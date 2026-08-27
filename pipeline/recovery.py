@@ -1,21 +1,23 @@
-"""Recovery / reconstitution model.
+"""Incident-level recovery / reconstitution model (iteration 2).
 
-Replaces the flat repair half-life with an evidence-driven one. The core decay is still
-`0.5 ^ (days_since_disruption / half_life)`, so the index stays continuous with the MVP,
-but the half-life is now chosen by the strongest available evidence:
+Iteration 1 attached recovery evidence to *facilities*. That smears a single recovery
+assessment across every strike a facility ever took. Iteration 2 attaches it to
+*incidents*: each disruption has its own trajectory, and recovery from one strike never
+resolves a later one. A facility hit four times has four independent recovery states.
 
-  observed  -- a source reported how long restoration/reconstitution actually took
-  estimated -- a source gave an expected reconstitution window
-  modelled  -- neither exists; fall back to the per-sector assumption
+Evidence precedence is RULE-BASED, not confidence-as-a-multiplier (see
+`recovery_precedence` in methodology/scoring.json):
 
-The `kind` travels with every number so the UI can render an observed restart and a
-modelled guess in visibly different language, and never present one as the other. That
-distinction is the whole reason this module exists.
+  observed full reconstitution (conf >= min)  -> closes the incident (cap at residual)
+  observed substantial restoration (conf>=min)-> observed days become the horizon
+  credible sourced estimate (conf >= min)      -> estimate central becomes the horizon
+  partial restart                              -> DISPLAY ONLY; never implies full recovery
+  low-confidence estimate (conf < min)         -> shown, but does not drive the decay
+  otherwise                                    -> modelled sector fallback
 
-Recovery evidence is carried in data/curated/recovery.csv, one row per facility
-(asset_id), describing that facility's most recent recovery assessment. It attaches to
-the facility's incidents because reconstitution is a property of the facility returning
-to service after its latest damage, not of a single dated event.
+The distinction the brief insists on: "operations resumed" is a partial_restart, not a
+full reconstitution. A restart is recorded and shown, but it never drives impairment to
+the residual and never invents a restored-capacity percentage.
 """
 
 import datetime as dt
@@ -25,12 +27,17 @@ from pipeline.util import log, read_csv, read_json
 
 _SCORING = read_json(METHODOLOGY_DIR / "scoring.json")
 _R = _SCORING["recovery"]
+_P = _SCORING["recovery_precedence"]
 
 RESIDUAL = _R["reconstitution_residual"]
 FACTOR = _R["horizon_to_halflife_factor"]
 FALLBACK = _R["sector_fallback_horizon_days"]
-RESOLVED_STATUSES = set(_R["resolved_statuses"])
-PARTIAL_FLOOR = _R["partial_operations_floor"]
+
+_CONF_RANK = _P["confidence_rank"]
+_MIN_OVERRIDE = _CONF_RANK[_P["min_confidence_to_override"]]
+_CLOSES = set(_P["closes_incident_states"])
+_HORIZON_STATES = set(_P["horizon_override_states"])
+VALID_STATES = set(_P["recovery_states"])
 
 
 def _date(value):
@@ -50,108 +57,130 @@ def _num(value):
 
 
 def load_recovery_records():
-    """Return {asset_id: record}. Every row must cite at least one source."""
+    """Return {incident_id: record}. Every row must cite at least one source.
+
+    Backward compatible: a legacy row keyed only by `asset_id` (no `incident_id`) is
+    accepted and flagged, so the older facility-level file still loads, but new records
+    should be incident-keyed.
+    """
     path = CURATED / "recovery.csv"
     if not path.exists():
         return {}
     out = {}
     for row in read_csv(path):
-        asset_id = row.get("asset_id")
-        if not asset_id:
+        incident_id = row.get("incident_id") or row.get("asset_id")
+        if not incident_id:
             continue
         urls = [u for u in (row.get("source_urls") or "").split("|") if u]
         if not urls:
-            log(f"  WARN recovery record for {asset_id} has no source URL; skipped")
+            log(f"  WARN recovery record for {incident_id} has no source URL; skipped")
             continue
-        out[asset_id] = {
-            "asset_id": asset_id,
-            "status": row.get("status") or "unknown",
-            "restoration_started_at": row.get("restoration_started_at"),
+        status = (row.get("recovery_status") or row.get("status") or "unknown").strip()
+        if status not in VALID_STATES:
+            # Map legacy iteration-1 statuses onto the new state vocabulary.
+            status = {"repaired": "fully_reconstituted", "active": "impaired",
+                      "degraded": "partial_restart"}.get(status, "unknown")
+        out[incident_id] = {
+            "incident_id": incident_id,
+            "recovery_status": status,
+            "source_confidence": (row.get("source_confidence") or "unknown").strip(),
+            "observed_date": row.get("observed_date") or row.get("reconstituted_at"),
+            "observed_days": _num(row.get("observed_days")) or _num(row.get("reconstitution_observed_days")),
             "partial_operations_resumed_at": row.get("partial_operations_resumed_at"),
-            "restoration_observed_days": _num(row.get("restoration_observed_days")),
-            "reconstituted_at": row.get("reconstituted_at"),
-            "reconstitution_observed_days": _num(row.get("reconstitution_observed_days")),
-            "reconstitution_level": row.get("reconstitution_level"),
+            "partial_or_full": row.get("partial_or_full"),
             "estimate_lower_days": _num(row.get("est_lower_days")),
             "estimate_central_days": _num(row.get("est_central_days")),
             "estimate_upper_days": _num(row.get("est_upper_days")),
             "estimate_basis": row.get("estimate_basis"),
             "estimate_method": row.get("estimate_method"),
-            "estimate_confidence": row.get("estimate_confidence"),
-            "evidence": row.get("evidence"),
+            "what_source_establishes": row.get("what_source_establishes") or row.get("evidence"),
             "source_types": [t for t in (row.get("source_types") or "").split("|") if t],
             "sources": [{"url": u} for u in urls],
         }
-    log(f"recovery: {len(out)} facility recovery records")
+    log(f"recovery: {len(out)} incident recovery records")
     return out
 
 
-def effective_horizon(asset_class, record):
-    """Return (horizon_days, kind) for an incident's reconstitution.
+def _conf_ok(record):
+    return _CONF_RANK.get(record.get("source_confidence"), 0) >= _MIN_OVERRIDE
 
-    kind is one of observed / estimated / modelled, matching the strongest evidence.
+
+def assess(asset_class, record):
+    """Resolve the effective (horizon_days, scoring_kind, closes) for an incident.
+
+    scoring_kind is observed / estimated / modelled — what actually drives the decay.
+    closes is True when a credible full reconstitution should cap impairment at residual.
     """
-    if record:
-        obs = record.get("reconstitution_observed_days") or record.get("restoration_observed_days")
-        if obs and obs > 0:
-            return obs, "observed"
-        est = record.get("estimate_central_days")
-        if est and est > 0:
-            return est, "estimated"
-    return FALLBACK.get(asset_class, FALLBACK["_default"]), "modelled"
+    fallback = FALLBACK.get(asset_class, FALLBACK["_default"])
+    if not record:
+        return fallback, "modelled", False
+
+    status = record.get("recovery_status")
+    conf_ok = _conf_ok(record)
+
+    if conf_ok and status in _CLOSES:
+        # Full reconstitution, credibly sourced: horizon from observed days if present,
+        # and the incident is closed (capped at residual after the observed date).
+        days = record.get("observed_days")
+        return (days if days and days > 0 else fallback), "observed", True
+
+    if conf_ok and status in _HORIZON_STATES and record.get("observed_days"):
+        return record["observed_days"], "observed", False
+
+    est = record.get("estimate_central_days")
+    if conf_ok and est and est > 0:
+        return est, "estimated", False
+
+    # partial_restart, low-confidence estimate, impaired, unknown -> modelled scoring.
+    return fallback, "modelled", False
 
 
 def effective_half_life(asset_class, record):
-    horizon, kind = effective_horizon(asset_class, record)
+    horizon, kind, _closes = assess(asset_class, record)
     return horizon / FACTOR, kind
 
 
-def recovery_kind(asset_class, record):
-    return effective_horizon(asset_class, record)[1]
+def scoring_kind(asset_class, record):
+    return assess(asset_class, record)[1]
 
 
-def is_resolved(record, when):
-    """True if credible evidence says the facility was substantially restored by `when`.
+def is_resolved(record, when, asset_class=None):
+    """True if a credible full reconstitution was reached by `when`.
 
-    Only an explicit reconstitution date or a resolved status counts. A generic decay
-    never marks a facility resolved -- absence of reporting is not evidence of recovery.
+    Only a fully_reconstituted status at/above the confidence threshold, with a date
+    that has passed, counts. Nothing else — and never a generic decay — resolves an
+    incident. Absence of reporting is not evidence of recovery.
     """
     if not record:
         return False
-    recon = _date(record.get("reconstituted_at"))
-    if recon and when >= recon:
-        return True
-    if record.get("status") in RESOLVED_STATUSES and record.get("reconstituted_at"):
-        return _date(record["reconstituted_at"]) is not None and when >= _date(record["reconstituted_at"])
-    return False
+    if record.get("recovery_status") not in _CLOSES or not _conf_ok(record):
+        return False
+    d = _date(record.get("observed_date"))
+    return d is not None and when >= d
 
 
-def partial_since(record, when):
-    """The date partial operations resumed, if that has happened by `when`, else None."""
+def partial_restart_date(record, when):
+    """Observed partial-restart date if it has occurred by `when` — display only."""
     if not record:
         return None
-    resumed = _date(record.get("partial_operations_resumed_at"))
-    return resumed if resumed and when >= resumed else None
+    d = _date(record.get("partial_operations_resumed_at"))
+    return d if d and when >= d else None
 
 
 def impairment_age_days(incident_date, record, as_of):
-    """Days a facility has been impaired, for UNRESOLVED incidents. None if resolved.
-
-    Measured from the disruption to either the reconstitution date (if resolved) or to
-    `as_of` (if still unresolved).
-    """
+    """Days impaired, for UNRESOLVED incidents. Measured to reconstitution if resolved."""
     start = _date(incident_date)
     if not start:
         return None
-    if record:
-        recon = _date(record.get("reconstituted_at"))
-        if recon:
-            return max(0, (recon - start).days)
+    if record and is_resolved(record, as_of):
+        d = _date(record.get("observed_date"))
+        if d:
+            return max(0, (d - start).days)
     return max(0, (as_of - start).days)
 
 
-def observed_restoration_days(record):
-    """The observed restoration duration, or None. Distinct from the modelled horizon."""
+def has_downweighted_estimate(record):
+    """True if a sourced estimate exists but its confidence was too low to drive scoring."""
     if not record:
-        return None
-    return record.get("restoration_observed_days") or record.get("reconstitution_observed_days")
+        return False
+    return bool(record.get("estimate_central_days")) and not _conf_ok(record)

@@ -69,16 +69,62 @@ def build():
     # into the denominator and deflate every refining exposure number.
     seen = {}
     for e in out:
-        seen.setdefault(e["name"].lower(), e)
-    refineries = list(seen.values())
+        seen.setdefault(_dedup_key(e["name"]), e)
+    base_total = sum(e["capacity_mtpa"] for e in seen.values() if e["capacity_mtpa"])
+    base_count = len(seen)
 
+    # Denominator audit (iteration 2): merge a curated supplement of major refineries
+    # the automated List parse omits (Moscow, Ilsky, Slavyansk, TAIF-NK, Mari El). Each
+    # supplement row is sourced and de-duplicated against the base by canonical name, so
+    # nothing is double-counted and the denominator is never silently inflated.
+    added = []
+    for row in _load_supplement():
+        key = _dedup_key(row["name"])
+        if key in seen:
+            log(f"  refineries: supplement '{row['name']}' already in base list; skipped")
+            continue
+        seen[key] = row
+        added.append(row)
+
+    refineries = list(seen.values())
     total = sum(r["capacity_mtpa"] for r in refineries if r["capacity_mtpa"])
     log(
-        f"refineries: {len(refineries)} in national inventory, "
-        f"{sum(1 for r in refineries if r['capacity_mtpa'])} with capacity, "
-        f"{total:,.1f} MTPA total"
+        f"refineries: {base_count} base ({base_total:,.1f} MTPA) + {len(added)} "
+        f"supplement = {len(refineries)} refineries, {total:,.1f} MTPA total "
+        f"(+{total - base_total:,.1f} from audit)"
     )
     return refineries, total
+
+
+def _dedup_key(name):
+    """Normalise a refinery name for duplicate detection across sources."""
+    n = name.lower()
+    for junk in ("refinery", "oil", "petrochemical", "the", "jsc", "ooo", "pjsc", "-"):
+        n = n.replace(junk, " ")
+    return re.sub(r"[^a-z0-9]+", "", n)
+
+
+def _load_supplement():
+    from pipeline.config import CURATED
+    from pipeline.util import read_csv
+
+    path = CURATED / "refineries_supplement.csv"
+    if not path.exists():
+        return []
+    rows = []
+    for r in read_csv(path):
+        cap = r.get("capacity_mtpa")
+        rows.append({
+            "name": r["name"],
+            "operator": r.get("operator"),
+            "capacity_mtpa": round(float(cap), 3) if cap else None,
+            "region_code": r.get("region_code"),
+            "listed_under": "curated_supplement",
+            "source_page": r.get("source_url"),
+            "source_date": r.get("source_date"),
+            "inclusion_reason": r.get("inclusion_reason"),
+        })
+    return rows
 
 
 def _parse_line(line, section):

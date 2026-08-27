@@ -159,7 +159,7 @@ def main():
     refineries, refining_total = build_refineries()
     curated = load_curated_incidents()
     coverage = load_coverage_benchmark()
-    recovery_by_asset = load_recovery_records()
+    recovery_by_incident = load_recovery_records()
 
     for inc in wiki_incidents:
         inc["origin"] = "wikipedia_strike_table"
@@ -188,7 +188,7 @@ def main():
         refinery_total_mtpa=refining_total,
         region_meta=region_meta,
         as_of=args.as_of,
-        recovery_by_asset=recovery_by_asset,
+        recovery_by_incident=recovery_by_incident,
     )
 
     enumerated = len(in_aoi)

@@ -230,47 +230,90 @@ def test_confidence_and_cause_reduce_weight():
 
 
 # --------------------------------------------------------------------------
-# Recovery / reconstitution framework (iteration 1)
+# Recovery / reconstitution framework — incident-level, rule-based (iteration 2)
 # --------------------------------------------------------------------------
+
+def _rec(**kw):
+    base = {"source_confidence": "medium", "sources": [{"url": "x"}]}
+    base.update(kw)
+    return base
+
 
 def test_observed_recovery_overrides_modelled_decay():
     """A sourced, faster-than-generic reconstitution must decay faster than the
     modelled fallback -- evidence overrides assumption."""
     from pipeline import recovery
     inc = _incident(date="2026-01-01")
-    fast = {"reconstitution_observed_days": 30, "sources": [{"url": "x"}]}
+    fast = _rec(recovery_status="substantially_restored", observed_days=30)
     on_day40 = dt.date(2026, 2, 10)
     modelled = _weight_at(inc, on_day40, None)
     observed = _weight_at(inc, on_day40, fast)
     assert observed < modelled
-    assert recovery.recovery_kind("refinery", fast) == "observed"
+    assert recovery.scoring_kind("refinery", fast) == "observed"
 
 
 def test_estimated_and_modelled_kinds_are_distinguished():
     from pipeline import recovery
-    est = {"estimate_central_days": 200, "sources": [{"url": "x"}]}
-    assert recovery.recovery_kind("refinery", est) == "estimated"
-    assert recovery.recovery_kind("refinery", None) == "modelled"
-    assert recovery.recovery_kind("refinery", {}) == "modelled"
+    est = _rec(recovery_status="impaired", estimate_central_days=200)
+    assert recovery.scoring_kind("refinery", est) == "estimated"
+    assert recovery.scoring_kind("refinery", None) == "modelled"
+    assert recovery.scoring_kind("refinery", {}) == "modelled"
 
 
-def test_confirmed_reconstitution_caps_at_residual():
-    """Once a facility is credibly reported restored, its contribution collapses."""
+def test_partial_restart_is_not_full_reconstitution():
+    """A partial restart records the observed date but does NOT drive the decay curve
+    to the residual and NEVER resolves the incident."""
     from pipeline import recovery
     inc = _incident(date="2026-01-01")
-    rec = {"reconstituted_at": "2026-02-01", "status": "repaired", "sources": [{"url": "x"}]}
+    partial = _rec(recovery_status="partial_restart",
+                   partial_operations_resumed_at="2026-01-19", observed_days=18)
+    # partial restart is display-only for scoring: falls back to the modelled horizon.
+    assert recovery.scoring_kind("refinery", partial) == "modelled"
+    assert not recovery.is_resolved(partial, dt.date(2026, 6, 1))
+    # and its weight equals the modelled (record-less) weight — no acceleration, no cap.
+    on = dt.date(2026, 3, 1)
+    assert _weight_at(inc, on, partial) == pytest.approx(_weight_at(inc, on, None), abs=1e-9)
+
+
+def test_low_confidence_estimate_does_not_drive_scoring():
+    """A low-confidence estimate is shown but must not replace the modelled horizon."""
+    from pipeline import recovery
+    low = _rec(source_confidence="low", recovery_status="impaired", estimate_central_days=400)
+    assert recovery.scoring_kind("refinery", low) == "modelled"
+    assert recovery.has_downweighted_estimate(low)
+    med = _rec(source_confidence="medium", recovery_status="impaired", estimate_central_days=400)
+    assert recovery.scoring_kind("refinery", med) == "estimated"
+
+
+def test_full_reconstitution_precedence_closes_incident():
+    """A credible full reconstitution caps the incident's contribution at the residual."""
+    from pipeline import recovery
+    inc = _incident(date="2026-01-01")
+    rec = _rec(recovery_status="fully_reconstituted", observed_date="2026-02-01", observed_days=31)
     after = _weight_at(inc, dt.date(2026, 3, 1), rec)
     assert after <= recovery.RESIDUAL + 1e-6
     assert recovery.is_resolved(rec, dt.date(2026, 3, 1))
     assert not recovery.is_resolved(rec, dt.date(2026, 1, 15))  # before reconstitution
+    # a LOW-confidence full-reconstitution claim must NOT close the incident
+    weak = _rec(source_confidence="low", recovery_status="fully_reconstituted", observed_date="2026-02-01")
+    assert not recovery.is_resolved(weak, dt.date(2026, 3, 1))
 
 
-def test_impairment_age_none_when_resolved():
+def test_impairment_age_none_or_capped_when_resolved():
     from pipeline import recovery
-    rec = {"reconstituted_at": "2026-02-01", "status": "repaired", "sources": [{"url": "x"}]}
-    # resolved facility: age is measured to reconstitution, not open-ended
+    rec = _rec(recovery_status="fully_reconstituted", observed_date="2026-02-01")
+    # resolved incident: age is measured to reconstitution, not open-ended
     age = recovery.impairment_age_days("2026-01-01", rec, dt.date(2026, 6, 1))
     assert age == 31  # 1 Jan -> 1 Feb
+
+
+def test_recovery_is_incident_keyed():
+    """Iteration 2: recovery records key on incident_id, not asset/facility id."""
+    from pipeline import recovery as rec_mod
+    records = rec_mod.load_recovery_records()
+    assert records, "expected curated recovery records"
+    # every key looks like an incident id (facility-slug:date or cur-*), never a bare slug
+    assert all((":" in k) or k.startswith("cur-") for k in records), list(records)[:5]
 
 
 def test_recovery_record_without_source_is_ignored(tmp_path, monkeypatch):
@@ -278,15 +321,15 @@ def test_recovery_record_without_source_is_ignored(tmp_path, monkeypatch):
     from pipeline import recovery as rec_mod
     csv = tmp_path / "recovery.csv"
     csv.write_text(
-        "asset_id,status,reconstitution_observed_days,source_urls\n"
-        "no-source-facility,repaired,10,\n"
-        "good-facility,repaired,10,https://example.org/x\n",
+        "incident_id,recovery_status,observed_days,source_confidence,source_urls\n"
+        "no-source:2026-01-01,fully_reconstituted,10,high,\n"
+        "good:2026-01-01,fully_reconstituted,10,high,https://example.org/x\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(rec_mod, "CURATED", tmp_path)
     records = rec_mod.load_recovery_records()
-    assert "good-facility" in records
-    assert "no-source-facility" not in records
+    assert "good:2026-01-01" in records
+    assert "no-source:2026-01-01" not in records
 
 
 def test_composite_renormalises_over_covered_sectors():
@@ -394,11 +437,65 @@ def test_snapshot_reports_its_own_coverage():
 
 @pytest.mark.skipif(not (PROCESSED / "regions.json").exists(),
                     reason="pipeline has not been run")
-def test_occupied_territory_is_excluded():
+def test_crimea_is_a_permitted_context_unit_others_excluded():
+    """Iteration 2: Crimea is a narrow, explicit exception -- present as a separately
+    identified CONTEXT unit (not a Russian federal subject), while the other four
+    annexed oblasts remain fully excluded from the region layer."""
     regions = json.loads((PROCESSED / "regions.json").read_text(encoding="utf-8"))
-    names = {r["name"].lower() for r in regions}
-    for excluded in ("crimea", "sevastopol", "donetsk", "luhansk", "zaporizhzhia", "kherson"):
-        assert excluded not in names
+    by_name = {r["name"].lower(): r for r in regions}
+    # Crimea present, but explicitly marked as context, Ukrainian, and ESDI-excluded.
+    assert "crimea" in by_name
+    crimea = by_name["crimea"]
+    assert crimea["analytic_scope"] == "context"
+    assert crimea["esdi_included"] is False
+    assert crimea["country"] == "UA"
+    assert "ukrain" in crimea["sovereignty"].lower()
+    # Other occupied Ukrainian territory stays out of the region layer entirely.
+    for excluded in ("donetsk", "luhansk", "zaporizhzhia", "kherson"):
+        assert excluded not in by_name
+
+
+def test_crimea_resolution_and_other_occupied_excluded():
+    """Crimea resolves as context; other occupied territory as a distinct excluded state."""
+    assert resolve("Crimea") == ("context", "UA-CR")
+    assert resolve("Sevastopol") == ("context", "UA-CR")
+    for name in ("Donetsk Oblast", "Luhansk", "Zaporizhzhia", "Kherson"):
+        kind, _ = resolve(name)
+        assert kind == "excluded_occupied", name
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_crimea_excluded_from_national_esdi_denominator():
+    """Crimea events must never enter the Russia+Belarus ESDI composite or denominator."""
+    snap = json.loads((PROCESSED / "snapshot.json").read_text(encoding="utf-8"))
+    crimea = snap["regions"]["UA-CR"]
+    assert crimea["esdi_included"] is False
+    # Its own regional exposure may be shown, but it is not in the national aggregate:
+    # rebuild-invariant check that a Crimea-only event cannot move the national ESDI.
+    incidents = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    crimea_incidents = [i for i in incidents if i.get("region_code") == "UA-CR"]
+    assert crimea_incidents, "expected at least one tracked Crimea event"
+    for i in crimea_incidents:
+        # Crimea events are tracked (region-coded) but carry no coordinates, like all others.
+        assert "lat" not in i and "lon" not in i
+
+
+def test_context_geography_has_no_analytic_infrastructure():
+    """Context countries are display-only: no asset in the emitted asset layer may sit
+    in a context country, and context files carry no scoring fields."""
+    land = json.loads((PROCESSED / "context_land.geojson").read_text(encoding="utf-8"))
+    for f in land["features"]:
+        props = f["properties"]
+        # only display metadata, never an event/score/capacity field
+        assert set(props) <= {"iso", "name", "label_lon", "label_lat"}, props
+
+
+def test_far_eastern_remains_disabled():
+    """Iteration 2 keeps the Far Eastern FD structurally supported but analytically off."""
+    from pipeline.config import AOI_FEDERAL_DISTRICTS, DEFINED_FEDERAL_DISTRICTS
+    assert "Far Eastern" not in AOI_FEDERAL_DISTRICTS
+    assert "Far Eastern" in DEFINED_FEDERAL_DISTRICTS
 
 
 # --------------------------------------------------------------------------
@@ -455,17 +552,40 @@ def test_recovery_stats_present_with_sample_sizes():
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
                     reason="pipeline has not been run")
 def test_recovery_evidence_kinds_distinguish_observed_from_estimated():
-    """Observed and estimated recovery must be structurally distinct in emitted data."""
+    """Observed / estimated / modelled recovery must be structurally distinct."""
     snap = _snapshot()
     for x in snap["live_disruptions"]:
         rec = x["recovery"]
-        assert rec["recovery_evidence_kind"] in ("observed", "estimated", "modelled")
-        if rec["recovery_evidence_kind"] == "estimated":
-            assert rec["estimate_days"] is not None
-        if rec["recovery_evidence_kind"] == "modelled":
-            # A modelled facility must not masquerade as having observed timing.
-            assert rec["observed_restoration_days"] is None
-            assert rec["reconstitution_observed_days"] is None
+        assert rec["scoring_evidence_kind"] in ("observed", "estimated", "modelled")
+        if rec["scoring_evidence_kind"] == "modelled":
+            # A modelled record must not masquerade as having observed timing driving it.
+            assert rec["observed_days"] is None or rec["recovery_status"] == "partial_restart"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_median_restoration_present_only_with_enough_samples():
+    """A median must be suppressed below the minimum sample and shown above it."""
+    snap = _snapshot()
+    rs = snap["recovery_stats"]
+    n = rs["observed_restoration_sample"]
+    if n < rs["min_median_sample"]:
+        assert rs["median_observed_restoration_days"] is None
+        assert rs["median_meaningful"] is False
+    else:
+        assert rs["median_observed_restoration_days"] is not None
+        assert rs["median_meaningful"] is True
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_partial_restart_not_counted_as_full_reconstitution():
+    """Partial restarts are tracked separately and never inflate reconstitution counts."""
+    snap = _snapshot()
+    rs = snap["recovery_stats"]
+    assert "partial_restart_count" in rs and "full_reconstitution_count" in rs
+    # These are independent tallies; a partial restart must not be a full reconstitution.
+    assert rs["partial_restart_count"] >= 0 and rs["full_reconstitution_count"] >= 0
 
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),

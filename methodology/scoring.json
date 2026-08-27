@@ -72,6 +72,31 @@
     "_partial_note": "When a source reports partial operations resumed but not full reconstitution, impairment is held no lower than this until full reconstitution evidence arrives -- a restart is not a return to full capability."
   },
 
+  "recovery_precedence": {
+    "_comment": [
+      "Iteration 2: recovery is now INCIDENT-level and evidence precedence is RULE-based,",
+      "not confidence-as-a-multiplier. A recovery record only overrides the model if its",
+      "source confidence clears min_confidence_to_override.",
+      "  fully_reconstituted (conf>=min): closes the incident -> impairment capped at the",
+      "    residual from the reconstitution date. Terminology: substantially restored to",
+      "    full capability, per a credible source.",
+      "  substantially_restored (conf>=min): observed days become the reconstitution horizon.",
+      "  a sourced ESTIMATE (conf>=min): its central value becomes the horizon (kind=estimated).",
+      "  partial_restart: DISPLAY ONLY. Records the observed restart date but does NOT",
+      "    accelerate decay and NEVER implies full restoration -- 'operations resumed' is not",
+      "    'fully reconstituted'. Scoring falls back to the modelled horizon.",
+      "  low-confidence estimate (conf<min): shown in the UI but does NOT drive the decay curve.",
+      "  otherwise: modelled sector fallback.",
+      "Priority: observed full/substantial > credible sourced estimate > modelled fallback."
+    ],
+    "recovery_states": ["impaired", "partial_restart", "substantially_restored", "fully_reconstituted", "unknown"],
+    "confidence_rank": {"high": 3, "medium": 2, "low": 1, "unknown": 0},
+    "min_confidence_to_override": "medium",
+    "closes_incident_states": ["fully_reconstituted"],
+    "horizon_override_states": ["substantially_restored"],
+    "display_only_states": ["partial_restart", "impaired", "unknown"]
+  },
+
   "status_multipliers": {
     "_comment": "Applied when a source explicitly states the recovery state, overriding pure time decay. 'repaired' collapses the contribution; 'active' holds it at full decayed value.",
     "active": 1.0,
