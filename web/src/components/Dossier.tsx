@@ -37,7 +37,13 @@ export default function Dossier({
   visibleIncidents: Incident[];
   onSelect: (code: string | null) => void;
 }) {
-  const [tab, setTab] = useState("Overview");
+  // Initial tab may be seeded from the URL hash (#tab=Recovery) — used for headless
+  // visual QA of individual tabs; harmless in normal use.
+  const initialTab = (() => {
+    const m = /[#&]tab=(\w+)/.exec(window.location.hash);
+    return m ? m[1] : "Overview";
+  })();
+  const [tab, setTab] = useState(initialTab);
 
   // Selecting a region on the map should surface its detail, not strand the reader on
   // a national-only tab.

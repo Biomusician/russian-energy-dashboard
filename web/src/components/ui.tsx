@@ -62,34 +62,48 @@ export function Bar({
   );
 }
 
-/** Compact recovery line: observed / estimated / modelled, always tagged. */
+const STATUS_LABEL: Record<string, string> = {
+  impaired: "Impaired",
+  partial_restart: "Partial restart",
+  substantially_restored: "Substantially restored",
+  fully_reconstituted: "Fully reconstituted",
+  unknown: "Unknown",
+};
+
+/** Compact recovery line: observed / estimated / modelled, always tagged, and never
+ *  presenting a partial restart or a low-confidence estimate as full recovery. */
 export function RecoveryLine({ r }: { r: RecoveryState }) {
-  const kind = r.recovery_evidence_kind;
+  const kind = r.scoring_evidence_kind;
   if (r.resolved) {
     return (
       <div className="rc-recovery">
-        <EvidenceChip kind="observed" text="Restored" />
-        {r.reconstituted_at && <span style={{ color: "var(--text-dim)" }}>by {fmtDate(r.reconstituted_at)}</span>}
-        {r.observed_restoration_days != null && (
-          <span style={{ color: "var(--green)" }}>{r.observed_restoration_days} d observed</span>
-        )}
+        <EvidenceChip kind="observed" text="Reconstituted" />
+        {r.observed_date && <span style={{ color: "var(--text-dim)" }}>by {fmtDate(r.observed_date)}</span>}
+        {r.observed_days != null && <span style={{ color: "var(--green)" }}>{r.observed_days} d observed</span>}
       </div>
     );
   }
   return (
     <div className="rc-recovery">
       <EvidenceChip kind={kind} />
+      <span style={{ color: "var(--text-dim)" }}>{STATUS_LABEL[r.recovery_status] ?? r.recovery_status}</span>
       {r.impairment_age_days != null && (
         <span style={{ color: "var(--text-dim)" }}>impaired {r.impairment_age_days} d</span>
       )}
-      {kind === "estimated" && r.estimate_days?.central != null && (
+      {r.recovery_status === "partial_restart" && r.partial_operations_resumed_at && (
         <span style={{ color: "var(--amber)" }}>
-          est. reconstitution ~{r.estimate_days.central} d
-          {r.estimate_days.lower != null && r.estimate_days.upper != null &&
-            ` (${r.estimate_days.lower}–${r.estimate_days.upper})`}
+          partial restart {fmtDate(r.partial_operations_resumed_at)} — not full reconstitution
         </span>
       )}
-      {kind === "modelled" && (
+      {r.estimate_days?.central != null && (
+        <span style={{ color: r.estimate_days.used_for_scoring ? "var(--amber)" : "var(--text-faint)" }}>
+          est. ~{r.estimate_days.central} d
+          {r.estimate_days.lower != null && r.estimate_days.upper != null &&
+            ` (${r.estimate_days.lower}–${r.estimate_days.upper})`}
+          {!r.estimate_days.used_for_scoring && " · low conf, not scored"}
+        </span>
+      )}
+      {kind === "modelled" && r.recovery_status !== "partial_restart" && !r.estimate_days && (
         <span style={{ color: "var(--text-faint)" }}>
           modelled horizon ~{r.reconstitution_horizon_days} d (assumption)
         </span>

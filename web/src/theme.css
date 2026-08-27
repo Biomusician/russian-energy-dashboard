@@ -547,3 +547,52 @@ a { color: var(--accent); }
   color: var(--text-faint);
 }
 .concept-key .ev { font-size: 8.5px; }
+
+/* ============================================================
+   Iteration 2: context-geography labels, camera controls, Crimea
+   ============================================================ */
+
+.geo-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 2;
+  white-space: nowrap;
+  font-family: var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.geo-label.country {
+  color: #4a5a68;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(5, 8, 12, 0.9);
+}
+.geo-label.sea {
+  color: #37566b;
+  font-style: italic;
+  letter-spacing: 0.28em;
+  text-shadow: 0 1px 2px rgba(5, 8, 12, 0.9);
+}
+
+.camera-controls {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: flex;
+  gap: 6px;
+  background: rgba(9, 13, 18, 0.9);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 4px;
+}
+.camera-controls button.ghost { font-size: 10.5px; padding: 3px 9px; }
+
+.context-banner {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  border-left: 2px solid var(--violet);
+  background: #16121f;
+}
+.tag.context { color: var(--violet); border-color: #4c3a7a; }

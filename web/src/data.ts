@@ -15,7 +15,8 @@ async function grab<T>(name: string): Promise<T> {
 
 export async function loadBundle(): Promise<Bundle> {
   const [
-    snapshot, national, regional, incidents, regions, assets, taxonomy, regionsGeo, linesGeo,
+    snapshot, national, regional, incidents, regions, assets, taxonomy,
+    regionsGeo, linesGeo, contextLand, contextBorders, ocean,
   ] = await Promise.all([
     grab<Bundle["snapshot"]>("snapshot.json"),
     grab<Bundle["national"]>("index_national.json"),
@@ -26,8 +27,14 @@ export async function loadBundle(): Promise<Bundle> {
     grab<Bundle["taxonomy"]>("taxonomy.json"),
     grab<Bundle["regionsGeo"]>("regions.geojson"),
     grab<Bundle["linesGeo"]>("assets_lines.geojson"),
+    grab<Bundle["contextLand"]>("context_land.geojson"),
+    grab<Bundle["contextBorders"]>("context_borders.geojson"),
+    grab<Bundle["ocean"]>("ocean.geojson"),
   ]);
-  return { snapshot, national, regional, incidents, regions, assets, taxonomy, regionsGeo, linesGeo };
+  return {
+    snapshot, national, regional, incidents, regions, assets, taxonomy,
+    regionsGeo, linesGeo, contextLand, contextBorders, ocean,
+  };
 }
 
 /** Index of the timeline step at or before `date`. */

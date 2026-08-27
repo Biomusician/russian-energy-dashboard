@@ -76,17 +76,30 @@ export function OverviewTab(p: TabProps) {
 
   const esdiNow = bundle.regional.regions[region.code]?.esdi[step] ?? 0;
   const regionIncidents = incidentsByRegion.get(region.code) ?? [];
+  const isContext = !region.esdi_included;
   return (
     <div className="tab-body">
+      {isContext && (
+        <div className="context-banner">
+          <div className="eyebrow" style={{ color: "var(--violet)" }}>Context unit — not in the index</div>
+          <div style={{ fontSize: 11.5, marginTop: 4, lineHeight: 1.5 }}>
+            <strong>Sovereignty:</strong> {region.sovereignty}<br />
+            <strong>De-facto control:</strong> {region.de_facto_control}
+          </div>
+          {region.status_note && (
+            <div style={{ fontSize: 10.5, color: "var(--text-dim)", marginTop: 5, lineHeight: 1.45 }}>{region.status_note}</div>
+          )}
+        </div>
+      )}
       <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--line-soft)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div className="num" style={{ fontSize: 32, color: severityColor(esdiNow) }}>{fmtNum(esdiNow, 1)}</div>
+          <div className="num" style={{ fontSize: 32, color: isContext ? "var(--violet)" : severityColor(esdiNow) }}>{fmtNum(esdiNow, 1)}</div>
           <div>
-            <div className="eyebrow">Disruption exposure</div>
+            <div className="eyebrow">{isContext ? "Context exposure (excl. index)" : "Disruption exposure"}</div>
             <div style={{ fontSize: 11, color: "var(--text-dim)" }}>as at {fmtDate(currentDate)}</div>
           </div>
         </div>
-        <div className="meter"><i style={{ width: `${Math.min(100, esdiNow * 4)}%`, background: severityColor(esdiNow) }} /></div>
+        <div className="meter"><i style={{ width: `${Math.min(100, esdiNow * 4)}%`, background: isContext ? "var(--violet)" : severityColor(esdiNow) }} /></div>
       </div>
 
       <Block title="Recorded activity">
@@ -256,7 +269,10 @@ export function RankingsTab(p: TabProps) {
         >
           <span className="rank-idx">{i + 1}</span>
           <span>
-            <div className="rank-name">{x.r.name}</div>
+            <div className="rank-name">
+              {x.r.name}
+              {!x.r.esdi_included && <span className="tag context" style={{ marginLeft: 6 }}>context</span>}
+            </div>
             <div className="rank-sub">{x.r.district} · {x.r.incident_count} events</div>
             <div className="rank-bar"><i style={{ width: `${(x.value / max) * 100}%`, background: metricKey === "confidence" ? "var(--accent)" : severityColor(metricKey === "exposure" ? x.value : Math.min(12, x.value)) }} /></div>
           </span>
@@ -284,11 +300,21 @@ export function RecentTab(p: TabProps) {
     return [...pool].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
   }, [p.visibleIncidents, p.selected]);
 
+  const isContextRegion = (code: string | null) =>
+    code ? p.bundle.snapshot.regions[code]?.esdi_included === false : false;
+
   return (
     <div className="tab-body">
       <div className="section-head" style={{ position: "static" }}>
-        <h2 style={{ fontSize: 12 }}>Top 10 most recent{p.selected ? " (region)" : ""}</h2>
-        <span className="eyebrow">to {fmtDate(p.currentDate)}</span>
+        <h2 style={{ fontSize: 12 }}>Top 10 most recent</h2>
+        <div style={{ display: "flex", gap: 5 }}>
+          <button className="ghost" aria-pressed={!p.selected} onClick={() => p.onSelect(null)}>National</button>
+          {p.selected && (
+            <button className="ghost" aria-pressed={true}>
+              {p.bundle.snapshot.regions[p.selected]?.name ?? "Region"}
+            </button>
+          )}
+        </div>
       </div>
       {recent.length === 0 && <div className="empty">No events match the current filters and timeline position.</div>}
       {recent.map((i) => {
@@ -303,6 +329,7 @@ export function RecentTab(p: TabProps) {
             <div className="rc-meta">
               <span className="tag" style={{ color: classColor(i.asset_class), borderColor: "var(--line)" }}>{titleCase(i.cause)}</span>
               <span className={`tag ${i.confidence}`}>{i.confidence}</span>
+              {isContextRegion(i.region_code) && <span className="tag context">context · excl. index</span>}
               {i.conflicting_reports && <span className="tag conflict">sources conflict</span>}
             </div>
             <div className="rc-summary">{summarise(i, regionName(i.region_code))}</div>
@@ -361,23 +388,40 @@ export function ReconstitutionTab(p: TabProps) {
 
       <div className="tiles">
         <Tile label="Unresolved disruptions" value={rs.unresolved_count} />
-        <Tile label="Restored (observed)" value={rs.resolved_count} />
+        <Tile label="Currently reconstituted" value={rs.resolved_count} />
+        {rs.median_meaningful ? (
+          <Tile
+            label="Median observed restoration"
+            value={rs.median_observed_restoration_days}
+            unit="days" kind="observed" n={rs.observed_restoration_sample}
+          />
+        ) : (
+          <Tile
+            label="Observed restorations"
+            value={`n=${rs.observed_restoration_sample}`}
+            small null
+          />
+        )}
         <Tile
-          label="Median observed restoration"
-          value={rs.median_observed_restoration_days != null ? rs.median_observed_restoration_days : "—"}
-          unit={rs.median_observed_restoration_days != null ? "days" : undefined}
-          kind={rs.median_observed_restoration_days != null ? "observed" : undefined}
-          n={rs.observed_restoration_sample}
-          null={rs.median_observed_restoration_days == null}
-        />
-        <Tile
-          label="Median impairment age"
-          value={rs.median_impairment_age_days != null ? rs.median_impairment_age_days : "—"}
-          unit={rs.median_impairment_age_days != null ? "days" : undefined}
-          n={rs.impairment_age_sample}
-          null={rs.median_impairment_age_days == null}
+          label="Full reconstitutions / partial restarts"
+          value={`${rs.full_reconstitution_count} / ${rs.partial_restart_count}`}
+          small
         />
       </div>
+
+      {!rs.median_meaningful && (
+        <Note warn>
+          Observed-restoration sample is n={rs.observed_restoration_sample} (below the n={rs.min_median_sample}
+          needed for a meaningful median). Individual observed cases are listed below; no
+          "typical" restoration time is claimed yet.
+        </Note>
+      )}
+      {rs.observed_restoration_values.length > 0 && (
+        <div style={{ padding: "0 14px 8px", fontSize: 11, color: "var(--text-dim)" }}>
+          Observed restoration durations (days):{" "}
+          <span className="num" style={{ color: "var(--green)" }}>{rs.observed_restoration_values.join(", ")}</span>
+        </div>
+      )}
 
       <Block title="Recovery evidence mix">
         <div className="bars">
@@ -414,7 +458,9 @@ export function ReconstitutionTab(p: TabProps) {
       <Block title="Facilities with recovery evidence">
         <div style={{ margin: "0 -14px" }}>
           {p.bundle.snapshot.live_disruptions
-            .filter((d) => d.recovery.recovery_evidence_kind !== "modelled" || d.recovery.resolved)
+            .filter((d) => d.recovery.scoring_evidence_kind !== "modelled" ||
+              d.recovery.resolved || d.recovery.recovery_status === "partial_restart" ||
+              d.recovery.estimate_days != null)
             .slice(0, 20)
             .map((d) => <RecoveryFacility key={d.asset_id} d={d} regionName={p.bundle.snapshot.regions[d.region_code ?? ""]?.name} />)}
         </div>

@@ -28,13 +28,16 @@ export function classColor(cls: string | null | undefined): string {
 /** Severity ramp for the choropleth. Six stops, deliberately not a rainbow: the eye
  *  should read intensity, and a shape should never depend on hue alone to be
  *  interpretable, which is why every filled region also reports a number. */
+// Stop 0 is the resting colour of an AOI region with no exposure. It is deliberately
+// lighter than the ocean/context fills so the analytic surface stays visually dominant
+// (iteration 2 added surrounding geography underneath it).
 export const SEVERITY_STOPS: [number, string][] = [
-  [0, "#16202a"],
-  [0.5, "#14484f"],
-  [1.5, "#157c7f"],
-  [3, "#a8871f"],
-  [6, "#c26326"],
-  [12, "#b8382f"],
+  [0, "#22303d"],
+  [0.5, "#1f5a61"],
+  [1.5, "#188084"],
+  [3, "#b0901f"],
+  [6, "#c86828"],
+  [12, "#c23a30"],
 ];
 
 export function severityColor(value: number): string {

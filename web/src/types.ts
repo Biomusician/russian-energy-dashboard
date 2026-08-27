@@ -45,6 +45,11 @@ export interface RegionMeta {
   name: string;
   district: string;
   country: string;
+  esdi_included: boolean;
+  analytic_scope?: string;
+  sovereignty?: string;
+  de_facto_control?: string;
+  status_note?: string;
   centroid: [number, number];
   bbox: [number, number, number, number];
 }
@@ -80,6 +85,11 @@ export interface RegionSnapshot {
   name: string;
   district: string;
   country: string;
+  esdi_included: boolean;
+  analytic_scope: string;
+  sovereignty: string | null;
+  de_facto_control: string | null;
+  status_note: string | null;
   esdi: number;
   sectors: Record<string, number>;
   incident_count: number;
@@ -91,14 +101,20 @@ export interface RegionSnapshot {
 }
 
 export type EvidenceKind = "observed" | "estimated" | "modelled";
+export type RecoveryStatus =
+  | "impaired" | "partial_restart" | "substantially_restored" | "fully_reconstituted" | "unknown";
 
 export interface RecoveryState {
-  recovery_evidence_kind: EvidenceKind;
+  incident_id: string | null;
+  recovery_status: RecoveryStatus;
+  scoring_evidence_kind: EvidenceKind;
   reconstitution_horizon_days: number;
   resolved: boolean;
   impairment_age_days: number | null;
-  observed_restoration_days: number | null;
-  reconstitution_observed_days: number | null;
+  observed_days: number | null;
+  observed_date: string | null;
+  partial_operations_resumed_at: string | null;
+  partial_or_full: string | null;
   estimate_days: {
     lower: number | null;
     central: number | null;
@@ -106,10 +122,11 @@ export interface RecoveryState {
     basis: string | null;
     method: string | null;
     confidence: string | null;
+    used_for_scoring: boolean;
   } | null;
-  reconstitution_level: string | null;
-  partial_operations_resumed_at: string | null;
-  reconstituted_at: string | null;
+  estimate_used_for_scoring: boolean;
+  what_source_establishes: string | null;
+  source_confidence: string | null;
   recovery_sources: { url: string }[];
 }
 
@@ -122,16 +139,24 @@ export interface LiveDisruption {
   disruption_weight: number;
   event_count: number;
   latest: string;
+  driving_incident_id: string | null;
   recovery: RecoveryState;
 }
 
 export interface RecoveryStats {
   unresolved_count: number;
   resolved_count: number;
+  min_median_sample: number;
   median_observed_restoration_days: number | null;
+  median_meaningful: boolean;
   observed_restoration_sample: number;
+  observed_restoration_values: number[];
   median_impairment_age_days: number | null;
   impairment_age_sample: number;
+  partial_restart_count: number;
+  full_reconstitution_count: number;
+  estimate_record_count: number;
+  recovery_record_count: number;
   evidence_kind_counts: Record<string, number>;
   by_sector: Record<string, {
     disrupted_facilities: number;
@@ -218,4 +243,7 @@ export interface Bundle {
   taxonomy: Taxonomy;
   regionsGeo: GeoJSON.FeatureCollection;
   linesGeo: GeoJSON.FeatureCollection;
+  contextLand: GeoJSON.FeatureCollection;
+  contextBorders: GeoJSON.FeatureCollection;
+  ocean: GeoJSON.FeatureCollection;
 }

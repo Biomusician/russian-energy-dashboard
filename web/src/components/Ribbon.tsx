@@ -45,16 +45,27 @@ export default function Ribbon({
         </div>
       </div>
 
-      {/* Recovery headline — new in iteration 1 */}
+      {/* Recovery headline. The median is shown only once the observed sample is large
+          enough (n>=min); below that it is reported honestly as a raw case count, never
+          dressed up as a descriptive median. */}
       <div className="esdi-block" style={{ gap: 20 }}>
         <RecoveryStat value={rs.unresolved_count} label="Unresolved impairments" color="var(--amber)" />
-        <RecoveryStat
-          value={rs.median_observed_restoration_days != null ? `${rs.median_observed_restoration_days}d` : "—"}
-          label="Median observed restoration"
-          sub={`n = ${rs.observed_restoration_sample}`}
-          color={rs.median_observed_restoration_days != null ? "var(--green)" : "var(--text-faint)"}
-        />
-        <RecoveryStat value={rs.resolved_count} label="Restored (observed)" color="var(--green)" />
+        {rs.median_meaningful ? (
+          <RecoveryStat
+            value={`${rs.median_observed_restoration_days}d`}
+            label="Median observed restoration"
+            sub={`n = ${rs.observed_restoration_sample}`}
+            color="var(--green)"
+          />
+        ) : (
+          <RecoveryStat
+            value={`${rs.observed_restoration_sample}`}
+            label="Observed restorations"
+            sub={rs.observed_restoration_sample < rs.min_median_sample ? "n too low for median" : ""}
+            color="var(--green)"
+          />
+        )}
+        <RecoveryStat value={rs.full_reconstitution_count} label="Full reconstitutions" color="var(--green)" />
       </div>
 
       <div className="sector-strip">

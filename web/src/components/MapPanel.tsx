@@ -24,9 +24,19 @@ const EMPTY_STYLE: maplibregl.StyleSpecification = {
   layers: [{ id: "bg", type: "background", paint: { "background-color": "#05070a" } }],
 };
 
-// Extended east in iteration 1 to frame the Siberian Federal District (Irkutsk reaches
-// ~119E) alongside Belarus in the west.
+// Two camera presets (iteration 2). Full AOI frames Belarus through the Siberian FD;
+// West/Black Sea zooms the western theatre where most disruption and Crimea sit.
 const AOI_BOUNDS: [number, number, number, number] = [17.5, 40.0, 120.0, 74.0];
+const WEST_BOUNDS: [number, number, number, number] = [20.0, 41.0, 62.0, 62.0];
+
+// Context-country label anchors worth showing, plus the sea labels. Kept short so the
+// map does not turn into a name soup; positioned as HTML overlays (no glyph endpoint).
+const SEA_LABELS: { name: string; lon: number; lat: number; size: number }[] = [
+  { name: "BLACK SEA", lon: 34.0, lat: 43.3, size: 12 },
+  { name: "CASPIAN SEA", lon: 50.5, lat: 41.5, size: 11 },
+  { name: "BALTIC SEA", lon: 19.5, lat: 57.6, size: 10 },
+  { name: "BARENTS SEA", lon: 40.0, lat: 71.5, size: 10 },
+];
 
 interface HoverInfo {
   x: number;
@@ -36,7 +46,10 @@ interface HoverInfo {
   district: string;
   value: number;
   incidents: number;
+  special: boolean;
 }
+
+interface ScreenLabel { name: string; x: number; y: number; size: number; kind: "country" | "sea" }
 
 export default function MapPanel({
   bundle, step, filters, selected, onSelect, incidentsByRegion,
@@ -52,6 +65,7 @@ export default function MapPanel({
   const map = useRef<maplibregl.Map | null>(null);
   const [ready, setReady] = useState(false);
   const [hover, setHover] = useState<HoverInfo | null>(null);
+  const [labels, setLabels] = useState<ScreenLabel[]>([]);
 
   const regionMeta = useMemo(
     () => new Map(bundle.regions.map((r) => [r.code, r])),
@@ -117,6 +131,21 @@ export default function MapPanel({
     );
 
     m.on("load", () => {
+      // --- context geography (drawn first, underneath everything analytic) ---
+      m.addSource("ocean", { type: "geojson", data: bundle.ocean });
+      m.addSource("context-land", { type: "geojson", data: bundle.contextLand });
+      m.addSource("context-borders", { type: "geojson", data: bundle.contextBorders });
+
+      // Context geography is deliberately subordinate: darker than the analytic surface,
+      // faint borders. The sea is a distinct, slightly-blue dark so the Black Sea reads
+      // as water rather than void.
+      m.addLayer({ id: "ocean-fill", type: "fill", source: "ocean",
+        paint: { "fill-color": "#0a1622", "fill-opacity": 1 } });
+      m.addLayer({ id: "context-fill", type: "fill", source: "context-land",
+        paint: { "fill-color": "#0c1116", "fill-opacity": 1 } });
+      m.addLayer({ id: "context-line", type: "line", source: "context-borders",
+        paint: { "line-color": "#1a242f", "line-width": 0.5 } });
+
       m.addSource("regions", {
         type: "geojson",
         data: bundle.regionsGeo,
@@ -126,10 +155,12 @@ export default function MapPanel({
       m.addSource("assets", { type: "geojson", data: assetPoints });
       m.addSource("disruptions", { type: "geojson", data: disruptionPoints });
 
+      // Analytic (Russia+Belarus) regions carry the severity choropleth.
       m.addLayer({
         id: "regions-fill",
         type: "fill",
         source: "regions",
+        filter: ["!=", ["get", "special"], true],
         paint: {
           "fill-color": [
             "interpolate", ["linear"], ["coalesce", ["feature-state", "value"], 0],
@@ -139,22 +170,49 @@ export default function MapPanel({
         },
       });
 
+      // Crimea (and any context unit): deliberately NOT the Russian-region choropleth.
+      // A neutral slate fill with a distinct dashed violet outline marks it as a
+      // separately-identified context unit without adjudicating sovereignty by colour.
+      m.addLayer({
+        id: "special-fill",
+        type: "fill",
+        source: "regions",
+        filter: ["==", ["get", "special"], true],
+        paint: { "fill-color": "#2a2438", "fill-opacity": 0.72 },
+      });
+      m.addLayer({
+        id: "special-line",
+        type: "line",
+        source: "regions",
+        filter: ["==", ["get", "special"], true],
+        paint: {
+          "line-color": [
+            "case",
+            ["boolean", ["feature-state", "selected"], false], "#c4b5fd",
+            "#a98bfa",
+          ] as unknown as maplibregl.ExpressionSpecification,
+          "line-width": 1.4,
+          "line-dasharray": [3, 2],
+        },
+      });
+
       m.addLayer({
         id: "regions-line",
         type: "line",
         source: "regions",
+        filter: ["!=", ["get", "special"], true],
         paint: {
           "line-color": [
             "case",
             ["boolean", ["feature-state", "selected"], false], "#2ad4ee",
             ["boolean", ["feature-state", "hover"], false], "#7fe3f2",
-            "#0d151d",
+            "#3a5064",
           ] as unknown as maplibregl.ExpressionSpecification,
           "line-width": [
             "case",
             ["boolean", ["feature-state", "selected"], false], 2.2,
             ["boolean", ["feature-state", "hover"], false], 1.4,
-            0.6,
+            0.5,
           ] as unknown as maplibregl.ExpressionSpecification,
         },
       });
@@ -252,6 +310,7 @@ export default function MapPanel({
         district: meta?.district ?? "",
         value: state?.value ?? 0,
         incidents: incidentsByRegion.get(code)?.length ?? 0,
+        special: Boolean((f.properties as { special?: boolean } | undefined)?.special),
       });
     };
 
@@ -269,13 +328,19 @@ export default function MapPanel({
       onSelect(code === selected ? null : code);
     };
 
-    m.on("mousemove", "regions-fill", move);
-    m.on("mouseleave", "regions-fill", leave);
-    m.on("click", "regions-fill", click);
+    // Both the analytic choropleth and the Crimea context unit are interactive.
+    const layers = ["regions-fill", "special-fill"];
+    for (const layer of layers) {
+      m.on("mousemove", layer, move);
+      m.on("mouseleave", layer, leave);
+      m.on("click", layer, click);
+    }
     return () => {
-      m.off("mousemove", "regions-fill", move);
-      m.off("mouseleave", "regions-fill", leave);
-      m.off("click", "regions-fill", click);
+      for (const layer of layers) {
+        m.off("mousemove", layer, move);
+        m.off("mouseleave", layer, leave);
+        m.off("click", layer, click);
+      }
     };
   }, [ready, selected, onSelect, regionMeta, incidentsByRegion]);
 
@@ -324,16 +389,80 @@ export default function MapPanel({
     }
   }, [ready, filters.showLines, filters.showAssets, filters.classes]);
 
+  // --- context labels, projected to screen coordinates on every move --------
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready) return;
+    const countryAnchors = bundle.contextLand.features.map((f) => ({
+      name: (f.properties?.name as string) ?? "",
+      lon: (f.properties?.label_lon as number) ?? 0,
+      lat: (f.properties?.label_lat as number) ?? 0,
+    }));
+
+    const recompute = () => {
+      const b = m.getBounds();
+      const W = m.getContainer().clientWidth;
+      const H = m.getContainer().clientHeight;
+      const out: ScreenLabel[] = [];
+      const inView = (lon: number, lat: number) =>
+        lon >= b.getWest() && lon <= b.getEast() && lat >= b.getSouth() && lat <= b.getNorth();
+      for (const a of countryAnchors) {
+        if (!a.name || !inView(a.lon, a.lat)) continue;
+        const p = m.project([a.lon, a.lat]);
+        if (p.x < 4 || p.x > W - 4 || p.y < 4 || p.y > H - 4) continue;
+        out.push({ name: a.name.toUpperCase(), x: p.x, y: p.y, size: 10, kind: "country" });
+      }
+      for (const s of SEA_LABELS) {
+        if (!inView(s.lon, s.lat)) continue;
+        const p = m.project([s.lon, s.lat]);
+        out.push({ name: s.name, x: p.x, y: p.y, size: s.size, kind: "sea" });
+      }
+      setLabels(out);
+    };
+
+    recompute();
+    m.on("move", recompute);
+    m.on("resize", recompute);
+    return () => {
+      m.off("move", recompute);
+      m.off("resize", recompute);
+    };
+  }, [ready, bundle.contextLand]);
+
+  const flyTo = (bounds: [number, number, number, number]) => {
+    map.current?.fitBounds(bounds, { padding: 28, duration: 700 });
+  };
+
   const metricLabel = filters.metric === "esdi" ? "Disruption exposure" : "Recorded events";
 
   return (
     <div className="mapwrap">
       <div ref={container} className="map" />
 
+      {/* Context geography labels — HTML overlays, so the map needs no glyph endpoint. */}
+      {labels.map((l, i) => (
+        <div
+          key={`${l.name}-${i}`}
+          className={`geo-label ${l.kind}`}
+          style={{ left: l.x, top: l.y, fontSize: l.size }}
+        >
+          {l.name}
+        </div>
+      ))}
+
+      <div className="camera-controls">
+        <button className="ghost" onClick={() => flyTo(AOI_BOUNDS)}>Full AOI</button>
+        <button className="ghost" onClick={() => flyTo(WEST_BOUNDS)}>West / Black Sea</button>
+      </div>
+
       <div className="map-scope-note">
         Permanent and administrative basing only, aggregated to administrative region.
         This is a damage-assessment view of publicly reported disruption — it holds no
         current unit positions, readiness or operational status.
+        <span style={{ display: "block", marginTop: 4, color: "var(--violet)" }}>
+          Crimea (dashed outline) is internationally recognised as Ukraine and is shown as
+          a separate context unit, excluded from the Russia+Belarus index.
+        </span>
       </div>
 
       <div className="map-legend">
@@ -347,20 +476,33 @@ export default function MapPanel({
           <span>low</span>
           <span>high</span>
         </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 7, borderTop: "1px solid var(--line)", paddingTop: 6 }}>
+          <span style={{ width: 16, height: 8, border: "1px dashed #a98bfa", background: "#2a2438" }} />
+          <span style={{ fontSize: 9.5, color: "var(--text-faint)" }}>Crimea — context (excl. index)</span>
+        </div>
       </div>
 
       {hover && (
-        <div className="map-hover" style={{ left: hover.x, top: hover.y }}>
+        <div className="map-hover" style={{ left: hover.x, top: hover.y, borderColor: hover.special ? "#a98bfa" : undefined }}>
           <div style={{ fontSize: 12 }}>{hover.name}</div>
           <div className="eyebrow" style={{ marginTop: 2 }}>{hover.district}</div>
-          <div className="kv" style={{ marginTop: 5 }}>
-            <span className="k">{metricLabel}</span>
-            <span className="v">{filters.metric === "esdi" ? fmtNum(hover.value, 2) : hover.value}</span>
-          </div>
-          <div className="kv">
-            <span className="k">Events to date</span>
-            <span className="v">{hover.incidents}</span>
-          </div>
+          {hover.special ? (
+            <div style={{ fontSize: 10.5, color: "var(--violet)", marginTop: 5, lineHeight: 1.4 }}>
+              Context unit — internationally Ukraine, excluded from the index.<br />
+              Events to date: <span className="num">{hover.incidents}</span>
+            </div>
+          ) : (
+            <>
+              <div className="kv" style={{ marginTop: 5 }}>
+                <span className="k">{metricLabel}</span>
+                <span className="v">{filters.metric === "esdi" ? fmtNum(hover.value, 2) : hover.value}</span>
+              </div>
+              <div className="kv">
+                <span className="k">Events to date</span>
+                <span className="v">{hover.incidents}</span>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
