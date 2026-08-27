@@ -76,7 +76,8 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
           <H>Denominators</H>
           <ul>
             <li>Refining: {s.denominators.refining_mtpa} MTPA across the tracked national refinery inventory.</li>
-            <li>Electric power: {s.denominators.electric_power_mw.toLocaleString("en-GB")} MW installed in the area of interest.</li>
+            <li>Electric generation: {s.denominators.electric_generation_mw.toLocaleString("en-GB")} MW installed in the area of interest (a capacity share).</li>
+            <li>Transmission: an event/recovery-burden measure against a saturation of {s.denominators.transmission_saturation_events} weighted concurrent facility-events — never a capacity-offline claim.</li>
             <li>Oil logistics uses the refining base as a proxy; it has no published throughput denominator.</li>
             {s.sectors_uncovered.length > 0 && (
               <li style={{ color: "var(--amber)" }}>

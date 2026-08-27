@@ -113,14 +113,15 @@ def _facility_weight(incs, when, recovery_by_incident):
 
 
 def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of,
-          recovery_by_incident=None):
+          recovery_by_incident=None, transmission_lines_by_region=None):
     """Return (national_series, regional_series, snapshot)."""
     recovery_by_incident = recovery_by_incident or {}
     step = SCORING["timeline"]["step_days"]
     timeline = _dates(WINDOW_START, as_of, step)
 
     facility_info = _facility_registry(facilities, incidents, assets)
-    denominators = _denominators(assets, refinery_total_mtpa, region_meta)
+    denominators = _denominators(assets, refinery_total_mtpa, region_meta,
+                                 transmission_lines_by_region)
 
     # Regions excluded from the Russia+Belarus headline composite (Crimea). Their events
     # are still tracked and get their own regional exposure, but never feed the national
@@ -222,13 +223,18 @@ def _facility_registry(facilities, incidents, assets):
             "region_code": inc.get("region_code"),
             "capacity_mtpa": inc.get("capacity_affected_mtpa") or (linked or {}).get("capacity_mtpa"),
             "capacity_mw": inc.get("capacity_affected_mw") or (linked or {}).get("capacity_mw"),
+            "voltage_kv": inc.get("voltage_kv") or (linked or {}).get("voltage_kv"),
             "linked_asset_id": inc.get("linked_asset_id"),
         }
     return reg
 
 
-def _denominators(assets, refinery_total_mtpa, region_meta):
+SATURATION_EVENTS = SCORING["transmission"]["saturation_events"]
+
+
+def _denominators(assets, refinery_total_mtpa, region_meta, transmission_lines_by_region=None):
     """National and per-region bases each sector's exposure is measured against."""
+    transmission_lines_by_region = transmission_lines_by_region or {}
     nat = {s: 0.0 for s in SECTORS}
     per_region = {code: {s: 0.0 for s in SECTORS} for code in region_meta}
     # Crimea and any esdi-excluded region never contribute to the national denominator.
@@ -236,38 +242,69 @@ def _denominators(assets, refinery_total_mtpa, region_meta):
 
     nat["refining"] = refinery_total_mtpa
 
+    # Electric GENERATION: installed MW from power plants (a capacity share).
     for a in assets:
-        sector = SECTOR_OF_CLASS.get(a["asset_class"])
-        if sector != "electric_power":
+        if SECTOR_OF_CLASS.get(a["asset_class"]) != "electric_generation":
             continue
         if a["region_code"] in esdi_excluded:
             continue
         mw = a.get("capacity_mw") or 0
-        nat["electric_power"] += mw
+        nat["electric_generation"] += mw
         if a["region_code"] in per_region:
-            per_region[a["region_code"]]["electric_power"] += mw
+            per_region[a["region_code"]]["electric_generation"] += mw
+
+    # Transmission network CONTEXT (not a hard denominator): tracked substation and
+    # HV-line counts per region. Shown alongside the event-burden exposure.
+    tx_context = {code: {"substations": 0, "lines": 0} for code in region_meta}
+    for a in assets:
+        if a["asset_class"] == "substation" and a["region_code"] in tx_context:
+            tx_context[a["region_code"]]["substations"] += 1
+    for code, n in transmission_lines_by_region.items():
+        if code in tx_context:
+            tx_context[code]["lines"] += n
 
     # oil_logistics has no published national throughput base; measure it against the
     # refining base, which is the volume the logistics chain exists to move. Flagged
     # as a proxy in the emitted metadata.
     nat["oil_logistics"] = refinery_total_mtpa
 
-    return {"national": nat, "regional": per_region}
+    # Transmission's "denominator" is the saturation constant (event-burden basis).
+    nat["transmission"] = SATURATION_EVENTS
+
+    return {"national": nat, "regional": per_region, "tx_context": tx_context}
 
 
 def _share(info, denominators):
-    """Fraction of the national base this facility represents."""
+    """Per-facility contribution to its sector's exposure.
+
+    Capacity sectors return the facility's fraction of the national capacity base.
+    Transmission (event_burden) returns a saturation-scaled unit: each disrupted
+    transmission facility is one weighted event out of `saturation_events`, so the
+    summed burden saturates at exposure 100 -- never a capacity-offline claim.
+    """
     sector = info["sector"]
-    nat = denominators["national"].get(sector, 0)
-    if not nat:
-        return 0.0
     if sector in ("refining", "oil_logistics"):
+        nat = denominators["national"].get(sector, 0)
         cap = info.get("capacity_mtpa")
-        return (cap / nat) if cap else 0.0
-    if sector == "electric_power":
+        return (cap / nat) if (nat and cap) else 0.0
+    if sector == "electric_generation":
+        nat = denominators["national"].get(sector, 0)
         cap = info.get("capacity_mw")
-        return (cap / nat) if cap else 0.0
+        return (cap / nat) if (nat and cap) else 0.0
+    if sector == "transmission":
+        return _voltage_weight(info) / SATURATION_EVENTS
     return 0.0
+
+
+def _voltage_weight(info):
+    """Weight a transmission facility by voltage class where known; default 1.0."""
+    vw = SCORING["transmission"]["voltage_weight"]
+    kv = info.get("voltage_kv")
+    if kv:
+        for band in ("750", "500", "330", "220", "110"):
+            if kv >= int(band):
+                return vw[band]
+    return vw["default"]
 
 
 def _incident_recovery_state(incident, record, today):
@@ -358,30 +395,37 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
         struck = {i["asset_id"] for i in r_inc}
         r_live = [x for x in live if x["region_code"] == code]
 
-        disrupted_mw = sum(
-            (facility_info[x["asset_id"]].get("capacity_mw") or 0) * x["disruption_weight"]
-            for x in r_live
+        finfo = lambda x: facility_info[x["asset_id"]]
+        disrupted_gen_mw = sum(
+            (finfo(x).get("capacity_mw") or 0) * x["disruption_weight"]
+            for x in r_live if finfo(x).get("sector") == "electric_generation"
         )
-        installed_mw = denominators["regional"][code]["electric_power"]
+        installed_mw = denominators["regional"][code]["electric_generation"]
         disrupted_mtpa = sum(
-            (facility_info[x["asset_id"]].get("capacity_mtpa") or 0) * x["disruption_weight"]
-            for x in r_live
-            if facility_info[x["asset_id"]].get("sector") == "refining"
+            (finfo(x).get("capacity_mtpa") or 0) * x["disruption_weight"]
+            for x in r_live if finfo(x).get("sector") == "refining"
         )
         thermal_disrupted = sum(
-            (facility_info[x["asset_id"]].get("capacity_mw") or 0) * x["disruption_weight"]
-            for x in r_live
-            if facility_info[x["asset_id"]].get("asset_class") == "power_plant_thermal"
+            (finfo(x).get("capacity_mw") or 0) * x["disruption_weight"]
+            for x in r_live if finfo(x).get("asset_class") == "power_plant_thermal"
         )
+        tx_burden = sum(
+            _voltage_weight(finfo(x)) * x["disruption_weight"]
+            for x in r_live if finfo(x).get("sector") == "transmission"
+        )
+        tx_ctx = denominators["tx_context"].get(code, {"substations": 0, "lines": 0})
         unresolved = [x for x in r_live if not x["recovery"]["resolved"]]
 
         effects = {
-            "generation_margin": _pct(disrupted_mw, installed_mw),
+            "generation_margin": _pct(disrupted_gen_mw, installed_mw),
             "fuel_production": _pct(disrupted_mtpa, denominators["national"]["refining"]),
             "logistics": round(
                 sum(x["disruption_weight"] for x in r_live
-                    if facility_info[x["asset_id"]].get("sector") == "oil_logistics"), 2
+                    if finfo(x).get("sector") == "oil_logistics"), 2
             ),
+            # Transmission is event-burden, not capacity: show the weighted burden and
+            # the tracked network context, never a "% offline".
+            "transmission_burden": round(tx_burden, 2),
             "heating_season_exposure": (
                 _pct(thermal_disrupted, installed_mw) if heating else 0.0
             ),
@@ -407,6 +451,8 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             "live_disruption_count": len(r_live),
             "unresolved_count": len(unresolved),
             "installed_mw": round(installed_mw),
+            "tracked_substations": tx_ctx["substations"],
+            "tracked_transmission_lines": tx_ctx["lines"],
             "effects": effects,
         }
 
@@ -419,7 +465,8 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
         "heating_season": heating,
         "denominators": {
             "refining_mtpa": round(denominators["national"]["refining"], 1),
-            "electric_power_mw": round(denominators["national"]["electric_power"]),
+            "electric_generation_mw": round(denominators["national"]["electric_generation"]),
+            "transmission_saturation_events": SATURATION_EVENTS,
         },
         "incident_total": len(incidents),
         "incidents_with_quantified_capacity": quantified,

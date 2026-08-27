@@ -106,21 +106,41 @@
   },
 
   "sector_weights": {
-    "_comment": "Contribution of each sector to the national composite. A judgement call about systemic importance, not a measured quantity. Sums to 1.0.",
+    "_comment": "Contribution of each sector to the national composite. A judgement call about systemic importance, not a measured quantity. Sums to 1.0. Iteration 3 split the old electric_power 0.30 into generation 0.20 + transmission 0.10.",
     "refining": 0.35,
-    "electric_power": 0.30,
+    "electric_generation": 0.20,
+    "transmission": 0.10,
     "oil_logistics": 0.20,
     "gas": 0.10,
     "coal": 0.05
   },
 
+  "transmission": {
+    "_comment": [
+      "Transmission is an EVENT/RECOVERY-BURDEN exposure, never a capacity-offline claim.",
+      "Each disrupted transmission facility contributes its evidence/recency/recovery",
+      "weight; the regional or national burden is that sum. Exposure (0-100) saturates:",
+      "exposure = 100 * min(1, burden / saturation_events). saturation_events is the",
+      "weighted count of concurrently-disrupted transmission facilities taken as 'fully",
+      "exposed'. This is a documented judgement, not a measurement. The region's tracked",
+      "substation and HV-line counts are shown as CONTEXT alongside, never as a hard",
+      "denominator, because a strike affects a neighbourhood of the grid, not one node."
+    ],
+    "saturation_events": 8.0,
+    "voltage_weight": {
+      "_comment": "Optional weight by voltage class where a source states it; default 1.0.",
+      "750": 2.0, "500": 1.6, "330": 1.3, "220": 1.0, "110": 0.7, "default": 1.0
+    }
+  },
+
   "sector_basis": {
-    "_comment": "What denominator each sector's exposure is measured against. 'capacity' uses MW or MTPA; 'count' falls back to number of assets because the class has no published capacity figure. Count-based sectors are flagged in the output so the UI can mark them as weaker measures.",
+    "_comment": "How each sector's exposure is measured. 'capacity' uses MW or MTPA share; 'event_burden' uses a weighted count against a saturation constant (transmission), because no defensible capacity denominator exists.",
     "refining": "capacity_mtpa",
-    "electric_power": "capacity_mw",
+    "electric_generation": "capacity_mw",
     "oil_logistics": "capacity_mtpa",
-    "gas": "count",
-    "coal": "count"
+    "transmission": "event_burden",
+    "gas": "event_burden",
+    "coal": "event_burden"
   },
 
   "heating_season_months": [10, 11, 12, 1, 2, 3, 4],

@@ -740,3 +740,47 @@ def test_web_crimea_feature_flagged_special():
     crimea = [f for f in regions["features"] if f["properties"]["code"] == "UA-CR"]
     assert len(crimea) == 1
     assert crimea[0]["properties"]["special"] is True, "the map keys Crimea styling on special=true"
+
+
+# --------------------------------------------------------------------------
+# Iteration 3: generation / transmission separation
+# --------------------------------------------------------------------------
+
+def test_electric_split_into_generation_and_transmission():
+    from pipeline.config import SECTOR_OF_CLASS, SECTORS
+    assert "electric_generation" in SECTORS and "transmission" in SECTORS
+    assert "electric_power" not in SECTORS
+    assert SECTOR_OF_CLASS["power_plant_thermal"] == "electric_generation"
+    assert SECTOR_OF_CLASS["substation"] == "transmission"
+    assert SECTOR_OF_CLASS["transmission_line"] == "transmission"
+
+
+def test_transmission_is_event_burden_not_capacity():
+    """A substation must contribute an event-burden unit, never a capacity share, and a
+    generation plant must contribute a capacity share."""
+    from pipeline.build_index import _share, SATURATION_EVENTS
+    sub = {"sector": "transmission", "voltage_kv": 500}
+    unit = _share(sub, {"national": {}})
+    assert unit > 0  # event-burden unit, independent of any capacity
+    # a 110 kV substation weighs less than a 500 kV one
+    assert _share({"sector": "transmission", "voltage_kv": 110}, {"national": {}}) < unit
+    # generation uses capacity share
+    gen = {"sector": "electric_generation", "capacity_mw": 1000}
+    assert _share(gen, {"national": {"electric_generation": 200000}}) == pytest.approx(1000 / 200000)
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_transmission_measure_never_claims_capacity_offline():
+    """The emitted snapshot must express transmission as burden/context, not lost MW."""
+    snap = _snapshot()
+    assert "transmission" in snap["sectors"]
+    assert "electric_generation" in snap["sectors"]
+    # No transmission-capacity denominator is emitted; a saturation constant is.
+    assert "transmission_saturation_events" in snap["denominators"]
+    assert "electric_power_mw" not in snap["denominators"]
+    # Regions carry tracked-network context, not a transmission-capacity figure.
+    for r in snap["regions"].values():
+        assert "tracked_substations" in r and "tracked_transmission_lines" in r
+        assert "transmission_burden" in r["effects"]
+        break

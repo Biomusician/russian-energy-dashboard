@@ -10,6 +10,7 @@ a scheduled job is the whole backend.
 """
 
 import argparse
+import collections
 import datetime as dt
 import shutil
 
@@ -68,6 +69,9 @@ def load_curated_incidents():
                 "capacity_affected_mw": _num(row.get("capacity_affected_mw")),
                 "capacity_affected_mtpa": _num(row.get("capacity_affected_mtpa")),
                 "capacity_affected_pct": _num(row.get("capacity_affected_pct")),
+                # Transmission voltage class (kV) where a source states it — weights the
+                # transmission event-burden. Not a capacity figure.
+                "voltage_kv": _num(row.get("voltage_kv")),
                 # Cost / economic scaffolding (iteration 1). Null unless a source gives a
                 # figure. reported = a source stated it; estimated = an external estimate;
                 # never a value the pipeline invents.
@@ -186,6 +190,14 @@ def main():
         f"{len(incidents) - len(in_aoi)} unplaced"
     )
 
+    # Transmission network context: HV-line count per region (transmission exposure is
+    # event-burden, but the tracked network is shown as context in each region dossier).
+    tx_lines_by_region = collections.Counter(
+        f["properties"]["region_code"] for f in lines
+        if f["properties"].get("asset_class") in ("transmission_line", "interconnector")
+        and f["properties"].get("region_code")
+    )
+
     national, regional, snapshot = build_index.build(
         incidents=in_aoi,
         facilities=wiki_facilities,
@@ -194,6 +206,7 @@ def main():
         region_meta=region_meta,
         as_of=args.as_of,
         recovery_by_incident=recovery_by_incident,
+        transmission_lines_by_region=dict(tx_lines_by_region),
     )
 
     enumerated = len(in_aoi)

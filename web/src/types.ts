@@ -77,6 +77,7 @@ export interface RegionEffects {
   generation_margin: number | null;
   fuel_production: number | null;
   logistics: number | null;
+  transmission_burden: number | null;
   heating_season_exposure: number | null;
   repair_burden: number | null;
   recurrence: number | null;
@@ -100,7 +101,17 @@ export interface RegionSnapshot {
   live_disruption_count: number;
   unresolved_count: number;
   installed_mw: number;
+  tracked_substations: number;
+  tracked_transmission_lines: number;
+  regional_intensity?: RegionalIntensity;
   effects: RegionEffects;
+}
+
+export interface RegionalIntensity {
+  composite: number | null;
+  sectors: Record<string, number | null>;
+  covered_sectors: string[];
+  missing_sectors: string[];
 }
 
 export type EvidenceKind = "observed" | "estimated" | "modelled";
@@ -203,7 +214,7 @@ export interface Snapshot {
   sectors_covered: string[];
   sectors_uncovered: string[];
   heating_season: boolean;
-  denominators: { refining_mtpa: number; electric_power_mw: number };
+  denominators: { refining_mtpa: number; electric_generation_mw: number; transmission_saturation_events: number };
   incident_total: number;
   incidents_with_quantified_capacity: number;
   assessed_degradation: AssessedDegradation;

@@ -285,14 +285,18 @@ ASSET_CLASSES = {
 
 # Which sub-index each asset class rolls up into. Classes absent from this map do
 # not contribute to any sub-index (they are shown on the map but not scored).
+# Iteration 3: electric power is split into GENERATION (plants, a capacity-share
+# measure against installed MW) and TRANSMISSION (substations + HV lines, an
+# event/recovery-burden measure -- never a lost-MW claim, because a substation strike
+# does not remove generation capacity). Conflating them was methodologically wrong.
 SECTOR_OF_CLASS = {
-    "power_plant_thermal": "electric_power",
-    "power_plant_nuclear": "electric_power",
-    "power_plant_hydro":   "electric_power",
-    "power_plant_other":   "electric_power",
-    "substation":          "electric_power",
-    "transmission_line":   "electric_power",
-    "interconnector":      "electric_power",
+    "power_plant_thermal": "electric_generation",
+    "power_plant_nuclear": "electric_generation",
+    "power_plant_hydro":   "electric_generation",
+    "power_plant_other":   "electric_generation",
+    "substation":          "transmission",
+    "transmission_line":   "transmission",
+    "interconnector":      "transmission",
     "refinery":            "refining",
     "oil_terminal":        "oil_logistics",
     "pipeline_oil":        "oil_logistics",
@@ -303,11 +307,25 @@ SECTOR_OF_CLASS = {
 }
 
 SECTORS = {
-    "refining":       "Refining",
-    "electric_power": "Electric power",
-    "oil_logistics":  "Oil logistics & export",
-    "gas":            "Gas",
-    "coal":           "Coal",
+    "refining":            "Refining",
+    "electric_generation": "Electric generation",
+    "transmission":        "Transmission",
+    "oil_logistics":       "Oil logistics & export",
+    "gas":                 "Gas",
+    "coal":                "Coal",
+}
+
+# How each sector's exposure is measured. "capacity" = disrupted capacity / tracked
+# capacity (a share). "event_burden" = evidence/recency-weighted count of disrupted
+# facilities against a documented saturation constant -- used where no defensible
+# capacity denominator exists (transmission). The distinction is documented in the UI.
+SECTOR_BASIS = {
+    "refining":            "capacity",
+    "electric_generation": "capacity",
+    "oil_logistics":       "capacity",
+    "transmission":        "event_burden",
+    "gas":                 "event_burden",
+    "coal":                "event_burden",
 }
 
 DISRUPTION_CAUSES = {
