@@ -21,13 +21,18 @@ WINDOW_START = "2022-01-01"
 # ---------------------------------------------------------------------------
 # Area of interest
 # ---------------------------------------------------------------------------
-# The brief says "Russia west of the SFD division". We read SFD as the Siberian
-# Federal District and take the AOI to be every federal district west of the
-# Siberian FD's western boundary, plus Belarus. That is six of Russia's eight
-# federal districts; Siberian and Far Eastern are out of scope.
+# The AOI is now explicitly locked as: Belarus, the six western Russian federal
+# districts, and the Siberian Federal District. This supersedes the earlier,
+# ambiguous "west of the division" phrasing from the original brief (see
+# docs/METHODOLOGY.md for how that phrase was interpreted and then retired).
 #
-# This assumption is documented in docs/METHODOLOGY.md and is changed by editing
-# AOI_FEDERAL_DISTRICTS below.
+# The Far Eastern Federal District is deliberately DEFINED but NOT ENABLED: its
+# regions and geometry are carried in FE_REGIONS so it can be turned on by adding
+# "Far Eastern" to AOI_FEDERAL_DISTRICTS below, with no other code change. It is left
+# off because open-source disruption reporting for the Far East is currently thin and
+# the analytic value does not yet justify the added surface.
+#
+# Every geographic membership decision is a single edit to this set.
 AOI_FEDERAL_DISTRICTS = {
     "Central",
     "Northwestern",
@@ -35,7 +40,12 @@ AOI_FEDERAL_DISTRICTS = {
     "North Caucasian",
     "Volga",
     "Ural",
+    "Siberian",
 }
+
+# All federal districts we carry geometry for, whether enabled or not. Enabling the
+# Far Eastern FD is adding its name to AOI_FEDERAL_DISTRICTS above.
+DEFINED_FEDERAL_DISTRICTS = AOI_FEDERAL_DISTRICTS | {"Far Eastern"}
 
 # Natural Earth's own `region` property is stale: it predates the 2010 creation of
 # the North Caucasian Federal District and files the entire Southern FD under
@@ -120,6 +130,42 @@ RU_REGIONS = {
     "Yamal-Nenets":           ("RU-YAN", "Yamalo-Nenets AO",           "Ural"),
 }
 
+# Siberian Federal District — added in iteration 1. Ten federal subjects.
+#
+# Note on Buryatia and Zabaykalsky Krai: Natural Earth's `region` field still files
+# both under "Siberian", but they were transferred to the Far Eastern Federal District
+# in November 2018. We follow the current administrative reality and place them in
+# FE_REGIONS, so they are Far Eastern and (for now) out of the enabled AOI.
+SI_REGIONS = {
+    "Altay":       ("RU-ALT", "Altai Krai",              "Siberian"),
+    "Gorno-Altay": ("RU-AL",  "Altai Republic",          "Siberian"),
+    "Irkutsk":     ("RU-IRK", "Irkutsk Oblast",          "Siberian"),
+    "Kemerovo":    ("RU-KEM", "Kemerovo Oblast (Kuzbass)", "Siberian"),
+    "Khakass":     ("RU-KK",  "Republic of Khakassia",   "Siberian"),
+    "Krasnoyarsk": ("RU-KYA", "Krasnoyarsk Krai",        "Siberian"),
+    "Novosibirsk": ("RU-NVS", "Novosibirsk Oblast",      "Siberian"),
+    "Omsk":        ("RU-OMS", "Omsk Oblast",             "Siberian"),
+    "Tomsk":       ("RU-TOM", "Tomsk Oblast",            "Siberian"),
+    "Tuva":        ("RU-TY",  "Tuva Republic",           "Siberian"),
+}
+
+# Far Eastern Federal District — DEFINED but not enabled. Present so the AOI can be
+# extended east by a one-line change to AOI_FEDERAL_DISTRICTS, with no refactor. Eleven
+# federal subjects (including Buryatia and Zabaykalsky Krai, transferred here in 2018).
+FE_REGIONS = {
+    "Amur":                     ("RU-AMU", "Amur Oblast",                 "Far Eastern"),
+    "Buryat":                   ("RU-BU",  "Republic of Buryatia",        "Far Eastern"),
+    "Chita":                    ("RU-ZAB", "Zabaykalsky Krai",            "Far Eastern"),
+    "Chukchi Autonomous Okrug": ("RU-CHU", "Chukotka Autonomous Okrug",   "Far Eastern"),
+    "Kamchatka":                ("RU-KAM", "Kamchatka Krai",              "Far Eastern"),
+    "Khabarovsk":               ("RU-KHA", "Khabarovsk Krai",             "Far Eastern"),
+    "Maga Buryatdan":           ("RU-MAG", "Magadan Oblast",              "Far Eastern"),
+    "Primor'ye":                ("RU-PRI", "Primorsky Krai",              "Far Eastern"),
+    "Sakha (Yakutia)":          ("RU-SA",  "Sakha Republic (Yakutia)",    "Far Eastern"),
+    "Sakhalin":                 ("RU-SAK", "Sakhalin Oblast",             "Far Eastern"),
+    "Yevrey":                   ("RU-YEV", "Jewish Autonomous Oblast",    "Far Eastern"),
+}
+
 BY_REGIONS = {
     "Brest":         ("BY-BR", "Brest Region",   "Belarus"),
     "Gomel":         ("BY-HO", "Gomel Region",   "Belarus"),
@@ -130,16 +176,40 @@ BY_REGIONS = {
     "Vitebsk":       ("BY-VI", "Vitebsk Region", "Belarus"),
 }
 
+# Every Russian federal subject we model, in one place. Occupied Ukrainian territory
+# is deliberately absent: it is internationally recognised as Ukraine, is not a Russian
+# federal subject, and never enters this dataset.
+ALL_RU_REGIONS = {**RU_REGIONS, **SI_REGIONS, **FE_REGIONS}
+
 
 def aoi_regions():
-    """Return {natural_earth_name: (code, display_name, district, country)} for the AOI."""
+    """Return {natural_earth_name: (code, display_name, district, country)} for the AOI.
+
+    A region is in the AOI iff its federal district is currently enabled in
+    AOI_FEDERAL_DISTRICTS. Belarus is always in.
+    """
     out = {}
-    for ne_name, (code, name, district) in RU_REGIONS.items():
+    for ne_name, (code, name, district) in ALL_RU_REGIONS.items():
         if district in AOI_FEDERAL_DISTRICTS:
             out[ne_name] = (code, name, district, "RU")
     for ne_name, (code, name, district) in BY_REGIONS.items():
         out[ne_name] = (code, name, district, "BY")
     return out
+
+
+def out_of_aoi_regions():
+    """{display_name: district} for every modelled Russian region NOT in the enabled AOI.
+
+    Derived, not hand-maintained: a region is out-of-AOI exactly when its district is
+    defined but not enabled. This lets region resolution recognise, e.g., a Far Eastern
+    facility and report it as "out of area" rather than as an unresolved parse failure —
+    a distinction the pipeline depends on to surface genuine breakage.
+    """
+    return {
+        name: district
+        for (_code, name, district) in ALL_RU_REGIONS.values()
+        if district not in AOI_FEDERAL_DISTRICTS
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -207,31 +277,19 @@ CONFIDENCE_LEVELS = ["confirmed", "probable", "possible", "unverified"]
 
 STATUS_VALUES = ["active", "degraded", "repaired", "unknown"]
 
-
-# Russian federal subjects deliberately OUTSIDE the AOI. Listed only so that a
-# source naming one can be recognised and reported as "out of area" rather than
-# landing in the unresolved-region bucket, which is reserved for genuine parse
-# failures. Siberian and Far Eastern federal districts.
-OUT_OF_AOI_REGIONS = {
-    "Omsk Oblast": "Siberian",
-    "Novosibirsk Oblast": "Siberian",
-    "Tomsk Oblast": "Siberian",
-    "Kemerovo Oblast": "Siberian",
-    "Irkutsk Oblast": "Siberian",
-    "Krasnoyarsk Krai": "Siberian",
-    "Altai Krai": "Siberian",
-    "Altai Republic": "Siberian",
-    "Republic of Khakassia": "Siberian",
-    "Tuva Republic": "Siberian",
-    "Republic of Buryatia": "Far Eastern",
-    "Zabaykalsky Krai": "Far Eastern",
-    "Amur Oblast": "Far Eastern",
-    "Primorsky Krai": "Far Eastern",
-    "Khabarovsk Krai": "Far Eastern",
-    "Sakhalin Oblast": "Far Eastern",
-    "Magadan Oblast": "Far Eastern",
-    "Kamchatka Krai": "Far Eastern",
-    "Chukotka Autonomous Okrug": "Far Eastern",
-    "Sakha Republic": "Far Eastern",
-    "Jewish Autonomous Oblast": "Far Eastern",
+# ---------------------------------------------------------------------------
+# Analytic concept separation (iteration 1)
+# ---------------------------------------------------------------------------
+# Four distinct concepts the data model and UI must never blur together. A reported
+# strike is not quantified degradation; a reported restart is not full reconstitution;
+# unknown stays unknown.
+ANALYTIC_CONCEPTS = {
+    "exposure":    "Disruption exposure",
+    "degradation": "Assessed degradation",
+    "recovery":    "Recovery / restoration",
+    "confidence":  "Data confidence / coverage",
 }
+
+# How a value was arrived at. Kept structurally so the UI can render observed and
+# estimated facts in visibly different language and never present one as the other.
+EVIDENCE_KINDS = ["observed", "estimated", "modelled", "unknown", "not_applicable"]

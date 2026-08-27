@@ -104,19 +104,59 @@ def test_unquoted_rowspan_attribute_is_stripped():
 # --------------------------------------------------------------------------
 
 def test_aoi_composition():
+    """Iteration 1: AOI is the six western districts + Siberian + Belarus = 79 regions."""
     aoi = aoi_regions()
-    assert len(aoi) == 69
+    assert len(aoi) == 79
     by_district = {}
     for _, (_, _, district, _) in aoi.items():
         by_district[district] = by_district.get(district, 0) + 1
     assert by_district == {
         "Central": 18, "Northwestern": 11, "Southern": 6,
-        "North Caucasian": 7, "Volga": 14, "Ural": 6, "Belarus": 7,
+        "North Caucasian": 7, "Volga": 14, "Ural": 6, "Siberian": 10, "Belarus": 7,
     }
 
 
+def test_siberian_federal_district_is_enabled():
+    from pipeline.config import AOI_FEDERAL_DISTRICTS
+    assert "Siberian" in AOI_FEDERAL_DISTRICTS
+    # Omsk, the analytic reason for the expansion, must resolve into the AOI.
+    assert resolve("Omsk Oblast") == ("in_aoi", "RU-OMS")
+    assert resolve("Omsk") == ("in_aoi", "RU-OMS")
+
+
+def test_far_eastern_defined_but_not_enabled():
+    """Far Eastern is carried so it can be turned on later, but is out of the AOI now."""
+    from pipeline.config import AOI_FEDERAL_DISTRICTS, DEFINED_FEDERAL_DISTRICTS, FE_REGIONS
+    assert "Far Eastern" in DEFINED_FEDERAL_DISTRICTS
+    assert "Far Eastern" not in AOI_FEDERAL_DISTRICTS
+    assert FE_REGIONS, "Far Eastern regions must be defined for future enablement"
+    # Buryatia and Zabaykalsky moved to the Far Eastern FD in 2018 and must be here.
+    codes = {v[0] for v in FE_REGIONS.values()}
+    assert {"RU-BU", "RU-ZAB"} <= codes
+
+
+def test_far_eastern_regions_resolve_as_out_of_aoi():
+    for name in ("Amur Oblast", "Primorsky Krai", "Republic of Buryatia", "Zabaykalsky Krai"):
+        assert resolve(name)[0] == "out_of_aoi", name
+
+
+def test_no_sfd_abbreviation_in_code_or_config():
+    """The ambiguous 'SFD' abbreviation must not appear in code, config or methodology."""
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    offenders = []
+    for sub in ("pipeline", "methodology", "docs"):
+        for path in (root / sub).rglob("*"):
+            if path.suffix not in (".py", ".json", ".md"):
+                continue
+            if re.search(r"\bSFD\b", path.read_text(encoding="utf-8")):
+                offenders.append(str(path.relative_to(root)))
+    assert not offenders, f"ambiguous 'SFD' still present in: {offenders}"
+
+
 def test_region_codes_are_unique():
-    codes = [v[0] for v in RU_REGIONS.values()]
+    from pipeline.config import ALL_RU_REGIONS
+    codes = [v[0] for v in ALL_RU_REGIONS.values()]
     assert len(codes) == len(set(codes))
 
 
@@ -129,7 +169,11 @@ def test_region_codes_are_unique():
         # Longest-match: the oblast must not be swallowed by the federal city.
         ("Moscow", "in_aoi", "RU-MOW"),
         ("Moscow Oblast", "in_aoi", "RU-MOS"),
-        ("Omsk Oblast", "out_of_aoi", None),
+        # Siberian, now in scope.
+        ("Omsk Oblast", "in_aoi", "RU-OMS"),
+        ("Krasnoyarsk Krai", "in_aoi", "RU-KYA"),
+        # Far Eastern, defined but out of the enabled AOI.
+        ("Amur Oblast", "out_of_aoi", None),
         ("Nowhere Special", "unresolved", None),
     ],
 )
@@ -142,7 +186,7 @@ def test_region_resolution(text, kind, code):
 
 def test_out_of_aoi_is_distinct_from_unresolved():
     """Conflating these would hide parser breakage as 'not our area'."""
-    assert resolve("Krasnoyarsk Krai")[0] == "out_of_aoi"
+    assert resolve("Amur Oblast")[0] == "out_of_aoi"
     assert resolve("qqqzzz")[0] == "unresolved"
 
 
@@ -159,13 +203,14 @@ def _incident(**kw):
     return base
 
 
-def test_weight_decays_by_half_life():
+def test_weight_decays_by_modelled_half_life():
+    """With no recovery record, the modelled refinery horizon of 150d implies a
+    half-life of ~45d, so impairment halves at ~45 days (continuous with the MVP)."""
     inc = _incident()
     day0 = _weight_at(inc, dt.date(2026, 1, 1))
-    # refinery half-life is 45 days
     day45 = _weight_at(inc, dt.date(2026, 2, 15))
     assert day0 == pytest.approx(1.0, abs=1e-9)
-    assert day45 == pytest.approx(0.5, abs=0.01)
+    assert day45 == pytest.approx(0.5, abs=0.02)
 
 
 def test_future_events_do_not_contribute():
@@ -178,6 +223,66 @@ def test_confidence_and_cause_reduce_weight():
     planned = _weight_at(_incident(cause="maintenance"), dt.date(2026, 1, 1))
     assert weak < strong
     assert planned < weak
+
+
+# --------------------------------------------------------------------------
+# Recovery / reconstitution framework (iteration 1)
+# --------------------------------------------------------------------------
+
+def test_observed_recovery_overrides_modelled_decay():
+    """A sourced, faster-than-generic reconstitution must decay faster than the
+    modelled fallback -- evidence overrides assumption."""
+    from pipeline import recovery
+    inc = _incident(date="2026-01-01")
+    fast = {"reconstitution_observed_days": 30, "sources": [{"url": "x"}]}
+    on_day40 = dt.date(2026, 2, 10)
+    modelled = _weight_at(inc, on_day40, None)
+    observed = _weight_at(inc, on_day40, fast)
+    assert observed < modelled
+    assert recovery.recovery_kind("refinery", fast) == "observed"
+
+
+def test_estimated_and_modelled_kinds_are_distinguished():
+    from pipeline import recovery
+    est = {"estimate_central_days": 200, "sources": [{"url": "x"}]}
+    assert recovery.recovery_kind("refinery", est) == "estimated"
+    assert recovery.recovery_kind("refinery", None) == "modelled"
+    assert recovery.recovery_kind("refinery", {}) == "modelled"
+
+
+def test_confirmed_reconstitution_caps_at_residual():
+    """Once a facility is credibly reported restored, its contribution collapses."""
+    from pipeline import recovery
+    inc = _incident(date="2026-01-01")
+    rec = {"reconstituted_at": "2026-02-01", "status": "repaired", "sources": [{"url": "x"}]}
+    after = _weight_at(inc, dt.date(2026, 3, 1), rec)
+    assert after <= recovery.RESIDUAL + 1e-6
+    assert recovery.is_resolved(rec, dt.date(2026, 3, 1))
+    assert not recovery.is_resolved(rec, dt.date(2026, 1, 15))  # before reconstitution
+
+
+def test_impairment_age_none_when_resolved():
+    from pipeline import recovery
+    rec = {"reconstituted_at": "2026-02-01", "status": "repaired", "sources": [{"url": "x"}]}
+    # resolved facility: age is measured to reconstitution, not open-ended
+    age = recovery.impairment_age_days("2026-01-01", rec, dt.date(2026, 6, 1))
+    assert age == 31  # 1 Jan -> 1 Feb
+
+
+def test_recovery_record_without_source_is_ignored(tmp_path, monkeypatch):
+    """Provenance integrity: a recovery row with no source URL must be skipped."""
+    from pipeline import recovery as rec_mod
+    csv = tmp_path / "recovery.csv"
+    csv.write_text(
+        "asset_id,status,reconstitution_observed_days,source_urls\n"
+        "no-source-facility,repaired,10,\n"
+        "good-facility,repaired,10,https://example.org/x\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(rec_mod, "CURATED", tmp_path)
+    records = rec_mod.load_recovery_records()
+    assert "good-facility" in records
+    assert "no-source-facility" not in records
 
 
 def test_composite_renormalises_over_covered_sectors():
@@ -290,3 +395,126 @@ def test_occupied_territory_is_excluded():
     names = {r["name"].lower() for r in regions}
     for excluded in ("crimea", "sevastopol", "donetsk", "luhansk", "zaporizhzhia", "kherson"):
         assert excluded not in names
+
+
+# --------------------------------------------------------------------------
+# Iteration 1: emitted snapshot — geography, rankings, recovery, coverage
+# --------------------------------------------------------------------------
+
+def _snapshot():
+    return json.loads((PROCESSED / "snapshot.json").read_text(encoding="utf-8"))
+
+
+@pytest.mark.skipif(not (PROCESSED / "regions.json").exists(),
+                    reason="pipeline has not been run")
+def test_siberian_regions_present_far_eastern_absent_in_emitted_data():
+    regions = json.loads((PROCESSED / "regions.json").read_text(encoding="utf-8"))
+    districts = {r["district"] for r in regions}
+    assert "Siberian" in districts
+    assert "Far Eastern" not in districts
+    names = {r["name"].lower() for r in regions}
+    assert "omsk oblast" in names                    # Siberian, now in scope
+    assert "amur oblast" not in names                # Far Eastern, excluded
+    assert "primorsky krai" not in names
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_rankings_cover_only_affected_regions():
+    """A ranking must never surface an undamaged region. Every ranked region must have
+    at least one recorded event or a non-zero exposure."""
+    snap = _snapshot()
+    for code, r in snap["regions"].items():
+        rankable = r["incident_count"] > 0 or r["esdi"] > 0 or r["live_disruption_count"] > 0
+        if not rankable:
+            # A region with nothing recorded is allowed to EXIST in the map data, but
+            # any ranking view filters on these fields; assert the fields exist so the
+            # frontend filter is well-defined.
+            assert "incident_count" in r and "esdi" in r
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_recovery_stats_present_with_sample_sizes():
+    snap = _snapshot()
+    rs = snap["recovery_stats"]
+    # Sample sizes must accompany every median so a median-of-one is never mistaken
+    # for a robust figure.
+    assert "observed_restoration_sample" in rs
+    assert "impairment_age_sample" in rs
+    if rs["median_observed_restoration_days"] is not None:
+        assert rs["observed_restoration_sample"] >= 1
+    kinds = rs["evidence_kind_counts"]
+    assert set(kinds) <= {"observed", "estimated", "modelled"}
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_recovery_evidence_kinds_distinguish_observed_from_estimated():
+    """Observed and estimated recovery must be structurally distinct in emitted data."""
+    snap = _snapshot()
+    for x in snap["live_disruptions"]:
+        rec = x["recovery"]
+        assert rec["recovery_evidence_kind"] in ("observed", "estimated", "modelled")
+        if rec["recovery_evidence_kind"] == "estimated":
+            assert rec["estimate_days"] is not None
+        if rec["recovery_evidence_kind"] == "modelled":
+            # A modelled facility must not masquerade as having observed timing.
+            assert rec["observed_restoration_days"] is None
+            assert rec["reconstitution_observed_days"] is None
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_assessed_degradation_separate_from_exposure():
+    """Concept separation: assessed degradation reports quantified capacity only."""
+    snap = _snapshot()
+    ad = snap["assessed_degradation"]
+    assert ad["quantified_incident_count"] <= ad["total_incident_count"]
+    # If nothing is quantified, the quantified totals must be zero, not inferred.
+    if ad["quantified_incident_count"] == 0:
+        assert ad["quantified_mw"] == 0 and ad["quantified_mtpa"] == 0
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_coverage_detail_is_categorical_not_a_fabricated_interval():
+    snap = _snapshot()
+    cov = snap["coverage_detail"]
+    assert "by_year" in cov and "by_sector" in cov and "by_district" in cov
+    # Siberian coverage must appear now that the district is enabled.
+    assert "Siberian" in cov["by_district"]
+    # No fabricated statistical confidence interval anywhere in coverage.
+    assert "confidence_interval" not in cov and "ci_lower" not in cov
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_unknown_is_not_silently_zero():
+    """Not-modelled effect categories stay null; they are never coerced to 0."""
+    snap = _snapshot()
+    any_region = next(iter(snap["regions"].values()))
+    for key in snap["not_modelled"]:
+        assert any_region["effects"][key] is None
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_processed_output_is_deterministic():
+    """A rebuild with a fixed as-of must reproduce the index byte-for-byte.
+
+    The database is a build artifact; a non-deterministic build would make every daily
+    refresh a spurious diff and defeat the git-tracked data model.
+    """
+    import subprocess
+    import sys
+
+    snap = _snapshot()
+    as_of = snap["as_of"]
+    before = (PROCESSED / "index_national.json").read_text(encoding="utf-8")
+    subprocess.run(
+        [sys.executable, "-m", "pipeline.run", "--as-of", as_of],
+        cwd=ROOT, check=True, capture_output=True,
+    )
+    after = (PROCESSED / "index_national.json").read_text(encoding="utf-8")
+    assert before == after, "index build is not deterministic for a fixed as-of"

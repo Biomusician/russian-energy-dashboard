@@ -13,7 +13,7 @@ Collapsing the last two would hide genuine parser breakage behind "not our area"
 
 import re
 
-from pipeline.config import BY_REGIONS, OUT_OF_AOI_REGIONS, RU_REGIONS, aoi_regions
+from pipeline.config import ALL_RU_REGIONS, BY_REGIONS, aoi_regions, out_of_aoi_regions
 
 # Forms that appear in sources but are not substrings of the canonical name.
 ALIASES = {
@@ -58,6 +58,20 @@ ALIASES = {
     "mogilev": "BY-MA",
     "mahilyow": "BY-MA",
     "brest": "BY-BR",
+    # Siberian Federal District (enabled in iteration 1).
+    "omsk": "RU-OMS",
+    "novosibirsk": "RU-NVS",
+    "tomsk": "RU-TOM",
+    "kemerovo": "RU-KEM",
+    "kuzbass": "RU-KEM",
+    "irkutsk": "RU-IRK",
+    "krasnoyarsk": "RU-KYA",
+    "altai krai": "RU-ALT",
+    "altai republic": "RU-AL",
+    "gorno altaysk": "RU-AL",
+    "khakassia": "RU-KK",
+    "tuva": "RU-TY",
+    "tyva": "RU-TY",
 }
 
 
@@ -70,11 +84,11 @@ def _norm(text):
 
 def _build():
     canonical = {}
-    for src in (RU_REGIONS, BY_REGIONS):
+    for src in (ALL_RU_REGIONS, BY_REGIONS):
         for _ne, (code, display, _district) in src.items():
             canonical[_norm(display)] = code
     aoi_codes = {v[0] for v in aoi_regions().values()}
-    out_names = {_norm(n): n for n in OUT_OF_AOI_REGIONS}
+    out_names = {_norm(n): n for n in out_of_aoi_regions()}
     return canonical, aoi_codes, out_names
 
 

@@ -22,6 +22,7 @@ the rest of the sector.
 import collections
 import datetime as dt
 
+from pipeline import recovery
 from pipeline.config import METHODOLOGY_DIR, SECTOR_OF_CLASS, SECTORS, WINDOW_START
 from pipeline.util import read_json
 
@@ -60,8 +61,14 @@ def _incident_date(incident):
     return dt.date.fromisoformat(raw if len(raw) == 10 else raw + "-01")
 
 
-def _weight_at(incident, when):
-    """Decayed contribution of one incident at a point in time, in [0, 1]."""
+def _weight_at(incident, when, record=None):
+    """Decayed contribution of one incident at a point in time, in [0, 1].
+
+    The decay half-life is evidence-driven (see pipeline/recovery.py): observed or
+    estimated reconstitution timing from a source overrides the generic per-sector
+    assumption. Confirmed reconstitution caps the contribution at the residual,
+    representing a facility credibly reported back in service.
+    """
     when_date = when
     occurred = _incident_date(incident)
     if occurred > when_date:
@@ -69,20 +76,27 @@ def _weight_at(incident, when):
 
     conf = SCORING["confidence_weights"].get(incident.get("confidence") or "possible", 0.45)
     cause = SCORING["cause_weights"].get(incident.get("cause") or "unknown", 0.7)
-    status = SCORING["status_multipliers"].get(incident.get("status") or "unknown", 1.0)
+    base = conf * cause
 
-    half_lives = SCORING["repair_half_life_days"]
-    half_life = half_lives.get(incident.get("asset_class"), half_lives["_default"])
-
+    half_life, _kind = recovery.effective_half_life(incident.get("asset_class"), record)
     days = (when_date - occurred).days
-    decay = 0.5 ** (days / half_life)
+    value = base * (0.5 ** (days / half_life))
 
-    value = conf * cause * status * decay
+    if recovery.is_resolved(record, when_date):
+        # Credible evidence says the facility is substantially restored: cap at the
+        # residual rather than trusting the generic curve.
+        value = min(value, base * recovery.RESIDUAL)
+    elif record is None:
+        # No recovery record: honour an explicit status on the incident itself.
+        value *= SCORING["status_multipliers"].get(incident.get("status") or "unknown", 1.0)
+
     return value if value >= SCORING["cutoff"]["min_contribution"] else 0.0
 
 
-def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of):
+def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of,
+          recovery_by_asset=None):
     """Return (national_series, regional_series, snapshot)."""
+    recovery_by_asset = recovery_by_asset or {}
     step = SCORING["timeline"]["step_days"]
     timeline = _dates(WINDOW_START, as_of, step)
 
@@ -109,7 +123,8 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
             info = facility_info.get(asset_id)
             if not info or not info["sector"]:
                 continue
-            weight = max((_weight_at(i, when) for i in incs), default=0.0)
+            rec = recovery_by_asset.get(asset_id)
+            weight = max((_weight_at(i, when, rec) for i in incs), default=0.0)
             if weight <= 0:
                 continue
             share = _share(info, denominators)
@@ -131,7 +146,7 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
 
     snapshot = _snapshot(
         incidents, incidents_by_facility, facility_info, denominators,
-        region_meta, national, regional, timeline, as_of, covered,
+        region_meta, national, regional, timeline, as_of, covered, recovery_by_asset,
     )
     return national, regional, snapshot
 
@@ -224,27 +239,73 @@ def _share(info, denominators):
     return 0.0
 
 
+def _facility_recovery_state(asset_id, incs, record, today):
+    """Recovery/reconstitution state for one disrupted facility, evidence-tagged.
+
+    Every duration says whether it is observed, estimated or modelled, so nothing here
+    can present a guess as a report.
+    """
+    latest = max(i["date"] for i in incs)
+    asset_class = incs[0].get("asset_class")
+    horizon, kind = recovery.effective_horizon(asset_class, record)
+    resolved = recovery.is_resolved(record, today)
+    age = None if resolved else recovery.impairment_age_days(latest, record, today)
+
+    state = {
+        "recovery_evidence_kind": kind,  # observed | estimated | modelled
+        "reconstitution_horizon_days": round(horizon),
+        "resolved": resolved,
+        "impairment_age_days": age,
+        "observed_restoration_days": None,
+        "reconstitution_observed_days": None,
+        "estimate_days": None,
+        "reconstitution_level": None,
+        "partial_operations_resumed_at": None,
+        "reconstituted_at": None,
+        "recovery_sources": [],
+    }
+    if record:
+        state["observed_restoration_days"] = record.get("restoration_observed_days")
+        state["reconstitution_observed_days"] = record.get("reconstitution_observed_days")
+        state["reconstitution_level"] = record.get("reconstitution_level")
+        state["partial_operations_resumed_at"] = record.get("partial_operations_resumed_at")
+        state["reconstituted_at"] = record.get("reconstituted_at")
+        state["recovery_sources"] = record.get("sources", [])
+        if kind == "estimated":
+            state["estimate_days"] = {
+                "lower": record.get("estimate_lower_days"),
+                "central": record.get("estimate_central_days"),
+                "upper": record.get("estimate_upper_days"),
+                "basis": record.get("estimate_basis"),
+                "method": record.get("estimate_method"),
+                "confidence": record.get("estimate_confidence"),
+            }
+    return state
+
+
 def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
-              national, regional, timeline, as_of, covered):
+              national, regional, timeline, as_of, covered, recovery_by_asset):
     today = dt.date.fromisoformat(as_of)
     heating = today.month in SCORING["heating_season_months"]
 
     live = []
     for asset_id, incs in by_facility.items():
-        w = max((_weight_at(i, today) for i in incs), default=0.0)
+        rec = recovery_by_asset.get(asset_id)
+        w = max((_weight_at(i, today, rec) for i in incs), default=0.0)
         if w > 0:
             info = facility_info.get(asset_id, {})
-            live.append(
-                {
-                    "asset_id": asset_id,
-                    "name": info.get("name"),
-                    "asset_class": info.get("asset_class"),
-                    "region_code": info.get("region_code"),
-                    "disruption_weight": round(w, 3),
-                    "event_count": len(incs),
-                    "latest": max(i["date"] for i in incs),
-                }
-            )
+            entry = {
+                "asset_id": asset_id,
+                "name": info.get("name"),
+                "asset_class": info.get("asset_class"),
+                "sector": info.get("sector"),
+                "region_code": info.get("region_code"),
+                "disruption_weight": round(w, 3),
+                "event_count": len(incs),
+                "latest": max(i["date"] for i in incs),
+                "recovery": _facility_recovery_state(asset_id, incs, rec, today),
+            }
+            live.append(entry)
     live.sort(key=lambda x: -x["disruption_weight"])
 
     quantified = sum(
@@ -268,12 +329,12 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             for x in r_live
             if facility_info[x["asset_id"]].get("sector") == "refining"
         )
-
         thermal_disrupted = sum(
             (facility_info[x["asset_id"]].get("capacity_mw") or 0) * x["disruption_weight"]
             for x in r_live
             if facility_info[x["asset_id"]].get("asset_class") == "power_plant_thermal"
         )
+        unresolved = [x for x in r_live if not x["recovery"]["resolved"]]
 
         effects = {
             "generation_margin": _pct(disrupted_mw, installed_mw),
@@ -285,7 +346,7 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             "heating_season_exposure": (
                 _pct(thermal_disrupted, installed_mw) if heating else 0.0
             ),
-            "repair_burden": len(r_live),
+            "repair_burden": len(unresolved),
             "recurrence": round(len(r_inc) / len(struck), 2) if struck else 0.0,
         }
         effects.update({k: None for k in NOT_MODELLED})
@@ -300,6 +361,7 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             "incident_count": len(r_inc),
             "struck_facility_count": len(struck),
             "live_disruption_count": len(r_live),
+            "unresolved_count": len(unresolved),
             "installed_mw": round(installed_mw),
             "effects": effects,
         }
@@ -317,9 +379,119 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
         },
         "incident_total": len(incidents),
         "incidents_with_quantified_capacity": quantified,
-        "live_disruptions": live[:60],
+        "assessed_degradation": _assessed_degradation(incidents, live, facility_info, today),
+        "recovery_stats": _recovery_stats(live),
+        "coverage_detail": _coverage_detail(incidents),
+        "live_disruptions": live[:80],
         "regions": regions_out,
         "not_modelled": NOT_MODELLED,
+    }
+
+
+def _assessed_degradation(incidents, live, facility_info, today):
+    """Concept 2: degradation actually quantified by sources, kept separate from exposure.
+
+    Exposure counts capacity sitting at disrupted sites; assessed degradation counts
+    only capacity a source explicitly said was lost. Today that is almost nothing, and
+    saying so plainly is the point.
+    """
+    quantified = [
+        i for i in incidents
+        if i.get("capacity_affected_mw") or i.get("capacity_affected_mtpa") or i.get("capacity_affected_pct")
+    ]
+    return {
+        "quantified_incident_count": len(quantified),
+        "total_incident_count": len(incidents),
+        "quantified_mw": round(sum(i.get("capacity_affected_mw") or 0 for i in quantified), 1),
+        "quantified_mtpa": round(sum(i.get("capacity_affected_mtpa") or 0 for i in quantified), 2),
+        "note": (
+            "Assessed degradation counts only capacity a source explicitly quantified. "
+            "It is deliberately distinct from exposure, which counts capacity at disrupted "
+            "sites regardless of measured loss."
+        ),
+    }
+
+
+def _median(values):
+    vals = sorted(v for v in values if v is not None)
+    if not vals:
+        return None
+    n = len(vals)
+    mid = n // 2
+    return vals[mid] if n % 2 else round((vals[mid - 1] + vals[mid]) / 2, 1)
+
+
+def _recovery_stats(live):
+    """Concept 3: reconstitution statistics. Medians, not means, and always with n."""
+    unresolved = [x for x in live if not x["recovery"]["resolved"]]
+    resolved = [x for x in live if x["recovery"]["resolved"]]
+
+    observed_durations = [
+        x["recovery"]["observed_restoration_days"] or x["recovery"]["reconstitution_observed_days"]
+        for x in live
+        if (x["recovery"]["observed_restoration_days"] or x["recovery"]["reconstitution_observed_days"])
+    ]
+    ages = [x["recovery"]["impairment_age_days"] for x in unresolved if x["recovery"]["impairment_age_days"] is not None]
+
+    by_kind = collections.Counter(x["recovery"]["recovery_evidence_kind"] for x in live)
+
+    by_sector = {}
+    for sector in SECTORS:
+        sect_live = [x for x in live if x.get("sector") == sector]
+        if not sect_live:
+            continue
+        sect_obs = [
+            x["recovery"]["observed_restoration_days"] or x["recovery"]["reconstitution_observed_days"]
+            for x in sect_live
+            if (x["recovery"]["observed_restoration_days"] or x["recovery"]["reconstitution_observed_days"])
+        ]
+        by_sector[sector] = {
+            "disrupted_facilities": len(sect_live),
+            "unresolved": sum(1 for x in sect_live if not x["recovery"]["resolved"]),
+            "observed_restoration_sample": len(sect_obs),
+            "median_observed_restoration_days": _median(sect_obs),
+        }
+
+    return {
+        "unresolved_count": len(unresolved),
+        "resolved_count": len(resolved),
+        "median_observed_restoration_days": _median(observed_durations),
+        "observed_restoration_sample": len(observed_durations),
+        "median_impairment_age_days": _median(ages),
+        "impairment_age_sample": len(ages),
+        "evidence_kind_counts": dict(by_kind),
+        "by_sector": by_sector,
+        "note": (
+            "Median rather than mean, since a few long repairs would distort it. Every "
+            "figure carries its sample size. 'modelled' recovery means no source-reported "
+            "timing exists and the generic per-sector assumption was used."
+        ),
+    }
+
+
+def _coverage_detail(incidents):
+    """Concept 4: transparent, categorical coverage — never a fabricated confidence interval.
+
+    Splits observed event counts by year, sector, region and cause so a reader can see
+    where the record is thin. A low count is explicitly ambiguous between low disruption
+    and low reporting; that ambiguity is stated, not resolved with false precision.
+    """
+    def bucket(key):
+        c = collections.Counter()
+        for i in incidents:
+            c[key(i)] += 1
+        return dict(sorted(c.items()))
+
+    return {
+        "by_year": bucket(lambda i: i["date"][:4]),
+        "by_sector": bucket(lambda i: SECTOR_OF_CLASS.get(i.get("asset_class"), "other")),
+        "by_cause": bucket(lambda i: i.get("cause") or "unknown"),
+        "by_district": bucket(lambda i: i.get("_district") or "unknown"),
+        "note": (
+            "Counts of enumerated events only. A low count may mean genuinely low "
+            "disruption OR thin open-source reporting for that bucket; this dataset "
+            "cannot always distinguish the two, and does not pretend to."
+        ),
     }
 
 

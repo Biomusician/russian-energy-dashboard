@@ -25,8 +25,11 @@ ENDPOINT = "https://overpass-api.de/api/interpreter"
 
 # south, west, north, east -- Kaliningrad (19E) to the Yamal peninsula (88E),
 # Caucasus (41N) to the Arctic coast (74N). Deliberately wider than the AOI; the
-# point-in-region join discards anything outside it.
-BBOX = "41.0,19.0,74.0,88.0"
+# point-in-region join discards anything outside it. Extended east to 120E and north
+# to 78N in iteration 1 to cover the Siberian Federal District (Irkutsk Oblast reaches
+# ~119E; the Taymyr peninsula in Krasnoyarsk Krai reaches ~78N). Probing showed the
+# eastern strip adds only ~276 substations and ~126 lines, so the wider box is cheap.
+BBOX = "41.0,19.0,78.0,120.0"
 
 _V_220_PLUS = '"voltage"~"(^|;)(220000|330000|400000|500000|750000|1150000)(;|$)"'
 _V_330_PLUS = '"voltage"~"(^|;)(330000|400000|500000|750000|1150000)(;|$)"'

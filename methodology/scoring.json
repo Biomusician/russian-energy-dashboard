@@ -34,23 +34,42 @@
     "unknown": 0.7
   },
 
-  "repair_half_life_days": {
-    "_comment": "Days for assumed impairment to halve, by asset class. These are ASSUMPTIONS, not measurements - the single weakest input to the index. They encode how quickly each class of asset is typically brought back after damage. Revising them changes every score.",
-    "refinery": 45,
-    "oil_terminal": 30,
-    "pipeline_oil": 21,
-    "pipeline_gas": 21,
-    "gas_processing": 60,
-    "lng_terminal": 90,
-    "power_plant_thermal": 60,
-    "power_plant_nuclear": 120,
-    "power_plant_hydro": 120,
-    "power_plant_other": 60,
-    "substation": 30,
-    "transmission_line": 14,
-    "coal": 45,
-    "interconnector": 30,
-    "_default": 45
+  "recovery": {
+    "_comment": [
+      "Recovery / reconstitution model (iteration 1). Replaces the flat repair half-life.",
+      "Impairment decays as 0.5^(days_since_disruption / effective_half_life). The",
+      "effective half-life is EVIDENCE-DRIVEN, in priority order:",
+      "  1. observed reconstitution/restoration duration from a source  (kind=observed)",
+      "  2. an estimated reconstitution window from a source             (kind=estimated)",
+      "  3. the modelled sector fallback below                          (kind=modelled)",
+      "A reconstitution horizon H (disruption -> substantially restored) maps to a half-life",
+      "of H / horizon_to_halflife_factor, so impairment is ~reconstitution_residual at H.",
+      "Observed recovery evidence therefore overrides the generic assumption, which is the",
+      "whole point: a sourced restart matters more than a half-life guess. See recovery.py."
+    ],
+    "reconstitution_residual": 0.1,
+    "horizon_to_halflife_factor": 3.3219,
+    "sector_fallback_horizon_days": {
+      "_comment": "MODELLED full-reconstitution horizons in days, used ONLY when an incident carries no observed or estimated recovery evidence. Assumptions, flagged kind=modelled in output. Chosen so the implied half-life matches the previous model (H = old_half_life x 3.32), keeping the index continuous while re-framing it as a reconstitution horizon. Still the weakest input; replace with evidence.",
+      "refinery": 150,
+      "oil_terminal": 100,
+      "pipeline_oil": 70,
+      "pipeline_gas": 70,
+      "gas_processing": 200,
+      "lng_terminal": 300,
+      "power_plant_thermal": 200,
+      "power_plant_nuclear": 400,
+      "power_plant_hydro": 400,
+      "power_plant_other": 200,
+      "substation": 100,
+      "transmission_line": 46,
+      "coal": 150,
+      "interconnector": 100,
+      "_default": 150
+    },
+    "resolved_statuses": ["repaired"],
+    "partial_operations_floor": 0.5,
+    "_partial_note": "When a source reports partial operations resumed but not full reconstitution, impairment is held no lower than this until full reconstitution evidence arrives -- a restart is not a return to full capability."
   },
 
   "status_multipliers": {

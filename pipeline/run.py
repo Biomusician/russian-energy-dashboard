@@ -15,10 +15,12 @@ import shutil
 
 from pipeline import build_assets, build_index
 from pipeline.config import (
-    ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, PROCESSED, SECTORS, WEB_DATA, WINDOW_START,
+    ANALYTIC_CONCEPTS, ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, EVIDENCE_KINDS,
+    PROCESSED, SECTORS, WEB_DATA, WINDOW_START,
 )
 from pipeline.fetch_refineries import build as build_refineries
 from pipeline.fetch_wikipedia import build as build_wikipedia
+from pipeline.recovery import load_recovery_records
 from pipeline.util import fetch_json, log, read_csv, write_json
 
 COVERAGE_PAGE = "2025%E2%80%932026_Russian_fuel_crisis"
@@ -61,6 +63,13 @@ def load_curated_incidents():
                 "capacity_affected_mw": _num(row.get("capacity_affected_mw")),
                 "capacity_affected_mtpa": _num(row.get("capacity_affected_mtpa")),
                 "capacity_affected_pct": _num(row.get("capacity_affected_pct")),
+                # Cost / economic scaffolding (iteration 1). Null unless a source gives a
+                # figure. reported = a source stated it; estimated = an external estimate;
+                # never a value the pipeline invents.
+                "repair_cost_reported_usd_m": _num(row.get("repair_cost_reported_usd_m")),
+                "repair_cost_estimate_low_usd_m": _num(row.get("repair_cost_estimate_low_usd_m")),
+                "repair_cost_estimate_high_usd_m": _num(row.get("repair_cost_estimate_high_usd_m")),
+                "cost_basis": row.get("cost_basis"),
                 "conflicting_reports": (row.get("conflicting_reports") or "").lower() == "true",
                 "notes": row.get("notes"),
                 "first_seen": row.get("first_seen"),
@@ -149,6 +158,7 @@ def main():
     refineries, refining_total = build_refineries()
     curated = load_curated_incidents()
     coverage = load_coverage_benchmark()
+    recovery_by_asset = load_recovery_records()
 
     for inc in wiki_incidents:
         inc["origin"] = "wikipedia_strike_table"
@@ -157,6 +167,12 @@ def main():
     incidents = wiki_incidents + curated
     incidents = [i for i in incidents if i["date"] >= WINDOW_START[:len(i["date"])]]
     incidents.sort(key=lambda i: i["date"])
+
+    # Attach federal district to each region-assigned incident, for coverage analytics.
+    district_of = {m["code"]: m["district"] for m in region_meta.values()}
+    for inc in incidents:
+        if inc.get("region_code"):
+            inc["_district"] = district_of.get(inc["region_code"])
 
     in_aoi = [i for i in incidents if i.get("region_code")]
     log(
@@ -171,6 +187,7 @@ def main():
         refinery_total_mtpa=refining_total,
         region_meta=region_meta,
         as_of=args.as_of,
+        recovery_by_asset=recovery_by_asset,
     )
 
     enumerated = len(in_aoi)
@@ -196,6 +213,8 @@ def main():
             "asset_classes": ASSET_CLASSES,
             "sectors": SECTORS,
             "causes": DISRUPTION_CAUSES,
+            "analytic_concepts": ANALYTIC_CONCEPTS,
+            "evidence_kinds": EVIDENCE_KINDS,
             "window_start": WINDOW_START,
         },
     )

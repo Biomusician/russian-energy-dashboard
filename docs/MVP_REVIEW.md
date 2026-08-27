@@ -111,9 +111,9 @@ loudly.
    halves refining exposure at any date. **Fix this first.**
 2. **Sector weights** (refining 0.35, electric 0.30, oil logistics 0.20, gas 0.10, coal
    0.05). A judgement about systemic importance. Defensible, unvalidated.
-3. **"West of the SFD division" = six federal districts west of the Siberian FD.** If
-   "SFD" meant Southern Federal District, the entire AOI is wrong. This reading is much
-   more plausible geographically, but it is an interpretation of an ambiguous phrase.
+3. **Area of interest** was the six western federal districts plus Belarus. (Iteration
+   1 resolved the original phrasing ambiguity and locked the AOI explicitly, adding the
+   Siberian Federal District; see docs/ITERATION_1_REVIEW.md.)
 4. **Cause weights**, particularly maintenance at 0.15 and sanctions at 0.6. Sanctions
    effects are cumulative and slow; a single decaying event models them badly.
 5. **Oil logistics uses the refining base as a proxy denominator.** Terminals and
@@ -161,8 +161,8 @@ loudly.
 
 ## 7. Questions for you
 
-1. **Is "SFD" the Siberian Federal District?** Everything downstream depends on it. If
-   you meant something else, say so and it is a one-line config change.
+1. **Area-of-interest scope.** (Resolved in iteration 1: the AOI is now explicitly
+   Belarus + six western districts + the Siberian Federal District.)
 2. **Should Belarus be scored, or only shown?** It currently participates fully in the
    index, but it has had no recorded events, so it contributes nothing and sits on the
    map as empty area. Treating it as context-only might read better.

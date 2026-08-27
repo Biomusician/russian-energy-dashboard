@@ -178,14 +178,15 @@ from "we have no data". Hence the explicit null.
 
 ## 7. Assumptions
 
-1. **"West of the SFD division"** is read as the six federal districts west of the
-   Siberian Federal District boundary — Central, Northwestern, Southern, North
-   Caucasian, Volga, Ural — plus Belarus. 69 regions. Change
-   `AOI_FEDERAL_DISTRICTS` in `pipeline/config.py` to alter it.
-
-   This is an interpretation. "SFD" most plausibly means Siberian Federal District, and
-   its western boundary is the only natural east–west divider in that phrase. If
-   Southern Federal District was meant, the AOI is wrong and should be revisited.
+1. **Area of interest (locked in iteration 1).** Belarus, the six western Russian
+   federal districts (Central, Northwestern, Southern, North Caucasian, Volga, Ural)
+   and the **Siberian Federal District** — 79 regions. The original brief's ambiguous
+   "west of the division" phrasing has been retired in favour of this explicit list.
+   The **Far Eastern Federal District** is defined in `FE_REGIONS` but not enabled;
+   adding `"Far Eastern"` to `AOI_FEDERAL_DISTRICTS` in `pipeline/config.py` turns it
+   on with no other change. Buryatia and Zabaykalsky Krai are treated as Far Eastern
+   (they were transferred there from Siberia in 2018), so they are currently out of
+   scope; Natural Earth's metadata still miscalls them Siberian.
 
 2. **Occupied Ukrainian territory is excluded** — Crimea, Sevastopol, and the four
    oblasts claimed in 2022. They are internationally recognised as Ukraine and are not
