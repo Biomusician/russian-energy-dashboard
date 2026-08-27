@@ -56,3 +56,19 @@ export const CAUSE_COLOR: Record<string, string> = {
   maintenance: "#6b7d8c",
   unknown: "#4e5f6d",
 };
+
+/** Observed / estimated / modelled visual language. The single most important
+ *  distinction in the product: a sourced observation must never look like a guess.
+ *  Observed reads as solid fact (green), estimated as provisional (amber), modelled as
+ *  a pure assumption (muted, dashed in the UI). */
+export const EVIDENCE: Record<string, { color: string; label: string; glyph: string }> = {
+  observed: { color: "#3ecf8e", label: "Observed", glyph: "●" },
+  estimated: { color: "#f2b134", label: "Estimated", glyph: "◐" },
+  modelled: { color: "#7f929f", label: "Modelled", glyph: "○" },
+  unknown: { color: "#4e5f6d", label: "Unknown", glyph: "·" },
+  not_applicable: { color: "#4e5f6d", label: "N/A", glyph: "–" },
+};
+
+export function evidence(kind: string | null | undefined) {
+  return (kind && EVIDENCE[kind]) || EVIDENCE.unknown;
+}

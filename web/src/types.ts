@@ -32,6 +32,12 @@ export interface Incident {
   part_of_unenumerated_series?: boolean;
   capacity_affected_mw?: number | null;
   capacity_affected_mtpa?: number | null;
+  capacity_affected_pct?: number | null;
+  repair_cost_reported_usd_m?: number | null;
+  repair_cost_estimate_low_usd_m?: number | null;
+  repair_cost_estimate_high_usd_m?: number | null;
+  cost_basis?: string | null;
+  _district?: string | null;
 }
 
 export interface RegionMeta {
@@ -79,8 +85,77 @@ export interface RegionSnapshot {
   incident_count: number;
   struck_facility_count: number;
   live_disruption_count: number;
+  unresolved_count: number;
   installed_mw: number;
   effects: RegionEffects;
+}
+
+export type EvidenceKind = "observed" | "estimated" | "modelled";
+
+export interface RecoveryState {
+  recovery_evidence_kind: EvidenceKind;
+  reconstitution_horizon_days: number;
+  resolved: boolean;
+  impairment_age_days: number | null;
+  observed_restoration_days: number | null;
+  reconstitution_observed_days: number | null;
+  estimate_days: {
+    lower: number | null;
+    central: number | null;
+    upper: number | null;
+    basis: string | null;
+    method: string | null;
+    confidence: string | null;
+  } | null;
+  reconstitution_level: string | null;
+  partial_operations_resumed_at: string | null;
+  reconstituted_at: string | null;
+  recovery_sources: { url: string }[];
+}
+
+export interface LiveDisruption {
+  asset_id: string;
+  name: string | null;
+  asset_class: string | null;
+  sector: string | null;
+  region_code: string | null;
+  disruption_weight: number;
+  event_count: number;
+  latest: string;
+  recovery: RecoveryState;
+}
+
+export interface RecoveryStats {
+  unresolved_count: number;
+  resolved_count: number;
+  median_observed_restoration_days: number | null;
+  observed_restoration_sample: number;
+  median_impairment_age_days: number | null;
+  impairment_age_sample: number;
+  evidence_kind_counts: Record<string, number>;
+  by_sector: Record<string, {
+    disrupted_facilities: number;
+    unresolved: number;
+    observed_restoration_sample: number;
+    median_observed_restoration_days: number | null;
+  }>;
+  note: string;
+}
+
+export interface AssessedDegradation {
+  quantified_incident_count: number;
+  total_incident_count: number;
+  quantified_mw: number;
+  quantified_mtpa: number;
+  note: string;
+}
+
+export interface CoverageDetail {
+  by_year: Record<string, number>;
+  by_sector: Record<string, number>;
+  by_cause: Record<string, number>;
+  by_district: Record<string, number>;
+  note: string;
 }
 
 export interface Coverage {
@@ -103,15 +178,10 @@ export interface Snapshot {
   denominators: { refining_mtpa: number; electric_power_mw: number };
   incident_total: number;
   incidents_with_quantified_capacity: number;
-  live_disruptions: {
-    asset_id: string;
-    name: string | null;
-    asset_class: string | null;
-    region_code: string | null;
-    disruption_weight: number;
-    event_count: number;
-    latest: string;
-  }[];
+  assessed_degradation: AssessedDegradation;
+  recovery_stats: RecoveryStats;
+  coverage_detail: CoverageDetail;
+  live_disruptions: LiveDisruption[];
   regions: Record<string, RegionSnapshot>;
   not_modelled: Record<string, string>;
   coverage: Coverage | null;
@@ -133,6 +203,8 @@ export interface Taxonomy {
   asset_classes: Record<string, string>;
   sectors: Record<string, string>;
   causes: Record<string, string>;
+  analytic_concepts: Record<string, string>;
+  evidence_kinds: string[];
   window_start: string;
 }
 

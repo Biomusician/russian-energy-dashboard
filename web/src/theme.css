@@ -10,9 +10,11 @@
   --line: #1b2530;
   --line-soft: #141c25;
 
-  --text: #ccd8e4;
-  --text-dim: #7f929f;
-  --text-faint: #4e5f6d;
+  /* Legibility pass (iteration 1): dim and faint lifted for contrast on the charcoal
+     base. The brief flagged low-contrast labels; these clear WCAG AA for body text. */
+  --text: #d4dfea;
+  --text-dim: #93a5b3;
+  --text-faint: #64778a;
 
   --accent: #2ad4ee;
   --accent-dim: #14707f;
@@ -402,3 +404,146 @@ button.play:hover { background: #103440; }
 ::-webkit-scrollbar-thumb:hover { background: #2b3a48; }
 
 a { color: var(--accent); }
+
+/* ============================================================
+   Iteration 1: tabbed analytical panel, evidence language
+   ============================================================ */
+
+.tabbar {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-panel);
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabbar::-webkit-scrollbar { display: none; }
+
+.tab {
+  padding: 9px 12px 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: none;
+}
+.tab:hover { color: var(--text-dim); }
+.tab[aria-selected="true"] {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.tab .badge {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 0 4px;
+  border-radius: 7px;
+  background: var(--bg-panel-2);
+  color: var(--text-dim);
+  font-size: 9px;
+}
+
+.tab-body { display: block; }
+
+/* Evidence chips — observed / estimated / modelled. The dashed border on 'modelled'
+   is a second, non-colour channel marking it as an assumption. */
+.ev {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 2px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.ev.modelled { border-style: dashed; }
+.ev .glyph { font-size: 8px; }
+
+/* Recent-disruption cards */
+.rc {
+  padding: 11px var(--pad);
+  border-bottom: 1px solid var(--line-soft);
+  cursor: pointer;
+}
+.rc:hover { background: var(--bg-panel-2); }
+.rc-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.rc-title { font-size: 12.5px; font-weight: 500; }
+.rc-region { color: var(--text-dim); font-size: 10.5px; }
+.rc-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; align-items: center; }
+.rc-summary { font-size: 11px; color: var(--text-dim); margin-top: 6px; line-height: 1.5; }
+.rc-recovery {
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+  font-size: 10.5px;
+}
+
+/* Ranking rows */
+.rank {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 7px var(--pad);
+  border-bottom: 1px solid var(--line-soft);
+  cursor: pointer;
+}
+.rank:hover { background: var(--bg-panel-2); }
+.rank[data-selected="true"] { background: #0c2229; }
+.rank-idx { font-family: var(--mono); font-size: 10px; color: var(--text-faint); text-align: right; }
+.rank-name { font-size: 12px; }
+.rank-sub { font-size: 10px; color: var(--text-faint); }
+.rank-val { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; min-width: 46px; }
+.rank-bar { height: 3px; background: var(--sev-0); border-radius: 2px; overflow: hidden; margin-top: 3px; }
+.rank-bar > i { display: block; height: 100%; }
+
+.ranking-picker { padding: 9px var(--pad); border-bottom: 1px solid var(--line-soft); }
+.ranking-desc {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  margin-top: 6px;
+  line-height: 1.45;
+  min-height: 28px;
+}
+
+/* Stat tiles used in Reconstitution / Effects / Costs */
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line-soft); }
+.tile { background: var(--bg-panel); padding: 10px 12px; }
+.tile-val { font-family: var(--mono); font-size: 20px; font-variant-numeric: tabular-nums; }
+.tile-val.small { font-size: 15px; }
+.tile-label { font-size: 10px; color: var(--text-dim); margin-top: 2px; line-height: 1.3; }
+.tile-n { font-size: 9.5px; color: var(--text-faint); font-family: var(--mono); }
+.tile-null .tile-val { color: var(--text-faint); font-style: italic; font-size: 13px; font-family: var(--sans); }
+
+.bars { padding: 4px var(--pad) 10px; }
+.bar-row { display: grid; grid-template-columns: 96px 1fr 34px; gap: 8px; align-items: center; padding: 3px 0; font-size: 11px; }
+.bar-track { height: 8px; background: var(--sev-0); border-radius: 2px; overflow: hidden; }
+.bar-track > i { display: block; height: 100%; }
+.bar-num { font-family: var(--mono); font-size: 10.5px; text-align: right; color: var(--text-dim); }
+
+.concept-key {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px var(--pad);
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 10px;
+  color: var(--text-faint);
+}
+.concept-key .ev { font-size: 8.5px; }

@@ -24,7 +24,9 @@ const EMPTY_STYLE: maplibregl.StyleSpecification = {
   layers: [{ id: "bg", type: "background", paint: { "background-color": "#05070a" } }],
 };
 
-const AOI_BOUNDS: [number, number, number, number] = [17.5, 40.0, 89.5, 73.5];
+// Extended east in iteration 1 to frame the Siberian Federal District (Irkutsk reaches
+// ~119E) alongside Belarus in the west.
+const AOI_BOUNDS: [number, number, number, number] = [17.5, 40.0, 120.0, 74.0];
 
 interface HoverInfo {
   x: number;

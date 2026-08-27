@@ -47,17 +47,30 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
 
           <H>How a score is built</H>
           <p>
-            Each event contributes <code>confidence × cause × status × 0.5^(days ÷ repair half-life)</code>.
-            Per facility the single strongest live contribution wins rather than the sum,
-            so a site hit four times cannot exceed being fully disrupted. Facility
-            contributions are then weighted by that facility's share of the national
-            capacity base for its sector, and sectors are combined using published
-            weights.
+            Each event contributes <code>confidence × cause × 0.5^(days ÷ half-life)</code>,
+            where the half-life is set by the recovery evidence (below). Per facility the
+            single strongest live contribution wins rather than the sum, so a site hit
+            four times cannot exceed being fully disrupted. Facility contributions are
+            then weighted by that facility's share of the national capacity base for its
+            sector, and sectors are combined using published weights.
+          </p>
+
+          <H>Recovery / reconstitution</H>
+          <p>
+            The decay half-life is evidence-driven, in priority order:{" "}
+            <strong style={{ color: "var(--green)" }}>observed</strong> (a source reported
+            how long restoration actually took) &gt;{" "}
+            <strong style={{ color: "var(--amber)" }}>estimated</strong> (a source gave a
+            reconstitution window) &gt;{" "}
+            <strong style={{ color: "var(--text-dim)" }}>modelled</strong> (neither exists,
+            so a generic per-sector assumption is used). The kind is carried on every
+            number and shown in the Recovery tab, so an observed restart never looks like a
+            guess. Confirmed reconstitution collapses a facility's contribution.
           </p>
           <p>
-            Repair half-lives are the weakest input — they are assumptions about how
-            quickly each class of asset returns to service, not measurements. Every
-            weight and half-life lives in <code>methodology/scoring.json</code>.
+            The modelled fallback horizons are the weakest input — assumptions about how
+            quickly each asset class returns to service, not measurements. All of them, and
+            every other weight, live in <code>methodology/scoring.json</code>.
           </p>
 
           <H>Denominators</H>
@@ -111,7 +124,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
 
           <H>Assumptions worth knowing</H>
           <ul>
-            <li>“West of the SFD division” is read as the six federal districts west of the Siberian FD boundary, plus Belarus.</li>
+            <li>Area of interest: Belarus, the six western Russian federal districts, and the Siberian Federal District (79 regions). The Far Eastern district is defined but not yet enabled.</li>
             <li>Occupied Ukrainian territory is excluded; it is internationally recognised as Ukraine.</li>
             <li>Transmission lines and pipelines are assigned to the region containing their midpoint, and are counted, never scored.</li>
             <li>Month-precision dates are anchored to the first of the month for decay arithmetic; the precision is preserved and shown.</li>
