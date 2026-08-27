@@ -63,13 +63,15 @@ Beloyarsk/Sverdlovsk all resolve to the correct oblast.
 - **Endpoint:** `overpass-api.de/api/interpreter`
 - **Licence:** ODbL — attribution and share-alike required
 - **Refresh:** 30-day cache, 10 s pause between queries, retry with backoff on HTTP 429
+- **Bounding box:** extended east to 120°E / north to 78°N in iteration 1 to cover the
+  Siberian Federal District (Irkutsk reaches ~119°E; Taymyr ~78°N).
 
-| Layer | Selector | In AOI |
+| Layer | Selector | In AOI (incl. Siberia) |
 |---|---|---|
-| Substations | `power=substation` + voltage ≥ 220 kV | 1,173 |
-| Transmission | `power=line` + voltage ≥ 330 kV | 4,913 |
-| Gas pipelines | `man_made=pipeline` + `substance=gas` + named | 2,553 |
-| Oil pipelines | `man_made=pipeline` + `substance~oil` + named | 178 |
+| Substations | `power=substation` + voltage ≥ 220 kV | 1,425 |
+| Transmission | `power=line` + voltage ≥ 330 kV | 5,046 |
+| Gas pipelines | `man_made=pipeline` + `substance=gas` + named | 2,572 |
+| Oil pipelines | `man_made=pipeline` + `substance~oil` + named | 205 |
 
 **Voltage filtering is essential.** Unfiltered, `power=substation` returns 157,771
 features across the AOI bounding box, essentially all local distribution and
@@ -175,6 +177,25 @@ Two honesty notes carried in the data itself:
 - Unecha is recorded at **month precision** because no day-level date was established
   across sources, and is flagged `conflicting_reports = true`. The date was not
   inferred.
+
+---
+
+## 6. Curated recovery file — `data/curated/recovery.csv` (iteration 1)
+
+Facility-level recovery evidence, source-required per row. Three seed records:
+
+| Facility | Kind | Evidence |
+|---|---|---|
+| Kuibyshev refinery | **Observed** | Reuters industry sources: halted 10 Jun 2026, resumed 21 Aug 2026 (~72 d) |
+| Omsk refinery | **Estimated** | Reuters industry source: "at least half a year" after CDU-10 damage |
+| Moscow Refinery | **Estimated** | Industry sources (via strike table): ≥6 months offline after June 2026 strikes |
+
+The observed vs estimated distinction is structural and drives both the score and the
+UI language. Kuibyshev's 28 Aug 2026 re-strike is after the dataset's as-of date and is
+not yet reflected — noted in the record's `evidence` field.
+
+Candidate open sources for future repair-cost and economic-effect fields are catalogued
+in [COST_SOURCES.md](COST_SOURCES.md).
 
 ---
 

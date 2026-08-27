@@ -141,13 +141,17 @@ def test_far_eastern_regions_resolve_as_out_of_aoi():
 
 
 def test_no_sfd_abbreviation_in_code_or_config():
-    """The ambiguous 'SFD' abbreviation must not appear in code, config or methodology."""
+    """The ambiguous 'SFD' abbreviation must not appear as a scope label in code, config
+    or user-facing methodology. Iteration review docs may discuss its removal by name."""
     from pathlib import Path
     root = Path(__file__).resolve().parent.parent
+    exempt = {Path("docs") / "ITERATION_1_REVIEW.md"}  # documents the removal itself
     offenders = []
     for sub in ("pipeline", "methodology", "docs"):
         for path in (root / sub).rglob("*"):
             if path.suffix not in (".py", ".json", ".md"):
+                continue
+            if path.relative_to(root) in exempt:
                 continue
             if re.search(r"\bSFD\b", path.read_text(encoding="utf-8")):
                 offenders.append(str(path.relative_to(root)))

@@ -1,11 +1,15 @@
-# Energy Disruption Monitor — Western Russia & Belarus
+# Energy Disruption Monitor — Western Russia, Siberia & Belarus
 
 An open-source-only dashboard tracking publicly reported degradation of energy
-infrastructure across western Russia and Belarus, aggregated to administrative region,
-from 2022 to the present.
+infrastructure across **Belarus, western Russia and the Siberian Federal District**,
+aggregated to administrative region (79 regions), from 2022 to the present.
 
 Every number traces to a public source. Where the data does not support a number, the
-dashboard says so rather than estimating one.
+dashboard says so rather than estimating one. Observed facts, external estimates and
+modelled assumptions are kept visibly distinct throughout.
+
+> **Status:** MVP + iteration 1 (Siberia, recovery/reconstitution framework, 7-tab
+> analytical panel). See [docs/ITERATION_1_REVIEW.md](docs/ITERATION_1_REVIEW.md).
 
 ---
 
@@ -19,7 +23,7 @@ answers one question:
 > time elapsed?
 
 **It is not a measurement of lost throughput or lost generation.** Open reporting
-almost never states how much capacity a given event removed. Of the 127 region-assigned
+almost never states how much capacity a given event removed. Of the 128 region-assigned
 events currently in the dataset, **zero** carry a quantified capacity effect — and the
 dashboard shows that ratio in its top ribbon rather than burying it. An exposure
 measure is what this data can honestly support; a "capacity offline" figure is not.
@@ -57,7 +61,7 @@ Wikipedia ───────────┘                                  
 
 Three deliberate choices:
 
-**No database.** The dataset is ~1,600 assets and ~130 events. Static JSON regenerated
+**No database.** The dataset is ~1,900 assets and ~130 events. Static JSON regenerated
 by a scheduled job *is* the backend. A Postgres instance here would be infrastructure
 to maintain in exchange for nothing.
 
@@ -134,28 +138,55 @@ Full detail and per-source caveats: [docs/SOURCES.md](docs/SOURCES.md).
 
 ---
 
+## Recovery / reconstitution (iteration 1)
+
+Repair is no longer a flat half-life. Each disrupted facility's decay is driven by the
+strongest available evidence, and the **kind travels with every number**:
+
+- **Observed** — a source reported how long restoration actually took (green, solid).
+- **Estimated** — a source gave a reconstitution window (amber, half-filled).
+- **Modelled** — neither exists; a generic per-sector assumption is used (muted, dashed).
+
+Confirmed reconstitution collapses a facility's contribution. Recovery evidence lives in
+`data/curated/recovery.csv` (source required per row). The dashboard's **Recovery tab**
+shows unresolved counts, median observed restoration (with sample size), impairment age,
+and the observed/estimated/modelled mix.
+
+The four analytic concepts — **exposure**, **assessed degradation** (quantified only),
+**recovery**, and **confidence/coverage** — are kept structurally distinct in the data
+and across the seven-tab analytical panel (Overview · Rankings · Recent · Recovery ·
+Effects · Costs · Sources).
+
+---
+
 ## Documentation
 
-- [docs/METHODOLOGY.md](docs/METHODOLOGY.md) — how the index is computed, and every assumption in it
+- [docs/ITERATION_1_REVIEW.md](docs/ITERATION_1_REVIEW.md) — **current state**: what changed, what works, what to decide next
+- [docs/METHODOLOGY.md](docs/METHODOLOGY.md) — how the index and recovery model are computed, and every assumption
 - [docs/SCHEMA.md](docs/SCHEMA.md) — data model and field definitions
 - [docs/SOURCES.md](docs/SOURCES.md) — provenance and licensing
+- [docs/COST_SOURCES.md](docs/COST_SOURCES.md) — candidate open sources for repair cost & economic effects
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — GitHub + Vercel + daily refresh
-- [docs/MVP_REVIEW.md](docs/MVP_REVIEW.md) — what works, what does not, what to decide next
+- [docs/MVP_REVIEW.md](docs/MVP_REVIEW.md) — the original MVP review
 - [docs/CHATGPT_ITERATION_PROMPT.md](docs/CHATGPT_ITERATION_PROMPT.md) — prompt for iterating elsewhere
 
 ---
 
 ## Known limits, stated up front
 
-- **Coverage is ~42%.** The dataset enumerates 127 region-assigned events; the source
+- **Coverage is ~42%.** The dataset enumerates 128 region-assigned events; the source
   benchmark reports 305 strikes on Russian oil facilities in total. The gap is events
-  that appear only in prose reporting, which this MVP does not parse.
+  that appear only in prose reporting, which this pipeline does not parse.
+- **Observed recovery sample is n=1.** The median-observed-restoration headline is a
+  median-of-one and is labelled as such; it grows with curated restart dates.
+- **Siberian event coverage is n=1** (Omsk). The region is fully populated structurally
+  but has barely been struck yet.
 - **Refining and oil logistics dominate.** They are the sectors with structured open
   data. Gas and coal have no capacity base and are excluded from the composite (their
-  weights are redistributed rather than counted as zero).
-- **Repair half-lives are assumptions, not measurements.** They are the single weakest
-  input to the index. All of them live in `methodology/scoring.json`.
+  weights are redistributed rather than counted as zero); electric power is ≈0.
+- **Modelled reconstitution horizons are assumptions, not measurements** — the single
+  weakest input where no evidence exists. All live in `methodology/scoring.json`.
 - **Four of the nine requested regional effect categories are not modelled** and are
   displayed as such, with reasons, rather than filled with plausible numbers.
 
-These are expanded in [docs/MVP_REVIEW.md](docs/MVP_REVIEW.md).
+These are expanded in [docs/ITERATION_1_REVIEW.md](docs/ITERATION_1_REVIEW.md).

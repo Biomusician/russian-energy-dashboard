@@ -4,6 +4,41 @@ All emitted files are UTF-8 JSON in `data/processed/`, mirrored to `web/public/d
 TypeScript mirrors of these shapes live in [`web/src/types.ts`](../web/src/types.ts), so
 a schema change surfaces as a type error rather than as `undefined` at runtime.
 
+> **Iteration 1 additions** (detailed below): `data/curated/recovery.csv`; the
+> `recovery`, `recovery_stats`, `assessed_degradation` and `coverage_detail` blocks in
+> `snapshot.json`; per-region `unresolved_count`; and cost fields on incidents. The
+> four analytic concepts — exposure, assessed degradation, recovery, confidence/coverage
+> — are kept structurally distinct.
+
+---
+
+## Input: `data/curated/recovery.csv` (iteration 1)
+
+One row per **facility** (`asset_id`), describing its most recent recovery assessment.
+Recovery attaches to the facility, not a single incident, because reconstitution is a
+property of the facility returning to service after its latest damage. **A row with no
+`source_urls` is skipped** (provenance is mandatory for a recovery claim).
+
+| Column | Meaning |
+|---|---|
+| `asset_id` | Facility slug, matching an incident's `asset_id` |
+| `status` | `active` / `degraded` / `repaired` / `unknown` |
+| `restoration_started_at` | Date repairs began (if reported) |
+| `partial_operations_resumed_at` | Date partial operations resumed |
+| `restoration_observed_days` | **Observed** days from disruption to first meaningful restart |
+| `reconstituted_at` | Date substantially restored (if reported) |
+| `reconstitution_observed_days` | **Observed** days from disruption to substantial restoration |
+| `reconstitution_level` | e.g. `partial`, `substantial`, `full` |
+| `est_lower_days` / `est_central_days` / `est_upper_days` | **Estimated** reconstitution window |
+| `estimate_basis` / `estimate_method` / `estimate_confidence` | Provenance of the estimate |
+| `evidence` | Free-text description of exactly what is claimed and by whom |
+| `source_types`, `source_urls` | `\|`-separated. **Required.** |
+
+**Evidence priority.** The scoring uses the strongest available: observed →
+estimated → modelled (the per-sector fallback in `methodology/scoring.json`). The
+`kind` is emitted on every recovery number so the UI never renders a guess like a
+report.
+
 ---
 
 ## Input: `data/curated/incidents.csv`
@@ -32,6 +67,9 @@ prose. **A row with no `source_urls` is skipped with a warning, not ingested.**
 | `capacity_affected_mw` | float | Only if a source states it. Leave blank otherwise |
 | `capacity_affected_mtpa` | float | As above |
 | `capacity_affected_pct` | float | As above |
+| `repair_cost_reported_usd_m` | float | **Reported** repair cost (a source stated it). Leave blank otherwise |
+| `repair_cost_estimate_low_usd_m` / `_high_usd_m` | float | **Estimated** repair-cost range from an external analyst |
+| `cost_basis` | string | Who estimated/reported the cost and how |
 | `first_seen` | ISO date | When this record entered the dataset |
 | `last_verified` | ISO date | When a human last checked it |
 | `conflicting_reports` | `true` \| `false` | Sources disagree on a material fact |
@@ -64,20 +102,65 @@ Current state, plus the honesty metadata.
   "sectors_uncovered": ["gas", "coal"],          // no capacity base; excluded from composite
   "heating_season": false,
   "denominators": { "refining_mtpa": 247.0, "electric_power_mw": 179662 },
-  "incident_total": 127,
+  "incident_total": 128,
   "incidents_with_quantified_capacity": 0,        // shown in the UI, not hidden
-  "live_disruptions": [ { "asset_id", "name", "disruption_weight", "event_count", "latest" } ],
+
+  // Concept 2 — assessed degradation, kept separate from exposure (quantified only)
+  "assessed_degradation": { "quantified_incident_count": 0, "total_incident_count": 128,
+                            "quantified_mw": 0, "quantified_mtpa": 0, "note": "…" },
+
+  // Concept 3 — reconstitution statistics (medians, always with sample size)
+  "recovery_stats": {
+    "unresolved_count": 34, "resolved_count": 1,
+    "median_observed_restoration_days": 72, "observed_restoration_sample": 1,
+    "median_impairment_age_days": 51, "impairment_age_sample": 33,
+    "evidence_kind_counts": { "observed": 1, "estimated": 2, "modelled": 32 },
+    "by_sector": { "refining": { "disrupted_facilities", "unresolved",
+                                 "observed_restoration_sample",
+                                 "median_observed_restoration_days" } },
+    "note": "…"
+  },
+
+  // Concept 4 — categorical coverage. No fabricated confidence interval.
+  "coverage_detail": { "by_year", "by_sector", "by_district", "by_cause", "note" },
+
+  // Each live disruption now carries a `recovery` object (see below)
+  "live_disruptions": [ { "asset_id", "name", "asset_class", "sector", "region_code",
+                          "disruption_weight", "event_count", "latest",
+                          "recovery": { /* RecoveryState */ } } ],
   "regions": { "RU-LEN": { /* RegionSnapshot */ } },
   "not_modelled": { "industrial_impact": "reason", ... },
   "coverage": {
     "reported_total_strikes": 305,
-    "enumerated_in_this_dataset": 127,
-    "coverage_ratio": 0.416,
+    "enumerated_in_this_dataset": 128,
+    "coverage_ratio": 0.42,
     "by_period": [ { "period": "3rd", "strikes": 92, "cumulative": 108 } ]
   },
   "parser_warnings": ["…: source row has 6 cells, expected 7; capacity not read"]
 }
 ```
+
+### `RecoveryState` (per live disruption)
+
+```jsonc
+{
+  "recovery_evidence_kind": "observed",   // observed | estimated | modelled — the key field
+  "reconstitution_horizon_days": 46,
+  "resolved": true,
+  "impairment_age_days": null,            // null once resolved
+  "observed_restoration_days": 72,        // present only for observed
+  "reconstitution_observed_days": 72,
+  "estimate_days": null,                  // { lower, central, upper, basis, method, confidence } for estimated
+  "reconstitution_level": "substantial",
+  "partial_operations_resumed_at": "2026-08-21",
+  "reconstituted_at": "2026-08-21",
+  "recovery_sources": [ { "url": "…" } ]
+}
+```
+
+`recovery_evidence_kind` is the one field the UI must always honour: **observed** and
+**estimated** and **modelled** are rendered in visibly different language, and a
+`modelled` record never carries an `observed_*` day count.
 
 `parser_warnings` is surfaced in the in-app methodology panel. A malformed upstream row
 becomes a visible warning, never a silently misaligned record.
@@ -93,6 +176,7 @@ becomes a visible warning, never a silently misaligned record.
   "incident_count": 22,
   "struck_facility_count": 5,
   "live_disruption_count": 5,
+  "unresolved_count": 5,               // facilities impaired with no reported restoration
   "installed_mw": 7915,
   "effects": {
     "generation_margin": 0.0,          // % of region's own installed MW

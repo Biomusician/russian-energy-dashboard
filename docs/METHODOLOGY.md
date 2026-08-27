@@ -44,18 +44,19 @@ incident record and displayed — it just is not what drives the score.
 ### Per event
 
 ```
-weight(event, t) = confidence × cause × status × 0.5 ^ (days_elapsed / half_life)
+weight(event, t) = confidence × cause × 0.5 ^ (days_elapsed / half_life)
 ```
 
 | Factor | Values | Rationale |
 |---|---|---|
 | `confidence` | confirmed 1.0 · probable 0.75 · possible 0.45 · unverified 0.2 | Evidence strength for whether the event occurred. Weak evidence is down-weighted, not discarded. |
 | `cause` | strike/sabotage 1.0 · cyber 0.8 · technical 0.8 · sanctions 0.6 · maintenance 0.15 · unknown 0.7 | Scheduled maintenance is planned downtime, not degradation. Sanctions bite gradually rather than removing capacity outright. |
-| `status` | active 1.0 · degraded 0.7 · repaired 0.1 · unknown 1.0 | Applied when a source explicitly states recovery state, overriding pure time decay. |
-| `half_life` | 14–120 days by asset class | See §5. |
+| `half_life` | evidence-driven (§5) | Set by observed → estimated → modelled recovery evidence. |
 
 Events below a 0.01 contribution are dropped so the time series does not carry a long
-meaningless tail.
+meaningless tail. When a facility carries no recovery record, an explicit `status` on
+the event itself (repaired 0.1 · degraded 0.7 · active/unknown 1.0) still applies as a
+fallback multiplier.
 
 ### Per facility
 
@@ -127,24 +128,46 @@ the `generation_margin` effect indicator.
 
 ---
 
-## 5. Repair half-lives — the weakest assumption
+## 5. Recovery / reconstitution — evidence over assumption
 
-| Class | Days | Class | Days |
+Iteration 1 replaced the flat repair half-life with an evidence-driven one. The decay
+half-life for a facility is set by the **strongest available evidence**, in order:
+
+1. **Observed** — a source reported how long restoration/reconstitution actually took.
+2. **Estimated** — a source gave an expected reconstitution window.
+3. **Modelled** — neither exists; the per-sector fallback below is used.
+
+The `kind` (observed / estimated / modelled) is carried on every recovery number and
+rendered in visibly different language in the UI. **A sourced restart never looks like a
+guess.** A confirmed reconstitution date collapses the facility's contribution to the
+residual. Recovery evidence lives in `data/curated/recovery.csv`; the model parameters
+live in `methodology/scoring.json` under `recovery`.
+
+A reconstitution horizon `H` (disruption → substantially restored) maps to a half-life
+of `H / 3.3219`, so impairment is ~10% (the residual) at `H`.
+
+### Modelled fallback horizons (days)
+
+Used only when no observed or estimated evidence exists.
+
+| Class | Horizon | Class | Horizon |
 |---|---|---|---|
-| Transmission line | 14 | Refinery | 45 |
-| Oil/gas pipeline | 21 | Coal | 45 |
-| Oil terminal, substation | 30 | Gas processing, thermal plant | 60 |
-| LNG terminal | 90 | Nuclear, hydro | 120 |
+| Transmission line | 46 | Refinery | 150 |
+| Oil/gas pipeline | 70 | Coal | 150 |
+| Oil terminal, substation | 100 | Gas processing, thermal plant | 200 |
+| LNG terminal | 300 | Nuclear, hydro | 400 |
 
-These encode how quickly each class of asset is typically returned to service. **They
-are assumptions, not measurements.** They are the single largest lever on every score:
-halving the refinery half-life roughly halves refining exposure at any given date.
+These are **assumptions, not measurements**, and remain the single largest lever on any
+score where no evidence exists. They were set so the implied half-lives match the
+original MVP model (keeping the index continuous) — a refinery unit hit today is ~50%
+"still impaired" at ~6 weeks and ~10% at ~5 months, broadly consistent with reported
+timelines. No systematic dataset of Russian repair durations was consulted because none
+is openly available. **Replacing these with curated observed durations is the highest-
+value model improvement**, and the framework now makes each such replacement visible as
+an "observed" record.
 
-They were chosen so that a refinery unit hit today is ~50% "still impaired" at six
-weeks and ~12% at three months, which is broadly consistent with reported repair
-timelines — but no systematic dataset of Russian refinery repair durations was
-consulted, because none is openly available. **This is the first thing to replace with
-evidence.**
+Current evidence mix: **1 observed, 2 estimated, ~32 modelled.** The dashboard shows
+this breakdown rather than hiding how much rests on assumption.
 
 ---
 

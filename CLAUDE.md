@@ -5,12 +5,18 @@ Project-level rules. These override `~/.claude/CLAUDE.md` where they conflict.
 ## What this is
 
 An open-source-only dashboard tracking publicly reported degradation of energy
-infrastructure in western Russia and Belarus, aggregated to administrative region,
-2022–present. It is a **research and monitoring instrument whose main product is
-calibrated honesty about what is and is not known**, with a good map attached.
+infrastructure in **Belarus, western Russia and the Siberian Federal District**,
+aggregated to administrative region, 2022–present (79 regions). It is a **research and
+monitoring instrument whose main product is calibrated honesty about what is and is not
+known**, with a good map attached.
 
-Read [docs/METHODOLOGY.md](docs/METHODOLOGY.md) before changing anything that produces a
-number.
+The area of interest is locked in `AOI_FEDERAL_DISTRICTS` (`pipeline/config.py`). The
+Far Eastern FD is defined but not enabled; adding it there turns it on with no refactor.
+Do not reintroduce the ambiguous "SFD" abbreviation — a test forbids it.
+
+Read [docs/METHODOLOGY.md](docs/METHODOLOGY.md) and, for the current state,
+[docs/ITERATION_1_REVIEW.md](docs/ITERATION_1_REVIEW.md), before changing anything that
+produces a number.
 
 ## SCOPE BOUNDARY — never relaxed
 
@@ -43,10 +49,19 @@ This is the project's whole point and it has already shaped the architecture:
 
 - The index measures **exposure**, not capacity loss, because open reporting does not
   support a loss figure. Do not "improve" it into a loss estimate.
+- Recovery is **evidence-driven**: observed > estimated > modelled, and the `kind`
+  travels with every recovery number so the UI never renders a guess like a report. Do
+  not collapse these into one undifferentiated figure. (`pipeline/recovery.py`,
+  `data/curated/recovery.csv`.)
+- The four concepts — exposure, assessed degradation, recovery, confidence/coverage —
+  stay **structurally distinct** in data and UI. A reported strike is not quantified
+  degradation; a reported restart is not full reconstitution.
 - Sectors with no capacity denominator are **excluded from the composite and the weights
   renormalised** — never counted as zero. Zero would mean "measured, nothing wrong".
 - Effect categories that cannot be derived render as **"not modelled" with a reason**,
   never as a blank row and never as a plausible-looking guess.
+- Rankings only ever include **affected** regions. Never rank undamaged infrastructure,
+  and never present a ranking as target value.
 - Where a source says a facility was hit "at least 16 times" without listing dates, only
   the extractable dates become events. The remainder is recorded as a known undercount.
 - The dashboard states its own **coverage ratio** and **quantified-capacity ratio** in
