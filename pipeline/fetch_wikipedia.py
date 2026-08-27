@@ -24,7 +24,7 @@ reporting of Ukrainian responsibility, not independent confirmation.
 import re
 
 from pipeline import wikitext as W
-from pipeline.dates import parse_dates, sort_key, unenumerated_count
+from pipeline.dates import parse_dates, unenumerated_count
 from pipeline.regionmatch import resolve
 from pipeline.util import fetch_json, log
 

@@ -22,8 +22,8 @@ the rest of the sector.
 import collections
 import datetime as dt
 
-from pipeline.config import METHODOLOGY_DIR, PROCESSED, SECTOR_OF_CLASS, SECTORS, WINDOW_START
-from pipeline.util import log, read_json
+from pipeline.config import METHODOLOGY_DIR, SECTOR_OF_CLASS, SECTORS, WINDOW_START
+from pipeline.util import read_json
 
 SCORING = read_json(METHODOLOGY_DIR / "scoring.json")
 
