@@ -784,3 +784,50 @@ def test_transmission_measure_never_claims_capacity_offline():
         assert "tracked_substations" in r and "tracked_transmission_lines" in r
         assert "transmission_burden" in r["effects"]
         break
+
+
+# --------------------------------------------------------------------------
+# Iteration 3: regional intensity vs national contribution
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_regional_intensity_separate_from_national_contribution():
+    """Regional intensity must be a distinct field, not the national-contribution esdi."""
+    snap = _snapshot()
+    for r in snap["regions"].values():
+        assert "regional_intensity" in r
+        ri = r["regional_intensity"]
+        assert set(ri) >= {"composite", "sectors", "covered_sectors", "missing_sectors"}
+        break
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_regional_intensity_unknown_denominator_is_missing_not_zero():
+    """A region disrupted in refining (no regional denominator) lists it as missing,
+    never scores it as zero intensity."""
+    snap = _snapshot()
+    # find a region disrupted in refining
+    offenders = []
+    for r in snap["regions"].values():
+        ri = r["regional_intensity"]
+        # refining is never an intensity-scored sector
+        assert "refining" not in ri["covered_sectors"]
+        # if the region has refining disruption it should be flagged missing
+        if r["incident_count"] > 0 and "refining" in ri["missing_sectors"]:
+            offenders.append(r["code"])
+    # At least one refinery region should be flagged (the corpus is refinery-heavy).
+    assert offenders, "expected some region to flag refining as a missing regional denominator"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_active_burden_columns_present():
+    """The Active Burden view needs decomposed columns, not a composite score."""
+    snap = _snapshot()
+    for r in snap["regions"].values():
+        for key in ("oldest_unresolved_days", "median_unresolved_age_days",
+                    "reconstitution_backlog_days", "affected_sectors"):
+            assert key in r, key
+        break

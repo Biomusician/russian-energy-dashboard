@@ -100,6 +100,10 @@ export interface RegionSnapshot {
   struck_facility_count: number;
   live_disruption_count: number;
   unresolved_count: number;
+  oldest_unresolved_days: number;
+  median_unresolved_age_days: number | null;
+  reconstitution_backlog_days: number;
+  affected_sectors: string[];
   installed_mw: number;
   tracked_substations: number;
   tracked_transmission_lines: number;

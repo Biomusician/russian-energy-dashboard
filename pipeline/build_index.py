@@ -307,6 +307,62 @@ def _voltage_weight(info):
     return vw["default"]
 
 
+# Sectors for which a defensible per-region capacity base exists. Refining and oil
+# logistics have no reliable regional denominator (the national refinery inventory is not
+# regionalised), so they are excluded from regional intensity and reported as missing.
+_INTENSITY_SECTORS = ("electric_generation", "transmission")
+
+
+def _regional_intensity(code, r_live, facility_info, installed_mw, tx_burden):
+    """Disruption relative to the REGION's own tracked base, per sector.
+
+    Returns per-sector intensity (or None where no regional denominator exists), the
+    covered/missing sector lists, and a composite renormalised over covered sectors only.
+    Unknown is never zero: a sector the region is disrupted in but cannot measure appears
+    in `missing_sectors`, not as a low score.
+    """
+    finfo = lambda x: facility_info[x["asset_id"]]
+    per_sector = {}
+
+    # Generation: disrupted installed MW / the region's own installed MW.
+    gen_disrupted = sum(
+        (finfo(x).get("capacity_mw") or 0) * x["disruption_weight"]
+        for x in r_live if finfo(x).get("sector") == "electric_generation"
+    )
+    per_sector["electric_generation"] = _pct(gen_disrupted, installed_mw) if installed_mw else None
+
+    # Transmission: event-burden against the saturation constant (regional == national
+    # basis for this event measure).
+    tx_live = any(finfo(x).get("sector") == "transmission" for x in r_live)
+    per_sector["transmission"] = (
+        round(min(100.0, 100.0 * tx_burden / SATURATION_EVENTS), 2) if tx_live else None
+    )
+
+    # Sectors the region is actually disrupted in, so we can flag the ones we cannot score.
+    disrupted_sectors = {finfo(x).get("sector") for x in r_live}
+    missing = sorted(
+        s for s in SECTORS
+        if s in disrupted_sectors and s not in _INTENSITY_SECTORS
+    )
+
+    sector_weights = SCORING["sector_weights"]
+    covered = [s for s in _INTENSITY_SECTORS if per_sector.get(s) is not None]
+    if covered:
+        total_w = sum(sector_weights.get(s, 0) for s in covered)
+        composite = round(
+            sum(sector_weights.get(s, 0) * per_sector[s] for s in covered) / total_w, 2
+        ) if total_w else None
+    else:
+        composite = None
+
+    return {
+        "composite": composite,
+        "sectors": per_sector,
+        "covered_sectors": covered,
+        "missing_sectors": missing,
+    }
+
+
 def _incident_recovery_state(incident, record, today):
     """Recovery/reconstitution state for ONE incident, evidence-tagged.
 
@@ -416,6 +472,19 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
         tx_ctx = denominators["tx_context"].get(code, {"substations": 0, "lines": 0})
         unresolved = [x for x in r_live if not x["recovery"]["resolved"]]
 
+        # Active-burden decomposition (transparent columns, not a composite): the oldest
+        # open impairment, the median open age, and the summed remaining reconstitution
+        # time (modelled/estimated horizon minus elapsed) across unresolved facilities.
+        open_ages = [x["recovery"]["impairment_age_days"] for x in unresolved
+                     if x["recovery"]["impairment_age_days"] is not None]
+        backlog_days = sum(
+            max(0, (x["recovery"]["reconstitution_horizon_days"] or 0)
+                - (x["recovery"]["impairment_age_days"] or 0))
+            for x in unresolved
+        )
+        affected_sectors = sorted({facility_info[x["asset_id"]].get("sector")
+                                   for x in unresolved if facility_info[x["asset_id"]].get("sector")})
+
         effects = {
             "generation_margin": _pct(disrupted_gen_mw, installed_mw),
             "fuel_production": _pct(disrupted_mtpa, denominators["national"]["refining"]),
@@ -434,6 +503,16 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
         }
         effects.update({k: None for k in NOT_MODELLED})
 
+        # Regional Disruption INTENSITY: disrupted vs the REGION's own tracked base, not
+        # the national base (which the ESDI "contribution" uses). Only sectors with a
+        # genuine regional denominator are scored; refining/oil-logistics have no reliable
+        # per-region capacity base, so they are excluded and reported as missing rather
+        # than treated as zero. A region disrupted in an unmeasurable sector shows that
+        # gap instead of a falsely low intensity.
+        intensity = _regional_intensity(
+            code, r_live, facility_info, installed_mw, tx_burden,
+        )
+
         regions_out[code] = {
             "code": code,
             "name": meta["name"],
@@ -450,9 +529,14 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             "struck_facility_count": len(struck),
             "live_disruption_count": len(r_live),
             "unresolved_count": len(unresolved),
+            "oldest_unresolved_days": max(open_ages) if open_ages else 0,
+            "median_unresolved_age_days": _median(open_ages),
+            "reconstitution_backlog_days": round(backlog_days),
+            "affected_sectors": affected_sectors,
             "installed_mw": round(installed_mw),
             "tracked_substations": tx_ctx["substations"],
             "tracked_transmission_lines": tx_ctx["lines"],
+            "regional_intensity": intensity,
             "effects": effects,
         }
 

@@ -106,13 +106,28 @@ export function OverviewTab(p: TabProps) {
         <KV k="Events to date" v={regionIncidents.length} />
         <KV k="Facilities affected" v={region.struck_facility_count} />
         <KV k="Currently impaired (unresolved)" v={region.unresolved_count} />
-        <KV k="Installed generation" v={`${region.installed_mw.toLocaleString("en-GB")} MW`} />
+        <KV k="Reconstitution backlog" v={`${region.reconstitution_backlog_days} d`} hint="summed remaining reconstitution time across unresolved facilities" />
       </Block>
 
-      <Block title="Effects (summary)" right={<button className="ghost" style={{ padding: "1px 6px", fontSize: 10 }} onClick={() => p.onTab("Effects")}>full ›</button>}>
-        <KV k="Generation margin" v={pct(region.effects.generation_margin)} />
-        <KV k="Fuel production" v={pct(region.effects.fuel_production)} />
-        <KV k="Repair burden (unresolved)" v={region.effects.repair_burden} />
+      <Block title="Regional intensity vs national contribution">
+        <KV k="Contribution to national exposure" v={fmtNum(esdiNow, 1)} hint="this region's share of the national disrupted-capacity exposure" />
+        <KV
+          k="Regional disruption intensity"
+          v={region.regional_intensity?.composite != null ? fmtNum(region.regional_intensity.composite, 1) : "—"}
+          hint="disruption vs the region's own tracked base (generation + transmission)"
+        />
+        {(region.regional_intensity?.missing_sectors.length ?? 0) > 0 && (
+          <div style={{ fontSize: 10, color: "var(--amber)", marginTop: 4 }}>
+            No regional denominator for {region.regional_intensity!.missing_sectors.map((s) => titleCase(s)).join(", ")} — excluded from intensity, not counted as zero.
+          </div>
+        )}
+      </Block>
+
+      <Block title="Network & sectors" right={<button className="ghost" style={{ padding: "1px 6px", fontSize: 10 }} onClick={() => p.onTab("Effects")}>effects ›</button>}>
+        <KV k="Installed generation" v={`${region.installed_mw.toLocaleString("en-GB")} MW`} />
+        <KV k="Tracked substations (≥220 kV)" v={region.tracked_substations} />
+        <KV k="Tracked HV lines (≥330 kV)" v={region.tracked_transmission_lines} />
+        <KV k="Transmission burden" v={fmtNum(region.effects.transmission_burden, 2)} hint="weighted burden of recently-disrupted transmission facilities (not % offline)" />
         <KV k="Recurrence" v={fmtNum(region.effects.recurrence, 2)} />
       </Block>
 
@@ -166,10 +181,18 @@ interface RankCtx {
 const RANK_METRICS: Metric[] = [
   {
     key: "exposure",
-    label: "Disruption exposure",
-    desc: "Share of tracked capacity at disrupted sites, evidence- and recency-weighted, at the selected time. NOT measured capacity loss.",
+    label: "Contribution to National Exposure",
+    desc: "This region's share of the NATIONAL disrupted-capacity exposure, evidence- and recency-weighted. A large region can rank high without being intensely disrupted itself. NOT measured capacity loss.",
     value: (code, c) => c.bundle.regional.regions[code]?.esdi[c.step] ?? 0,
     fmt: (v) => fmtNum(v, 1),
+  },
+  {
+    key: "intensity",
+    label: "Regional Disruption Intensity",
+    desc: "Disruption relative to the REGION's OWN tracked base (generation MW + transmission burden). Refining/oil-logistics have no regional denominator and are excluded, shown as 'missing' — never counted as zero. Current.",
+    value: (code, c) => c.bundle.snapshot.regions[code]?.regional_intensity?.composite ?? 0,
+    fmt: (v) => fmtNum(v, 1),
+    current: true,
   },
   {
     key: "unresolved",
@@ -179,8 +202,15 @@ const RANK_METRICS: Metric[] = [
     current: true,
   },
   {
+    key: "backlog",
+    label: "Reconstitution backlog (days)",
+    desc: "Summed remaining reconstitution time across the region's unresolved facilities (horizon minus elapsed). Modelled/estimated where no observed timing exists. Current.",
+    value: (code, c) => c.bundle.snapshot.regions[code]?.reconstitution_backlog_days ?? 0,
+    current: true,
+  },
+  {
     key: "recent",
-    label: "Recent events (90 days)",
+    label: "Recent activity (90 days)",
     desc: "Count of recorded events in the 90 days up to the selected date. A recency signal, not a severity measure.",
     value: (code, c) => {
       const cutoff = shift(c.currentDate, -90);
@@ -206,7 +236,7 @@ const RANK_METRICS: Metric[] = [
   },
   {
     key: "confidence",
-    label: "Data confidence",
+    label: "Data coverage / confidence",
     desc: "Share of the region's events sourced at 'confirmed' or 'probable'. A high value means well-corroborated reporting, NOT necessarily more disruption.",
     value: (code, c) => {
       const inc = c.incidentsByRegion.get(code) ?? [];
@@ -227,6 +257,7 @@ function shift(date: string, days: number): string {
 export function RankingsTab(p: TabProps) {
   const [metricKey, setMetricKey] = useState("exposure");
   const [desc, setDesc] = useState(true);
+  const [view, setView] = useState<"ranked" | "burden">("ranked");
   const metric = RANK_METRICS.find((m) => m.key === metricKey)!;
   const ctx: RankCtx = { bundle: p.bundle, step: p.step, incidentsByRegion: p.incidentsByRegion, currentDate: p.currentDate };
 
@@ -242,9 +273,15 @@ export function RankingsTab(p: TabProps) {
 
   const max = Math.max(1, ...rows.map((x) => x.value));
 
+  if (view === "burden") return <ActiveBurdenTable p={p} onBack={() => setView("ranked")} />;
+
   return (
     <div className="tab-body">
       <div className="ranking-picker">
+        <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+          <button className="ghost" aria-pressed={true}>Ranked</button>
+          <button className="ghost" onClick={() => setView("burden")} title="Where is the unresolved burden greatest right now?">Active burden ›</button>
+        </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <select className="ghost" value={metricKey} onChange={(e) => setMetricKey(e.target.value)}>
             {RANK_METRICS.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
@@ -273,13 +310,82 @@ export function RankingsTab(p: TabProps) {
               {x.r.name}
               {!x.r.esdi_included && <span className="tag context" style={{ marginLeft: 6 }}>context</span>}
             </div>
-            <div className="rank-sub">{x.r.district} · {x.r.incident_count} events</div>
-            <div className="rank-bar"><i style={{ width: `${(x.value / max) * 100}%`, background: metricKey === "confidence" ? "var(--accent)" : severityColor(metricKey === "exposure" ? x.value : Math.min(12, x.value)) }} /></div>
+            <div className="rank-sub">
+              {x.r.district} · {x.r.incident_count} events
+              {metricKey === "intensity" && (x.r.regional_intensity?.missing_sectors.length ?? 0) > 0 && (
+                <span style={{ color: "var(--amber)" }}> · no regional base: {x.r.regional_intensity!.missing_sectors.map((s) => titleCase(s)).join(", ")}</span>
+              )}
+            </div>
+            <div className="rank-bar"><i style={{ width: `${(x.value / max) * 100}%`, background: metricKey === "confidence" ? "var(--accent)" : severityColor(metricKey === "exposure" || metricKey === "intensity" ? x.value : Math.min(12, x.value)) }} /></div>
           </span>
           <span className="rank-val">{(metric.fmt ?? ((v) => String(Math.round(v))))(x.value)}</span>
         </div>
       ))}
-      <Note>Rankings only ever include regions with recorded disruption. Undamaged infrastructure is never ranked, and no ranking represents target value.</Note>
+      <Note>Rankings only ever include regions with recorded disruption. Undamaged infrastructure is never ranked, and no ranking represents target value. "Contribution to National Exposure" and "Regional Intensity" answer different questions — a big region can top the first without topping the second.</Note>
+    </div>
+  );
+}
+
+/** Active Burden: a transparent sortable table (columns, not a composite) answering
+ *  "where is the unresolved energy-disruption burden greatest right now?". */
+function ActiveBurdenTable({ p, onBack }: { p: TabProps; onBack: () => void }) {
+  type Col = { key: string; label: string; get: (r: RegionSnapshot) => number };
+  const cols: Col[] = [
+    { key: "unresolved_count", label: "Unresolved", get: (r) => r.unresolved_count },
+    { key: "oldest_unresolved_days", label: "Oldest (d)", get: (r) => r.oldest_unresolved_days },
+    { key: "median_unresolved_age_days", label: "Median age (d)", get: (r) => r.median_unresolved_age_days ?? 0 },
+    { key: "reconstitution_backlog_days", label: "Backlog (d)", get: (r) => r.reconstitution_backlog_days },
+  ];
+  const [sortKey, setSortKey] = useState("unresolved_count");
+  const active = cols.find((c) => c.key === sortKey)!;
+  const rows = Object.values(p.bundle.snapshot.regions)
+    .filter((r) => r.unresolved_count > 0)
+    .sort((a, b) => active.get(b) - active.get(a))
+    .slice(0, 40);
+
+  return (
+    <div className="tab-body">
+      <div className="ranking-picker">
+        <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+          <button className="ghost" onClick={onBack}>‹ Ranked</button>
+          <button className="ghost" aria-pressed={true}>Active burden</button>
+        </div>
+        <div className="ranking-desc">
+          Unresolved-disruption burden, by region, decomposed into transparent columns.
+          Click a column to sort; click a region to select it. No hidden composite.
+        </div>
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table className="burden-table">
+          <thead>
+            <tr>
+              <th style={{ textAlign: "left" }}>Region</th>
+              {cols.map((c) => (
+                <th key={c.key} onClick={() => setSortKey(c.key)}
+                    aria-sort={sortKey === c.key ? "descending" : undefined}>
+                  {c.label}{sortKey === c.key ? " ▼" : ""}
+                </th>
+              ))}
+              <th style={{ textAlign: "left" }}>Sectors</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.code} onClick={() => p.onSelect(r.code)} className={r.code === p.selected ? "sel" : ""}>
+                <td style={{ textAlign: "left" }}>
+                  {r.name}{!r.esdi_included && <span className="tag context" style={{ marginLeft: 5 }}>ctx</span>}
+                </td>
+                {cols.map((c) => <td key={c.key} className="num">{c.get(r) || "—"}</td>)}
+                <td style={{ textAlign: "left", color: "var(--text-dim)", fontSize: 10 }}>
+                  {r.affected_sectors.map((s) => titleCase(s).replace("Electric ", "")).join(", ") || "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {rows.length === 0 && <div className="empty">No unresolved disruptions currently recorded.</div>}
+      <Note>Backlog = summed remaining reconstitution time (horizon − elapsed) across unresolved facilities, modelled/estimated where no observed timing exists. A transparent burden view, not a score.</Note>
     </div>
   );
 }
