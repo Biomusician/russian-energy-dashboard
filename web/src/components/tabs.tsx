@@ -3,10 +3,10 @@
  *  primary visualization; these give it depth. */
 
 import { useMemo, useState } from "react";
-import type { Bundle, Incident, LiveDisruption, RegionSnapshot } from "../types";
+import type { Bundle, CoverageDetail, Incident, LiveDisruption, RegionSnapshot } from "../types";
 import { fmtDate, fmtNum, titleCase } from "../data";
 import { classColor, evidence, severityColor } from "../palette";
-import { Bar, EventRow, EvidenceChip, RecoveryLine, Tile, pct } from "./ui";
+import { Bar, EventRow, EvidenceChip, RecoveryLine, Tile } from "./ui";
 
 export interface TabProps {
   bundle: Bundle;
@@ -19,7 +19,7 @@ export interface TabProps {
   onTab: (tab: string) => void;
 }
 
-function Block({ title, right, children }: { title: string; right?: React.ReactNode; children: React.ReactNode }) {
+function Block({ title, right, children }: { title: React.ReactNode; right?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section style={{ padding: "10px 14px 14px", borderBottom: "1px solid var(--line-soft)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
@@ -437,6 +437,11 @@ export function RecentTab(p: TabProps) {
               <span className={`tag ${i.confidence}`}>{i.confidence}</span>
               {isContextRegion(i.region_code) && <span className="tag context">context · excl. index</span>}
               {i.conflicting_reports && <span className="tag conflict">sources conflict</span>}
+              {live && live.event_count > 1 && (
+                <span className="tag repeat" title={`This facility has ${live.event_count} recorded disruption events — a repeatedly targeted site, not a one-off.`}>
+                  struck ×{live.event_count}
+                </span>
+              )}
             </div>
             <div className="rc-summary">{summarise(i, regionName(i.region_code))}</div>
             {live && <RecoveryLine r={live.recovery} />}
@@ -601,21 +606,24 @@ function RecoveryFacility({ d, regionName }: { d: LiveDisruption; regionName?: s
 
 // ============================================================ EFFECTS
 
-const STRATEGIC = [
-  { key: "fuel_market_pressure", label: "Domestic fuel-market pressure", from: "refining" },
-  { key: "refining_utilization", label: "Refining utilization pressure", from: "refining" },
-  { key: "export_revenue", label: "Export / revenue effect", from: "oil_logistics" },
-];
+/** Layer badge: the three-layer distinction the brief insists on. A proxy must never
+ *  carry the same visual authority as a measured observation. */
+function LayerBadge({ layer }: { layer: "observed" | "structural" | "proxy" }) {
+  const cfg = {
+    observed: { c: "var(--green)", t: "Observed" },
+    structural: { c: "var(--accent)", t: "Structural context" },
+    proxy: { c: "var(--amber)", t: "Analytic proxy" },
+  }[layer];
+  return <span className={`layer-badge ${layer}`} style={{ color: cfg.c }}>{cfg.t}</span>;
+}
 
 export function EffectsTab(p: TabProps) {
   const { bundle, selected, step } = p;
   const region = selected ? bundle.snapshot.regions[selected] : null;
   const heating = bundle.snapshot.heating_season;
-
-  // National sector exposures at the current step, reused for the strategic panel.
   const sectorNow = (s: string) => (region ? region.sectors[s] ?? 0 : bundle.national.sectors[s]?.[step] ?? 0);
-
-  const effects = region?.effects;
+  const ad = bundle.snapshot.assessed_degradation;
+  const econ = bundle.snapshot.economic_context;
 
   return (
     <div className="tab-body">
@@ -624,47 +632,70 @@ export function EffectsTab(p: TabProps) {
         {!region && <span className="eyebrow">select a region for detail</span>}
       </div>
 
-      {region ? (
-        <>
-          <Block title="Physical / operational effects">
-            <EffectRow k="Generation margin" v={pct(effects!.generation_margin)} hint="share of the region's own installed MW at impaired plants" />
-            <EffectRow k="Fuel production" v={pct(effects!.fuel_production)} hint="share of national refining capacity impaired here" />
-            <EffectRow k="Logistics / transport" v={fmtNum(effects!.logistics, 2)} hint="weighted count of impaired oil-logistics nodes" />
-            <EffectRow k="Heating exposure" v={heating ? pct(effects!.heating_season_exposure) : "out of season"} hint="thermal generation impaired during Oct–Apr" />
-            <EffectRow k="Repair burden" v={effects!.repair_burden} hint="facilities with impairment still unresolved" />
-            <EffectRow k="Recurrence" v={fmtNum(effects!.recurrence, 2)} hint="mean recorded events per affected facility" />
-          </Block>
-        </>
-      ) : (
-        <Block title="Sector exposure (national)">
-          <div className="bars">
-            {Object.entries(bundle.taxonomy.sectors).map(([k, label]) => {
-              const covered = bundle.snapshot.sectors_covered.includes(k);
-              return covered
-                ? <Bar key={k} label={label} value={sectorNow(k)} max={100} suffix="" />
-                : (
-                  <div className="bar-row" key={k}>
-                    <span style={{ color: "var(--text-faint)" }}>{label}</span>
-                    <span style={{ gridColumn: "2 / span 2", color: "var(--text-faint)", fontStyle: "italic", fontSize: 10.5 }}>no capacity base — not scored</span>
-                  </div>
-                );
-            })}
-          </div>
-        </Block>
-      )}
+      <div className="concept-key" style={{ gap: 8 }}>
+        <LayerBadge layer="observed" /><LayerBadge layer="structural" /><LayerBadge layer="proxy" />
+        <span style={{ fontSize: 9.5 }}>— a proxy is never shown with the authority of a measurement.</span>
+      </div>
 
-      <Block title="Strategic / war-sustainment pressure">
-        <div style={{ fontSize: 10.5, color: "var(--text-dim)", marginBottom: 8, lineHeight: 1.5 }}>
-          Macro-level indicators derived from refining and logistics exposure. Deliberately strategic, never tactical: no unit-supply inference.
-        </div>
-        {STRATEGIC.map((s) => {
-          const v = sectorNow(s.from);
-          return <Bar key={s.key} label={s.label} value={v} max={100} color={severityColor(v)} suffix="" />;
-        })}
-        <div style={{ fontSize: 10, color: "var(--text-faint)", marginTop: 8, lineHeight: 1.45 }}>
-          These track exposure in the refining and export-logistics sectors as a proxy for pressure on fuel supply and hydrocarbon export revenue — the open-source-observable channels through which energy disruption bears on war sustainment.
+      {/* LAYER 1: OBSERVED */}
+      <Block title={<><LayerBadge layer="observed" /> Observed effect</>}>
+        <KV k="Quantified capacity effect (events)" v={`${ad.quantified_incident_count} of ${ad.total_incident_count}`} hint="events whose sources quantified the capacity lost" />
+        <KV k="Quantified refining lost" v={ad.quantified_mtpa > 0 ? `${fmtNum(ad.quantified_mtpa, 1)} MTPA` : "—"} />
+        {region && (
+          <KV k="Currently impaired facilities" v={region.unresolved_count} hint="a directly recorded, unresolved disruption count" />
+        )}
+        <div style={{ fontSize: 10, color: "var(--text-faint)", marginTop: 4, lineHeight: 1.45 }}>
+          Directly reported consequences only. Open reporting rarely quantifies lost output, so this layer is deliberately sparse — it is not padded with model output.
         </div>
       </Block>
+
+      {/* LAYER 2: STRUCTURAL CONTEXT */}
+      <Block title={<><LayerBadge layer="structural" /> Structural exposure / context</>}>
+        {region ? (
+          <>
+            <KV k="Region population" v={region.population_millions != null ? `${fmtNum(region.population_millions, 1)} m` : "—"} hint="population POTENTIALLY exposed — not population actually affected" />
+            <KV k="Installed generation" v={`${region.installed_mw.toLocaleString("en-GB")} MW`} />
+            <KV k="Tracked substations / HV lines" v={`${region.tracked_substations} / ${region.tracked_transmission_lines}`} />
+            <KV k="Heating season" v={heating ? "active (Oct–Apr)" : "out of season"} />
+          </>
+        ) : (
+          <>
+            <KV k="Tracked refining base" v={`${fmtNum(bundle.snapshot.denominators.refining_mtpa, 0)} MTPA`} />
+            <KV k="Tracked generation base" v={`${bundle.snapshot.denominators.electric_generation_mw.toLocaleString("en-GB")} MW`} />
+            <KV k="Heating season" v={heating ? "active (Oct–Apr)" : "out of season"} />
+          </>
+        )}
+        <div style={{ fontSize: 10, color: "var(--text-faint)", marginTop: 4, lineHeight: 1.45 }}>
+          Factors that could make disruption consequential. Population is potentially exposed, never a claim that people were affected.
+        </div>
+      </Block>
+
+      {/* LAYER 3: ANALYTIC PROXY */}
+      <Block title={<><LayerBadge layer="proxy" /> Analytic proxy — sector exposure</>}>
+        <div className="bars">
+          {Object.entries(bundle.taxonomy.sectors).map(([k, label]) => {
+            const covered = bundle.snapshot.sectors_covered.includes(k);
+            return covered
+              ? <Bar key={k} label={label} value={sectorNow(k)} max={100} color="var(--amber)" suffix="" />
+              : (
+                <div className="bar-row" key={k}>
+                  <span style={{ color: "var(--text-faint)" }}>{label}</span>
+                  <span style={{ gridColumn: "2 / span 2", color: "var(--text-faint)", fontStyle: "italic", fontSize: 10.5 }}>no capacity base — not scored</span>
+                </div>
+              );
+          })}
+        </div>
+        <div style={{ fontSize: 10, color: "var(--text-faint)", marginTop: 6, lineHeight: 1.45 }}>
+          Model-derived exposure, NOT a measured effect. Refining and logistics exposure proxy the war-sustainment channel (fuel supply, export revenue) — strategic only, never tactical unit-supply inference.
+        </div>
+      </Block>
+
+      {/* Observed external economic context (CREA), distinct from the proxy */}
+      {econ && !region && (
+        <Block title={<><LayerBadge layer="observed" /> Observed economic context (CREA)</>}>
+          <EconContext econ={econ} />
+        </Block>
+      )}
 
       <Block title="Not modelled">
         {Object.entries(bundle.snapshot.not_modelled).map(([k, reason]) => (
@@ -681,38 +712,83 @@ export function EffectsTab(p: TabProps) {
   );
 }
 
-function EffectRow({ k, v, hint }: { k: string; v: React.ReactNode; hint?: string }) {
+function EconContext({ econ }: { econ: NonNullable<Bundle["snapshot"]["economic_context"]> }) {
+  const series = econ.metrics["total_fossil_export_revenue"] ?? [];
+  const max = Math.max(1, ...series.map((x) => x.value ?? 0));
   return (
-    <div className="kv" title={hint}>
-      <span className="k">{k}</span>
-      <span className="v">{v}</span>
-    </div>
+    <>
+      <div style={{ fontSize: 10.5, color: "var(--text-dim)", marginBottom: 6, lineHeight: 1.5 }}>
+        Russian total fossil-fuel export revenue (EUR mn/day), monthly, from CREA. An
+        observed external indicator — <strong>not</strong> attributed to strikes.
+      </div>
+      <div className="bars">
+        {series.map((s) => (
+          <div className="bar-row" key={s.reporting_month}>
+            <span style={{ color: "var(--text-dim)" }}>{s.reporting_month}</span>
+            <span className="bar-track"><i style={{ width: `${((s.value ?? 0) / max) * 100}%`, background: "var(--accent-dim)" }} /></span>
+            <span className="bar-num">
+              <a href={s.source_url ?? "#"} target="_blank" rel="noreferrer noopener" style={{ color: "var(--text-dim)" }}>{s.value}</a>
+            </span>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 10, color: "var(--text-faint)", marginTop: 6, lineHeight: 1.45 }}>{econ.caveat}</div>
+    </>
   );
 }
 
 // ============================================================ COSTS
 
 export function CostsTab(p: TabProps) {
-  const withCost = p.bundle.incidents.filter(
+  const { bundle, selected } = p;
+  const rs = bundle.snapshot.recovery_stats;
+  const region = selected ? bundle.snapshot.regions[selected] : null;
+
+  // Reconstitution burden aggregated without inventing a single dollar figure.
+  const regionList = Object.values(bundle.snapshot.regions);
+  const nationalBacklog = regionList.reduce((a, r) => a + (r.reconstitution_backlog_days || 0), 0);
+  const backlogSource = region ? region.reconstitution_backlog_days : nationalBacklog;
+  const unresolved = region ? region.unresolved_count : rs.unresolved_count;
+  const withCost = bundle.incidents.filter(
     (i) => i.repair_cost_reported_usd_m != null || i.repair_cost_estimate_low_usd_m != null,
   );
   return (
     <div className="tab-body">
       <div className="section-head" style={{ position: "static" }}>
-        <h2 style={{ fontSize: 12 }}>Costs & economic effects</h2>
-        <span className="eyebrow">early view</span>
+        <h2 style={{ fontSize: 12 }}>{region ? region.name : "National"} — costs &amp; reconstitution</h2>
+        <span className="eyebrow">repair burden</span>
       </div>
 
+      <div className="tiles">
+        <Tile label="Facilities awaiting reconstitution" value={unresolved} />
+        <Tile label="Reconstitution backlog (days)" value={backlogSource} small />
+        <Tile label="Median impairment age (days)" value={rs.median_impairment_age_days ?? "—"} small />
+        <Tile label="Full reconstitutions observed" value={rs.full_reconstitution_episodes} small />
+      </div>
+
+      <Block title="Reconstitution burden — the non-monetary cost">
+        <div style={{ fontSize: 10.5, color: "var(--text-dim)", marginBottom: 8, lineHeight: 1.5 }}>
+          Where repair-cost figures are absent, the recoverable cost signal is the
+          <em> reconstitution burden</em>: how many facilities remain impaired and how long
+          they have stayed that way. This is directly observed, not modelled or priced.
+        </div>
+        <KV k="Facilities still impaired" v={unresolved} hint="open, unresolved disruptions" />
+        <KV k="Summed remaining reconstitution time" v={`${backlogSource} d`} hint="sum of evidence-graded remaining reconstitution horizons across open facilities" />
+        <KV k="Partial restarts (not yet full)" v={rs.partial_restart_episodes} hint="operations resumed but reconstitution incomplete" />
+        <KV k="Observed full reconstitutions" v={rs.full_reconstitution_episodes} />
+      </Block>
+
       <Note warn>
-        This is a data-model foundation. Repair-cost and economic-consequence figures are
-        populated only from sources, and almost none are public today, so most values are
-        deliberately absent. Reported, externally-estimated and modelled costs are kept
-        structurally distinct and none are invented to fill the view.
+        Monetary repair-cost and economic-consequence figures are populated only from public
+        sources, and almost none exist today, so most dollar values are deliberately absent.
+        Reported, externally-estimated and modelled costs are kept structurally distinct and
+        none are invented. The reconstitution burden above stands in as the defensible,
+        source-grounded cost measure.
       </Note>
 
       <div className="tiles">
-        <Tile label="Incidents with a reported repair cost" value={withCost.filter((i) => i.repair_cost_reported_usd_m != null).length} />
-        <Tile label="Incidents with a cost estimate" value={withCost.filter((i) => i.repair_cost_estimate_low_usd_m != null).length} />
+        <Tile label="Incidents with a reported repair cost" value={withCost.filter((i) => i.repair_cost_reported_usd_m != null).length} small />
+        <Tile label="Incidents with a cost estimate" value={withCost.filter((i) => i.repair_cost_estimate_low_usd_m != null).length} small />
       </div>
 
       {withCost.length === 0 ? (
@@ -752,6 +828,49 @@ export function CostsTab(p: TabProps) {
 }
 
 // ============================================================ SOURCES / CONFIDENCE
+
+/** Evidence coverage heatmap: for each sector, how much evidence of each kind exists.
+ *  The point is to separate "low disruption" (few events, but we would see them) from
+ *  "little data" (a sector we simply have not populated) — a blank cell is not a zero. */
+function EvidenceMatrix({ detail, sectors }: { detail: CoverageDetail; sectors: Record<string, string> }) {
+  const matrix = detail.evidence_matrix ?? {};
+  const cols: { key: "events" | "recovery" | "cost"; label: string }[] = [
+    { key: "events", label: "Events" },
+    { key: "recovery", label: "Recovery" },
+    { key: "cost", label: "Cost" },
+  ];
+  const rows = Object.keys(sectors).filter((s) => matrix[s]);
+  // Per-column max so intensity is comparable within a column, not across kinds.
+  const colMax = (k: "events" | "recovery" | "cost") => Math.max(1, ...rows.map((s) => matrix[s]?.[k] ?? 0));
+  const cell = (n: number, max: number) => {
+    if (n === 0) return { background: "var(--line-soft)", color: "var(--text-faint)" };
+    const t = 0.18 + 0.82 * (n / max);
+    return { background: `color-mix(in srgb, var(--accent) ${Math.round(t * 100)}%, transparent)`, color: t > 0.55 ? "#04121f" : "var(--text)" };
+  };
+  return (
+    <Block title="Evidence coverage matrix">
+      <div style={{ fontSize: 10.5, color: "var(--text-dim)", margin: "0 14px 8px", lineHeight: 1.5 }}>
+        How much evidence of each kind exists per sector. A faint cell means <em>little data
+        here</em>, which is not the same as <em>low disruption</em> — read it as coverage, not effect.
+      </div>
+      <div className="ev-matrix" style={{ padding: "0 14px 4px" }}>
+        <div className="ev-row ev-head">
+          <span className="ev-sector" />
+          {cols.map((c) => <span key={c.key} className="ev-cell-h">{c.label}</span>)}
+        </div>
+        {rows.map((s) => (
+          <div className="ev-row" key={s}>
+            <span className="ev-sector">{sectors[s]}</span>
+            {cols.map((c) => {
+              const n = matrix[s]?.[c.key] ?? 0;
+              return <span key={c.key} className="ev-cell" style={cell(n, colMax(c.key))}>{n}</span>;
+            })}
+          </div>
+        ))}
+      </div>
+    </Block>
+  );
+}
 
 export function SourcesTab(p: TabProps) {
   const { bundle } = p;
@@ -816,6 +935,8 @@ export function SourcesTab(p: TabProps) {
           ))}
         </div>
       </Block>
+
+      <EvidenceMatrix detail={detail} sectors={bundle.taxonomy.sectors} />
 
       <Note>{detail.note}</Note>
 

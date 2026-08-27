@@ -831,3 +831,101 @@ def test_active_burden_columns_present():
                     "reconstitution_backlog_days", "affected_sectors"):
             assert key in r, key
         break
+
+
+# --------------------------------------------------------------------------
+# Iteration 3: CREA economic context — observed, provenanced, not a strike feed
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_crea_economic_context_is_observed_and_provenanced():
+    """CREA context must be labelled observed context, monthly, never attributed to
+    strikes, and every point must carry reporting month, snapshot date and a source."""
+    snap = _snapshot()
+    ec = snap.get("economic_context")
+    assert ec is not None, "economic_context should be emitted"
+    assert ec["cadence"] == "monthly"
+    assert ec["kind"] == "observed_economic_context"
+    # The caveat must explicitly refuse strike attribution.
+    assert "NOT attributed" in ec["caveat"] or "not attributed" in ec["caveat"].lower()
+    assert ec["metrics"], "expected at least one economic metric series"
+    for series in ec["metrics"].values():
+        assert series, "metric series should not be empty"
+        for pt in series:
+            assert pt["reporting_month"], "each point needs a reporting month"
+            assert pt["snapshot_date"], "each point needs a snapshot date (revision provenance)"
+            assert pt["source_url"], "each point needs a provenance URL"
+            assert pt["value"] is not None
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_crea_series_sorted_by_reporting_month():
+    """Monthly series must be chronologically ordered so the UI never draws a scrambled line."""
+    snap = _snapshot()
+    ec = snap.get("economic_context")
+    assert ec is not None
+    for series in ec["metrics"].values():
+        months = [p["reporting_month"] for p in series]
+        assert months == sorted(months)
+
+
+# --------------------------------------------------------------------------
+# Iteration 3: refinery reconciliation — honest denominator, no padding
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_refinery_reconciliation_is_lower_bound_not_padded():
+    """Tracked capacity must be <= the national estimate, and coverage must be the honest
+    ratio of the two — never forced to 100% by padding unlike facilities."""
+    snap = _snapshot()
+    rec = snap.get("refinery_reconciliation")
+    assert rec is not None, "refinery_reconciliation should be emitted"
+    tracked = rec["tracked_mtpa"]
+    national = rec["national_public_estimate_mtpa"]
+    assert 0 < tracked <= national, "tracked capacity must not exceed the national estimate"
+    assert rec["gap_mtpa"] == pytest.approx(national - tracked, abs=0.2)
+    assert rec["coverage_pct"] == pytest.approx(100.0 * tracked / national, abs=0.6)
+    assert rec["coverage_pct"] < 100.0, "coverage should be an honest lower bound, not 100%"
+
+
+# --------------------------------------------------------------------------
+# Iteration 3: evidence coverage matrix — coverage, not effect
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_evidence_matrix_distinguishes_coverage_from_effect():
+    """coverage_detail must carry a per-sector evidence matrix with event/recovery/cost
+    counts, so the UI can tell 'little data' from 'low disruption'."""
+    snap = _snapshot()
+    em = snap["coverage_detail"].get("evidence_matrix")
+    assert em, "evidence_matrix should be present and non-empty"
+    for sector, cells in em.items():
+        assert set(cells) >= {"events", "recovery", "cost"}
+        for v in cells.values():
+            assert isinstance(v, int) and v >= 0
+    # A sector we actually populated (refining) must show events.
+    assert em.get("refining", {}).get("events", 0) > 0
+
+
+# --------------------------------------------------------------------------
+# Iteration 3: population is structural exposure, never "actually affected"
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_population_is_structural_context_on_regions():
+    """Regions carry population_millions as structural context; it is a plain number or
+    null (not yet researched), never derived from incidents."""
+    snap = _snapshot()
+    seen_value = False
+    for r in snap["regions"].values():
+        assert "population_millions" in r
+        pop = r["population_millions"]
+        assert pop is None or (isinstance(pop, (int, float)) and pop > 0)
+        if pop:
+            seen_value = True
+    assert seen_value, "expected at least one region with a researched population"

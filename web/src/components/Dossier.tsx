@@ -22,7 +22,7 @@ const TABS: {
   { key: "Recent", label: "Recent", Comp: RecentTab, badge: (p) => Math.min(10, p.visibleIncidents.length) },
   { key: "Reconstitution", label: "Recovery", Comp: ReconstitutionTab, badge: (p) => p.bundle.snapshot.recovery_stats.unresolved_count },
   { key: "Effects", label: "Effects", Comp: EffectsTab },
-  { key: "Costs", label: "Costs", Comp: CostsTab },
+  { key: "Costs", label: "Repair burden", Comp: CostsTab },
   { key: "Sources", label: "Sources", Comp: SourcesTab },
 ];
 

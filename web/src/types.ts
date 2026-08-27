@@ -107,6 +107,7 @@ export interface RegionSnapshot {
   installed_mw: number;
   tracked_substations: number;
   tracked_transmission_lines: number;
+  population_millions: number | null;
   regional_intensity?: RegionalIntensity;
   effects: RegionEffects;
 }
@@ -198,6 +199,33 @@ export interface CoverageDetail {
   by_sector: Record<string, number>;
   by_cause: Record<string, number>;
   by_district: Record<string, number>;
+  evidence_matrix: Record<string, { events: number; recovery: number; cost: number }>;
+  note: string;
+}
+
+export interface EconomicSnapshotPoint {
+  reporting_month: string;
+  snapshot_date: string;
+  value: number | null;
+  units: string;
+  source_url: string | null;
+  revision_status: string | null;
+}
+
+export interface EconomicContext {
+  provider: string;
+  cadence: string;
+  kind: string;
+  caveat: string;
+  metrics: Record<string, EconomicSnapshotPoint[]>;
+}
+
+export interface RefineryReconciliation {
+  national_public_estimate_mtpa: number;
+  national_estimate_source: string;
+  tracked_mtpa: number;
+  coverage_pct: number;
+  gap_mtpa: number;
   note: string;
 }
 
@@ -228,6 +256,8 @@ export interface Snapshot {
   regions: Record<string, RegionSnapshot>;
   not_modelled: Record<string, string>;
   coverage: Coverage | null;
+  economic_context: EconomicContext | null;
+  refinery_reconciliation: RefineryReconciliation | null;
   parser_warnings: string[];
 }
 
