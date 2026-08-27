@@ -1,4 +1,4 @@
-# Prompt for iterating with ChatGPT (after iteration 2)
+# Prompt for iterating with ChatGPT (after iteration 3)
 
 Paste everything below the line into ChatGPT. It is self-contained and asks for output
 you can hand straight back to a coding agent.
@@ -8,7 +8,7 @@ you can hand straight back to a coding agent.
 I am developing an open-source-only intelligence dashboard tracking degradation of
 energy infrastructure in **Belarus + western Russia + the Siberian Federal District**,
 aggregated to administrative region, 2022–present, with **Crimea** shown separately as a
-context unit. An MVP and two iterations exist and work. I want help deciding what to do
+context unit. An MVP and three iterations exist and work. I want help deciding what to do
 next, not help writing code.
 
 ## Stack & architecture (unchanged, working)
@@ -19,45 +19,63 @@ the map draws its own Natural Earth GeoJSON (regions, surrounding countries, oce
 dark ground with HTML label overlays, so the deployed page makes **zero external runtime
 requests**. A GitHub Action rebuilds the dataset daily.
 
-## Current state (iteration 2)
+## Current state (iteration 3)
 
-- **Geography:** 80 regions (six western Russian FDs + Siberian FD + Belarus), plus
-  **Crimea** as a separately-identified context unit — internationally Ukrainian,
-  distinct dashed styling, **excluded from the Russia+Belarus ESDI**, but tracked in
-  Recent/timeline/Recovery/coverage. The other four annexed oblasts stay fully excluded.
-  Far Eastern FD is defined but disabled. Surrounding context countries + Black Sea are
-  drawn as display-only geography.
-- **Data:** ~1,950 assets; **133 events** with citations; **35-refinery / 280.6 MTPA**
-  national inventory (audited up from 247).
-- **Index (ESDI, now 14.7):** share of *tracked capacity at disrupted sites*, evidence-
-  and recency-weighted. **Not measured capacity loss** (0/133 events carry a quantified
-  loss). ESDI fell 16.7 → 14.7 this iteration, mostly from the honest denominator audit.
-- **Recovery is now incident-level** with **rule-based evidence precedence**: observed
-  full/substantial reconstitution (conf ≥ medium) > credible sourced estimate (≥ medium)
-  > modelled fallback. A **partial restart is never treated as full reconstitution**; a
-  **low-confidence estimate is shown but does not drive scoring**. Observed corpus grew
-  from n=1 to **n=4** (22, 72, 73, 98 days; 1 full reconstitution, 1 partial restart, 2
-  estimates). The median un-suppresses only at n≥3.
-- **Four separated concepts:** exposure, assessed degradation (quantified only),
-  recovery, confidence/coverage. Seven analytical tabs. Observed/estimated/modelled have
-  a consistent visual language (green solid / amber half / muted dashed).
+- **Geography:** 80 regions (six western Russian FDs + Siberian FD + Belarus) plus
+  **Crimea** as a separately-identified context unit (internationally Ukrainian, distinct
+  dashed styling, excluded from the Russia+Belarus ESDI, tracked everywhere else). Far
+  Eastern FD defined but disabled. Surrounding countries + Black Sea are display-only.
+  Map now declutters by zoom (asset dots fade in above a minzoom; labels have deterministic
+  priorities + greedy de-overlap) and has a third **"Current activity"** camera preset that
+  frames only the admin regions with unresolved disruption (admin geography, no coordinates).
+- **Data:** ~1,950 assets; **132 events** (now episode-modelled — a multi-day strike is one
+  episode, `episode_id` + start/end dates); **35-refinery / 280.6 MTPA** inventory.
+- **Index (ESDI 15.86):** share of *tracked capacity at disrupted sites*, evidence- and
+  recency-weighted. **Not measured capacity loss** (0/132 events carry a quantified loss).
+- **Electric power is split into two sectors** with different bases:
+  **electric generation** (capacity/MW basis, currently 0.07) and **transmission**
+  (an **event-burden** measure — voltage-weighted disrupted-node count against a documented
+  saturation constant of 8 weighted concurrent events = 100; network inventory is *context,
+  not a denominator*; currently 11.92, from a recent 500 kV strike). Never "% offline".
+- **Recovery** is incident/episode-level with rule-based evidence precedence. The "typical
+  recovery" median is gated on **≥5 distinct episodes**; with **3** observed episodes today
+  it is honestly suppressed ("< 5 episodes — no median"). Partial restart ≠ full
+  reconstitution; low-confidence estimates shown but not scored.
+- **Rankings** offer eight explicit switchable metrics, including **Contribution to
+  National Exposure** (national denominator) vs **Regional Disruption Intensity** (regional
+  denominator), plus a transparent sortable **Active Burden table** (unresolved / oldest /
+  median age / backlog / sectors) instead of another composite. Regional intensity scores
+  only sectors that have a regional denominator (generation MW, transmission saturation);
+  refining/oil-logistics are flagged **missing, never zero**.
+- **Effects** is now three visibly-badged layers — **observed effect / structural exposure
+  (incl. region population as "potentially exposed") / analytic proxy** — so a proxy never
+  reads as a measurement. **CREA** fossil-fuel export revenue is ingested as a deterministic
+  monthly-snapshot CSV (reporting month, snapshot date, source, revision status) and shown
+  as **observed economic context, explicitly not attributed to strikes**.
+- **Costs → "Repair burden":** leads with the observed **reconstitution burden** (open
+  facilities, summed remaining reconstitution days, partial vs full) — useful without
+  inventing dollars. A **Sources evidence matrix** shows event/recovery/cost coverage per
+  sector to separate "little data" from "low disruption".
+- **77 tests pass; deterministic rebuild confirmed.**
 
 ## Known weaknesses (my own assessment)
 
-1. **Observed-recovery n=4 is still thin** (one is a duplicated day-range strike, so ~3
-   distinct). Median-of-few.
-2. **Electric-power exposure ≈0.** Curated substation events decayed out and carry
-   transmission throughput, not generation MW, so they don't move a generation-MW index.
-3. **Refining denominator (281 MTPA) is still a lower bound** vs ~330 MTPA true;
-   refining exposure percentages remain somewhat inflated.
-4. **Strategic/war-sustainment indicators are still a refining/logistics-exposure
-   proxy** — no CREA / external economic data ingested yet (no stable public machine-
-   readable endpoint found; CREA revises historical figures).
-5. **Costs tab is empty** of dollar figures (per-facility repair costs rarely public).
-6. **Regional scores are contributions to the national total**, not regional
-   intensities.
-7. **The WebGL map canvas is visually unverified** in my environment (headless has no
-   WebGL); the HTML overlays and all tabs are screenshot-verified.
+1. **Observed-recovery episodes are still thin (n=3 distinct)** — the median stays
+   suppressed. Growing this corpus from public restart reporting is still the #1 data gap.
+2. **Transmission exposure rests on a chosen saturation constant (8).** It is labelled a
+   proxy and produces a bounded, comparable signal, but the constant is a convention, not a
+   measured network limit. I have no open-source calibration for it.
+3. **Refining denominator held at 85% (280.6 / ~330 MTPA)** as a disclosed lower bound. I
+   chose not to pad toward 330; refining exposure percentages are against tracked capacity.
+4. **Regional intensity only covers 2 sectors** (generation, transmission) — the ones with a
+   regional denominator. Refining and oil-logistics have no per-region base, so a
+   refinery-heavy region shows them as "missing", not scored.
+5. **CREA context is only 2 metrics and manually snapshotted.** It is honest but sparse, and
+   the monthly snapshot is analyst-maintained rather than automated.
+6. **Costs has no dollar figures** (rarely public); the reconstitution burden stands in.
+7. **The WebGL map canvas is pixel-unverified in my headless environment** (the pane doesn't
+   composite, so raster screenshots time out). The canvas *does* initialise with a live
+   WebGL2 context, and all tabs/geometry are verified through the rendered DOM.
 
 ## Hard constraints — do not propose anything that breaks these
 
@@ -67,37 +85,42 @@ requests**. A GitHub Action rebuilds the dataset daily.
   range-to-target, ingress/egress, tactical routing, or precise incident coordinates.
   Crimea is an exception only to the *geographic* exclusion, not to these limits.
   Free-tier static hosting; Windows dev machine, no Docker/Postgres.
+- **Credibility and interpretability over feature count.** The dashboard has enough
+  features. Prefer fixing a denominator, tightening an evidence category, or making a
+  measure more legible to adding another view. The evidence ladder is
+  **observation > sourced estimate > transparent proxy > model > unknown** — but never
+  force a weaker category where "unknown" is the more defensible answer.
 
 ## What I want from you (numbered, concrete — I paste your answer to a coding agent)
 
-1. **Electricity sub-index.** Substation strikes (transmission throughput) don't fit a
-   generation-MW denominator. Design the most defensible open-source-only approach:
-   a separate transmission-disruption sub-measure? a customer-minutes proxy? or keep
-   electric ≈0 until generation-plant strikes with MW arrive? Give the exact data model
-   and how to source it.
+1. **Recovery corpus growth.** Give a concrete, low-fabrication-risk method to grow the
+   observed *distinct-episode* restoration corpus toward n≈15–20 from public reporting
+   (restart/repair dates in Reuters, Moscow Times, regional operators), with exact fields,
+   an `episode_id` mapping, and a human-sign-off gate. This is the change most likely to
+   un-suppress the median honestly.
 
-2. **CREA / economic ingestion.** Tell me precisely which CREA public products
-   (Russia fossil-fuel export tracker, refinery-throughput) are reproducibly ingestible
-   today, their cadence and format, and how to represent them honestly (observed
-   external indicator vs inferred consequence of strikes — the data usually can't prove
-   causation). If no stable machine-readable export exists, propose a deterministic
-   monthly-snapshot ingestion instead.
+2. **Transmission saturation constant.** Is there any open-source way to *calibrate or
+   justify* the "8 weighted concurrent events = 100" constant (e.g. historical simultaneous
+   substation-strike counts), or should it remain an explicitly-labelled convention with a
+   sensitivity note? If calibratable, give the sourcing and the exact method.
 
-3. **Refinery denominator.** Should I push to the full ~330 MTPA (adds many mini-
-   refineries and curation) or hold the audited 281 MTPA lower bound with the caveat
-   shown? If pushing, give a sourced list of the missing Russian refineries with
-   capacities.
+3. **Regional intensity denominators.** Can per-region **refining capacity** and
+   **oil-logistics throughput** be sourced openly and reproducibly, to complete the regional
+   intensity measure for those two sectors? If yes, give the sources and the data model; if
+   no, confirm that "missing, not zero" is the right permanent treatment.
 
-4. **Recovery corpus.** Give a concrete, low-fabrication-risk method to grow the observed
-   restoration corpus toward n≈15–20 from public reporting (Reuters/Moscow Times restart
-   dates), with the exact fields and a human-sign-off gate.
+4. **CREA breadth & cadence.** Which additional CREA public products are reproducibly
+   snapshot-ingestible (refinery throughput, price-cap compliance, discount to Brent), at
+   what cadence, and how should each be labelled to stay clearly *observed context* rather
+   than *strike effect*? Should the monthly snapshot stay analyst-maintained or is there a
+   stable machine-readable export now?
 
-5. **Rank the next five work items** by analytic value per unit of effort.
+5. **Rank the next five work items** by analytic-credibility value per unit of effort.
 
-6. **What am I getting wrong that I haven't listed?** Especially: is the incident-level
-   recovery precedence sound; is the contributions-to-national regional framing
-   misleading; and is the Crimea treatment (tracked but excluded, dashed styling,
-   explicit status) the right call?
+6. **What am I getting wrong that I haven't listed?** Especially: is the transmission
+   event-burden model defensible; is splitting "contribution" from "intensity" actually
+   clearer to a reader or just more knobs; and is the three-layer Effects framing
+   (observed / structural / proxy) the right way to stop a proxy reading as a measurement?
 
 Format as numbered sections. For anything you want built, write it as a concrete
 instruction I can paste to a coding agent, including which assumption it replaces and how

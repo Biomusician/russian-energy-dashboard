@@ -12,9 +12,10 @@ Crimea is shown as a **separately identified context unit** — internationally
 recognised as Ukraine, distinct styling, tracked but **excluded from the Russia+Belarus
 index**. Surrounding countries and the Black Sea are drawn as display-only context.
 
-> **Status:** MVP + iteration 1 (Siberia, recovery framework, 7 tabs) + iteration 2
-> (Crimea & context geography, incident-level recovery, refinery-denominator audit).
-> See [docs/ITERATION_2_REVIEW.md](docs/ITERATION_2_REVIEW.md).
+> **Status:** MVP + iterations 1–2 + **iteration 3** (electric generation/transmission
+> split, regional intensity vs national contribution, episode-based recovery with a
+> 5-episode median gate, CREA observed economic context, three-layer Effects, map &
+> tab-strip polish). See [docs/ITERATION_3_REVIEW.md](docs/ITERATION_3_REVIEW.md).
 
 ---
 
@@ -160,13 +161,14 @@ and the observed/estimated/modelled mix.
 The four analytic concepts — **exposure**, **assessed degradation** (quantified only),
 **recovery**, and **confidence/coverage** — are kept structurally distinct in the data
 and across the seven-tab analytical panel (Overview · Rankings · Recent · Recovery ·
-Effects · Costs · Sources).
+Effects · Repair burden · Sources).
 
 ---
 
 ## Documentation
 
-- [docs/ITERATION_2_REVIEW.md](docs/ITERATION_2_REVIEW.md) — **current state**: Crimea, context geography, incident-level recovery, denominator audit
+- [docs/ITERATION_3_REVIEW.md](docs/ITERATION_3_REVIEW.md) — **current state**: generation/transmission split, regional intensity, episode recovery, CREA context, three-layer Effects
+- [docs/ITERATION_2_REVIEW.md](docs/ITERATION_2_REVIEW.md) — Crimea, context geography, incident-level recovery, denominator audit
 - [docs/ITERATION_1_REVIEW.md](docs/ITERATION_1_REVIEW.md) — Siberia, recovery framework, 7-tab panel
 - [docs/METHODOLOGY.md](docs/METHODOLOGY.md) — how the index and recovery model are computed, and every assumption
 - [docs/SCHEMA.md](docs/SCHEMA.md) — data model and field definitions
@@ -180,16 +182,19 @@ Effects · Costs · Sources).
 
 ## Known limits, stated up front
 
-- **Coverage is ~44%.** The dataset enumerates 133 region-assigned events; the source
+- **Coverage is ~43%.** The dataset enumerates 132 region-assigned events; the source
   benchmark reports 305 strikes on Russian oil facilities in total. The gap is events
   that appear only in prose reporting, which this pipeline does not parse.
-- **Observed recovery sample is n=4** (grown from n=1). The median un-suppresses at
-  n>=3; below that a raw case count is shown, never a median.
+- **Observed recovery is 3 distinct episodes** (6 records deduplicated by `episode_id`).
+  The "typical recovery" median un-suppresses only at **≥5 distinct episodes**; below that
+  the UI shows "records / episodes", never a median.
 - **Siberian event coverage is n=1** (Omsk). The region is fully populated structurally
   but has barely been struck yet.
 - **Refining and oil logistics dominate.** They are the sectors with structured open
-  data. Gas and coal have no capacity base and are excluded from the composite (their
-  weights are redistributed rather than counted as zero); electric power is ≈0.
+  data. Electric power is split into **generation** (capacity basis, ≈0 — barely struck)
+  and **transmission** (an event-burden proxy, never "% offline"). Gas and coal have no
+  capacity base and are excluded from the composite (their weights are redistributed
+  rather than counted as zero).
 - **Modelled reconstitution horizons are assumptions, not measurements** — the single
   weakest input where no evidence exists. All live in `methodology/scoring.json`.
 - **Four of the nine requested regional effect categories are not modelled** and are

@@ -120,37 +120,66 @@ Current state, plus the honesty metadata.
   "incident_total": 128,
   "incidents_with_quantified_capacity": 0,        // shown in the UI, not hidden
 
+  // Sector split (iteration 3): electric_generation (capacity basis) and transmission
+  // (event-burden basis) are separate sectors; "electric_power" no longer exists.
+  "denominators": { "refining_mtpa": 280.6, "electric_generation_mw": 219992,
+                    "transmission_saturation_events": 8.0 },
+
   // Concept 2 — assessed degradation, kept separate from exposure (quantified only)
-  "assessed_degradation": { "quantified_incident_count": 0, "total_incident_count": 128,
+  "assessed_degradation": { "quantified_incident_count": 0, "total_incident_count": 132,
                             "quantified_mw": 0, "quantified_mtpa": 0, "note": "…" },
 
-  // Concept 3 — reconstitution statistics (medians, always with sample size)
+  // Concept 3 — reconstitution statistics. Deduplicated by episode_id; the "typical"
+  // median is gated on >= 5 DISTINCT episodes (min_median_episodes), never records.
   "recovery_stats": {
-    "unresolved_count": 34, "resolved_count": 1,
-    "median_observed_restoration_days": 72, "observed_restoration_sample": 1,
+    "unresolved_count": 40, "resolved_count": 6,
+    "recovery_record_count": 6, "observed_restoration_episodes": 3,
+    "min_median_episodes": 5, "median_meaningful": false,
+    "median_observed_restoration_days": null,       // suppressed below the episode gate
+    "observed_restoration_values": [22, 72, 98],
+    "full_reconstitution_episodes": 3, "partial_restart_episodes": 1, "estimate_episodes": 2,
     "median_impairment_age_days": 51, "impairment_age_sample": 33,
-    "evidence_kind_counts": { "observed": 1, "estimated": 2, "modelled": 32 },
+    "evidence_kind_counts": { "observed": 3, "estimated": 2, "modelled": 32 },
     "by_sector": { "refining": { "disrupted_facilities", "unresolved",
-                                 "observed_restoration_sample",
+                                 "observed_restoration_episodes",
                                  "median_observed_restoration_days" } },
     "note": "…"
   },
 
-  // Concept 4 — categorical coverage. No fabricated confidence interval.
-  "coverage_detail": { "by_year", "by_sector", "by_district", "by_cause", "note" },
+  // Concept 4 — categorical coverage. No fabricated confidence interval. The
+  // evidence_matrix gives per-sector event/recovery/cost counts so the UI can tell
+  // "little data" from "low disruption".
+  "coverage_detail": { "by_year", "by_sector", "by_district", "by_cause",
+                       "evidence_matrix": { "refining": { "events": 84, "recovery": 6, "cost": 0 } },
+                       "note" },
 
   // Each live disruption now carries a `recovery` object (see below)
   "live_disruptions": [ { "asset_id", "name", "asset_class", "sector", "region_code",
                           "disruption_weight", "event_count", "latest",
                           "recovery": { /* RecoveryState */ } } ],
-  "regions": { "RU-LEN": { /* RegionSnapshot */ } },
+  "regions": { "RU-LEN": { /* RegionSnapshot — now incl. regional_intensity,
+                              population_millions, transmission_burden,
+                              reconstitution_backlog_days, affected_sectors */ } },
   "not_modelled": { "industrial_impact": "reason", ... },
   "coverage": {
     "reported_total_strikes": 305,
-    "enumerated_in_this_dataset": 128,
-    "coverage_ratio": 0.42,
+    "enumerated_in_this_dataset": 132,
+    "coverage_ratio": 0.43,
     "by_period": [ { "period": "3rd", "strikes": 92, "cumulative": 108 } ]
   },
+
+  // Iteration 3 — refinery denominator reconciliation (honest lower bound, not padded)
+  "refinery_reconciliation": { "national_public_estimate_mtpa": 330.0, "tracked_mtpa": 280.6,
+                               "coverage_pct": 85.0, "gap_mtpa": 49.4, "tracked_refineries": 35,
+                               "national_estimate_source": "…", "note": "…" },
+
+  // Iteration 3 — observed economic context (CREA), NEVER attributed to strikes. Each
+  // point carries reporting_month, snapshot_date, source_url, revision_status.
+  "economic_context": { "provider": "…CREA…", "cadence": "monthly",
+                        "kind": "observed_economic_context", "caveat": "…NOT attributed…",
+                        "metrics": { "total_fossil_export_revenue": [ { "reporting_month",
+                          "snapshot_date", "value", "units", "source_url", "revision_status" } ] } },
+
   "parser_warnings": ["…: source row has 6 cells, expected 7; capacity not read"]
 }
 ```

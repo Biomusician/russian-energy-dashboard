@@ -79,8 +79,10 @@ sector_index    = min(1, sector_exposure) × 100
 ESDI = Σ (sector_weight × sector_index) ÷ Σ sector_weight     — over covered sectors only
 ```
 
-Sector weights: refining 0.35, electric power 0.30, oil logistics 0.20, gas 0.10, coal
-0.05. These are a judgement about systemic importance, not a measured quantity.
+Sector weights: refining 0.35, **electric generation 0.20**, **transmission 0.10**, oil
+logistics 0.20, gas 0.10, coal 0.05. These are a judgement about systemic importance, not
+a measured quantity. Electric power was split into two sectors in iteration 3 because
+generation and transmission are not commensurable (see §3).
 
 **Sectors without a capacity base are excluded and the weights renormalised**, rather
 than counted as zero. Counting an unmeasurable sector as zero would treat "we cannot
@@ -93,10 +95,18 @@ test for this.
 
 | Sector | Base | Source |
 |---|---|---|
-| Refining | **280.6 MTPA** | 35-refinery national inventory: Wikipedia's *List of oil refineries* (30) + a sourced curated supplement (5), audited in iteration 2 |
-| Electric power | 179,662 MW | Sum of WRI plant capacities inside the AOI |
+| Refining | **280.6 MTPA** | 35-refinery national inventory: Wikipedia's *List of oil refineries* (30) + a sourced curated supplement (5), audited in iteration 2. A `refinery_reconciliation` block reports this as **85.0% of the ~330 MTPA national estimate** (gap 49.4), an explicit lower bound — not padded toward 330 with unlike facilities |
+| Electric generation | **219,992 MW** | Sum of WRI plant capacities inside the AOI (thermal + hydro + nuclear + other), capacity basis like refining |
+| Transmission | **event-burden, not capacity** | No open capacity denominator exists. A voltage-weighted count of disrupted substations/lines is scored against a documented **saturation constant of 8 weighted concurrent events = 100**. Network inventory (substations, lines) is *context, not a denominator*; the measure is never expressed as "% offline" |
 | Oil logistics | Refining base (proxy) | No published throughput denominator exists; flagged as a proxy in the emitted metadata |
 | Gas, coal | *none* | Excluded from the composite |
+
+**Regional Disruption Intensity** (iteration 3) scores a region's disruption against its
+**own** base, but only for sectors that have a regional denominator — **electric generation**
+(regional installed MW) and **transmission** (regional saturation). Refining and oil
+logistics have no per-region base, so they are reported as **missing, never scored as
+zero**. This is distinct from **Contribution to National Exposure**, which uses the national
+denominator. The two are separate, switchable rankings, never conflated.
 
 **Refining denominator audit (iteration 2).** The base parse missed several major
 refineries (Moscow, Ilsky, Slavyansk, TAIF-NK, Mari El). A curated, de-duplicated,
@@ -113,21 +123,26 @@ its published capacity within 3%. There is a test for this.
 
 ---
 
-## 4. Regional scores
+## 4. Regional scores — two explicit framings
 
-Regional exposure is each region's **contribution to the national figure** —
-(disrupted capacity in region) ÷ (national base) — not disruption measured against the
-region's own base.
+There are **two** regional measures, kept separate and switchable in the UI (iteration 3),
+because they answer different questions and conflating them was misleading:
 
-This is deliberate. Our only regional refining capacities come from the set of
-refineries known to have been struck, so a regional denominator built from them would
-make every affected region 100% disrupted by construction. Framing regional scores as
-contributions to the national total avoids the fake denominator entirely, is
-interpretable ("how much of the national refining base is impaired here"), and makes
-regional scores sum to the national one.
+**Contribution to National Exposure** — (disrupted capacity in region) ÷ (national base).
+This is the default and the one that sums to the national ESDI. It is deliberate: our only
+regional refining capacities come from the set of refineries known to have been struck, so
+a regional refining denominator built from them would make every affected region 100%
+disrupted by construction. Contribution avoids that fake denominator, and reads as "how
+much of the *national* base is impaired here".
 
-Where a genuine regional denominator exists — installed MW, from WRI — it is used for
-the `generation_margin` effect indicator.
+**Regional Disruption Intensity** — disruption measured against the **region's own** base,
+but *only* for sectors that have a genuine regional denominator: **electric generation**
+(regional installed MW, from WRI) and **transmission** (regional saturation). Sectors with
+no per-region base — refining, oil logistics — are reported as **missing, never scored as
+zero**, so "we have no regional denominator" is never silently rendered as "no disruption".
+
+Treating unknown as zero here would be the same error §2 avoids in the composite; a test
+enforces the missing-not-zero behaviour.
 
 ---
 
@@ -189,11 +204,13 @@ is openly available. **Replacing these with curated observed durations is the hi
 value model improvement**, and the framework now makes each such replacement visible as
 an "observed" record.
 
-Current observed corpus (iteration 2): **4 observed restorations** (22, 72, 73, 98 days;
-1 full reconstitution, 1 partial restart), **2 estimates** (one medium that drives
-scoring, one low that is display-only). The median observed restoration is shown only at
-n ≥ 3; below that the UI reports a raw case count, never a "median". The dashboard shows
-this whole breakdown rather than hiding how much rests on assumption.
+Current observed corpus (iteration 3): **6 recovery records → 3 distinct observed
+episodes** (22, 72, 98 days; 3 full reconstitutions, 1 partial restart), plus estimates.
+Records are deduplicated by `episode_id` — a multi-day strike is one episode, so the
+iteration-2 "72/73-day" pair collapses to a single 72-day episode. The "typical recovery"
+median is shown **only at ≥ 5 distinct episodes**; below that the UI reports
+"records / episodes" and the honest label "< 5 episodes — no median", never a "typical".
+The dashboard shows this whole breakdown rather than hiding how much rests on assumption.
 
 ## 5a. Crimea and the area of interest (iteration 2)
 
