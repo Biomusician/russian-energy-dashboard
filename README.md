@@ -8,8 +8,13 @@ Every number traces to a public source. Where the data does not support a number
 dashboard says so rather than estimating one. Observed facts, external estimates and
 modelled assumptions are kept visibly distinct throughout.
 
-> **Status:** MVP + iteration 1 (Siberia, recovery/reconstitution framework, 7-tab
-> analytical panel). See [docs/ITERATION_1_REVIEW.md](docs/ITERATION_1_REVIEW.md).
+Crimea is shown as a **separately identified context unit** — internationally
+recognised as Ukraine, distinct styling, tracked but **excluded from the Russia+Belarus
+index**. Surrounding countries and the Black Sea are drawn as display-only context.
+
+> **Status:** MVP + iteration 1 (Siberia, recovery framework, 7 tabs) + iteration 2
+> (Crimea & context geography, incident-level recovery, refinery-denominator audit).
+> See [docs/ITERATION_2_REVIEW.md](docs/ITERATION_2_REVIEW.md).
 
 ---
 
@@ -161,7 +166,8 @@ Effects · Costs · Sources).
 
 ## Documentation
 
-- [docs/ITERATION_1_REVIEW.md](docs/ITERATION_1_REVIEW.md) — **current state**: what changed, what works, what to decide next
+- [docs/ITERATION_2_REVIEW.md](docs/ITERATION_2_REVIEW.md) — **current state**: Crimea, context geography, incident-level recovery, denominator audit
+- [docs/ITERATION_1_REVIEW.md](docs/ITERATION_1_REVIEW.md) — Siberia, recovery framework, 7-tab panel
 - [docs/METHODOLOGY.md](docs/METHODOLOGY.md) — how the index and recovery model are computed, and every assumption
 - [docs/SCHEMA.md](docs/SCHEMA.md) — data model and field definitions
 - [docs/SOURCES.md](docs/SOURCES.md) — provenance and licensing
@@ -174,11 +180,11 @@ Effects · Costs · Sources).
 
 ## Known limits, stated up front
 
-- **Coverage is ~42%.** The dataset enumerates 128 region-assigned events; the source
+- **Coverage is ~44%.** The dataset enumerates 133 region-assigned events; the source
   benchmark reports 305 strikes on Russian oil facilities in total. The gap is events
   that appear only in prose reporting, which this pipeline does not parse.
-- **Observed recovery sample is n=1.** The median-observed-restoration headline is a
-  median-of-one and is labelled as such; it grows with curated restart dates.
+- **Observed recovery sample is n=4** (grown from n=1). The median un-suppresses at
+  n>=3; below that a raw case count is shown, never a median.
 - **Siberian event coverage is n=1** (Omsk). The region is fully populated structurally
   but has barely been struck yet.
 - **Refining and oil logistics dominate.** They are the sectors with structured open

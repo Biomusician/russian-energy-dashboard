@@ -93,16 +93,19 @@ test for this.
 
 | Sector | Base | Source |
 |---|---|---|
-| Refining | 247.0 MTPA | 30-refinery national inventory parsed from Wikipedia's *List of oil refineries* |
+| Refining | **280.6 MTPA** | 35-refinery national inventory: Wikipedia's *List of oil refineries* (30) + a sourced curated supplement (5), audited in iteration 2 |
 | Electric power | 179,662 MW | Sum of WRI plant capacities inside the AOI |
 | Oil logistics | Refining base (proxy) | No published throughput denominator exists; flagged as a proxy in the emitted metadata |
 | Gas, coal | *none* | Excluded from the composite |
 
-**The refining denominator is known to be low.** Russia's full refining base is larger
-than 247 MTPA; the inventory covers major refineries and omits smaller and
-mini-refineries. Refining exposure is therefore measured against *tracked major
-refining capacity* and is labelled as such. A larger denominator would lower the
-reported exposure percentage.
+**Refining denominator audit (iteration 2).** The base parse missed several major
+refineries (Moscow, Ilsky, Slavyansk, TAIF-NK, Mari El). A curated, de-duplicated,
+sourced supplement (`data/curated/refineries_supplement.csv`) added them: **247.0 →
+280.6 MTPA**, which lowered refining exposure 34.3 → 30.2 and ESDI 16.7 → 14.7 — an
+honest correction from a more complete denominator, not a re-tune. It is **still a lower
+bound**: mini-refineries and some mid-size plants remain absent (the true national total
+is ~330 MTPA), so refining exposure percentages remain somewhat inflated. Refining
+exposure is measured against *tracked major refining capacity* and labelled as such.
 
 Barrels-per-day figures convert at 0.136 tonnes/barrel (1 bbl/d = 49.6 t/yr).
 Cross-check: Omsk at 22.0 MTPA in the strike table converts to ~443,000 bbl/d, matching
@@ -128,20 +131,40 @@ the `generation_margin` effect indicator.
 
 ---
 
-## 5. Recovery / reconstitution — evidence over assumption
+## 5. Recovery / reconstitution — incident-level, evidence over assumption
 
-Iteration 1 replaced the flat repair half-life with an evidence-driven one. The decay
-half-life for a facility is set by the **strongest available evidence**, in order:
+**Iteration 2 moved recovery from facility-level to incident-level.** Each disruption has
+its own recovery trajectory; recovery from one strike never resolves a later one. A
+facility hit repeatedly shows the strongest *still-live* incident, not a single state
+smeared backwards through time. Recovery records in `data/curated/recovery.csv` key on
+`incident_id`.
 
-1. **Observed** — a source reported how long restoration/reconstitution actually took.
-2. **Estimated** — a source gave an expected reconstitution window.
-3. **Modelled** — neither exists; the per-sector fallback below is used.
+Recovery states: `impaired`, `partial_restart`, `substantially_restored`,
+`fully_reconstituted`, `unknown`. **A partial restart ("operations resumed") is recorded
+and displayed but never treated as full reconstitution, and never invents a
+restored-capacity percentage.**
 
-The `kind` (observed / estimated / modelled) is carried on every recovery number and
-rendered in visibly different language in the UI. **A sourced restart never looks like a
-guess.** A confirmed reconstitution date collapses the facility's contribution to the
-residual. Recovery evidence lives in `data/curated/recovery.csv`; the model parameters
-live in `methodology/scoring.json` under `recovery`.
+### Evidence precedence (rule-based, not a confidence multiplier)
+
+Confidence decides *whether* a recovery claim overrides the model, via clear rules in
+`methodology/scoring.json` (`recovery_precedence`), not by scaling a repair time by a
+percentage:
+
+1. **Observed full reconstitution**, confidence ≥ medium → closes the incident (capped
+   at the residual from the reconstitution date).
+2. **Observed substantial restoration**, ≥ medium → observed days become the horizon.
+3. **A credible sourced estimate**, ≥ medium → its central value becomes the horizon
+   (kind = estimated).
+4. **Partial restart** → display only; records the restart date, does not accelerate
+   decay, never implies full recovery.
+5. **A low-confidence estimate** (< medium) → shown in the UI but does **not** drive the
+   decay curve; scoring falls back to the modelled horizon.
+6. Otherwise → the modelled per-sector fallback below.
+
+The decay half-life is then set by whichever rule fired. Priority: **observed >
+credible sourced estimate > modelled**. The `kind` (observed / estimated / modelled) is
+carried on every recovery number and rendered in visibly different language. **A sourced
+restart never looks like a guess, and a low-confidence guess never drives the index.**
 
 A reconstitution horizon `H` (disruption → substantially restored) maps to a half-life
 of `H / 3.3219`, so impairment is ~10% (the residual) at `H`.
@@ -166,8 +189,37 @@ is openly available. **Replacing these with curated observed durations is the hi
 value model improvement**, and the framework now makes each such replacement visible as
 an "observed" record.
 
-Current evidence mix: **1 observed, 2 estimated, ~32 modelled.** The dashboard shows
-this breakdown rather than hiding how much rests on assumption.
+Current observed corpus (iteration 2): **4 observed restorations** (22, 72, 73, 98 days;
+1 full reconstitution, 1 partial restart), **2 estimates** (one medium that drives
+scoring, one low that is display-only). The median observed restoration is shown only at
+n ≥ 3; below that the UI reports a raw case count, never a "median". The dashboard shows
+this whole breakdown rather than hiding how much rests on assumption.
+
+## 5a. Crimea and the area of interest (iteration 2)
+
+The blanket occupied-territory exclusion is narrowly, deliberately superseded **for
+Crimea only**. Crimea is added as a **separately identified context unit** (`UA-CR`),
+not a Russian federal subject:
+
+- It is **internationally recognised as Ukraine** and is **excluded from the
+  Russia+Belarus ESDI denominator and composite** — enforced in `build_index` and by a
+  test. Its own regional exposure is computed and shown, but never feeds the national
+  index.
+- It **is** tracked in Recent, the timeline, Recovery, Sources, coverage and filters,
+  because its disruption is relevant to the picture.
+- The map **does not adjudicate sovereignty by colour or polygon membership**: Crimea
+  gets a distinct dashed outline and neutral fill, and its status is stated in words in
+  the hover card, legend and scope note.
+- Every analytic/safety limit (no coordinates, no range-to-target, no facility-level
+  asset deck, no targeting) applies to Crimea exactly as elsewhere. The exception is
+  only to the geographic exclusion.
+- The other four annexed oblasts (Donetsk, Luhansk, Zaporizhzhia, Kherson) remain fully
+  excluded and resolve as `excluded_occupied`.
+
+Surrounding **context countries and the Black Sea** are drawn from Natural Earth 50m as
+display-only geography — no infrastructure is ingested and nothing there is scored. The
+**Far Eastern Federal District remains structurally supported but analytically
+disabled** pending sufficient event/coverage justification.
 
 ---
 

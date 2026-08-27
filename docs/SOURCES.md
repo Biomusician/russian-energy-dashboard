@@ -126,7 +126,7 @@ in emitted data.
 
 ### 4b. *List of oil refineries* — refining denominator
 
-Sections "Russia in Europe" and "Russia in Asia". **30 refineries, 247.0 MTPA.**
+Sections "Russia in Europe" and "Russia in Asia". **30 refineries, 247.0 MTPA** as parsed; iteration 2 adds a sourced curated supplement of 5 more majors -> **35 refineries, 280.6 MTPA** (see data/curated/refineries_supplement.csv).
 
 Both sections are included: the index frame is national because Russian fuel markets
 are national, and the Europe/Asia split does not match the federal-district AOI anyway
@@ -135,7 +135,7 @@ are national, and the Europe/Asia split does not match the federal-district AOI 
 Without this, refining exposure would be measured against the set of refineries known
 to have been struck — 100% by construction, and meaningless.
 
-**Known low.** Russia's full refining base exceeds 247 MTPA; smaller and mini-refineries
+**Still a lower bound.** Even after the iteration-2 audit (280.6 MTPA), Russia's full refining base (~330 MTPA) exceeds it; smaller and mini-refineries
 are absent. Exposure is therefore against *tracked major refining capacity* and is
 labelled as such. Capacities cross-check well against the strike table (Kirishi 17.18 vs
 17.5, Kstovo 14.54 vs 15.0).

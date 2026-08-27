@@ -6,7 +6,8 @@ Project-level rules. These override `~/.claude/CLAUDE.md` where they conflict.
 
 An open-source-only dashboard tracking publicly reported degradation of energy
 infrastructure in **Belarus, western Russia and the Siberian Federal District**,
-aggregated to administrative region, 2022–present (79 regions). It is a **research and
+aggregated to administrative region, 2022–present (79 regions), with **Crimea** shown
+separately as a context unit (internationally Ukrainian, excluded from the index). It is a **research and
 monitoring instrument whose main product is calibrated honesty about what is and is not
 known**, with a good map attached.
 
@@ -15,7 +16,7 @@ Far Eastern FD is defined but not enabled; adding it there turns it on with no r
 Do not reintroduce the ambiguous "SFD" abbreviation — a test forbids it.
 
 Read [docs/METHODOLOGY.md](docs/METHODOLOGY.md) and, for the current state,
-[docs/ITERATION_1_REVIEW.md](docs/ITERATION_1_REVIEW.md), before changing anything that
+[docs/ITERATION_2_REVIEW.md](docs/ITERATION_2_REVIEW.md), before changing anything that
 produces a number.
 
 ## SCOPE BOUNDARY — never relaxed
@@ -36,7 +37,11 @@ Specific consequences already implemented — do not undo them:
 - **Incident records never carry coordinates.** Events are region-scoped.
 - `tests/test_pipeline.py` fails the build if a range-to-target field or an incident
   coordinate appears in emitted data. **Do not defeat these tests.**
-- Occupied Ukrainian territory is excluded from the region set, with a test.
+- Occupied Ukrainian territory is excluded, **except Crimea** — a narrow, documented
+  iteration-2 exception. Crimea is a separately-identified *context unit* (internationally
+  Ukrainian, `esdi_included: false`), tracked but excluded from the Russia+Belarus index.
+  Every analytic/safety limit still applies to it; the exception is only geographic. The
+  other four annexed oblasts stay fully excluded. Tests enforce all of this.
 
 Sources are public, open and unclassified, always.
 

@@ -14,30 +14,45 @@ a schema change surfaces as a type error rather than as `undefined` at runtime.
 
 ## Input: `data/curated/recovery.csv` (iteration 1)
 
-One row per **facility** (`asset_id`), describing its most recent recovery assessment.
-Recovery attaches to the facility, not a single incident, because reconstitution is a
-property of the facility returning to service after its latest damage. **A row with no
-`source_urls` is skipped** (provenance is mandatory for a recovery claim).
+**Iteration 2: keyed by `incident_id`, not facility.** Each disruption has its own
+recovery trajectory; recovery of one strike never resolves a later one. **A row with no
+`source_urls` is skipped** (provenance is mandatory for a recovery claim). Legacy
+facility-keyed rows still load for backward compatibility.
 
 | Column | Meaning |
 |---|---|
-| `asset_id` | Facility slug, matching an incident's `asset_id` |
-| `status` | `active` / `degraded` / `repaired` / `unknown` |
-| `restoration_started_at` | Date repairs began (if reported) |
-| `partial_operations_resumed_at` | Date partial operations resumed |
-| `restoration_observed_days` | **Observed** days from disruption to first meaningful restart |
-| `reconstituted_at` | Date substantially restored (if reported) |
-| `reconstitution_observed_days` | **Observed** days from disruption to substantial restoration |
-| `reconstitution_level` | e.g. `partial`, `substantial`, `full` |
+| `incident_id` | The specific incident this recovery applies to (e.g. `omsk-refinery:2026-07-06`) |
+| `recovery_status` | `impaired` / `partial_restart` / `substantially_restored` / `fully_reconstituted` / `unknown` |
+| `source_confidence` | `high` / `medium` / `low` — decides whether the evidence overrides the model |
+| `observed_date` | Date the status was reached (for observed) |
+| `observed_days` | **Observed** days from disruption to that status |
+| `partial_operations_resumed_at` | Date partial operations resumed (partial restart) |
+| `partial_or_full` | `partial` / `full` — what the source actually establishes |
 | `est_lower_days` / `est_central_days` / `est_upper_days` | **Estimated** reconstitution window |
-| `estimate_basis` / `estimate_method` / `estimate_confidence` | Provenance of the estimate |
-| `evidence` | Free-text description of exactly what is claimed and by whom |
+| `estimate_basis` / `estimate_method` | Provenance of the estimate |
+| `what_source_establishes` | Free text: exactly what the source supports, and by whom |
 | `source_types`, `source_urls` | `\|`-separated. **Required.** |
 
-**Evidence priority.** The scoring uses the strongest available: observed →
-estimated → modelled (the per-sector fallback in `methodology/scoring.json`). The
-`kind` is emitted on every recovery number so the UI never renders a guess like a
-report.
+**Evidence precedence (rule-based).** observed full/substantial reconstitution
+(conf ≥ medium) → credible sourced estimate (≥ medium) → modelled fallback. A
+**partial restart** updates state and records the date but is display-only for scoring;
+a **low-confidence estimate** is shown but does not drive the decay curve. The
+`scoring_evidence_kind` (observed / estimated / modelled) is emitted on every live
+disruption so the UI never renders a guess like a report. See
+`methodology/scoring.json` → `recovery_precedence`.
+
+---
+
+## Input: `data/curated/refineries_supplement.csv` (iteration 2)
+
+Sourced additions to the national refinery denominator that the automated *List of oil
+refineries* parse omits. De-duplicated by canonical name against the base list.
+
+| Column | Meaning |
+|---|---|
+| `name`, `region_code`, `capacity_mtpa`, `operator` | Refinery identity and capacity |
+| `source_url`, `source_date` | Provenance |
+| `inclusion_reason` | Why it was added and why it is not a double-count |
 
 ---
 
@@ -101,7 +116,7 @@ Current state, plus the honesty metadata.
   "sectors_covered":   ["refining", "electric_power", "oil_logistics"],
   "sectors_uncovered": ["gas", "coal"],          // no capacity base; excluded from composite
   "heating_season": false,
-  "denominators": { "refining_mtpa": 247.0, "electric_power_mw": 179662 },
+  "denominators": { "refining_mtpa": 280.6, "electric_power_mw": 179662 },
   "incident_total": 128,
   "incidents_with_quantified_capacity": 0,        // shown in the UI, not hidden
 

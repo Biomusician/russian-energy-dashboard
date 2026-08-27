@@ -145,7 +145,11 @@ def test_no_sfd_abbreviation_in_code_or_config():
     or user-facing methodology. Iteration review docs may discuss its removal by name."""
     from pathlib import Path
     root = Path(__file__).resolve().parent.parent
-    exempt = {Path("docs") / "ITERATION_1_REVIEW.md"}  # documents the removal itself
+    # Iteration review docs may discuss the removal of the abbreviation by name.
+    exempt = {
+        Path("docs") / "ITERATION_1_REVIEW.md",
+        Path("docs") / "ITERATION_2_REVIEW.md",
+    }
     offenders = []
     for sub in ("pipeline", "methodology", "docs"):
         for path in (root / sub).rglob("*"):
@@ -642,3 +646,67 @@ def test_processed_output_is_deterministic():
     )
     after = (PROCESSED / "index_national.json").read_text(encoding="utf-8")
     assert before == after, "index build is not deterministic for a fixed as-of"
+
+
+# --------------------------------------------------------------------------
+# Frontend contract smoke test (iteration 2)
+# --------------------------------------------------------------------------
+# No browser test framework is available on this machine, so the practical smoke test
+# is a data-contract check: the pipeline must emit, into web/public/data/, exactly the
+# files and keys the frontend TypeScript expects. This catches pipeline/frontend drift
+# -- the class of bug where the app loads but a field the UI reads is missing.
+
+WEB_DATA = ROOT / "web" / "public" / "data"
+
+REQUIRED_WEB_FILES = [
+    "snapshot.json", "index_national.json", "index_regional.json", "incidents.json",
+    "regions.json", "assets.json", "taxonomy.json", "regions.geojson",
+    "assets_lines.geojson", "context_land.geojson", "context_borders.geojson",
+    "ocean.geojson",
+]
+
+
+@pytest.mark.skipif(not WEB_DATA.exists(), reason="web data not mirrored")
+def test_web_data_files_present():
+    missing = [f for f in REQUIRED_WEB_FILES if not (WEB_DATA / f).exists()]
+    assert not missing, f"frontend depends on these missing files: {missing}"
+
+
+@pytest.mark.skipif(not (WEB_DATA / "snapshot.json").exists(), reason="web data not mirrored")
+def test_web_snapshot_contract():
+    """The keys the frontend's Snapshot/RecoveryStats/RegionSnapshot types require."""
+    snap = json.loads((WEB_DATA / "snapshot.json").read_text(encoding="utf-8"))
+    for key in ("esdi", "sectors", "recovery_stats", "assessed_degradation",
+                "coverage_detail", "live_disruptions", "regions", "coverage"):
+        assert key in snap, f"snapshot missing frontend key {key}"
+    rs = snap["recovery_stats"]
+    for key in ("median_meaningful", "min_median_sample", "observed_restoration_values",
+                "partial_restart_count", "full_reconstitution_count", "evidence_kind_counts"):
+        assert key in rs, f"recovery_stats missing frontend key {key}"
+    region = next(iter(snap["regions"].values()))
+    for key in ("esdi_included", "analytic_scope", "unresolved_count", "effects"):
+        assert key in region, f"region missing frontend key {key}"
+    for d in snap["live_disruptions"]:
+        rec = d["recovery"]
+        for key in ("scoring_evidence_kind", "recovery_status", "resolved"):
+            assert key in rec, f"live disruption recovery missing frontend key {key}"
+        break
+
+
+@pytest.mark.skipif(not (WEB_DATA / "context_land.geojson").exists(), reason="web data not mirrored")
+def test_web_context_geography_contract():
+    land = json.loads((WEB_DATA / "context_land.geojson").read_text(encoding="utf-8"))
+    assert land["features"], "context land must contain countries"
+    for f in land["features"]:
+        # the label overlay needs these; nothing else should leak in
+        assert "label_lon" in f["properties"] and "label_lat" in f["properties"]
+    ocean = json.loads((WEB_DATA / "ocean.geojson").read_text(encoding="utf-8"))
+    assert ocean["features"], "ocean fill required for the sea to read as water"
+
+
+@pytest.mark.skipif(not (WEB_DATA / "regions.geojson").exists(), reason="web data not mirrored")
+def test_web_crimea_feature_flagged_special():
+    regions = json.loads((WEB_DATA / "regions.geojson").read_text(encoding="utf-8"))
+    crimea = [f for f in regions["features"] if f["properties"]["code"] == "UA-CR"]
+    assert len(crimea) == 1
+    assert crimea[0]["properties"]["special"] is True, "the map keys Crimea styling on special=true"
