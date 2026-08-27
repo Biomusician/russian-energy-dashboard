@@ -540,15 +540,18 @@ def test_rankings_cover_only_affected_regions():
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
                     reason="pipeline has not been run")
-def test_recovery_stats_present_with_sample_sizes():
+def test_recovery_stats_present_with_episode_counts():
     snap = _snapshot()
     rs = snap["recovery_stats"]
-    # Sample sizes must accompany every median so a median-of-one is never mistaken
-    # for a robust figure.
-    assert "observed_restoration_sample" in rs
+    # Episode counts must accompany every median so a median-of-few is never mistaken
+    # for a robust figure. Records and episodes are reported separately.
+    assert "observed_restoration_episodes" in rs
+    assert "recovery_record_count" in rs
     assert "impairment_age_sample" in rs
+    # Episodes can never exceed records (each observed episode has >=1 record).
+    assert rs["observed_restoration_episodes"] <= rs["recovery_record_count"]
     if rs["median_observed_restoration_days"] is not None:
-        assert rs["observed_restoration_sample"] >= 1
+        assert rs["observed_restoration_episodes"] >= rs["min_median_episodes"]
     kinds = rs["evidence_kind_counts"]
     assert set(kinds) <= {"observed", "estimated", "modelled"}
 
@@ -568,12 +571,12 @@ def test_recovery_evidence_kinds_distinguish_observed_from_estimated():
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
                     reason="pipeline has not been run")
-def test_median_restoration_present_only_with_enough_samples():
-    """A median must be suppressed below the minimum sample and shown above it."""
+def test_median_restoration_present_only_with_enough_distinct_episodes():
+    """A median must be suppressed below the minimum DISTINCT EPISODE count (5)."""
     snap = _snapshot()
     rs = snap["recovery_stats"]
-    n = rs["observed_restoration_sample"]
-    if n < rs["min_median_sample"]:
+    n = rs["observed_restoration_episodes"]
+    if n < rs["min_median_episodes"]:
         assert rs["median_observed_restoration_days"] is None
         assert rs["median_meaningful"] is False
     else:
@@ -587,9 +590,36 @@ def test_partial_restart_not_counted_as_full_reconstitution():
     """Partial restarts are tracked separately and never inflate reconstitution counts."""
     snap = _snapshot()
     rs = snap["recovery_stats"]
-    assert "partial_restart_count" in rs and "full_reconstitution_count" in rs
-    # These are independent tallies; a partial restart must not be a full reconstitution.
-    assert rs["partial_restart_count"] >= 0 and rs["full_reconstitution_count"] >= 0
+    assert "partial_restart_episodes" in rs and "full_reconstitution_episodes" in rs
+    assert rs["partial_restart_episodes"] >= 0 and rs["full_reconstitution_episodes"] >= 0
+
+
+@pytest.mark.skipif(not (PROCESSED / "incidents.json").exists(),
+                    reason="pipeline has not been run")
+def test_multi_day_strike_is_one_episode_not_several_incidents():
+    """A hyphen-range strike ("9-10 June") must be one incident/episode, not two."""
+    incidents = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    kb = [i for i in incidents if i.get("asset_id") == "kuibyshev-refinery"]
+    # The 9-10 June 2026 strike is a single incident spanning a date range.
+    ranged = [i for i in kb if i.get("date_start") == "2026-06-09"]
+    assert len(ranged) == 1, "the 9-10 June strike must collapse to one incident"
+    assert ranged[0]["date_end"] == "2026-06-10"
+    # No same-facility incident on the very next day of a range.
+    assert not any(i["incident_id"].endswith(":2026-06-10") for i in kb)
+    # Every incident carries an episode_id.
+    for i in incidents:
+        assert i.get("episode_id"), i.get("incident_id")
+
+
+def test_episode_grouping_distinguishes_range_from_list():
+    """dates.parse_dates_grouped: a range is one episode; discrete dates are separate."""
+    from pipeline.dates import parse_dates_grouped
+    one = parse_dates_grouped("9-10 June 2026")
+    assert len({g for *_x, g in one}) == 1  # one episode
+    two = parse_dates_grouped("22-23 and 25 May 2026")
+    assert len({g for *_x, g in two}) == 2  # range + discrete
+    three = parse_dates_grouped("5 April 2026, 20 May 2026, 24 June 2026")
+    assert len({g for *_x, g in three}) == 3
 
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
@@ -680,8 +710,8 @@ def test_web_snapshot_contract():
                 "coverage_detail", "live_disruptions", "regions", "coverage"):
         assert key in snap, f"snapshot missing frontend key {key}"
     rs = snap["recovery_stats"]
-    for key in ("median_meaningful", "min_median_sample", "observed_restoration_values",
-                "partial_restart_count", "full_reconstitution_count", "evidence_kind_counts"):
+    for key in ("median_meaningful", "min_median_episodes", "observed_restoration_values",
+                "partial_restart_episodes", "full_reconstitution_episodes", "evidence_kind_counts"):
         assert key in rs, f"recovery_stats missing frontend key {key}"
     region = next(iter(snap["regions"].values()))
     for key in ("esdi_included", "analytic_scope", "unresolved_count", "effects"):

@@ -47,12 +47,17 @@ def load_curated_incidents():
         out.append(
             {
                 "incident_id": row["incident_id"],
+                # An episode is one disruption event; several incident rows may share an
+                # episode_id when a source describes them as one strike. Defaults to the
+                # incident's own id (each incident is its own episode).
+                "episode_id": row.get("episode_id") or row["incident_id"],
                 "asset_id": row.get("asset_id") or row["incident_id"],
                 "asset_name": row.get("asset_name"),
                 "linked_asset_id": row.get("linked_asset_id"),
                 "asset_class": row.get("asset_class"),
                 "region_code": row.get("region_code"),
                 "date": row["date"],
+                "date_start": row.get("date") ,
                 "date_end": row.get("date_end"),
                 "date_precision": row.get("date_precision") or "day",
                 "cause": row.get("cause") or "unknown",

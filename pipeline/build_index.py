@@ -465,44 +465,50 @@ def _median(values):
     return vals[mid] if n % 2 else round((vals[mid - 1] + vals[mid]) / 2, 1)
 
 
-# A median under this many observations is not a meaningful descriptive statistic and
-# must not be presented as "typical". Enforced here and honoured by the ribbon.
-MIN_MEDIAN_SAMPLE = 3
+# A median observed restoration is shown only with at least this many DISTINCT recovery
+# EPISODES (not records). Iteration 3 raised this to 5 and made it episode-based, so a
+# multi-day strike counted once and the median is never "median-of-few".
+MIN_MEDIAN_EPISODES = 5
 
 
 def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
-    """Concept 3: incident-level reconstitution statistics. Medians, not means, with n.
+    """Concept 3: incident-level reconstitution statistics, counted by DISTINCT EPISODE.
 
-    The observed corpus is counted across ALL incident recovery records, not only the
-    incident currently driving a facility's score -- a facility whose latest strike is
-    modelled may still contribute an earlier, observed reconstitution to the corpus.
+    Row count is not sample size: a multi-day strike, or the same episode recorded
+    twice, must not inflate n. Observed durations are collected per unique episode_id, so
+    the median rests on independent disruption/recovery sequences.
     """
     unresolved = [x for x in live if not x["recovery"]["resolved"]]
     resolved = [x for x in live if x["recovery"]["resolved"]]
 
-    # Corpus counts, over incident records.
-    records = [recovery_by_incident[i["incident_id"]] for i in incidents
-               if i.get("incident_id") in recovery_by_incident]
-    observed_durations, partial_restarts, full_reconstitutions, estimate_records = [], 0, 0, 0
-    obs_by_sector = collections.defaultdict(list)
-    for i in incidents:
-        rec = recovery_by_incident.get(i.get("incident_id"))
-        if not rec:
-            continue
-        _h, kind, _c = recovery.assess(i.get("asset_class"), rec)
+    inc_by_id = {i["incident_id"]: i for i in incidents}
+
+    # Deduplicate recovery evidence by episode before counting anything.
+    records = 0
+    observed_by_episode = {}   # episode_id -> observed days (first seen)
+    partial_episodes, full_episodes, estimate_episodes = set(), set(), set()
+    obs_by_sector = collections.defaultdict(dict)  # sector -> {episode: days}
+    for incident_id, rec in recovery_by_incident.items():
+        inc = inc_by_id.get(incident_id)
+        if inc is None:
+            continue  # orphaned record (episode merged/removed) — ignored, not counted
+        records += 1
+        episode = inc.get("episode_id") or incident_id
+        _h, kind, _c = recovery.assess(inc.get("asset_class"), rec)
         status = rec.get("recovery_status")
         if status == "partial_restart":
-            partial_restarts += 1
-        if status == "fully_reconstituted":
-            full_reconstitutions += 1
+            partial_episodes.add(episode)
+        if status in ("fully_reconstituted", "substantially_restored"):
+            full_episodes.add(episode)
         if rec.get("estimate_central_days"):
-            estimate_records += 1
-        if kind == "observed" and rec.get("observed_days"):
-            observed_durations.append(rec["observed_days"])
-            sector = SECTOR_OF_CLASS.get(i.get("asset_class"))
+            estimate_episodes.add(episode)
+        if kind == "observed" and rec.get("observed_days") and episode not in observed_by_episode:
+            observed_by_episode[episode] = rec["observed_days"]
+            sector = SECTOR_OF_CLASS.get(inc.get("asset_class"))
             if sector:
-                obs_by_sector[sector].append(rec["observed_days"])
+                obs_by_sector[sector][episode] = rec["observed_days"]
 
+    observed_durations = list(observed_by_episode.values())
     ages = [x["recovery"]["impairment_age_days"] for x in unresolved if x["recovery"]["impairment_age_days"] is not None]
     by_kind = collections.Counter(x["recovery"]["scoring_evidence_kind"] for x in live)
 
@@ -511,39 +517,39 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
         sect_live = [x for x in live if x.get("sector") == sector]
         if not sect_live and sector not in obs_by_sector:
             continue
-        sect_obs = obs_by_sector.get(sector, [])
+        sect_obs = list(obs_by_sector.get(sector, {}).values())
         by_sector[sector] = {
             "disrupted_facilities": len(sect_live),
             "unresolved": sum(1 for x in sect_live if not x["recovery"]["resolved"]),
-            "observed_restoration_sample": len(sect_obs),
-            "median_observed_restoration_days": _median(sect_obs) if len(sect_obs) >= MIN_MEDIAN_SAMPLE else None,
+            "observed_restoration_episodes": len(sect_obs),
+            "median_observed_restoration_days": _median(sect_obs) if len(sect_obs) >= MIN_MEDIAN_EPISODES else None,
         }
 
-    n_obs = len(observed_durations)
-    median_meaningful = n_obs >= MIN_MEDIAN_SAMPLE
+    n_episodes = len(observed_durations)
+    median_meaningful = n_episodes >= MIN_MEDIAN_EPISODES
     return {
         "unresolved_count": len(unresolved),
         "resolved_count": len(resolved),
-        "min_median_sample": MIN_MEDIAN_SAMPLE,
-        # Only expose a median once the corpus is large enough for it to mean anything.
+        "min_median_episodes": MIN_MEDIAN_EPISODES,
+        # Median only appears with enough INDEPENDENT episodes; else the UI shows counts.
         "median_observed_restoration_days": _median(observed_durations) if median_meaningful else None,
         "median_meaningful": median_meaningful,
-        "observed_restoration_sample": n_obs,
+        "observed_restoration_episodes": n_episodes,
         "observed_restoration_values": sorted(int(d) for d in observed_durations),
-        "median_impairment_age_days": _median(ages) if len(ages) >= MIN_MEDIAN_SAMPLE else None,
+        "median_impairment_age_days": _median(ages) if len(ages) >= MIN_MEDIAN_EPISODES else None,
         "impairment_age_sample": len(ages),
-        "partial_restart_count": partial_restarts,
-        "full_reconstitution_count": full_reconstitutions,
-        "estimate_record_count": estimate_records,
-        "recovery_record_count": len(records),
+        "partial_restart_episodes": len(partial_episodes),
+        "full_reconstitution_episodes": len(full_episodes),
+        "estimate_episodes": len(estimate_episodes),
+        "recovery_record_count": records,
         "evidence_kind_counts": dict(by_kind),
         "by_sector": by_sector,
         "note": (
-            "Recovery is tracked per incident. Median rather than mean, and suppressed "
-            f"below n={MIN_MEDIAN_SAMPLE} so a median-of-one is never shown as 'typical'. "
-            "'modelled' scoring means no credible source-reported timing exists and the "
-            "generic per-sector assumption was used; a partial restart is recorded but "
-            "never treated as full reconstitution."
+            "Recovery is tracked per incident and counted by DISTINCT EPISODE: a multi-day "
+            f"strike counts once. A median observed restoration is shown only with >= "
+            f"{MIN_MEDIAN_EPISODES} independent episodes, and is never called 'typical'. "
+            "'modelled' scoring means no credible source-reported timing exists; a partial "
+            "restart is recorded but never treated as full reconstitution."
         ),
     }
 

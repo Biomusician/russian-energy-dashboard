@@ -24,7 +24,7 @@ reporting of Ukrainian responsibility, not independent confirmation.
 import re
 
 from pipeline import wikitext as W
-from pipeline.dates import parse_dates, unenumerated_count
+from pipeline.dates import parse_dates, parse_dates_grouped, unenumerated_count
 from pipeline.regionmatch import resolve
 from pipeline.util import fetch_json, log
 
@@ -210,14 +210,19 @@ def build():
 
 
 def _incidents_for(asset_id, name, asset_class, region, date_src, spans, named_refs):
-    """One incident per date, with citations attributed by proximity.
+    """One incident per EPISODE, with citations attributed by proximity.
 
-    The date cell is prose of the form "date<ref>, date<ref>, date<ref>". Splitting
-    on top-level commas keeps each date with the citation that follows it, rather
-    than smearing every citation in the row across every date.
+    An episode is one disruption event: a single date, or a contiguous day-range
+    ("9-10 June") that the source describes as one strike. Discrete listed dates are
+    separate episodes. This is the iteration-3 fix for multi-day strikes previously
+    exploding into several independent incident rows.
+
+    The date cell is prose of the form "date<ref>, date<ref>, date<ref>". Splitting on
+    top-level commas keeps each date with the citation that follows it; episode grouping
+    within a fragment then merges a hyphen-range into one incident.
     """
     out = []
-    seen = set()
+    seen_episode_first = set()
     for fragment in _split_fragments(date_src):
         restored = W.restore(fragment, spans)
         citations = [
@@ -225,18 +230,28 @@ def _incidents_for(asset_id, name, asset_class, region, date_src, spans, named_r
             for c in (parse_citation(r, named_refs) for r in W.refs_in(fragment, spans))
             if c
         ]
-        for iso, precision in parse_dates(W.clean_cell(restored, keep_templates=("dts",))):
-            if iso in seen:
+        # group -> ordered list of (iso, precision)
+        episodes = {}
+        for iso, precision, grp in parse_dates_grouped(W.clean_cell(restored, keep_templates=("dts",))):
+            episodes.setdefault(grp, []).append((iso, precision))
+        for _grp, dates in episodes.items():
+            first_iso, precision = dates[0]
+            last_iso = dates[-1][0]
+            if first_iso in seen_episode_first:
                 continue
-            seen.add(iso)
+            seen_episode_first.add(first_iso)
+            incident_id = f"{asset_id}:{first_iso}"
             out.append(
                 {
-                    "incident_id": f"{asset_id}:{iso}",
+                    "incident_id": incident_id,
+                    "episode_id": incident_id,
                     "asset_id": asset_id,
                     "asset_name": name,
                     "asset_class": asset_class,
                     "region_code": region,
-                    "date": iso,
+                    "date": first_iso,
+                    "date_start": first_iso,
+                    "date_end": last_iso if last_iso != first_iso else None,
                     "date_precision": precision,
                     "cause": "kinetic_strike",
                     "attribution": "reported_ukrainian_strike",

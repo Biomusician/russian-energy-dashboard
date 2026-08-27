@@ -70,10 +70,25 @@ def parse_dates(text):
 
     Returns a list of (iso_string, precision) where precision is "day" or "month".
     """
+    return [(iso, prec) for iso, prec, _grp in parse_dates_grouped(text)]
+
+
+def parse_dates_grouped(text):
+    """Like parse_dates, but each date carries an EPISODE group index.
+
+    Dates from one contiguous day-range ("9-10 June") share a group -- they are one
+    strike spanning two days. Discrete listed dates ("5 April, 20 May", or "22, 25 May")
+    are separate groups -- distinct strikes. This is what lets the pipeline tell one
+    multi-day incident from two independent strikes on successive days.
+
+    Returns [(iso_string, precision, group_index)] with group_index increasing left to
+    right; every date in a hyphen-range shares its group's index.
+    """
     text = normalise_templates(text)
     found = []
     seen = set()
     pos = 0
+    group = 0
     while pos < len(text):
         best = None
         for kind, rx in _PATTERNS:
@@ -83,10 +98,12 @@ def parse_dates(text):
         if best is None:
             break
         kind, m = best
-        for value in _expand(kind, m):
-            if value and value[0] not in seen:
-                seen.add(value[0])
-                found.append(value)
+        for iso, prec, sub in _expand_grouped(kind, m):
+            if iso and iso not in seen:
+                seen.add(iso)
+                found.append((iso, prec, group + sub))
+        # Advance the group counter past every sub-group this token produced.
+        group += 1 + max((sub for *_x, sub in _expand_grouped(kind, m)), default=0)
         pos = m.end()
     return found
 
@@ -94,9 +111,11 @@ def parse_dates(text):
 _RANGE_RE = re.compile(rf"^(\d{{1,2}})\s*{DASH}\s*(\d{{1,2}})$")
 
 
-def _days_in_list(text):
-    """Expand "22-23 and 25" to [22, 23, 25]."""
-    days = []
+def _days_in_list_grouped(text):
+    """Expand "22-23 and 25" to [(22,0),(23,0),(25,1)] -- range shares a subgroup,
+    discrete days get their own."""
+    out = []
+    sub = 0
     for part in re.split(r"\s*(?:,|and|&)\s*", text.strip()):
         part = part.strip()
         if not part:
@@ -104,26 +123,28 @@ def _days_in_list(text):
         m = _RANGE_RE.match(part)
         if m:
             lo, hi = int(m.group(1)), int(m.group(2))
-            # A descending pair spans a month boundary ("31-2 April"); the source
-            # does not say which month the first day belongs to, so take it as
-            # written and keep only the endpoint we can place.
-            days.extend(range(lo, hi + 1) if lo <= hi else [hi])
+            days = range(lo, hi + 1) if lo <= hi else [hi]
+            for d in days:
+                out.append((d, sub))
+            sub += 1
         elif part.isdigit():
-            days.append(int(part))
-    return days
+            out.append((int(part), sub))
+            sub += 1
+    return out
 
 
-def _expand(kind, m):
+def _expand_grouped(kind, m):
+    """Return [(iso, precision, subgroup)] for one matched token."""
     try:
         if kind == "day_list":
             mon, yr = MONTHS[m[2].lower()], int(m[3])
-            return [_iso(yr, mon, d) for d in _days_in_list(m[1]) if 1 <= d <= 31]
+            return [(*_iso(yr, mon, d), sub) for d, sub in _days_in_list_grouped(m[1]) if 1 <= d <= 31]
         if kind == "day_us":
-            return [_iso(int(m[3]), MONTHS[m[1].lower()], int(m[2]))]
+            return [(*_iso(int(m[3]), MONTHS[m[1].lower()], int(m[2])), 0)]
         if kind == "iso":
-            return [_iso(int(m[1]), int(m[2]), int(m[3]))]
+            return [(*_iso(int(m[1]), int(m[2]), int(m[3])), 0)]
         if kind == "month":
-            return [_iso(int(m[2]), MONTHS[m[1].lower()])]
+            return [(*_iso(int(m[2]), MONTHS[m[1].lower()]), 0)]
     except (ValueError, KeyError):
         return []
     return []

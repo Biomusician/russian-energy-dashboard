@@ -14,11 +14,14 @@ export interface Source {
 
 export interface Incident {
   incident_id: string;
+  episode_id?: string;
   asset_id: string;
   asset_name: string | null;
   asset_class: string | null;
   region_code: string | null;
   date: string;
+  date_start?: string | null;
+  date_end?: string | null;
   date_precision: "day" | "month";
   cause: string;
   attribution: string;
@@ -146,22 +149,22 @@ export interface LiveDisruption {
 export interface RecoveryStats {
   unresolved_count: number;
   resolved_count: number;
-  min_median_sample: number;
+  min_median_episodes: number;
   median_observed_restoration_days: number | null;
   median_meaningful: boolean;
-  observed_restoration_sample: number;
+  observed_restoration_episodes: number;
   observed_restoration_values: number[];
   median_impairment_age_days: number | null;
   impairment_age_sample: number;
-  partial_restart_count: number;
-  full_reconstitution_count: number;
-  estimate_record_count: number;
+  partial_restart_episodes: number;
+  full_reconstitution_episodes: number;
+  estimate_episodes: number;
   recovery_record_count: number;
   evidence_kind_counts: Record<string, number>;
   by_sector: Record<string, {
     disrupted_facilities: number;
     unresolved: number;
-    observed_restoration_sample: number;
+    observed_restoration_episodes: number;
     median_observed_restoration_days: number | null;
   }>;
   note: string;

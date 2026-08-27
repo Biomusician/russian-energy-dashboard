@@ -54,18 +54,18 @@ export default function Ribbon({
           <RecoveryStat
             value={`${rs.median_observed_restoration_days}d`}
             label="Median observed restoration"
-            sub={`n = ${rs.observed_restoration_sample}`}
+            sub={`${rs.observed_restoration_episodes} episodes`}
             color="var(--green)"
           />
         ) : (
           <RecoveryStat
-            value={`${rs.observed_restoration_sample}`}
-            label="Observed restorations"
-            sub={rs.observed_restoration_sample < rs.min_median_sample ? "n too low for median" : ""}
+            value={`${rs.recovery_record_count} / ${rs.observed_restoration_episodes}`}
+            label="Observed recovery: records / episodes"
+            sub={`< ${rs.min_median_episodes} episodes — no median`}
             color="var(--green)"
           />
         )}
-        <RecoveryStat value={rs.full_reconstitution_count} label="Full reconstitutions" color="var(--green)" />
+        <RecoveryStat value={rs.full_reconstitution_episodes} label="Reconstitution episodes" color="var(--green)" />
       </div>
 
       <div className="sector-strip">

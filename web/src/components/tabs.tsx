@@ -393,32 +393,33 @@ export function ReconstitutionTab(p: TabProps) {
           <Tile
             label="Median observed restoration"
             value={rs.median_observed_restoration_days}
-            unit="days" kind="observed" n={rs.observed_restoration_sample}
+            unit="days" kind="observed" n={rs.observed_restoration_episodes}
           />
         ) : (
           <Tile
-            label="Observed restorations"
-            value={`n=${rs.observed_restoration_sample}`}
+            label="Observed recovery (records / episodes)"
+            value={`${rs.recovery_record_count} / ${rs.observed_restoration_episodes}`}
             small null
           />
         )}
         <Tile
-          label="Full reconstitutions / partial restarts"
-          value={`${rs.full_reconstitution_count} / ${rs.partial_restart_count}`}
+          label="Reconstitution / partial-restart episodes"
+          value={`${rs.full_reconstitution_episodes} / ${rs.partial_restart_episodes}`}
           small
         />
       </div>
 
       {!rs.median_meaningful && (
         <Note warn>
-          Observed-restoration sample is n={rs.observed_restoration_sample} (below the n={rs.min_median_sample}
-          needed for a meaningful median). Individual observed cases are listed below; no
-          "typical" restoration time is claimed yet.
+          Observed restoration rests on {rs.observed_restoration_episodes} distinct episodes
+          (below the {rs.min_median_episodes} independent episodes needed for a meaningful
+          median). Individual observed cases are listed below; no "typical" restoration time
+          is claimed. Episodes, not records: a multi-day strike counts once.
         </Note>
       )}
       {rs.observed_restoration_values.length > 0 && (
         <div style={{ padding: "0 14px 8px", fontSize: 11, color: "var(--text-dim)" }}>
-          Observed restoration durations (days):{" "}
+          Observed restoration durations (days), by episode:{" "}
           <span className="num" style={{ color: "var(--green)" }}>{rs.observed_restoration_values.join(", ")}</span>
         </div>
       )}
@@ -448,8 +449,10 @@ export function ReconstitutionTab(p: TabProps) {
             </span>
             <span className="v">
               {s.median_observed_restoration_days != null
-                ? <><span style={{ color: "var(--green)" }}>{s.median_observed_restoration_days}d</span> <span className="tile-n">n={s.observed_restoration_sample}</span></>
-                : <span style={{ color: "var(--text-faint)", fontStyle: "italic", fontSize: 11 }}>no observed data</span>}
+                ? <><span style={{ color: "var(--green)" }}>{s.median_observed_restoration_days}d</span> <span className="tile-n">n={s.observed_restoration_episodes}</span></>
+                : s.observed_restoration_episodes > 0
+                  ? <span className="tile-n">{s.observed_restoration_episodes} episode(s), no median</span>
+                  : <span style={{ color: "var(--text-faint)", fontStyle: "italic", fontSize: 11 }}>no observed data</span>}
             </span>
           </div>
         ))}
