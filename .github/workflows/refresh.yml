@@ -1,0 +1,69 @@
+name: Refresh dataset
+
+# Rebuilds the dataset from public sources and commits the result. Vercel redeploys
+# on the resulting push, so the live dashboard updates without a separate deploy step.
+on:
+  schedule:
+    # 05:20 UTC daily. Deliberately off the hour: scheduled runs cluster on the hour
+    # across GitHub and get queued.
+    - cron: "20 5 * * *"
+  workflow_dispatch:
+    inputs:
+      force_refresh:
+        description: "Ignore the on-disk source cache"
+        type: boolean
+        default: false
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      # The pipeline is stdlib-only by design, so there is nothing to install and no
+      # wheel that can break the scheduled run.
+      - name: Cache upstream downloads
+        uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: sources-${{ github.run_id }}
+          restore-keys: sources-
+
+      - name: Clear cache if forced
+        if: inputs.force_refresh
+        run: rm -rf data/raw
+
+      - name: Build dataset
+        run: python -m pipeline.run
+
+      - name: Install test dependency
+        run: pip install pytest
+
+      - name: Test
+        run: python -m pytest
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "dataset-refresh[bot]"
+          git config user.email "dataset-refresh[bot]@users.noreply.github.com"
+          git add data/processed web/public/data
+          if git diff --staged --quiet; then
+            echo "No dataset change today."
+            exit 0
+          fi
+          ESDI=$(python -c "import json;print(json.load(open('data/processed/snapshot.json',encoding='utf-8'))['esdi'])")
+          N=$(python -c "import json;print(json.load(open('data/processed/snapshot.json',encoding='utf-8'))['incident_total'])")
+          git commit -m "data: refresh $(date -u +%Y-%m-%d) — ESDI ${ESDI}, ${N} events"
+          git push

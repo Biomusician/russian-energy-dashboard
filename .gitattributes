@@ -1,0 +1,11 @@
+# Normalise to LF in the repository. The daily refresh Action runs on Ubuntu and the
+# development checkout is Windows; without this, every scheduled data commit would show
+# as a whole-file rewrite.
+* text=auto eol=lf
+
+# Windows shims must keep CRLF or cmd.exe can mis-parse them.
+*.cmd text eol=crlf
+
+# Emitted data is machine-written, single-line JSON. Never merge it by hand -- rebuild.
+data/processed/** -diff merge=ours linguist-generated
+web/public/data/** -diff merge=ours linguist-generated

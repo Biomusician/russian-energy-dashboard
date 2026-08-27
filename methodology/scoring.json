@@ -1,0 +1,93 @@
+{
+  "version": "0.1.0",
+  "index_name": "Energy System Disruption Exposure Index",
+  "index_abbreviation": "ESDI",
+
+  "what_this_measures": [
+    "ESDI measures DISRUPTION EXPOSURE, not measured capacity loss.",
+    "For each sector it answers: what share of the installed base sits at facilities",
+    "disrupted recently enough to still be plausibly impaired, weighted by how strong",
+    "the evidence is and how long ago it happened.",
+    "It is NOT a claim about actual lost throughput or generation. Open reporting",
+    "almost never states how much capacity a given strike removed, and this project",
+    "does not invent that number. Where a source does quantify the loss, the figure is",
+    "carried on the incident and shown, but the index itself is exposure-based so that",
+    "quantified and unquantified incidents are treated on the same defensible footing."
+  ],
+
+  "confidence_weights": {
+    "_comment": "Evidence strength for whether the event occurred. Applied multiplicatively.",
+    "confirmed": 1.0,
+    "probable": 0.75,
+    "possible": 0.45,
+    "unverified": 0.2
+  },
+
+  "cause_weights": {
+    "_comment": "How much a cause implies unplanned impairment. Scheduled maintenance is planned downtime and is near-discounted; sanctions bite gradually rather than removing capacity outright.",
+    "kinetic_strike": 1.0,
+    "sabotage": 1.0,
+    "cyber": 0.8,
+    "technical": 0.8,
+    "sanctions": 0.6,
+    "maintenance": 0.15,
+    "unknown": 0.7
+  },
+
+  "repair_half_life_days": {
+    "_comment": "Days for assumed impairment to halve, by asset class. These are ASSUMPTIONS, not measurements - the single weakest input to the index. They encode how quickly each class of asset is typically brought back after damage. Revising them changes every score.",
+    "refinery": 45,
+    "oil_terminal": 30,
+    "pipeline_oil": 21,
+    "pipeline_gas": 21,
+    "gas_processing": 60,
+    "lng_terminal": 90,
+    "power_plant_thermal": 60,
+    "power_plant_nuclear": 120,
+    "power_plant_hydro": 120,
+    "power_plant_other": 60,
+    "substation": 30,
+    "transmission_line": 14,
+    "coal": 45,
+    "interconnector": 30,
+    "_default": 45
+  },
+
+  "status_multipliers": {
+    "_comment": "Applied when a source explicitly states the recovery state, overriding pure time decay. 'repaired' collapses the contribution; 'active' holds it at full decayed value.",
+    "active": 1.0,
+    "degraded": 0.7,
+    "repaired": 0.1,
+    "unknown": 1.0
+  },
+
+  "sector_weights": {
+    "_comment": "Contribution of each sector to the national composite. A judgement call about systemic importance, not a measured quantity. Sums to 1.0.",
+    "refining": 0.35,
+    "electric_power": 0.30,
+    "oil_logistics": 0.20,
+    "gas": 0.10,
+    "coal": 0.05
+  },
+
+  "sector_basis": {
+    "_comment": "What denominator each sector's exposure is measured against. 'capacity' uses MW or MTPA; 'count' falls back to number of assets because the class has no published capacity figure. Count-based sectors are flagged in the output so the UI can mark them as weaker measures.",
+    "refining": "capacity_mtpa",
+    "electric_power": "capacity_mw",
+    "oil_logistics": "capacity_mtpa",
+    "gas": "count",
+    "coal": "count"
+  },
+
+  "heating_season_months": [10, 11, 12, 1, 2, 3, 4],
+
+  "cutoff": {
+    "_comment": "An incident stops contributing once decayed below this, to keep the time series from carrying a long meaningless tail.",
+    "min_contribution": 0.01
+  },
+
+  "timeline": {
+    "step_days": 7,
+    "_comment": "Weekly steps. Daily resolution would quadruple the payload without changing any visible conclusion, since the decay half-lives are measured in weeks."
+  }
+}

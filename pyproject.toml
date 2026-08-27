@@ -1,0 +1,11 @@
+[project]
+name = "russian-energy-dashboard"
+version = "0.1.0"
+description = "Open-source energy infrastructure disruption monitoring for western Russia and Belarus"
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"

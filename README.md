@@ -1,0 +1,161 @@
+# Energy Disruption Monitor — Western Russia & Belarus
+
+An open-source-only dashboard tracking publicly reported degradation of energy
+infrastructure across western Russia and Belarus, aggregated to administrative region,
+from 2022 to the present.
+
+Every number traces to a public source. Where the data does not support a number, the
+dashboard says so rather than estimating one.
+
+---
+
+## What it is, precisely
+
+The headline figure is the **Energy System Disruption Exposure Index (ESDI)**. It
+answers one question:
+
+> What share of the tracked installed base sits at facilities disrupted recently
+> enough to still be plausibly impaired, weighted by evidence strength, cause, and
+> time elapsed?
+
+**It is not a measurement of lost throughput or lost generation.** Open reporting
+almost never states how much capacity a given event removed. Of the 127 region-assigned
+events currently in the dataset, **zero** carry a quantified capacity effect — and the
+dashboard shows that ratio in its top ribbon rather than burying it. An exposure
+measure is what this data can honestly support; a "capacity offline" figure is not.
+
+### Scope boundary
+
+This is a damage-assessment and monitoring tool. It models publicly reported disruption
+to energy infrastructure, aggregated to administrative region. It contains no current
+unit positions, no readiness state, no vulnerability or defensive-gap assessment, and
+no ranking of undamaged assets.
+
+One upstream source (the Wikipedia strike table) publishes a "distance from
+Ukrainian-controlled territory" column for each facility. **The parser deliberately does
+not read it.** It describes reach rather than damage, contributes nothing to a
+degradation assessment, and is the one field in that table with obvious
+operational-planning value. `tests/test_pipeline.py` fails the build if any
+range-to-target field ever appears in emitted data.
+
+---
+
+## Architecture
+
+```
+data/curated/*.csv ──┐
+Natural Earth ───────┤
+WRI Power Plant DB ──┼──► pipeline/ (Python 3.13, stdlib only) ──► data/processed/*.json
+OpenStreetMap ───────┤                                                      │
+Wikipedia ───────────┘                                                      │
+                                                                web/public/data/ (mirrored)
+                                                                            │
+                                                    web/ (Vite + React + TS + MapLibre)
+                                                                            │
+                                                                    Vercel (static)
+```
+
+Three deliberate choices:
+
+**No database.** The dataset is ~1,600 assets and ~130 events. Static JSON regenerated
+by a scheduled job *is* the backend. A Postgres instance here would be infrastructure
+to maintain in exchange for nothing.
+
+**No basemap.** The map renders our own GeoJSON on a flat dark ground. Every tile
+provider worth using needs an API key, a billing relationship, or an attribution
+banner, and streets and terrain add nothing underneath an administrative choropleth.
+The deployed page therefore makes **zero external network requests** and works offline.
+
+**Stdlib-only ETL.** No pandas, geopandas, shapely or requests. Point-in-polygon,
+Douglas–Peucker simplification and Wikitext parsing are each a few dozen readable
+lines. The GitHub Action needs no build toolchain and cannot break on a wheel that
+stops publishing for Python 3.13.
+
+---
+
+## Setup
+
+Requires Python 3.13 and Node 24. Node is vendored under `tools/node/` (gitignored) and
+reached through `scripts/node.cmd` / `scripts/npm.cmd`, so nothing touches PATH.
+
+```bash
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install pytest
+```
+
+Build the dataset — this downloads from Natural Earth, WRI, Overpass and Wikipedia, and
+caches everything under `data/raw/` (gitignored):
+
+```bash
+.venv\Scripts\python.exe -m pipeline.run
+```
+
+Run the dashboard:
+
+```bash
+cd web && ..\scripts\npm.cmd install && ..\scripts\npm.cmd run dev
+```
+
+Run the tests:
+
+```bash
+.venv\Scripts\python.exe -m pytest
+```
+
+---
+
+## Data flow
+
+| Stage | Location | Committed? |
+|---|---|---|
+| Raw downloads | `data/raw/` | No — large, regenerable, third-party licensed |
+| Analyst-curated events | `data/curated/incidents.csv` | Yes — this is source truth |
+| Scoring parameters | `methodology/scoring.json` | Yes |
+| Processed output | `data/processed/` | Yes — so Vercel can serve it without running Python |
+| Frontend copy | `web/public/data/` | Yes — mirrored by the pipeline |
+
+`data/processed/` is a **build artifact that is nonetheless committed**, because Vercel
+builds only the frontend. A clean rebuild is deterministic given the same upstream
+sources. Never hand-edit processed JSON; fix the curated source and rebuild.
+
+---
+
+## Sources
+
+| Layer | Source | Licence |
+|---|---|---|
+| Administrative boundaries | Natural Earth 10m admin-1 | Public domain |
+| Generation (MW, fuel, location) | WRI Global Power Plant Database v1.3 | CC BY 4.0 |
+| Substations, transmission, pipelines | OpenStreetMap via Overpass | ODbL |
+| Strike events, refinery capacities | English Wikipedia | CC BY-SA 4.0 |
+| Everything else | `data/curated/incidents.csv` | Per-row source URLs |
+
+Full detail and per-source caveats: [docs/SOURCES.md](docs/SOURCES.md).
+
+---
+
+## Documentation
+
+- [docs/METHODOLOGY.md](docs/METHODOLOGY.md) — how the index is computed, and every assumption in it
+- [docs/SCHEMA.md](docs/SCHEMA.md) — data model and field definitions
+- [docs/SOURCES.md](docs/SOURCES.md) — provenance and licensing
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — GitHub + Vercel + daily refresh
+- [docs/MVP_REVIEW.md](docs/MVP_REVIEW.md) — what works, what does not, what to decide next
+- [docs/CHATGPT_ITERATION_PROMPT.md](docs/CHATGPT_ITERATION_PROMPT.md) — prompt for iterating elsewhere
+
+---
+
+## Known limits, stated up front
+
+- **Coverage is ~42%.** The dataset enumerates 127 region-assigned events; the source
+  benchmark reports 305 strikes on Russian oil facilities in total. The gap is events
+  that appear only in prose reporting, which this MVP does not parse.
+- **Refining and oil logistics dominate.** They are the sectors with structured open
+  data. Gas and coal have no capacity base and are excluded from the composite (their
+  weights are redistributed rather than counted as zero).
+- **Repair half-lives are assumptions, not measurements.** They are the single weakest
+  input to the index. All of them live in `methodology/scoring.json`.
+- **Four of the nine requested regional effect categories are not modelled** and are
+  displayed as such, with reasons, rather than filled with plausible numbers.
+
+These are expanded in [docs/MVP_REVIEW.md](docs/MVP_REVIEW.md).

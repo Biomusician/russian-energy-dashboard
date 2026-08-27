@@ -1,0 +1,21 @@
+# Raw downloads are large, regenerable, and third-party licensed. Never committed.
+data/raw/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Node / Vite
+node_modules/
+web/dist/
+web/.vite/
+*.log
+.vercel/
+
+# OS
+Thumbs.db
+.DS_Store
+tools/
