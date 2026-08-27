@@ -1,0 +1,30 @@
+region_code,population_millions,source,note
+RU-MOW,13.0,Rosstat 2021 census,Moscow federal city
+RU-MOS,8.5,Rosstat 2021 census,Moscow Oblast
+RU-SPE,5.6,Rosstat 2021 census,Saint Petersburg
+RU-KDA,5.8,Rosstat 2021 census,Krasnodar Krai
+RU-SVE,4.3,Rosstat 2021 census,Sverdlovsk Oblast
+RU-ROS,4.2,Rosstat 2021 census,Rostov Oblast
+RU-BA,4.0,Rosstat 2021 census,Republic of Bashkortostan
+RU-TA,4.0,Rosstat 2021 census,Republic of Tatarstan
+RU-CHE,3.4,Rosstat 2021 census,Chelyabinsk Oblast
+RU-SAM,3.2,Rosstat 2021 census,Samara Oblast
+RU-NIZ,3.1,Rosstat 2021 census,Nizhny Novgorod Oblast
+RU-KYA,2.9,Rosstat 2021 census,Krasnoyarsk Krai
+RU-NVS,2.8,Rosstat 2021 census,Novosibirsk Oblast
+RU-KEM,2.6,Rosstat 2021 census,Kemerovo Oblast (Kuzbass)
+RU-PER,2.5,Rosstat 2021 census,Perm Krai
+RU-VGG,2.5,Rosstat 2021 census,Volgograd Oblast
+RU-SAR,2.4,Rosstat 2021 census,Saratov Oblast
+RU-IRK,2.4,Rosstat 2021 census,Irkutsk Oblast
+RU-VOR,2.3,Rosstat 2021 census,Voronezh Oblast
+RU-LEN,2.0,Rosstat 2021 census,Leningrad Oblast
+RU-OMS,1.9,Rosstat 2021 census,Omsk Oblast
+RU-TYU,1.6,Rosstat 2021 census,Tyumen Oblast (excl. autonomous okrugs)
+RU-TUL,1.5,Rosstat 2021 census,Tula Oblast
+RU-YAR,1.2,Rosstat 2021 census,Yaroslavl Oblast
+RU-BRY,1.2,Rosstat 2021 census,Bryansk Oblast
+RU-RYA,1.1,Rosstat 2021 census,Ryazan Oblast
+RU-KRS,1.1,Rosstat 2021 census,Kursk Oblast
+RU-KLU,1.0,Rosstat 2021 census,Kaluga Oblast
+RU-KO,0.8,Rosstat 2021 census,Komi Republic

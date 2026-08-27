@@ -95,6 +95,74 @@ def load_curated_incidents():
     return out
 
 
+def load_region_context():
+    """Population and other structural regional context (Rosstat census, etc.).
+
+    STRUCTURAL context only -- population POTENTIALLY exposed, never population ACTUALLY
+    affected. The two are kept strictly distinct; an observed civilian effect is only a
+    sourced incident, never derived from population.
+    """
+    path = CURATED / "region_context.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    for row in read_csv(path):
+        code = row.get("region_code")
+        if not code:
+            continue
+        out[code] = {
+            "population_millions": _num(row.get("population_millions")),
+            "population_source": row.get("source"),
+        }
+    log(f"region context: {len(out)} regions with structural data")
+    return out
+
+
+def load_crea_snapshots():
+    """CREA monthly economic snapshots -- observed economic CONTEXT, monthly cadence.
+
+    Deliberately NOT a strike feed and NEVER attributed to infrastructure disruption:
+    export revenue moves for many reasons the data cannot separate. Versioned by
+    reporting month + snapshot date, with provenance and revision status preserved.
+    CREA publishes stable per-month public analysis pages (the source URLs); there is no
+    documented machine-readable public API, so this is an analyst-maintained snapshot
+    file per the design brief -- no API is fabricated.
+    """
+    path = CURATED / "crea_snapshots.csv"
+    if not path.exists():
+        return None
+    by_metric = {}
+    for row in read_csv(path):
+        metric = row.get("metric")
+        if not metric or not row.get("value"):
+            continue
+        by_metric.setdefault(metric, []).append({
+            "reporting_month": row.get("reporting_month"),
+            "snapshot_date": row.get("snapshot_date"),
+            "value": _num(row.get("value")),
+            "units": row.get("units"),
+            "source_url": row.get("source_url"),
+            "revision_status": row.get("revision_status"),
+            "note": row.get("notes"),
+        })
+    for series in by_metric.values():
+        series.sort(key=lambda x: x["reporting_month"] or "")
+    total = sum(len(v) for v in by_metric.values())
+    log(f"CREA: {total} monthly economic snapshots across {len(by_metric)} metrics")
+    return {
+        "provider": "Centre for Research on Energy and Clean Air (CREA)",
+        "cadence": "monthly",
+        "kind": "observed_economic_context",
+        "caveat": (
+            "Observed external economic indicators, monthly. NOT attributed to "
+            "infrastructure strikes -- export revenue moves for many reasons this data "
+            "cannot separate. CREA revises historical figures as shipment data is "
+            "verified; reporting month and snapshot date are preserved."
+        ),
+        "metrics": by_metric,
+    } if by_metric else None
+
+
 def _num(value):
     try:
         return float(value)
@@ -165,10 +233,12 @@ def main():
     assets, lines, region_meta = build_assets.build()
     build_context.build()  # surrounding countries, borders, ocean — display only
     wiki_facilities, wiki_incidents, wiki_warnings = build_wikipedia()
-    refineries, refining_total = build_refineries()
+    refineries, refining_total, refinery_reconciliation = build_refineries()
     curated = load_curated_incidents()
     coverage = load_coverage_benchmark()
     recovery_by_incident = load_recovery_records()
+    region_context = load_region_context()
+    crea = load_crea_snapshots()
 
     for inc in wiki_incidents:
         inc["origin"] = "wikipedia_strike_table"
@@ -207,6 +277,7 @@ def main():
         as_of=args.as_of,
         recovery_by_incident=recovery_by_incident,
         transmission_lines_by_region=dict(tx_lines_by_region),
+        region_context=region_context,
     )
 
     enumerated = len(in_aoi)
@@ -216,6 +287,8 @@ def main():
             enumerated / coverage["reported_total_strikes"], 3
         )
 
+    snapshot["refinery_reconciliation"] = refinery_reconciliation
+    snapshot["economic_context"] = crea
     snapshot["coverage"] = coverage
     snapshot["parser_warnings"] = wiki_warnings
     snapshot["build_time"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
@@ -225,7 +298,8 @@ def main():
     write_json(PROCESSED / "index_regional.json", {"dates": national["dates"], "regions": regional})
     write_json(PROCESSED / "snapshot.json", snapshot)
     write_json(PROCESSED / "refinery_inventory.json",
-               {"refineries": refineries, "total_mtpa": round(refining_total, 1)})
+               {"refineries": refineries, "total_mtpa": round(refining_total, 1),
+                "reconciliation": refinery_reconciliation})
     write_json(
         PROCESSED / "taxonomy.json",
         {

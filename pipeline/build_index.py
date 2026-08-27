@@ -113,9 +113,10 @@ def _facility_weight(incs, when, recovery_by_incident):
 
 
 def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of,
-          recovery_by_incident=None, transmission_lines_by_region=None):
+          recovery_by_incident=None, transmission_lines_by_region=None, region_context=None):
     """Return (national_series, regional_series, snapshot)."""
     recovery_by_incident = recovery_by_incident or {}
+    region_context = region_context or {}
     step = SCORING["timeline"]["step_days"]
     timeline = _dates(WINDOW_START, as_of, step)
 
@@ -175,6 +176,7 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
     snapshot = _snapshot(
         incidents, incidents_by_facility, facility_info, denominators,
         region_meta, national, regional, timeline, as_of, covered, recovery_by_incident,
+        region_context,
     )
     return national, regional, snapshot
 
@@ -415,7 +417,9 @@ def _incident_recovery_state(incident, record, today):
 
 
 def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
-              national, regional, timeline, as_of, covered, recovery_by_incident):
+              national, regional, timeline, as_of, covered, recovery_by_incident,
+              region_context=None):
+    region_context = region_context or {}
     today = dt.date.fromisoformat(as_of)
     heating = today.month in SCORING["heating_season_months"]
 
@@ -537,6 +541,9 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             "tracked_substations": tx_ctx["substations"],
             "tracked_transmission_lines": tx_ctx["lines"],
             "regional_intensity": intensity,
+            # Structural context only: population POTENTIALLY exposed, never population
+            # actually affected. A civilian effect is only ever a sourced incident.
+            "population_millions": (region_context.get(code) or {}).get("population_millions"),
             "effects": effects,
         }
 
@@ -556,7 +563,7 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
         "incidents_with_quantified_capacity": quantified,
         "assessed_degradation": _assessed_degradation(incidents, live, facility_info, today),
         "recovery_stats": _recovery_stats(live, incidents, recovery_by_incident, facility_info),
-        "coverage_detail": _coverage_detail(incidents),
+        "coverage_detail": _coverage_detail(incidents, recovery_by_incident),
         "live_disruptions": live[:80],
         "regions": regions_out,
         "not_modelled": NOT_MODELLED,
@@ -685,24 +692,39 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
     }
 
 
-def _coverage_detail(incidents):
+def _coverage_detail(incidents, recovery_by_incident=None):
     """Concept 4: transparent, categorical coverage — never a fabricated confidence interval.
 
     Splits observed event counts by year, sector, region and cause so a reader can see
     where the record is thin. A low count is explicitly ambiguous between low disruption
     and low reporting; that ambiguity is stated, not resolved with false precision.
     """
+    recovery_by_incident = recovery_by_incident or {}
+
     def bucket(key):
         c = collections.Counter()
         for i in incidents:
             c[key(i)] += 1
         return dict(sorted(c.items()))
 
+    # Evidence-availability matrix: how many events in each sector carry recovery and
+    # cost evidence, so the reader can see where sourcing is thin along each dimension.
+    evidence_matrix = {}
+    for i in incidents:
+        sector = SECTOR_OF_CLASS.get(i.get("asset_class"), "other")
+        row = evidence_matrix.setdefault(sector, {"events": 0, "recovery": 0, "cost": 0})
+        row["events"] += 1
+        if i.get("incident_id") in recovery_by_incident:
+            row["recovery"] += 1
+        if i.get("repair_cost_reported_usd_m") or i.get("repair_cost_estimate_low_usd_m"):
+            row["cost"] += 1
+
     return {
         "by_year": bucket(lambda i: i["date"][:4]),
         "by_sector": bucket(lambda i: SECTOR_OF_CLASS.get(i.get("asset_class"), "other")),
         "by_cause": bucket(lambda i: i.get("cause") or "unknown"),
         "by_district": bucket(lambda i: i.get("_district") or "unknown"),
+        "evidence_matrix": evidence_matrix,
         "note": (
             "Counts of enumerated events only. A low count may mean genuinely low "
             "disruption OR thin open-source reporting for that bucket; this dataset "

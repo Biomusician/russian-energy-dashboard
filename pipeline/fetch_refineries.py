@@ -32,6 +32,13 @@ BBL_PER_DAY_TO_MTPA = TONNES_PER_BARREL * 365 / 1e6
 
 SECTIONS = ("Russia in Europe", "Russia in Asia")
 
+# Published national estimate of Russian primary crude-refining capacity. ~6.6 mb/d of
+# primary distillation is the figure repeatedly cited by the IEA and Reuters; at the
+# 0.136 t/bbl / 49.6 t/yr convention that is ~330 MTPA. Used ONLY to state our
+# denominator coverage honestly -- never as an input to any score.
+NATIONAL_ESTIMATE_MTPA = 330.0
+NATIONAL_ESTIMATE_SOURCE = "IEA / Reuters, Russian primary refining ~6.6 mb/d (~330 MTPA)"
+
 _BULLET = re.compile(r"^\*\s*(?!\*)(.+)$", re.M)
 _CVT_BBL = re.compile(r"\{\{\s*cvt\s*\|\s*([\d,\.]+)\s*\|\s*oilbbl/d", re.I)
 _CVT_TPA = re.compile(r"\{\{\s*cvt\s*\|\s*([\d,\.]+)\s*\|\s*(?:MTPA|Mt/a|t/a)", re.I)
@@ -88,12 +95,30 @@ def build():
 
     refineries = list(seen.values())
     total = sum(r["capacity_mtpa"] for r in refineries if r["capacity_mtpa"])
+
+    # Reconciliation (iteration 3): state coverage against the published national
+    # estimate honestly. The gap is not padded away -- it is reported.
+    reconciliation = {
+        "national_public_estimate_mtpa": NATIONAL_ESTIMATE_MTPA,
+        "national_estimate_source": NATIONAL_ESTIMATE_SOURCE,
+        "tracked_mtpa": round(total, 1),
+        "tracked_refineries": len(refineries),
+        "coverage_pct": round(100 * total / NATIONAL_ESTIMATE_MTPA, 1),
+        "gap_mtpa": round(NATIONAL_ESTIMATE_MTPA - total, 1),
+        "note": (
+            "Tracked major-refinery capacity vs the published national estimate. The gap "
+            "is chiefly mini-refineries and gas-condensate plants not individually "
+            "inventoried; refining exposure is measured against tracked capacity and is a "
+            "lower bound. Unlike facilities are not counted merely to close the gap."
+        ),
+    }
     log(
         f"refineries: {base_count} base ({base_total:,.1f} MTPA) + {len(added)} "
         f"supplement = {len(refineries)} refineries, {total:,.1f} MTPA total "
-        f"(+{total - base_total:,.1f} from audit)"
+        f"(+{total - base_total:,.1f} from audit) = {reconciliation['coverage_pct']}% "
+        f"of the ~{NATIONAL_ESTIMATE_MTPA:.0f} MTPA national estimate"
     )
-    return refineries, total
+    return refineries, total, reconciliation
 
 
 def _dedup_key(name):

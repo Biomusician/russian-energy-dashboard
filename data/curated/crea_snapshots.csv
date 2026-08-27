@@ -1,0 +1,10 @@
+reporting_month,snapshot_date,metric,value,units,source_url,revision_status,notes
+2026-01,2026-08-27,total_fossil_export_revenue,464,EUR_mn_per_day,https://energyandcleanair.org/january-2026-monthly-analysis-of-russian-fossil-fuel-exports-and-sanctions/,as_reported,"CREA monthly analysis. Observed economic context, not attributed to infrastructure strikes."
+2026-02,2026-08-27,total_fossil_export_revenue,492,EUR_mn_per_day,https://energyandcleanair.org/february-2026-monthly-analysis-of-russian-fossil-fuel-exports-and-sanctions/,as_reported,"CREA monthly analysis."
+2026-03,2026-08-27,total_fossil_export_revenue,713,EUR_mn_per_day,https://energyandcleanair.org/march-2026-monthly-analysis-of-russian-fossil-fuel-exports-and-sanctions/,as_reported,"CREA monthly analysis."
+2026-04,2026-08-27,total_fossil_export_revenue,733,EUR_mn_per_day,https://energyandcleanair.org/april-2026-monthly-analysis-of-russian-fossil-fuel-exports-and-sanctions/,as_reported,"CREA: highest revenues in two and a half years."
+2026-05,2026-08-27,total_fossil_export_revenue,726,EUR_mn_per_day,https://energyandcleanair.org/may-2026-monthly-analysis-of-russian-fossil-fuel-exports-and-sanctions/,as_reported,"CREA monthly analysis."
+2026-06,2026-08-27,total_fossil_export_revenue,734,EUR_mn_per_day,https://energyandcleanair.org/june-2026-monthly-analysis-of-russian-fossil-fuel-exports-and-sanctions/,as_reported,"CREA monthly analysis."
+2026-04,2026-08-27,crude_oil_export_revenue,374,EUR_mn_per_day,https://energyandcleanair.org/april-2026-monthly-analysis-of-russian-fossil-fuel-exports-and-sanctions/,as_reported,"CREA crude-oil-specific export revenue."
+2026-05,2026-08-27,crude_oil_export_revenue,362,EUR_mn_per_day,https://energyandcleanair.org/may-2026-monthly-analysis-of-russian-fossil-fuel-exports-and-sanctions/,as_reported,"CREA crude-oil-specific export revenue."
+2026-06,2026-08-27,crude_oil_export_revenue,348,EUR_mn_per_day,https://energyandcleanair.org/june-2026-monthly-analysis-of-russian-fossil-fuel-exports-and-sanctions/,as_reported,"CREA: crude oil export revenue fell 8% m/m in June 2026."
