@@ -29,6 +29,19 @@ def bbox_of_geometry(geom):
     return (minx, miny, maxx, maxy)
 
 
+def merge_geometries(geoms):
+    """Combine several Polygon/MultiPolygon geometries into one MultiPolygon.
+
+    A set union, not a dissolve: the parts (e.g. Crimea + Sevastopol) are adjacent and
+    non-overlapping, so concatenating their polygons is correct and avoids pulling in a
+    polygon-clipping dependency the pipeline otherwise does not need.
+    """
+    polys = []
+    for g in geoms:
+        polys.extend(list(_polygons(g)))
+    return {"type": "MultiPolygon", "coordinates": polys}
+
+
 def _polygons(geom):
     """Yield each polygon (list of rings) from a Polygon or MultiPolygon."""
     t = geom["type"]

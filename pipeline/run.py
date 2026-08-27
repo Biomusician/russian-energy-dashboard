@@ -13,7 +13,7 @@ import argparse
 import datetime as dt
 import shutil
 
-from pipeline import build_assets, build_index
+from pipeline import build_assets, build_context, build_index
 from pipeline.config import (
     ANALYTIC_CONCEPTS, ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, EVIDENCE_KINDS,
     PROCESSED, SECTORS, WEB_DATA, WINDOW_START,
@@ -154,6 +154,7 @@ def main():
     log("=" * 62)
 
     assets, lines, region_meta = build_assets.build()
+    build_context.build()  # surrounding countries, borders, ocean — display only
     wiki_facilities, wiki_incidents, wiki_warnings = build_wikipedia()
     refineries, refining_total = build_refineries()
     curated = load_curated_incidents()

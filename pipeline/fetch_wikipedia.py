@@ -167,6 +167,12 @@ def build():
             if kind == "unresolved":
                 warnings.append(f"{name}: could not resolve region {region_src!r}")
 
+            # in_aoi regions and the Crimea context unit both get a region_code so their
+            # events are tracked. Crimea is flagged so the index excludes it from the
+            # Russia+Belarus composite. Everything else stays region-less.
+            tracked = kind in ("in_aoi", "context")
+            region_code = region if tracked else None
+
             asset_class = classify(ti, name)
             asset_id = _slug(name)
 
@@ -175,9 +181,10 @@ def build():
                     "asset_id": asset_id,
                     "name": name,
                     "asset_class": asset_class,
-                    "region_code": region if kind == "in_aoi" else None,
+                    "region_code": region_code,
                     "region_text": region_src or None,
                     "in_aoi": kind == "in_aoi",
+                    "context": kind == "context",
                     "out_of_aoi": kind == "out_of_aoi",
                     "operator": operator,
                     "capacity_mtpa": capacity,
@@ -187,7 +194,7 @@ def build():
 
             unenumerated = unenumerated_count(W.clean_cell(date_src))
             row_incidents = _incidents_for(
-                asset_id, name, asset_class, region if kind == "in_aoi" else None,
+                asset_id, name, asset_class, region_code,
                 date_src, spans, named_refs,
             )
             if unenumerated is not None:

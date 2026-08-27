@@ -176,10 +176,54 @@ BY_REGIONS = {
     "Vitebsk":       ("BY-VI", "Vitebsk Region", "Belarus"),
 }
 
-# Every Russian federal subject we model, in one place. Occupied Ukrainian territory
-# is deliberately absent: it is internationally recognised as Ukraine, is not a Russian
-# federal subject, and never enters this dataset.
+# Every Russian federal subject we model, in one place.
 ALL_RU_REGIONS = {**RU_REGIONS, **SI_REGIONS, **FE_REGIONS}
+
+# ---------------------------------------------------------------------------
+# Special analytic units — Crimea (iteration 2)
+# ---------------------------------------------------------------------------
+# Crimea is a deliberate, narrow exception to the blanket occupied-territory exclusion.
+# It is tracked as a SEPARATELY IDENTIFIED context unit, NOT as a Russian federal
+# subject: publicly reported disruption there is relevant to the picture, but Crimea is
+# internationally recognised as Ukraine and is excluded from the Russia+Belarus ESDI
+# denominator and composite.
+#
+# The exception is only to the *geographic* exclusion. Every analytic/safety limit
+# (no coordinates, no range-to-target, no facility-level asset deck, no targeting)
+# applies to Crimea exactly as elsewhere. See docs/METHODOLOGY.md.
+#
+# Geometry is the union of Natural Earth's two Crimean features, which NE files under
+# adm0_a3=RUS but honestly tags with the Ukrainian ISO codes UA-43 / UA-40.
+SPECIAL_UNITS = {
+    "UA-CR": {
+        "code": "UA-CR",
+        "name": "Crimea",
+        "district": "Crimea",
+        "country": "UA",
+        "natural_earth_names": ["Crimea", "Sevastopol"],
+        "sovereignty": "Internationally recognised as Ukraine",
+        "de_facto_control": "Russian-occupied since 2014",
+        "analytic_scope": "context",
+        "esdi_included": False,
+        "note": (
+            "Represented separately because it is relevant to the disruption picture. "
+            "Not a Russian federal subject; excluded from the Russia+Belarus composite. "
+            "The map does not adjudicate sovereignty through colour or polygon "
+            "membership."
+        ),
+    },
+}
+
+# Other occupied Ukrainian territory that remains fully excluded. Listed so a source
+# naming one is recognised and reported as "excluded (occupied Ukraine)" rather than as
+# an unresolved parse failure. Natural Earth already files these under adm0_a3=UKR, so
+# they never enter the region layer; this is only for source-name resolution.
+OCCUPIED_EXCLUDED = {
+    "Donetsk", "Donetsk Oblast", "Donetsk People's Republic",
+    "Luhansk", "Lugansk", "Luhansk Oblast", "Luhansk People's Republic",
+    "Zaporizhzhia", "Zaporizhzhia Oblast", "Zaporozhye", "Zaporizhia",
+    "Kherson", "Kherson Oblast",
+}
 
 
 def aoi_regions():
@@ -195,6 +239,11 @@ def aoi_regions():
     for ne_name, (code, name, district) in BY_REGIONS.items():
         out[ne_name] = (code, name, district, "BY")
     return out
+
+
+def context_units():
+    """Special context units (Crimea) — tracked, but excluded from the ESDI composite."""
+    return dict(SPECIAL_UNITS)
 
 
 def out_of_aoi_regions():

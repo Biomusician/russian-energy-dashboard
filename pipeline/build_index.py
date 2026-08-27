@@ -103,6 +103,11 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
     facility_info = _facility_registry(facilities, incidents, assets)
     denominators = _denominators(assets, refinery_total_mtpa, region_meta)
 
+    # Regions excluded from the Russia+Belarus headline composite (Crimea). Their events
+    # are still tracked and get their own regional exposure, but never feed the national
+    # ESDI or its denominators. See docs/METHODOLOGY.md.
+    esdi_excluded = {code for code, m in region_meta.items() if not m.get("esdi_included", True)}
+
     incidents_by_facility = collections.defaultdict(list)
     for inc in incidents:
         incidents_by_facility[inc["asset_id"]].append(inc)
@@ -130,9 +135,13 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
             share = _share(info, denominators)
             if share <= 0:
                 continue
-            nat_sector[info["sector"]] += share * weight
-            if info["region_code"]:
-                reg_sector[info["region_code"]][info["sector"]] += share * weight
+            region_code = info["region_code"]
+            # Crimea (and any esdi-excluded region) contributes to its own regional
+            # exposure but never to the national composite.
+            if region_code not in esdi_excluded:
+                nat_sector[info["sector"]] += share * weight
+            if region_code:
+                reg_sector[region_code][info["sector"]] += share * weight
 
         for s in SECTORS:
             national["sectors"][s].append(round(min(1.0, nat_sector[s]) * 100, 2))
@@ -204,12 +213,16 @@ def _denominators(assets, refinery_total_mtpa, region_meta):
     """National and per-region bases each sector's exposure is measured against."""
     nat = {s: 0.0 for s in SECTORS}
     per_region = {code: {s: 0.0 for s in SECTORS} for code in region_meta}
+    # Crimea and any esdi-excluded region never contribute to the national denominator.
+    esdi_excluded = {code for code, m in region_meta.items() if not m.get("esdi_included", True)}
 
     nat["refining"] = refinery_total_mtpa
 
     for a in assets:
         sector = SECTOR_OF_CLASS.get(a["asset_class"])
         if sector != "electric_power":
+            continue
+        if a["region_code"] in esdi_excluded:
             continue
         mw = a.get("capacity_mw") or 0
         nat["electric_power"] += mw
@@ -356,6 +369,11 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             "name": meta["name"],
             "district": meta["district"],
             "country": meta["country"],
+            "esdi_included": meta.get("esdi_included", True),
+            "analytic_scope": meta.get("analytic_scope", "aoi"),
+            "sovereignty": meta.get("sovereignty"),
+            "de_facto_control": meta.get("de_facto_control"),
+            "status_note": meta.get("status_note"),
             "esdi": regional[code]["esdi"][-1],
             "sectors": {s: regional[code]["sectors"][s][-1] for s in SECTORS},
             "incident_count": len(r_inc),

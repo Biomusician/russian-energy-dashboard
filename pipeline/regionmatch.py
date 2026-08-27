@@ -4,16 +4,21 @@ Sources name regions loosely: "Tatarstan" for the Republic of Tatarstan, "Port o
 Novorossiysk, Krasnodar Krai" for Krasnodar Krai, "Moscow" for the federal city as
 distinct from "Moscow Oblast" around it.
 
-Resolution returns one of three outcomes, and the difference matters:
-  ("in_aoi", code)      -- resolved to a region we cover
-  ("out_of_aoi", name)  -- a real region east of the AOI boundary
-  ("unresolved", text)  -- we could not identify it; a parse failure to be reported
-Collapsing the last two would hide genuine parser breakage behind "not our area".
+Resolution returns one of five outcomes, and the differences matter:
+  ("in_aoi", code)           -- a Russia/Belarus region we cover and score
+  ("context", "UA-CR")       -- Crimea: tracked, but excluded from the ESDI composite
+  ("excluded_occupied", name)-- other occupied Ukrainian territory, fully excluded
+  ("out_of_aoi", name)       -- a real Russian region east of the enabled AOI boundary
+  ("unresolved", text)       -- could not identify it; a parse failure to be reported
+Collapsing any of these would hide either a scope decision or genuine parser breakage.
 """
 
 import re
 
-from pipeline.config import ALL_RU_REGIONS, BY_REGIONS, aoi_regions, out_of_aoi_regions
+from pipeline.config import (
+    ALL_RU_REGIONS, BY_REGIONS, OCCUPIED_EXCLUDED, SPECIAL_UNITS,
+    aoi_regions, context_units, out_of_aoi_regions,
+)
 
 # Forms that appear in sources but are not substrings of the canonical name.
 ALIASES = {
@@ -82,6 +87,14 @@ def _norm(text):
     return re.sub(r"\s+", " ", text).strip()
 
 
+# Crimea and Sevastopol names/aliases → the single context unit.
+_CRIMEA_ALIASES = {
+    "crimea", "republic of crimea", "autonomous republic of crimea",
+    "sevastopol", "simferopol", "kerch", "feodosia", "feodosiya",
+    "crimean peninsula", "saky", "dzhankoi",
+}
+
+
 def _build():
     canonical = {}
     for src in (ALL_RU_REGIONS, BY_REGIONS):
@@ -89,10 +102,13 @@ def _build():
             canonical[_norm(display)] = code
     aoi_codes = {v[0] for v in aoi_regions().values()}
     out_names = {_norm(n): n for n in out_of_aoi_regions()}
-    return canonical, aoi_codes, out_names
+    occupied = {_norm(n): n for n in OCCUPIED_EXCLUDED}
+    crimea_code = next(iter(SPECIAL_UNITS))  # "UA-CR"
+    context_codes = set(context_units())
+    return canonical, aoi_codes, out_names, occupied, crimea_code, context_codes
 
 
-_CANONICAL, _AOI_CODES, _OUT_NAMES = _build()
+_CANONICAL, _AOI_CODES, _OUT_NAMES, _OCCUPIED, _CRIMEA_CODE, _CONTEXT_CODES = _build()
 
 
 def resolve(text):
@@ -103,6 +119,13 @@ def resolve(text):
     if not n:
         return ("unresolved", text)
 
+    # 0. Crimea first — it must never be mistaken for a Russian region or scored into
+    #    the composite, and other occupied territory must stay excluded.
+    if n in _CRIMEA_ALIASES or any(re.search(rf"\b{re.escape(a)}\b", n) for a in _CRIMEA_ALIASES):
+        return ("context", _CRIMEA_CODE)
+    if n in _OCCUPIED:
+        return ("excluded_occupied", _OCCUPIED[n])
+
     # 1. Exact canonical name, then exact alias.
     if n in _CANONICAL:
         return _classify(_CANONICAL[n], text)
@@ -110,11 +133,16 @@ def resolve(text):
         return _classify(ALIASES[n], text)
     if n in _OUT_NAMES:
         return ("out_of_aoi", _OUT_NAMES[n])
+    if n in _OCCUPIED:
+        return ("excluded_occupied", _OCCUPIED[n])
 
     # 2. Containment, longest key first. "Moscow Oblast" must beat "Moscow", and
     #    "Port of Novorossiysk, Krasnodar Krai" must find "Krasnodar Krai".
     best = None
-    for table, kind in ((_CANONICAL, "code"), (ALIASES, "code"), (_OUT_NAMES, "out")):
+    for table, kind in (
+        (_CANONICAL, "code"), (ALIASES, "code"),
+        (_OUT_NAMES, "out"), (_OCCUPIED, "occupied"),
+    ):
         for key, value in table.items():
             if len(key) < 4:
                 continue
@@ -122,7 +150,11 @@ def resolve(text):
                 if best is None or len(key) > len(best[0]):
                     best = (key, value, kind)
     if best:
-        return _classify(best[1], text) if best[2] == "code" else ("out_of_aoi", best[1])
+        if best[2] == "code":
+            return _classify(best[1], text)
+        if best[2] == "occupied":
+            return ("excluded_occupied", best[1])
+        return ("out_of_aoi", best[1])
 
     return ("unresolved", text)
 
