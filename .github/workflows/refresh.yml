@@ -65,5 +65,5 @@ jobs:
           fi
           ESDI=$(python -c "import json;print(json.load(open('data/processed/snapshot.json',encoding='utf-8'))['esdi'])")
           N=$(python -c "import json;print(json.load(open('data/processed/snapshot.json',encoding='utf-8'))['incident_total'])")
-          git commit -m "data: refresh $(date -u +%Y-%m-%d) — ESDI ${ESDI}, ${N} events"
+          git commit -m "data: daily refresh $(date -u +%Y-%m-%d) — ESDI ${ESDI}, ${N} events"
           git push

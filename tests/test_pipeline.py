@@ -929,3 +929,94 @@ def test_population_is_structural_context_on_regions():
         if pop:
             seen_value = True
     assert seen_value, "expected at least one region with a researched population"
+
+
+# --------------------------------------------------------------------------
+# Public-release gate: the ENTIRE served payload, not just three files
+# --------------------------------------------------------------------------
+
+# The exact set of files the frontend fetches (mirrored to web/public/data at build).
+SERVED_DATA_JSON = (
+    "incidents.json", "snapshot.json", "assets.json",
+    "index_national.json", "index_regional.json",
+    "refinery_inventory.json", "regions.json", "taxonomy.json",
+)
+# Coordinates are permitted ONLY in public-infrastructure points (assets.json) and the
+# basemap geometry (*.geojson). Every event/analysis file must stay coordinate-free, so
+# a strike is never resolvable below the admin-region level the UI presents.
+COORD_KEYS = {"lat", "lon", "lng", "latitude", "longitude", "coordinates", "geometry"}
+COORD_ALLOWED_FILES = {"assets.json"}  # + every *.geojson, handled below
+
+
+def _walk_keys(node):
+    if isinstance(node, dict):
+        for k, v in node.items():
+            yield k
+            yield from _walk_keys(v)
+    elif isinstance(node, list):
+        for v in node:
+            yield from _walk_keys(v)
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_no_out_of_scope_fields_anywhere_in_served_payload():
+    """The out-of-scope gate must cover EVERYTHING that ships, not a sample. This is the
+    regression guard the daily refresh Action relies on before publishing."""
+    offenders = {}
+    for name in SERVED_DATA_JSON:
+        fp = PROCESSED / name
+        if not fp.exists():
+            continue
+        bad = {k for k in _walk_keys(json.loads(fp.read_text(encoding="utf-8")))
+               if k.lower() in FORBIDDEN_FIELDS}
+        if bad:
+            offenders[name] = sorted(bad)
+    assert not offenders, f"out-of-scope fields present in served data: {offenders}"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_event_and_analysis_files_carry_no_coordinates():
+    """Coordinates may exist only in public-infrastructure points (assets.json) and the
+    basemap *.geojson. No event or analysis file may leak asset-level geographic
+    precision — that would exceed the admin-region level the dashboard presents."""
+    offenders = {}
+    for name in SERVED_DATA_JSON:
+        if name in COORD_ALLOWED_FILES:
+            continue
+        fp = PROCESSED / name
+        if not fp.exists():
+            continue
+        bad = {k for k in _walk_keys(json.loads(fp.read_text(encoding="utf-8")))
+               if k.lower() in COORD_KEYS}
+        if bad:
+            offenders[name] = sorted(bad)
+    assert not offenders, f"coordinate keys leaked into event/analysis data: {offenders}"
+
+
+# --------------------------------------------------------------------------
+# Daily-refresh safety floor: a catastrophically broken parse must FAIL the
+# test gate (which runs before the Action commits), not publish empty output.
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_dataset_sanity_floor_for_daily_refresh():
+    """If an upstream source silently changes format and the parse collapses, the numbers
+    go degenerate (near-zero events, missing sectors, ESDI 0/NaN). The daily Action runs
+    pytest before committing, so failing here preserves the last known-good public dataset
+    instead of publishing a gutted dashboard. Floors are deliberately far below current
+    values to avoid false failures on normal variation."""
+    snap = json.loads((PROCESSED / "snapshot.json").read_text(encoding="utf-8"))
+    inc = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    assert len(inc) >= 50, f"incident corpus collapsed to {len(inc)} — likely a broken parse"
+    assert snap["incident_total"] >= 50
+    assert isinstance(snap["esdi"], (int, float)) and snap["esdi"] == snap["esdi"], "ESDI is NaN"
+    assert snap["esdi"] > 0, "ESDI collapsed to 0 — no scored disruption"
+    assert snap["sectors"], "no sector exposures emitted"
+    assert snap["regions"], "no regions emitted"
+    assert snap["coverage"] and snap["coverage"]["coverage_ratio"] > 0
+    # Denominators must survive — a zeroed denominator would silently break every share.
+    den = snap["denominators"]
+    assert den["refining_mtpa"] > 0 and den["electric_generation_mw"] > 0
