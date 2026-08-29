@@ -1556,6 +1556,37 @@ def test_transmission_concentration_disclosed():
     assert 0 <= tc["occupied_share_pct"] <= 100
 
 
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_transmission_sensitivity_sweep_is_consistent_and_monotone():
+    """§21-23: the saturation sweep must (a) contain the actual constant, (b) reproduce the
+    headline value at that constant, and (c) fall monotonically as saturation rises — the whole
+    point being to show how fragile the number is, without changing the formula."""
+    snap = _snapshot()
+    t = snap.get("transmission_sensitivity")
+    assert t, "transmission sensitivity must be published"
+    sweep = {r["saturation"]: r["sector_value"] for r in t["saturation_sweep"]}
+    assert t["saturation_constant"] in sweep
+    # Reproduces the shipped headline value at the real constant.
+    assert sweep[t["saturation_constant"]] == pytest.approx(snap["sectors"]["transmission"], abs=0.05)
+    # Higher saturation -> strictly lower (or equal at the cap) sector value.
+    sats = sorted(sweep)
+    vals = [sweep[k] for k in sats]
+    assert vals == sorted(vals, reverse=True), "sweep must be non-increasing in saturation"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_transmission_sensitivity_exposes_theatre_concentration():
+    """The per-region breakdown must show the burden sits in a handful of theatres, and the
+    top-theatre share must be a real fraction — the audit's central finding."""
+    snap = _snapshot()
+    t = snap["transmission_sensitivity"]
+    assert t["distinct_affected_regions"] == len(t["per_region_saturated"])
+    if t["raw_burden"] > 0:
+        assert t["top_region_share_pct"] is not None and 0 < t["top_region_share_pct"] <= 100
+        # per-region burdens sum to the raw burden.
+        assert sum(r["burden"] for r in t["per_region_saturated"]) == pytest.approx(t["raw_burden"], abs=0.02)
+
+
 def test_gas_and_coal_are_labelled_uncovered_not_a_fake_basis():
     """gas/coal must not advertise an 'event_burden' basis that build_index._share implements
     only for transmission — that footgun would silently zero-score a sector if it were ever

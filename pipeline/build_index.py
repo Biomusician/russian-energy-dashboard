@@ -502,6 +502,59 @@ def _gas_processing_index(gpp_census, live, today):
     }
 
 
+def _transmission_sensitivity(live, facility_info, esdi_excluded):
+    """Transmission-audit alternatives (§21-23). The headline transmission value is an
+    event-burden against an arbitrary saturation constant, dominated by 1-2 theatres. Rather
+    than tune the formula (which would look like engineering Crimea's effect away), we EXPOSE
+    how the number moves under other reasonable formulations and let the reader judge.
+    """
+    finfo = lambda x: facility_info.get(x["asset_id"], {})
+    tx = [x for x in live if finfo(x).get("sector") == "transmission"]
+    # Mirror the headline: only esdi-included regions feed the national composite.
+    nat_tx = [x for x in tx if finfo(x).get("region_code") not in esdi_excluded]
+    vw = lambda x: _voltage_weight(finfo(x))
+    raw_burden = sum(vw(x) * x["disruption_weight"] for x in nat_tx)
+
+    # (1) Saturation sensitivity: the headline value at other reasonable constants.
+    sweep = [{"saturation": k, "sector_value": round(min(1.0, raw_burden / k) * 100, 2)}
+             for k in (4, 6, 8, 10, 12, 16)]
+
+    # (2) Breadth: how many DISTINCT regions/facilities carry the burden — and each theatre's
+    # own saturated value, so a single dominant theatre is visible, not hidden in the sum.
+    by_region = collections.defaultdict(float)
+    for x in nat_tx:
+        by_region[finfo(x).get("region_code")] += vw(x) * x["disruption_weight"]
+    per_region = sorted(
+        ({"region_code": r, "burden": round(b, 3),
+          "saturated_value": round(min(1.0, b / SATURATION_EVENTS) * 100, 2)}
+         for r, b in by_region.items()),
+        key=lambda d: -d["burden"])
+    top_share = round(100 * per_region[0]["burden"] / raw_burden, 1) if raw_burden and per_region else None
+
+    return {
+        "saturation_constant": SATURATION_EVENTS,
+        "raw_burden": round(raw_burden, 3),
+        "saturation_sweep": sweep,
+        "distinct_affected_regions": len(by_region),
+        "distinct_facilities": len(nat_tx),
+        "top_region_share_pct": top_share,
+        "per_region_saturated": per_region,
+        "note": (
+            "Transmission is an event-burden against a saturation constant, not a national-grid "
+            "capacity measure. It is dominated by 1-2 theatres and the headline value roughly "
+            f"halves/doubles as the saturation constant moves between {sweep[-1]['saturation']} "
+            f"and {sweep[0]['saturation']}. Published as a sensitivity, not a tuning knob."
+        ),
+        "red_team_verdict": (
+            "RETAINED in the headline. It reflects real, sourced disruption to the Kerch power "
+            "bridge and Crimea substations; removing it would discard that signal and would "
+            "amount to tuning away an inconvenient theatre. It is retained WITH mandatory "
+            "concentration disclosure and these alternatives, and is NOT presented as national "
+            "grid exposure. Flagged for the independent red-team."
+        ),
+    }
+
+
 def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
               national, regional, timeline, as_of, covered, recovery_by_incident,
               region_context=None, gpp_census=None):
@@ -556,6 +609,8 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             "it as theatre-concentrated, not national."
         ),
     }
+    tx_esdi_excluded = {code for code, m in region_meta.items() if not m.get("esdi_included", True)}
+    transmission_sensitivity = _transmission_sensitivity(live, facility_info, tx_esdi_excluded)
 
     quantified = sum(
         1 for i in incidents
@@ -678,6 +733,7 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
         "sectors_covered": covered,
         "sectors_uncovered": [s for s in SECTORS if s not in covered],
         "transmission_concentration": transmission_concentration,
+        "transmission_sensitivity": transmission_sensitivity,
         "heating_season": heating,
         "denominators": {
             "refining_mtpa": round(denominators["national"]["refining"], 1),

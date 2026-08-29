@@ -322,6 +322,18 @@ export interface Snapshot {
     occupied_share_pct: number;
     note: string;
   };
+  /** Transmission audit alternatives (iteration 6, §21-23) — a sensitivity, not a tuning knob. */
+  transmission_sensitivity?: {
+    saturation_constant: number;
+    raw_burden: number;
+    saturation_sweep: { saturation: number; sector_value: number }[];
+    distinct_affected_regions: number;
+    distinct_facilities: number;
+    top_region_share_pct: number | null;
+    per_region_saturated: { region_code: string | null; burden: number; saturated_value: number }[];
+    note: string;
+    red_team_verdict: string;
+  };
   sectors: Record<string, number>;
   sectors_covered: string[];
   sectors_uncovered: string[];

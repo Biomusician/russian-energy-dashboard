@@ -150,6 +150,25 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
               as the Kerch power bridge plus Crimea substations, not the wider Russian grid.
             </p>
           )}
+          {s.transmission_sensitivity && (() => {
+            const t = s.transmission_sensitivity!;
+            return (
+              <>
+                <p style={{ color: "var(--text-faint)", fontSize: 11 }}>
+                  <b>Transmission sensitivity.</b> The value is an event-burden against a chosen
+                  saturation constant ({t.saturation_constant}), spread over just{" "}
+                  {t.distinct_affected_regions} region(s) / {t.distinct_facilities} facilities
+                  {t.top_region_share_pct != null && <> (top theatre {t.top_region_share_pct}%)</>}.
+                  It moves sharply with that constant:{" "}
+                  {t.saturation_sweep.map((r) => `sat ${r.saturation}→${r.sector_value}`).join(", ")}.
+                  Published as a sensitivity, not a tuning knob — the formula is unchanged.
+                </p>
+                <p style={{ color: "var(--text-faint)", fontSize: 10.5, fontStyle: "italic" }}>
+                  Red-team verdict: {t.red_team_verdict}
+                </p>
+              </>
+            );
+          })()}
 
           <H>Coverage</H>
           {s.coverage && (
