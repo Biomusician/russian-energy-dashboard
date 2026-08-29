@@ -100,8 +100,10 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
                 missing</b>: the gap is ~{r.gap_decomposition?.excluded_condensate_splitters_mtpa} MTPA
                 of gas-condensate splitters (Surgut, Ust-Luga, Astrakhan) excluded like Tobolsk, plus ~
                 {r.gap_decomposition?.conservative_basis_understatement_mtpa} MTPA because the tracked
-                figures use one consistent source ~10-15% below current nameplate — so reported
-                refining shares are conservative <i>upper</i> bounds. This is denominator
+                figures use one consistent source ~10-15% below current nameplate. Because refining
+                exposure is a capacity <i>share</i>, a uniform revaluation of all plants leaves it
+                essentially unchanged — the conservative basis doesn't systematically bias the score;
+                it mainly affects the absolute MTPA and this completeness ratio. This is denominator
                 completeness, NOT event coverage.
               </p>
             );

@@ -181,11 +181,16 @@ def build():
             "by the same rule as Tobolsk/ZapSibNeftekhim (6.85 MTPA, the only petrochemical "
             f"exclusion); and (b) ~{basis_understatement:.0f} MTPA because the tracked figures come "
             "from one consistent public source (Wikipedia bbl/d, converted) that sits ~10-15% below "
-            "current nameplate. Consequence: reported refining struck-shares are CONSERVATIVE UPPER "
-            "BOUNDS — a full-nameplate basis would give a larger denominator and a lower exposure. "
-            "The consistent single-source basis is kept deliberately rather than swapping to a mixed "
-            "nameplate basis; a future pass could revalue uniformly. Belarus (Mozyr, Naftan) is "
-            "correctly outside the Russian denominator."
+            "current nameplate. Consequence for the score: because refining exposure is a capacity "
+            "SHARE (struck capacity / denominator), a UNIFORM nameplate revaluation -- scaling all "
+            "tracked plants up together -- leaves the exposure essentially INVARIANT (numerator and "
+            "denominator scale together); the conservative basis does not systematically bias "
+            "refining exposure up or down. It mainly affects the absolute MTPA and the completeness "
+            "ratio against the nameplate reference. (Only a one-sided enlargement of the denominator "
+            "alone would lower the exposure, which is not what a uniform revaluation does.) The "
+            "consistent single-source basis is kept deliberately rather than a mixed nameplate basis; "
+            "a future pass could revalue uniformly. Belarus (Mozyr, Naftan) is correctly outside the "
+            "Russian denominator."
         ),
     }
     log(

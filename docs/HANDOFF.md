@@ -50,8 +50,10 @@ made numbers more defensible, not larger. Highlights:
 - **Transmission is "Transmission burden"**, an event-burden proxy against an arbitrary saturation
   of 8 — never "% of grid offline". ~45% is Crimea. The formula is retained deliberately; a future
   pass could revisit it.
-- **The refining base is a conservative single-source vintage** ~10-15% below nameplate → struck-
-  shares are conservative upper bounds. A uniform nameplate revaluation is a candidate future change.
+- **The refining base is a conservative single-source vintage** ~10-15% below nameplate. This does
+  NOT bias the refining *exposure* (a capacity share is invariant under uniform revaluation); it
+  only understates the absolute MTPA + the completeness ratio. A uniform nameplate revaluation is a
+  candidate future change.
 - **Never fix data by editing `data/processed/`** — it's a build artifact. Fix the curated source
   and rebuild. All Cyrillic Python I/O must pass `encoding="utf-8"`.
 - **Research episodes must be re-sourced from public news with real URLs**, never reconstructed from

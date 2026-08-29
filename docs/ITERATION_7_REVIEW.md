@@ -52,9 +52,13 @@ open-source census (triangulated: Carnegie Oct-2025 + Reuters/industry) found:
 DISCLOSE. No capacity changed → ESDI unchanged. Emitted denominator-completeness **metadata** (§6),
 structurally distinct from event coverage: reference nameplate 327, like-for-like crude reference
 ~303, `denominator_coverage_pct` 90.4% against the crude reference (NOT a naive 273.8/327 universe
-mismatch), a gap decomposition (24 condensate + 29 basis + 0 missing), and the plain statement that
-refining struck-shares are therefore **conservative UPPER bounds**. Belarus (Mozyr/Naftan) confirmed
-outside. A future pass could revalue uniformly to a full-nameplate basis.
+mismatch), a gap decomposition (24 condensate + 29 basis + 0 missing). Because refining exposure is
+a capacity **share**, a *uniform* nameplate revaluation (scaling all tracked plants up together)
+leaves it essentially **invariant** (numerator and denominator scale together) — so the conservative
+basis does **not** systematically bias the refining exposure; it mainly affects the absolute MTPA
+and the completeness ratio. (Only a one-sided enlargement of the denominator alone would lower the
+exposure, which a uniform revaluation is not.) Belarus (Mozyr/Naftan) confirmed outside. A future
+pass could revalue uniformly to a full-nameplate basis.
 
 ## Recovery semantics (§9-15)
 
@@ -73,10 +77,34 @@ classes × ages to prove it. `'repaired'` is no longer a damage state — the 3 
 recovery state in the damage field were migrated (all weight-0 at the frozen date, so the headline is
 unchanged; rostov/kursk historical curves become more accurate). Frozen ESDI unchanged at 18.49.
 
-**Evidence families (§15)**: recovery is now grouped into `facility_reconstitution` | `unit_restart`
-| `service_restoration` | `flow_rerouting` | `estimate`, surfaced in a Recovery-tab block — only
-facility_reconstitution means the struck equipment itself returned. Current mix: service_restoration
-12, unit_restart 7, facility_reconstitution 2, flow_rerouting 1, estimate 3.
+**Evidence families (§15)**: recovery is grouped into a **deterministic partition** — every record
+maps to exactly one of `facility_reconstitution` | `unit_restart` | `service_restoration` |
+`flow_rerouting` | `estimate`, by a fixed precedence (`recovery.evidence_family`): an `impaired`
+record with an estimate → estimate; a full reconstitution → facility_reconstitution (beats any
+service-y kind); `flow_rerouted` → flow_rerouting (beats generic partial); then unit / service kinds;
+then the status fallback. So the family counts **partition the record set** (they sum to the record
+count, no double-counting). Only `facility_reconstitution` means the struck equipment itself
+returned. Current mix (26 records): service_restoration 12, unit_restart 7, facility_reconstitution
+2, estimate 3, flow_rerouting 2.
+
+**Historical replay (check #3)** — an incident-level OLD(iteration-6)-vs-NEW(iteration-7) weight
+diff across a monthly grid 2022→2026-08-28 (both the code refactor and the data migration):
+- **Code-refactor-only incidents with any nonzero delta: 0** — the orthogonal refactor is
+  structurally neutral for every incident except those whose recovery *data* changed.
+- Only **3 incidents** move: Kursk NPP **−0.88** (0.955→0.072, its new 7-day record) and Rostov NPP
+  **−0.07** (→0.0, its new record) — both electric_generation DECREASES in the correct direction;
+  and Urengoy **+0.48** — the ONLY increase, an **unscored gas-pipeline maintenance** explosion whose
+  unsourced `repaired` flag (0.1) was retired (the source supports only flow-rerouting via parallel
+  lines, not section repair, so it now carries `damaged` + a sourced `flow_rerouted` record). Zero
+  ESDI impact (gas is uncovered), and no *scored* incident's disruption rose.
+- The frozen headline is unchanged **because all three changed incidents are old and fully decayed
+  by 2026-08-28 — not because opposite changes cancel** (they are different sectors/times and do not
+  net). Max absolute incident delta 0.883.
+- **Record-addition invariant** verified separately: for every recovery record, weight-with-record ≤
+  weight-without at all dates, with the single §11-sanctioned exception of Astrakhan GPP (+0.002,
+  observed 205-day restoration slightly exceeds the 200-day modelled fallback = evidence the
+  impairment lasted longer than assumed; unscored). partial/service/flow records are display-only
+  (exactly equal to no record).
 
 ## Recovery evidence (§13-14)
 
@@ -168,11 +196,36 @@ baseline (iteration 6)                              18.49
 + effects + source_quality                         +0.00  (observational)
 = final                                            18.49
 ```
-Iteration 7 is **scoring-neutral by construction** — it improved defensibility, not the number.
+Iteration 7 is **frozen-headline-neutral** — the current headline is unchanged. (It is not
+literally "zero change everywhere": the new recovery observations correctly lower a few *historical*
+mid-timeline weights, e.g. Kursk NPP and Rostov NPP decay faster once their restarts are recorded —
+but those incidents are fully decayed by the frozen date, so the current ESDI is unmoved.)
 
 ## Independent final red-team
 
-<!-- FINAL RED-TEAM: filled from the independent adversarial review before deploy. -->
+An independent adversarial agent reproduced 12+ numbers and resolved **all 16 checks** (the
+original 8 review areas + the 8 mandated final-gate checks). **No DEFECT; three MINOR; disposition
+SHIP.** The three minors were fixed before deploy anyway:
+
+- **CONFIRMED_OK** (with reproduced numbers): refinery denominator completeness (327 − 273.8 = 53.2 =
+  24 + 29.2 + 0; coverage 90.4% vs the crude 303 reference, not a universe mismatch); recovery
+  monotonicity (`partial == impaired == unknown == no-record` at every age; refactor exactly 0
+  delta with data held constant); gas experimental (census 91.91, Minnibaevo 0.8, gas headline
+  0.0); transmission (Model E 18.10, +0.39; Taman 54.5% + Crimea 44.7% = 99% of the burden — a
+  genuinely fragile scalar, honestly relabelled, not tuned); Crimea (removing it drops ESDI −1.13);
+  §27 naming; coverage universe (144 = 92 refining + 53 oil − 1 non-strike); scope (no coordinates /
+  range-to-target / population-as-affected; Kerch is a proxy proportion, Taman a 90-minute
+  duration). All 8 coordinator checks CONFIRMED_OK (35/34/1/273.8 consistency; no naive 84%;
+  historical replay; label; §27 alias; family partition = 26; source_quality provenance-only;
+  CURRENT_STATE in sync with clean git status).
+- **MINOR M1 (fixed)**: "conservative upper bound" was only true under an asymmetric
+  denominator-only enlargement; under a *uniform* revaluation refining exposure is invariant
+  (a capacity share). Reworded in code + Methodology + this review + handoff.
+- **MINOR M2 (fixed)**: published Model A (21.35) was computed from rounded weights, off the headline
+  (21.37) by 0.02. Now computed from the full-precision weight → Model A = 21.37 exactly.
+- **MINOR M3 (fixed)**: `_weight_at` docstring now carries the "horizon ≤ fallback" qualifier; the
+  iteration is described as "frozen-headline-neutral" (not "scoring-neutral"); a new test forbids
+  the deprecated `repaired` damage status, closing the latent scored-sector migration trap.
 
 ## Production
 
@@ -180,9 +233,10 @@ Iteration 7 is **scoring-neutral by construction** — it improved defensibility
 
 ## Limitations (aggressive)
 
-1. **The refining base is still a conservative single-source vintage** ~10-15% below nameplate — a
-   real bias that inflates refining struck-shares; disclosed, not corrected. A uniform nameplate
-   revaluation is deferred.
+1. **The refining base is a conservative single-source vintage** ~10-15% below nameplate. It does
+   NOT systematically bias the refining *exposure* (a capacity share is invariant under uniform
+   revaluation), but it understates the absolute MTPA figures and the completeness ratio; disclosed,
+   not corrected. A uniform nameplate revaluation is deferred.
 2. **Transmission is still an arbitrary-constant proxy** (4× sensitivity), retained on labelling +
    disclosure rather than a physically-grounded measure; ~45% is occupied Crimea by analytic choice.
 3. **Gas processing has no defensible denominator** and mixes design/actual — a sample, not a rate.

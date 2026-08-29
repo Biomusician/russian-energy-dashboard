@@ -72,11 +72,14 @@ def _weight_at(incident, when, record=None):
          for a credible FULL reconstitution, caps the contribution at the residual.
 
     Because damage severity is applied independently, adding a recovery record is MONOTONIC: it
-    can only speed the decay or cap the tail, never strip the damage multiplier. A partial
-    restart therefore scores exactly like no record; a full reconstitution scores <= a partial;
-    stronger restoration evidence never raises the contribution (the iteration-6 status-coupling
-    bug, where attaching a partial-restart record removed the damping, is now structurally
-    impossible).
+    can only speed the decay or cap the tail, never strip the damage multiplier. A partial restart
+    therefore scores exactly like no record, and a full reconstitution scores <= a partial. The
+    one sanctioned exception (per methodology): an OBSERVED restoration whose duration EXCEEDS the
+    modelled sector fallback decays slightly slower than the assumption — evidence the impairment
+    lasted longer than assumed — so the monotonic "stronger evidence never raises the score"
+    invariant is scoped to horizon <= fallback (as the property tests encode). The iteration-6
+    status-coupling bug (attaching a partial-restart record removed the damping) is now
+    structurally impossible.
     """
     when_date = when
     occurred = _incident_date(incident)
@@ -546,7 +549,10 @@ def _transmission_sensitivity(live, facility_info, esdi_excluded):
     # Mirror the headline: only esdi-included regions feed the national composite.
     nat_tx = [x for x in tx if finfo(x).get("region_code") not in esdi_excluded]
     vw = lambda x: _voltage_weight(finfo(x))
-    raw_burden = sum(vw(x) * x["disruption_weight"] for x in nat_tx)
+    # Use the full-precision weight so Model A reproduces the headline transmission value EXACTLY
+    # (the rounded disruption_weight would drift it by ~0.02).
+    wt = lambda x: x.get("_w_exact", x["disruption_weight"])
+    raw_burden = sum(vw(x) * wt(x) for x in nat_tx)
 
     # (1) Saturation sensitivity: the headline value at other reasonable constants.
     sweep = [{"saturation": k, "sector_value": round(min(1.0, raw_burden / k) * 100, 2)}
@@ -556,7 +562,7 @@ def _transmission_sensitivity(live, facility_info, esdi_excluded):
     # own saturated value, so a single dominant theatre is visible, not hidden in the sum.
     by_region = collections.defaultdict(float)
     for x in nat_tx:
-        by_region[finfo(x).get("region_code")] += vw(x) * x["disruption_weight"]
+        by_region[finfo(x).get("region_code")] += vw(x) * wt(x)
     per_region = sorted(
         ({"region_code": r, "burden": round(b, 3),
           "saturated_value": round(min(1.0, b / SATURATION_EVENTS) * 100, 2)}
@@ -648,6 +654,9 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
                 "sector": info.get("sector"),
                 "region_code": info.get("region_code"),
                 "disruption_weight": round(w, 3),
+                # Full-precision weight, used where a recomputation must match the headline
+                # exactly (transmission sensitivity Model A); not serialised — dropped below.
+                "_w_exact": w,
                 "event_count": len(incs),
                 "latest": max(i["date"] for i in incs),
                 "driving_incident_id": driver.get("incident_id") if driver else None,
@@ -691,6 +700,8 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
     _covered_no_tx = [s for s in covered if s != "transmission"]
     esdi_excluding_transmission = _composite(_nat_final, _sw, _covered_no_tx) if _covered_no_tx else None
     transmission_sensitivity["alternative_models"]["E_esdi_if_transmission_removed"] = esdi_excluding_transmission
+    for _x in live:                       # internal full-precision weight — not part of the payload
+        _x.pop("_w_exact", None)
 
     quantified = sum(
         1 for i in incidents

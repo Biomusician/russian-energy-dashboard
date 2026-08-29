@@ -841,6 +841,17 @@ def test_recovery_kind_column_matches_status_in_source():
                 assert row["recovery_status"] == "partial_restart", row["incident_id"]
 
 
+def test_no_incident_uses_the_deprecated_repaired_damage_status():
+    """§10 / red-team M3: 'repaired' is a RECOVERY state, not a damage state. It must not appear in
+    incident.status (recovery belongs in a recovery record). This closes the latent trap where
+    migrating a 'repaired' status to 'damaged' without a collapsing record would inflate a
+    scored-sector incident: there is simply no 'repaired' status to migrate."""
+    import csv
+    with open(ROOT / "data" / "curated" / "incidents.csv", encoding="utf-8", newline="") as f:
+        bad = [r["incident_id"] for r in csv.DictReader(f) if (r.get("status") or "") == "repaired"]
+    assert not bad, f"incident.status='repaired' is deprecated; use a recovery record: {bad}"
+
+
 def test_incident_status_does_not_contradict_its_recovery_record():
     """Red-team (iter 6): the scoring status_multiplier reads incident.status, which must not
     contradict the authoritative recovery record. An incident may be status='repaired' only if
