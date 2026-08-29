@@ -1,25 +1,25 @@
 {
   "schema_version": 2,
-  "build_time": "2026-08-29T05:06:15+00:00",
+  "build_time": "2026-08-29T15:27:01+00:00",
   "files": [
     {
       "name": "assets.json",
-      "bytes": 584363,
+      "bytes": 586075,
       "optional": false
     },
     {
       "name": "incidents.json",
-      "bytes": 127001,
+      "bytes": 173101,
       "optional": false
     },
     {
       "name": "index_national.json",
-      "bytes": 10736,
+      "bytes": 10772,
       "optional": false
     },
     {
       "name": "index_regional.json",
-      "bytes": 561155,
+      "bytes": 561575,
       "optional": false
     },
     {
@@ -34,7 +34,7 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 126347,
+      "bytes": 136334,
       "optional": false
     },
     {

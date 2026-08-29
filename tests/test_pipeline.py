@@ -1102,11 +1102,13 @@ def test_facet_counts_match_the_processed_corpus():
                     reason="pipeline has not been run")
 def test_facet_counts_keep_asset_and_incident_kinds_distinct():
     """A class can have infrastructure but no incidents (LNG-style) or incidents but no
-    inventoried asset (refineries). The two counts are separate facets, never merged."""
+    inventoried point-asset (oil terminals/depots). The two counts are separate facets,
+    never merged. (Iteration 5 added a few struck refineries as linkable assets, so
+    refineries are no longer a clean incidents-but-no-asset example — oil terminals are.)"""
     fc = _snapshot()["facet_counts"]
-    # Refineries: incidents exist, but they are not in the point-asset layer.
-    assert fc["incident_asset_class"].get("refinery", 0) > 0
-    assert fc["asset_class"].get("refinery", 0) == 0
+    # Oil terminals/depots: incidents exist, but they are not in the point-asset layer.
+    assert fc["incident_asset_class"].get("oil_terminal", 0) > 0
+    assert fc["asset_class"].get("oil_terminal", 0) == 0
     # Substations: both an inventory and incidents — distinct, non-merged counts.
     assert fc["asset_class"].get("substation", 0) > 0
     assert fc["incident_asset_class"].get("substation", 0) > 0
@@ -1335,3 +1337,54 @@ def test_coal_and_gas_capacities_kept_out_of_the_mtpa_field():
             assert not a.get("capacity_mtpa"), f"{a['asset_id']} must not carry an MTPA figure"
             assert a.get("source_url"), f"{a['asset_id']} needs a source"
             assert a.get("precision") == "region"
+
+
+# --------------------------------------------------------------------------
+# Iteration 5: event/recovery coverage expansion + candidate queue (§15-§18)
+# --------------------------------------------------------------------------
+# A candidate-event queue stages OSINT proposals; only analyst-approved rows enter the
+# scored corpus. Rejected/held candidates (unconfirmed 'repelled' claims, partisan-only
+# sabotage, weather outages) must never score.
+
+CANDIDATE = ROOT / "data" / "candidate" / "candidate_incidents.csv"
+
+
+def test_candidate_queue_exists_with_decisions():
+    import csv as _csv
+    assert CANDIDATE.exists(), "the analyst candidate queue must exist (§16)"
+    with open(CANDIDATE, encoding="utf-8", newline="") as fh:
+        rows = list(_csv.DictReader(fh))
+    statuses = {r["research_status"] for r in rows}
+    assert "accepted" in statuses and (statuses & {"rejected", "hold"}), \
+        "the queue must record both accepted and rejected/held candidates"
+    for r in rows:
+        assert r["decision_reason"], "every candidate needs a decision reason"
+
+
+@pytest.mark.skipif(not (PROCESSED / "incidents.json").exists(), reason="pipeline not run")
+def test_rejected_candidates_never_enter_scoring():
+    inc = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    blob = " ".join((i.get("asset_name") or "") + " " + (i.get("incident_id") or "") for i in inc).lower()
+    for term in ("russkaya", "blue stream", "mozyr", "bolshoe polpino"):
+        assert term not in blob, f"rejected/held candidate '{term}' leaked into the scored corpus"
+
+
+@pytest.mark.skipif(not (PROCESSED / "incidents.json").exists(), reason="pipeline not run")
+def test_recovery_records_key_to_real_incidents():
+    import csv as _csv
+    inc = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    ids = {i["incident_id"] for i in inc}
+    with open(ROOT / "data" / "curated" / "recovery.csv", encoding="utf-8", newline="") as fh:
+        recs = list(_csv.DictReader(fh))
+    orphans = [r["incident_id"] for r in recs if r["incident_id"] not in ids]
+    assert not orphans, f"recovery records with no matching incident: {orphans}"
+
+
+@pytest.mark.skipif(not (PROCESSED / "incidents.json").exists(), reason="pipeline not run")
+def test_no_exact_duplicate_incidents():
+    """Curated events must not duplicate a facility+date already in the corpus."""
+    import collections as _c
+    inc = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    seen = _c.Counter((i.get("asset_id"), i.get("date")) for i in inc)
+    dups = [k for k, v in seen.items() if v > 1]
+    assert not dups, f"exact (asset_id, date) duplicate incidents: {dups}"
