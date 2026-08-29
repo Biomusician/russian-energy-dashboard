@@ -88,6 +88,25 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
             )}
           </ul>
 
+          {s.esdi_all_sectors != null && (
+            <p style={{ color: "var(--amber)" }}>
+              The headline ESDI ({s.esdi.toFixed(1)}) renormalises the covered sectors. Counting
+              the uncovered gas &amp; coal sectors as present-at-zero instead gives{" "}
+              {s.esdi_all_sectors.toFixed(1)} — so excluding them lifts the headline by{" "}
+              {(s.esdi - s.esdi_all_sectors).toFixed(1)}. Gas is not unmeasured: it carries
+              documented strikes that score zero for want of a defensible denominator.
+            </p>
+          )}
+          {s.transmission_concentration && s.transmission_concentration.top.length > 0 && (
+            <p style={{ color: "var(--text-faint)" }}>
+              Transmission is theatre-concentrated, not a national-grid measure: the top
+              contributor is {s.transmission_concentration.top[0].name} (
+              {s.transmission_concentration.top[0].pct}% of the sector), and occupied Crimea is{" "}
+              {s.transmission_concentration.occupied_share_pct}% of it — so read "transmission"
+              as the Kerch power bridge plus Crimea substations, not the wider Russian grid.
+            </p>
+          )}
+
           <H>Coverage</H>
           {s.coverage && (
             <p>

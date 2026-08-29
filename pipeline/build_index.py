@@ -136,7 +136,8 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
     sector_weights = SCORING["sector_weights"]
     covered = [s for s in SECTORS if denominators["national"].get(s, 0) > 0]
 
-    national = {"dates": [d.isoformat() for d in timeline], "esdi": [], "sectors": {s: [] for s in SECTORS}}
+    national = {"dates": [d.isoformat() for d in timeline], "esdi": [], "esdi_all_sectors": [],
+                "sectors": {s: [] for s in SECTORS}}
     regional = {
         code: {"esdi": [], "sectors": {s: [] for s in SECTORS}} for code in region_meta
     }
@@ -166,6 +167,7 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
         for s in SECTORS:
             national["sectors"][s].append(round(min(1.0, nat_sector[s]) * 100, 2))
         national["esdi"].append(_composite(nat_sector, sector_weights, covered))
+        national["esdi_all_sectors"].append(_composite_all(nat_sector, sector_weights))
 
         for code in region_meta:
             rs = reg_sector.get(code, {})
@@ -191,6 +193,20 @@ def _composite(sector_values, weights, covered):
     if not total_w:
         return 0.0
     acc = sum(weights[s] * min(1.0, sector_values.get(s, 0.0)) for s in covered)
+    return round(acc / total_w * 100, 2)
+
+
+def _composite_all(sector_values, weights):
+    """The composite if EVERY sector were counted, including the uncovered ones (gas, coal)
+    treated as present-at-zero -- i.e. the headline WITHOUT the covered-sector renormalisation.
+    The gap between this and the headline `esdi` is the uplift that excluding gas and coal
+    adds, and is disclosed alongside the headline (red-team, iteration 5) so a reader can see
+    that the number rests on renormalising two sectors away -- one of which (gas) is not
+    unmeasured but has documented strikes we deliberately do not score."""
+    total_w = sum(weights[s] for s in SECTORS)
+    if not total_w:
+        return 0.0
+    acc = sum(weights[s] * min(1.0, sector_values.get(s, 0.0)) for s in SECTORS)
     return round(acc / total_w * 100, 2)
 
 
@@ -444,6 +460,33 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             live.append(entry)
     live.sort(key=lambda x: -x["disruption_weight"])
 
+    # Transmission-concentration disclosure (red-team, iteration 5). Transmission is an
+    # event-burden measure against a small saturation constant, so it is dominated by the
+    # freshest strikes in a thinly-populated sector -- currently the Kerch power bridge and
+    # occupied-Crimea substations. Surface where the burden actually sits so "transmission N"
+    # is not misread as "N% of Russia's grid".
+    tx = []
+    for x in live:
+        if x["sector"] != "transmission":
+            continue
+        contrib = _share(facility_info.get(x["asset_id"], {}), denominators) * x["disruption_weight"]
+        if contrib > 0:
+            tx.append((contrib, x["name"] or x["asset_id"], x["region_code"]))
+    tx.sort(reverse=True)
+    tx_total = sum(c for c, _, _ in tx) or 1.0
+    occupied = {code for code, m in region_meta.items() if m.get("analytic_scope", "aoi") != "aoi"}
+    transmission_concentration = {
+        "top": [{"name": n, "region_code": rc, "pct": round(c / tx_total * 100, 1)}
+                for c, n, rc in tx[:5]],
+        "occupied_share_pct": round(sum(c for c, _, rc in tx if rc in occupied) / tx_total * 100, 1),
+        "note": (
+            "Transmission is an event-burden measure against a saturation constant (8), so it "
+            "is dominated by the freshest strikes in a thin sector -- currently the Kerch power "
+            "bridge (Taman) and occupied-Crimea substations, not the wider Russian grid. Read "
+            "it as theatre-concentrated, not national."
+        ),
+    }
+
     quantified = sum(
         1 for i in incidents
         if i.get("capacity_affected_mw") or i.get("capacity_affected_mtpa")
@@ -550,9 +593,21 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
     return {
         "as_of": as_of,
         "esdi": national["esdi"][-1],
+        # The same composite WITHOUT renormalising the uncovered sectors away (gas + coal
+        # counted present-at-zero). Disclosed so the headline's renormalisation uplift is
+        # visible, not silent (red-team, iteration 5).
+        "esdi_all_sectors": national["esdi_all_sectors"][-1],
+        "esdi_renormalization_note": (
+            "The headline ESDI renormalises the covered sectors (their weights sum to less "
+            "than 1 because gas and coal are uncovered). esdi_all_sectors is the same figure "
+            "with gas and coal counted as present-at-zero; the gap is the uplift that "
+            "excluding them adds. Gas is not unmeasured -- it carries documented strikes that "
+            "score zero for want of a defensible denominator."
+        ),
         "sectors": {s: national["sectors"][s][-1] for s in SECTORS},
         "sectors_covered": covered,
         "sectors_uncovered": [s for s in SECTORS if s not in covered],
+        "transmission_concentration": transmission_concentration,
         "heating_season": heating,
         "denominators": {
             "refining_mtpa": round(denominators["national"]["refining"], 1),

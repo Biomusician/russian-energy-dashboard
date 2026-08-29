@@ -140,8 +140,8 @@
     "electric_generation": "capacity_mw",
     "oil_logistics": "capacity_mtpa",
     "transmission": "event_burden",
-    "gas": "event_burden",
-    "coal": "event_burden"
+    "gas": "uncovered",
+    "coal": "uncovered"
   },
 
   "heating_season_months": [10, 11, 12, 1, 2, 3, 4],

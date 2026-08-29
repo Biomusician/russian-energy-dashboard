@@ -255,6 +255,15 @@ export interface Snapshot {
   as_of: string;
   build_time: string;
   esdi: number;
+  /** The composite WITHOUT renormalising the uncovered sectors (gas + coal counted at zero).
+   *  The gap `esdi - esdi_all_sectors` is the uplift that excluding them adds (iteration 5). */
+  esdi_all_sectors?: number;
+  esdi_renormalization_note?: string;
+  transmission_concentration?: {
+    top: { name: string; region_code: string | null; pct: number }[];
+    occupied_share_pct: number;
+    note: string;
+  };
   sectors: Record<string, number>;
   sectors_covered: string[];
   sectors_uncovered: string[];

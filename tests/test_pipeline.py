@@ -1451,3 +1451,44 @@ def test_context_network_files_are_declared_optional_and_lazy():
     for name in ("context_gas_network.geojson", "context_oil_network.geojson", "rivers.geojson"):
         assert name in OPTIONAL_CONTEXT_FILES
         assert name not in REQUIRED_WEB_FILES, f"{name} is optional/lazy, never a required file"
+
+
+# --------------------------------------------------------------------------
+# Iteration 5: red-team disclosures (§37) — renormalization uplift, transmission theatre
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_headline_renormalization_uplift_is_disclosed():
+    """The headline ESDI renormalises the uncovered sectors away; the honest present-at-zero
+    figure and the gap must be emitted so the uplift is visible, not silent."""
+    snap = _snapshot()
+    assert "esdi_all_sectors" in snap
+    assert snap["esdi"] >= snap["esdi_all_sectors"]  # renormalisation can only lift the number
+    assert snap.get("esdi_renormalization_note")
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_transmission_concentration_disclosed():
+    """Transmission is theatre-concentrated; top contributors + occupied share are emitted so
+    'transmission N' is not misread as a national-grid figure."""
+    snap = _snapshot()
+    tc = snap.get("transmission_concentration")
+    assert tc and tc["top"], "transmission concentration must be disclosed"
+    assert sum(t["pct"] for t in tc["top"]) > 0
+    assert 0 <= tc["occupied_share_pct"] <= 100
+
+
+def test_gas_and_coal_are_labelled_uncovered_not_a_fake_basis():
+    """gas/coal must not advertise an 'event_burden' basis that build_index._share implements
+    only for transmission — that footgun would silently zero-score a sector if it were ever
+    moved into `covered` (red-team, iteration 5)."""
+    from pipeline.config import SECTOR_BASIS
+    assert SECTOR_BASIS["gas"] == "uncovered" and SECTOR_BASIS["coal"] == "uncovered"
+    assert SECTOR_BASIS["transmission"] == "event_burden"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_gas_and_coal_stay_out_of_covered():
+    snap = _snapshot()
+    assert "gas" in snap["sectors_uncovered"] and "coal" in snap["sectors_uncovered"]
+    assert "gas" not in snap["sectors_covered"] and "coal" not in snap["sectors_covered"]

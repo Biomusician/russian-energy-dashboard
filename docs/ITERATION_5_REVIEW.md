@@ -27,9 +27,9 @@ regression-tested.
 
 | | Value |
 |---|---|
-| **New ESDI** | **18.26** (as-of 2026-08-29) / **18.57** at the fixed reference as-of 2026-08-28 |
+| **New ESDI** | **18.26** (as-of 2026-08-29) / 18.57 at ref 2026-08-28 — vs **`esdi_all_sectors` 15.52** if gas & coal count present-at-zero; the +2.74 renormalisation uplift is now disclosed |
 | Events | 134 → **175** · coverage 43.9% → **57.4%** |
-| Recovery | 3 → **6** distinct observed episodes → median **un-suppressed at 47 days** |
+| Recovery | 3 → **5** distinct observed episodes (Unecha demoted to a flow-restart in red-team) → median **72 days** |
 | Tests | 90 → **108 python + 10 vitest** |
 | Payload | 4.4 → 4.9 MB total; **eager first-load 4.89 MB + 146 KB lazy** (rivers + networks) |
 
@@ -126,6 +126,14 @@ No weights were retuned. The scoring changes were put through an independent red
   composite is not defensible, so gas is exposed only as separate, clearly-labelled
   sub-measures and its 0.10 weight is renormalised away. **This is the honest result** — gas
   carries records but scores 0, which the UI states plainly. (Red-teamed; see below.)
+- **Sharper reason (from the red-team):** the incommensurability argument only rules out a
+  *single* gas composite. Gas *processing* alone is internally commensurable (all 12 GPPs are
+  bcm/y) and could in principle be its own scored sub-sector — the real blocker is that (a) the
+  bcm/y capacities live in free-text notes, not a structured column, and (b) there is no
+  reconciled national bcm/y denominator (refining has one at 85% coverage; gas processing has
+  none). So gas stays uncovered because its **denominator is not yet reconciled**, not merely
+  because of unit-mixing. Activating a gas-processing sub-sector once a denominator exists is
+  the cleanest future step.
 
 ## Coal (§21)
 
@@ -156,9 +164,13 @@ No weights were retuned. The scoring changes were put through an independent red
 
 ## Recovery (§25–§26)
 
-- **Observed episodes 3 → 6**, so the "typical recovery" median **un-suppresses naturally**
-  at **47 days** from genuine episodes `[2, 7, 22, 72, 98, 205]`. Not curated to the
-  threshold — the median activated because real independent episodes crossed it.
+- **Observed episodes 3 → 5**, so the median crosses the ≥5 gate at **72 days** from genuine
+  episodes `[2, 22, 72, 98, 205]`. (Pre-red-team this read 6 episodes / 47 days; the red-team
+  correctly flagged the Druzhba/Unecha record — flows rerouted while the pumping station itself
+  was destroyed — as a *flow restart*, not a facility reconstitution, so it was demoted to
+  `partial_restart`.) Not curated to the threshold. The median is now labelled honestly as
+  **mixed-facility-type** (a 2-day terminal restart pooled with a 205-day gas-plant repair),
+  not "typical recovery".
 - **Non-refinery spread gained:** oil logistics (Primorsk, Novorossiysk/Sheskharis, Druzhba/
   Unecha) and gas processing (Astrakhan, Orenburg) now carry recovery evidence — previously
   refinery-only.
@@ -200,11 +212,33 @@ No weights were retuned. The scoring changes were put through an independent red
 
 ## Red-team (§37)
 
-An independent adversarial pass attacked the refinery-linking exposure change, the gas/coal
-uncovered decisions, the context/analytic separation, the recovery-median activation and the
-transmission bump. Findings and dispositions are recorded below.
+An independent adversarial agent reproduced the build (ESDI 18.26, all tests green), decomposed
+every sub-index by hand, and traced each change through the code. It **validated the three
+changes most at risk of being wrong** and surfaced honesty gaps I then closed.
 
-_(Red-team findings — filled in on completion of the adversarial pass.)_
+**Confirmed sound (attacked, held up):**
+- **No refinery double-count.** Each of the three linked refineries is in the refining
+  denominator exactly once, and none appears in the wiki strike table — so no second exposure
+  path exists. The numerator draws capacity from the *same* source as the denominator.
+- **No coal double-count**; inventory-without-score is coherent (generation vs mine/terminal are
+  distinct assets in distinct sectors).
+- **Analytic/context separation is airtight.** `build_index` never receives the context files;
+  context routes carry no region and no capacity and cannot reach any aggregation.
+
+**Findings closed this pass:**
+
+| # | Severity | Finding | Disposition |
+|---|---|---|---|
+| 1 | HIGH | The headline renormalises gas+coal away (÷0.85), a silent **+2.74 (~18%)** uplift; gas is *not* unmeasured (it has documented strikes). | **Disclosed.** `esdi_all_sectors` (15.52) + the gap + a note now ship in the snapshot and show in the Methodology modal. |
+| 2 | MED | `SECTOR_BASIS` advertised gas/coal as `event_burden`, a measure `_share` implements only for transmission — a footgun that could silently zero-score a sector. | **Fixed.** Gas/coal relabelled `uncovered` in config + scoring.json, with a comment and a test. |
+| 3 | MED-HIGH | Transmission (10% of ESDI) is **~95% one theatre** — Taman 500 kV (54%) + occupied-Crimea substations (45%) — scaled by an arbitrary saturation constant (8); read as "% of Russia's grid" it misleads. | **Disclosed.** `transmission_concentration` (top contributors + occupied share + a note) now ships and shows in the Methodology modal. |
+| 4 | MED | The recovery median blended flow-restarts with reconstitutions; the Druzhba/Unecha record logged a *destroyed* pumping station as "substantially restored". | **Fixed + relabelled.** Unecha demoted to `partial_restart` (→ 5 episodes, median 72); the median is now labelled "mixed facility types" in the UI and doc. |
+| 5 | LOW | "Three refineries" overstates — Mari El's single Oct-2025 strike has decayed to ~0 by the as-of, so the refining rise is essentially Novoshakhtinsk + Orsk (both Aug 2026). | **Documented** (see Limitations). |
+| 6 | MED | The wiki-vs-curated dedup is by `asset_id` string only; a refinery that were ever *both* wiki-struck and given a capacity-bearing curated incident would double-count (does not fire today — the 3 linked refineries are absent from the wiki table). | **Documented as a known latent fragility**; an explicit facility-identity invariant is the recommended next hardening. |
+
+The red-team's single most important point — *don't let the headline silently absorb the
+renormalisation uplift* — is now addressed by shipping both figures with the reason gas/coal
+are excluded.
 
 ## Production (§39)
 
@@ -212,11 +246,12 @@ _(Deployed SHA, live verification and any production-only defects — filled in 
 
 ## Limitations — read before quoting
 
-- **The refining rise reflects three *linked* refineries, not a model change.** It is exactly
-  the exposure treatment wiki strikes already get, and no capacity loss is claimed. But only
-  the three refineries documented as struck-and-net-new were added as assets; the wider
-  refinery inventory is still not point-mapped, so curated strikes on *other* inventoried
-  refineries would still under-count until similarly linked.
+- **The refining rise reflects *linked* refineries, not a model change.** It is exactly the
+  exposure treatment wiki strikes already get, and no capacity loss is claimed. Two nuances the
+  red-team drew out: (a) only the three struck-and-net-new refineries were point-mapped, so
+  curated strikes on *other* inventoried refineries still under-count until similarly linked;
+  and (b) of the three, **Mari El's single Oct-2025 strike has already decayed to ~0** by the
+  as-of, so the +4.47 is essentially Novoshakhtinsk + Orsk (both Aug 2026).
 - **Oil-terminal / power / gas / coal events raise coverage and counts but not capacity-based
   exposure**, because we hold no per-facility capacity for them (oil logistics is a proxy;
   generation needs MW; gas/coal are uncovered). Coverage rose to 57% largely through events
@@ -224,8 +259,9 @@ _(Deployed SHA, live verification and any production-only defects — filled in 
 - **Gas and coal remain uncovered.** Gas carries real strikes (incl. GPP hits) that add 0 to
   the index — deliberate honesty, not a claim they did not matter. Coal has inventory but no
   disruption evidence.
-- **Recovery is still thin (6 episodes).** The 47-day median mixes a 2-day port restart with a
-  205-day gas-plant repair; treat it as a coarse central tendency, not a sector norm.
+- **Recovery is still thin (5 episodes).** The 72-day median pools a 2-day terminal restart
+  with a 205-day gas-plant repair across sectors; it is labelled mixed-facility-type, not a
+  sector norm. Only the cross-sector median clears the gate; no single sector has ≥5 episodes.
 - **The context network is OSM-only.** It is real traced geometry but not the GEM census;
   coverage is "major named transmission trunks ≥ 50 km", so some corridors are absent and all
   routes render as `osm_mapped` (the mapped/approximate distinction awaits a GEM snapshot).

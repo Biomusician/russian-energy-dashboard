@@ -347,8 +347,12 @@ SECTOR_BASIS = {
     "electric_generation": "capacity",
     "oil_logistics":       "capacity",
     "transmission":        "event_burden",
-    "gas":                 "event_burden",
-    "coal":                "event_burden",
+    # gas and coal are UNCOVERED: no capacity denominator and (unlike transmission) no
+    # saturation model, so they never enter the composite. Do not relabel one
+    # "event_burden" without also implementing its branch in build_index._share, or the
+    # sector would join `covered` and score every facility at 0, silently dropping ESDI.
+    "gas":                 "uncovered",
+    "coal":                "uncovered",
 }
 
 DISRUPTION_CAUSES = {
