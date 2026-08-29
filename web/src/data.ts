@@ -1,9 +1,39 @@
 /** Loads the static JSON payload the Python pipeline writes into public/data/.
- *  There is no API: every file here is a build artifact served straight off the CDN. */
+ *  There is no API: every file here is a build artifact served straight off the CDN.
+ *
+ *  Deploy-window resilience (iteration 5): on a static CDN, a freshly deployed bundle can
+ *  briefly fetch data files an edge node has not caught up to. Core files stay required and
+ *  fail loudly if genuinely absent; optional context layers degrade to empty rather than
+ *  white-screening the whole dashboard; and a one-version schema skew (N or N-1) is
+ *  tolerated. See docs/DEPLOYMENT.md. */
 
-import type { Bundle } from "./types";
+import type { Bundle, SchemaCheck } from "./types";
 
 const BASE = `${import.meta.env.BASE_URL}data`;
+
+/** Schema this frontend build was written for, and the oldest it still renders. */
+export const SUPPORTED_SCHEMA = 2;
+export const MIN_SUPPORTED_SCHEMA = 1;
+
+const EMPTY_FC: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+
+/** Decide whether a payload of `dataVersion` is safe for an app built for `appVersion`.
+ *  The static-CDN deploy window means new code briefly reading old data (back-compat) or,
+ *  more rarely, old code reading new data (forward). We render in every case and only flag
+ *  a genuine skew: a one-day-stale dashboard beats a white screen. A payload with no
+ *  schema_version predates the field and is version 1 by definition. */
+export function schemaCompatibility(
+  dataVersion: number | undefined | null,
+  appVersion: number = SUPPORTED_SCHEMA,
+  minVersion: number = MIN_SUPPORTED_SCHEMA,
+): SchemaCheck {
+  const v = dataVersion ?? 1;
+  let mode: SchemaCheck["mode"];
+  if (v === appVersion) mode = "exact";
+  else if (v > appVersion) mode = "forward";
+  else mode = v >= minVersion ? "back" : "unsupported";
+  return { dataVersion: v, appVersion, ok: mode !== "unsupported", mode };
+}
 
 async function grab<T>(name: string): Promise<T> {
   const res = await fetch(`${BASE}/${name}`);
@@ -11,6 +41,23 @@ async function grab<T>(name: string): Promise<T> {
     throw new Error(`could not load ${name} (HTTP ${res.status}) — run the pipeline first`);
   }
   return (await res.json()) as T;
+}
+
+/** Load a file that may legitimately be absent: an optional context layer, or a file a
+ *  stale CDN edge has not caught up to during a deploy. Returns `fallback` instead of
+ *  throwing, so a missing optional layer degrades the map rather than crashing the app. */
+export async function grabOptional<T>(name: string, fallback: T): Promise<T> {
+  try {
+    const res = await fetch(`${BASE}/${name}`);
+    if (!res.ok) {
+      console.warn(`optional layer ${name} absent (HTTP ${res.status}); continuing without it`);
+      return fallback;
+    }
+    return (await res.json()) as T;
+  } catch (err) {
+    console.warn(`optional layer ${name} failed to load; continuing without it`, err);
+    return fallback;
+  }
 }
 
 export async function loadBundle(): Promise<Bundle> {
@@ -31,9 +78,25 @@ export async function loadBundle(): Promise<Bundle> {
     grab<Bundle["contextBorders"]>("context_borders.geojson"),
     grab<Bundle["ocean"]>("ocean.geojson"),
   ]);
+
+  // Optional context layers (iteration 5): absent on older data or a lagging edge -> empty.
+  const [rivers, contextPipelines] = await Promise.all([
+    grabOptional<GeoJSON.FeatureCollection>("rivers.geojson", EMPTY_FC),
+    grabOptional<GeoJSON.FeatureCollection>("pipelines_context.geojson", EMPTY_FC),
+  ]);
+
+  const schema = schemaCompatibility(snapshot.schema_version);
+  if (schema.mode !== "exact") {
+    console.warn(
+      `data schema ${schema.dataVersion} vs app schema ${schema.appVersion} (${schema.mode}); ` +
+        "rendering best-effort",
+    );
+  }
+
   return {
     snapshot, national, regional, incidents, regions, assets, taxonomy,
     regionsGeo, linesGeo, contextLand, contextBorders, ocean,
+    rivers, contextPipelines, schema,
   };
 }
 

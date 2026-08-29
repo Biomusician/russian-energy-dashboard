@@ -1183,3 +1183,50 @@ def test_lng_inventory_does_not_invent_a_gas_denominator():
     assert "gas" in snap["sectors_uncovered"]
     assert snap["sectors"]["gas"] == 0
     assert snap["denominators"].get("gas") in (None, 0), "no gas denominator should be emitted"
+
+
+# --------------------------------------------------------------------------
+# Iteration 5: data-contract resilience — schema_version + manifest (§27)
+# --------------------------------------------------------------------------
+# The deploy-window failure that white-screened iteration 4 was new JS reading old data.
+# The contract now carries a schema_version and a manifest so a client can tell app/data
+# skew from a genuine outage, and so optional context layers can be absent without a crash.
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_snapshot_carries_schema_version():
+    from pipeline.config import SCHEMA_VERSION
+    snap = json.loads((PROCESSED / "snapshot.json").read_text(encoding="utf-8"))
+    assert snap.get("schema_version") == SCHEMA_VERSION
+
+
+@pytest.mark.skipif(not (PROCESSED / "data_manifest.json").exists(),
+                    reason="pipeline has not been run")
+def test_data_manifest_is_present_and_consistent():
+    from pipeline.config import SCHEMA_VERSION, OPTIONAL_CONTEXT_FILES
+    manifest = json.loads((PROCESSED / "data_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["schema_version"] == SCHEMA_VERSION
+    assert manifest.get("build_time")
+    names = {f["name"] for f in manifest["files"]}
+    # every file the frontend loads must be listed
+    for required in REQUIRED_WEB_FILES:
+        assert required in names, f"manifest omits frontend file {required}"
+    # the manifest never lists itself, and every listed file exists on disk
+    assert "data_manifest.json" not in names
+    for f in manifest["files"]:
+        assert (PROCESSED / f["name"]).exists(), f"manifest lists a missing file {f['name']}"
+        assert isinstance(f["bytes"], int) and f["bytes"] >= 0
+        # the optional flag must agree with the config-declared optional set
+        assert f["optional"] == (f["name"] in OPTIONAL_CONTEXT_FILES)
+    # the manifest must itself be mirrored to the web payload
+    assert (WEB_DATA / "data_manifest.json").exists(), "manifest must be mirrored to web/public/data"
+
+
+def test_optional_context_files_are_declared_optional_not_required():
+    """An optional context layer must never be in the frontend's required set, so a build
+    that omits it (or a stale edge that lacks it) can still load the core dashboard."""
+    from pipeline.config import OPTIONAL_CONTEXT_FILES
+    for name in OPTIONAL_CONTEXT_FILES:
+        assert name not in REQUIRED_WEB_FILES, (
+            f"{name} is optional context and must not be a required frontend file"
+        )

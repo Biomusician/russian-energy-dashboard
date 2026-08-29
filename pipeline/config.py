@@ -15,6 +15,20 @@ PROCESSED = DATA / "processed"
 METHODOLOGY_DIR = ROOT / "methodology"
 WEB_DATA = ROOT / "web" / "public" / "data"
 
+# Data-contract version (iteration 5). Bump whenever the emitted JSON shape changes in a
+# way the frontend must be aware of. The frontend renders schema_version N and N-1 and
+# never white-screens on a one-version skew during a Vercel deploy window (see web/src/
+# data.ts, docs/DEPLOYMENT.md). Payloads emitted before this field existed are version 1.
+SCHEMA_VERSION = 2
+
+# Context layers a build MAY emit but that are not load-bearing: a stale CDN edge lacking
+# one must degrade the map, never crash it. The frontend loads these tolerantly and the
+# data_manifest marks them optional. Names are emitted filenames under data/processed/.
+OPTIONAL_CONTEXT_FILES = {
+    "rivers.geojson",
+    "pipelines_context.geojson",
+}
+
 # Analysis window. The dashboard's time axis runs from here to the build date.
 WINDOW_START = "2022-01-01"
 

@@ -17,7 +17,8 @@ import shutil
 from pipeline import build_assets, build_context, build_index
 from pipeline.config import (
     ANALYTIC_CONCEPTS, ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, EVIDENCE_KINDS,
-    PROCESSED, SECTOR_OF_CLASS, SECTORS, WEB_DATA, WINDOW_START,
+    OPTIONAL_CONTEXT_FILES, PROCESSED, SCHEMA_VERSION, SECTOR_OF_CLASS, SECTORS,
+    WEB_DATA, WINDOW_START,
 )
 from pipeline.fetch_refineries import build as build_refineries
 from pipeline.fetch_wikipedia import build as build_wikipedia
@@ -365,6 +366,7 @@ def main():
     snapshot["coverage"] = coverage
     snapshot["facet_counts"] = _facet_counts(assets, lines, incidents, snapshot)
     snapshot["parser_warnings"] = wiki_warnings
+    snapshot["schema_version"] = SCHEMA_VERSION
     snapshot["build_time"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
     write_json(PROCESSED / "assets.json", assets)
@@ -386,6 +388,21 @@ def main():
             "window_start": WINDOW_START,
         },
     )
+
+    # Data manifest (iteration 5): one stamp of the schema version and the files this
+    # build emitted, so a client can distinguish app/data skew from a genuine outage and
+    # tests can assert the contract. Written last, before the mirror copies it across.
+    manifest = {
+        "schema_version": SCHEMA_VERSION,
+        "build_time": snapshot["build_time"],
+        "files": [
+            {"name": p.name, "bytes": p.stat().st_size,
+             "optional": p.name in OPTIONAL_CONTEXT_FILES}
+            for p in sorted(PROCESSED.glob("*.json")) + sorted(PROCESSED.glob("*.geojson"))
+            if p.name != "data_manifest.json"
+        ],
+    }
+    write_json(PROCESSED / "data_manifest.json", manifest, indent=2)
 
     _mirror_to_web()
 

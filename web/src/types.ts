@@ -243,6 +243,13 @@ export interface Coverage {
   note: string;
 }
 
+export interface SchemaCheck {
+  dataVersion: number;
+  appVersion: number;
+  ok: boolean;
+  mode: "exact" | "back" | "forward" | "unsupported";
+}
+
 export interface Snapshot {
   as_of: string;
   build_time: string;
@@ -265,6 +272,8 @@ export interface Snapshot {
   refinery_reconciliation: RefineryReconciliation | null;
   facet_counts: FacetCounts;
   parser_warnings: string[];
+  /** Data-contract version (iteration 5). Absent in pre-iteration-5 payloads -> treated as 1. */
+  schema_version?: number;
 }
 
 /** Full-corpus counts per UI dimension (iteration 4). Counters omit zero keys, so a key's
@@ -314,4 +323,10 @@ export interface Bundle {
   contextLand: GeoJSON.FeatureCollection;
   contextBorders: GeoJSON.FeatureCollection;
   ocean: GeoJSON.FeatureCollection;
+  /** Optional context layers (iteration 5). Empty FeatureCollection when the build did not
+   *  emit them, or a stale CDN edge lacks them mid-deploy -- never a hard load failure. */
+  rivers: GeoJSON.FeatureCollection;
+  contextPipelines: GeoJSON.FeatureCollection;
+  /** Result of the schema compatibility check performed at load time. */
+  schema: SchemaCheck;
 }
