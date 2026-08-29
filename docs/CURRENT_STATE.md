@@ -14,17 +14,17 @@
 - **Total events across all sectors**: 175
 
 ## Recovery
-- **Observed-restoration episodes (national)**: n = 7
-- **Recovery records / partial / full / estimate**: 20 / 9 / 8 / 3
+- **Observed-restoration episodes (national)**: n = 9
+- **Recovery records / partial / full / estimate**: 26 / 13 / 10 / 3
 - **Per-class medians (n ≥ 3)**: refining 47.0d
-- **Pooled cross-class median (mixed-infrastructure, not headline)**: 72.0
+- **Pooled cross-class median (mixed-infrastructure, not headline)**: 22.0
 
 ## Refining denominator
 - **Tracked refining base**: 273.8 MTPA across 34 denominator refineries
 - **Canonical linkage (identity, NOT disruption coverage)**: 27/34 refineries struck = 85.6% of denominator MTPA
 
 ## Gas processing (experimental, NOT in headline ESDI)
-- **Within-census exposure**: 26.8% (2 of 12 censused plants, 91.56 bcm/y total)
+- **Within-census exposure**: 26.7% (2 of 12 censused plants, 91.91 bcm/y total)
 
 ## Transmission (event-burden, theatre-concentrated)
 - **Headline value**: 20.88 at saturation 8.0
@@ -32,8 +32,8 @@
 - **Top-theatre share**: 54.5% over 3 region(s)
 
 ## Strategic effects (source-backed, observational)
-- **National/macro datapoints**: 4
-- **Per-incident effects**: 11 across 8 incidents
+- **National/macro datapoints**: 8
+- **Per-incident effects**: 18 across 15 incidents
 
 ## Tests
-- **Python test functions** (`tests/test_pipeline.py`): 128 (pytest reports more cases — some functions are parametrized)
+- **Python test functions** (`tests/test_pipeline.py`): 142 (pytest reports more cases — some functions are parametrized)

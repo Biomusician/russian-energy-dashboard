@@ -279,6 +279,96 @@ def test_partial_restart_is_not_full_reconstitution():
     assert _weight_at(inc, on, partial) == pytest.approx(_weight_at(inc, on, None), abs=1e-9)
 
 
+def test_evidence_family_is_a_deterministic_partition():
+    """§15 / check #6: evidence_family is a total, DETERMINISTIC function of (recovery_status,
+    recovery_kind) into mutually-exclusive families, with a fixed precedence when a kind could
+    match two (a flow-rerouting kind is flow_rerouting even though partial_restart would also
+    be service_restoration; a full reconstitution wins over any kind)."""
+    from pipeline import recovery
+    fams = set(recovery.EVIDENCE_FAMILIES)
+    # every (status, kind) maps into exactly one declared family
+    for status in ("impaired", "partial_restart", "substantially_restored", "fully_reconstituted", "unknown"):
+        for kind in (None, "flow_rerouted", "grid_reenergised", "unit_restarted", "unit_rebuilt",
+                     "throughput_restored", "transformer_replaced", "primary_unit_offline", "weird"):
+            assert recovery.evidence_family(status, kind) in fams
+    # precedence: full reconstitution beats a service-y kind; flow beats generic partial;
+    # estimate (impaired) beats everything.
+    assert recovery.evidence_family("fully_reconstituted", "grid_reenergised") == "facility_reconstitution"
+    assert recovery.evidence_family("partial_restart", "flow_rerouted") == "flow_rerouting"
+    assert recovery.evidence_family("partial_restart", "grid_reenergised") == "service_restoration"
+    assert recovery.evidence_family("impaired", "unit_restarted") == "estimate"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_evidence_family_counts_partition_the_record_set():
+    """check #6: the per-family counts are a partition — they sum to the deduplicated episode
+    count, so no record is double-counted across families."""
+    snap = _snapshot()
+    rs = snap["recovery_stats"]
+    efc = rs.get("evidence_family_counts") or {}
+    # sum of families == distinct episodes that carry a recovery record (<= record count).
+    assert sum(efc.values()) <= rs["recovery_record_count"]
+    assert sum(efc.values()) >= rs["observed_restoration_episodes"]  # observed are a subset
+
+
+def test_damage_severity_is_monotone_and_repaired_is_not_a_damage_state():
+    """§10-11: damage severity (concept A) is a clean, monotone map from a DAMAGE observation.
+    'repaired'/'restored' are recovery states, not damage states, and must fall through to the
+    1.0 default (never a silent 0.1 damp)."""
+    from pipeline import recovery
+    assert recovery.damage_severity("degraded") < recovery.damage_severity("unknown")
+    assert recovery.damage_severity("degraded") <= recovery.damage_severity("active")
+    # damaged/destroyed/shutdown are full damage; unknown defaults to full.
+    for s in ("active", "damaged", "destroyed", "shutdown", "unknown", None, "anything-unmapped"):
+        assert recovery.damage_severity(s) == pytest.approx(1.0)
+    # a recovery state mis-filed in status must NOT discount (it maps to the 1.0 default).
+    assert recovery.damage_severity("repaired") == pytest.approx(1.0)
+    assert recovery.damage_severity("restored") == pytest.approx(1.0)
+
+
+def test_adding_recovery_evidence_is_monotonic_non_increasing():
+    """§11 property test: across a grid of incidents, adding a recovery record whose horizon does
+    NOT exceed the modelled fallback must never INCREASE the weight. A partial restart equals the
+    record-less weight exactly; a full/substantial reconstitution is <= it. (An estimate that
+    LENGTHENS the horizon may raise it — that is evidence of worse-than-assumed damage, the one
+    allowed exception, tested separately.)"""
+    from pipeline import recovery
+    import itertools
+    statuses = ["unknown", "degraded", "active", "damaged"]
+    classes = ["refinery", "substation", "power_plant_nuclear", "oil_terminal", "gas_processing"]
+    ages = [1, 20, 60, 150, 400]
+    for status, cls, age in itertools.product(statuses, classes, ages):
+        occurred = dt.date(2026, 1, 1)
+        when = occurred + dt.timedelta(days=age)
+        inc = _incident(date="2026-01-01", status=status, asset_class=cls)
+        w_none = _weight_at(inc, when, None)
+        fallback = recovery.FALLBACK.get(cls, recovery.FALLBACK["_default"])
+        # partial restart: DISPLAY-only -> identical to no record.
+        partial = _rec(recovery_status="partial_restart", partial_operations_resumed_at="2026-01-10")
+        assert _weight_at(inc, when, partial) == pytest.approx(w_none, abs=1e-12), (status, cls, age)
+        # full reconstitution reached before `when`: capped -> never above no-record.
+        full = _rec(recovery_status="fully_reconstituted", observed_date="2026-01-15", observed_days=14)
+        assert _weight_at(inc, when, full) <= w_none + 1e-12, (status, cls, age)
+        # substantial restoration with a horizon <= fallback: faster decay -> <= no-record.
+        substantial = _rec(recovery_status="substantially_restored", observed_days=max(1, fallback // 2))
+        assert _weight_at(inc, when, substantial) <= w_none + 1e-12, (status, cls, age)
+
+
+def test_stronger_recovery_evidence_is_ordered_full_le_substantial_le_partial():
+    """§11: at a fixed point after recovery, evidence of stronger recovery is monotone downward:
+    full reconstitution <= substantial restoration <= partial restart == no record."""
+    inc = _incident(date="2026-01-01", status="degraded", asset_class="refinery")
+    when = dt.date(2026, 4, 1)  # well after the recovery dates below
+    w_none = _weight_at(inc, when, None)
+    w_partial = _weight_at(inc, when, _rec(recovery_status="partial_restart",
+                                           partial_operations_resumed_at="2026-01-20"))
+    w_subst = _weight_at(inc, when, _rec(recovery_status="substantially_restored", observed_days=30))
+    w_full = _weight_at(inc, when, _rec(recovery_status="fully_reconstituted",
+                                        observed_date="2026-02-01", observed_days=31))
+    assert w_partial == pytest.approx(w_none, abs=1e-12)
+    assert w_full <= w_subst + 1e-12 <= w_partial + 1e-12
+
+
 def test_partial_restart_never_scores_above_no_record_for_degraded_status():
     """Regression: a partial_restart record must never RAISE an incident's weight. The
     status_multiplier ('degraded' = 0.7) was applied only when no record existed, so
@@ -488,6 +578,65 @@ def test_crimea_resolution_and_other_occupied_excluded():
         assert kind == "excluded_occupied", name
 
 
+# A styling word makes "Crimea is never the Russian X" legitimate (it's about the map, not the
+# composite). Anything else pairing Crimea/occupied with a non-contribution claim about the
+# composite/index is the dangerous stale assertion this project has shipped twice.
+_CRIMEA_LINT_STYLING = (
+    "choropleth", "painted", "rendered", "labelled", "labeled", "styl", "colour", "color",
+    "mistaken for a russian", "russian region", "russian choropleth", "ordinary russian",
+    "dashed", "outline",
+)
+_CRIMEA_LINT_NEGATION = (
+    "never", "excluded from", "does not contribute", "doesn't contribute", "not contribute",
+    "not feed", "never feeds", "cannot enter", "no contribution", "kept out of the",
+)
+_CRIMEA_LINT_COMPOSITE = (
+    "composite", "national esdi", "national index", "monitored-area", "monitored area index",
+    "the index", "the headline",
+)
+
+
+def _scan_files_for_crimea_lint():
+    """Yield (path, fragment) where a source text wrongly implies Crimea/occupied is out of the
+    composite. Historical iteration reviews are excluded — they were correct for their pass."""
+    import re
+    files = list((ROOT / "pipeline").glob("*.py"))
+    files += list((ROOT / "web" / "src").rglob("*.ts")) + list((ROOT / "web" / "src").rglob("*.tsx"))
+    files += [ROOT / "README.md"]
+    files += [ROOT / "docs" / f for f in (
+        "METHODOLOGY.md", "HANDOFF.md", "SCHEMA.md", "SOURCES.md", "CURRENT_STATE.md",
+        "CHATGPT_ITERATION_PROMPT.md")]
+    for path in files:
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8").lower()
+        for frag in re.split(r"[.\n;!?]", text):
+            frag = " ".join(frag.split())
+            if ("crimea" not in frag and "occupied" not in frag):
+                continue
+            if not any(n in frag for n in _CRIMEA_LINT_NEGATION):
+                continue
+            if not any(c in frag for c in _CRIMEA_LINT_COMPOSITE):
+                continue
+            if any(s in frag for s in _CRIMEA_LINT_STYLING):
+                continue
+            yield (path, frag)
+
+
+def test_no_source_text_claims_crimea_is_out_of_the_composite():
+    """Lint (§1): fail the build if a comment/doc asserts Crimea/occupied never enters the
+    monitored-area composite — false, since esdi_included=True. Twice-shipped bug; now guarded."""
+    # Self-check: the detector must fire on the exact phrasing this project shipped.
+    bad = "crimea (and any esdi-excluded region) contributes to its own regional exposure but never to the national composite"
+    frag = " ".join(bad.split())
+    assert (any(n in frag for n in _CRIMEA_LINT_NEGATION)
+            and any(c in frag for c in _CRIMEA_LINT_COMPOSITE)
+            and not any(s in frag for s in _CRIMEA_LINT_STYLING)), "lint detector is broken"
+    hits = list(_scan_files_for_crimea_lint())
+    assert not hits, "stale 'Crimea out of the composite' text found:\n" + "\n".join(
+        f"  {p}: {f[:140]}" for p, f in hits)
+
+
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
                     reason="pipeline has not been run")
 def test_crimea_now_contributes_to_the_monitored_area_index():
@@ -690,6 +839,17 @@ def test_recovery_kind_column_matches_status_in_source():
         for row in csv.DictReader(f):
             if (row.get("recovery_kind") or "") in flow_kinds:
                 assert row["recovery_status"] == "partial_restart", row["incident_id"]
+
+
+def test_no_incident_uses_the_deprecated_repaired_damage_status():
+    """§10 / red-team M3: 'repaired' is a RECOVERY state, not a damage state. It must not appear in
+    incident.status (recovery belongs in a recovery record). This closes the latent trap where
+    migrating a 'repaired' status to 'damaged' without a collapsing record would inflate a
+    scored-sector incident: there is simply no 'repaired' status to migrate."""
+    import csv
+    with open(ROOT / "data" / "curated" / "incidents.csv", encoding="utf-8", newline="") as f:
+        bad = [r["incident_id"] for r in csv.DictReader(f) if (r.get("status") or "") == "repaired"]
+    assert not bad, f"incident.status='repaired' is deprecated; use a recovery record: {bad}"
 
 
 def test_incident_status_does_not_contradict_its_recovery_record():
@@ -995,17 +1155,58 @@ def test_crea_series_sorted_by_reporting_month():
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
                     reason="pipeline has not been run")
 def test_refinery_reconciliation_is_lower_bound_not_padded():
-    """Tracked capacity must be <= the national estimate, and coverage must be the honest
-    ratio of the two — never forced to 100% by padding unlike facilities."""
+    """Tracked capacity must be <= the full nameplate reference, and coverage must be the honest
+    ratio against the LIKE-FOR-LIKE crude reference — never forced to 100% by padding."""
     snap = _snapshot()
     rec = snap.get("refinery_reconciliation")
     assert rec is not None, "refinery_reconciliation should be emitted"
     tracked = rec["tracked_mtpa"]
-    national = rec["national_public_estimate_mtpa"]
-    assert 0 < tracked <= national, "tracked capacity must not exceed the national estimate"
-    assert rec["gap_mtpa"] == pytest.approx(national - tracked, abs=0.2)
-    assert rec["coverage_pct"] == pytest.approx(100.0 * tracked / national, abs=0.6)
+    full = rec["national_public_estimate_mtpa"]      # full nameplate (incl. condensate + mini)
+    crude = rec["reference_crude_nameplate_mtpa"]    # like-for-like crude reference
+    assert 0 < tracked <= full, "tracked capacity must not exceed the full nameplate reference"
+    assert rec["gap_mtpa"] == pytest.approx(full - tracked, abs=0.2)
+    # Coverage is against the crude reference (~303), NOT the full 327 (universe mismatch).
+    assert rec["coverage_pct"] == pytest.approx(100.0 * tracked / crude, abs=0.6)
     assert rec["coverage_pct"] < 100.0, "coverage should be an honest lower bound, not 100%"
+
+
+def test_denominator_completeness_metadata_is_distinct_from_event_coverage(SNAP=None):
+    """§6: the refining denominator emits completeness metadata that is structurally SEPARATE
+    from event coverage, and the gap decomposition adds up with no missing crude refinery."""
+    snap = _snapshot()
+    rec = snap["refinery_reconciliation"]
+    # completeness fields present
+    for k in ("reference_nameplate_mtpa", "reference_crude_nameplate_mtpa", "reference_range_mtpa",
+              "denominator_coverage_pct", "gap_decomposition", "facility_count"):
+        assert k in rec, f"missing denominator metadata: {k}"
+    # crude reference < full (condensate removed), both positive
+    assert 0 < rec["reference_crude_nameplate_mtpa"] < rec["reference_nameplate_mtpa"]
+    # gap decomposition: condensate + basis + missing == full gap; missing crude refineries == 0
+    gd = rec["gap_decomposition"]
+    assert gd["missing_crude_refineries_mtpa"] == 0.0
+    total = (gd["excluded_condensate_splitters_mtpa"] + gd["conservative_basis_understatement_mtpa"]
+             + gd["missing_crude_refineries_mtpa"])
+    assert total == pytest.approx(rec["reference_nameplate_mtpa"] - rec["tracked_mtpa"], abs=0.6)
+    # DENOMINATOR coverage must not be confused with the OIL-STRIKE event coverage — different value.
+    cov = snap.get("coverage") or {}
+    if cov:
+        assert abs(rec["denominator_coverage_pct"] - cov["coverage_ratio"] * 100) > 1.0
+
+
+def test_denominator_sum_equals_registry_members():
+    """§36: the tracked denominator MTPA must equal the sum of non-excluded registry members —
+    no capacity double-counted, no exclusion silently counted."""
+    if not (PROCESSED / "refinery_inventory.json").exists():
+        pytest.skip("pipeline not run")
+    inv = json.loads((PROCESSED / "refinery_inventory.json").read_text(encoding="utf-8"))
+    members = [r for r in inv["refineries"]
+               if r.get("denominator_status") != "exclude" and r.get("capacity_mtpa")]
+    member_sum = round(sum(r["capacity_mtpa"] for r in members), 1)
+    assert member_sum == pytest.approx(inv["total_mtpa"], abs=0.15)
+    assert inv["reconciliation"]["tracked_refineries"] == len(members)
+    # canonical ids unique among members (no duplicate facility).
+    ids = [r["canonical_id"] for r in members if r.get("canonical_id")]
+    assert len(ids) == len(set(ids)), "duplicate canonical_id in the denominator"
 
 
 # --------------------------------------------------------------------------
@@ -1606,6 +1807,64 @@ def test_transmission_sensitivity_exposes_theatre_concentration():
         assert sum(r["burden"] for r in t["per_region_saturated"]) == pytest.approx(t["raw_burden"], abs=0.02)
 
 
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_transmission_alternative_models_are_deterministic_and_bounded():
+    """§23-24: the alternative formulations are all emitted, bounded [0,100], and internally
+    consistent (Model A reproduces the headline; Model E is the headline minus transmission)."""
+    snap = _snapshot()
+    t = snap["transmission_sensitivity"]
+    am = t.get("alternative_models")
+    assert am, "alternative_models must be published"
+    for k in ("A_current_global_saturation", "B_per_region_saturation_breadth_aware",
+              "C_breadth_affected_regions", "C_intensity_max_region_pct", "D_distinct_facility_burden"):
+        assert k in am
+    # A reproduces the shipped headline transmission value.
+    assert am["A_current_global_saturation"] == pytest.approx(snap["sectors"]["transmission"], abs=0.05)
+    # burdens are exposures in [0,100].
+    for k in ("A_current_global_saturation", "B_per_region_saturation_breadth_aware",
+              "C_intensity_max_region_pct", "D_distinct_facility_burden"):
+        assert 0.0 <= am[k] <= 100.0
+    # Model E: removing transmission changes the headline (a positive-contribution sector).
+    if am.get("E_esdi_if_transmission_removed") is not None:
+        assert am["E_esdi_if_transmission_removed"] <= snap["esdi"] + 1e-6
+    assert snap.get("esdi_excluding_transmission") == pytest.approx(am.get("E_esdi_if_transmission_removed"), abs=0.05)
+    # The models must carry the explicit disclaimer that none is a percent of grid offline.
+    assert "grid offline" in am["note"].lower()
+
+
+def test_transmission_sector_is_labelled_a_burden_not_bare_transmission():
+    """§22-25 transmission red-team: the sector must be labelled a 'burden' so a reader cannot
+    read the event-burden proxy as a '% of grid offline' capacity share."""
+    from pipeline.config import SECTORS
+    assert "burden" in SECTORS["transmission"].lower(), SECTORS["transmission"]
+    if (PROCESSED / "taxonomy.json").exists():
+        tax = json.loads((PROCESSED / "taxonomy.json").read_text(encoding="utf-8"))
+        assert "burden" in tax["sectors"]["transmission"].lower()
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_effects_carry_source_quality_tier(SNAP=None):
+    """§31: source-quality tier is emitted for triage/provenance (separate from evidence_kind)."""
+    snap = _snapshot()
+    se = snap.get("strategic_effects") or {"national": [], "by_incident": {}}
+    allowed = {"primary_operator", "government", "major_wire", "national_regional",
+               "specialist_industry", "secondary_aggregation", "claim_only", None}
+    for e in list(se["national"]) + [x for lst in se["by_incident"].values() for x in lst]:
+        assert e.get("source_quality") in allowed, e.get("source_quality")
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_uncovered_zero_assumption_sensitivity_is_labelled_not_a_second_esdi():
+    """§27: the gas+coal-at-zero figure is a SENSITIVITY under a false assumption, renamed to say
+    so, with the deprecated alias preserved for N-1 payloads."""
+    snap = _snapshot()
+    assert "uncovered_zero_assumption_sensitivity" in snap
+    # N-1 alias preserved and equal.
+    assert snap["uncovered_zero_assumption_sensitivity"] == pytest.approx(snap["esdi_all_sectors"], abs=0.01)
+    note = snap["esdi_renormalization_note"].lower()
+    assert "sensitivity" in note and ("assumption" in note or "false" in note)
+
+
 def test_gas_and_coal_are_labelled_uncovered_not_a_fake_basis():
     """gas/coal must not advertise an 'event_burden' basis that build_index._share implements
     only for transmission — that footgun would silently zero-score a sector if it were ever
@@ -1692,6 +1951,21 @@ def test_experimental_gas_index_excluded_from_headline_esdi():
     assert g["experimental"] is True and g["in_headline_esdi"] is False
     # Gas still contributes exactly zero to the composite.
     assert snap["sectors"]["gas"] == 0.0
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_gas_graduation_decision_is_experimental_with_reasons():
+    """§19: iteration 7 makes an explicit graduation DECISION and records why gas processing did
+    not graduate to the headline (no matched denominator + non-comparable capacities)."""
+    snap = _snapshot()
+    g = snap["experimental_indices"]["gas_processing"]
+    assert g.get("graduation_decision") == "experimental"
+    reasons = g.get("graduation_reasons") or []
+    assert len(reasons) >= 2
+    joined = " ".join(reasons).lower()
+    assert "denominator" in joined and ("design" in joined or "throughput" in joined)
+    # §20: the caveat must forbid a summed 'Gas' super-score across processing/LNG/pipelines.
+    assert "lng" in g["caveat"].lower()
 
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")

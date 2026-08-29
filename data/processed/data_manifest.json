@@ -1,30 +1,30 @@
 {
   "schema_version": 2,
-  "build_time": "2026-08-29T20:18:47+00:00",
+  "build_time": "2026-08-29T22:16:01+00:00",
   "files": [
     {
       "name": "assets.json",
-      "bytes": 628727,
+      "bytes": 628729,
       "optional": false
     },
     {
       "name": "incidents.json",
-      "bytes": 173101,
+      "bytes": 173098,
       "optional": false
     },
     {
       "name": "index_national.json",
-      "bytes": 11961,
+      "bytes": 11908,
       "optional": false
     },
     {
       "name": "index_regional.json",
-      "bytes": 561602,
+      "bytes": 561556,
       "optional": false
     },
     {
       "name": "refinery_inventory.json",
-      "bytes": 10619,
+      "bytes": 12189,
       "optional": false
     },
     {
@@ -34,12 +34,12 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 156496,
+      "bytes": 170323,
       "optional": false
     },
     {
       "name": "taxonomy.json",
-      "bytes": 1217,
+      "bytes": 1224,
       "optional": false
     },
     {

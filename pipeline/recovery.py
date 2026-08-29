@@ -39,6 +39,23 @@ _CLOSES = set(_P["closes_incident_states"])
 _HORIZON_STATES = set(_P["horizon_override_states"])
 VALID_STATES = set(_P["recovery_states"])
 
+# Concept A (iteration 7): initial DAMAGE severity, applied orthogonally to recovery.
+_DAMAGE_SEVERITY = _SCORING.get("damage_severity", {"unknown": 1.0, "_default": 1.0})
+_DAMAGE_DEFAULT = _DAMAGE_SEVERITY.get("_default", 1.0)
+
+
+def damage_severity(status):
+    """Concept A: the incident's INITIAL damage severity, in (0, 1]. Applied ALWAYS and
+    independently of any recovery record — recovery evidence changes the decay/cap (concepts
+    B/C), never this multiplier. That orthogonality is what makes adding a recovery record
+    monotonic: it can only speed decay or cap the tail, never strip this multiplier.
+
+    'repaired'/'restored' are RECOVERY states, not damage states — they belong in a recovery
+    record, are not keys in the damage_severity map, and fall through to the 1.0 default. A
+    test rejects an incident whose status contradicts its recovery record.
+    """
+    return _DAMAGE_SEVERITY.get((status or "unknown"), _DAMAGE_DEFAULT)
+
 
 def _date(value):
     if not value:
@@ -87,6 +104,13 @@ def load_recovery_records():
             # partial_line_energised, unit_restarted, station_rebuilt, throughput_restored…).
             # Free-vocabulary, display-only; never widens the scoring bucket above.
             "recovery_kind": (row.get("recovery_kind") or "").strip() or None,
+            # §15: which EVIDENCE FAMILY this restart belongs to (service restoration vs unit
+            # restart vs physical reconstitution vs flow rerouting vs estimate). Derived, so a
+            # curator sets recovery_status + recovery_kind and this stays consistent.
+            "evidence_family": evidence_family(status, (row.get("recovery_kind") or "").strip()),
+            # §31: lightweight source-quality tier for triage/provenance — NOT a hidden
+            # confidence score; occurrence confidence stays separate (source_confidence).
+            "source_quality": (row.get("source_quality") or "").strip() or None,
             "source_confidence": (row.get("source_confidence") or "unknown").strip(),
             "observed_date": row.get("observed_date") or row.get("reconstituted_at"),
             "observed_days": _num(row.get("observed_days")) or _num(row.get("reconstitution_observed_days")),
@@ -103,6 +127,43 @@ def load_recovery_records():
         }
     log(f"recovery: {len(out)} incident recovery records")
     return out
+
+
+# §15 evidence families — what KIND of restoration the source actually established. Kept
+# separate so the UI never collapses a service re-energisation and a physical rebuild into one
+# "recovery" number. Derived from (recovery_status, recovery_kind), never a stored duplicate.
+_SERVICE_KINDS = {"grid_reenergised", "partial_line_energised", "loadings_resumed",
+                  "partial_operations_resumed", "interim_restart", "service_restored"}
+_FLOW_KINDS = {"flow_rerouted"}
+_UNIT_KINDS = {"unit_restarted", "primary_unit_repaired", "throughput_restored", "capacity_restored"}
+_RECON_KINDS = {"unit_rebuilt", "substation_rebuilt", "transformer_replaced", "primary_unit_offline"}
+
+EVIDENCE_FAMILIES = ("facility_reconstitution", "unit_restart", "service_restoration",
+                     "flow_rerouting", "estimate", "unknown")
+
+
+def evidence_family(recovery_status, recovery_kind):
+    """Map a recovery record to its evidence family (§15). Physical reconstitution is only ever
+    claimed when the source proves the damaged equipment itself returned — a service/flow
+    restart never counts as facility repair."""
+    k = (recovery_kind or "").strip()
+    if recovery_status == "impaired":
+        return "estimate"
+    if recovery_status == "fully_reconstituted":
+        return "facility_reconstitution"
+    if k in _FLOW_KINDS:
+        return "flow_rerouting"
+    if k in _RECON_KINDS:
+        return "facility_reconstitution"
+    if k in _UNIT_KINDS:
+        return "unit_restart"
+    if k in _SERVICE_KINDS:
+        return "service_restoration"
+    if recovery_status == "substantially_restored":
+        return "unit_restart"
+    if recovery_status == "partial_restart":
+        return "service_restoration"
+    return "unknown"
 
 
 def _conf_ok(record):

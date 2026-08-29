@@ -135,6 +135,11 @@ export interface RecoveryState {
   /** §13 granular description of what the source proves (flow_rerouted, unit_restarted,
    *  station_rebuilt…). Distinct from recovery_status, the scoring bucket. */
   recovery_kind?: string | null;
+  /** §15 evidence family: facility_reconstitution | unit_restart | service_restoration |
+   *  flow_rerouting | estimate. Only facility_reconstitution means the equipment itself returned. */
+  evidence_family?: string | null;
+  /** §31 lightweight source-quality tier (major_wire, government, national_regional…). */
+  source_quality?: string | null;
   scoring_evidence_kind: EvidenceKind;
   reconstitution_horizon_days: number;
   resolved: boolean;
@@ -182,6 +187,9 @@ export interface RecoveryStats {
   median_is_mixed_infrastructure?: boolean;
   observed_restoration_episodes: number;
   observed_restoration_values: number[];
+  /** §15: episode count per evidence family (service_restoration vs unit_restart vs
+   *  facility_reconstitution vs flow_rerouting vs estimate). */
+  evidence_family_counts?: Record<string, number>;
   /** Per-class medians that individually clear the per-class gate (may be empty). */
   sector_medians?: Record<string, number>;
   median_impairment_age_days: number | null;
@@ -244,6 +252,23 @@ export interface RefineryReconciliation {
   coverage_pct: number;
   gap_mtpa: number;
   excluded_non_fuels?: string[];
+  /** Iteration 7 (§6): denominator-completeness metadata. DENOMINATOR completeness, distinct
+   *  from event coverage. */
+  reference_nameplate_mtpa?: number;
+  reference_range_mtpa?: [number, number];
+  reference_crude_nameplate_mtpa?: number;
+  reference_year?: number;
+  reference_definition?: string;
+  denominator_coverage_pct?: number;
+  denominator_coverage_basis?: string;
+  facility_count?: number;
+  excluded_facility_count?: number;
+  excluded_condensate_splitters?: string[];
+  gap_decomposition?: {
+    excluded_condensate_splitters_mtpa: number;
+    conservative_basis_understatement_mtpa: number;
+    missing_crude_refineries_mtpa: number;
+  };
   /** Canonical refinery linkage completeness (iteration 6, §9) — identity/linkage, NOT
    *  disruption coverage. */
   canonical_linkage?: {
@@ -294,6 +319,7 @@ export type EffectEvidence = "observed" | "estimated" | "modelled" | "unknown";
 export interface StrategicEffect {
   effect_type: string;
   evidence_kind: EffectEvidence;
+  source_quality?: string | null;
   value_numeric: number | null;
   value_unit: string | null;
   currency: string | null;
@@ -310,6 +336,8 @@ export interface StrategicEffects {
 export interface GasProcessingIndex {
   experimental: boolean;
   in_headline_esdi: boolean;
+  graduation_decision?: string;
+  graduation_reasons?: string[];
   census_plants: number;
   census_bcm_y: number;
   struck_plants: number;
@@ -332,9 +360,13 @@ export interface Snapshot {
   as_of: string;
   build_time: string;
   esdi: number;
-  /** The composite WITHOUT renormalising the uncovered sectors (gas + coal counted at zero).
-   *  The gap `esdi - esdi_all_sectors` is the uplift that excluding them adds (iteration 5). */
+  /** §27: sensitivity under the explicitly-FALSE assumption that uncovered gas+coal are zero —
+   *  NOT a second valid ESDI. Prefer this clearly-named field. */
+  uncovered_zero_assumption_sensitivity?: number;
+  /** @deprecated §27 alias of uncovered_zero_assumption_sensitivity (kept for N-1 payloads). */
   esdi_all_sectors?: number;
+  /** Model E (§23): the headline if transmission were removed from the composite. */
+  esdi_excluding_transmission?: number | null;
   esdi_renormalization_note?: string;
   transmission_concentration?: {
     top: { name: string; region_code: string | null; pct: number }[];
@@ -350,6 +382,17 @@ export interface Snapshot {
     distinct_facilities: number;
     top_region_share_pct: number | null;
     per_region_saturated: { region_code: string | null; burden: number; saturated_value: number }[];
+    /** §23 alternative formulations (A current, B per-region, C breadth/intensity, D distinct
+     *  facilities, E ESDI if removed). */
+    alternative_models?: {
+      A_current_global_saturation: number;
+      B_per_region_saturation_breadth_aware: number;
+      C_breadth_affected_regions: number;
+      C_intensity_max_region_pct: number;
+      D_distinct_facility_burden: number;
+      E_esdi_if_transmission_removed?: number | null;
+      note: string;
+    };
     note: string;
     red_team_verdict: string;
   };

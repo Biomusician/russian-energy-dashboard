@@ -120,8 +120,10 @@ def resolve(text):
     if not n:
         return ("unresolved", text)
 
-    # 0. Crimea first — it must never be mistaken for a Russian region or scored into
-    #    the composite, and other occupied territory must stay excluded.
+    # 0. Crimea first — it must never be mistaken for a RUSSIAN region: it resolves to its own
+    #    "context" class with occupied styling. (Whether it enters the monitored-area aggregate
+    #    is a separate downstream decision via esdi_included, currently True — it DOES contribute.
+    #    That is not decided here.) Other occupied Ukrainian territory stays fully excluded.
     if n in _CRIMEA_ALIASES or any(re.search(rf"\b{re.escape(a)}\b", n) for a in _CRIMEA_ALIASES):
         return ("context", _CRIMEA_CODE)
     if n in _OCCUPIED:

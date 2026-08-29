@@ -263,7 +263,13 @@ def aoi_regions():
 
 
 def context_units():
-    """Special context units (Crimea) — tracked, but excluded from the ESDI composite."""
+    """Special units tracked with distinct occupied styling (currently just Crimea).
+
+    NOTE: 'context' here is about styling/status, NOT ESDI exclusion. Crimea is
+    esdi_included=True and DOES contribute to the monitored-area headline where it has a
+    denominator (transmission, oil logistics). Other occupied Ukrainian territory (see
+    OCCUPIED_EXCLUDED) is the part that is analytically excluded.
+    """
     return dict(SPECIAL_UNITS)
 
 
@@ -332,7 +338,9 @@ SECTOR_OF_CLASS = {
 SECTORS = {
     "refining":            "Refining",
     "electric_generation": "Electric generation",
-    "transmission":        "Transmission",
+    # §22-25 (iteration-7 transmission red-team): named a "burden", never bare "Transmission",
+    # so a reader cannot mistake the event-burden proxy for a "% of grid offline" capacity share.
+    "transmission":        "Transmission burden",
     "oil_logistics":       "Oil logistics & export",
     "gas":                 "Gas",
     "coal":                "Coal",

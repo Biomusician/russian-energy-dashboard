@@ -98,8 +98,19 @@
     "display_only_states": ["partial_restart", "impaired", "unknown"]
   },
 
+  "damage_severity": {
+    "_comment": "Concept A (iteration 7): INITIAL damage severity from the incident's own damage observation. Applied ALWAYS and orthogonally to recovery — recovery evidence changes the DECAY/cap (concepts B/C in recovery.py), never this initial multiplier. That orthogonality is what makes adding a recovery record monotonic (it can only speed decay or cap the tail, never remove this multiplier). NOTE: 'repaired'/'restored' are RECOVERY states, not damage states — they belong in a recovery record and are NOT keys here; a mis-filed recovery-in-status maps to the 1.0 default and is rejected by test_incident_status_does_not_contradict_its_recovery_record.",
+    "destroyed": 1.0,
+    "damaged": 1.0,
+    "shutdown": 1.0,
+    "active": 1.0,
+    "degraded": 0.7,
+    "unknown": 1.0,
+    "_default": 1.0
+  },
+
   "status_multipliers": {
-    "_comment": "Applied when a source explicitly states the recovery state, overriding pure time decay. 'repaired' collapses the contribution; 'active' holds it at full decayed value.",
+    "_comment": "DEPRECATED (iteration 7): superseded by damage_severity, which is applied orthogonally to recovery rather than only when the recovery kind is 'modelled'. Retained for one release so N-1 data/config readers do not break. Not read by the scorer any more.",
     "active": 1.0,
     "degraded": 0.7,
     "repaired": 0.1,

@@ -62,7 +62,7 @@ export default function Dossier({
     <aside className="panel dossier">
       <div className="section-head">
         <div>
-          <h2 style={{ fontSize: 13 }}>{region ? region.name : "National picture"}</h2>
+          <h2 style={{ fontSize: 13 }}>{region ? region.name : "Monitored-area picture"}</h2>
           <div className="eyebrow" style={{ marginTop: 3 }}>
             {region ? `${region.district} · ${region.country === "RU" ? "Russia" : region.country === "BY" ? "Belarus" : "Ukraine (occupied)"}` : "Belarus, western Russia & Siberia + occupied Crimea"}
           </div>

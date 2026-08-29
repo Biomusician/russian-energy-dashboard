@@ -51,7 +51,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
             where the half-life is set by the recovery evidence (below). Per facility the
             single strongest live contribution wins rather than the sum, so a site hit
             four times cannot exceed being fully disrupted. Facility contributions are
-            then weighted by that facility's share of the national capacity base for its
+            then weighted by that facility's share of the Russian national capacity base for its
             sector, and sectors are combined using published weights.
           </p>
 
@@ -75,7 +75,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
 
           <H>Denominators</H>
           <ul>
-            <li>Refining: {s.denominators.refining_mtpa} MTPA across the tracked national refinery inventory.</li>
+            <li>Refining: {s.denominators.refining_mtpa} MTPA across the tracked <b>Russian</b> national refinery inventory (the monitored-area aggregate is Belarus + Russian regions + Crimea, but this capacity denominator is Russia-only).</li>
             <li>Electric generation: {s.denominators.electric_generation_mw.toLocaleString("en-GB")} MW installed in the area of interest (a capacity share).</li>
             <li>Transmission: an event/recovery-burden measure against a saturation of {s.denominators.transmission_saturation_events} weighted concurrent facility-events — never a capacity-offline claim.</li>
             <li>Oil logistics uses the refining base as a proxy; it has no published throughput denominator.</li>
@@ -87,6 +87,27 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
               </li>
             )}
           </ul>
+
+          {s.refinery_reconciliation?.reference_nameplate_mtpa && (() => {
+            const r = s.refinery_reconciliation!;
+            return (
+              <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
+                <b>Refining denominator completeness:</b> {r.tracked_mtpa} MTPA tracked ≈{" "}
+                {r.denominator_coverage_pct}% of a crude-fuels nameplate reference (~
+                {r.reference_crude_nameplate_mtpa} MTPA; full Russian nameplate{" "}
+                {r.reference_nameplate_mtpa} MTPA, range {r.reference_range_mtpa?.[0]}–
+                {r.reference_range_mtpa?.[1]}, {r.reference_year}). <b>No major crude refinery is
+                missing</b>: the gap is ~{r.gap_decomposition?.excluded_condensate_splitters_mtpa} MTPA
+                of gas-condensate splitters (Surgut, Ust-Luga, Astrakhan) excluded like Tobolsk, plus ~
+                {r.gap_decomposition?.conservative_basis_understatement_mtpa} MTPA because the tracked
+                figures use one consistent source ~10-15% below current nameplate. Because refining
+                exposure is a capacity <i>share</i>, a uniform revaluation of all plants leaves it
+                essentially unchanged — the conservative basis doesn't systematically bias the score;
+                it mainly affects the absolute MTPA and this completeness ratio. This is denominator
+                completeness, NOT event coverage.
+              </p>
+            );
+          })()}
 
           {s.refinery_reconciliation?.canonical_linkage && (
             <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
@@ -100,15 +121,20 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
             </p>
           )}
 
-          {s.esdi_all_sectors != null && (
-            <p style={{ color: "var(--amber)" }}>
-              The headline ESDI ({s.esdi.toFixed(1)}) renormalises the covered sectors. Counting
-              the uncovered gas &amp; coal sectors as present-at-zero instead gives{" "}
-              {s.esdi_all_sectors.toFixed(1)} — so excluding them lifts the headline by{" "}
-              {(s.esdi - s.esdi_all_sectors).toFixed(1)}. Gas is not unmeasured: it carries
-              documented strikes that score zero for want of a defensible denominator.
-            </p>
-          )}
+          {(s.uncovered_zero_assumption_sensitivity ?? s.esdi_all_sectors) != null && (() => {
+            const zero = (s.uncovered_zero_assumption_sensitivity ?? s.esdi_all_sectors)!;
+            return (
+              <p style={{ color: "var(--amber)" }}>
+                The headline ESDI ({s.esdi.toFixed(1)}) renormalises the covered sectors. The{" "}
+                <b>uncovered-sectors-zero sensitivity</b> recomputes it under the explicitly
+                <i> false</i> assumption that gas &amp; coal are zero, giving {zero.toFixed(1)} — so
+                excluding them lifts the headline by {(s.esdi - zero).toFixed(1)}. It is a
+                sensitivity under an assumption, <b>not a second valid ESDI</b>: unknown stays
+                unknown. Gas carries documented strikes that score zero only for want of a
+                defensible denominator.
+              </p>
+            );
+          })()}
           {s.experimental_indices?.gas_processing && (() => {
             const g = s.experimental_indices!.gas_processing!;
             return (
@@ -131,6 +157,14 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
                   {g.uncertain_bcm_y > 0 && `${g.uncertain_bcm_y} bcm/y of the census is flagged uncertain; `}
                   {g.aggregate_bcm_y > 0 && `${g.aggregate_bcm_y} bcm/y is multi-plant aggregate. `}
                   Capacities are structured bcm/y fields, never parsed from prose at scoring time.
+                </p>
+                <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
+                  <b>Iteration-7 decision: stays experimental.</b> A defensible headline sub-sector
+                  would need a matched external denominator and internally comparable capacities;
+                  an open-source census found neither — no all-Russia/AOI gas-processing capacity
+                  total exists, and the census mixes design nameplate (Orenburg, Astrakhan) with
+                  actual throughput. It is never summed with LNG (MTPA) or gas pipelines into a
+                  single "Gas" score — different functions and units.
                 </p>
                 {g.struck.length > 0 && (
                   <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
@@ -163,6 +197,18 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
                   {t.saturation_sweep.map((r) => `sat ${r.saturation}→${r.sector_value}`).join(", ")}.
                   Published as a sensitivity, not a tuning knob — the formula is unchanged.
                 </p>
+                {t.alternative_models && (
+                  <p style={{ color: "var(--text-faint)", fontSize: 10.5 }}>
+                    <b>Alternative formulations</b> (same data): A current {t.alternative_models.A_current_global_saturation};
+                    B per-region-capped {t.alternative_models.B_per_region_saturation_breadth_aware};
+                    C breadth {t.alternative_models.C_breadth_affected_regions} region(s) × intensity{" "}
+                    {t.alternative_models.C_intensity_max_region_pct} (worst theatre);
+                    D distinct-facility {t.alternative_models.D_distinct_facility_burden};
+                    {t.alternative_models.E_esdi_if_transmission_removed != null &&
+                      ` E: headline would be ${t.alternative_models.E_esdi_if_transmission_removed.toFixed(1)} without transmission.`}
+                    {" "}None claims a percent of grid offline.
+                  </p>
+                )}
                 <p style={{ color: "var(--text-faint)", fontSize: 10.5, fontStyle: "italic" }}>
                   Red-team verdict: {t.red_team_verdict}
                 </p>

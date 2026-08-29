@@ -58,7 +58,7 @@ export function OverviewTab(p: TabProps) {
       .slice(0, 12);
     return (
       <div className="tab-body">
-        <Block title="National picture">
+        <Block title="Monitored-area picture">
           <KV k="Disruption exposure (ESDI)" v={fmtNum(bundle.national.esdi[step], 1)} />
           <KV k="Events to date" v={p.visibleIncidents.length} />
           <KV k="Facilities currently impaired" v={bundle.snapshot.recovery_stats.unresolved_count} />
@@ -555,6 +555,28 @@ export function ReconstitutionTab(p: TabProps) {
         </div>
       </Block>
 
+      {rs.evidence_family_counts && Object.keys(rs.evidence_family_counts).length > 0 && (
+        <Block title="Evidence families">
+          {([
+            ["facility_reconstitution", "Facility reconstitution", "var(--green)", "the damaged equipment itself returned to service"],
+            ["unit_restart", "Unit restart", "var(--text)", "a damaged unit resumed, full repair not always confirmed"],
+            ["service_restoration", "Service restoration", "var(--amber)", "supply re-energised, often around a still-damaged node"],
+            ["flow_rerouting", "Flow rerouting", "var(--amber)", "throughput restored by rerouting, node not repaired"],
+            ["estimate", "Repair estimate", "var(--text-dim)", "a sourced repair-time projection, no restart yet"],
+          ] as const).filter(([k]) => (rs.evidence_family_counts?.[k] ?? 0) > 0).map(([k, label, color, hint]) => (
+            <div key={k} className="kv" title={hint} style={{ alignItems: "center" }}>
+              <span className="k" style={{ flex: 1, color }}>{label}</span>
+              <span className="v"><span className="num" style={{ color }}>{rs.evidence_family_counts?.[k]}</span></span>
+            </div>
+          ))}
+          <div style={{ fontSize: 10.5, color: "var(--text-faint)", padding: "4px 14px 0", lineHeight: 1.45 }}>
+            Only <b style={{ color: "var(--green)" }}>facility reconstitution</b> means the struck
+            equipment returned. Service restoration and flow rerouting bring supply back around a
+            node that may still be destroyed — never read as a repair.
+          </div>
+        </Block>
+      )}
+
       <Block title="By infrastructure class">
         {Object.keys(rs.by_sector).length === 0 && <div className="empty">No disrupted facilities to summarise.</div>}
         {Object.entries(rs.by_sector).map(([sector, s]) => (
@@ -650,8 +672,14 @@ export function EffectItem({ e }: { e: import("../types").StrategicEffect }) {
       </div>
       {e.value_text && <div style={{ fontSize: 11, color: "var(--text-dim)", lineHeight: 1.5, marginTop: 2 }}>{e.value_text}</div>}
       {e.source_url && (
-        <div className="src-list" style={{ marginTop: 3 }}>
+        <div className="src-list" style={{ marginTop: 3, display: "flex", gap: 8, alignItems: "center" }}>
           <a href={e.source_url} target="_blank" rel="noreferrer noopener">↗ {hostname(e.source_url)}</a>
+          {e.source_quality && (
+            <span style={{ fontSize: 9.5, color: "var(--text-faint)", letterSpacing: 0.2 }}
+                  title="Source-quality tier (triage/provenance, not a confidence score)">
+              {e.source_quality.replace(/_/g, " ")}
+            </span>
+          )}
         </div>
       )}
     </div>

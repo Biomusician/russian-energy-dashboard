@@ -64,11 +64,22 @@ def _incident_date(incident):
 def _weight_at(incident, when, record=None):
     """Decayed contribution of ONE incident at a point in time, in [0, 1].
 
-    `record` is that incident's own recovery record (incident-level, iteration 2). The
-    half-life is set by rule-based evidence precedence (pipeline/recovery.py): observed
-    full/substantial reconstitution or a credible sourced estimate overrides the generic
-    per-sector assumption; a mere partial restart or a low-confidence estimate does not.
-    A credibly-sourced full reconstitution caps the contribution at the residual.
+    Three orthogonal concepts (iteration 7 state model), so they can never contradict silently:
+      A. DAMAGE severity — recovery.damage_severity(incident.status), the initial hit severity.
+         Applied ALWAYS, independent of recovery.
+      B/C. RECOVERY — the record sets the decay half-life (observed/estimated timing overrides
+         the modelled sector fallback; a partial restart / low-confidence estimate does not) and,
+         for a credible FULL reconstitution, caps the contribution at the residual.
+
+    Because damage severity is applied independently, adding a recovery record is MONOTONIC: it
+    can only speed the decay or cap the tail, never strip the damage multiplier. A partial restart
+    therefore scores exactly like no record, and a full reconstitution scores <= a partial. The
+    one sanctioned exception (per methodology): an OBSERVED restoration whose duration EXCEEDS the
+    modelled sector fallback decays slightly slower than the assumption — evidence the impairment
+    lasted longer than assumed — so the monotonic "stronger evidence never raises the score"
+    invariant is scoped to horizon <= fallback (as the property tests encode). The iteration-6
+    status-coupling bug (attaching a partial-restart record removed the damping) is now
+    structurally impossible.
     """
     when_date = when
     occurred = _incident_date(incident)
@@ -77,24 +88,15 @@ def _weight_at(incident, when, record=None):
 
     conf = SCORING["confidence_weights"].get(incident.get("confidence") or "possible", 0.45)
     cause = SCORING["cause_weights"].get(incident.get("cause") or "unknown", 0.7)
-    base = conf * cause
+    # A: initial damage severity, orthogonal to recovery and always applied.
+    base = conf * cause * recovery.damage_severity(incident.get("status"))
 
-    half_life, kind = recovery.effective_half_life(incident.get("asset_class"), record)
+    half_life, _kind = recovery.effective_half_life(incident.get("asset_class"), record)
     days = (when_date - occurred).days
     value = base * (0.5 ** (days / half_life))
 
-    if recovery.is_resolved(record, when_date):
+    if recovery.is_resolved(record, when_date):   # C: credible full reconstitution caps the tail
         value = min(value, base * recovery.RESIDUAL)
-    elif kind == "modelled":
-        # No overriding recovery TIMING — either no record at all, or a record that falls back
-        # to the modelled horizon (partial_restart, low-confidence estimate, bare impaired,
-        # unknown). In all of these the incident's own reported status severity still governs.
-        # Applying it only when `record is None` was a latent bug: attaching a partial-restart
-        # record (which by design does NOT change the decay) silently DROPPED the 'degraded'
-        # damping and scored the facility HIGHER than with no evidence at all. A partial
-        # restart must never raise a score. (observed/estimated kinds override with real
-        # timing and are intentionally exempt.)
-        value *= SCORING["status_multipliers"].get(incident.get("status") or "unknown", 1.0)
 
     return value if value >= SCORING["cutoff"]["min_contribution"] else 0.0
 
@@ -169,8 +171,12 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
             if share <= 0:
                 continue
             region_code = info["region_code"]
-            # Crimea (and any esdi-excluded region) contributes to its own regional
-            # exposure but never to the national composite.
+            # Only regions flagged esdi_included=False are held out of the monitored-area
+            # aggregate (they still get their own regional exposure). That set is currently
+            # EMPTY: occupied Crimea is intentionally esdi_included=True, so it DOES contribute
+            # to the monitored-area headline where it has a denominator (transmission, oil
+            # logistics) — it is ~half the transmission signal. Not a fence around occupied
+            # territory; see the note where esdi_excluded is defined.
             if region_code not in esdi_excluded:
                 nat_sector[info["sector"]] += share * weight
             if region_code:
@@ -431,6 +437,8 @@ def _incident_recovery_state(incident, record, today):
         # Granular §13 vocabulary describing WHAT the source proves (e.g. flow_rerouted vs
         # station_rebuilt). Distinct from recovery_status, which is the scoring bucket.
         "recovery_kind": None,
+        "evidence_family": None,   # §15: service_restoration | unit_restart | facility_reconstitution | ...
+        "source_quality": None,    # §31
         "scoring_evidence_kind": kind,  # observed | estimated | modelled — drives the decay
         "reconstitution_horizon_days": round(horizon),
         "resolved": resolved,
@@ -447,6 +455,8 @@ def _incident_recovery_state(incident, record, today):
     }
     if record:
         state["recovery_kind"] = record.get("recovery_kind")
+        state["evidence_family"] = record.get("evidence_family")
+        state["source_quality"] = record.get("source_quality")
         state["observed_days"] = record.get("observed_days")
         state["observed_date"] = record.get("observed_date")
         state["partial_operations_resumed_at"] = record.get("partial_operations_resumed_at")
@@ -493,6 +503,22 @@ def _gas_processing_index(gpp_census, live, today):
     return {
         "experimental": True,
         "in_headline_esdi": False,
+        # §19 decision (iteration 7): stays EXPERIMENTAL. A defensible headline sub-sector needs
+        # (a) a matched external denominator and (b) internally comparable capacities; neither
+        # holds — see graduation_reasons.
+        "graduation_decision": "experimental",
+        "graduation_reasons": [
+            "No matched external denominator exists: the only public total (Gazprom Pererabotka "
+            "~110 bcm/y) is operator-scope and spans other federal districts incl. out-of-AOI "
+            "Amur, so a ratio against it is invalid; no all-Russia or AOI-matched capacity total "
+            "was found.",
+            "Capacities are not internally comparable: the census mixes DESIGN nameplate "
+            "(Orenburg 45, Astrakhan 12 — actual throughput markedly lower, Astrakhan ~5.4) with "
+            "actual-throughput figures for others, so the total is not like-for-like.",
+            "Non-exhaustive by construction: the largest Russian GPP (Amur, ~42 bcm/y) is "
+            "correctly out of the AOI; condensate-stabilisation plants (Surgut, Novy Urengoy, "
+            "Purovsky) are a different function and excluded.",
+        ],
         "census_plants": len(gpp_census),
         "census_bcm_y": round(census_total, 2),
         "struck_plants": len(struck),
@@ -502,10 +528,12 @@ def _gas_processing_index(gpp_census, live, today):
         "aggregate_bcm_y": round(aggregate, 2),
         "struck": sorted(struck, key=lambda s: -s["bcm_y"]),
         "caveat": (
-            "Within-census share only. The census is a non-exhaustive, bottom-up sample of "
-            "publicly-sourced gas-processing capacities (bcm/y raw gas) — NOT a national "
-            "denominator — so this is not national gas-processing exposure. Experimental: "
-            "excluded from the headline ESDI pending an independent red-team."
+            "Within-census share of a non-exhaustive, bottom-up sample of publicly-sourced GPP "
+            "capacities (bcm/y raw gas) — NOT a national denominator, and NOT like-for-like (it "
+            "mixes design nameplate with actual throughput). This is a sample, not a percentage of "
+            "national gas-processing exposure. Experimental: kept out of the headline ESDI, and "
+            "NOT summed with LNG (MTPA) or gas-transmission (bcm/y pipeline) into any 'Gas' super-"
+            "score — those are different functions and units."
         ),
     }
 
@@ -521,7 +549,10 @@ def _transmission_sensitivity(live, facility_info, esdi_excluded):
     # Mirror the headline: only esdi-included regions feed the national composite.
     nat_tx = [x for x in tx if finfo(x).get("region_code") not in esdi_excluded]
     vw = lambda x: _voltage_weight(finfo(x))
-    raw_burden = sum(vw(x) * x["disruption_weight"] for x in nat_tx)
+    # Use the full-precision weight so Model A reproduces the headline transmission value EXACTLY
+    # (the rounded disruption_weight would drift it by ~0.02).
+    wt = lambda x: x.get("_w_exact", x["disruption_weight"])
+    raw_burden = sum(vw(x) * wt(x) for x in nat_tx)
 
     # (1) Saturation sensitivity: the headline value at other reasonable constants.
     sweep = [{"saturation": k, "sector_value": round(min(1.0, raw_burden / k) * 100, 2)}
@@ -531,13 +562,41 @@ def _transmission_sensitivity(live, facility_info, esdi_excluded):
     # own saturated value, so a single dominant theatre is visible, not hidden in the sum.
     by_region = collections.defaultdict(float)
     for x in nat_tx:
-        by_region[finfo(x).get("region_code")] += vw(x) * x["disruption_weight"]
+        by_region[finfo(x).get("region_code")] += vw(x) * wt(x)
     per_region = sorted(
         ({"region_code": r, "burden": round(b, 3),
           "saturated_value": round(min(1.0, b / SATURATION_EVENTS) * 100, 2)}
          for r, b in by_region.items()),
         key=lambda d: -d["burden"])
     top_share = round(100 * per_region[0]["burden"] / raw_burden, 1) if raw_burden and per_region else None
+
+    # (3) Alternative formulations (§23), computed on the same frozen data so a reader (and the
+    # red-team) can compare them against the current Model A rather than take it on faith.
+    SAT = SATURATION_EVENTS
+    model_a = min(1.0, raw_burden / SAT) * 100.0            # A: current global-saturation burden
+    prod = 1.0                                              # B: per-region saturation, breadth-aware
+    for b in by_region.values():                           #    (probabilistic-OR: each region capped
+        prod *= (1 - min(1.0, b / SAT))                    #    at its own saturation, so one theatre
+    model_b = 100.0 * (1 - prod) if by_region else 0.0     #    cannot consume the whole proxy)
+    intensity_max = max((min(1.0, b / SAT) * 100 for b in by_region.values()), default=0.0)  # C
+    model_d = min(1.0, len(nat_tx) / SAT) * 100.0          # D: distinct impaired facilities (a node
+    #                                                        hit repeatedly counts once — repeat
+    #                                                        strike != repeat capacity)
+    alternative_models = {
+        "A_current_global_saturation": round(model_a, 2),
+        "B_per_region_saturation_breadth_aware": round(model_b, 2),
+        "C_breadth_affected_regions": len(by_region),
+        "C_intensity_max_region_pct": round(intensity_max, 2),
+        "D_distinct_facility_burden": round(model_d, 2),
+        "note": (
+            "A (current): voltage-weighted facility event-burden / global saturation. B: per-"
+            "region saturation combined breadth-aware, so one theatre cannot consume the proxy. "
+            "C: breadth (regions) and intensity (worst region) reported SEPARATELY, never one "
+            "scalar. D: count of distinct currently-impaired facilities (repeat strikes on a node "
+            "count once). E (remove from headline): see esdi_excluding_transmission on the "
+            "snapshot. None claims a percent of grid offline."
+        ),
+    }
 
     return {
         "saturation_constant": SATURATION_EVENTS,
@@ -547,6 +606,7 @@ def _transmission_sensitivity(live, facility_info, esdi_excluded):
         "distinct_facilities": len(nat_tx),
         "top_region_share_pct": top_share,
         "per_region_saturated": per_region,
+        "alternative_models": alternative_models,
         "note": (
             "Transmission is an event-burden against a saturation constant, not a national-grid "
             "capacity measure. It is dominated by 1-2 theatres and the headline value roughly "
@@ -554,13 +614,22 @@ def _transmission_sensitivity(live, facility_info, esdi_excluded):
             f"and {sweep[0]['saturation']}. Published as a sensitivity, not a tuning knob."
         ),
         "red_team_verdict": (
-            "RETAINED in the headline. It reflects real, sourced disruption to the Kerch power "
-            "bridge and Crimea substations; removing it would discard that signal and would "
-            "amount to tuning away an inconvenient theatre. Read plainly: occupied Crimea is "
-            "roughly HALF of this transmission signal (see transmission_concentration."
-            "occupied_share_pct) and is folded into the 'national' figure by an intentional "
-            "analytic choice, NOT fenced out. It is retained WITH mandatory concentration "
-            "disclosure and these alternatives, and is NOT presented as national grid exposure."
+            "RETAINED in the headline as 'Transmission disruption burden' (iteration-7 independent "
+            "red-team). Model A is the least-bad scalar: it is the only formulation that jointly "
+            "honours recency, evidence confidence, damage severity and voltage class, is "
+            "structurally immune to repeat-strike double-counting (a node's strongest live "
+            "trajectory wins, never the sum), and fits the service-only recovery evidence we "
+            "actually have (it never needs a reconstitution duration). Alternatives were measured "
+            "and rejected as a headline: B's breadth-awareness is dormant at current magnitudes; D "
+            "(distinct-facility count) is the single most misleading number; C (breadth+intensity) "
+            "is kept only as a supporting display; E (remove entirely) buys just +0.39 of purity "
+            "while discarding real sourced signal and is the option most exposed to the appearance "
+            "of tuning occupied Crimea (~45% of the burden) away. The honest fix is LABELLING not "
+            "surgery: it is a disruption BURDEN of a handful of theatres, never a percent of grid "
+            "offline, and the ex-transmission counterfactual (esdi_excluding_transmission) is "
+            "published so the +0.39 it adds is one click away. Its two real wounds — an arbitrary "
+            "saturation constant (~4x swing) and single-theatre concentration — are disclosed via "
+            "the sweep, the concentration split and these alternatives."
         ),
     }
 
@@ -585,6 +654,9 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
                 "sector": info.get("sector"),
                 "region_code": info.get("region_code"),
                 "disruption_weight": round(w, 3),
+                # Full-precision weight, used where a recomputation must match the headline
+                # exactly (transmission sensitivity Model A); not serialised — dropped below.
+                "_w_exact": w,
                 "event_count": len(incs),
                 "latest": max(i["date"] for i in incs),
                 "driving_incident_id": driver.get("incident_id") if driver else None,
@@ -621,6 +693,15 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
     }
     tx_esdi_excluded = {code for code, m in region_meta.items() if not m.get("esdi_included", True)}
     transmission_sensitivity = _transmission_sensitivity(live, facility_info, tx_esdi_excluded)
+    # Model E (§23): the headline recomputed WITHOUT transmission — the counterfactual the
+    # "remove transmission from the ESDI" option would produce, disclosed so the choice is visible.
+    _sw = SCORING["sector_weights"]
+    _nat_final = {s: national["sectors"][s][-1] / 100.0 for s in SECTORS}
+    _covered_no_tx = [s for s in covered if s != "transmission"]
+    esdi_excluding_transmission = _composite(_nat_final, _sw, _covered_no_tx) if _covered_no_tx else None
+    transmission_sensitivity["alternative_models"]["E_esdi_if_transmission_removed"] = esdi_excluding_transmission
+    for _x in live:                       # internal full-precision weight — not part of the payload
+        _x.pop("_w_exact", None)
 
     quantified = sum(
         1 for i in incidents
@@ -728,16 +809,20 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
     return {
         "as_of": as_of,
         "esdi": national["esdi"][-1],
-        # The same composite WITHOUT renormalising the uncovered sectors away (gas + coal
-        # counted present-at-zero). Disclosed so the headline's renormalisation uplift is
-        # visible, not silent (red-team, iteration 5).
-        "esdi_all_sectors": national["esdi_all_sectors"][-1],
+        # §27: a SENSITIVITY under the explicitly-false assumption that the uncovered gas & coal
+        # sectors are zero — NOT a second valid ESDI. Named to make the assumption unmissable.
+        # `esdi_all_sectors` is kept as a deprecated alias for N-1 payload compatibility.
+        "uncovered_zero_assumption_sensitivity": national["esdi_all_sectors"][-1],
+        "esdi_all_sectors": national["esdi_all_sectors"][-1],  # DEPRECATED alias (§27); use the field above
+        # Model E (§23): the headline if transmission were removed from the composite entirely.
+        "esdi_excluding_transmission": esdi_excluding_transmission,
         "esdi_renormalization_note": (
-            "The headline ESDI renormalises the covered sectors (their weights sum to less "
-            "than 1 because gas and coal are uncovered). esdi_all_sectors is the same figure "
-            "with gas and coal counted as present-at-zero; the gap is the uplift that "
-            "excluding them adds. Gas is not unmeasured -- it carries documented strikes that "
-            "score zero for want of a defensible denominator."
+            "The headline ESDI renormalises the covered sectors (their weights sum to less than 1 "
+            "because gas and coal are uncovered). The 'uncovered-zero-assumption sensitivity' is "
+            "the same figure computed under the explicitly FALSE assumption that gas and coal are "
+            "zero; the gap is the uplift that excluding them adds. It is a sensitivity, not a "
+            "measured ESDI — unknown stays unknown. Gas carries documented strikes that score zero "
+            "only for want of a defensible denominator."
         ),
         "sectors": {s: national["sectors"][s][-1] for s in SECTORS},
         "sectors_covered": covered,
@@ -827,6 +912,7 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
     partial_episodes, full_episodes, estimate_episodes = set(), set(), set()
     obs_by_sector = collections.defaultdict(dict)  # sector -> {episode: days}
     partial_by_sector = collections.defaultdict(set)  # sector -> {episode} (partial restarts)
+    by_family = collections.defaultdict(set)  # §15: evidence_family -> {episode}
     for incident_id, rec in recovery_by_incident.items():
         inc = inc_by_id.get(incident_id)
         if inc is None:
@@ -836,6 +922,8 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
         _h, kind, _c = recovery.assess(inc.get("asset_class"), rec)
         status = rec.get("recovery_status")
         sector = SECTOR_OF_CLASS.get(inc.get("asset_class"))
+        fam = rec.get("evidence_family") or recovery.evidence_family(status, rec.get("recovery_kind"))
+        by_family[fam].add(episode)
         if status == "partial_restart":
             partial_episodes.add(episode)
             if sector:
@@ -895,6 +983,10 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
         "median_is_mixed_infrastructure": True,
         "observed_restoration_episodes": n_episodes,
         "observed_restoration_values": sorted(int(d) for d in observed_durations),
+        # §15: episodes by EVIDENCE FAMILY, so the UI never merges a service re-energisation with
+        # a physical rebuild. facility_reconstitution is the only family that means the damaged
+        # equipment itself returned.
+        "evidence_family_counts": {f: len(eps) for f, eps in sorted(by_family.items())},
         # Per-class medians that individually clear MIN_SECTOR_MEDIAN_EPISODES (may be empty).
         "sector_medians": sector_medians,
         "median_impairment_age_days": _median(ages) if len(ages) >= MIN_MEDIAN_EPISODES else None,

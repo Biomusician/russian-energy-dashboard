@@ -249,6 +249,7 @@ def load_effects(valid_incident_ids):
         rec = {
             "effect_type": (row.get("effect_type") or "").strip(),
             "evidence_kind": kind,
+            "source_quality": (row.get("source_quality") or "").strip() or None,  # §31
             "value_numeric": _num(row.get("value_numeric")),
             "value_unit": row.get("value_unit") or None,
             "currency": row.get("currency") or None,
@@ -480,8 +481,8 @@ def main():
         f"{len(incidents) - len(in_aoi)} unplaced"
     )
 
-    # Transmission network context: HV-line count per region (transmission exposure is
-    # event-burden, but the tracked network is shown as context in each region dossier).
+    # Transmission network context: HV-line count per region (the transmission BURDEN is an
+    # event-burden proxy, not a capacity share; the tracked network is shown as context only).
     tx_lines_by_region = collections.Counter(
         f["properties"]["region_code"] for f in lines
         if f["properties"].get("asset_class") in ("transmission_line", "interconnector")
