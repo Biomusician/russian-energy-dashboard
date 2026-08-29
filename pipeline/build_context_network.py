@@ -88,11 +88,18 @@ def build(analytic_osm_ids=None, max_age_hours=CACHE_HOURS):
     analytic_osm_ids = set(analytic_osm_ids or ())
     seen_ids = set()
     gas, oil = [], []
+    failures = 0
 
     for i, (name, bbox) in enumerate(BANDS.items()):
         if i:
             time.sleep(PAUSE_SECONDS)
-        for el in _fetch_band(name, bbox, max_age_hours):
+        try:
+            elements = _fetch_band(name, bbox, max_age_hours)
+        except Exception as exc:  # Overpass down / rate-limited / no cache on a fresh runner
+            failures += 1
+            log(f"context-network: band {name} unavailable ({exc}); skipping")
+            continue
+        for el in elements:
             oid = el.get("id")
             # A trunk crossing a tile boundary appears in two bands; and a line already in
             # the analytic feed must not be redrawn as context (§6 -- one corridor, one line).
@@ -120,11 +127,20 @@ def build(analytic_osm_ids=None, max_age_hours=CACHE_HOURS):
             }
             (oil if cls == "pipeline_oil" else gas).append(feat)
 
-    from pipeline.util import write_json
-    write_json(PROCESSED / "context_gas_network.geojson",
-               {"type": "FeatureCollection", "features": gas})
-    write_json(PROCESSED / "context_oil_network.geojson",
-               {"type": "FeatureCollection", "features": oil})
+    from pipeline.util import read_json, write_json
+    gas_path = PROCESSED / "context_gas_network.geojson"
+    oil_path = PROCESSED / "context_oil_network.geojson"
+    # Fail-safe (§6/§35): if every band was unreachable (e.g. Overpass down on a cache-less CI
+    # runner), do NOT overwrite the committed network with an empty file — keep last-known-good
+    # so the daily refresh degrades to yesterday's context rather than dropping it.
+    if not gas and not oil and failures == len(BANDS) and gas_path.exists() and oil_path.exists():
+        g = len(read_json(gas_path).get("features", []))
+        o = len(read_json(oil_path).get("features", []))
+        log(f"context-network: all bands unavailable; keeping committed network ({g} gas + {o} oil)")
+        return {"pipeline_gas": g, "pipeline_oil": o}
+
+    write_json(gas_path, {"type": "FeatureCollection", "features": gas})
+    write_json(oil_path, {"type": "FeatureCollection", "features": oil})
     total_mb = sum((PROCESSED / f).stat().st_size for f in
                    ("context_gas_network.geojson", "context_oil_network.geojson")) / 1e6
     log(f"context-network: {len(gas)} gas + {len(oil)} oil trunk routes (context), {total_mb:.2f} MB")
