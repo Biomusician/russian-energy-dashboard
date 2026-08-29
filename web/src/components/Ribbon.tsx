@@ -45,26 +45,20 @@ export default function Ribbon({
         </div>
       </div>
 
-      {/* Recovery headline. The median is shown only once the observed sample is large
-          enough (n>=min); below that it is reported honestly as a raw case count, never
-          dressed up as a descriptive median. */}
+      {/* Recovery headline. §11: the headline is the national EVIDENCE COUNT, not the pooled
+          cross-class median — a 2-day terminal restart and a 205-day gas-plant repair are not
+          one repair time. The mixed median is shown only as a caveated sub-line, never the
+          lead number; per-class medians live in the Recovery tab. */}
       <div className="esdi-block" style={{ gap: 20 }}>
         <RecoveryStat value={rs.unresolved_count} label="Unresolved impairments" color="var(--amber)" />
-        {rs.median_meaningful ? (
-          <RecoveryStat
-            value={`${rs.median_observed_restoration_days}d`}
-            label="Median observed restoration"
-            sub={`${rs.observed_restoration_episodes} episodes`}
-            color="var(--green)"
-          />
-        ) : (
-          <RecoveryStat
-            value={`${rs.recovery_record_count} / ${rs.observed_restoration_episodes}`}
-            label="Observed recovery: records / episodes"
-            sub={`< ${rs.min_median_episodes} episodes — no median`}
-            color="var(--green)"
-          />
-        )}
+        <RecoveryStat
+          value={`${rs.observed_restoration_episodes}`}
+          label="Observed-restoration episodes"
+          sub={rs.median_observed_restoration_days != null
+            ? `mixed-infra median ${rs.median_observed_restoration_days}d — not a per-sector norm`
+            : `< ${rs.min_median_episodes} for a pooled median`}
+          color="var(--green)"
+        />
         <RecoveryStat value={rs.full_reconstitution_episodes} label="Reconstitution episodes" color="var(--green)" />
       </div>
 

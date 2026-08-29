@@ -633,8 +633,9 @@ const EFFECT_LABEL: Record<string, string> = {
 /** One source-backed observed consequence (§25-28). The evidence tag governs its authority;
  *  the figure is shown only when a source gave one, never inferred. */
 export function EffectItem({ e }: { e: import("../types").StrategicEffect }) {
-  const val = e.value_numeric != null
-    ? `${fmtNum(e.value_numeric, e.value_numeric >= 100 ? 0 : 2)}${e.value_unit ? " " + e.value_unit : ""}`
+  const n = e.value_numeric;
+  const val = n != null
+    ? `${Number.isInteger(n) ? n.toLocaleString("en-GB") : n}${e.value_unit ? " " + e.value_unit : ""}`
     : null;
   const cost = e.effect_type === "repair_cost" && e.value_numeric != null
     ? `${e.currency ?? ""} ${fmtNum(e.value_numeric, 0)}${e.cost_year ? ` (${e.cost_year})` : ""}`.trim()
