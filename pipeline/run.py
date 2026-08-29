@@ -362,7 +362,13 @@ def _build_coverage(in_aoi, benchmark, snapshot):
             "discovery_sources": _DISCOVERY_SOURCES.get(sec, "curated"),
             "has_event_benchmark": sec in OIL_SECTORS,
             "asset_inventory_count": sum(asset_fc.get(c, 0) for c in classes_of.get(sec, [])),
-            "recovery_episodes": rs.get("observed_restoration_episodes", 0),
+            # RECOVERY-EVIDENCE coverage (§5): ANY recovery evidence for the sector, not just
+            # observed full-restoration durations — a partial restart is still evidence. So a
+            # class (e.g. transmission) can show recovery evidence while having no observed
+            # median. The Recovery tab keeps observed vs partial distinct.
+            "recovery_episodes": (rs.get("observed_restoration_episodes", 0)
+                                  + rs.get("partial_restart_episodes", 0)),
+            "recovery_observed_episodes": rs.get("observed_restoration_episodes", 0),
             "disrupted_facilities": rs.get("disrupted_facilities", 0),
             "last_audit": snapshot["as_of"],
         }

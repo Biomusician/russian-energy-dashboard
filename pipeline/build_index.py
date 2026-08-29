@@ -79,14 +79,21 @@ def _weight_at(incident, when, record=None):
     cause = SCORING["cause_weights"].get(incident.get("cause") or "unknown", 0.7)
     base = conf * cause
 
-    half_life, _kind = recovery.effective_half_life(incident.get("asset_class"), record)
+    half_life, kind = recovery.effective_half_life(incident.get("asset_class"), record)
     days = (when_date - occurred).days
     value = base * (0.5 ** (days / half_life))
 
     if recovery.is_resolved(record, when_date):
         value = min(value, base * recovery.RESIDUAL)
-    elif record is None:
-        # No recovery record: honour an explicit status on the incident itself.
+    elif kind == "modelled":
+        # No overriding recovery TIMING — either no record at all, or a record that falls back
+        # to the modelled horizon (partial_restart, low-confidence estimate, bare impaired,
+        # unknown). In all of these the incident's own reported status severity still governs.
+        # Applying it only when `record is None` was a latent bug: attaching a partial-restart
+        # record (which by design does NOT change the decay) silently DROPPED the 'degraded'
+        # damping and scored the facility HIGHER than with no evidence at all. A partial
+        # restart must never raise a score. (observed/estimated kinds override with real
+        # timing and are intentionally exempt.)
         value *= SCORING["status_multipliers"].get(incident.get("status") or "unknown", 1.0)
 
     return value if value >= SCORING["cutoff"]["min_contribution"] else 0.0
@@ -689,6 +696,7 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
     observed_by_episode = {}   # episode_id -> observed days (first seen)
     partial_episodes, full_episodes, estimate_episodes = set(), set(), set()
     obs_by_sector = collections.defaultdict(dict)  # sector -> {episode: days}
+    partial_by_sector = collections.defaultdict(set)  # sector -> {episode} (partial restarts)
     for incident_id, rec in recovery_by_incident.items():
         inc = inc_by_id.get(incident_id)
         if inc is None:
@@ -697,15 +705,17 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
         episode = inc.get("episode_id") or incident_id
         _h, kind, _c = recovery.assess(inc.get("asset_class"), rec)
         status = rec.get("recovery_status")
+        sector = SECTOR_OF_CLASS.get(inc.get("asset_class"))
         if status == "partial_restart":
             partial_episodes.add(episode)
+            if sector:
+                partial_by_sector[sector].add(episode)
         if status in ("fully_reconstituted", "substantially_restored"):
             full_episodes.add(episode)
         if rec.get("estimate_central_days"):
             estimate_episodes.add(episode)
         if kind == "observed" and rec.get("observed_days") and episode not in observed_by_episode:
             observed_by_episode[episode] = rec["observed_days"]
-            sector = SECTOR_OF_CLASS.get(inc.get("asset_class"))
             if sector:
                 obs_by_sector[sector][episode] = rec["observed_days"]
 
@@ -724,6 +734,9 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
             "unresolved": sum(1 for x in sect_live if not x["recovery"]["resolved"]),
             "observed_restoration_episodes": len(sect_obs),
             "observed_restoration_values": sect_obs,
+            # Partial restarts are recovery EVIDENCE for the class but not a full-restoration
+            # duration — so a class can have partial evidence while showing no observed median.
+            "partial_restart_episodes": len(partial_by_sector.get(sector, set())),
             # Per-class median (§12): needs episodes WITHIN the class; below the gate the UI
             # shows the individual durations, which is honest for a small sample.
             "median_observed_restoration_days":

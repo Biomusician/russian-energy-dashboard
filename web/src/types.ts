@@ -196,6 +196,7 @@ export interface RecoveryStats {
     unresolved: number;
     observed_restoration_episodes: number;
     observed_restoration_values?: number[];
+    partial_restart_episodes?: number;
     median_observed_restoration_days: number | null;
   }>;
   note: string;
@@ -277,7 +278,9 @@ export interface CoverageMatrixEntry {
   discovery_sources: string;
   has_event_benchmark: boolean;
   asset_inventory_count: number;
+  /** RECOVERY-EVIDENCE coverage: any recovery evidence (observed + partial restarts). */
   recovery_episodes: number;
+  recovery_observed_episodes?: number;
   disrupted_facilities: number;
   event_coverage_state: string;
   last_audit: string;

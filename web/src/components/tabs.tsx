@@ -570,7 +570,11 @@ export function ReconstitutionTab(p: TabProps) {
                   ? <span className="tile-n" title={`Below the ${rs.min_sector_median_episodes ?? 3}-episode gate for a class median`}>
                       {(s.observed_restoration_values ?? []).join(", ")}d · n={s.observed_restoration_episodes} (below median gate)
                     </span>
-                  : <span style={{ color: "var(--text-faint)", fontStyle: "italic", fontSize: 11 }}>no observed data</span>}
+                  : (s.partial_restart_episodes ?? 0) > 0
+                    ? <span className="tile-n" style={{ color: "var(--amber)" }} title="Partial restarts observed, but no full-restoration duration">
+                        {s.partial_restart_episodes} partial restart(s), no full-restoration duration
+                      </span>
+                    : <span style={{ color: "var(--text-faint)", fontStyle: "italic", fontSize: 11 }}>no observed data</span>}
             </span>
           </div>
         ))}

@@ -279,6 +279,25 @@ def test_partial_restart_is_not_full_reconstitution():
     assert _weight_at(inc, on, partial) == pytest.approx(_weight_at(inc, on, None), abs=1e-9)
 
 
+def test_partial_restart_never_scores_above_no_record_for_degraded_status():
+    """Regression: a partial_restart record must never RAISE an incident's weight. The
+    status_multiplier ('degraded' = 0.7) was applied only when no record existed, so
+    attaching a partial-restart record silently removed the damping and scored the facility
+    ~43% HIGHER than with no evidence at all — the whole cause of a spurious transmission jump
+    when recovery evidence was added. A partial restart is at best neutral for scoring."""
+    inc = _incident(date="2026-08-20", status="degraded", asset_class="substation")
+    on = dt.date(2026, 8, 28)
+    w_none = _weight_at(inc, on, None)
+    partial = _rec(source_confidence="high", recovery_status="partial_restart",
+                   partial_operations_resumed_at="2026-08-20")
+    w_partial = _weight_at(inc, on, partial)
+    # Neutral: identical to the record-less weight (both carry the degraded damping).
+    assert w_partial == pytest.approx(w_none, abs=1e-9)
+    # And the damping is really present (strictly below the undamped 'active' weight).
+    w_active = _weight_at(_incident(date="2026-08-20", status="active", asset_class="substation"), on, None)
+    assert w_partial < w_active
+
+
 def test_low_confidence_estimate_does_not_drive_scoring():
     """A low-confidence estimate is shown but must not replace the modelled horizon."""
     from pipeline import recovery
