@@ -242,7 +242,25 @@ are excluded.
 
 ## Production (§39)
 
-_(Deployed SHA, live verification and any production-only defects — filled in at deploy.)_
+Deployed to **https://russian-energy-dashboard.vercel.app** at merge commit **`f88b30c`**
+(iteration-5 branch `fce5311`→`79950d4` merged onto the daily-refresh `c8efa36`). The push
+auto-deployed and propagated in ~30 s.
+
+**Live-verified on the production URL** (not localhost): headline ESDI **18.26** / 175 events;
+all `/data/*` return 200 (rivers.geojson, context_gas_network.geojson, context_oil_network.geojson,
+data_manifest.json `schema_version: 2`); the control rail shows the three semantic groups
+(Analytic infrastructure / Network context / Geographic context) with the **Gas pipelines (220)**
+and **Oil pipelines (75)** context toggles and **Major rivers**; the four camera presets include
+**Russia–Europe Network**; all seven tabs render (Overview · Rankings · Recent · Recovery ·
+Effects · Repair burden · Sources); the Methodology modal shows both red-team disclosures (the
+renormalisation gap "headline ESDI (18.3)…present-at-zero…" and the transmission theatre-
+concentration note naming Taman / the Kerch bridge). **Zero console errors** on a clean load.
+
+**Not pixel-verified:** the WebGL map raster (choropleth shading, pipeline/river line rendering,
+camera pans, dot placement) — the headless in-app browser does not composite GL frames, so the
+map canvas is confirmed to initialise with a live WebGL2 context and every layer/control/data
+path is verified via the DOM and network, but the drawn pixels are not. No production-only
+defect was found.
 
 ## Limitations — read before quoting
 
