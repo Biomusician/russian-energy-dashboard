@@ -22,3 +22,6 @@ tools/
 
 # TypeScript incremental build state
 *.tsbuildinfo
+
+# Candidate-discovery review queue (unverified pointers, human-gated) — never committed
+data/review/

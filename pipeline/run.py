@@ -224,6 +224,52 @@ def _num(value):
         return None
 
 
+_EFFECT_KINDS = {"observed", "estimated", "modelled", "unknown"}
+
+
+def load_effects(valid_incident_ids):
+    """Curated, source-backed OBSERVED consequences of strikes (§25-28).
+
+    Every row is a single sourced consequence with an evidence tag. Per-incident effects
+    attach to their incident; rows with an empty incident_id are national/macro war-effort
+    datapoints (strategic aggregates only). Region population is NEVER an effect here — a
+    civilian effect is only ever a source that states people/customers actually affected.
+    Repair costs are stored as amount+currency+year+source, never invented.
+    """
+    path = CURATED / "effects.csv"
+    if not path.exists():
+        return {"national": [], "by_incident": {}}
+    national, by_incident = [], collections.defaultdict(list)
+    orphaned = []
+    for row in read_csv(path):
+        kind = (row.get("evidence_kind") or "unknown").strip()
+        if kind not in _EFFECT_KINDS:
+            log(f"  WARN effects: unknown evidence_kind '{kind}' for {row.get('incident_id')}")
+            kind = "unknown"
+        rec = {
+            "effect_type": (row.get("effect_type") or "").strip(),
+            "evidence_kind": kind,
+            "value_numeric": _num(row.get("value_numeric")),
+            "value_unit": row.get("value_unit") or None,
+            "currency": row.get("currency") or None,
+            "cost_year": row.get("cost_year") or None,
+            "as_of_date": row.get("as_of_date") or None,
+            "value_text": row.get("value_text") or None,
+            "source_url": row.get("source_url") or None,
+        }
+        iid = (row.get("incident_id") or "").strip()
+        if not iid:
+            national.append(rec)
+        elif iid in valid_incident_ids:
+            by_incident[iid].append(rec)
+        else:
+            orphaned.append(iid)
+    if orphaned:
+        log(f"  WARN effects: {len(orphaned)} rows reference unknown incidents: {sorted(set(orphaned))}")
+    log(f"effects: {sum(len(v) for v in by_incident.values())} per-incident + {len(national)} national")
+    return {"national": national, "by_incident": dict(by_incident)}
+
+
 def _facet_counts(assets, lines, incidents, snapshot, context_routes=None):
     """Full-corpus counts per UI dimension, so the frontend never reverse-engineers the
     dataset to decide which controls exist (iteration 4, §18).
@@ -478,6 +524,8 @@ def main():
     }
     snapshot["refinery_reconciliation"] = refinery_reconciliation
     snapshot["economic_context"] = crea
+    # Source-backed observed effects (§25-28), keyed to incidents in the AOI universe.
+    snapshot["strategic_effects"] = load_effects({i["incident_id"] for i in in_aoi})
     snapshot["facet_counts"] = _facet_counts(assets, lines, incidents, snapshot, ctx_net)
 
     # Coverage is computed AFTER facet_counts/recovery_stats exist — the matrix reads them.

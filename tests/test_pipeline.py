@@ -1714,6 +1714,83 @@ def test_lng_and_condensate_not_counted_in_gpp_census():
 
 
 # --------------------------------------------------------------------------
+# Iteration 6: source-backed strategic / observed effects (§25-28)
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_strategic_effects_present_and_evidence_tagged():
+    """Every observed effect carries an evidence tag and a source; national vs per-incident are
+    kept separate (§25). Works whether or not any effects are curated yet."""
+    snap = _snapshot()
+    se = snap.get("strategic_effects")
+    assert se is not None and "national" in se and "by_incident" in se
+    all_effects = list(se["national"]) + [e for lst in se["by_incident"].values() for e in lst]
+    for e in all_effects:
+        assert e["evidence_kind"] in ("observed", "estimated", "modelled", "unknown")
+        assert e.get("source_url"), f"a sourced effect must cite a source: {e}"
+        assert e.get("effect_type")
+
+
+@pytest.mark.skipif(not (PROCESSED / "incidents.json").exists(), reason="pipeline not run")
+def test_effects_attach_only_to_real_incidents():
+    """§25: per-incident effects must key to incidents that exist (no orphans)."""
+    snap = _snapshot()
+    se = snap.get("strategic_effects") or {"by_incident": {}}
+    incidents = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    ids = {i["incident_id"] for i in incidents}
+    for iid in se["by_incident"]:
+        assert iid in ids, f"effect references unknown incident {iid}"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_repair_costs_are_never_bare_numbers():
+    """§27: a repair-cost effect must carry currency + year, never an un-anchored figure."""
+    snap = _snapshot()
+    se = snap.get("strategic_effects") or {"national": [], "by_incident": {}}
+    for e in list(se["national"]) + [x for lst in se["by_incident"].values() for x in lst]:
+        if e["effect_type"] == "repair_cost" and e["value_numeric"] is not None:
+            assert e.get("currency") and e.get("cost_year"), f"repair cost needs currency+year: {e}"
+
+
+# --------------------------------------------------------------------------
+# Iteration 6: candidate discovery is human-gated and CANNOT feed the scored dataset (§29-30)
+# --------------------------------------------------------------------------
+
+def test_candidate_discovery_fails_safely_and_never_raises():
+    """The discovery step must return [] on any failure (e.g. no network here) and never raise,
+    so it can never break anything."""
+    from pipeline import discover_candidates as dc
+    got = dc.discover(days_back=1, max_records=5, timeout=3)
+    assert isinstance(got, list)  # [] when the feed is unreachable — the common CI case
+
+
+def test_candidate_pointers_carry_no_location_or_score():
+    """§29 scope guard: a candidate is a bare pointer for human review — never a located or
+    scored record. The queue schema must contain no location/score/facility fields."""
+    from pipeline import discover_candidates as dc
+    banned = {"lat", "lon", "latitude", "longitude", "coordinate", "region", "region_code",
+              "score", "esdi", "capacity", "facility", "asset_id", "sector"}
+    assert not (set(dc._FIELDS) & banned), dc._FIELDS
+    assert "needs_review" in dc._FIELDS or "status" in dc._FIELDS
+
+
+def test_build_never_imports_candidate_discovery():
+    """The daily build must not import the discovery module — discovery can never auto-feed the
+    scored pipeline; a human hand-adds a curated incident or nothing happens."""
+    run_src = (ROOT / "pipeline" / "run.py").read_text(encoding="utf-8")
+    assert "discover_candidates" not in run_src, "run.py must not import candidate discovery"
+
+
+def test_discovery_writes_only_to_review_queue_not_curated_or_processed():
+    """The discovery module's output path must live under data/review, never curated/processed."""
+    from pipeline import discover_candidates as dc
+    assert dc.REVIEW_DIR.name == "review" and dc.REVIEW_DIR.parent.name == "data"
+    assert dc.QUEUE.parent == dc.REVIEW_DIR
+    parts = set(dc.QUEUE.parts)
+    assert "curated" not in parts and "processed" not in parts
+
+
+# --------------------------------------------------------------------------
 # Iteration 6: canonical refinery registry + linkage (§6-§9)
 # --------------------------------------------------------------------------
 # One stable id + alias set per refinery, so denominator and incidents resolve to the SAME

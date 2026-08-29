@@ -622,6 +622,41 @@ function RecoveryFacility({ d, regionName }: { d: LiveDisruption; regionName?: s
 
 // ============================================================ EFFECTS
 
+const EFFECT_LABEL: Record<string, string> = {
+  production_halt: "Production halt", throughput_reduction: "Throughput reduction",
+  power_outage: "Power outage", customers_affected: "Customers affected",
+  heating_disruption: "Heating disruption", fuel_shortage: "Fuel shortage",
+  export_interruption: "Export interruption", repair_cost: "Repair cost",
+  war_effort_macro: "Strategic / macro effect",
+};
+
+/** One source-backed observed consequence (§25-28). The evidence tag governs its authority;
+ *  the figure is shown only when a source gave one, never inferred. */
+export function EffectItem({ e }: { e: import("../types").StrategicEffect }) {
+  const val = e.value_numeric != null
+    ? `${fmtNum(e.value_numeric, e.value_numeric >= 100 ? 0 : 2)}${e.value_unit ? " " + e.value_unit : ""}`
+    : null;
+  const cost = e.effect_type === "repair_cost" && e.value_numeric != null
+    ? `${e.currency ?? ""} ${fmtNum(e.value_numeric, 0)}${e.cost_year ? ` (${e.cost_year})` : ""}`.trim()
+    : null;
+  return (
+    <div className="event" style={{ borderLeft: "2px solid var(--line)", paddingLeft: 8 }}>
+      <div className="event-top" style={{ gap: 6, flexWrap: "wrap" }}>
+        <span className="event-name">{EFFECT_LABEL[e.effect_type] ?? titleCase(e.effect_type)}</span>
+        <EvidenceChip kind={e.evidence_kind === "observed" ? "observed" : e.evidence_kind === "estimated" ? "estimated" : "modelled"} />
+        {(cost ?? val) && <span className="num" style={{ color: "var(--text)", fontSize: 11 }}>{cost ?? val}</span>}
+        {e.as_of_date && <span className="num" style={{ color: "var(--text-faint)", fontSize: 10 }}>{fmtDate(e.as_of_date)}</span>}
+      </div>
+      {e.value_text && <div style={{ fontSize: 11, color: "var(--text-dim)", lineHeight: 1.5, marginTop: 2 }}>{e.value_text}</div>}
+      {e.source_url && (
+        <div className="src-list" style={{ marginTop: 3 }}>
+          <a href={e.source_url} target="_blank" rel="noreferrer noopener">↗ {hostname(e.source_url)}</a>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Layer badge: the three-layer distinction the brief insists on. A proxy must never
  *  carry the same visual authority as a measured observation. */
 function LayerBadge({ layer }: { layer: "observed" | "structural" | "proxy" }) {
@@ -664,6 +699,39 @@ export function EffectsTab(p: TabProps) {
           Directly reported consequences only. Open reporting rarely quantifies lost output, so this layer is deliberately sparse — it is not padded with model output.
         </div>
       </Block>
+
+      {/* LAYER 1b: SOURCE-BACKED OBSERVED EFFECTS (§25-28) */}
+      {(() => {
+        const se = bundle.snapshot.strategic_effects;
+        if (!se) return null;
+        const national = se.national ?? [];
+        // Per-incident effects for the selected region's incidents.
+        const regionEffects = region
+          ? bundle.incidents
+              .filter((i) => i.region_code === region.code)
+              .flatMap((i) => (se.by_incident[i.incident_id] ?? []).map((e) => ({ e, i })))
+          : [];
+        if (national.length === 0 && regionEffects.length === 0) return null;
+        return (
+          <Block title={<><LayerBadge layer="observed" /> {region ? "Observed effects in region" : "Observed strategic & macro effects"}</>}>
+            <div style={{ margin: "0 -6px" }}>
+              {region
+                ? regionEffects.map(({ e, i }, n) => (
+                    <div key={n}>
+                      <div style={{ fontSize: 10, color: "var(--text-faint)", padding: "2px 8px 0" }}>{i.asset_name}</div>
+                      <EffectItem e={e} />
+                    </div>
+                  ))
+                : national.map((e, n) => <EffectItem key={n} e={e} />)}
+            </div>
+            <div style={{ fontSize: 10, color: "var(--text-faint)", marginTop: 6, lineHeight: 1.45 }}>
+              Each effect is a single sourced consequence carrying its own evidence tag. Macro
+              effects are strategic aggregates only. A civilian figure appears only when a source
+              states people or customers were actually affected — never a region's population.
+            </div>
+          </Block>
+        );
+      })()}
 
       {/* LAYER 2: STRUCTURAL CONTEXT */}
       <Block title={<><LayerBadge layer="structural" /> Structural exposure / context</>}>

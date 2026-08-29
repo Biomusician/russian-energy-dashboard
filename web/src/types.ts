@@ -288,6 +288,25 @@ export interface CoverageMatrixEntry {
 
 /** Experimental gas-processing exposure (iteration 6, §18). A WITHIN-CENSUS share, never a
  *  national figure, and deliberately excluded from the headline ESDI. */
+/** A single source-backed observed consequence of a strike (iteration 6, §25-28). Every
+ *  effect carries an evidence tag; region population is never an effect here. */
+export type EffectEvidence = "observed" | "estimated" | "modelled" | "unknown";
+export interface StrategicEffect {
+  effect_type: string;
+  evidence_kind: EffectEvidence;
+  value_numeric: number | null;
+  value_unit: string | null;
+  currency: string | null;
+  cost_year: string | null;
+  as_of_date: string | null;
+  value_text: string | null;
+  source_url: string | null;
+}
+export interface StrategicEffects {
+  national: StrategicEffect[];
+  by_incident: Record<string, StrategicEffect[]>;
+}
+
 export interface GasProcessingIndex {
   experimental: boolean;
   in_headline_esdi: boolean;
@@ -350,6 +369,7 @@ export interface Snapshot {
   coverage: Coverage | null;
   coverage_matrix?: Record<string, CoverageMatrixEntry>;
   experimental_indices?: { gas_processing: GasProcessingIndex | null };
+  strategic_effects?: StrategicEffects;
   economic_context: EconomicContext | null;
   refinery_reconciliation: RefineryReconciliation | null;
   facet_counts: FacetCounts;
