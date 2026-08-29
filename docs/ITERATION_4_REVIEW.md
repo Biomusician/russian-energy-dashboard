@@ -91,8 +91,22 @@ that newly populated:** LNG terminal, Gas processing.
 
 ## Production
 
-- Deployment SHA and live checks are appended after the iteration-4 deploy.
-- Dataset as-of: the daily rebuild date; the freshness line states per-source cadence.
+Deployed to **https://russian-energy-dashboard.vercel.app** (commit `fb79a49`), exercised on
+the live URL: headline reads **Monitored-Area ESDI 16.3**; scope line *Belarus, western
+Russia & Siberia + occupied Crimea*; Crimea selectable with its **occupied-territory /
+in-index** banner and sovereignty status; the **LNG terminal (5)** and **Gas processing (4)**
+toggles present while coal, interconnector, sabotage, cyber, maintenance, unknown and
+unverified are hidden; all seven tabs render (134 events, 44% coverage); WebGL map canvas
+live; all `/data/*` return 200, no 404s; **zero console errors** on a clean load.
+
+**One production-only defect found and fixed.** The first iteration-4 deploy briefly
+white-screened: for a few minutes the Vercel edge served the previous `snapshot.json`
+(without `facet_counts`) to the newly-deployed bundle, and Filters assumed the field
+existed. Fixed by making Filters fall back to computing facet counts from the raw corpus
+when `snapshot.facet_counts` is absent (commit `fb79a49`), verified against the production
+build with a `facet_counts`-stripped snapshot. Future deploys degrade instead of crashing.
+
+Dataset as-of: the daily rebuild date; the freshness line states per-source cadence.
 
 ## Limitations — read before quoting
 
