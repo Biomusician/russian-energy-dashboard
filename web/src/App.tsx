@@ -15,6 +15,8 @@ export interface FilterState {
   showLines: boolean;
   showAssets: boolean;
   showRivers: boolean;
+  showGasNetwork: boolean;
+  showOilNetwork: boolean;
   metric: "esdi" | "incidents";
 }
 
@@ -32,6 +34,8 @@ export default function App() {
     showLines: false,
     showAssets: true,
     showRivers: false,
+    showGasNetwork: false,
+    showOilNetwork: false,
     metric: "esdi",
   });
 

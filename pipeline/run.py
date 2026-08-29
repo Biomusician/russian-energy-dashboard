@@ -14,7 +14,7 @@ import collections
 import datetime as dt
 import shutil
 
-from pipeline import build_assets, build_context, build_index
+from pipeline import build_assets, build_context, build_context_network, build_index
 from pipeline.config import (
     ANALYTIC_CONCEPTS, ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, EVIDENCE_KINDS,
     OPTIONAL_CONTEXT_FILES, PROCESSED, SCHEMA_VERSION, SECTOR_OF_CLASS, SECTORS,
@@ -130,6 +130,7 @@ def load_asset_supplement(region_meta):
             "lon": lon,
             "lat": lat,
             "precision": "region",
+            "scope": "analytic",
             "source": "Curated infrastructure supplement",
             "source_url": row.get("source_url") or None,
             "note": row.get("note") or None,
@@ -215,7 +216,7 @@ def _num(value):
         return None
 
 
-def _facet_counts(assets, lines, incidents, snapshot):
+def _facet_counts(assets, lines, incidents, snapshot, context_routes=None):
     """Full-corpus counts per UI dimension, so the frontend never reverse-engineers the
     dataset to decide which controls exist (iteration 4, §18).
 
@@ -234,7 +235,10 @@ def _facet_counts(assets, lines, incidents, snapshot):
 
     return {
         "asset_class": count(a["asset_class"] for a in assets),
+        # Analytic pipeline/grid lines only; context trunk routes are a SEPARATE count so a
+        # continent of context routes can never imply thousands of disruption records (§15).
         "line_class": count(f["properties"].get("asset_class") for f in lines),
+        "context_route_class": dict(sorted((context_routes or {}).items())),
         "incident_asset_class": count(i.get("asset_class") for i in incidents),
         "sector": count(SECTOR_OF_CLASS.get(i.get("asset_class")) for i in incidents),
         "cause": count(i.get("cause") for i in incidents),
@@ -306,7 +310,11 @@ def main():
 
     assets, lines, region_meta = build_assets.build()
     assets += load_asset_supplement(region_meta)  # curated LNG etc., admin-region precision
-    build_context.build()  # surrounding countries, borders, ocean — display only
+    build_context.build()  # surrounding countries, borders, ocean, rivers — display only
+    # Continental oil/gas trunk CONTEXT network (§3-§8): a SEPARATE path, scope=context,
+    # deduped against the analytic OSM lines by way id, never scored.
+    analytic_osm_ids = {f["properties"].get("osm_id") for f in lines if f["properties"].get("osm_id")}
+    ctx_net = build_context_network.build(analytic_osm_ids)
     wiki_facilities, wiki_incidents, wiki_warnings = build_wikipedia()
     refineries, refining_total, refinery_reconciliation = build_refineries()
     curated = load_curated_incidents()
@@ -365,7 +373,7 @@ def main():
     snapshot["refinery_reconciliation"] = refinery_reconciliation
     snapshot["economic_context"] = crea
     snapshot["coverage"] = coverage
-    snapshot["facet_counts"] = _facet_counts(assets, lines, incidents, snapshot)
+    snapshot["facet_counts"] = _facet_counts(assets, lines, incidents, snapshot, ctx_net)
     snapshot["parser_warnings"] = wiki_warnings
     snapshot["schema_version"] = SCHEMA_VERSION
     snapshot["build_time"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

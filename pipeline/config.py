@@ -26,7 +26,8 @@ SCHEMA_VERSION = 2
 # data_manifest marks them optional. Names are emitted filenames under data/processed/.
 OPTIONAL_CONTEXT_FILES = {
     "rivers.geojson",
-    "pipelines_context.geojson",
+    "context_gas_network.geojson",
+    "context_oil_network.geojson",
 }
 
 # Analysis window. The dashboard's time axis runs from here to the build date.

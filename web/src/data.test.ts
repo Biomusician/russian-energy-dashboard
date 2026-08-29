@@ -61,3 +61,28 @@ describe("grabOptional", () => {
     expect(out).toEqual(payload);
   });
 });
+
+// §16 lazy-load: loadContextLayer fetches once and caches; a missing file degrades to empty.
+describe("loadContextLayer (lazy context layers)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("fetches a layer once, then serves it from cache", async () => {
+    const { loadContextLayer } = await import("./data");
+    const payload = { type: "FeatureCollection", features: [{ id: 1 }] };
+    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => payload }) as unknown as Response);
+    vi.stubGlobal("fetch", fetchMock);
+    const a = await loadContextLayer("context_oil_network.geojson");
+    const b = await loadContextLayer("context_oil_network.geojson");
+    expect(a).toEqual(payload);
+    expect(b).toBe(a); // same cached object
+    expect(fetchMock).toHaveBeenCalledTimes(1); // cached, not refetched
+  });
+
+  it("degrades to an empty FeatureCollection when the layer is absent", async () => {
+    const { loadContextLayer } = await import("./data");
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 404 }) as Response));
+    const fc = await loadContextLayer("rivers.geojson");
+    expect(fc.type).toBe("FeatureCollection");
+    expect(fc.features).toEqual([]);
+  });
+});

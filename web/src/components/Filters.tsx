@@ -67,6 +67,11 @@ export default function Filters({
   const causeKeys = Object.keys(taxonomy.causes).filter((k) => causeTotal(k) > 0);
   const confKeys = ["confirmed", "probable", "possible", "unverified"].filter((k) => confTotal(k) > 0);
 
+  // Context trunk-route counts are a SEPARATE facet from analytic line_class (§15). A
+  // network toggle appears only if the corpus actually holds context routes for it.
+  const gasCtx = fc.context_route_class?.pipeline_gas ?? 0;
+  const oilCtx = fc.context_route_class?.pipeline_oil ?? 0;
+
   return (
     <aside className="panel filters">
       <div className="section-head">
@@ -86,7 +91,7 @@ export default function Filters({
       </div>
 
       <div className="ctl-group">
-        <div className="eyebrow" style={{ marginBottom: 6 }}>Map overlays</div>
+        <div className="eyebrow" style={{ marginBottom: 6 }}>Analytic infrastructure</div>
         <label className="check">
           <input
             type="checkbox"
@@ -104,6 +109,44 @@ export default function Filters({
           />
           Grid &amp; pipeline network
         </label>
+      </div>
+
+      {(gasCtx > 0 || oilCtx > 0) && (
+        <div className="ctl-group">
+          <div className="eyebrow" style={{ marginBottom: 6 }}>Network context</div>
+          {gasCtx > 0 && (
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={filters.showGasNetwork}
+                onChange={() => setFilters((f) => ({ ...f, showGasNetwork: !f.showGasNetwork }))}
+              />
+              <span className="swatch" style={{ background: classColor("pipeline_gas") }} />
+              Gas pipelines
+              <span className="tally">{gasCtx}</span>
+            </label>
+          )}
+          {oilCtx > 0 && (
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={filters.showOilNetwork}
+                onChange={() => setFilters((f) => ({ ...f, showOilNetwork: !f.showOilNetwork }))}
+              />
+              <span className="swatch" style={{ background: classColor("pipeline_oil") }} />
+              Oil pipelines
+              <span className="tally">{oilCtx}</span>
+            </label>
+          )}
+          <div className="note" style={{ marginTop: 4 }}>
+            Continental trunk routes (OSM, cross-referenced with GEM) shown as geographic
+            context — never scored, never counted as incidents.
+          </div>
+        </div>
+      )}
+
+      <div className="ctl-group">
+        <div className="eyebrow" style={{ marginBottom: 6 }}>Geographic context</div>
         <label className="check">
           <input
             type="checkbox"
@@ -111,9 +154,6 @@ export default function Filters({
             onChange={() => setFilters((f) => ({ ...f, showRivers: !f.showRivers }))}
           />
           Major rivers
-          <span className="tally" title="Geographic context only — never affects any score">
-            {bundle.rivers.features.length}
-          </span>
         </label>
       </div>
 

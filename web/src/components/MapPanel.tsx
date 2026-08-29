@@ -3,7 +3,7 @@ import maplibregl from "maplibre-gl";
 import type { FilterState } from "../App";
 import type { Bundle, Incident } from "../types";
 import { CLASS_COLOR, SEVERITY_STOPS } from "../palette";
-import { fmtNum } from "../data";
+import { fmtNum, loadContextLayer } from "../data";
 
 /** The map deliberately has no basemap.
  *
@@ -28,6 +28,10 @@ const EMPTY_STYLE: maplibregl.StyleSpecification = {
 // West/Black Sea zooms the western theatre where most disruption and Crimea sit.
 const AOI_BOUNDS: [number, number, number, number] = [17.5, 40.0, 120.0, 74.0];
 const WEST_BOUNDS: [number, number, number, number] = [20.0, 41.0, 62.0, 62.0];
+// Russia–Europe Network (iteration 5): frames the continental oil/gas trunk context, from
+// Atlantic Europe to the Russian Far East. The default view stays the analytic Full AOI —
+// this is an on-demand context frame, not the dashboard's home (§12).
+const NETWORK_BOUNDS: [number, number, number, number] = [-8.0, 36.0, 145.0, 73.0];
 
 // Context-country label anchors worth showing, plus the sea labels. Kept short so the
 // map does not turn into a name soup; positioned as HTML overlays (no glyph endpoint).
@@ -73,6 +77,10 @@ export default function MapPanel({
   const [ready, setReady] = useState(false);
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [labels, setLabels] = useState<ScreenLabel[]>([]);
+  // Lazy-loaded context layers (§16): which files we've fetched, and the rivers FC (needed
+  // for the HTML label overlay, which the map source alone can't drive).
+  const loadedRef = useRef<Set<string>>(new Set());
+  const [ctxRivers, setCtxRivers] = useState<GeoJSON.FeatureCollection | null>(null);
 
   const regionMeta = useMemo(
     () => new Map(bundle.regions.map((r) => [r.code, r])),
@@ -131,7 +139,8 @@ export default function MapPanel({
     m.addControl(
       new maplibregl.AttributionControl({
         customAttribution:
-          "Boundaries: Natural Earth (public domain) · Grid &amp; pipelines: OpenStreetMap (ODbL) · " +
+          "Boundaries &amp; rivers: Natural Earth (public domain) · Grid, pipelines &amp; network " +
+          "context: OpenStreetMap (ODbL), cross-referenced with Global Energy Monitor GGIT/GOIT · " +
           "Generation: WRI Global Power Plant Database (CC BY 4.0) · Events: Wikipedia (CC BY-SA 4.0)",
       }),
       "bottom-right",
@@ -142,7 +151,11 @@ export default function MapPanel({
       m.addSource("ocean", { type: "geojson", data: bundle.ocean });
       m.addSource("context-land", { type: "geojson", data: bundle.contextLand });
       m.addSource("context-borders", { type: "geojson", data: bundle.contextBorders });
-      m.addSource("rivers", { type: "geojson", data: bundle.rivers });
+      // Optional context layers start empty; they are lazy-loaded on first toggle (§16).
+      const EMPTY_FC: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+      m.addSource("rivers", { type: "geojson", data: EMPTY_FC });
+      m.addSource("context-gas-net", { type: "geojson", data: EMPTY_FC });
+      m.addSource("context-oil-net", { type: "geojson", data: EMPTY_FC });
 
       // Context geography is deliberately subordinate: darker than the analytic surface,
       // faint borders. The sea is a distinct, slightly-blue dark so the Black Sea reads
@@ -248,6 +261,33 @@ export default function MapPanel({
           ] as unknown as maplibregl.ExpressionSpecification,
         },
       });
+
+      // Continental oil/gas CONTEXT network (§3-§8): trunk export/transit routes, scope
+      // "context", never scored. Deliberately subordinate — faint and thin at continental
+      // zoom, firmer on zoom-in — so the degradation surface dominates the analytic view
+      // and the trunks read at the Russia–Europe Network preset (§29). All OSM geometry is
+      // traced ("osm_mapped") and drawn solid; a route_quality="approximate" companion
+      // treatment (dashed) is reserved for a future GEM snapshot (§5). Off by default.
+      for (const [id, src, color] of [
+        ["context-gas-net", "context-gas-net", CLASS_COLOR.pipeline_gas],
+        ["context-oil-net", "context-oil-net", CLASS_COLOR.pipeline_oil],
+      ] as const) {
+        m.addLayer({
+          id,
+          type: "line",
+          source: src,
+          layout: { visibility: "none", "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-color": color,
+            "line-width": [
+              "interpolate", ["linear"], ["zoom"], 2, 0.5, 5, 1.0, 8, 1.9,
+            ] as unknown as maplibregl.ExpressionSpecification,
+            "line-opacity": [
+              "interpolate", ["linear"], ["zoom"], 2, 0.28, 4, 0.42, 8, 0.62,
+            ] as unknown as maplibregl.ExpressionSpecification,
+          },
+        });
+      }
 
       m.addLayer({
         id: "network",
@@ -428,10 +468,33 @@ export default function MapPanel({
     m.setLayoutProperty("network", "visibility", filters.showLines ? "visible" : "none");
     m.setLayoutProperty("asset-dots", "visibility", filters.showAssets ? "visible" : "none");
     m.setLayoutProperty("rivers", "visibility", filters.showRivers ? "visible" : "none");
+    m.setLayoutProperty("context-gas-net", "visibility", filters.showGasNetwork ? "visible" : "none");
+    m.setLayoutProperty("context-oil-net", "visibility", filters.showOilNetwork ? "visible" : "none");
     if (filters.showLines) {
       m.setFilter("network", ["in", ["get", "asset_class"], ["literal", [...filters.classes]]]);
     }
-  }, [ready, filters.showLines, filters.showAssets, filters.showRivers, filters.classes]);
+  }, [ready, filters.showLines, filters.showAssets, filters.showRivers,
+      filters.showGasNetwork, filters.showOilNetwork, filters.classes]);
+
+  // Lazy-load optional context layers on first toggle, then cache. Missing/late files
+  // degrade to empty; the core dashboard never waits on them (§16, §35).
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready) return;
+    const wanted: [boolean, string, string][] = [
+      [filters.showRivers, "rivers.geojson", "rivers"],
+      [filters.showGasNetwork, "context_gas_network.geojson", "context-gas-net"],
+      [filters.showOilNetwork, "context_oil_network.geojson", "context-oil-net"],
+    ];
+    for (const [on, file, src] of wanted) {
+      if (!on || loadedRef.current.has(file)) continue;
+      loadedRef.current.add(file);
+      loadContextLayer(file).then((fc) => {
+        (m.getSource(src) as maplibregl.GeoJSONSource | undefined)?.setData(fc);
+        if (file === "rivers.geojson") setCtxRivers(fc);
+      });
+    }
+  }, [ready, filters.showRivers, filters.showGasNetwork, filters.showOilNetwork]);
 
   // --- context labels, projected to screen coordinates on every move --------
   useEffect(() => {
@@ -446,7 +509,8 @@ export default function MapPanel({
       minZoom: (f.properties?.label_min_zoom as number) ?? DEFAULT_COUNTRY_MINZOOM,
     }));
     // River label anchors: only the major named systems carry one (see build_context.py).
-    const riverAnchors = bundle.rivers.features
+    // Rivers are lazy-loaded, so this reads the loaded FC (empty until the toggle is on).
+    const riverAnchors = (ctxRivers?.features ?? [])
       .filter((f) => f.properties?.label_name)
       .map((f) => ({
         name: (f.properties?.label_name as string) ?? "",
@@ -513,7 +577,7 @@ export default function MapPanel({
       m.off("move", recompute);
       m.off("resize", recompute);
     };
-  }, [ready, bundle.contextLand, bundle.rivers, filters.showRivers]);
+  }, [ready, bundle.contextLand, ctxRivers, filters.showRivers]);
 
   const flyTo = (bounds: [number, number, number, number]) => {
     map.current?.fitBounds(bounds, { padding: 28, duration: 700 });
@@ -561,6 +625,10 @@ export default function MapPanel({
       <div className="camera-controls">
         <button className="ghost" onClick={() => flyTo(AOI_BOUNDS)}>Full AOI</button>
         <button className="ghost" onClick={() => flyTo(WEST_BOUNDS)}>West / Black Sea</button>
+        <button className="ghost" onClick={() => flyTo(NETWORK_BOUNDS)}
+                title="Frame the Russia–Europe oil &amp; gas trunk network context">
+          Russia–Europe Network
+        </button>
         {currentActivityBounds && (
           <button className="ghost" onClick={() => flyTo(currentActivityBounds)}
                   title="Fit the administrative regions with unresolved disruption">

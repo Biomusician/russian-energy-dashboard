@@ -68,9 +68,12 @@ RIVER_LABEL_SEP = 4.0            # min degrees between two river labels (geometr
 RIVER_LABEL_MIN_LAT = 43.0       # only label rivers in the AOI latitude band (drops
                                  # Middle-East / China-interior rivers at the frame edge)
 
-# Clip everything to a generous frame around the AOI so we never ship, say, all of China
-# or Canada. west, south, east, north. Wide enough for the Russia-Europe network view.
-CLIP = (5.0, 34.0, 130.0, 82.0)
+# Clip everything to a Eurasian context frame. Iteration 5 widened this from the old
+# 5-130E box to a real Russia-Europe extent (Atlantic Europe through the Russian Far East),
+# so the network view shows where the export system actually connects (§11/§27). Russia and
+# Belarus are still excluded from the country set (they are analytic); this only governs how
+# far the surrounding context geography and rivers reach. west, south, east, north.
+CLIP = (-12.0, 34.0, 170.0, 82.0)
 
 LAND_TOLERANCE = 0.05    # ~5 km; scenery, simplify hard
 OCEAN_TOLERANCE = 0.06

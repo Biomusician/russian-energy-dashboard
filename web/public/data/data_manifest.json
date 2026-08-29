@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
-  "build_time": "2026-08-29T15:27:01+00:00",
+  "build_time": "2026-08-29T15:58:00+00:00",
   "files": [
     {
       "name": "assets.json",
-      "bytes": 586075,
+      "bytes": 623752,
       "optional": false
     },
     {
@@ -34,7 +34,7 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 136334,
+      "bytes": 136395,
       "optional": false
     },
     {
@@ -44,18 +44,28 @@
     },
     {
       "name": "assets_lines.geojson",
-      "bytes": 2085369,
+      "bytes": 2386460,
       "optional": false
     },
     {
       "name": "context_borders.geojson",
-      "bytes": 97141,
+      "bytes": 121351,
       "optional": false
     },
     {
+      "name": "context_gas_network.geojson",
+      "bytes": 69142,
+      "optional": true
+    },
+    {
       "name": "context_land.geojson",
-      "bytes": 102657,
+      "bytes": 127779,
       "optional": false
+    },
+    {
+      "name": "context_oil_network.geojson",
+      "bytes": 24603,
+      "optional": true
     },
     {
       "name": "ocean.geojson",
@@ -69,7 +79,7 @@
     },
     {
       "name": "rivers.geojson",
-      "bytes": 46247,
+      "bytes": 52178,
       "optional": true
     }
   ]

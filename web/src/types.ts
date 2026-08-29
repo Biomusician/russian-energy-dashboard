@@ -283,6 +283,9 @@ export interface Snapshot {
 export interface FacetCounts {
   asset_class: Record<string, number>;
   line_class: Record<string, number>;
+  /** Continental context trunk routes, kept SEPARATE from analytic line_class so a
+   *  continent of context pipelines can never imply thousands of disruption records (§15). */
+  context_route_class?: Record<string, number>;
   incident_asset_class: Record<string, number>;
   sector: Record<string, number>;
   cause: Record<string, number>;
@@ -324,10 +327,8 @@ export interface Bundle {
   contextLand: GeoJSON.FeatureCollection;
   contextBorders: GeoJSON.FeatureCollection;
   ocean: GeoJSON.FeatureCollection;
-  /** Optional context layers (iteration 5). Empty FeatureCollection when the build did not
-   *  emit them, or a stale CDN edge lacks them mid-deploy -- never a hard load failure. */
-  rivers: GeoJSON.FeatureCollection;
-  contextPipelines: GeoJSON.FeatureCollection;
-  /** Result of the schema compatibility check performed at load time. */
+  /** Result of the schema compatibility check performed at load time. Optional context
+   *  layers (rivers, pipeline networks) are lazy-loaded via loadContextLayer(), not held
+   *  on the bundle (§16). */
   schema: SchemaCheck;
 }

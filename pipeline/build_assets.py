@@ -87,6 +87,7 @@ def build_power_plants(index):
                 "owner": row.get("owner") or None,
                 "lon": round(lon, 4),
                 "lat": round(lat, 4),
+                "scope": "analytic",
                 "source": "WRI Global Power Plant Database v1.3",
                 "source_url": row.get("url") or None,
             }
@@ -117,6 +118,7 @@ def build_osm_points(index, elements):
                 "operator": tags.get("operator") or None,
                 "lon": round(lon, 4),
                 "lat": round(lat, 4),
+                "scope": "analytic",
                 "source": "OpenStreetMap (ODbL)",
                 "source_url": f"https://www.openstreetmap.org/{el['type']}/{el['id']}",
             }
@@ -152,6 +154,8 @@ def build_osm_lines(index, elements, asset_class):
                 "type": "Feature",
                 "properties": {
                     "asset_class": asset_class,
+                    "scope": "analytic",
+                    "osm_id": el.get("id"),
                     "region_code": region,
                     "name": tags.get("name") or tags.get("name:en") or None,
                     "voltage_kv": _max_voltage(tags.get("voltage")),

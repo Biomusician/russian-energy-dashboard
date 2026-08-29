@@ -80,11 +80,9 @@ export async function loadBundle(): Promise<Bundle> {
   ]);
 
   // Optional context layers (iteration 5): absent on older data or a lagging edge -> empty.
-  const [rivers, contextPipelines] = await Promise.all([
-    grabOptional<GeoJSON.FeatureCollection>("rivers.geojson", EMPTY_FC),
-    grabOptional<GeoJSON.FeatureCollection>("pipelines_context.geojson", EMPTY_FC),
-  ]);
-
+  // Rivers and the continental pipeline networks are NOT loaded here. They are off by
+  // default and can be large, so they lazy-load on first toggle via loadContextLayer()
+  // below — keeping the analytic dashboard's first paint fast (§16).
   const schema = schemaCompatibility(snapshot.schema_version);
   if (schema.mode !== "exact") {
     console.warn(
@@ -96,8 +94,20 @@ export async function loadBundle(): Promise<Bundle> {
   return {
     snapshot, national, regional, incidents, regions, assets, taxonomy,
     regionsGeo, linesGeo, contextLand, contextBorders, ocean,
-    rivers, contextPipelines, schema,
+    schema,
   };
+}
+
+/** Lazy-load an optional context layer (rivers or a pipeline network) on first use, then
+ *  cache it for the session. Absent/late files degrade to an empty FeatureCollection rather
+ *  than throwing, so the core dashboard never depends on them (§16, §35). */
+const contextLayerCache = new Map<string, GeoJSON.FeatureCollection>();
+export async function loadContextLayer(file: string): Promise<GeoJSON.FeatureCollection> {
+  const cached = contextLayerCache.get(file);
+  if (cached) return cached;
+  const fc = await grabOptional<GeoJSON.FeatureCollection>(file, EMPTY_FC);
+  contextLayerCache.set(file, fc);
+  return fc;
 }
 
 /** Index of the timeline step at or before `date`. */

@@ -1388,3 +1388,66 @@ def test_no_exact_duplicate_incidents():
     seen = _c.Counter((i.get("asset_id"), i.get("date")) for i in inc)
     dups = [k for k, v in seen.items() if v > 1]
     assert not dups, f"exact (asset_id, date) duplicate incidents: {dups}"
+
+
+# --------------------------------------------------------------------------
+# Iteration 5: analytic vs context scope + continental pipeline network (§2,§7,§15,§36)
+# --------------------------------------------------------------------------
+# The context network is a SEPARATE, display-only layer. It is never joined to a region,
+# never scored, never an incident; its counts are kept apart from the analytic lines.
+
+def test_analytic_assets_and_lines_carry_analytic_scope():
+    if (PROCESSED / "assets.json").exists():
+        for a in json.loads((PROCESSED / "assets.json").read_text(encoding="utf-8")):
+            assert a.get("scope") == "analytic", f"{a['asset_id']} must be scope=analytic"
+    if (PROCESSED / "assets_lines.geojson").exists():
+        lines = json.loads((PROCESSED / "assets_lines.geojson").read_text(encoding="utf-8"))
+        for f in lines["features"]:
+            assert f["properties"].get("scope") == "analytic"
+
+
+@pytest.mark.skipif(not (PROCESSED / "context_gas_network.geojson").exists(),
+                    reason="context network not built")
+def test_context_network_is_scope_context_sourced_and_route_qualified():
+    for fn in ("context_gas_network.geojson", "context_oil_network.geojson"):
+        fc = json.loads((PROCESSED / fn).read_text(encoding="utf-8"))
+        for feat in fc["features"]:
+            p = feat["properties"]
+            assert p["scope"] == "context", f"{fn}: a network route must be scope=context"
+            assert p["route_quality"], "route-quality provenance must travel (§5)"
+            assert p["asset_class"] in ("pipeline_gas", "pipeline_oil")
+            assert feat["geometry"]["type"] in ("LineString", "MultiLineString")
+
+
+@pytest.mark.skipif(not (PROCESSED / "context_gas_network.geojson").exists(),
+                    reason="context network not built")
+def test_context_routes_never_score_and_create_no_incident():
+    """European and Far-Eastern context routes carry no region and generate no incident, so
+    they cannot enter ESDI, rankings, regional intensity or recovery (§7, §36)."""
+    inc = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    inc_ids = {i.get("asset_id") for i in inc}
+    for fn in ("context_gas_network.geojson", "context_oil_network.geojson"):
+        fc = json.loads((PROCESSED / fn).read_text(encoding="utf-8"))
+        for feat in fc["features"]:
+            p = feat["properties"]
+            assert "region_code" not in p, "a context route must not be region-scoped"
+            assert f"osm-way-{p.get('osm_id')}" not in inc_ids, "context route must not be an incident"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_context_route_facet_kept_separate_from_analytic_lines():
+    """A continent of context routes must not be conflated with analytic pipeline lines or
+    with incidents (§15)."""
+    fc = _snapshot()["facet_counts"]
+    assert "context_route_class" in fc and fc["context_route_class"], "context routes must be counted"
+    # the two counts are distinct dimensions
+    assert fc["line_class"].get("pipeline_gas", 0) != fc["context_route_class"].get("pipeline_gas")
+
+
+def test_context_network_files_are_declared_optional_and_lazy():
+    """The continental network files are optional context: a build that omits them, or a CDN
+    edge that lacks them mid-deploy, must not break the core dashboard (§16, §35)."""
+    from pipeline.config import OPTIONAL_CONTEXT_FILES
+    for name in ("context_gas_network.geojson", "context_oil_network.geojson", "rivers.geojson"):
+        assert name in OPTIONAL_CONTEXT_FILES
+        assert name not in REQUIRED_WEB_FILES, f"{name} is optional/lazy, never a required file"
