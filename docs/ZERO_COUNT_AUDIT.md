@@ -83,3 +83,27 @@ the sourcing floor** (sabotage), **without defensible evidence** (cyber), **out 
 (maintenance), or a **plausible true absence** (unknown, unverified). Every one reappears
 automatically if a sourced record later lands. No synthetic records were created, no
 confidence was moved to fill a bucket, and no facility was reclassified to complete the UI.
+
+---
+
+## Iteration-7 re-audit (§32)
+
+Re-run after the iteration-7 research (new recovery episodes, effects, source-quality). Filter
+visibility remains data-driven off `snapshot.facet_counts` (zero keys omitted, so a dead control
+is hidden automatically and reappears on its own if a sourced record arrives). Findings:
+
+- **Cause**: kinetic_strike, technical, sanctions are populated. **sabotage / cyber** stay zero —
+  a genuine/plausible absence in a drone-strike corpus (maintenance accidents are captured as
+  `technical`, e.g. the 2022 Urengoy pipeline explosion). Not a parser or classification gap; not
+  populated for cosmetic completeness.
+- **Confidence**: confirmed / probable / possible populated; `unverified` stays zero (curated rows
+  all carry at least a probable classification).
+- **Coal**: inventory exists (mines + terminals) but zero AOI disruption events → correctly
+  score-0 and the sector stays uncovered. TRUE ABSENCE.
+- **New iteration-7 fields are display-only, not filter dimensions**: effect types (price_move,
+  export_interruption, …), recovery `evidence_family`, and `source_quality` are shown where present
+  and never create an empty toggle. `evidence_family="unknown"` is not emitted (every record maps
+  to a concrete family).
+
+No category was populated for cosmetic completeness; no new dead control was introduced. The
+iteration-4 rule holds: **zero is a question before it is an answer.**

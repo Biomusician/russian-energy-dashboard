@@ -481,8 +481,8 @@ def main():
         f"{len(incidents) - len(in_aoi)} unplaced"
     )
 
-    # Transmission network context: HV-line count per region (transmission exposure is
-    # event-burden, but the tracked network is shown as context in each region dossier).
+    # Transmission network context: HV-line count per region (the transmission BURDEN is an
+    # event-burden proxy, not a capacity share; the tracked network is shown as context only).
     tx_lines_by_region = collections.Counter(
         f["properties"]["region_code"] for f in lines
         if f["properties"].get("asset_class") in ("transmission_line", "interconnector")

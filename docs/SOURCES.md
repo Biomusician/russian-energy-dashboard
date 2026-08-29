@@ -133,7 +133,20 @@ in emitted data.
 
 ### 4b. *List of oil refineries* — refining denominator
 
-Sections "Russia in Europe" and "Russia in Asia". **30 refineries, 247.0 MTPA** as parsed; iteration 2 adds a sourced curated supplement of 5 more majors -> **35 refineries, 280.6 MTPA** (see data/curated/refineries_supplement.csv).
+Sections "Russia in Europe" and "Russia in Asia", parsed and merged with a sourced curated
+supplement (`data/curated/refineries_supplement.csv`). The distinction matters and is kept
+mechanically consistent (live counts in [CURRENT_STATE.md](CURRENT_STATE.md)):
+
+- **canonical/inventory facilities**: 35 (every refinery the registry knows);
+- **excluded non-fuels**: 1 — Tobolsk/ZapSibNeftekhim (a petrochemical NGL cracker, not crude fuels);
+- **fuels-refining DENOMINATOR facilities**: 34 (= 35 − 1);
+- **denominator MTPA**: 273.8 (the sum of the 34 members only; Tobolsk's 6.85 MTPA is NOT in it).
+
+So "35 refineries" is the inventory, never the denominator — only 34 participate in the 273.8 MTPA
+base. Iteration 7 added denominator-completeness metadata: this base covers ~90% of a like-for-like
+crude nameplate reference (~303 MTPA); the gap to the full ~327 MTPA nameplate is ~24 MTPA of
+excluded gas-condensate splitters plus a ~10-15% conservative-basis understatement, not any missing
+refinery (see [ITERATION_7_REVIEW.md](ITERATION_7_REVIEW.md)).
 
 Both sections are included: the index frame is national because Russian fuel markets
 are national, and the Europe/Asia split does not match the federal-district AOI anyway

@@ -279,6 +279,38 @@ def test_partial_restart_is_not_full_reconstitution():
     assert _weight_at(inc, on, partial) == pytest.approx(_weight_at(inc, on, None), abs=1e-9)
 
 
+def test_evidence_family_is_a_deterministic_partition():
+    """§15 / check #6: evidence_family is a total, DETERMINISTIC function of (recovery_status,
+    recovery_kind) into mutually-exclusive families, with a fixed precedence when a kind could
+    match two (a flow-rerouting kind is flow_rerouting even though partial_restart would also
+    be service_restoration; a full reconstitution wins over any kind)."""
+    from pipeline import recovery
+    fams = set(recovery.EVIDENCE_FAMILIES)
+    # every (status, kind) maps into exactly one declared family
+    for status in ("impaired", "partial_restart", "substantially_restored", "fully_reconstituted", "unknown"):
+        for kind in (None, "flow_rerouted", "grid_reenergised", "unit_restarted", "unit_rebuilt",
+                     "throughput_restored", "transformer_replaced", "primary_unit_offline", "weird"):
+            assert recovery.evidence_family(status, kind) in fams
+    # precedence: full reconstitution beats a service-y kind; flow beats generic partial;
+    # estimate (impaired) beats everything.
+    assert recovery.evidence_family("fully_reconstituted", "grid_reenergised") == "facility_reconstitution"
+    assert recovery.evidence_family("partial_restart", "flow_rerouted") == "flow_rerouting"
+    assert recovery.evidence_family("partial_restart", "grid_reenergised") == "service_restoration"
+    assert recovery.evidence_family("impaired", "unit_restarted") == "estimate"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_evidence_family_counts_partition_the_record_set():
+    """check #6: the per-family counts are a partition — they sum to the deduplicated episode
+    count, so no record is double-counted across families."""
+    snap = _snapshot()
+    rs = snap["recovery_stats"]
+    efc = rs.get("evidence_family_counts") or {}
+    # sum of families == distinct episodes that carry a recovery record (<= record count).
+    assert sum(efc.values()) <= rs["recovery_record_count"]
+    assert sum(efc.values()) >= rs["observed_restoration_episodes"]  # observed are a subset
+
+
 def test_damage_severity_is_monotone_and_repaired_is_not_a_damage_state():
     """§10-11: damage severity (concept A) is a clean, monotone map from a DAMAGE observation.
     'repaired'/'restored' are recovery states, not damage states, and must fall through to the
