@@ -1,0 +1,36 @@
+canonical_id,canonical_name,region_code,denominator_status,aliases
+afipsky,Afipsky Refinery,RU-KDA,member,Afipsky Refinery|afipsky-refinery|Afipsky NPZ|Neftisa
+kirishi,Kirishi Refinery,RU-LEN,member,Kirishi Refinery|kirishi-refinery-kinef|Kirishi Refinery (Kinef)|KINEF|Kirishinefteorgsintez|Surgutneftegas
+krasnodar,Krasnodar Refinery,RU-KDA,member,Krasnodar Refinery|krasnodar-refinery|Krasnodareconeft
+kuibyshev,Kuibyshev Refinery,RU-SAM,member,Kuibyshev Refinery|kuibyshev-refinery|Kuibyshevsky NPZ
+novokuibyshevsk,Novokuibyshevsk Refinery,RU-SAM,member,Novokuibyshevsk Refinery|novokuibyshevsk-refinery|Novokuibyshevsky NPZ
+taneco,TANECO (Nizhnekamsk) Refinery,RU-TA,member,Nizhnekamsk Refinery|taneco|TANECO|TANEKO
+kstovo,Kstovo Refinery,RU-NIZ,member,Kstovo Refinery|kstovo-refinery|NORSI|Nizhegorodnefteorgsintez|Lukoil-Nizhny Novgorod
+novoshakhtinsk,Novoshakhtinsk Refinery,RU-ROS,member,Novoshakhtinsk Refinery|refinery-novoshakhtinsk|NZNP
+orsk,Orsk Refinery,RU-ORE,member,Orsk Refinery|refinery-orsk|Orsknefteorgsintez|ONOS|SAFMAR
+perm,Perm Refinery,RU-PER,member,Perm Refinery|perm-refinery|Permnefteorgsintez|PNOS
+ryazan,Ryazan Refinery,RU-RYA,member,Ryazan Refinery|ryazan-refinery|RNPK|Ryazan Oil Refining Company
+salavat,Gazprom Neftekhim Salavat,RU-BA,member,Salavatnefteorgsintez Refinery|gazprom-neftekhim-salavat|Gazprom Neftekhim Salavat|Salavatnefteorgsintez
+syzran,Syzran Refinery,RU-SAM,member,Syzran Refinery|syzran-refinery|Syzransky NPZ
+tuapse,Tuapse Refinery,RU-KDA,member,Tuapse Refinery|tuapse-refinery-tuapse-oil-terminal|Tuapsinsky NPZ
+ukhta,Ukhta Refinery,RU-KO,member,Ukhta Refinery|ukhta-refinery|Ukhtaneftepererabotka
+ufa,Ufa Refinery (UNPZ),RU-BA,member,Ufa Refinery|ufimsky-refinery|Ufimsky NPZ|UNPZ
+novo-ufa,Novo-Ufimsky Refinery (Novoil),RU-BA,member,Novo-Ufa Refinery|novo-ufimsky-refinery|Novoil|Novo-Ufimsky NPZ
+ufaneftekhim,Ufaneftekhim Refinery,RU-BA,member,Ufaneftekhim Refinery|Ufaneftekhim
+volgograd,Volgograd Refinery,RU-VGG,member,Volgograd Refinery|volgograd-refinery|Volgogradneftepererabotka
+yaroslavl,Yaroslavl Refinery (YANOS),RU-YAR,member,Yaroslavl Refinery|yaroslavl-refinery-yanos|YANOS|Slavneft-YANOS
+saratov,Saratov Refinery,RU-SAR,member,Saratov oil refinery|saratov-oil-refinery|Saratovsky NPZ
+achinsk,Achinsk Refinery,RU-KYA,member,Achinsk Refinery|Achinsk NPZ|ANPZ
+angarsk,Angarsk Petrochemical Company,RU-IRK,member,Angarsk Petrochemical Refinery|ANKhK
+antipinsky,Antipinsky Refinery,RU-TYU,member,Antipinsky Refinery|antipinsky-refinery|Antipinsky NPZ
+khabarovsk,Khabarovsk Refinery,RU-KHA,member,Khabarovsk Refinery|Khabarovsk NPZ|NNK
+komsomolsk,Komsomolsk Refinery,RU-KHA,member,Komsomolsk Refinery|Komsomolsky NPZ
+nizhnevartovsk,Nizhnevartovsk Refinery,RU-KHM,mini,Nizhnevartovsk Refinery|NNPO
+omsk,Omsk Refinery,RU-OMS,member,Omsk Refinery|omsk-refinery|ONPZ|Gazpromneft-ONPZ
+tobolsk,Tobolsk (ZapSibNeftekhim) complex,RU-TYU,exclude,Tobolsk Petrochemical Refinery|ZapSibNeftekhim|Tobolsk-Neftekhim|SIBUR
+yaya,Yaya Refinery,RU-KEM,mini,Yaya Refinery|Yaya NPZ|Anzhero-Sudzhensk
+moscow,Moscow Refinery,RU-MOW,member,Moscow Refinery|moscow-refinery|MNPZ|Gazpromneft-MNPZ|Kapotnya
+ilsky,Ilsky Refinery,RU-KDA,member,Ilsky Refinery|ilsky-refinery|Ilsky NPZ|INPZ|KNGK
+slavyansk-eco,Slavyansk ECO Refinery,RU-KDA,member,Slavyansk ECO Refinery|slavyansk-refinery|Slavyansk ECO|Slavyansk-na-Kubani
+taif-nk,TAIF-NK Refinery,RU-TA,member,TAIF-NK Refinery|taif-nik|TAIF-NK|TAIF-NIK
+mari-el,Mari El Refinery (Mariysky),RU-ME,mini,Mari El Refinery|refinery-mari-el|Mariysky NPZ|New Stream

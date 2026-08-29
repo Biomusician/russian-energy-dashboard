@@ -88,6 +88,18 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
             )}
           </ul>
 
+          {s.refinery_reconciliation?.canonical_linkage && (
+            <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
+              Refineries resolve to a canonical registry (stable id + aliases), so the
+              denominator and incidents share one identity. Petrochemical complexes
+              (Tobolsk/ZapSibNeftekhim) are excluded from the fuels-refining base.{" "}
+              <b>Canonical linkage {s.refinery_reconciliation.canonical_linkage.struck_refineries}/
+              {s.refinery_reconciliation.canonical_linkage.denominator_refineries} refineries
+              struck = {s.refinery_reconciliation.canonical_linkage.pct_denominator_mtpa_struck}% of
+              denominator capacity</b> — this is identity/linkage completeness, not disruption coverage.
+            </p>
+          )}
+
           {s.esdi_all_sectors != null && (
             <p style={{ color: "var(--amber)" }}>
               The headline ESDI ({s.esdi.toFixed(1)}) renormalises the covered sectors. Counting

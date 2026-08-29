@@ -440,6 +440,28 @@ def main():
         region_context=region_context,
     )
 
+    # Canonical refinery linkage completeness (§9) — identity/linkage, NOT disruption coverage.
+    from pipeline import refinery_registry as _RR
+    denom_cap = {r["canonical_id"]: r["capacity_mtpa"] for r in refineries
+                 if r.get("denominator_status") != "exclude" and r.get("canonical_id") and r.get("capacity_mtpa")}
+    struck, unresolved = set(), []
+    for i in (x for x in in_aoi if x.get("asset_class") == "refinery"):
+        cid = _RR.resolve(i.get("asset_id")) or _RR.resolve(i.get("asset_name"))
+        if cid and cid in denom_cap:
+            struck.add(cid)
+        elif cid is None:
+            unresolved.append(i.get("asset_name"))
+    total_denom_cap = round(sum(denom_cap.values()), 1) or 1
+    refinery_reconciliation["canonical_linkage"] = {
+        "denominator_refineries": len(denom_cap),
+        "struck_refineries": len(struck),
+        "mtpa_struck": round(sum(denom_cap.get(c, 0) for c in struck), 1),
+        "pct_denominator_mtpa_struck": round(100 * sum(denom_cap.get(c, 0) for c in struck) / total_denom_cap, 1),
+        "incidents_unresolved_to_registry": sorted({x for x in unresolved if x}),
+        "note": ("Identity/linkage completeness, NOT disruption coverage: how much of the tracked "
+                 "denominator resolves to a struck canonical refinery. Naftan (Belarus) is "
+                 "intentionally outside the Russian denominator."),
+    }
     snapshot["refinery_reconciliation"] = refinery_reconciliation
     snapshot["economic_context"] = crea
     snapshot["facet_counts"] = _facet_counts(assets, lines, incidents, snapshot, ctx_net)

@@ -94,7 +94,24 @@ def build():
         added.append(row)
 
     refineries = list(seen.values())
-    total = sum(r["capacity_mtpa"] for r in refineries if r["capacity_mtpa"])
+
+    # Canonical identity (iteration 6, §6/§7): resolve every inventory refinery to a stable
+    # canonical id, and EXCLUDE facilities flagged non-fuels (petrochemical complexes such as
+    # Tobolsk/ZapSibNeftekhim) from the denominator — they inflate the base but are not fuels
+    # refineries. Mini fuels refineries are kept. This replaces display-name string equality.
+    from pipeline import refinery_registry as RR
+    reg = RR.by_id()
+    excluded = []
+    for r in refineries:
+        cid = RR.resolve(r["name"])
+        r["canonical_id"] = cid
+        status = reg.get(cid, {}).get("denominator_status") if cid else "unresolved"
+        r["denominator_status"] = status
+        if status == "exclude":
+            excluded.append(r["name"])
+    total = sum(r["capacity_mtpa"] for r in refineries
+                if r["capacity_mtpa"] and r["denominator_status"] != "exclude")
+    denom_refineries = [r for r in refineries if r["denominator_status"] != "exclude"]
 
     # Reconciliation (iteration 3): state coverage against the published national
     # estimate honestly. The gap is not padded away -- it is reported.
@@ -102,14 +119,17 @@ def build():
         "national_public_estimate_mtpa": NATIONAL_ESTIMATE_MTPA,
         "national_estimate_source": NATIONAL_ESTIMATE_SOURCE,
         "tracked_mtpa": round(total, 1),
-        "tracked_refineries": len(refineries),
+        "tracked_refineries": len(denom_refineries),
         "coverage_pct": round(100 * total / NATIONAL_ESTIMATE_MTPA, 1),
         "gap_mtpa": round(NATIONAL_ESTIMATE_MTPA - total, 1),
+        "excluded_non_fuels": excluded,
         "note": (
             "Tracked major-refinery capacity vs the published national estimate. The gap "
             "is chiefly mini-refineries and gas-condensate plants not individually "
             "inventoried; refining exposure is measured against tracked capacity and is a "
-            "lower bound. Unlike facilities are not counted merely to close the gap."
+            "lower bound. Unlike facilities are not counted merely to close the gap. "
+            "Iteration 6 excluded petrochemical complexes (Tobolsk/ZapSibNeftekhim) from the "
+            "fuels-refining denominator via the canonical registry."
         ),
     }
     log(

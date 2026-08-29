@@ -230,8 +230,20 @@ export interface RefineryReconciliation {
   national_public_estimate_mtpa: number;
   national_estimate_source: string;
   tracked_mtpa: number;
+  tracked_refineries?: number;
   coverage_pct: number;
   gap_mtpa: number;
+  excluded_non_fuels?: string[];
+  /** Canonical refinery linkage completeness (iteration 6, §9) — identity/linkage, NOT
+   *  disruption coverage. */
+  canonical_linkage?: {
+    denominator_refineries: number;
+    struck_refineries: number;
+    mtpa_struck: number;
+    pct_denominator_mtpa_struck: number;
+    incidents_unresolved_to_registry: string[];
+    note: string;
+  };
   note: string;
 }
 

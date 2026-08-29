@@ -1549,3 +1549,63 @@ def test_coverage_matrix_keeps_event_inventory_recovery_distinct():
     snap = _snapshot()
     for sec, e in snap["coverage_matrix"].items():
         assert {"event_count", "asset_inventory_count", "recovery_episodes"} <= set(e)
+
+
+# --------------------------------------------------------------------------
+# Iteration 6: canonical refinery registry + linkage (§6-§9)
+# --------------------------------------------------------------------------
+# One stable id + alias set per refinery, so denominator and incidents resolve to the SAME
+# canonical asset instead of display-name string equality. Uncertain names never auto-resolve.
+
+def test_all_denominator_refineries_resolve_to_canonical_ids():
+    from pipeline import refinery_registry as RR
+    if not (PROCESSED / "refinery_inventory.json").exists():
+        pytest.skip("pipeline not run")
+    inv = json.loads((PROCESSED / "refinery_inventory.json").read_text(encoding="utf-8"))["refineries"]
+    for r in inv:
+        assert RR.resolve(r["name"]) is not None, f"{r['name']} must resolve to a canonical id"
+
+
+def test_petrochemical_complex_excluded_from_fuels_denominator():
+    from pipeline import refinery_registry as RR
+    reg = RR.by_id()
+    assert reg["tobolsk"]["denominator_status"] == "exclude"
+    assert "tobolsk" not in RR.denominator_ids()
+
+
+def test_refinery_alias_resolution_disambiguates_co_located_plants():
+    from pipeline import refinery_registry as RR
+    # distinct plants in the same city must NOT collapse to one id
+    assert RR.resolve("TANECO") == "taneco"
+    assert RR.resolve("TAIF-NK") == "taif-nk"
+    assert RR.resolve("taneco") != RR.resolve("taif-nk")
+    assert RR.resolve("Ufa Refinery") == "ufa"
+    assert RR.resolve("Novo-Ufa Refinery") == "novo-ufa"
+    assert RR.resolve("Ufaneftekhim Refinery") == "ufaneftekhim"
+    # an unknown name returns None — no fuzzy guessing (§7)
+    assert RR.resolve("Totally Unknown Plant XYZ") is None
+
+
+def test_no_alias_collision_across_canonical_ids():
+    """Two different canonical ids must not share a normalized alias — that would double-count
+    one facility's capacity into the denominator (§7/§10)."""
+    import collections
+    from pipeline import refinery_registry as RR
+    idx = collections.defaultdict(set)
+    for r in RR.load():
+        for a in [r["canonical_id"], r["canonical_name"], *r["aliases"]]:
+            key = RR._norm(a)
+            if key:
+                idx[key].add(r["canonical_id"])
+    collisions = {k: v for k, v in idx.items() if len(v) > 1}
+    assert not collisions, f"alias collisions would double-count capacity: {collisions}"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_canonical_linkage_is_identity_not_disruption_coverage():
+    snap = _snapshot()
+    cl = snap["refinery_reconciliation"]["canonical_linkage"]
+    assert 0 < cl["struck_refineries"] <= cl["denominator_refineries"]
+    assert 0 < cl["pct_denominator_mtpa_struck"] <= 100
+    # Naftan is a Belarusian refinery, intentionally outside the Russian denominator
+    assert "Naftan refinery (Novopolotsk)" in cl["incidents_unresolved_to_registry"]

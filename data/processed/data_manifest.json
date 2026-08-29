@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-08-29T18:34:29+00:00",
+  "build_time": "2026-08-29T18:46:31+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -14,17 +14,17 @@
     },
     {
       "name": "index_national.json",
-      "bytes": 11949,
+      "bytes": 11964,
       "optional": false
     },
     {
       "name": "index_regional.json",
-      "bytes": 561575,
+      "bytes": 561605,
       "optional": false
     },
     {
       "name": "refinery_inventory.json",
-      "bytes": 7736,
+      "bytes": 10278,
       "optional": false
     },
     {
@@ -34,7 +34,7 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 140480,
+      "bytes": 141079,
       "optional": false
     },
     {
