@@ -1,8 +1,30 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { FilterState } from "../App";
-import type { Bundle, Incident } from "../types";
+import type { Bundle, FacetCounts, Incident } from "../types";
 import { CAUSE_COLOR, classColor } from "../palette";
 import { titleCase } from "../data";
+
+/** Recompute facet counts from the raw bundle when snapshot.facet_counts is absent — a
+ *  resilience fallback for the brief deploy window where the CDN may serve an older
+ *  snapshot.json to the newer bundle. Sector/recovery/evidence facets aren't needed by the
+ *  left rail, so they are left empty here. */
+function fallbackFacets(bundle: Bundle): FacetCounts {
+  const c = (arr: (string | null | undefined)[]): Record<string, number> => {
+    const m: Record<string, number> = {};
+    for (const v of arr) if (v) m[v] = (m[v] ?? 0) + 1;
+    return m;
+  };
+  return {
+    asset_class: c(bundle.assets.map((a) => a.asset_class)),
+    line_class: c(bundle.linesGeo.features.map((f) => f.properties?.asset_class as string)),
+    incident_asset_class: c(bundle.incidents.map((i) => i.asset_class)),
+    sector: {},
+    cause: c(bundle.incidents.map((i) => i.cause)),
+    confidence: c(bundle.incidents.map((i) => i.confidence)),
+    recovery_state: {},
+    evidence_kind: {},
+  };
+}
 
 /** Left rail. Every toggle carries a live tally so an empty layer reads as
  *  "nothing recorded here" rather than as a broken filter. */
@@ -15,7 +37,10 @@ export default function Filters({
   visibleIncidents: Incident[];
 }) {
   const { taxonomy } = bundle;
-  const fc = bundle.snapshot.facet_counts;
+  // Normally the pipeline emits facet_counts. During a deploy the CDN can briefly serve an
+  // older snapshot.json (pre-facet_counts) to the new bundle; rather than white-screen, fall
+  // back to counts computed from the raw corpus so the controls still render correctly.
+  const fc = bundle.snapshot.facet_counts ?? fallbackFacets(bundle);
 
   // Corpus-wide totals (iteration 4). Toggle VISIBILITY is data-driven off these — a
   // control exists iff the whole current dataset has a record for it — never off the
