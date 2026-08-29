@@ -64,11 +64,19 @@ def _incident_date(incident):
 def _weight_at(incident, when, record=None):
     """Decayed contribution of ONE incident at a point in time, in [0, 1].
 
-    `record` is that incident's own recovery record (incident-level, iteration 2). The
-    half-life is set by rule-based evidence precedence (pipeline/recovery.py): observed
-    full/substantial reconstitution or a credible sourced estimate overrides the generic
-    per-sector assumption; a mere partial restart or a low-confidence estimate does not.
-    A credibly-sourced full reconstitution caps the contribution at the residual.
+    Three orthogonal concepts (iteration 7 state model), so they can never contradict silently:
+      A. DAMAGE severity — recovery.damage_severity(incident.status), the initial hit severity.
+         Applied ALWAYS, independent of recovery.
+      B/C. RECOVERY — the record sets the decay half-life (observed/estimated timing overrides
+         the modelled sector fallback; a partial restart / low-confidence estimate does not) and,
+         for a credible FULL reconstitution, caps the contribution at the residual.
+
+    Because damage severity is applied independently, adding a recovery record is MONOTONIC: it
+    can only speed the decay or cap the tail, never strip the damage multiplier. A partial
+    restart therefore scores exactly like no record; a full reconstitution scores <= a partial;
+    stronger restoration evidence never raises the contribution (the iteration-6 status-coupling
+    bug, where attaching a partial-restart record removed the damping, is now structurally
+    impossible).
     """
     when_date = when
     occurred = _incident_date(incident)
@@ -77,24 +85,15 @@ def _weight_at(incident, when, record=None):
 
     conf = SCORING["confidence_weights"].get(incident.get("confidence") or "possible", 0.45)
     cause = SCORING["cause_weights"].get(incident.get("cause") or "unknown", 0.7)
-    base = conf * cause
+    # A: initial damage severity, orthogonal to recovery and always applied.
+    base = conf * cause * recovery.damage_severity(incident.get("status"))
 
-    half_life, kind = recovery.effective_half_life(incident.get("asset_class"), record)
+    half_life, _kind = recovery.effective_half_life(incident.get("asset_class"), record)
     days = (when_date - occurred).days
     value = base * (0.5 ** (days / half_life))
 
-    if recovery.is_resolved(record, when_date):
+    if recovery.is_resolved(record, when_date):   # C: credible full reconstitution caps the tail
         value = min(value, base * recovery.RESIDUAL)
-    elif kind == "modelled":
-        # No overriding recovery TIMING — either no record at all, or a record that falls back
-        # to the modelled horizon (partial_restart, low-confidence estimate, bare impaired,
-        # unknown). In all of these the incident's own reported status severity still governs.
-        # Applying it only when `record is None` was a latent bug: attaching a partial-restart
-        # record (which by design does NOT change the decay) silently DROPPED the 'degraded'
-        # damping and scored the facility HIGHER than with no evidence at all. A partial
-        # restart must never raise a score. (observed/estimated kinds override with real
-        # timing and are intentionally exempt.)
-        value *= SCORING["status_multipliers"].get(incident.get("status") or "unknown", 1.0)
 
     return value if value >= SCORING["cutoff"]["min_contribution"] else 0.0
 
@@ -169,8 +168,12 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
             if share <= 0:
                 continue
             region_code = info["region_code"]
-            # Crimea (and any esdi-excluded region) contributes to its own regional
-            # exposure but never to the national composite.
+            # Only regions flagged esdi_included=False are held out of the monitored-area
+            # aggregate (they still get their own regional exposure). That set is currently
+            # EMPTY: occupied Crimea is intentionally esdi_included=True, so it DOES contribute
+            # to the monitored-area headline where it has a denominator (transmission, oil
+            # logistics) — it is ~half the transmission signal. Not a fence around occupied
+            # territory; see the note where esdi_excluded is defined.
             if region_code not in esdi_excluded:
                 nat_sector[info["sector"]] += share * weight
             if region_code:
@@ -431,6 +434,8 @@ def _incident_recovery_state(incident, record, today):
         # Granular §13 vocabulary describing WHAT the source proves (e.g. flow_rerouted vs
         # station_rebuilt). Distinct from recovery_status, which is the scoring bucket.
         "recovery_kind": None,
+        "evidence_family": None,   # §15: service_restoration | unit_restart | facility_reconstitution | ...
+        "source_quality": None,    # §31
         "scoring_evidence_kind": kind,  # observed | estimated | modelled — drives the decay
         "reconstitution_horizon_days": round(horizon),
         "resolved": resolved,
@@ -447,6 +452,8 @@ def _incident_recovery_state(incident, record, today):
     }
     if record:
         state["recovery_kind"] = record.get("recovery_kind")
+        state["evidence_family"] = record.get("evidence_family")
+        state["source_quality"] = record.get("source_quality")
         state["observed_days"] = record.get("observed_days")
         state["observed_date"] = record.get("observed_date")
         state["partial_operations_resumed_at"] = record.get("partial_operations_resumed_at")
@@ -827,6 +834,7 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
     partial_episodes, full_episodes, estimate_episodes = set(), set(), set()
     obs_by_sector = collections.defaultdict(dict)  # sector -> {episode: days}
     partial_by_sector = collections.defaultdict(set)  # sector -> {episode} (partial restarts)
+    by_family = collections.defaultdict(set)  # §15: evidence_family -> {episode}
     for incident_id, rec in recovery_by_incident.items():
         inc = inc_by_id.get(incident_id)
         if inc is None:
@@ -836,6 +844,8 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
         _h, kind, _c = recovery.assess(inc.get("asset_class"), rec)
         status = rec.get("recovery_status")
         sector = SECTOR_OF_CLASS.get(inc.get("asset_class"))
+        fam = rec.get("evidence_family") or recovery.evidence_family(status, rec.get("recovery_kind"))
+        by_family[fam].add(episode)
         if status == "partial_restart":
             partial_episodes.add(episode)
             if sector:
@@ -895,6 +905,10 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
         "median_is_mixed_infrastructure": True,
         "observed_restoration_episodes": n_episodes,
         "observed_restoration_values": sorted(int(d) for d in observed_durations),
+        # §15: episodes by EVIDENCE FAMILY, so the UI never merges a service re-energisation with
+        # a physical rebuild. facility_reconstitution is the only family that means the damaged
+        # equipment itself returned.
+        "evidence_family_counts": {f: len(eps) for f, eps in sorted(by_family.items())},
         # Per-class medians that individually clear MIN_SECTOR_MEDIAN_EPISODES (may be empty).
         "sector_medians": sector_medians,
         "median_impairment_age_days": _median(ages) if len(ages) >= MIN_MEDIAN_EPISODES else None,

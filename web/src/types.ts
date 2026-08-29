@@ -135,6 +135,11 @@ export interface RecoveryState {
   /** §13 granular description of what the source proves (flow_rerouted, unit_restarted,
    *  station_rebuilt…). Distinct from recovery_status, the scoring bucket. */
   recovery_kind?: string | null;
+  /** §15 evidence family: facility_reconstitution | unit_restart | service_restoration |
+   *  flow_rerouting | estimate. Only facility_reconstitution means the equipment itself returned. */
+  evidence_family?: string | null;
+  /** §31 lightweight source-quality tier (major_wire, government, national_regional…). */
+  source_quality?: string | null;
   scoring_evidence_kind: EvidenceKind;
   reconstitution_horizon_days: number;
   resolved: boolean;
@@ -182,6 +187,9 @@ export interface RecoveryStats {
   median_is_mixed_infrastructure?: boolean;
   observed_restoration_episodes: number;
   observed_restoration_values: number[];
+  /** §15: episode count per evidence family (service_restoration vs unit_restart vs
+   *  facility_reconstitution vs flow_rerouting vs estimate). */
+  evidence_family_counts?: Record<string, number>;
   /** Per-class medians that individually clear the per-class gate (may be empty). */
   sector_medians?: Record<string, number>;
   median_impairment_age_days: number | null;

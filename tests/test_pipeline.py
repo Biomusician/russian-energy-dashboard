@@ -279,6 +279,64 @@ def test_partial_restart_is_not_full_reconstitution():
     assert _weight_at(inc, on, partial) == pytest.approx(_weight_at(inc, on, None), abs=1e-9)
 
 
+def test_damage_severity_is_monotone_and_repaired_is_not_a_damage_state():
+    """§10-11: damage severity (concept A) is a clean, monotone map from a DAMAGE observation.
+    'repaired'/'restored' are recovery states, not damage states, and must fall through to the
+    1.0 default (never a silent 0.1 damp)."""
+    from pipeline import recovery
+    assert recovery.damage_severity("degraded") < recovery.damage_severity("unknown")
+    assert recovery.damage_severity("degraded") <= recovery.damage_severity("active")
+    # damaged/destroyed/shutdown are full damage; unknown defaults to full.
+    for s in ("active", "damaged", "destroyed", "shutdown", "unknown", None, "anything-unmapped"):
+        assert recovery.damage_severity(s) == pytest.approx(1.0)
+    # a recovery state mis-filed in status must NOT discount (it maps to the 1.0 default).
+    assert recovery.damage_severity("repaired") == pytest.approx(1.0)
+    assert recovery.damage_severity("restored") == pytest.approx(1.0)
+
+
+def test_adding_recovery_evidence_is_monotonic_non_increasing():
+    """§11 property test: across a grid of incidents, adding a recovery record whose horizon does
+    NOT exceed the modelled fallback must never INCREASE the weight. A partial restart equals the
+    record-less weight exactly; a full/substantial reconstitution is <= it. (An estimate that
+    LENGTHENS the horizon may raise it — that is evidence of worse-than-assumed damage, the one
+    allowed exception, tested separately.)"""
+    from pipeline import recovery
+    import itertools
+    statuses = ["unknown", "degraded", "active", "damaged"]
+    classes = ["refinery", "substation", "power_plant_nuclear", "oil_terminal", "gas_processing"]
+    ages = [1, 20, 60, 150, 400]
+    for status, cls, age in itertools.product(statuses, classes, ages):
+        occurred = dt.date(2026, 1, 1)
+        when = occurred + dt.timedelta(days=age)
+        inc = _incident(date="2026-01-01", status=status, asset_class=cls)
+        w_none = _weight_at(inc, when, None)
+        fallback = recovery.FALLBACK.get(cls, recovery.FALLBACK["_default"])
+        # partial restart: DISPLAY-only -> identical to no record.
+        partial = _rec(recovery_status="partial_restart", partial_operations_resumed_at="2026-01-10")
+        assert _weight_at(inc, when, partial) == pytest.approx(w_none, abs=1e-12), (status, cls, age)
+        # full reconstitution reached before `when`: capped -> never above no-record.
+        full = _rec(recovery_status="fully_reconstituted", observed_date="2026-01-15", observed_days=14)
+        assert _weight_at(inc, when, full) <= w_none + 1e-12, (status, cls, age)
+        # substantial restoration with a horizon <= fallback: faster decay -> <= no-record.
+        substantial = _rec(recovery_status="substantially_restored", observed_days=max(1, fallback // 2))
+        assert _weight_at(inc, when, substantial) <= w_none + 1e-12, (status, cls, age)
+
+
+def test_stronger_recovery_evidence_is_ordered_full_le_substantial_le_partial():
+    """§11: at a fixed point after recovery, evidence of stronger recovery is monotone downward:
+    full reconstitution <= substantial restoration <= partial restart == no record."""
+    inc = _incident(date="2026-01-01", status="degraded", asset_class="refinery")
+    when = dt.date(2026, 4, 1)  # well after the recovery dates below
+    w_none = _weight_at(inc, when, None)
+    w_partial = _weight_at(inc, when, _rec(recovery_status="partial_restart",
+                                           partial_operations_resumed_at="2026-01-20"))
+    w_subst = _weight_at(inc, when, _rec(recovery_status="substantially_restored", observed_days=30))
+    w_full = _weight_at(inc, when, _rec(recovery_status="fully_reconstituted",
+                                        observed_date="2026-02-01", observed_days=31))
+    assert w_partial == pytest.approx(w_none, abs=1e-12)
+    assert w_full <= w_subst + 1e-12 <= w_partial + 1e-12
+
+
 def test_partial_restart_never_scores_above_no_record_for_degraded_status():
     """Regression: a partial_restart record must never RAISE an incident's weight. The
     status_multiplier ('degraded' = 0.7) was applied only when no record existed, so
@@ -486,6 +544,65 @@ def test_crimea_resolution_and_other_occupied_excluded():
     for name in ("Donetsk Oblast", "Luhansk", "Zaporizhzhia", "Kherson"):
         kind, _ = resolve(name)
         assert kind == "excluded_occupied", name
+
+
+# A styling word makes "Crimea is never the Russian X" legitimate (it's about the map, not the
+# composite). Anything else pairing Crimea/occupied with a non-contribution claim about the
+# composite/index is the dangerous stale assertion this project has shipped twice.
+_CRIMEA_LINT_STYLING = (
+    "choropleth", "painted", "rendered", "labelled", "labeled", "styl", "colour", "color",
+    "mistaken for a russian", "russian region", "russian choropleth", "ordinary russian",
+    "dashed", "outline",
+)
+_CRIMEA_LINT_NEGATION = (
+    "never", "excluded from", "does not contribute", "doesn't contribute", "not contribute",
+    "not feed", "never feeds", "cannot enter", "no contribution", "kept out of the",
+)
+_CRIMEA_LINT_COMPOSITE = (
+    "composite", "national esdi", "national index", "monitored-area", "monitored area index",
+    "the index", "the headline",
+)
+
+
+def _scan_files_for_crimea_lint():
+    """Yield (path, fragment) where a source text wrongly implies Crimea/occupied is out of the
+    composite. Historical iteration reviews are excluded — they were correct for their pass."""
+    import re
+    files = list((ROOT / "pipeline").glob("*.py"))
+    files += list((ROOT / "web" / "src").rglob("*.ts")) + list((ROOT / "web" / "src").rglob("*.tsx"))
+    files += [ROOT / "README.md"]
+    files += [ROOT / "docs" / f for f in (
+        "METHODOLOGY.md", "HANDOFF.md", "SCHEMA.md", "SOURCES.md", "CURRENT_STATE.md",
+        "CHATGPT_ITERATION_PROMPT.md")]
+    for path in files:
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8").lower()
+        for frag in re.split(r"[.\n;!?]", text):
+            frag = " ".join(frag.split())
+            if ("crimea" not in frag and "occupied" not in frag):
+                continue
+            if not any(n in frag for n in _CRIMEA_LINT_NEGATION):
+                continue
+            if not any(c in frag for c in _CRIMEA_LINT_COMPOSITE):
+                continue
+            if any(s in frag for s in _CRIMEA_LINT_STYLING):
+                continue
+            yield (path, frag)
+
+
+def test_no_source_text_claims_crimea_is_out_of_the_composite():
+    """Lint (§1): fail the build if a comment/doc asserts Crimea/occupied never enters the
+    monitored-area composite — false, since esdi_included=True. Twice-shipped bug; now guarded."""
+    # Self-check: the detector must fire on the exact phrasing this project shipped.
+    bad = "crimea (and any esdi-excluded region) contributes to its own regional exposure but never to the national composite"
+    frag = " ".join(bad.split())
+    assert (any(n in frag for n in _CRIMEA_LINT_NEGATION)
+            and any(c in frag for c in _CRIMEA_LINT_COMPOSITE)
+            and not any(s in frag for s in _CRIMEA_LINT_STYLING)), "lint detector is broken"
+    hits = list(_scan_files_for_crimea_lint())
+    assert not hits, "stale 'Crimea out of the composite' text found:\n" + "\n".join(
+        f"  {p}: {f[:140]}" for p, f in hits)
 
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),

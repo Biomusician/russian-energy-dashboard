@@ -4,31 +4,31 @@
 > A test (`test_current_state_doc_is_in_sync`) fails if this drifts from the build.
 > Other docs should link here instead of re-quoting these numbers (§2).
 
-- **as_of**: 2026-08-29
-- **Headline ESDI (monitored area)**: 18.17
-- **ESDI, gas+coal counted at zero**: 15.45
-- **Sector exposures**: refining 32.85, electric_generation 0.02, transmission 20.88, oil_logistics 9.28, gas 0.00, coal 0.00
+- **as_of**: 2026-08-28
+- **Headline ESDI (monitored area)**: 18.49
+- **ESDI, gas+coal counted at zero**: 15.72
+- **Sector exposures**: refining 33.35, electric_generation 0.02, transmission 21.37, oil_logistics 9.50, gas 0.00, coal 0.00
 
 ## Coverage
 - **Oil-strike benchmark coverage**: 47.2% (144 enumerated oil-sector strikes / 305 reported)
 - **Total events across all sectors**: 175
 
 ## Recovery
-- **Observed-restoration episodes (national)**: n = 7
-- **Recovery records / partial / full / estimate**: 20 / 9 / 8 / 3
+- **Observed-restoration episodes (national)**: n = 9
+- **Recovery records / partial / full / estimate**: 25 / 12 / 10 / 3
 - **Per-class medians (n ≥ 3)**: refining 47.0d
-- **Pooled cross-class median (mixed-infrastructure, not headline)**: 72.0
+- **Pooled cross-class median (mixed-infrastructure, not headline)**: 22.0
 
 ## Refining denominator
 - **Tracked refining base**: 273.8 MTPA across 34 denominator refineries
 - **Canonical linkage (identity, NOT disruption coverage)**: 27/34 refineries struck = 85.6% of denominator MTPA
 
 ## Gas processing (experimental, NOT in headline ESDI)
-- **Within-census exposure**: 26.8% (2 of 12 censused plants, 91.56 bcm/y total)
+- **Within-census exposure**: 27.1% (2 of 12 censused plants, 91.56 bcm/y total)
 
 ## Transmission (event-burden, theatre-concentrated)
-- **Headline value**: 20.88 at saturation 8.0
-- **Sensitivity range across saturations**: 10.44–41.76
+- **Headline value**: 21.37 at saturation 8.0
+- **Sensitivity range across saturations**: 10.68–42.70
 - **Top-theatre share**: 54.5% over 3 region(s)
 
 ## Strategic effects (source-backed, observational)
@@ -36,4 +36,4 @@
 - **Per-incident effects**: 11 across 8 incidents
 
 ## Tests
-- **Python test functions** (`tests/test_pipeline.py`): 128 (pytest reports more cases — some functions are parametrized)
+- **Python test functions** (`tests/test_pipeline.py`): 132 (pytest reports more cases — some functions are parametrized)

@@ -25,3 +25,6 @@ tools/
 
 # Candidate-discovery review queue (unverified pointers, human-gated) — never committed
 data/review/
+
+# iteration-7 research scratch (compaction insurance, not committed)
+docs/_it7_research.md
