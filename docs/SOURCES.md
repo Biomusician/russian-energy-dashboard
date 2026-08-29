@@ -34,7 +34,14 @@ redistribution — that restriction would propagate into the deployed site.
    official standard. The join key is therefore the region *name*, and canonical codes
    are assigned by us.
 
-Natural Earth assigns Crimea and Sevastopol to Russia. The pipeline excludes both.
+Natural Earth assigns Crimea and Sevastopol to Russia by geometry. The pipeline draws
+Crimea instead as a **separately-identified occupied unit** (internationally Ukraine,
+distinct dashed styling, `analytic_scope: "occupied"`) that, since iteration 4,
+contributes to the Monitored-Area ESDI through the sectors where it has qualifying events
+and a compatible denominator. It is never coloured as a Russian region. The other four
+annexed oblasts remain excluded. Because Natural Earth files Crimea inside the Russian
+polygon and Russia is excluded from the context-country layer, Crimea is never painted as
+ordinary Russian context either.
 
 Enclave geometry is correct — Moscow city, St Petersburg, Minsk city, Nenets AO,
 Khanty-Mansi and Yamalo-Nenets are all properly holed out of their surrounding regions,
@@ -156,7 +163,10 @@ risk fabricated records. This is the largest identified coverage gap.
 
 ## 5. Curated file — `data/curated/incidents.csv`
 
-Analyst-maintained, five seed events, each with real citations:
+Analyst-maintained, now the largest event source (2022–present). Curated events reach the
+scored corpus only after passing through the analyst **candidate queue**
+(`data/candidate/candidate_incidents.csv`) — proposed → accepted/rejected/hold, each with
+a decision reason and mandatory source URLs. A sample of the seed events:
 
 | Event | Date | Cause | Region |
 |---|---|---|---|
@@ -182,7 +192,9 @@ Two honesty notes carried in the data itself:
 
 ## 6. Curated recovery file — `data/curated/recovery.csv` (iteration 1)
 
-Facility-level recovery evidence, source-required per row. Three seed records:
+Facility-level recovery evidence, source-required per row. **13 records → 6 distinct
+observed episodes** (iteration 5), spanning refining, oil logistics and gas processing, so
+the "typical recovery" median is now shown (47 days). A sample:
 
 | Facility | Kind | Evidence |
 |---|---|---|
@@ -209,3 +221,19 @@ in [COST_SOURCES.md](COST_SOURCES.md).
    equally well-sourced.
 5. Parser warnings from each build are surfaced in the in-app methodology panel.
 6. The dashboard states its own coverage ratio in the top ribbon.
+
+## 7. Continental pipeline network context — OpenStreetMap (ODbL), iteration 5
+
+`pipeline/build_context_network.py` collects major named `usage=transmission` oil/gas trunk
+routes (≥ 50 km) across Eurasia from **OpenStreetMap via Overpass (ODbL)**, deduplicated
+against the analytic OSM lines. These are `scope="context"` — display-only, never scored.
+**Global Energy Monitor's Global Gas/Oil Infrastructure Trackers (GGIT/GOIT, CC BY 4.0)** are
+the authoritative trackers and the cited cross-reference, but their bulk data is delivered
+behind a per-request download form with no stable CI-fetchable URL, so OSM is the automatable
+feed. Route geometry is OSM-traced (`route_quality="osm_mapped"`); cadence is monthly at most,
+not daily.
+
+## 8. Major rivers — Natural Earth (public domain), iteration 5
+
+`rivers.geojson` from Natural Earth 50m `rivers_lake_centerlines`, emphasis by `scalerank`.
+Geographic context only — never scored. Attribution is carried in the map footer.

@@ -309,3 +309,39 @@ them.
 
 Sector rollup is defined by `SECTOR_OF_CLASS` in `pipeline/config.py`. A class absent
 from that map is displayed but not scored.
+
+## Iteration 5 additions
+
+### Scope on assets and lines
+Every emitted asset (`assets.json`) and network line (`assets_lines.geojson`) carries
+`scope: "analytic"`. Analytic lines also carry `osm_id` (used to de-duplicate the context
+network against them). The continental context network lives in separate files and is
+`scope: "context"` — display-only, never scored.
+
+### Output: `data_manifest.json`
+`{ schema_version, build_time, files: [{ name, bytes, optional }] }`. A single stamp of the
+data-contract version and the files this build emitted, so a client can distinguish app/data
+skew from a genuine outage. `snapshot.json` also carries `schema_version`.
+
+### Output: optional context layers (lazy-loaded)
+- `rivers.geojson` — Natural Earth river centrelines. Per feature: `scalerank`, `reveal_zoom`,
+  optional `name` and, for major systems, `label_name`/`label_lon`/`label_lat`/`label_zoom`.
+- `context_gas_network.geojson`, `context_oil_network.geojson` — OSM trunk routes. Per
+  feature: `asset_class` (`pipeline_gas`/`pipeline_oil`), `scope: "context"`, `route_quality`
+  (`osm_mapped`), `osm_id`, `name`, `operator`.
+These are marked `optional` in the manifest and lazy-loaded on first toggle; a missing one
+must not break the core dashboard.
+
+### `context_land.geojson` (broadened)
+Every in-frame Natural Earth admin-0 country except Russia/Belarus. Per feature: `iso`,
+`name`, `labelrank`, `label_min_zoom`, `label_lon`, `label_lat` — display metadata only.
+
+### `facet_counts.context_route_class`
+Context trunk-route counts (`pipeline_gas`, `pipeline_oil`), kept **separate** from analytic
+`line_class` and from `incident_asset_class`, so context routes never imply incidents.
+
+### Input: `data/candidate/candidate_incidents.csv`
+The analyst candidate queue. Columns: `candidate_id, proposed_date, region_code, asset_name,
+asset_class, cause, confidence_or_status, research_status (accepted|rejected|hold),
+decision_reason, source_urls`. **Not read by the scoring pipeline** — only analyst-approved
+rows are copied into `incidents.csv`.
