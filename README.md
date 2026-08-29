@@ -8,14 +8,17 @@ Every number traces to a public source. Where the data does not support a number
 dashboard says so rather than estimating one. Observed facts, external estimates and
 modelled assumptions are kept visibly distinct throughout.
 
-Crimea is shown as a **separately identified context unit** — internationally
-recognised as Ukraine, distinct styling, tracked but **excluded from the Russia+Belarus
-index**. Surrounding countries and the Black Sea are drawn as display-only context.
+Crimea is shown as a **separately identified occupied unit** — internationally recognised
+as Ukraine, under Russian occupation, distinct styling and status. Since iteration 4 it
+**contributes to the headline Monitored-Area index** (through the sectors where it has
+qualifying events and a compatible denominator) while never being labelled a Russian region.
+Surrounding countries and the Black Sea are drawn as display-only context.
 
-> **Status:** MVP + iterations 1–2 + **iteration 3** (electric generation/transmission
-> split, regional intensity vs national contribution, episode-based recovery with a
-> 5-episode median gate, CREA observed economic context, three-layer Effects, map &
-> tab-strip polish). See [docs/ITERATION_3_REVIEW.md](docs/ITERATION_3_REVIEW.md).
+> **Status:** MVP + iterations 1–3 + **iteration 4** (Crimea in the Monitored-Area ESDI with
+> status preserved; whole-corpus facet counts driving data-driven filter visibility; a full
+> zero-count audit; and LNG + gas-processing coverage — five LNG terminals, two GPPs, and two
+> documented gas-plant strikes). See [docs/ITERATION_4_REVIEW.md](docs/ITERATION_4_REVIEW.md)
+> and [docs/ZERO_COUNT_AUDIT.md](docs/ZERO_COUNT_AUDIT.md).
 
 **Live site:** **https://russian-energy-dashboard.vercel.app** · **Deployment:** static
 Vite + MapLibre on Vercel, rebuilt daily by a GitHub Action; push-to-`main` auto-deploys.
@@ -172,7 +175,9 @@ Effects · Repair burden · Sources).
 
 ## Documentation
 
-- [docs/ITERATION_3_REVIEW.md](docs/ITERATION_3_REVIEW.md) — **current state**: generation/transmission split, regional intensity, episode recovery, CREA context, three-layer Effects
+- [docs/ITERATION_4_REVIEW.md](docs/ITERATION_4_REVIEW.md) — **current state**: Crimea in the index, facet-driven UI, zero-count audit, LNG/gas coverage
+- [docs/ZERO_COUNT_AUDIT.md](docs/ZERO_COUNT_AUDIT.md) — every taxonomy/filter zero: researched, classified, ingested or hidden
+- [docs/ITERATION_3_REVIEW.md](docs/ITERATION_3_REVIEW.md) — generation/transmission split, regional intensity, episode recovery, CREA context, three-layer Effects
 - [docs/ITERATION_2_REVIEW.md](docs/ITERATION_2_REVIEW.md) — Crimea, context geography, incident-level recovery, denominator audit
 - [docs/ITERATION_1_REVIEW.md](docs/ITERATION_1_REVIEW.md) — Siberia, recovery framework, 7-tab panel
 - [docs/METHODOLOGY.md](docs/METHODOLOGY.md) — how the index and recovery model are computed, and every assumption

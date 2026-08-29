@@ -212,24 +212,27 @@ median is shown **only at ≥ 5 distinct episodes**; below that the UI reports
 "records / episodes" and the honest label "< 5 episodes — no median", never a "typical".
 The dashboard shows this whole breakdown rather than hiding how much rests on assumption.
 
-## 5a. Crimea and the area of interest (iteration 2)
+## 5a. Crimea and the area of interest (iteration 2; index inclusion iteration 4)
 
 The blanket occupied-territory exclusion is narrowly, deliberately superseded **for
-Crimea only**. Crimea is added as a **separately identified context unit** (`UA-CR`),
-not a Russian federal subject:
+Crimea only**. Crimea is a **separately identified occupied unit** (`UA-CR`,
+`analytic_scope: "occupied"`), not a Russian federal subject:
 
-- It is **internationally recognised as Ukraine** and is **excluded from the
-  Russia+Belarus ESDI denominator and composite** — enforced in `build_index` and by a
-  test. Its own regional exposure is computed and shown, but never feeds the national
-  index.
-- It **is** tracked in Recent, the timeline, Recovery, Sources, coverage and filters,
-  because its disruption is relevant to the picture.
-- The map **does not adjudicate sovereignty by colour or polygon membership**: Crimea
-  gets a distinct dashed outline and neutral fill, and its status is stated in words in
-  the hover card, legend and scope note.
-- Every analytic/safety limit (no coordinates, no range-to-target, no facility-level
-  asset deck, no targeting) applies to Crimea exactly as elsewhere. The exception is
-  only to the geographic exclusion.
+- It is **internationally recognised as Ukraine**, under Russian occupation. Since
+  **iteration 4** it **contributes to the headline Monitored-Area ESDI** — but only through
+  the sectors where it has qualifying events and a compatible denominator: **transmission**
+  (event-burden; its substations/lines are context, not a denominator) and **oil logistics**
+  (events vs the proxy denominator, like every region). It is **excluded from refining and
+  electric generation** for lack of an inventoried base — not silently zeroed. This is
+  enforced in `build_index` and by tests, including one that Crimea's contribution is
+  recomputed across the whole historical series.
+- Index inclusion is an **analytic choice, not a statement about sovereignty**. The headline
+  is named **"Monitored-Area ESDI"** (Belarus + monitored Russian regions + Crimea) so the
+  point is explicit. Crimea is **never** rendered as the Russian choropleth or labelled a
+  Russian region; its distinct dashed-violet treatment, sovereignty/occupation banner and
+  "occupied"/"UA" tags are driven by `analytic_scope`, independent of index inclusion.
+- Every analytic/safety limit (no coordinates, no range-to-target, no facility-level asset
+  deck, no targeting) applies to Crimea exactly as elsewhere. The exception is only geographic.
 - The other four annexed oblasts (Donetsk, Luhansk, Zaporizhzhia, Kherson) remain fully
   excluded and resolve as `excluded_occupied`.
 
@@ -324,3 +327,22 @@ reliably is beyond MVP scope and would risk fabricated records.
 
 **Sparse 2022 coverage is correct, not a gap.** The benchmark records 3 strikes in the
 first war year and 13 in the second. A near-empty 2022 reflects reality.
+
+## 8a. Facet counts and data-driven controls (iteration 4)
+
+The pipeline emits `snapshot.facet_counts` — whole-corpus counts per UI dimension, with the
+kinds kept **separate**: point assets, network lines, incident classes, sectors, causes,
+confidence, recovery state, evidence kind. A class can have infrastructure but no incidents
+(LNG today) or incidents but no inventoried asset (refineries) — these are different numbers,
+never merged. The left-rail filters derive **visibility** from these corpus totals: a control
+exists iff the whole current dataset holds a record for it, so controls never flicker as the
+timeline or another filter moves. A category that becomes non-zero in a later rebuild
+reappears on its own. Every genuinely-zero control is audited in
+[ZERO_COUNT_AUDIT.md](ZERO_COUNT_AUDIT.md) before being hidden — coverage is improved from
+public sources first, and only what stays zero is hidden.
+
+**Gas is tracked but uncovered.** LNG liquefaction (MTPA), gas-processing throughput (bcm/y)
+and pipeline capacity (bcm/y) are incompatible units and are **never summed** into a single
+"gas capacity". The gas sector therefore carries records (events and infrastructure) but a
+**score of 0** — record count is not the sector score. Gas re-enters the composite only if a
+defensible single-basis denominator is established.
