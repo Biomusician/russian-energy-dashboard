@@ -132,6 +132,9 @@ export type RecoveryStatus =
 export interface RecoveryState {
   incident_id: string | null;
   recovery_status: RecoveryStatus;
+  /** §13 granular description of what the source proves (flow_rerouted, unit_restarted,
+   *  station_rebuilt…). Distinct from recovery_status, the scoring bucket. */
+  recovery_kind?: string | null;
   scoring_evidence_kind: EvidenceKind;
   reconstitution_horizon_days: number;
   resolved: boolean;
@@ -172,10 +175,15 @@ export interface RecoveryStats {
   unresolved_count: number;
   resolved_count: number;
   min_median_episodes: number;
+  min_sector_median_episodes?: number;
+  /** POOLED median across all classes — mixed-infrastructure evidence, never the headline. */
   median_observed_restoration_days: number | null;
   median_meaningful: boolean;
+  median_is_mixed_infrastructure?: boolean;
   observed_restoration_episodes: number;
   observed_restoration_values: number[];
+  /** Per-class medians that individually clear the per-class gate (may be empty). */
+  sector_medians?: Record<string, number>;
   median_impairment_age_days: number | null;
   impairment_age_sample: number;
   partial_restart_episodes: number;
@@ -187,6 +195,7 @@ export interface RecoveryStats {
     disrupted_facilities: number;
     unresolved: number;
     observed_restoration_episodes: number;
+    observed_restoration_values?: number[];
     median_observed_restoration_days: number | null;
   }>;
   note: string;

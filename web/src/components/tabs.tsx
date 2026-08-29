@@ -502,19 +502,11 @@ export function ReconstitutionTab(p: TabProps) {
       <div className="tiles">
         <Tile label="Unresolved disruptions" value={rs.unresolved_count} />
         <Tile label="Currently reconstituted" value={rs.resolved_count} />
-        {rs.median_meaningful ? (
-          <Tile
-            label="Median observed restart (mixed facility types)"
-            value={rs.median_observed_restoration_days}
-            unit="days" kind="observed" n={rs.observed_restoration_episodes}
-          />
-        ) : (
-          <Tile
-            label="Observed recovery (records / episodes)"
-            value={`${rs.recovery_record_count} / ${rs.observed_restoration_episodes}`}
-            small null
-          />
-        )}
+        <Tile
+          label="Observed-restoration evidence"
+          value={rs.observed_restoration_episodes}
+          unit="episodes" kind="observed"
+        />
         <Tile
           label="Reconstitution / partial-restart episodes"
           value={`${rs.full_reconstitution_episodes} / ${rs.partial_restart_episodes}`}
@@ -522,22 +514,23 @@ export function ReconstitutionTab(p: TabProps) {
         />
       </div>
 
-      {rs.median_meaningful && (
-        <Note>
-          The median pools {rs.observed_restoration_episodes} independent episodes across
-          different facility types — from a ~2-day oil-terminal restart to a ~205-day gas-plant
-          repair, and it mixes first-restart with full-reconstitution evidence. Read it as a
-          coarse central tendency, not a per-sector norm; no single sector yet has enough
-          episodes for its own median.
-        </Note>
-      )}
+      <Note warn={rs.observed_restoration_episodes < (rs.min_sector_median_episodes ?? 3)}>
+        National observed-restoration evidence rests on{" "}
+        <b>{rs.observed_restoration_episodes} independent episodes</b> (episodes, not records: a
+        multi-day strike counts once). No single "typical" repair time is claimed — a ~2-day
+        oil-terminal restart and a ~205-day gas-plant repair are different repair problems, so a
+        median is shown for an infrastructure class only once that class has ≥{" "}
+        {rs.min_sector_median_episodes ?? 3} of its own observed episodes (see <i>By
+        infrastructure class</i> below).
+      </Note>
 
-      {!rs.median_meaningful && (
-        <Note warn>
-          Observed restoration rests on {rs.observed_restoration_episodes} distinct episodes
-          (below the {rs.min_median_episodes} independent episodes needed for a meaningful
-          median). Individual observed cases are listed below; no "typical" restoration time
-          is claimed. Episodes, not records: a multi-day strike counts once.
+      {rs.median_observed_restoration_days != null && (
+        <Note>
+          <b>Mixed-infrastructure reference only:</b> the pooled median across all{" "}
+          {rs.observed_restoration_episodes} episodes is {rs.median_observed_restoration_days}{" "}
+          days. It mixes facility classes and blends first-restart with full-reconstitution
+          evidence, so it is deliberately <i>not</i> used as a headline figure or a per-sector
+          norm.
         </Note>
       )}
       {rs.observed_restoration_values.length > 0 && (
@@ -562,7 +555,7 @@ export function ReconstitutionTab(p: TabProps) {
         </div>
       </Block>
 
-      <Block title="By sector">
+      <Block title="By infrastructure class">
         {Object.keys(rs.by_sector).length === 0 && <div className="empty">No disrupted facilities to summarise.</div>}
         {Object.entries(rs.by_sector).map(([sector, s]) => (
           <div key={sector} className="kv" style={{ alignItems: "center" }}>
@@ -572,13 +565,20 @@ export function ReconstitutionTab(p: TabProps) {
             </span>
             <span className="v">
               {s.median_observed_restoration_days != null
-                ? <><span style={{ color: "var(--green)" }}>{s.median_observed_restoration_days}d</span> <span className="tile-n">n={s.observed_restoration_episodes}</span></>
+                ? <><span style={{ color: "var(--green)" }} title="Median of this class's own observed episodes">{s.median_observed_restoration_days}d median</span> <span className="tile-n">n={s.observed_restoration_episodes}</span></>
                 : s.observed_restoration_episodes > 0
-                  ? <span className="tile-n">{s.observed_restoration_episodes} episode(s), no median</span>
+                  ? <span className="tile-n" title={`Below the ${rs.min_sector_median_episodes ?? 3}-episode gate for a class median`}>
+                      {(s.observed_restoration_values ?? []).join(", ")}d · n={s.observed_restoration_episodes} (below median gate)
+                    </span>
                   : <span style={{ color: "var(--text-faint)", fontStyle: "italic", fontSize: 11 }}>no observed data</span>}
             </span>
           </div>
         ))}
+        <div style={{ fontSize: 10.5, color: "var(--text-faint)", padding: "4px 14px 0" }}>
+          A class shows a median only at ≥{rs.min_sector_median_episodes ?? 3} of its own
+          observed episodes; below that, the individual durations are listed rather than a
+          median that a small sample cannot support.
+        </div>
       </Block>
 
       <Block title="Facilities with recovery evidence">

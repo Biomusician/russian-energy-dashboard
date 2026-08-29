@@ -80,6 +80,7 @@ export function RecoveryLine({ r }: { r: RecoveryState }) {
         <EvidenceChip kind="observed" text="Reconstituted" />
         {r.observed_date && <span style={{ color: "var(--text-dim)" }}>by {fmtDate(r.observed_date)}</span>}
         {r.observed_days != null && <span style={{ color: "var(--green)" }}>{r.observed_days} d observed</span>}
+        {r.recovery_kind && <RecoveryKind kind={r.recovery_kind} />}
       </div>
     );
   }
@@ -87,6 +88,7 @@ export function RecoveryLine({ r }: { r: RecoveryState }) {
     <div className="rc-recovery">
       <EvidenceChip kind={kind} />
       <span style={{ color: "var(--text-dim)" }}>{STATUS_LABEL[r.recovery_status] ?? r.recovery_status}</span>
+      {r.recovery_kind && <RecoveryKind kind={r.recovery_kind} />}
       {r.impairment_age_days != null && (
         <span style={{ color: "var(--text-dim)" }}>impaired {r.impairment_age_days} d</span>
       )}
@@ -109,6 +111,24 @@ export function RecoveryLine({ r }: { r: RecoveryState }) {
         </span>
       )}
     </div>
+  );
+}
+
+/** §13: the granular "what the source proves" token. Flow-rerouted / partial-throughput kinds
+ *  are amber because they are explicitly NOT facility reconstitution; unit repairs are neutral. */
+function RecoveryKind({ kind }: { kind: string }) {
+  const flowOnly = /flow_rerouted|partial_throughput|partial_operations|interim|loadings_resumed/.test(kind);
+  return (
+    <span
+      title="What the source establishes (distinct from the scoring bucket)"
+      style={{
+        fontSize: 9.5, letterSpacing: 0.2, padding: "0 5px", borderRadius: 2,
+        border: "1px solid var(--line)",
+        color: flowOnly ? "var(--amber)" : "var(--text-faint)",
+      }}
+    >
+      {kind.replace(/_/g, " ")}
+    </span>
   );
 }
 

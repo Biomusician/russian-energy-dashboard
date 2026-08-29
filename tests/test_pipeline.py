@@ -614,6 +614,65 @@ def test_partial_restart_not_counted_as_full_reconstitution():
     assert rs["partial_restart_episodes"] >= 0 and rs["full_reconstitution_episodes"] >= 0
 
 
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_pooled_median_is_labelled_mixed_infrastructure():
+    """§11: the pooled cross-class median must be flagged mixed-infrastructure so the UI can
+    never present it as a per-sector repair time."""
+    snap = _snapshot()
+    rs = snap["recovery_stats"]
+    assert rs.get("median_is_mixed_infrastructure") is True
+    assert "min_sector_median_episodes" in rs
+    # The per-class gate is looser than the pooled gate, but still > 1.
+    assert 1 < rs["min_sector_median_episodes"] <= rs["min_median_episodes"]
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_per_class_median_only_appears_at_class_gate():
+    """§12: a class median is emitted only when THAT class has enough of its own observed
+    episodes; below the gate the individual durations are exposed instead."""
+    snap = _snapshot()
+    rs = snap["recovery_stats"]
+    gate = rs["min_sector_median_episodes"]
+    for sector, m in rs["by_sector"].items():
+        assert "observed_restoration_values" in m, sector
+        # Values length agrees with the episode count.
+        assert len(m["observed_restoration_values"]) == m["observed_restoration_episodes"]
+        if m["observed_restoration_episodes"] < gate:
+            assert m["median_observed_restoration_days"] is None, sector
+        # sector_medians must be exactly the classes that cleared the gate.
+        in_medians = sector in (rs.get("sector_medians") or {})
+        assert in_medians == (m["median_observed_restoration_days"] is not None), sector
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_flow_rerouted_recovery_kind_is_never_full_reconstitution():
+    """§13: a 'flow rerouted around a still-damaged node' restart is a partial restart, never
+    facility reconstitution (the Unecha lesson). The granular kind must not contradict the
+    scoring bucket."""
+    snap = _snapshot()
+    for d in snap["live_disruptions"]:
+        rec = d["recovery"]
+        kind = rec.get("recovery_kind")
+        if kind and "flow_rerouted" in kind:
+            assert rec["recovery_status"] == "partial_restart", d["asset_id"]
+            assert rec["resolved"] is False, d["asset_id"]
+
+
+def test_recovery_kind_column_matches_status_in_source():
+    """The curated recovery file must not pair a flow-only kind with a full-reconstitution
+    status — checked on the source of truth, not just the built artifact."""
+    import csv
+    path = ROOT / "data" / "curated" / "recovery.csv"
+    flow_kinds = {"flow_rerouted"}
+    with open(path, encoding="utf-8", newline="") as f:
+        for row in csv.DictReader(f):
+            if (row.get("recovery_kind") or "") in flow_kinds:
+                assert row["recovery_status"] == "partial_restart", row["incident_id"]
+
+
 @pytest.mark.skipif(not (PROCESSED / "incidents.json").exists(),
                     reason="pipeline has not been run")
 def test_multi_day_strike_is_one_episode_not_several_incidents():

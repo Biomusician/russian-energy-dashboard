@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-08-29T18:46:31+00:00",
+  "build_time": "2026-08-29T19:05:08+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -34,7 +34,7 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 141079,
+      "bytes": 142737,
       "optional": false
     },
     {

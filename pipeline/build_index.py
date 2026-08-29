@@ -397,6 +397,9 @@ def _incident_recovery_state(incident, record, today):
     state = {
         "incident_id": incident.get("incident_id"),
         "recovery_status": status,
+        # Granular §13 vocabulary describing WHAT the source proves (e.g. flow_rerouted vs
+        # station_rebuilt). Distinct from recovery_status, which is the scoring bucket.
+        "recovery_kind": None,
         "scoring_evidence_kind": kind,  # observed | estimated | modelled — drives the decay
         "reconstitution_horizon_days": round(horizon),
         "resolved": resolved,
@@ -412,6 +415,7 @@ def _incident_recovery_state(incident, record, today):
         "recovery_sources": [],
     }
     if record:
+        state["recovery_kind"] = record.get("recovery_kind")
         state["observed_days"] = record.get("observed_days")
         state["observed_date"] = record.get("observed_date")
         state["partial_operations_resumed_at"] = record.get("partial_operations_resumed_at")
@@ -662,6 +666,10 @@ def _median(values):
 # EPISODES (not records). Iteration 3 raised this to 5 and made it episode-based, so a
 # multi-day strike counted once and the median is never "median-of-few".
 MIN_MEDIAN_EPISODES = 5
+# A per-CLASS median needs fewer episodes than the pooled one, because episodes within one
+# infrastructure class are commensurable (§12). The pooled cross-class median is kept only as
+# labelled "mixed-infrastructure evidence", never a generic repair time.
+MIN_SECTOR_MEDIAN_EPISODES = 3
 
 
 def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
@@ -710,25 +718,42 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
         sect_live = [x for x in live if x.get("sector") == sector]
         if not sect_live and sector not in obs_by_sector:
             continue
-        sect_obs = list(obs_by_sector.get(sector, {}).values())
+        sect_obs = sorted(int(d) for d in obs_by_sector.get(sector, {}).values())
         by_sector[sector] = {
             "disrupted_facilities": len(sect_live),
             "unresolved": sum(1 for x in sect_live if not x["recovery"]["resolved"]),
             "observed_restoration_episodes": len(sect_obs),
-            "median_observed_restoration_days": _median(sect_obs) if len(sect_obs) >= MIN_MEDIAN_EPISODES else None,
+            "observed_restoration_values": sect_obs,
+            # Per-class median (§12): needs episodes WITHIN the class; below the gate the UI
+            # shows the individual durations, which is honest for a small sample.
+            "median_observed_restoration_days":
+                _median(sect_obs) if len(sect_obs) >= MIN_SECTOR_MEDIAN_EPISODES else None,
         }
 
     n_episodes = len(observed_durations)
     median_meaningful = n_episodes >= MIN_MEDIAN_EPISODES
+    # §12: sectors/classes that clear the per-class gate get their OWN median; these are the
+    # only medians a reader should treat as a repair time for that kind of infrastructure.
+    sector_medians = {
+        sec: m["median_observed_restoration_days"]
+        for sec, m in by_sector.items()
+        if m["median_observed_restoration_days"] is not None
+    }
     return {
         "unresolved_count": len(unresolved),
         "resolved_count": len(resolved),
         "min_median_episodes": MIN_MEDIAN_EPISODES,
-        # Median only appears with enough INDEPENDENT episodes; else the UI shows counts.
+        "min_sector_median_episodes": MIN_SECTOR_MEDIAN_EPISODES,
+        # The POOLED median mixes infrastructure classes (a refinery CDU and a substation are
+        # not the same repair problem), so it is emitted but explicitly labelled mixed and is
+        # never the headline (§11). Prefer sector_medians below where they exist.
         "median_observed_restoration_days": _median(observed_durations) if median_meaningful else None,
         "median_meaningful": median_meaningful,
+        "median_is_mixed_infrastructure": True,
         "observed_restoration_episodes": n_episodes,
         "observed_restoration_values": sorted(int(d) for d in observed_durations),
+        # Per-class medians that individually clear MIN_SECTOR_MEDIAN_EPISODES (may be empty).
+        "sector_medians": sector_medians,
         "median_impairment_age_days": _median(ages) if len(ages) >= MIN_MEDIAN_EPISODES else None,
         "impairment_age_sample": len(ages),
         "partial_restart_episodes": len(partial_episodes),
@@ -739,10 +764,13 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
         "by_sector": by_sector,
         "note": (
             "Recovery is tracked per incident and counted by DISTINCT EPISODE: a multi-day "
-            f"strike counts once. A median observed restoration is shown only with >= "
-            f"{MIN_MEDIAN_EPISODES} independent episodes, and is never called 'typical'. "
+            f"strike counts once. National observed-restoration evidence is n={n_episodes}. A "
+            f"per-CLASS median appears only where a class has >= {MIN_SECTOR_MEDIAN_EPISODES} "
+            "independent observed episodes; the pooled cross-class figure is MIXED-"
+            "INFRASTRUCTURE evidence, not a generic repair time, and is never the headline. "
             "'modelled' scoring means no credible source-reported timing exists; a partial "
-            "restart is recorded but never treated as full reconstitution."
+            "restart (including flow rerouted around a still-damaged node) is recorded but "
+            "never treated as full reconstitution."
         ),
     }
 
