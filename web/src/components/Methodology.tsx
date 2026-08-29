@@ -149,8 +149,12 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
             <li>Curated incident file — per-row source URLs, shown on each event</li>
           </ul>
 
-          <p style={{ color: "var(--text-faint)", marginTop: 18 }}>
-            Data as at {fmtDate(s.as_of)} · built {s.build_time}
+          <p style={{ color: "var(--text-faint)", marginTop: 18, lineHeight: 1.5 }}>
+            Data as at {fmtDate(s.as_of)}; the dataset is rebuilt daily (last build{" "}
+            {fmtDate(s.build_time.slice(0, 10))}). Sources refresh at their own cadence,
+            not all daily — strike reporting continuously, the power-plant and grid
+            inventories rarely, CREA economic figures monthly (each shown with its own
+            reporting month), and curated incidents when a sourced update is added.
           </p>
         </div>
       </div>
