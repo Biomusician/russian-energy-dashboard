@@ -582,6 +582,11 @@ def main():
 
     _mirror_to_web()
 
+    # Single source of truth for headline numbers (§2) — regenerated every build so no doc
+    # drifts. A test asserts it matches the snapshot.
+    from pipeline import current_state
+    current_state.write(snapshot)
+
     log("-" * 62)
     log(f"ESDI {snapshot['esdi']}  sectors " +
         "  ".join(f"{k}={v}" for k, v in snapshot["sectors"].items()))

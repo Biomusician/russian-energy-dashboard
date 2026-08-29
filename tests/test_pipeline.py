@@ -1791,6 +1791,26 @@ def test_discovery_writes_only_to_review_queue_not_curated_or_processed():
 
 
 # --------------------------------------------------------------------------
+# Iteration 6: headline-number consistency (§2, §39)
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_current_state_doc_is_in_sync():
+    """docs/CURRENT_STATE.md is the single source of truth for headline numbers and must match
+    the current build. If this fails, run `python -m pipeline.run` to regenerate it (§2)."""
+    from pipeline import current_state
+    doc = current_state.DOC
+    assert doc.exists(), "docs/CURRENT_STATE.md is missing — run the build"
+    snap = _snapshot()
+    expected = current_state.render(snap, current_state.count_tests())
+    actual = doc.read_text(encoding="utf-8")
+    assert actual == expected, (
+        "docs/CURRENT_STATE.md is stale vs the built snapshot — rebuild to regenerate it. "
+        "This is the drift guard: headline counts must not be hand-maintained."
+    )
+
+
+# --------------------------------------------------------------------------
 # Iteration 6: canonical refinery registry + linkage (§6-§9)
 # --------------------------------------------------------------------------
 # One stable id + alias set per refinery, so denominator and incidents resolve to the SAME
