@@ -76,12 +76,14 @@ export function OverviewTab(p: TabProps) {
 
   const esdiNow = bundle.regional.regions[region.code]?.esdi[step] ?? 0;
   const regionIncidents = incidentsByRegion.get(region.code) ?? [];
-  const isContext = !region.esdi_included;
+  // Occupied-territory treatment is independent of index inclusion: Crimea is now IN the
+  // Monitored-Area index but keeps its distinct violet styling and sovereignty banner.
+  const isOccupied = region.analytic_scope !== "aoi";
   return (
     <div className="tab-body">
-      {isContext && (
+      {isOccupied && (
         <div className="context-banner">
-          <div className="eyebrow" style={{ color: "var(--violet)" }}>Context unit — not in the index</div>
+          <div className="eyebrow" style={{ color: "var(--violet)" }}>Occupied territory — in the index, shown separately</div>
           <div style={{ fontSize: 11.5, marginTop: 4, lineHeight: 1.5 }}>
             <strong>Sovereignty:</strong> {region.sovereignty}<br />
             <strong>De-facto control:</strong> {region.de_facto_control}
@@ -93,13 +95,13 @@ export function OverviewTab(p: TabProps) {
       )}
       <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--line-soft)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div className="num" style={{ fontSize: 32, color: isContext ? "var(--violet)" : severityColor(esdiNow) }}>{fmtNum(esdiNow, 1)}</div>
+          <div className="num" style={{ fontSize: 32, color: isOccupied ? "var(--violet)" : severityColor(esdiNow) }}>{fmtNum(esdiNow, 1)}</div>
           <div>
-            <div className="eyebrow">{isContext ? "Context exposure (excl. index)" : "Disruption exposure"}</div>
+            <div className="eyebrow">Disruption exposure{isOccupied && " · occupied"}</div>
             <div style={{ fontSize: 11, color: "var(--text-dim)" }}>as at {fmtDate(currentDate)}</div>
           </div>
         </div>
-        <div className="meter"><i style={{ width: `${Math.min(100, esdiNow * 4)}%`, background: isContext ? "var(--violet)" : severityColor(esdiNow) }} /></div>
+        <div className="meter"><i style={{ width: `${Math.min(100, esdiNow * 4)}%`, background: isOccupied ? "var(--violet)" : severityColor(esdiNow) }} /></div>
       </div>
 
       <Block title="Recorded activity">
@@ -308,7 +310,7 @@ export function RankingsTab(p: TabProps) {
           <span>
             <div className="rank-name">
               {x.r.name}
-              {!x.r.esdi_included && <span className="tag context" style={{ marginLeft: 6 }}>context</span>}
+              {x.r.analytic_scope !== "aoi" && <span className="tag context" style={{ marginLeft: 6 }}>occupied</span>}
             </div>
             <div className="rank-sub">
               {x.r.district} · {x.r.incident_count} events
@@ -373,7 +375,7 @@ function ActiveBurdenTable({ p, onBack }: { p: TabProps; onBack: () => void }) {
             {rows.map((r) => (
               <tr key={r.code} onClick={() => p.onSelect(r.code)} className={r.code === p.selected ? "sel" : ""}>
                 <td style={{ textAlign: "left" }}>
-                  {r.name}{!r.esdi_included && <span className="tag context" style={{ marginLeft: 5 }}>ctx</span>}
+                  {r.name}{r.analytic_scope !== "aoi" && <span className="tag context" style={{ marginLeft: 5 }}>UA</span>}
                 </td>
                 {cols.map((c) => <td key={c.key} className="num">{c.get(r) || "—"}</td>)}
                 <td style={{ textAlign: "left", color: "var(--text-dim)", fontSize: 10 }}>
@@ -406,8 +408,8 @@ export function RecentTab(p: TabProps) {
     return [...pool].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
   }, [p.visibleIncidents, p.selected]);
 
-  const isContextRegion = (code: string | null) =>
-    code ? p.bundle.snapshot.regions[code]?.esdi_included === false : false;
+  const isOccupiedRegion = (code: string | null) =>
+    code ? p.bundle.snapshot.regions[code]?.analytic_scope !== "aoi" : false;
 
   return (
     <div className="tab-body">
@@ -435,7 +437,7 @@ export function RecentTab(p: TabProps) {
             <div className="rc-meta">
               <span className="tag" style={{ color: classColor(i.asset_class), borderColor: "var(--line)" }}>{titleCase(i.cause)}</span>
               <span className={`tag ${i.confidence}`}>{i.confidence}</span>
-              {isContextRegion(i.region_code) && <span className="tag context">context · excl. index</span>}
+              {isOccupiedRegion(i.region_code) && <span className="tag context">Ukraine · occupied</span>}
               {i.conflicting_reports && <span className="tag conflict">sources conflict</span>}
               {live && live.event_count > 1 && (
                 <span className="tag repeat" title={`This facility has ${live.event_count} recorded disruption events — a repeatedly targeted site, not a one-off.`}>

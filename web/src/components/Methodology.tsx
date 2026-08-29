@@ -125,8 +125,8 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
 
           <H>Assumptions worth knowing</H>
           <ul>
-            <li>Area of interest: Belarus, the six western Russian federal districts, and the Siberian Federal District (79 regions). The Far Eastern district is defined but not yet enabled.</li>
-            <li>Occupied Ukrainian territory is excluded; it is internationally recognised as Ukraine.</li>
+            <li>Monitored area: Belarus, the six western Russian federal districts, the Siberian Federal District, and occupied Crimea. The headline <strong style={{ color: "var(--text)" }}>Monitored-Area ESDI</strong> covers all of these. The Far Eastern district is defined but not yet enabled.</li>
+            <li>Crimea is internationally recognised as Ukraine and is under Russian occupation. It is shown as a separate unit with distinct styling and status, and it now contributes to the index through the sectors where it has qualifying events and a compatible denominator (transmission, oil logistics) — never labelled a Russian region. Inclusion in the index is an analytic choice, not a statement about sovereignty. The other occupied Ukrainian oblasts remain excluded.</li>
             <li>Transmission lines and pipelines are assigned to the region containing their midpoint, and are counted, never scored.</li>
             <li>Month-precision dates are anchored to the first of the month for decay arithmetic; the precision is preserved and shown.</li>
           </ul>

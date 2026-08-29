@@ -6,7 +6,8 @@ distinct from "Moscow Oblast" around it.
 
 Resolution returns one of five outcomes, and the differences matter:
   ("in_aoi", code)           -- a Russia/Belarus region we cover and score
-  ("context", "UA-CR")       -- Crimea: tracked, but excluded from the ESDI composite
+  ("context", "UA-CR")       -- Crimea: a separately-identified occupied unit, tracked and
+                                (since iteration 4) included in the Monitored-Area index
   ("excluded_occupied", name)-- other occupied Ukrainian territory, fully excluded
   ("out_of_aoi", name)       -- a real Russian region east of the enabled AOI boundary
   ("unresolved", text)       -- could not identify it; a parse failure to be reported

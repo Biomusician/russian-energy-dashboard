@@ -180,17 +180,22 @@ BY_REGIONS = {
 ALL_RU_REGIONS = {**RU_REGIONS, **SI_REGIONS, **FE_REGIONS}
 
 # ---------------------------------------------------------------------------
-# Special analytic units — Crimea (iteration 2)
+# Special analytic units — Crimea (iteration 2; index inclusion iteration 4)
 # ---------------------------------------------------------------------------
 # Crimea is a deliberate, narrow exception to the blanket occupied-territory exclusion.
-# It is tracked as a SEPARATELY IDENTIFIED context unit, NOT as a Russian federal
-# subject: publicly reported disruption there is relevant to the picture, but Crimea is
-# internationally recognised as Ukraine and is excluded from the Russia+Belarus ESDI
-# denominator and composite.
+# It is a SEPARATELY IDENTIFIED unit, NOT a Russian federal subject: internationally
+# recognised as Ukraine, under Russian occupation for the period this dashboard covers.
 #
-# The exception is only to the *geographic* exclusion. Every analytic/safety limit
-# (no coordinates, no range-to-target, no facility-level asset deck, no targeting)
-# applies to Crimea exactly as elsewhere. See docs/METHODOLOGY.md.
+# ITERATION 4 change: Crimea now CONTRIBUTES to the headline Monitored-Area ESDI, through
+# the sectors where it has qualifying events and a compatible denominator (transmission,
+# oil logistics). It is excluded from refining/generation for lack of an infrastructure
+# base, not silently zeroed. Inclusion in the analytic index is NOT a statement about
+# sovereignty; the map never colours Crimea as a Russian region. `analytic_scope:
+# "occupied"` (never "aoi") is what drives its distinct styling and status language, so
+# that treatment is independent of whether it is in the index.
+#
+# Every analytic/safety limit (no coordinates, no range-to-target, no facility-level asset
+# deck, no targeting) applies to Crimea exactly as elsewhere. See docs/METHODOLOGY.md.
 #
 # Geometry is the union of Natural Earth's two Crimean features, which NE files under
 # adm0_a3=RUS but honestly tags with the Ukrainian ISO codes UA-43 / UA-40.
@@ -203,13 +208,14 @@ SPECIAL_UNITS = {
         "natural_earth_names": ["Crimea", "Sevastopol"],
         "sovereignty": "Internationally recognised as Ukraine",
         "de_facto_control": "Russian-occupied since 2014",
-        "analytic_scope": "context",
-        "esdi_included": False,
+        "analytic_scope": "occupied",
+        "esdi_included": True,
         "note": (
-            "Represented separately because it is relevant to the disruption picture. "
-            "Not a Russian federal subject; excluded from the Russia+Belarus composite. "
-            "The map does not adjudicate sovereignty through colour or polygon "
-            "membership."
+            "Separately identified: internationally recognised as Ukraine, under Russian "
+            "occupation. Not a Russian federal subject. Included in the Monitored-Area "
+            "ESDI (iteration 4) through the sectors where it has qualifying events and a "
+            "compatible denominator; excluded from refining/generation for lack of a base. "
+            "The map does not adjudicate sovereignty through colour or polygon membership."
         ),
     },
 }

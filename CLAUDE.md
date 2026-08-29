@@ -6,10 +6,11 @@ Project-level rules. These override `~/.claude/CLAUDE.md` where they conflict.
 
 An open-source-only dashboard tracking publicly reported degradation of energy
 infrastructure in **Belarus, western Russia and the Siberian Federal District**,
-aggregated to administrative region, 2022–present (79 regions), with **Crimea** shown
-separately as a context unit (internationally Ukrainian, excluded from the index). It is a **research and
-monitoring instrument whose main product is calibrated honesty about what is and is not
-known**, with a good map attached.
+aggregated to administrative region, 2022–present, with **Crimea** shown separately as an
+occupied unit (internationally Ukrainian) that, since iteration 4, **contributes to the
+headline Monitored-Area index** while keeping distinct styling and status. It is a
+**research and monitoring instrument whose main product is calibrated honesty about what
+is and is not known**, with a good map attached.
 
 The area of interest is locked in `AOI_FEDERAL_DISTRICTS` (`pipeline/config.py`). The
 Far Eastern FD is defined but not enabled; adding it there turns it on with no refactor.
@@ -38,10 +39,14 @@ Specific consequences already implemented — do not undo them:
 - `tests/test_pipeline.py` fails the build if a range-to-target field or an incident
   coordinate appears in emitted data. **Do not defeat these tests.**
 - Occupied Ukrainian territory is excluded, **except Crimea** — a narrow, documented
-  iteration-2 exception. Crimea is a separately-identified *context unit* (internationally
-  Ukrainian, `esdi_included: false`), tracked but excluded from the Russia+Belarus index.
-  Every analytic/safety limit still applies to it; the exception is only geographic. The
-  other four annexed oblasts stay fully excluded. Tests enforce all of this.
+  exception. Crimea is a separately-identified *occupied unit* (internationally Ukrainian,
+  `analytic_scope: "occupied"`, `esdi_included: true` since iteration 4). It **contributes
+  to the Monitored-Area index** through the sectors where it has qualifying events and a
+  compatible denominator, but is **never labelled a Russian region** and keeps its distinct
+  styling and sovereignty status. Index inclusion is an analytic choice, not a statement
+  about sovereignty. Every analytic/safety limit still applies to it — no incident
+  coordinates, admin-region precision only — the exception is only geographic. The other
+  four annexed oblasts stay fully excluded. Tests enforce all of this.
 
 Sources are public, open and unclassified, always.
 

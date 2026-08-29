@@ -26,7 +26,7 @@ export default function Ribbon({
     <header className="ribbon">
       <div className="ribbon-brand">
         <h1 className="ribbon-title">Energy Disruption Monitor</h1>
-        <div className="ribbon-sub">Western Russia, Siberia &amp; Belarus · admin-region level</div>
+        <div className="ribbon-sub">Belarus, western Russia &amp; Siberia + occupied Crimea · admin-region level</div>
         <button className="ghost" style={{ marginTop: 8, alignSelf: "flex-start" }} onClick={onOpenMethodology}>
           Methodology &amp; caveats
         </button>
@@ -35,12 +35,12 @@ export default function Ribbon({
       <div className="esdi-block">
         <div className="esdi-value" style={{ color: severityColor(esdi) }}>{fmtNum(esdi, 1)}</div>
         <div className="esdi-meta">
-          <div className="eyebrow">Disruption Exposure Index</div>
+          <div className="eyebrow">Monitored-Area ESDI</div>
           <div style={{ fontSize: 11, color: "var(--text-dim)" }}>
             {fmtDate(currentDate)} {isLatest && <span style={{ color: "var(--accent)" }}>· live</span>}
           </div>
           <div style={{ fontSize: 10.5, color: "var(--text-faint)", maxWidth: 180, lineHeight: 1.4 }}>
-            Capacity at disrupted sites — not measured loss
+            Belarus + monitored Russian regions + Crimea. Capacity at disrupted sites — not measured loss.
           </div>
         </div>
       </div>

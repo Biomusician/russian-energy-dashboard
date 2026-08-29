@@ -165,7 +165,7 @@ export default function MapPanel({
       m.addSource("assets", { type: "geojson", data: assetPoints });
       m.addSource("disruptions", { type: "geojson", data: disruptionPoints });
 
-      // Analytic (Russia+Belarus) regions carry the severity choropleth.
+      // Analytic (monitored-area) regions carry the severity choropleth.
       m.addLayer({
         id: "regions-fill",
         type: "fill",
@@ -534,8 +534,9 @@ export default function MapPanel({
         This is a damage-assessment view of publicly reported disruption — it holds no
         current unit positions, readiness or operational status.
         <span style={{ display: "block", marginTop: 4, color: "var(--violet)" }}>
-          Crimea (dashed outline) is internationally recognised as Ukraine and is shown as
-          a separate context unit, excluded from the Russia+Belarus index.
+          Crimea (dashed outline) is internationally recognised as Ukraine, under Russian
+          occupation. It is shown as a separate unit and is included in the Monitored-Area
+          index — inclusion is an analytic choice, not a statement about sovereignty.
         </span>
       </div>
 
@@ -552,7 +553,7 @@ export default function MapPanel({
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 7, borderTop: "1px solid var(--line)", paddingTop: 6 }}>
           <span style={{ width: 16, height: 8, border: "1px dashed #a98bfa", background: "#2a2438" }} />
-          <span style={{ fontSize: 9.5, color: "var(--text-faint)" }}>Crimea — context (excl. index)</span>
+          <span style={{ fontSize: 9.5, color: "var(--text-faint)" }}>Crimea — Ukraine, occupied (in index)</span>
         </div>
       </div>
 
@@ -562,7 +563,7 @@ export default function MapPanel({
           <div className="eyebrow" style={{ marginTop: 2 }}>{hover.district}</div>
           {hover.special ? (
             <div style={{ fontSize: 10.5, color: "var(--violet)", marginTop: 5, lineHeight: 1.4 }}>
-              Context unit — internationally Ukraine, excluded from the index.<br />
+              Internationally Ukraine, under Russian occupation. Included in the index; shown separately.<br />
               Events to date: <span className="num">{hover.incidents}</span>
             </div>
           ) : (

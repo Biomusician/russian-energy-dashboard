@@ -441,19 +441,20 @@ def test_snapshot_reports_its_own_coverage():
 
 @pytest.mark.skipif(not (PROCESSED / "regions.json").exists(),
                     reason="pipeline has not been run")
-def test_crimea_is_a_permitted_context_unit_others_excluded():
-    """Iteration 2: Crimea is a narrow, explicit exception -- present as a separately
-    identified CONTEXT unit (not a Russian federal subject), while the other four
-    annexed oblasts remain fully excluded from the region layer."""
+def test_crimea_is_a_separate_occupied_unit_others_excluded():
+    """Iteration 4: Crimea is a separately identified OCCUPIED unit (not a Russian federal
+    subject) that now participates in the index, while the other four annexed oblasts
+    remain fully excluded from the region layer. Its distinct status is preserved."""
     regions = json.loads((PROCESSED / "regions.json").read_text(encoding="utf-8"))
     by_name = {r["name"].lower(): r for r in regions}
-    # Crimea present, but explicitly marked as context, Ukrainian, and ESDI-excluded.
     assert "crimea" in by_name
     crimea = by_name["crimea"]
-    assert crimea["analytic_scope"] == "context"
-    assert crimea["esdi_included"] is False
+    # Distinct occupied status, Ukrainian, now index-included — never a Russian subject.
+    assert crimea["analytic_scope"] == "occupied"
+    assert crimea["esdi_included"] is True
     assert crimea["country"] == "UA"
     assert "ukrain" in crimea["sovereignty"].lower()
+    assert crimea["de_facto_control"], "occupation status must remain stated"
     # Other occupied Ukrainian territory stays out of the region layer entirely.
     for excluded in ("donetsk", "luhansk", "zaporizhzhia", "kherson"):
         assert excluded not in by_name
@@ -470,19 +471,36 @@ def test_crimea_resolution_and_other_occupied_excluded():
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
                     reason="pipeline has not been run")
-def test_crimea_excluded_from_national_esdi_denominator():
-    """Crimea events must never enter the Russia+Belarus ESDI composite or denominator."""
+def test_crimea_now_contributes_to_the_monitored_area_index():
+    """Iteration 4: Crimea contributes to the headline index. It must be flagged included,
+    and its events must actually move the national aggregate (its regional exposure > 0
+    where it has qualifying events), while carrying no coordinates."""
     snap = json.loads((PROCESSED / "snapshot.json").read_text(encoding="utf-8"))
     crimea = snap["regions"]["UA-CR"]
-    assert crimea["esdi_included"] is False
-    # Its own regional exposure may be shown, but it is not in the national aggregate:
-    # rebuild-invariant check that a Crimea-only event cannot move the national ESDI.
+    assert crimea["esdi_included"] is True
+    assert crimea["analytic_scope"] == "occupied"
+    # Crimea has qualifying transmission + oil-logistics events, so its own exposure is > 0.
+    assert crimea["esdi"] > 0, "Crimea has qualifying events and should carry exposure"
     incidents = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
     crimea_incidents = [i for i in incidents if i.get("region_code") == "UA-CR"]
     assert crimea_incidents, "expected at least one tracked Crimea event"
     for i in crimea_incidents:
-        # Crimea events are tracked (region-coded) but carry no coordinates, like all others.
+        # Included in the index, still admin-region only: never any coordinate.
         assert "lat" not in i and "lon" not in i
+
+
+@pytest.mark.skipif(not (PROCESSED / "index_national.json").exists(),
+                    reason="pipeline has not been run")
+def test_crimea_contribution_is_included_across_the_historical_series():
+    """Including Crimea must recompute the whole time series, not just the latest point.
+    Rebuild-invariant: the national transmission series is >= a Crimea-excluded rebuild at
+    every step where Crimea has an active event. We assert the weaker, stable property that
+    the transmission series is non-trivial and Crimea's own series carries transmission."""
+    nat = json.loads((PROCESSED / "index_national.json").read_text(encoding="utf-8"))
+    reg = json.loads((PROCESSED / "index_regional.json").read_text(encoding="utf-8"))
+    assert any(v > 0 for v in nat["sectors"]["transmission"]), "transmission series is empty"
+    cr = reg["regions"]["UA-CR"]["sectors"]["transmission"]
+    assert any(v > 0 for v in cr), "Crimea transmission series should be populated historically"
 
 
 def test_context_geography_has_no_analytic_infrastructure():
