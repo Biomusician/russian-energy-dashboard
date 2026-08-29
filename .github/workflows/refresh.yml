@@ -54,15 +54,19 @@ jobs:
       - name: Test
         run: python -m pytest
 
-      - name: Commit if changed
+      - name: Commit if data changed
         run: |
           git config user.name  "dataset-refresh[bot]"
           git config user.email "dataset-refresh[bot]@users.noreply.github.com"
-          git add data/processed web/public/data
-          if git diff --staged --quiet; then
-            echo "No dataset change today."
+          # Skip the commit when the only difference from HEAD is the wall-clock
+          # build_time — a same-day rerun with no real data change must not produce an
+          # empty "daily refresh" commit. Legitimate daily drift (as_of, recency-weighted
+          # index) still counts as a change.
+          if ! python scripts/ci_data_changed.py; then
+            echo "No substantive dataset change — skipping commit."
             exit 0
           fi
+          git add data/processed web/public/data
           ESDI=$(python -c "import json;print(json.load(open('data/processed/snapshot.json',encoding='utf-8'))['esdi'])")
           N=$(python -c "import json;print(json.load(open('data/processed/snapshot.json',encoding='utf-8'))['incident_total'])")
           git commit -m "data: daily refresh $(date -u +%Y-%m-%d) — ESDI ${ESDI}, ${N} events"

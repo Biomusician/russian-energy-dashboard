@@ -1020,3 +1020,34 @@ def test_dataset_sanity_floor_for_daily_refresh():
     # Denominators must survive — a zeroed denominator would silently break every share.
     den = snap["denominators"]
     assert den["refining_mtpa"] > 0 and den["electric_generation_mw"] > 0
+
+
+# --------------------------------------------------------------------------
+# Daily-refresh: build_time alone must NOT count as a data change (step 5 —
+# avoid unnecessary commits when upstream data has not changed).
+# --------------------------------------------------------------------------
+
+def _load_ci_data_changed():
+    import importlib.util
+    path = ROOT / "scripts" / "ci_data_changed.py"
+    spec = importlib.util.spec_from_file_location("ci_data_changed", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_build_time_alone_is_not_a_substantive_change():
+    """Two snapshots identical except for build_time must normalise equal, so a same-day
+    rerun does not trigger an empty daily commit."""
+    ci = _load_ci_data_changed()
+    a = json.dumps({"build_time": "2026-08-28T05:20:00+00:00", "as_of": "2026-08-28", "esdi": 15.6})
+    b = json.dumps({"build_time": "2026-08-28T05:25:59+00:00", "as_of": "2026-08-28", "esdi": 15.6})
+    assert ci.normalise(a) == ci.normalise(b)
+
+
+def test_real_data_change_survives_normalisation():
+    """A genuine change (as_of / esdi / anything but build_time) must remain visible."""
+    ci = _load_ci_data_changed()
+    a = json.dumps({"build_time": "2026-08-28T05:20:00+00:00", "as_of": "2026-08-28", "esdi": 15.6})
+    b = json.dumps({"build_time": "2026-08-29T05:20:00+00:00", "as_of": "2026-08-29", "esdi": 15.4})
+    assert ci.normalise(a) != ci.normalise(b)
