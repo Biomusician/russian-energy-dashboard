@@ -319,6 +319,7 @@ export type EffectEvidence = "observed" | "estimated" | "modelled" | "unknown";
 export interface StrategicEffect {
   effect_type: string;
   evidence_kind: EffectEvidence;
+  source_quality?: string | null;
   value_numeric: number | null;
   value_unit: string | null;
   currency: string | null;

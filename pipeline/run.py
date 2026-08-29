@@ -249,6 +249,7 @@ def load_effects(valid_incident_ids):
         rec = {
             "effect_type": (row.get("effect_type") or "").strip(),
             "evidence_kind": kind,
+            "source_quality": (row.get("source_quality") or "").strip() or None,  # §31
             "value_numeric": _num(row.get("value_numeric")),
             "value_unit": row.get("value_unit") or None,
             "currency": row.get("currency") or None,

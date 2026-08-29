@@ -338,7 +338,9 @@ SECTOR_OF_CLASS = {
 SECTORS = {
     "refining":            "Refining",
     "electric_generation": "Electric generation",
-    "transmission":        "Transmission",
+    # §22-25 (iteration-7 transmission red-team): named a "burden", never bare "Transmission",
+    # so a reader cannot mistake the event-burden proxy for a "% of grid offline" capacity share.
+    "transmission":        "Transmission burden",
     "oil_logistics":       "Oil logistics & export",
     "gas":                 "Gas",
     "coal":                "Coal",

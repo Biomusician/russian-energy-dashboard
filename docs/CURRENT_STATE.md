@@ -32,8 +32,8 @@
 - **Top-theatre share**: 54.5% over 3 region(s)
 
 ## Strategic effects (source-backed, observational)
-- **National/macro datapoints**: 4
-- **Per-incident effects**: 11 across 8 incidents
+- **National/macro datapoints**: 8
+- **Per-incident effects**: 18 across 15 incidents
 
 ## Tests
-- **Python test functions** (`tests/test_pipeline.py`): 137 (pytest reports more cases — some functions are parametrized)
+- **Python test functions** (`tests/test_pipeline.py`): 139 (pytest reports more cases — some functions are parametrized)

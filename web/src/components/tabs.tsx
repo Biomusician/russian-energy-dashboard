@@ -672,8 +672,14 @@ export function EffectItem({ e }: { e: import("../types").StrategicEffect }) {
       </div>
       {e.value_text && <div style={{ fontSize: 11, color: "var(--text-dim)", lineHeight: 1.5, marginTop: 2 }}>{e.value_text}</div>}
       {e.source_url && (
-        <div className="src-list" style={{ marginTop: 3 }}>
+        <div className="src-list" style={{ marginTop: 3, display: "flex", gap: 8, alignItems: "center" }}>
           <a href={e.source_url} target="_blank" rel="noreferrer noopener">↗ {hostname(e.source_url)}</a>
+          {e.source_quality && (
+            <span style={{ fontSize: 9.5, color: "var(--text-faint)", letterSpacing: 0.2 }}
+                  title="Source-quality tier (triage/provenance, not a confidence score)">
+              {e.source_quality.replace(/_/g, " ")}
+            </span>
+          )}
         </div>
       )}
     </div>

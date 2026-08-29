@@ -608,13 +608,22 @@ def _transmission_sensitivity(live, facility_info, esdi_excluded):
             f"and {sweep[0]['saturation']}. Published as a sensitivity, not a tuning knob."
         ),
         "red_team_verdict": (
-            "RETAINED in the headline. It reflects real, sourced disruption to the Kerch power "
-            "bridge and Crimea substations; removing it would discard that signal and would "
-            "amount to tuning away an inconvenient theatre. Read plainly: occupied Crimea is "
-            "roughly HALF of this transmission signal (see transmission_concentration."
-            "occupied_share_pct) and is folded into the 'national' figure by an intentional "
-            "analytic choice, NOT fenced out. It is retained WITH mandatory concentration "
-            "disclosure and these alternatives, and is NOT presented as national grid exposure."
+            "RETAINED in the headline as 'Transmission disruption burden' (iteration-7 independent "
+            "red-team). Model A is the least-bad scalar: it is the only formulation that jointly "
+            "honours recency, evidence confidence, damage severity and voltage class, is "
+            "structurally immune to repeat-strike double-counting (a node's strongest live "
+            "trajectory wins, never the sum), and fits the service-only recovery evidence we "
+            "actually have (it never needs a reconstitution duration). Alternatives were measured "
+            "and rejected as a headline: B's breadth-awareness is dormant at current magnitudes; D "
+            "(distinct-facility count) is the single most misleading number; C (breadth+intensity) "
+            "is kept only as a supporting display; E (remove entirely) buys just +0.39 of purity "
+            "while discarding real sourced signal and is the option most exposed to the appearance "
+            "of tuning occupied Crimea (~45% of the burden) away. The honest fix is LABELLING not "
+            "surgery: it is a disruption BURDEN of a handful of theatres, never a percent of grid "
+            "offline, and the ex-transmission counterfactual (esdi_excluding_transmission) is "
+            "published so the +0.39 it adds is one click away. Its two real wounds — an arbitrary "
+            "saturation constant (~4x swing) and single-theatre concentration — are disclosed via "
+            "the sweep, the concentration split and these alternatives."
         ),
     }
 

@@ -1789,6 +1789,27 @@ def test_transmission_alternative_models_are_deterministic_and_bounded():
     assert "grid offline" in am["note"].lower()
 
 
+def test_transmission_sector_is_labelled_a_burden_not_bare_transmission():
+    """§22-25 transmission red-team: the sector must be labelled a 'burden' so a reader cannot
+    read the event-burden proxy as a '% of grid offline' capacity share."""
+    from pipeline.config import SECTORS
+    assert "burden" in SECTORS["transmission"].lower(), SECTORS["transmission"]
+    if (PROCESSED / "taxonomy.json").exists():
+        tax = json.loads((PROCESSED / "taxonomy.json").read_text(encoding="utf-8"))
+        assert "burden" in tax["sectors"]["transmission"].lower()
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_effects_carry_source_quality_tier(SNAP=None):
+    """§31: source-quality tier is emitted for triage/provenance (separate from evidence_kind)."""
+    snap = _snapshot()
+    se = snap.get("strategic_effects") or {"national": [], "by_incident": {}}
+    allowed = {"primary_operator", "government", "major_wire", "national_regional",
+               "specialist_industry", "secondary_aggregation", "claim_only", None}
+    for e in list(se["national"]) + [x for lst in se["by_incident"].values() for x in lst]:
+        assert e.get("source_quality") in allowed, e.get("source_quality")
+
+
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
 def test_uncovered_zero_assumption_sensitivity_is_labelled_not_a_second_esdi():
     """§27: the gas+coal-at-zero figure is a SENSITIVITY under a false assumption, renamed to say
