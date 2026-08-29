@@ -58,7 +58,7 @@ export function OverviewTab(p: TabProps) {
       .slice(0, 12);
     return (
       <div className="tab-body">
-        <Block title="National picture">
+        <Block title="Monitored-area picture">
           <KV k="Disruption exposure (ESDI)" v={fmtNum(bundle.national.esdi[step], 1)} />
           <KV k="Events to date" v={p.visibleIncidents.length} />
           <KV k="Facilities currently impaired" v={bundle.snapshot.recovery_stats.unresolved_count} />

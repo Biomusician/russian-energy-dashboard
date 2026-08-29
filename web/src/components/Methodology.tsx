@@ -51,7 +51,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
             where the half-life is set by the recovery evidence (below). Per facility the
             single strongest live contribution wins rather than the sum, so a site hit
             four times cannot exceed being fully disrupted. Facility contributions are
-            then weighted by that facility's share of the national capacity base for its
+            then weighted by that facility's share of the Russian national capacity base for its
             sector, and sectors are combined using published weights.
           </p>
 
@@ -75,7 +75,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
 
           <H>Denominators</H>
           <ul>
-            <li>Refining: {s.denominators.refining_mtpa} MTPA across the tracked national refinery inventory.</li>
+            <li>Refining: {s.denominators.refining_mtpa} MTPA across the tracked <b>Russian</b> national refinery inventory (the monitored-area aggregate is Belarus + Russian regions + Crimea, but this capacity denominator is Russia-only).</li>
             <li>Electric generation: {s.denominators.electric_generation_mw.toLocaleString("en-GB")} MW installed in the area of interest (a capacity share).</li>
             <li>Transmission: an event/recovery-burden measure against a saturation of {s.denominators.transmission_saturation_events} weighted concurrent facility-events — never a capacity-offline claim.</li>
             <li>Oil logistics uses the refining base as a proxy; it has no published throughput denominator.</li>

@@ -87,7 +87,7 @@ export default function Timeline({
         <div>
           <div className="tl-date">{fmtDate(dates[step])}</div>
           <div className="eyebrow">
-            {selected ? bundle.snapshot.regions[selected]?.name : "National"} ·{" "}
+            {selected ? bundle.snapshot.regions[selected]?.name : "Monitored area"} ·{" "}
             {fmtNum(series[step], 1)} index · {visibleIncidents.length} events shown
           </div>
         </div>
