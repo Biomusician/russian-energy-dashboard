@@ -132,6 +132,7 @@ def load_asset_supplement(region_meta):
             "precision": "region",
             "source": "Curated infrastructure supplement",
             "source_url": row.get("source_url") or None,
+            "note": row.get("note") or None,
         })
     if out:
         by_class = collections.Counter(a["asset_class"] for a in out)

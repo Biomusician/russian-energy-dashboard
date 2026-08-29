@@ -63,7 +63,8 @@
       "power_plant_other": 200,
       "substation": 100,
       "transmission_line": 46,
-      "coal": 150,
+      "coal_mine": 150,
+      "coal_terminal": 120,
       "interconnector": 100,
       "_default": 150
     },

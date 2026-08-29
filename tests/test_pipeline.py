@@ -1159,7 +1159,14 @@ def test_lng_assets_are_classified_and_sourced_at_admin_precision():
     for a in lng:
         assert a.get("precision") == "region", f"{a['asset_id']} must be admin-region precision"
         assert a.get("source_url"), f"{a['asset_id']} needs a source"
-        assert a.get("capacity_mtpa"), f"{a['asset_id']} needs a liquefaction capacity"
+        # Liquefaction terminals carry a liquefaction MTPA. Import/regasification terminals
+        # (iteration 5, e.g. the Kaliningrad FSRU) deliberately do NOT: their capacity is a
+        # different physical quantity, kept in the note so it can never be summed into a
+        # liquefaction denominator (§11).
+        note = (a.get("note") or "").lower()
+        is_import = "import" in note or "regas" in note
+        if not is_import:
+            assert a.get("capacity_mtpa"), f"{a['asset_id']} (liquefaction) needs a capacity"
 
 
 @pytest.mark.skipif(not (PROCESSED / "assets.json").exists(),
@@ -1170,8 +1177,10 @@ def test_gas_condensate_is_not_miscounted_as_lng():
     assets = json.loads((PROCESSED / "assets.json").read_text(encoding="utf-8"))
     for a in assets:
         if a["asset_class"] == "lng_terminal":
-            blob = f"{a['name']} {a.get('note','')}".lower()
-            assert "condensate" not in blob and "fractionation" not in blob, a["asset_id"]
+            # Key on the facility's identity (its name). A note may legitimately MENTION
+            # condensate to disclaim it (e.g. "distinct from the Ust-Luga condensate complex").
+            name = a["name"].lower()
+            assert "condensate" not in name and "fractionation" not in name, a["asset_id"]
 
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
@@ -1280,3 +1289,49 @@ def test_rivers_are_real_features_and_score_nothing():
     # the biggest Russian/European systems are captured (via scalerank, not a name list)
     names = {f["properties"].get("label_name") for f in rivers["features"]}
     assert "Volga" in names and "Danube" in names
+
+
+# --------------------------------------------------------------------------
+# Iteration 5: coal taxonomy split + inventory (§14, §35)
+# --------------------------------------------------------------------------
+# Generic "coal infrastructure" is split into coal_mine and coal_terminal. Coal-fired
+# GENERATION stays under electric generation, so a coal mine is never double-counted as a
+# power plant. Coal is now inventoried but has no qualifying disruption, so the coal SECTOR
+# stays unsupported: an inventory is not a score.
+
+def test_coal_class_split_into_mine_and_terminal():
+    from pipeline.config import ASSET_CLASSES, SECTOR_OF_CLASS
+    assert "coal_mine" in ASSET_CLASSES and "coal_terminal" in ASSET_CLASSES
+    assert "coal" not in ASSET_CLASSES, "the generic coal class must be gone after the split"
+    # both physical coal classes roll up to the coal sector...
+    assert SECTOR_OF_CLASS["coal_mine"] == "coal"
+    assert SECTOR_OF_CLASS["coal_terminal"] == "coal"
+    # ...while coal-fired generation stays under electric generation (no double count, §14)
+    assert SECTOR_OF_CLASS["power_plant_thermal"] == "electric_generation"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_coal_inventory_present_but_sector_unsupported():
+    """Coal mines and terminals are now in the corpus, but with no qualifying disruption the
+    coal sector stays uncovered and scores zero -- an inventory is not disruption (§14/§35)."""
+    snap = _snapshot()
+    fc = snap["facet_counts"]["asset_class"]
+    assert fc.get("coal_mine", 0) > 0 and fc.get("coal_terminal", 0) > 0, "coal inventory expected"
+    assert "coal" in snap["sectors_uncovered"]
+    assert snap["sectors"]["coal"] == 0
+    assert snap["denominators"].get("coal") in (None, 0), "no coal denominator should be emitted"
+
+
+@pytest.mark.skipif(not (PROCESSED / "assets.json").exists(),
+                    reason="pipeline has not been run")
+def test_coal_and_gas_capacities_kept_out_of_the_mtpa_field():
+    """Coal tonnage (Mt/y) and gas-processing throughput (bcm/y) are different units from
+    LNG liquefaction (MTPA). They live in the note, never in capacity_mtpa, so nothing can
+    later sum them into a single fake denominator (§12, §13)."""
+    assets = json.loads((PROCESSED / "assets.json").read_text(encoding="utf-8"))
+    for a in assets:
+        if a["asset_class"] in ("coal_mine", "coal_terminal", "gas_processing"):
+            assert not a.get("capacity_mtpa"), f"{a['asset_id']} must not carry an MTPA figure"
+            assert a.get("source_url"), f"{a['asset_id']} needs a source"
+            assert a.get("precision") == "region"

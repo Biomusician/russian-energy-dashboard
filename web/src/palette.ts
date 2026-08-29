@@ -15,7 +15,8 @@ export const CLASS_COLOR: Record<string, string> = {
   lng_terminal: "#14b8a6",
   substation: "#e0b83a",
   transmission_line: "#40566a",
-  coal: "#94a3b8",
+  coal_mine: "#94a3b8",
+  coal_terminal: "#78716c",
   interconnector: "#c084fc",
 };
 

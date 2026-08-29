@@ -76,6 +76,7 @@ export interface Asset {
   lat: number;
   source: string;
   source_url: string | null;
+  note?: string | null;
 }
 
 export interface RegionEffects {

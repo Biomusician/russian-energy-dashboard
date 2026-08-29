@@ -299,7 +299,8 @@ ASSET_CLASSES = {
     "pipeline_gas":         "Gas pipeline",
     "substation":           "Major substation",
     "transmission_line":    "Transmission line",
-    "coal":                 "Coal infrastructure",
+    "coal_mine":             "Coal mine",
+    "coal_terminal":         "Coal export terminal",
     "interconnector":       "Major interconnector",
 }
 
@@ -323,7 +324,8 @@ SECTOR_OF_CLASS = {
     "gas_processing":      "gas",
     "lng_terminal":        "gas",
     "pipeline_gas":        "gas",
-    "coal":                "coal",
+    "coal_mine":           "coal",
+    "coal_terminal":       "coal",
 }
 
 SECTORS = {

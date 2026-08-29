@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
-  "build_time": "2026-08-29T04:55:03+00:00",
+  "build_time": "2026-08-29T05:06:15+00:00",
   "files": [
     {
       "name": "assets.json",
-      "bytes": 569810,
+      "bytes": 584363,
       "optional": false
     },
     {
@@ -34,12 +34,12 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 126314,
+      "bytes": 126347,
       "optional": false
     },
     {
       "name": "taxonomy.json",
-      "bytes": 1183,
+      "bytes": 1217,
       "optional": false
     },
     {
