@@ -692,6 +692,25 @@ def test_recovery_kind_column_matches_status_in_source():
                 assert row["recovery_status"] == "partial_restart", row["incident_id"]
 
 
+def test_incident_status_does_not_contradict_its_recovery_record():
+    """Red-team (iter 6): the scoring status_multiplier reads incident.status, which must not
+    contradict the authoritative recovery record. An incident may be status='repaired' only if
+    its recovery record actually closes it (fully_reconstituted). Unecha was the offender:
+    status='repaired' against a record saying the pumping station was destroyed and only flow
+    was rerouted."""
+    import csv
+    rec = {}
+    with open(ROOT / "data" / "curated" / "recovery.csv", encoding="utf-8", newline="") as f:
+        for r in csv.DictReader(f):
+            rec[r["incident_id"]] = r["recovery_status"]
+    with open(ROOT / "data" / "curated" / "incidents.csv", encoding="utf-8", newline="") as f:
+        for r in csv.DictReader(f):
+            iid = r["incident_id"]
+            if r.get("status") == "repaired" and iid in rec:
+                assert rec[iid] == "fully_reconstituted", (
+                    f"{iid}: incident.status='repaired' contradicts recovery_status='{rec[iid]}'")
+
+
 @pytest.mark.skipif(not (PROCESSED / "incidents.json").exists(),
                     reason="pipeline has not been run")
 def test_multi_day_strike_is_one_episode_not_several_incidents():

@@ -128,8 +128,12 @@ def build():
             "is chiefly mini-refineries and gas-condensate plants not individually "
             "inventoried; refining exposure is measured against tracked capacity and is a "
             "lower bound. Unlike facilities are not counted merely to close the gap. "
-            "Iteration 6 excluded petrochemical complexes (Tobolsk/ZapSibNeftekhim) from the "
-            "fuels-refining denominator via the canonical registry."
+            "Iteration 6 excluded petrochemical complexes (Tobolsk/ZapSibNeftekhim, 6.85 MTPA) "
+            "from the fuels-refining denominator via the canonical registry. That is the only "
+            "exclusion; because it shrinks the denominator it RAISES every refining struck-share "
+            "by ~2.5% (~+0.33 to the headline ESDI). Tobolsk is a pure NGL cracker with no motor-"
+            "fuel output, so it never belonged in a fuels denominator; its capacity is instead "
+            "counted in the gas-processing census, not double-counted here."
         ),
     }
     log(

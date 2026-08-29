@@ -131,9 +131,14 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
     denominators = _denominators(assets, refinery_total_mtpa, region_meta,
                                  transmission_lines_by_region)
 
-    # Regions excluded from the Russia+Belarus headline composite (Crimea). Their events
-    # are still tracked and get their own regional exposure, but never feed the national
-    # ESDI or its denominators. See docs/METHODOLOGY.md.
+    # Regions flagged esdi_included=False are fenced out of the national composite (their
+    # events still get their own regional exposure). NOTE: this set is currently EMPTY —
+    # occupied Crimea is intentionally esdi_included=True (an iteration-4 analytic choice, see
+    # config.py + docs/METHODOLOGY.md), so Crimea DOES feed the national ESDI through the
+    # sectors where it has a compatible denominator (transmission, oil logistics). It is a
+    # large share of the transmission signal — see transmission_concentration.occupied_share_pct
+    # and transmission_sensitivity. The mechanism is retained for any future excluded region;
+    # the other occupied Ukrainian oblasts are simply not tracked at all rather than excluded.
     esdi_excluded = {code for code, m in region_meta.items() if not m.get("esdi_included", True)}
 
     incidents_by_facility = collections.defaultdict(list)
@@ -278,7 +283,10 @@ def _denominators(assets, refinery_total_mtpa, region_meta, transmission_lines_b
     transmission_lines_by_region = transmission_lines_by_region or {}
     nat = {s: 0.0 for s in SECTORS}
     per_region = {code: {s: 0.0 for s in SECTORS} for code in region_meta}
-    # Crimea and any esdi-excluded region never contribute to the national denominator.
+    # Any region flagged esdi_included=False is kept out of the national denominator. This set
+    # is currently EMPTY: occupied Crimea is intentionally included (esdi_included=True), so it
+    # DOES contribute where it has a denominator (transmission, oil logistics). Not a fence
+    # around occupied territory — see the note in build().
     esdi_excluded = {code for code, m in region_meta.items() if not m.get("esdi_included", True)}
 
     nat["refining"] = refinery_total_mtpa
@@ -548,9 +556,11 @@ def _transmission_sensitivity(live, facility_info, esdi_excluded):
         "red_team_verdict": (
             "RETAINED in the headline. It reflects real, sourced disruption to the Kerch power "
             "bridge and Crimea substations; removing it would discard that signal and would "
-            "amount to tuning away an inconvenient theatre. It is retained WITH mandatory "
-            "concentration disclosure and these alternatives, and is NOT presented as national "
-            "grid exposure. Flagged for the independent red-team."
+            "amount to tuning away an inconvenient theatre. Read plainly: occupied Crimea is "
+            "roughly HALF of this transmission signal (see transmission_concentration."
+            "occupied_share_pct) and is folded into the 'national' figure by an intentional "
+            "analytic choice, NOT fenced out. It is retained WITH mandatory concentration "
+            "disclosure and these alternatives, and is NOT presented as national grid exposure."
         ),
     }
 
