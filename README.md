@@ -196,12 +196,16 @@ Effects · Repair burden · Sources).
 
 ## Known limits, stated up front
 
-- **Coverage is ~57%.** The dataset enumerates 175 region-assigned events; the source
-  benchmark reports 305 strikes on Russian oil facilities in total. The gap is events
-  that appear only in prose reporting, which this pipeline does not parse.
-- **Observed recovery is 6 distinct episodes** (13 records deduplicated by `episode_id`),
-  spanning refining, oil logistics and gas processing. The "typical recovery" median
-  un-suppresses at **≥5 distinct episodes**, so it is now shown (47 days) with its sample size.
+- **Coverage is an oil-strike benchmark ≈47%.** Iteration 6 corrected a universe mismatch:
+  the old "~57%" divided *all* energy events by an *oil-only* 305-strike benchmark. It is now
+  oil-sector strikes ÷ 305. Non-oil sectors get honest descriptive states, never a fabricated %.
+- **Observed recovery** spans refining, oil logistics and gas processing. Iteration 6 demoted
+  the pooled cross-class median to "mixed-infrastructure evidence" and shows a per-class median
+  only at ≥3 episodes within a class; the headline is the national episode count.
+
+> Live counts (coverage %, episodes, ESDI, tests) are generated into
+> [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md) every build and drift-guarded by a test — this
+> README quotes no live number.
 - **Siberian event coverage is n=1** (Omsk). The region is fully populated structurally
   but has barely been struck yet.
 - **Refining and oil logistics dominate.** They are the sectors with structured open

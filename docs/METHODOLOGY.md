@@ -204,13 +204,15 @@ is openly available. **Replacing these with curated observed durations is the hi
 value model improvement**, and the framework now makes each such replacement visible as
 an "observed" record.
 
-Current observed corpus (iteration 3): **6 recovery records → 3 distinct observed
-episodes** (22, 72, 98 days; 3 full reconstitutions, 1 partial restart), plus estimates.
-Records are deduplicated by `episode_id` — a multi-day strike is one episode, so the
-iteration-2 "72/73-day" pair collapses to a single 72-day episode. The "typical recovery"
-median is shown **only at ≥ 5 distinct episodes**; below that the UI reports
-"records / episodes" and the honest label "< 5 episodes — no median", never a "typical".
-The dashboard shows this whole breakdown rather than hiding how much rests on assumption.
+Records are deduplicated by `episode_id` — a multi-day strike is one episode. Iteration 6
+redesigned how the median is presented: the pooled cross-class figure is now shown only as
+"mixed-infrastructure evidence" (a 2-day terminal restart and a 205-day gas-plant repair are
+not one repair time), and a **per-class** median appears only once a class has ≥ 3 of its own
+observed episodes. The dashboard leads with the national observed-episode count, not the mixed
+median. The dashboard shows this whole breakdown rather than hiding how much rests on assumption.
+
+> **Live corpus counts (episodes, records, per-class medians) are generated:** see
+> [CURRENT_STATE.md](CURRENT_STATE.md), not embedded here, so they cannot drift.
 
 ## 5a. Crimea and the area of interest (iteration 2; index inclusion iteration 4)
 
