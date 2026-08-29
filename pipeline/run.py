@@ -17,7 +17,7 @@ import shutil
 from pipeline import build_assets, build_context, build_index
 from pipeline.config import (
     ANALYTIC_CONCEPTS, ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, EVIDENCE_KINDS,
-    PROCESSED, SECTORS, WEB_DATA, WINDOW_START,
+    PROCESSED, SECTOR_OF_CLASS, SECTORS, WEB_DATA, WINDOW_START,
 )
 from pipeline.fetch_refineries import build as build_refineries
 from pipeline.fetch_wikipedia import build as build_wikipedia
@@ -170,6 +170,35 @@ def _num(value):
         return None
 
 
+def _facet_counts(assets, lines, incidents, snapshot):
+    """Full-corpus counts per UI dimension, so the frontend never reverse-engineers the
+    dataset to decide which controls exist (iteration 4, §18).
+
+    Counts are deliberately SEPARATE by kind — a class can have infrastructure assets but
+    zero incidents (LNG), or incidents but no inventoried asset (refineries live in the
+    refinery inventory, not the asset layer). The taxonomy defines what the system
+    understands; these counts are what the current corpus actually contains. A dimension a
+    control derives its VISIBILITY from is the union of the relevant kinds:
+      infrastructure class -> asset_class + line_class + incident_asset_class
+      cause / confidence   -> incident counts
+    Counters omit zero keys, which is exactly what a data-driven "hide the empty toggle"
+    rule needs. Sector counts here are RECORD counts, never the (separate) sector score."""
+    def count(values):
+        c = collections.Counter(v for v in values if v)
+        return dict(sorted(c.items(), key=lambda kv: (-kv[1], kv[0])))
+
+    return {
+        "asset_class": count(a["asset_class"] for a in assets),
+        "line_class": count(f["properties"].get("asset_class") for f in lines),
+        "incident_asset_class": count(i.get("asset_class") for i in incidents),
+        "sector": count(SECTOR_OF_CLASS.get(i.get("asset_class")) for i in incidents),
+        "cause": count(i.get("cause") for i in incidents),
+        "confidence": count(i.get("confidence") for i in incidents),
+        "recovery_state": count(d["recovery"]["recovery_status"] for d in snapshot["live_disruptions"]),
+        "evidence_kind": dict(snapshot["recovery_stats"]["evidence_kind_counts"]),
+    }
+
+
 def load_coverage_benchmark():
     """Reported strike totals by war year, used to state our own coverage honestly.
 
@@ -290,6 +319,7 @@ def main():
     snapshot["refinery_reconciliation"] = refinery_reconciliation
     snapshot["economic_context"] = crea
     snapshot["coverage"] = coverage
+    snapshot["facet_counts"] = _facet_counts(assets, lines, incidents, snapshot)
     snapshot["parser_warnings"] = wiki_warnings
     snapshot["build_time"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 

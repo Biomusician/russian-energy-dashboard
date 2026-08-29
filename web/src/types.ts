@@ -258,7 +258,22 @@ export interface Snapshot {
   coverage: Coverage | null;
   economic_context: EconomicContext | null;
   refinery_reconciliation: RefineryReconciliation | null;
+  facet_counts: FacetCounts;
   parser_warnings: string[];
+}
+
+/** Full-corpus counts per UI dimension (iteration 4). Counters omit zero keys, so a key's
+ *  presence with a positive count is what a data-driven "show this toggle" rule checks.
+ *  Kinds are separate on purpose: a class can have assets but no incidents, or vice versa. */
+export interface FacetCounts {
+  asset_class: Record<string, number>;
+  line_class: Record<string, number>;
+  incident_asset_class: Record<string, number>;
+  sector: Record<string, number>;
+  cause: Record<string, number>;
+  confidence: Record<string, number>;
+  recovery_state: Record<string, number>;
+  evidence_kind: Record<string, number>;
 }
 
 export interface NationalSeries {

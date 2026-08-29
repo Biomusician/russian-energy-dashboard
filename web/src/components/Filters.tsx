@@ -7,25 +7,26 @@ import { titleCase } from "../data";
 /** Left rail. Every toggle carries a live tally so an empty layer reads as
  *  "nothing recorded here" rather than as a broken filter. */
 export default function Filters({
-  bundle, filters, setFilters, visibleIncidents,
+  bundle, filters, setFilters,
 }: {
   bundle: Bundle;
   filters: FilterState;
   setFilters: Dispatch<SetStateAction<FilterState>>;
   visibleIncidents: Incident[];
 }) {
-  const { taxonomy, assets, incidents } = bundle;
+  const { taxonomy } = bundle;
+  const fc = bundle.snapshot.facet_counts;
 
-  const assetTally = tally(assets.map((a) => a.asset_class));
-  const incidentTally = tally(incidents.map((i) => i.asset_class ?? "unknown"));
-  // Lines live in their own GeoJSON layer, not assets.json. Without them the
-  // transmission and pipeline rows read "0", which the note below would then
-  // wrongly explain as "nothing recorded".
-  const lineTally = tally(
-    bundle.linesGeo.features.map((f) => (f.properties?.asset_class as string) ?? null),
-  );
-  const causeTally = tally(visibleIncidents.map((i) => i.cause));
-  const confTally = tally(visibleIncidents.map((i) => i.confidence));
+  // Corpus-wide totals (iteration 4). Toggle VISIBILITY is data-driven off these — a
+  // control exists iff the whole current dataset has a record for it — never off the
+  // moving timeline/filter slice, which would make controls flicker in and out. An
+  // infrastructure class counts assets + network lines + incidents; a cause or confidence
+  // tier counts incidents. A newly-nonzero category appears automatically after a rebuild,
+  // with no frontend edit, because the filter state already holds every taxonomy key.
+  const classTotal = (k: string) =>
+    (fc.asset_class[k] ?? 0) + (fc.line_class[k] ?? 0) + (fc.incident_asset_class[k] ?? 0);
+  const causeTotal = (k: string) => fc.cause[k] ?? 0;
+  const confTotal = (k: string) => fc.confidence[k] ?? 0;
 
   const toggle = (field: "classes" | "causes" | "confidences", key: string) =>
     setFilters((f) => {
@@ -37,9 +38,9 @@ export default function Filters({
   const setAll = (field: "classes" | "causes" | "confidences", keys: string[], on: boolean) =>
     setFilters((f) => ({ ...f, [field]: on ? new Set(keys) : new Set() }));
 
-  const classKeys = Object.keys(taxonomy.asset_classes);
-  const causeKeys = Object.keys(taxonomy.causes);
-  const confKeys = ["confirmed", "probable", "possible", "unverified"];
+  const classKeys = Object.keys(taxonomy.asset_classes).filter((k) => classTotal(k) > 0);
+  const causeKeys = Object.keys(taxonomy.causes).filter((k) => causeTotal(k) > 0);
+  const confKeys = ["confirmed", "probable", "possible", "unverified"].filter((k) => confTotal(k) > 0);
 
   return (
     <aside className="panel filters">
@@ -68,7 +69,7 @@ export default function Filters({
             onChange={() => setFilters((f) => ({ ...f, showAssets: !f.showAssets }))}
           />
           Infrastructure sites
-          <span className="tally">{assets.length}</span>
+          <span className="tally">{bundle.assets.length}</span>
         </label>
         <label className="check">
           <input
@@ -88,9 +89,7 @@ export default function Filters({
         onToggle={(k) => toggle("classes", k)}
         onAll={(on) => setAll("classes", classKeys, on)}
         color={(k) => classColor(k)}
-        tally={(k) =>
-          (assetTally.get(k) ?? 0) + (incidentTally.get(k) ?? 0) + (lineTally.get(k) ?? 0)
-        }
+        tally={classTotal}
       />
 
       <Group
@@ -101,7 +100,7 @@ export default function Filters({
         onToggle={(k) => toggle("causes", k)}
         onAll={(on) => setAll("causes", causeKeys, on)}
         color={(k) => CAUSE_COLOR[k] ?? "#4e5f6d"}
-        tally={(k) => causeTally.get(k) ?? 0}
+        tally={causeTotal}
       />
 
       <Group
@@ -112,13 +111,14 @@ export default function Filters({
         onToggle={(k) => toggle("confidences", k)}
         onAll={(on) => setAll("confidences", confKeys, on)}
         color={() => "transparent"}
-        tally={(k) => confTally.get(k) ?? 0}
+        tally={confTotal}
       />
 
       <div className="note">
-        Counts beside infrastructure types combine inventoried sites with facilities
-        named in disruption reporting. A zero means nothing is recorded for that class
-        in this dataset, not that nothing exists.
+        Counts are whole-corpus totals: infrastructure rows combine inventoried sites and
+        network lines with facilities named in disruption reporting; cause and confidence
+        rows count events. Filters with no records anywhere in the current dataset are
+        hidden automatically, and reappear on their own once a sourced record arrives.
       </div>
     </aside>
   );
@@ -157,11 +157,3 @@ function Group({
   );
 }
 
-function tally(values: (string | null)[]): Map<string, number> {
-  const m = new Map<string, number>();
-  for (const v of values) {
-    if (!v) continue;
-    m.set(v, (m.get(v) ?? 0) + 1);
-  }
-  return m;
-}

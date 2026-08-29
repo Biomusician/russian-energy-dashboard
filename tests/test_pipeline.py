@@ -1069,3 +1069,71 @@ def test_real_data_change_survives_normalisation():
     a = json.dumps({"build_time": "2026-08-28T05:20:00+00:00", "as_of": "2026-08-28", "esdi": 15.6})
     b = json.dumps({"build_time": "2026-08-29T05:20:00+00:00", "as_of": "2026-08-29", "esdi": 15.4})
     assert ci.normalise(a) != ci.normalise(b)
+
+
+# --------------------------------------------------------------------------
+# Iteration 4: facet counts — the data-driven-UI contract
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_facet_counts_match_the_processed_corpus():
+    """Facet counts must equal what is actually in the emitted data — the frontend trusts
+    them to decide which controls exist, so they cannot drift from the corpus."""
+    import collections as _c
+    snap = _snapshot()
+    fc = snap["facet_counts"]
+    incidents = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    assets = json.loads((PROCESSED / "assets.json").read_text(encoding="utf-8"))
+    assert fc["incident_asset_class"] == {k: v for k, v in sorted(
+        _c.Counter(i["asset_class"] for i in incidents if i.get("asset_class")).items(),
+        key=lambda kv: (-kv[1], kv[0]))}
+    assert fc["asset_class"] == {k: v for k, v in sorted(
+        _c.Counter(a["asset_class"] for a in assets).items(),
+        key=lambda kv: (-kv[1], kv[0]))}
+    assert fc["cause"] == {k: v for k, v in sorted(
+        _c.Counter(i["cause"] for i in incidents).items(),
+        key=lambda kv: (-kv[1], kv[0]))}
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_facet_counts_keep_asset_and_incident_kinds_distinct():
+    """A class can have infrastructure but no incidents (LNG-style) or incidents but no
+    inventoried asset (refineries). The two counts are separate facets, never merged."""
+    fc = _snapshot()["facet_counts"]
+    # Refineries: incidents exist, but they are not in the point-asset layer.
+    assert fc["incident_asset_class"].get("refinery", 0) > 0
+    assert fc["asset_class"].get("refinery", 0) == 0
+    # Substations: both an inventory and incidents — distinct, non-merged counts.
+    assert fc["asset_class"].get("substation", 0) > 0
+    assert fc["incident_asset_class"].get("substation", 0) > 0
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_corpus_zero_categories_are_absent_from_facets_nonzero_present():
+    """Counters omit zero keys — that omission is what a data-driven 'hide the empty toggle'
+    rule reads. Genuinely-empty categories must be absent; populated ones present."""
+    fc = _snapshot()["facet_counts"]
+    # Nonzero cause present; corpus-zero causes absent (so the toggle hides).
+    assert fc["cause"].get("kinetic_strike", 0) > 0
+    for zero in ("maintenance",):  # planned maintenance is out of scope; stays zero/hidden
+        assert zero not in fc["cause"]
+    # Unverified confidence has no records → absent → its toggle hides.
+    assert "unverified" not in fc["confidence"]
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_sector_record_count_is_not_the_sector_score():
+    """A sector can carry records while its SCORE is zero/uncovered (gas has events but no
+    defensible denominator). Visibility must key off record count, not score, so this
+    distinction has to survive in the emitted data."""
+    snap = _snapshot()
+    fc = snap["facet_counts"]
+    # Gas: incidents exist in the corpus...
+    assert fc["sector"].get("gas", 0) > 0
+    # ...but the gas sector is uncovered (score path), i.e. not in sectors_covered.
+    assert "gas" in snap["sectors_uncovered"]
+    assert snap["sectors"]["gas"] == 0
