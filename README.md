@@ -17,6 +17,11 @@ index**. Surrounding countries and the Black Sea are drawn as display-only conte
 > 5-episode median gate, CREA observed economic context, three-layer Effects, map &
 > tab-strip polish). See [docs/ITERATION_3_REVIEW.md](docs/ITERATION_3_REVIEW.md).
 
+**Live site:** _pending first Vercel deploy_ · **Deployment:** static Vite + MapLibre on
+Vercel, rebuilt daily by a GitHub Action; push-to-`main` auto-deploys. Zero external
+runtime requests. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Run locally:
+`.venv\Scripts\python.exe -m pipeline.run` then `cd web && ..\scripts\npm.cmd run dev`.
+
 ---
 
 ## What it is, precisely

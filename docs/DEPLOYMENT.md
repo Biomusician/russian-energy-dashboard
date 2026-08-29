@@ -4,92 +4,145 @@ The deployed site is **static**. There is no server, no database, no API route a
 environment variable. The dataset ships as JSON files in `web/public/data/`, and the
 map draws its own GeoJSON, so the running page makes zero external network requests.
 
-That means deployment is: push to GitHub, connect to Vercel, done.
+**Repository:** https://github.com/Biomusician/russian-energy-dashboard (public)
+**Deployment branch:** `main`
+**Production URL:** _added after the first Vercel import (see §2)._
+
+Architecture: **GitHub repo → daily GitHub Action rebuilds & commits the processed data →
+push triggers a Vercel production deploy.** Vercel builds only the static frontend; it
+never runs Python.
 
 ---
 
-## 1. Push to GitHub
+## 1. GitHub (done)
+
+The repo exists and `main` is pushed. For reference, the one-time setup was:
 
 ```bash
-git remote add origin https://github.com/<you>/russian-energy-dashboard.git
+gh repo create Biomusician/russian-energy-dashboard --public
+git remote add origin https://github.com/Biomusician/russian-energy-dashboard.git
 git push -u origin main
 ```
 
-`data/raw/` and `tools/node/` are gitignored. `data/processed/` **is** committed — see
-§4 for why.
+`data/raw/`, `tools/node/`, `node_modules/` and `web/dist/` are gitignored.
+`data/processed/` and `web/public/data/` **are** committed — see §4 for why.
+
+**Actions write permission** is already enabled (needed so the daily bot can push):
+
+```bash
+gh api -X PUT repos/Biomusician/russian-energy-dashboard/actions/permissions/workflow \
+  -f default_workflow_permissions=write
+```
+
+Without it the daily commit step fails with a 403.
 
 ---
 
-## 2. Connect Vercel
+## 2. Connect Vercel (one-time, requires your Vercel login)
 
-1. Vercel → **Add New… → Project** → import the repository.
-2. Leave the root directory as the repository root. `vercel.json` handles the rest:
+1. Go to **https://vercel.com/new** and sign in with **GitHub**.
+2. If prompted, grant the Vercel GitHub App access to the `russian-energy-dashboard` repo.
+3. **Import** `Biomusician/russian-energy-dashboard`.
+4. On the configure screen:
+   - **Root Directory:** leave it as the **repository root** (`./`). Do **not** set it to
+     `web/` — the root `vercel.json` already does `cd web && npm install && npm run build`
+     and outputs `web/dist`. Pointing the root at `web/` would bypass `vercel.json`.
+   - **Framework Preset:** **Other** (set by `vercel.json`'s `framework: null`).
+   - **Environment Variables:** none.
+5. **Deploy.** Copy the production URL back into this file and the README.
 
-   ```jsonc
-   {
-     "buildCommand": "cd web && npm install && npm run build",
-     "outputDirectory": "web/dist"
-   }
-   ```
+`vercel.json` (repo root):
 
-3. Framework preset: **Other** (`vercel.json` sets `"framework": null`).
-4. Deploy.
+```jsonc
+{
+  "buildCommand": "cd web && npm install && npm run build",
+  "outputDirectory": "web/dist",
+  "framework": null,
+  "headers": [ { "source": "/data/(.*)", "headers": [
+    { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400" } ] } ]
+}
+```
 
-No environment variables are required. If the dashboard shows *"could not load
-snapshot.json"*, `web/public/data/` was empty at build time — run `python -m
-pipeline.run` locally and commit the result.
+If the dashboard shows *"could not load snapshot.json"*, `web/public/data/` was empty at
+build time — run `.venv\Scripts\python.exe -m pipeline.run` locally and commit the result.
 
 ### Caching
 
 `vercel.json` sets `s-maxage=3600, stale-while-revalidate=86400` on `/data/*`. The CDN
 serves data for an hour, then refreshes in the background while still serving the old
 copy. Since a fresh dataset arrives at most daily, this costs nothing in staleness and
-removes almost all origin traffic.
+removes almost all origin traffic. The HTML and hashed JS/CSS assets use Vercel's
+defaults; a new deploy invalidates them.
+
+Once connected, **every push to `main` auto-deploys** — including the daily data commits —
+through Vercel's GitHub integration. No deploy hook or Vercel token lives in the repo.
 
 ---
 
-## 3. Daily refresh
+## 3. Daily refresh workflow
 
-`.github/workflows/refresh.yml` runs at **05:20 UTC daily** (and on demand via
-*workflow_dispatch*). It:
+`.github/workflows/refresh.yml` (`Refresh dataset`) runs at **05:20 UTC daily** and on
+demand via **workflow_dispatch**. It:
 
-1. Rebuilds the dataset from Natural Earth, WRI, Overpass and Wikipedia.
-2. Runs the test suite — including the scope tests.
-3. Commits `data/processed/` and `web/public/data/` **only if something changed**.
-4. Pushes, which triggers a Vercel redeploy.
+1. Checks out the repo.
+2. Sets up Python 3.13.
+3. Restores the `data/raw` cache, then **rebuilds the dataset** (`python -m pipeline.run`).
+4. **Runs the full test suite** (`python -m pytest`) — including the scope/coordinate
+   gates and the dataset-sanity floor.
+5. **Commits `data/processed/` + `web/public/data/` only if something substantive changed**,
+   then pushes (which triggers the Vercel redeploy).
 
 Two properties worth knowing:
 
-- **No dependencies to install.** The pipeline is stdlib-only, so a scheduled run
-  cannot fail because a wheel stopped publishing for Python 3.13.
-- **It degrades rather than breaks.** `pipeline/util.fetch` retries with backoff, and
-  if a source is unreachable it falls back to the cached copy with a warning. A
-  Wikipedia outage produces yesterday's numbers, not an empty dashboard.
+- **Stdlib-only pipeline.** Nothing to install, so a scheduled run cannot fail because a
+  wheel stopped publishing for Python 3.13. (Validated: it builds on the Ubuntu runner.)
+- **It degrades rather than breaks.** `pipeline.util.fetch` retries with backoff and falls
+  back to the cached copy with a warning, so a Wikipedia/Overpass outage produces
+  yesterday's numbers, not an empty dashboard.
 
-`data/raw` is cached between runs, so a daily refresh re-fetches only what has expired
-(Wikipedia every 12–24 h, Overpass and WRI every 30 days). Use **Run workflow →
-force_refresh** to bypass it.
+### No unnecessary commits
 
-### Enable it
+The emitted `snapshot.json` embeds a per-run wall-clock `build_time`, which would make the
+Action commit on every run even when nothing changed. `scripts/ci_data_changed.py` compares
+the freshly built data against `HEAD` with `build_time` stripped, and the workflow commits
+**only when something substantive differs**. Legitimate daily drift (the date advancing,
+the recency-weighted index decaying) still counts; a same-day rerun with no new data is
+skipped. Bot commits read `data: daily refresh YYYY-MM-DD — ESDI x, N events`.
 
-Repository → Settings → Actions → General → Workflow permissions → **Read and write
-permissions**. Without this the commit step fails with a 403.
+### Failure behavior — fail safe, never publish garbage
 
-> GitHub disables scheduled workflows on repositories with no activity for 60 days.
-> For a low-traffic repo, either push occasionally or trigger the workflow manually.
+The steps run in order **build → test → commit**, and any non-zero step fails the job
+*before* the commit step. So if an upstream source changes format, a parser breaks, a
+scope/coordinate gate trips, or the sanity floor (min event count, non-zero ESDI, intact
+denominators) fails, **the job goes red and nothing is committed or deployed** — the last
+known-good public dataset stays live. A one-day-stale dashboard is preferable to a
+silently corrupted one. Check the **Actions** tab; a red run is the signal.
+
+### Force a manual refresh / deploy
+
+- **Rebuild data now:** Actions → *Refresh dataset* → **Run workflow** (optionally tick
+  **force_refresh** to ignore the `data/raw` cache). If the data changed, it pushes and
+  Vercel redeploys.
+- **Redeploy without data change:** Vercel dashboard → the project → **Redeploy**, or push
+  any commit to `main`.
+
+> GitHub disables scheduled workflows on repos with no activity for 60 days. For a
+> low-traffic repo, push occasionally or trigger the workflow manually.
 
 ---
 
 ## 4. Why `data/processed/` is committed
 
-It is a build artifact, which normally argues for gitignoring it. It is committed
-anyway because **Vercel builds only the frontend** — it has no Python, and running the
-ETL inside the Vercel build would add minutes to every deploy and make deploys depend
-on Overpass being up.
+It is a build artifact, which normally argues for gitignoring it. It is committed anyway
+because **Vercel builds only the frontend** — it has no Python, and running the ETL inside
+the Vercel build would add minutes to every deploy and make deploys depend on Overpass
+being up.
 
 The consequence to respect: a clean rebuild must stay deterministic given the same
 upstream inputs. **Never hand-edit processed JSON.** Fix the curated source or the
-pipeline, and rebuild. `data/curated/` is the truth; `data/processed/` is output.
+pipeline, and rebuild. `data/curated/` is the truth; `data/processed/` is output. A
+`.gitattributes` rule marks the emitted JSON `-diff merge=ours` so a machine-written
+single-line file is never hand-merged.
 
 ---
 
@@ -100,18 +153,19 @@ pipeline, and rebuild. `data/curated/` is the truth; `data/processed/` is output
 cd web && ..\scripts\npm.cmd run dev         # http://localhost:5178
 ```
 
-`npm run build` runs `tsc -b` first, so a type error fails the build rather than
-shipping.
+`npm run build` runs `tsc -b` first, so a type error fails the build rather than shipping.
+Node is portable under `tools/node/` (not on PATH); use `scripts\npm.cmd` / `scripts\node.cmd`.
 
 ---
 
 ## 6. Adding an event
 
-1. Append a row to `data/curated/incidents.csv`. `source_urls` is required — a row
-   without one is skipped with a warning.
-2. If it hits an inventoried asset, set `linked_asset_id` to its `wri-*` / `osm-*` id
-   from `assets.json` so the facility's capacity becomes the exposure base.
-3. Rebuild, run `pytest`, commit.
+1. Append a row to `data/curated/incidents.csv`. `source_urls` is required — a row without
+   one is skipped with a warning.
+2. If it hits an inventoried asset, set `linked_asset_id` to its `wri-*` / `osm-*` id from
+   `assets.json` so the facility's capacity becomes the exposure base.
+3. Rebuild, run `pytest`, commit, push. The daily Action would pick up curated changes too,
+   but committing yourself deploys immediately.
 
 Field definitions: [SCHEMA.md](SCHEMA.md).
 
@@ -120,5 +174,5 @@ Field definitions: [SCHEMA.md](SCHEMA.md).
 ## 7. Cost
 
 Zero on free tiers. Static hosting, ~4 MB of data, one scheduled Action run per day
-(~2 minutes). The only rate-limit risk is Overpass, which is why queries are cached for
-30 days, serialised, and paced 10 seconds apart.
+(~2–7 minutes depending on cache warmth). The only rate-limit risk is Overpass, which is
+why queries are cached for 30 days, serialised, and paced 10 seconds apart.
