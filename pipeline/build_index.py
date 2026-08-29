@@ -500,6 +500,22 @@ def _gas_processing_index(gpp_census, live, today):
     return {
         "experimental": True,
         "in_headline_esdi": False,
+        # §19 decision (iteration 7): stays EXPERIMENTAL. A defensible headline sub-sector needs
+        # (a) a matched external denominator and (b) internally comparable capacities; neither
+        # holds — see graduation_reasons.
+        "graduation_decision": "experimental",
+        "graduation_reasons": [
+            "No matched external denominator exists: the only public total (Gazprom Pererabotka "
+            "~110 bcm/y) is operator-scope and spans other federal districts incl. out-of-AOI "
+            "Amur, so a ratio against it is invalid; no all-Russia or AOI-matched capacity total "
+            "was found.",
+            "Capacities are not internally comparable: the census mixes DESIGN nameplate "
+            "(Orenburg 45, Astrakhan 12 — actual throughput markedly lower, Astrakhan ~5.4) with "
+            "actual-throughput figures for others, so the total is not like-for-like.",
+            "Non-exhaustive by construction: the largest Russian GPP (Amur, ~42 bcm/y) is "
+            "correctly out of the AOI; condensate-stabilisation plants (Surgut, Novy Urengoy, "
+            "Purovsky) are a different function and excluded.",
+        ],
         "census_plants": len(gpp_census),
         "census_bcm_y": round(census_total, 2),
         "struck_plants": len(struck),
@@ -509,10 +525,12 @@ def _gas_processing_index(gpp_census, live, today):
         "aggregate_bcm_y": round(aggregate, 2),
         "struck": sorted(struck, key=lambda s: -s["bcm_y"]),
         "caveat": (
-            "Within-census share only. The census is a non-exhaustive, bottom-up sample of "
-            "publicly-sourced gas-processing capacities (bcm/y raw gas) — NOT a national "
-            "denominator — so this is not national gas-processing exposure. Experimental: "
-            "excluded from the headline ESDI pending an independent red-team."
+            "Within-census share of a non-exhaustive, bottom-up sample of publicly-sourced GPP "
+            "capacities (bcm/y raw gas) — NOT a national denominator, and NOT like-for-like (it "
+            "mixes design nameplate with actual throughput). This is a sample, not a percentage of "
+            "national gas-processing exposure. Experimental: kept out of the headline ESDI, and "
+            "NOT summed with LNG (MTPA) or gas-transmission (bcm/y pipeline) into any 'Gas' super-"
+            "score — those are different functions and units."
         ),
     }
 

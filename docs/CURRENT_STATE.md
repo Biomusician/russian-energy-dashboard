@@ -24,7 +24,7 @@
 - **Canonical linkage (identity, NOT disruption coverage)**: 27/34 refineries struck = 85.6% of denominator MTPA
 
 ## Gas processing (experimental, NOT in headline ESDI)
-- **Within-census exposure**: 27.1% (2 of 12 censused plants, 91.56 bcm/y total)
+- **Within-census exposure**: 27.0% (2 of 12 censused plants, 91.91 bcm/y total)
 
 ## Transmission (event-burden, theatre-concentrated)
 - **Headline value**: 21.37 at saturation 8.0
@@ -36,4 +36,4 @@
 - **Per-incident effects**: 11 across 8 incidents
 
 ## Tests
-- **Python test functions** (`tests/test_pipeline.py`): 134 (pytest reports more cases — some functions are parametrized)
+- **Python test functions** (`tests/test_pipeline.py`): 135 (pytest reports more cases — some functions are parametrized)

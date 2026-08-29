@@ -335,6 +335,8 @@ export interface StrategicEffects {
 export interface GasProcessingIndex {
   experimental: boolean;
   in_headline_esdi: boolean;
+  graduation_decision?: string;
+  graduation_reasons?: string[];
   census_plants: number;
   census_bcm_y: number;
   struck_plants: number;

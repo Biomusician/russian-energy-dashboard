@@ -1853,6 +1853,21 @@ def test_experimental_gas_index_excluded_from_headline_esdi():
 
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_gas_graduation_decision_is_experimental_with_reasons():
+    """§19: iteration 7 makes an explicit graduation DECISION and records why gas processing did
+    not graduate to the headline (no matched denominator + non-comparable capacities)."""
+    snap = _snapshot()
+    g = snap["experimental_indices"]["gas_processing"]
+    assert g.get("graduation_decision") == "experimental"
+    reasons = g.get("graduation_reasons") or []
+    assert len(reasons) >= 2
+    joined = " ".join(reasons).lower()
+    assert "denominator" in joined and ("design" in joined or "throughput" in joined)
+    # §20: the caveat must forbid a summed 'Gas' super-score across processing/LNG/pipelines.
+    assert "lng" in g["caveat"].lower()
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
 def test_experimental_gas_index_is_within_census_not_national():
     """§17: no national denominator. The share is disrupted vs the CENSUSED capacity, and the
     weighted disrupted capacity can never exceed the census."""

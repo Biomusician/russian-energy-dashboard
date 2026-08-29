@@ -151,6 +151,14 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
                   {g.aggregate_bcm_y > 0 && `${g.aggregate_bcm_y} bcm/y is multi-plant aggregate. `}
                   Capacities are structured bcm/y fields, never parsed from prose at scoring time.
                 </p>
+                <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
+                  <b>Iteration-7 decision: stays experimental.</b> A defensible headline sub-sector
+                  would need a matched external denominator and internally comparable capacities;
+                  an open-source census found neither — no all-Russia/AOI gas-processing capacity
+                  total exists, and the census mixes design nameplate (Orenburg, Astrakhan) with
+                  actual throughput. It is never summed with LNG (MTPA) or gas pipelines into a
+                  single "Gas" score — different functions and units.
+                </p>
                 {g.struck.length > 0 && (
                   <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
                     Live-disrupted plants:{" "}
