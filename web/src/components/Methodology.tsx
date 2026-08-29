@@ -88,6 +88,18 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
             )}
           </ul>
 
+          {s.refinery_reconciliation?.canonical_linkage && (
+            <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
+              Refineries resolve to a canonical registry (stable id + aliases), so the
+              denominator and incidents share one identity. Petrochemical complexes
+              (Tobolsk/ZapSibNeftekhim) are excluded from the fuels-refining base.{" "}
+              <b>Canonical linkage {s.refinery_reconciliation.canonical_linkage.struck_refineries}/
+              {s.refinery_reconciliation.canonical_linkage.denominator_refineries} refineries
+              struck = {s.refinery_reconciliation.canonical_linkage.pct_denominator_mtpa_struck}% of
+              denominator capacity</b> — this is identity/linkage completeness, not disruption coverage.
+            </p>
+          )}
+
           {s.esdi_all_sectors != null && (
             <p style={{ color: "var(--amber)" }}>
               The headline ESDI ({s.esdi.toFixed(1)}) renormalises the covered sectors. Counting
@@ -97,6 +109,38 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
               documented strikes that score zero for want of a defensible denominator.
             </p>
           )}
+          {s.experimental_indices?.gas_processing && (() => {
+            const g = s.experimental_indices!.gas_processing!;
+            return (
+              <>
+                <H>Gas processing — experimental (not in the headline)</H>
+                <p>
+                  Gas is uncovered in the headline ESDI because no defensible national
+                  denominator exists. As a separate, <b style={{ color: "var(--amber)" }}>experimental</b>{" "}
+                  measure only, disrupted gas-processing capacity is compared against a{" "}
+                  bottom-up census of {g.census_plants} publicly-sourced plants totalling{" "}
+                  {g.census_bcm_y} bcm/y raw gas. {g.struck_plants} of them carry a live
+                  disruption, giving a <b>within-census exposure of{" "}
+                  {g.within_census_exposure_pct != null ? `${g.within_census_exposure_pct}%` : "—"}</b>.
+                </p>
+                <p style={{ color: "var(--amber)", fontSize: 11 }}>
+                  This is <b>not</b> national gas-processing exposure. The census is a
+                  non-exhaustive sample — Russia processes far more gas than {g.census_bcm_y}{" "}
+                  bcm/y — so the ratio overstates the national picture and is deliberately kept
+                  out of the headline ESDI pending an independent red-team.{" "}
+                  {g.uncertain_bcm_y > 0 && `${g.uncertain_bcm_y} bcm/y of the census is flagged uncertain; `}
+                  {g.aggregate_bcm_y > 0 && `${g.aggregate_bcm_y} bcm/y is multi-plant aggregate. `}
+                  Capacities are structured bcm/y fields, never parsed from prose at scoring time.
+                </p>
+                {g.struck.length > 0 && (
+                  <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
+                    Live-disrupted plants:{" "}
+                    {g.struck.map((p) => `${p.name} (${p.bcm_y} bcm/y × ${p.disruption_weight})`).join(", ")}.
+                  </p>
+                )}
+              </>
+            );
+          })()}
           {s.transmission_concentration && s.transmission_concentration.top.length > 0 && (
             <p style={{ color: "var(--text-faint)" }}>
               Transmission is theatre-concentrated, not a national-grid measure: the top
@@ -106,16 +150,67 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
               as the Kerch power bridge plus Crimea substations, not the wider Russian grid.
             </p>
           )}
+          {s.transmission_sensitivity && (() => {
+            const t = s.transmission_sensitivity!;
+            return (
+              <>
+                <p style={{ color: "var(--text-faint)", fontSize: 11 }}>
+                  <b>Transmission sensitivity.</b> The value is an event-burden against a chosen
+                  saturation constant ({t.saturation_constant}), spread over just{" "}
+                  {t.distinct_affected_regions} region(s) / {t.distinct_facilities} facilities
+                  {t.top_region_share_pct != null && <> (top theatre {t.top_region_share_pct}%)</>}.
+                  It moves sharply with that constant:{" "}
+                  {t.saturation_sweep.map((r) => `sat ${r.saturation}→${r.sector_value}`).join(", ")}.
+                  Published as a sensitivity, not a tuning knob — the formula is unchanged.
+                </p>
+                <p style={{ color: "var(--text-faint)", fontSize: 10.5, fontStyle: "italic" }}>
+                  Red-team verdict: {t.red_team_verdict}
+                </p>
+              </>
+            );
+          })()}
 
           <H>Coverage</H>
           {s.coverage && (
             <p>
-              This dataset enumerates {s.coverage.enumerated_in_this_dataset} region-assigned
-              events. The source benchmark reports {s.coverage.reported_total_strikes} strikes
-              on Russian oil facilities in total — so coverage is roughly{" "}
-              {Math.round(s.coverage.coverage_ratio * 100)}%. Events not individually
-              enumerated in open structured sources are absent, and the index is
-              correspondingly conservative.
+              <b>Oil-strike benchmark coverage ≈ {Math.round(s.coverage.coverage_ratio * 100)}%</b>:{" "}
+              {s.coverage.enumerated_in_this_dataset} enumerated oil-sector strikes vs the{" "}
+              {s.coverage.reported_total_strikes} reported strikes on Russian oil facilities. The
+              numerator and denominator are the same oil-strike universe — earlier iterations
+              divided <i>all</i> energy events ({s.coverage.total_events_all_sectors} across all
+              sectors) by this oil-only benchmark, which overstated coverage; that is corrected.
+              Other sectors have no known-total benchmark and are shown as unbenchmarked, never a
+              fabricated percentage.
+            </p>
+          )}
+          {s.coverage_matrix && (
+            <table className="cov-matrix" style={{ width: "100%", fontSize: 11, borderCollapse: "collapse", marginTop: 6 }}>
+              <thead><tr style={{ color: "var(--text-faint)", textAlign: "left" }}>
+                <th>Sector</th><th>Events</th><th>Assets</th><th>Recov.</th><th>Event coverage</th>
+              </tr></thead>
+              <tbody>
+                {Object.entries(s.coverage_matrix).map(([sec, m]) => (
+                  <tr key={sec} style={{ borderTop: "1px solid var(--line)" }}>
+                    <td>{titleCase(sec)}</td>
+                    <td>{m.event_count}</td>
+                    <td>{m.asset_inventory_count}</td>
+                    <td>{m.recovery_episodes}</td>
+                    <td style={{ color: m.has_event_benchmark ? "var(--text)" : "var(--text-faint)" }}>
+                      {m.has_event_benchmark ? "oil-strike benchmark" : m.event_coverage_state}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <p style={{ fontSize: 10.5, color: "var(--text-faint)", marginTop: 4 }}>
+            Three distinct concepts, never merged: <b>event coverage</b> (only the oil sectors have a
+            defensible benchmark), <b>asset-inventory coverage</b>, and <b>recovery-evidence coverage</b>.
+          </p>
+          {s.coverage && (
+            <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
+              Events not individually enumerated in open structured sources are absent, and the
+              index is correspondingly conservative.
             </p>
           )}
 

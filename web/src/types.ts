@@ -132,6 +132,9 @@ export type RecoveryStatus =
 export interface RecoveryState {
   incident_id: string | null;
   recovery_status: RecoveryStatus;
+  /** §13 granular description of what the source proves (flow_rerouted, unit_restarted,
+   *  station_rebuilt…). Distinct from recovery_status, the scoring bucket. */
+  recovery_kind?: string | null;
   scoring_evidence_kind: EvidenceKind;
   reconstitution_horizon_days: number;
   resolved: boolean;
@@ -172,10 +175,15 @@ export interface RecoveryStats {
   unresolved_count: number;
   resolved_count: number;
   min_median_episodes: number;
+  min_sector_median_episodes?: number;
+  /** POOLED median across all classes — mixed-infrastructure evidence, never the headline. */
   median_observed_restoration_days: number | null;
   median_meaningful: boolean;
+  median_is_mixed_infrastructure?: boolean;
   observed_restoration_episodes: number;
   observed_restoration_values: number[];
+  /** Per-class medians that individually clear the per-class gate (may be empty). */
+  sector_medians?: Record<string, number>;
   median_impairment_age_days: number | null;
   impairment_age_sample: number;
   partial_restart_episodes: number;
@@ -187,6 +195,8 @@ export interface RecoveryStats {
     disrupted_facilities: number;
     unresolved: number;
     observed_restoration_episodes: number;
+    observed_restoration_values?: number[];
+    partial_restart_episodes?: number;
     median_observed_restoration_days: number | null;
   }>;
   note: string;
@@ -230,18 +240,85 @@ export interface RefineryReconciliation {
   national_public_estimate_mtpa: number;
   national_estimate_source: string;
   tracked_mtpa: number;
+  tracked_refineries?: number;
   coverage_pct: number;
   gap_mtpa: number;
+  excluded_non_fuels?: string[];
+  /** Canonical refinery linkage completeness (iteration 6, §9) — identity/linkage, NOT
+   *  disruption coverage. */
+  canonical_linkage?: {
+    denominator_refineries: number;
+    struck_refineries: number;
+    mtpa_struck: number;
+    pct_denominator_mtpa_struck: number;
+    incidents_unresolved_to_registry: string[];
+    note: string;
+  };
   note: string;
 }
 
 export interface Coverage {
   reported_total_strikes: number;
+  /** Iteration 6: now the OIL-SECTOR strike count (matches the oil benchmark universe), not
+   *  all energy events. See numerator_definition + total_events_all_sectors. */
   enumerated_in_this_dataset: number;
   coverage_ratio: number;
+  total_events_all_sectors?: number;
+  numerator_definition?: string;
   by_period: { period: string; strikes: number; cumulative: number }[];
   source_url: string;
   note: string;
+}
+
+/** Per-sector coverage matrix (iteration 6, §5). EVENT / ASSET-INVENTORY / RECOVERY-EVIDENCE
+ *  coverage are kept as separate concepts; only the oil sectors carry a defensible event
+ *  benchmark, others get an honest descriptive state, never a fabricated percentage. */
+export interface CoverageMatrixEntry {
+  event_count: number;
+  discovery_sources: string;
+  has_event_benchmark: boolean;
+  asset_inventory_count: number;
+  /** RECOVERY-EVIDENCE coverage: any recovery evidence (observed + partial restarts). */
+  recovery_episodes: number;
+  recovery_observed_episodes?: number;
+  disrupted_facilities: number;
+  event_coverage_state: string;
+  last_audit: string;
+}
+
+/** Experimental gas-processing exposure (iteration 6, §18). A WITHIN-CENSUS share, never a
+ *  national figure, and deliberately excluded from the headline ESDI. */
+/** A single source-backed observed consequence of a strike (iteration 6, §25-28). Every
+ *  effect carries an evidence tag; region population is never an effect here. */
+export type EffectEvidence = "observed" | "estimated" | "modelled" | "unknown";
+export interface StrategicEffect {
+  effect_type: string;
+  evidence_kind: EffectEvidence;
+  value_numeric: number | null;
+  value_unit: string | null;
+  currency: string | null;
+  cost_year: string | null;
+  as_of_date: string | null;
+  value_text: string | null;
+  source_url: string | null;
+}
+export interface StrategicEffects {
+  national: StrategicEffect[];
+  by_incident: Record<string, StrategicEffect[]>;
+}
+
+export interface GasProcessingIndex {
+  experimental: boolean;
+  in_headline_esdi: boolean;
+  census_plants: number;
+  census_bcm_y: number;
+  struck_plants: number;
+  disrupted_bcm_y_weighted: number;
+  within_census_exposure_pct: number | null;
+  uncertain_bcm_y: number;
+  aggregate_bcm_y: number;
+  struck: { asset_id: string; name: string | null; bcm_y: number; disruption_weight: number }[];
+  caveat: string;
 }
 
 export interface SchemaCheck {
@@ -264,6 +341,18 @@ export interface Snapshot {
     occupied_share_pct: number;
     note: string;
   };
+  /** Transmission audit alternatives (iteration 6, §21-23) — a sensitivity, not a tuning knob. */
+  transmission_sensitivity?: {
+    saturation_constant: number;
+    raw_burden: number;
+    saturation_sweep: { saturation: number; sector_value: number }[];
+    distinct_affected_regions: number;
+    distinct_facilities: number;
+    top_region_share_pct: number | null;
+    per_region_saturated: { region_code: string | null; burden: number; saturated_value: number }[];
+    note: string;
+    red_team_verdict: string;
+  };
   sectors: Record<string, number>;
   sectors_covered: string[];
   sectors_uncovered: string[];
@@ -278,6 +367,9 @@ export interface Snapshot {
   regions: Record<string, RegionSnapshot>;
   not_modelled: Record<string, string>;
   coverage: Coverage | null;
+  coverage_matrix?: Record<string, CoverageMatrixEntry>;
+  experimental_indices?: { gas_processing: GasProcessingIndex | null };
+  strategic_effects?: StrategicEffects;
   economic_context: EconomicContext | null;
   refinery_reconciliation: RefineryReconciliation | null;
   facet_counts: FacetCounts;

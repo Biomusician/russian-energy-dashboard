@@ -279,6 +279,25 @@ def test_partial_restart_is_not_full_reconstitution():
     assert _weight_at(inc, on, partial) == pytest.approx(_weight_at(inc, on, None), abs=1e-9)
 
 
+def test_partial_restart_never_scores_above_no_record_for_degraded_status():
+    """Regression: a partial_restart record must never RAISE an incident's weight. The
+    status_multiplier ('degraded' = 0.7) was applied only when no record existed, so
+    attaching a partial-restart record silently removed the damping and scored the facility
+    ~43% HIGHER than with no evidence at all — the whole cause of a spurious transmission jump
+    when recovery evidence was added. A partial restart is at best neutral for scoring."""
+    inc = _incident(date="2026-08-20", status="degraded", asset_class="substation")
+    on = dt.date(2026, 8, 28)
+    w_none = _weight_at(inc, on, None)
+    partial = _rec(source_confidence="high", recovery_status="partial_restart",
+                   partial_operations_resumed_at="2026-08-20")
+    w_partial = _weight_at(inc, on, partial)
+    # Neutral: identical to the record-less weight (both carry the degraded damping).
+    assert w_partial == pytest.approx(w_none, abs=1e-9)
+    # And the damping is really present (strictly below the undamped 'active' weight).
+    w_active = _weight_at(_incident(date="2026-08-20", status="active", asset_class="substation"), on, None)
+    assert w_partial < w_active
+
+
 def test_low_confidence_estimate_does_not_drive_scoring():
     """A low-confidence estimate is shown but must not replace the modelled horizon."""
     from pipeline import recovery
@@ -612,6 +631,84 @@ def test_partial_restart_not_counted_as_full_reconstitution():
     rs = snap["recovery_stats"]
     assert "partial_restart_episodes" in rs and "full_reconstitution_episodes" in rs
     assert rs["partial_restart_episodes"] >= 0 and rs["full_reconstitution_episodes"] >= 0
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_pooled_median_is_labelled_mixed_infrastructure():
+    """§11: the pooled cross-class median must be flagged mixed-infrastructure so the UI can
+    never present it as a per-sector repair time."""
+    snap = _snapshot()
+    rs = snap["recovery_stats"]
+    assert rs.get("median_is_mixed_infrastructure") is True
+    assert "min_sector_median_episodes" in rs
+    # The per-class gate is looser than the pooled gate, but still > 1.
+    assert 1 < rs["min_sector_median_episodes"] <= rs["min_median_episodes"]
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_per_class_median_only_appears_at_class_gate():
+    """§12: a class median is emitted only when THAT class has enough of its own observed
+    episodes; below the gate the individual durations are exposed instead."""
+    snap = _snapshot()
+    rs = snap["recovery_stats"]
+    gate = rs["min_sector_median_episodes"]
+    for sector, m in rs["by_sector"].items():
+        assert "observed_restoration_values" in m, sector
+        # Values length agrees with the episode count.
+        assert len(m["observed_restoration_values"]) == m["observed_restoration_episodes"]
+        if m["observed_restoration_episodes"] < gate:
+            assert m["median_observed_restoration_days"] is None, sector
+        # sector_medians must be exactly the classes that cleared the gate.
+        in_medians = sector in (rs.get("sector_medians") or {})
+        assert in_medians == (m["median_observed_restoration_days"] is not None), sector
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_flow_rerouted_recovery_kind_is_never_full_reconstitution():
+    """§13: a 'flow rerouted around a still-damaged node' restart is a partial restart, never
+    facility reconstitution (the Unecha lesson). The granular kind must not contradict the
+    scoring bucket."""
+    snap = _snapshot()
+    for d in snap["live_disruptions"]:
+        rec = d["recovery"]
+        kind = rec.get("recovery_kind")
+        if kind and "flow_rerouted" in kind:
+            assert rec["recovery_status"] == "partial_restart", d["asset_id"]
+            assert rec["resolved"] is False, d["asset_id"]
+
+
+def test_recovery_kind_column_matches_status_in_source():
+    """The curated recovery file must not pair a flow-only kind with a full-reconstitution
+    status — checked on the source of truth, not just the built artifact."""
+    import csv
+    path = ROOT / "data" / "curated" / "recovery.csv"
+    flow_kinds = {"flow_rerouted"}
+    with open(path, encoding="utf-8", newline="") as f:
+        for row in csv.DictReader(f):
+            if (row.get("recovery_kind") or "") in flow_kinds:
+                assert row["recovery_status"] == "partial_restart", row["incident_id"]
+
+
+def test_incident_status_does_not_contradict_its_recovery_record():
+    """Red-team (iter 6): the scoring status_multiplier reads incident.status, which must not
+    contradict the authoritative recovery record. An incident may be status='repaired' only if
+    its recovery record actually closes it (fully_reconstituted). Unecha was the offender:
+    status='repaired' against a record saying the pumping station was destroyed and only flow
+    was rerouted."""
+    import csv
+    rec = {}
+    with open(ROOT / "data" / "curated" / "recovery.csv", encoding="utf-8", newline="") as f:
+        for r in csv.DictReader(f):
+            rec[r["incident_id"]] = r["recovery_status"]
+    with open(ROOT / "data" / "curated" / "incidents.csv", encoding="utf-8", newline="") as f:
+        for r in csv.DictReader(f):
+            iid = r["incident_id"]
+            if r.get("status") == "repaired" and iid in rec:
+                assert rec[iid] == "fully_reconstituted", (
+                    f"{iid}: incident.status='repaired' contradicts recovery_status='{rec[iid]}'")
 
 
 @pytest.mark.skipif(not (PROCESSED / "incidents.json").exists(),
@@ -1478,6 +1575,37 @@ def test_transmission_concentration_disclosed():
     assert 0 <= tc["occupied_share_pct"] <= 100
 
 
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_transmission_sensitivity_sweep_is_consistent_and_monotone():
+    """§21-23: the saturation sweep must (a) contain the actual constant, (b) reproduce the
+    headline value at that constant, and (c) fall monotonically as saturation rises — the whole
+    point being to show how fragile the number is, without changing the formula."""
+    snap = _snapshot()
+    t = snap.get("transmission_sensitivity")
+    assert t, "transmission sensitivity must be published"
+    sweep = {r["saturation"]: r["sector_value"] for r in t["saturation_sweep"]}
+    assert t["saturation_constant"] in sweep
+    # Reproduces the shipped headline value at the real constant.
+    assert sweep[t["saturation_constant"]] == pytest.approx(snap["sectors"]["transmission"], abs=0.05)
+    # Higher saturation -> strictly lower (or equal at the cap) sector value.
+    sats = sorted(sweep)
+    vals = [sweep[k] for k in sats]
+    assert vals == sorted(vals, reverse=True), "sweep must be non-increasing in saturation"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_transmission_sensitivity_exposes_theatre_concentration():
+    """The per-region breakdown must show the burden sits in a handful of theatres, and the
+    top-theatre share must be a real fraction — the audit's central finding."""
+    snap = _snapshot()
+    t = snap["transmission_sensitivity"]
+    assert t["distinct_affected_regions"] == len(t["per_region_saturated"])
+    if t["raw_burden"] > 0:
+        assert t["top_region_share_pct"] is not None and 0 < t["top_region_share_pct"] <= 100
+        # per-region burdens sum to the raw burden.
+        assert sum(r["burden"] for r in t["per_region_saturated"]) == pytest.approx(t["raw_burden"], abs=0.02)
+
+
 def test_gas_and_coal_are_labelled_uncovered_not_a_fake_basis():
     """gas/coal must not advertise an 'event_burden' basis that build_index._share implements
     only for transmission — that footgun would silently zero-score a sector if it were ever
@@ -1492,3 +1620,270 @@ def test_gas_and_coal_stay_out_of_covered():
     snap = _snapshot()
     assert "gas" in snap["sectors_uncovered"] and "coal" in snap["sectors_uncovered"]
     assert "gas" not in snap["sectors_covered"] and "coal" not in snap["sectors_covered"]
+
+
+# --------------------------------------------------------------------------
+# Iteration 6: coverage universe correction (§3-§5)
+# --------------------------------------------------------------------------
+# The oil-strike benchmark describes ONE universe. Coverage against it must use a matching
+# numerator (oil-sector strikes), not all energy events; non-oil sectors get no fake %.
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_oil_coverage_uses_the_oil_strike_universe():
+    from pipeline.config import SECTOR_OF_CLASS
+    snap = _snapshot()
+    cov = snap["coverage"]
+    inc = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    oil_strikes = sum(
+        1 for i in inc
+        if SECTOR_OF_CLASS.get(i.get("asset_class")) in ("refining", "oil_logistics")
+        and i.get("cause") in ("kinetic_strike", "sabotage")
+    )
+    assert cov["enumerated_in_this_dataset"] == oil_strikes, "numerator must be oil-sector strikes only"
+    assert cov["enumerated_in_this_dataset"] < snap["incident_total"], "numerator must exclude non-oil events"
+    assert cov["total_events_all_sectors"] == snap["incident_total"]
+    assert cov["numerator_definition"]
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_non_oil_events_cannot_inflate_oil_coverage():
+    """A transmission/generation/gas event must never enter the oil-strike numerator."""
+    from pipeline.config import SECTOR_OF_CLASS
+    snap = _snapshot()
+    inc = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    non_oil = [i for i in inc if SECTOR_OF_CLASS.get(i.get("asset_class")) not in ("refining", "oil_logistics")]
+    assert non_oil, "corpus should contain non-oil events (else this test is vacuous)"
+    # the corrected numerator equals the oil-strike count; the OLD formula (all events) would
+    # have been strictly larger, so the correction actually lowered the reported coverage.
+    assert snap["coverage"]["enumerated_in_this_dataset"] == snap["incident_total"] - non_oil.__len__() \
+        or snap["coverage"]["enumerated_in_this_dataset"] < snap["incident_total"]
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_unbenchmarked_sectors_emit_no_fabricated_percentage():
+    snap = _snapshot()
+    for sec, e in snap["coverage_matrix"].items():
+        if not e["has_event_benchmark"]:
+            assert "%" not in e["event_coverage_state"], f"{sec} must not fabricate a coverage %"
+            assert e["event_coverage_state"] in (
+                "no events", "thin", "expanded but unbenchmarked",
+            ), f"{sec} state must be a defined descriptive state"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_coverage_matrix_keeps_event_inventory_recovery_distinct():
+    """EVENT coverage, ASSET-INVENTORY coverage and RECOVERY-EVIDENCE coverage are three
+    different concepts and are never merged into one number (§5)."""
+    snap = _snapshot()
+    for sec, e in snap["coverage_matrix"].items():
+        assert {"event_count", "asset_inventory_count", "recovery_episodes"} <= set(e)
+
+
+# --------------------------------------------------------------------------
+# Iteration 6: experimental gas-processing sub-index (§16-§20)
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_experimental_gas_index_excluded_from_headline_esdi():
+    """§18: the gas-processing sub-index is experimental and must never enter the headline."""
+    snap = _snapshot()
+    g = (snap.get("experimental_indices") or {}).get("gas_processing")
+    assert g is not None, "experimental gas-processing index should be present"
+    assert g["experimental"] is True and g["in_headline_esdi"] is False
+    # Gas still contributes exactly zero to the composite.
+    assert snap["sectors"]["gas"] == 0.0
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_experimental_gas_index_is_within_census_not_national():
+    """§17: no national denominator. The share is disrupted vs the CENSUSED capacity, and the
+    weighted disrupted capacity can never exceed the census."""
+    snap = _snapshot()
+    g = snap["experimental_indices"]["gas_processing"]
+    assert g["census_bcm_y"] > 0 and g["census_plants"] >= 1
+    assert g["disrupted_bcm_y_weighted"] <= g["census_bcm_y"] + 1e-9
+    if g["within_census_exposure_pct"] is not None:
+        assert g["within_census_exposure_pct"] == pytest.approx(
+            100 * g["disrupted_bcm_y_weighted"] / g["census_bcm_y"], abs=0.1)
+    # The caveat must state it is not a national figure.
+    assert "not" in g["caveat"].lower() and "national" in g["caveat"].lower()
+
+
+def test_gas_processing_capacity_is_structured_not_prose():
+    """§16: GPP capacities live in an explicit bcm/y field, never parsed from the note text."""
+    import csv
+    path = ROOT / "data" / "curated" / "assets_supplement.csv"
+    with open(path, encoding="utf-8", newline="") as f:
+        gpps = [r for r in csv.DictReader(f) if r["asset_class"] == "gas_processing"]
+    assert gpps, "expected gas_processing rows"
+    for r in gpps:
+        assert r.get("capacity_bcm_y"), f"{r['asset_id']} needs a structured bcm/y capacity"
+        float(r["capacity_bcm_y"])  # must be numeric
+        assert r.get("capacity_status") in ("sourced", "aggregate", "uncertain"), r["asset_id"]
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_lng_and_condensate_not_counted_in_gpp_census():
+    """§19: LNG / gas-condensate complexes are kept separate from the gas-PROCESSING census."""
+    snap = _snapshot()
+    g = snap["experimental_indices"]["gas_processing"]
+    struck_ids = {p["asset_id"] for p in g["struck"]}
+    # The Novatek Ust-Luga gas-condensate/LNG complex is struck but is NOT a censused GPP.
+    assert "ust-luga-novatek-gas" not in struck_ids
+
+
+# --------------------------------------------------------------------------
+# Iteration 6: source-backed strategic / observed effects (§25-28)
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_strategic_effects_present_and_evidence_tagged():
+    """Every observed effect carries an evidence tag and a source; national vs per-incident are
+    kept separate (§25). Works whether or not any effects are curated yet."""
+    snap = _snapshot()
+    se = snap.get("strategic_effects")
+    assert se is not None and "national" in se and "by_incident" in se
+    all_effects = list(se["national"]) + [e for lst in se["by_incident"].values() for e in lst]
+    for e in all_effects:
+        assert e["evidence_kind"] in ("observed", "estimated", "modelled", "unknown")
+        assert e.get("source_url"), f"a sourced effect must cite a source: {e}"
+        assert e.get("effect_type")
+
+
+@pytest.mark.skipif(not (PROCESSED / "incidents.json").exists(), reason="pipeline not run")
+def test_effects_attach_only_to_real_incidents():
+    """§25: per-incident effects must key to incidents that exist (no orphans)."""
+    snap = _snapshot()
+    se = snap.get("strategic_effects") or {"by_incident": {}}
+    incidents = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    ids = {i["incident_id"] for i in incidents}
+    for iid in se["by_incident"]:
+        assert iid in ids, f"effect references unknown incident {iid}"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_repair_costs_are_never_bare_numbers():
+    """§27: a repair-cost effect must carry currency + year, never an un-anchored figure."""
+    snap = _snapshot()
+    se = snap.get("strategic_effects") or {"national": [], "by_incident": {}}
+    for e in list(se["national"]) + [x for lst in se["by_incident"].values() for x in lst]:
+        if e["effect_type"] == "repair_cost" and e["value_numeric"] is not None:
+            assert e.get("currency") and e.get("cost_year"), f"repair cost needs currency+year: {e}"
+
+
+# --------------------------------------------------------------------------
+# Iteration 6: candidate discovery is human-gated and CANNOT feed the scored dataset (§29-30)
+# --------------------------------------------------------------------------
+
+def test_candidate_discovery_fails_safely_and_never_raises():
+    """The discovery step must return [] on any failure (e.g. no network here) and never raise,
+    so it can never break anything."""
+    from pipeline import discover_candidates as dc
+    got = dc.discover(days_back=1, max_records=5, timeout=3)
+    assert isinstance(got, list)  # [] when the feed is unreachable — the common CI case
+
+
+def test_candidate_pointers_carry_no_location_or_score():
+    """§29 scope guard: a candidate is a bare pointer for human review — never a located or
+    scored record. The queue schema must contain no location/score/facility fields."""
+    from pipeline import discover_candidates as dc
+    banned = {"lat", "lon", "latitude", "longitude", "coordinate", "region", "region_code",
+              "score", "esdi", "capacity", "facility", "asset_id", "sector"}
+    assert not (set(dc._FIELDS) & banned), dc._FIELDS
+    assert "needs_review" in dc._FIELDS or "status" in dc._FIELDS
+
+
+def test_build_never_imports_candidate_discovery():
+    """The daily build must not import the discovery module — discovery can never auto-feed the
+    scored pipeline; a human hand-adds a curated incident or nothing happens."""
+    run_src = (ROOT / "pipeline" / "run.py").read_text(encoding="utf-8")
+    assert "discover_candidates" not in run_src, "run.py must not import candidate discovery"
+
+
+def test_discovery_writes_only_to_review_queue_not_curated_or_processed():
+    """The discovery module's output path must live under data/review, never curated/processed."""
+    from pipeline import discover_candidates as dc
+    assert dc.REVIEW_DIR.name == "review" and dc.REVIEW_DIR.parent.name == "data"
+    assert dc.QUEUE.parent == dc.REVIEW_DIR
+    parts = set(dc.QUEUE.parts)
+    assert "curated" not in parts and "processed" not in parts
+
+
+# --------------------------------------------------------------------------
+# Iteration 6: headline-number consistency (§2, §39)
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_current_state_doc_is_in_sync():
+    """docs/CURRENT_STATE.md is the single source of truth for headline numbers and must match
+    the current build. If this fails, run `python -m pipeline.run` to regenerate it (§2)."""
+    from pipeline import current_state
+    doc = current_state.DOC
+    assert doc.exists(), "docs/CURRENT_STATE.md is missing — run the build"
+    snap = _snapshot()
+    expected = current_state.render(snap, current_state.count_tests())
+    actual = doc.read_text(encoding="utf-8")
+    assert actual == expected, (
+        "docs/CURRENT_STATE.md is stale vs the built snapshot — rebuild to regenerate it. "
+        "This is the drift guard: headline counts must not be hand-maintained."
+    )
+
+
+# --------------------------------------------------------------------------
+# Iteration 6: canonical refinery registry + linkage (§6-§9)
+# --------------------------------------------------------------------------
+# One stable id + alias set per refinery, so denominator and incidents resolve to the SAME
+# canonical asset instead of display-name string equality. Uncertain names never auto-resolve.
+
+def test_all_denominator_refineries_resolve_to_canonical_ids():
+    from pipeline import refinery_registry as RR
+    if not (PROCESSED / "refinery_inventory.json").exists():
+        pytest.skip("pipeline not run")
+    inv = json.loads((PROCESSED / "refinery_inventory.json").read_text(encoding="utf-8"))["refineries"]
+    for r in inv:
+        assert RR.resolve(r["name"]) is not None, f"{r['name']} must resolve to a canonical id"
+
+
+def test_petrochemical_complex_excluded_from_fuels_denominator():
+    from pipeline import refinery_registry as RR
+    reg = RR.by_id()
+    assert reg["tobolsk"]["denominator_status"] == "exclude"
+    assert "tobolsk" not in RR.denominator_ids()
+
+
+def test_refinery_alias_resolution_disambiguates_co_located_plants():
+    from pipeline import refinery_registry as RR
+    # distinct plants in the same city must NOT collapse to one id
+    assert RR.resolve("TANECO") == "taneco"
+    assert RR.resolve("TAIF-NK") == "taif-nk"
+    assert RR.resolve("taneco") != RR.resolve("taif-nk")
+    assert RR.resolve("Ufa Refinery") == "ufa"
+    assert RR.resolve("Novo-Ufa Refinery") == "novo-ufa"
+    assert RR.resolve("Ufaneftekhim Refinery") == "ufaneftekhim"
+    # an unknown name returns None — no fuzzy guessing (§7)
+    assert RR.resolve("Totally Unknown Plant XYZ") is None
+
+
+def test_no_alias_collision_across_canonical_ids():
+    """Two different canonical ids must not share a normalized alias — that would double-count
+    one facility's capacity into the denominator (§7/§10)."""
+    import collections
+    from pipeline import refinery_registry as RR
+    idx = collections.defaultdict(set)
+    for r in RR.load():
+        for a in [r["canonical_id"], r["canonical_name"], *r["aliases"]]:
+            key = RR._norm(a)
+            if key:
+                idx[key].add(r["canonical_id"])
+    collisions = {k: v for k, v in idx.items() if len(v) > 1}
+    assert not collisions, f"alias collisions would double-count capacity: {collisions}"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_canonical_linkage_is_identity_not_disruption_coverage():
+    snap = _snapshot()
+    cl = snap["refinery_reconciliation"]["canonical_linkage"]
+    assert 0 < cl["struck_refineries"] <= cl["denominator_refineries"]
+    assert 0 < cl["pct_denominator_mtpa_struck"] <= 100
+    # Naftan is a Belarusian refinery, intentionally outside the Russian denominator
+    assert "Naftan refinery (Novopolotsk)" in cl["incidents_unresolved_to_registry"]

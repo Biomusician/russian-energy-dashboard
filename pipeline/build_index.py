@@ -79,14 +79,21 @@ def _weight_at(incident, when, record=None):
     cause = SCORING["cause_weights"].get(incident.get("cause") or "unknown", 0.7)
     base = conf * cause
 
-    half_life, _kind = recovery.effective_half_life(incident.get("asset_class"), record)
+    half_life, kind = recovery.effective_half_life(incident.get("asset_class"), record)
     days = (when_date - occurred).days
     value = base * (0.5 ** (days / half_life))
 
     if recovery.is_resolved(record, when_date):
         value = min(value, base * recovery.RESIDUAL)
-    elif record is None:
-        # No recovery record: honour an explicit status on the incident itself.
+    elif kind == "modelled":
+        # No overriding recovery TIMING — either no record at all, or a record that falls back
+        # to the modelled horizon (partial_restart, low-confidence estimate, bare impaired,
+        # unknown). In all of these the incident's own reported status severity still governs.
+        # Applying it only when `record is None` was a latent bug: attaching a partial-restart
+        # record (which by design does NOT change the decay) silently DROPPED the 'degraded'
+        # damping and scored the facility HIGHER than with no evidence at all. A partial
+        # restart must never raise a score. (observed/estimated kinds override with real
+        # timing and are intentionally exempt.)
         value *= SCORING["status_multipliers"].get(incident.get("status") or "unknown", 1.0)
 
     return value if value >= SCORING["cutoff"]["min_contribution"] else 0.0
@@ -124,9 +131,14 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
     denominators = _denominators(assets, refinery_total_mtpa, region_meta,
                                  transmission_lines_by_region)
 
-    # Regions excluded from the Russia+Belarus headline composite (Crimea). Their events
-    # are still tracked and get their own regional exposure, but never feed the national
-    # ESDI or its denominators. See docs/METHODOLOGY.md.
+    # Regions flagged esdi_included=False are fenced out of the national composite (their
+    # events still get their own regional exposure). NOTE: this set is currently EMPTY —
+    # occupied Crimea is intentionally esdi_included=True (an iteration-4 analytic choice, see
+    # config.py + docs/METHODOLOGY.md), so Crimea DOES feed the national ESDI through the
+    # sectors where it has a compatible denominator (transmission, oil logistics). It is a
+    # large share of the transmission signal — see transmission_concentration.occupied_share_pct
+    # and transmission_sensitivity. The mechanism is retained for any future excluded region;
+    # the other occupied Ukrainian oblasts are simply not tracked at all rather than excluded.
     esdi_excluded = {code for code, m in region_meta.items() if not m.get("esdi_included", True)}
 
     incidents_by_facility = collections.defaultdict(list)
@@ -175,10 +187,20 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
                 regional[code]["sectors"][s].append(round(min(1.0, rs.get(s, 0.0)) * 100, 2))
             regional[code]["esdi"].append(_composite(rs, sector_weights, covered))
 
+    # Bottom-up gas-processing census for the EXPERIMENTAL sub-index (§18). Only assets that
+    # carry an explicit bcm/y figure (structured, never parsed from prose) are counted.
+    gpp_census = [
+        {"asset_id": a["asset_id"], "name": a.get("name"), "bcm_y": a["capacity_bcm_y"],
+         "basis": a.get("capacity_basis"), "status": a.get("capacity_status"),
+         "region_code": a.get("region_code")}
+        for a in assets
+        if a.get("asset_class") == "gas_processing" and a.get("capacity_bcm_y")
+    ]
+
     snapshot = _snapshot(
         incidents, incidents_by_facility, facility_info, denominators,
         region_meta, national, regional, timeline, as_of, covered, recovery_by_incident,
-        region_context,
+        region_context, gpp_census=gpp_census,
     )
     return national, regional, snapshot
 
@@ -223,6 +245,7 @@ def _facility_registry(facilities, incidents, assets):
             "region_code": f.get("region_code"),
             "capacity_mtpa": f.get("capacity_mtpa"),
             "capacity_mw": f.get("capacity_mw"),
+            "capacity_bcm_y": f.get("capacity_bcm_y"),
         }
     # Curated incidents may name a facility that no source table lists.
     for inc in incidents:
@@ -234,6 +257,7 @@ def _facility_registry(facilities, incidents, assets):
         # treatment refineries get, since the index measures capacity exposed to
         # disruption rather than capacity proven lost.
         linked = by_asset.get(inc.get("linked_asset_id") or "")
+        self_asset = by_asset.get(inc["asset_id"])  # incident hitting an inventoried asset directly
         reg[inc["asset_id"]] = {
             "name": inc.get("asset_name"),
             "asset_class": cls,
@@ -241,6 +265,10 @@ def _facility_registry(facilities, incidents, assets):
             "region_code": inc.get("region_code"),
             "capacity_mtpa": inc.get("capacity_affected_mtpa") or (linked or {}).get("capacity_mtpa"),
             "capacity_mw": inc.get("capacity_affected_mw") or (linked or {}).get("capacity_mw"),
+            # bcm/y is carried for the experimental gas-processing index only (never MTPA/MW,
+            # so the headline denominators are untouched); a GPP incident resolves to its own
+            # inventoried supplement asset for the capacity figure.
+            "capacity_bcm_y": (linked or {}).get("capacity_bcm_y") or (self_asset or {}).get("capacity_bcm_y"),
             "voltage_kv": inc.get("voltage_kv") or (linked or {}).get("voltage_kv"),
             "linked_asset_id": inc.get("linked_asset_id"),
         }
@@ -255,7 +283,10 @@ def _denominators(assets, refinery_total_mtpa, region_meta, transmission_lines_b
     transmission_lines_by_region = transmission_lines_by_region or {}
     nat = {s: 0.0 for s in SECTORS}
     per_region = {code: {s: 0.0 for s in SECTORS} for code in region_meta}
-    # Crimea and any esdi-excluded region never contribute to the national denominator.
+    # Any region flagged esdi_included=False is kept out of the national denominator. This set
+    # is currently EMPTY: occupied Crimea is intentionally included (esdi_included=True), so it
+    # DOES contribute where it has a denominator (transmission, oil logistics). Not a fence
+    # around occupied territory — see the note in build().
     esdi_excluded = {code for code, m in region_meta.items() if not m.get("esdi_included", True)}
 
     nat["refining"] = refinery_total_mtpa
@@ -397,6 +428,9 @@ def _incident_recovery_state(incident, record, today):
     state = {
         "incident_id": incident.get("incident_id"),
         "recovery_status": status,
+        # Granular §13 vocabulary describing WHAT the source proves (e.g. flow_rerouted vs
+        # station_rebuilt). Distinct from recovery_status, which is the scoring bucket.
+        "recovery_kind": None,
         "scoring_evidence_kind": kind,  # observed | estimated | modelled — drives the decay
         "reconstitution_horizon_days": round(horizon),
         "resolved": resolved,
@@ -412,6 +446,7 @@ def _incident_recovery_state(incident, record, today):
         "recovery_sources": [],
     }
     if record:
+        state["recovery_kind"] = record.get("recovery_kind")
         state["observed_days"] = record.get("observed_days")
         state["observed_date"] = record.get("observed_date")
         state["partial_operations_resumed_at"] = record.get("partial_operations_resumed_at")
@@ -432,9 +467,107 @@ def _incident_recovery_state(incident, record, today):
     return state
 
 
+def _gas_processing_index(gpp_census, live, today):
+    """EXPERIMENTAL gas-processing exposure (§18). A WITHIN-CENSUS share — the weighted
+    disrupted GPP capacity over the total CENSUSED capacity — and nothing more.
+
+    It is deliberately NOT part of the headline ESDI and carries no national denominator: the
+    census is a non-exhaustive, bottom-up sample of publicly-sourced GPP capacities (bcm/y raw
+    gas). Russia processes far more gas than the census holds, so this ratio OVERSTATES national
+    exposure and is gated out of the composite pending an independent red-team (§18, §35).
+    """
+    if not gpp_census:
+        return None
+    census_total = sum(g["bcm_y"] for g in gpp_census)
+    live_by_id = {x["asset_id"]: x for x in live}
+    disrupted, struck = 0.0, []
+    for g in gpp_census:
+        x = live_by_id.get(g["asset_id"])
+        w = x["disruption_weight"] if x else 0.0
+        if w > 0:
+            disrupted += g["bcm_y"] * w
+            struck.append({"asset_id": g["asset_id"], "name": g["name"],
+                           "bcm_y": g["bcm_y"], "disruption_weight": round(w, 3)})
+    uncertain = sum(g["bcm_y"] for g in gpp_census if g.get("status") == "uncertain")
+    aggregate = sum(g["bcm_y"] for g in gpp_census if g.get("status") == "aggregate")
+    return {
+        "experimental": True,
+        "in_headline_esdi": False,
+        "census_plants": len(gpp_census),
+        "census_bcm_y": round(census_total, 2),
+        "struck_plants": len(struck),
+        "disrupted_bcm_y_weighted": round(disrupted, 2),
+        "within_census_exposure_pct": round(100 * disrupted / census_total, 1) if census_total else None,
+        "uncertain_bcm_y": round(uncertain, 2),
+        "aggregate_bcm_y": round(aggregate, 2),
+        "struck": sorted(struck, key=lambda s: -s["bcm_y"]),
+        "caveat": (
+            "Within-census share only. The census is a non-exhaustive, bottom-up sample of "
+            "publicly-sourced gas-processing capacities (bcm/y raw gas) — NOT a national "
+            "denominator — so this is not national gas-processing exposure. Experimental: "
+            "excluded from the headline ESDI pending an independent red-team."
+        ),
+    }
+
+
+def _transmission_sensitivity(live, facility_info, esdi_excluded):
+    """Transmission-audit alternatives (§21-23). The headline transmission value is an
+    event-burden against an arbitrary saturation constant, dominated by 1-2 theatres. Rather
+    than tune the formula (which would look like engineering Crimea's effect away), we EXPOSE
+    how the number moves under other reasonable formulations and let the reader judge.
+    """
+    finfo = lambda x: facility_info.get(x["asset_id"], {})
+    tx = [x for x in live if finfo(x).get("sector") == "transmission"]
+    # Mirror the headline: only esdi-included regions feed the national composite.
+    nat_tx = [x for x in tx if finfo(x).get("region_code") not in esdi_excluded]
+    vw = lambda x: _voltage_weight(finfo(x))
+    raw_burden = sum(vw(x) * x["disruption_weight"] for x in nat_tx)
+
+    # (1) Saturation sensitivity: the headline value at other reasonable constants.
+    sweep = [{"saturation": k, "sector_value": round(min(1.0, raw_burden / k) * 100, 2)}
+             for k in (4, 6, 8, 10, 12, 16)]
+
+    # (2) Breadth: how many DISTINCT regions/facilities carry the burden — and each theatre's
+    # own saturated value, so a single dominant theatre is visible, not hidden in the sum.
+    by_region = collections.defaultdict(float)
+    for x in nat_tx:
+        by_region[finfo(x).get("region_code")] += vw(x) * x["disruption_weight"]
+    per_region = sorted(
+        ({"region_code": r, "burden": round(b, 3),
+          "saturated_value": round(min(1.0, b / SATURATION_EVENTS) * 100, 2)}
+         for r, b in by_region.items()),
+        key=lambda d: -d["burden"])
+    top_share = round(100 * per_region[0]["burden"] / raw_burden, 1) if raw_burden and per_region else None
+
+    return {
+        "saturation_constant": SATURATION_EVENTS,
+        "raw_burden": round(raw_burden, 3),
+        "saturation_sweep": sweep,
+        "distinct_affected_regions": len(by_region),
+        "distinct_facilities": len(nat_tx),
+        "top_region_share_pct": top_share,
+        "per_region_saturated": per_region,
+        "note": (
+            "Transmission is an event-burden against a saturation constant, not a national-grid "
+            "capacity measure. It is dominated by 1-2 theatres and the headline value roughly "
+            f"halves/doubles as the saturation constant moves between {sweep[-1]['saturation']} "
+            f"and {sweep[0]['saturation']}. Published as a sensitivity, not a tuning knob."
+        ),
+        "red_team_verdict": (
+            "RETAINED in the headline. It reflects real, sourced disruption to the Kerch power "
+            "bridge and Crimea substations; removing it would discard that signal and would "
+            "amount to tuning away an inconvenient theatre. Read plainly: occupied Crimea is "
+            "roughly HALF of this transmission signal (see transmission_concentration."
+            "occupied_share_pct) and is folded into the 'national' figure by an intentional "
+            "analytic choice, NOT fenced out. It is retained WITH mandatory concentration "
+            "disclosure and these alternatives, and is NOT presented as national grid exposure."
+        ),
+    }
+
+
 def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
               national, regional, timeline, as_of, covered, recovery_by_incident,
-              region_context=None):
+              region_context=None, gpp_census=None):
     region_context = region_context or {}
     today = dt.date.fromisoformat(as_of)
     heating = today.month in SCORING["heating_season_months"]
@@ -486,6 +619,8 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             "it as theatre-concentrated, not national."
         ),
     }
+    tx_esdi_excluded = {code for code, m in region_meta.items() if not m.get("esdi_included", True)}
+    transmission_sensitivity = _transmission_sensitivity(live, facility_info, tx_esdi_excluded)
 
     quantified = sum(
         1 for i in incidents
@@ -608,6 +743,7 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
         "sectors_covered": covered,
         "sectors_uncovered": [s for s in SECTORS if s not in covered],
         "transmission_concentration": transmission_concentration,
+        "transmission_sensitivity": transmission_sensitivity,
         "heating_season": heating,
         "denominators": {
             "refining_mtpa": round(denominators["national"]["refining"], 1),
@@ -619,6 +755,11 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
         "assessed_degradation": _assessed_degradation(incidents, live, facility_info, today),
         "recovery_stats": _recovery_stats(live, incidents, recovery_by_incident, facility_info),
         "coverage_detail": _coverage_detail(incidents, recovery_by_incident),
+        # Experimental, non-headline measures (§18). Kept in a separate namespace so nothing can
+        # mistake them for the composite. Gas processing is the first: a within-census share.
+        "experimental_indices": {
+            "gas_processing": _gas_processing_index(gpp_census, live, today),
+        },
         "live_disruptions": live[:80],
         "regions": regions_out,
         "not_modelled": NOT_MODELLED,
@@ -662,6 +803,10 @@ def _median(values):
 # EPISODES (not records). Iteration 3 raised this to 5 and made it episode-based, so a
 # multi-day strike counted once and the median is never "median-of-few".
 MIN_MEDIAN_EPISODES = 5
+# A per-CLASS median needs fewer episodes than the pooled one, because episodes within one
+# infrastructure class are commensurable (§12). The pooled cross-class median is kept only as
+# labelled "mixed-infrastructure evidence", never a generic repair time.
+MIN_SECTOR_MEDIAN_EPISODES = 3
 
 
 def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
@@ -681,6 +826,7 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
     observed_by_episode = {}   # episode_id -> observed days (first seen)
     partial_episodes, full_episodes, estimate_episodes = set(), set(), set()
     obs_by_sector = collections.defaultdict(dict)  # sector -> {episode: days}
+    partial_by_sector = collections.defaultdict(set)  # sector -> {episode} (partial restarts)
     for incident_id, rec in recovery_by_incident.items():
         inc = inc_by_id.get(incident_id)
         if inc is None:
@@ -689,15 +835,17 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
         episode = inc.get("episode_id") or incident_id
         _h, kind, _c = recovery.assess(inc.get("asset_class"), rec)
         status = rec.get("recovery_status")
+        sector = SECTOR_OF_CLASS.get(inc.get("asset_class"))
         if status == "partial_restart":
             partial_episodes.add(episode)
+            if sector:
+                partial_by_sector[sector].add(episode)
         if status in ("fully_reconstituted", "substantially_restored"):
             full_episodes.add(episode)
         if rec.get("estimate_central_days"):
             estimate_episodes.add(episode)
         if kind == "observed" and rec.get("observed_days") and episode not in observed_by_episode:
             observed_by_episode[episode] = rec["observed_days"]
-            sector = SECTOR_OF_CLASS.get(inc.get("asset_class"))
             if sector:
                 obs_by_sector[sector][episode] = rec["observed_days"]
 
@@ -710,25 +858,45 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
         sect_live = [x for x in live if x.get("sector") == sector]
         if not sect_live and sector not in obs_by_sector:
             continue
-        sect_obs = list(obs_by_sector.get(sector, {}).values())
+        sect_obs = sorted(int(d) for d in obs_by_sector.get(sector, {}).values())
         by_sector[sector] = {
             "disrupted_facilities": len(sect_live),
             "unresolved": sum(1 for x in sect_live if not x["recovery"]["resolved"]),
             "observed_restoration_episodes": len(sect_obs),
-            "median_observed_restoration_days": _median(sect_obs) if len(sect_obs) >= MIN_MEDIAN_EPISODES else None,
+            "observed_restoration_values": sect_obs,
+            # Partial restarts are recovery EVIDENCE for the class but not a full-restoration
+            # duration — so a class can have partial evidence while showing no observed median.
+            "partial_restart_episodes": len(partial_by_sector.get(sector, set())),
+            # Per-class median (§12): needs episodes WITHIN the class; below the gate the UI
+            # shows the individual durations, which is honest for a small sample.
+            "median_observed_restoration_days":
+                _median(sect_obs) if len(sect_obs) >= MIN_SECTOR_MEDIAN_EPISODES else None,
         }
 
     n_episodes = len(observed_durations)
     median_meaningful = n_episodes >= MIN_MEDIAN_EPISODES
+    # §12: sectors/classes that clear the per-class gate get their OWN median; these are the
+    # only medians a reader should treat as a repair time for that kind of infrastructure.
+    sector_medians = {
+        sec: m["median_observed_restoration_days"]
+        for sec, m in by_sector.items()
+        if m["median_observed_restoration_days"] is not None
+    }
     return {
         "unresolved_count": len(unresolved),
         "resolved_count": len(resolved),
         "min_median_episodes": MIN_MEDIAN_EPISODES,
-        # Median only appears with enough INDEPENDENT episodes; else the UI shows counts.
+        "min_sector_median_episodes": MIN_SECTOR_MEDIAN_EPISODES,
+        # The POOLED median mixes infrastructure classes (a refinery CDU and a substation are
+        # not the same repair problem), so it is emitted but explicitly labelled mixed and is
+        # never the headline (§11). Prefer sector_medians below where they exist.
         "median_observed_restoration_days": _median(observed_durations) if median_meaningful else None,
         "median_meaningful": median_meaningful,
+        "median_is_mixed_infrastructure": True,
         "observed_restoration_episodes": n_episodes,
         "observed_restoration_values": sorted(int(d) for d in observed_durations),
+        # Per-class medians that individually clear MIN_SECTOR_MEDIAN_EPISODES (may be empty).
+        "sector_medians": sector_medians,
         "median_impairment_age_days": _median(ages) if len(ages) >= MIN_MEDIAN_EPISODES else None,
         "impairment_age_sample": len(ages),
         "partial_restart_episodes": len(partial_episodes),
@@ -739,10 +907,13 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
         "by_sector": by_sector,
         "note": (
             "Recovery is tracked per incident and counted by DISTINCT EPISODE: a multi-day "
-            f"strike counts once. A median observed restoration is shown only with >= "
-            f"{MIN_MEDIAN_EPISODES} independent episodes, and is never called 'typical'. "
+            f"strike counts once. National observed-restoration evidence is n={n_episodes}. A "
+            f"per-CLASS median appears only where a class has >= {MIN_SECTOR_MEDIAN_EPISODES} "
+            "independent observed episodes; the pooled cross-class figure is MIXED-"
+            "INFRASTRUCTURE evidence, not a generic repair time, and is never the headline. "
             "'modelled' scoring means no credible source-reported timing exists; a partial "
-            "restart is recorded but never treated as full reconstitution."
+            "restart (including flow rerouted around a still-damaged node) is recorded but "
+            "never treated as full reconstitution."
         ),
     }
 

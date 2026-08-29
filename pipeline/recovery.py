@@ -83,6 +83,10 @@ def load_recovery_records():
         out[incident_id] = {
             "incident_id": incident_id,
             "recovery_status": status,
+            # §13: granular description of what the source establishes (flow_rerouted,
+            # partial_line_energised, unit_restarted, station_rebuilt, throughput_restored…).
+            # Free-vocabulary, display-only; never widens the scoring bucket above.
+            "recovery_kind": (row.get("recovery_kind") or "").strip() or None,
             "source_confidence": (row.get("source_confidence") or "unknown").strip(),
             "observed_date": row.get("observed_date") or row.get("reconstituted_at"),
             "observed_days": _num(row.get("observed_days")) or _num(row.get("reconstitution_observed_days")),
