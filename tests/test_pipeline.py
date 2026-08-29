@@ -1764,6 +1764,43 @@ def test_transmission_sensitivity_exposes_theatre_concentration():
         assert sum(r["burden"] for r in t["per_region_saturated"]) == pytest.approx(t["raw_burden"], abs=0.02)
 
 
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_transmission_alternative_models_are_deterministic_and_bounded():
+    """§23-24: the alternative formulations are all emitted, bounded [0,100], and internally
+    consistent (Model A reproduces the headline; Model E is the headline minus transmission)."""
+    snap = _snapshot()
+    t = snap["transmission_sensitivity"]
+    am = t.get("alternative_models")
+    assert am, "alternative_models must be published"
+    for k in ("A_current_global_saturation", "B_per_region_saturation_breadth_aware",
+              "C_breadth_affected_regions", "C_intensity_max_region_pct", "D_distinct_facility_burden"):
+        assert k in am
+    # A reproduces the shipped headline transmission value.
+    assert am["A_current_global_saturation"] == pytest.approx(snap["sectors"]["transmission"], abs=0.05)
+    # burdens are exposures in [0,100].
+    for k in ("A_current_global_saturation", "B_per_region_saturation_breadth_aware",
+              "C_intensity_max_region_pct", "D_distinct_facility_burden"):
+        assert 0.0 <= am[k] <= 100.0
+    # Model E: removing transmission changes the headline (a positive-contribution sector).
+    if am.get("E_esdi_if_transmission_removed") is not None:
+        assert am["E_esdi_if_transmission_removed"] <= snap["esdi"] + 1e-6
+    assert snap.get("esdi_excluding_transmission") == pytest.approx(am.get("E_esdi_if_transmission_removed"), abs=0.05)
+    # The models must carry the explicit disclaimer that none is a percent of grid offline.
+    assert "grid offline" in am["note"].lower()
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_uncovered_zero_assumption_sensitivity_is_labelled_not_a_second_esdi():
+    """§27: the gas+coal-at-zero figure is a SENSITIVITY under a false assumption, renamed to say
+    so, with the deprecated alias preserved for N-1 payloads."""
+    snap = _snapshot()
+    assert "uncovered_zero_assumption_sensitivity" in snap
+    # N-1 alias preserved and equal.
+    assert snap["uncovered_zero_assumption_sensitivity"] == pytest.approx(snap["esdi_all_sectors"], abs=0.01)
+    note = snap["esdi_renormalization_note"].lower()
+    assert "sensitivity" in note and ("assumption" in note or "false" in note)
+
+
 def test_gas_and_coal_are_labelled_uncovered_not_a_fake_basis():
     """gas/coal must not advertise an 'event_burden' basis that build_index._share implements
     only for transmission — that footgun would silently zero-score a sector if it were ever

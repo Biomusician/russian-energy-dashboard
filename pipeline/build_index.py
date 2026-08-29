@@ -564,6 +564,34 @@ def _transmission_sensitivity(live, facility_info, esdi_excluded):
         key=lambda d: -d["burden"])
     top_share = round(100 * per_region[0]["burden"] / raw_burden, 1) if raw_burden and per_region else None
 
+    # (3) Alternative formulations (§23), computed on the same frozen data so a reader (and the
+    # red-team) can compare them against the current Model A rather than take it on faith.
+    SAT = SATURATION_EVENTS
+    model_a = min(1.0, raw_burden / SAT) * 100.0            # A: current global-saturation burden
+    prod = 1.0                                              # B: per-region saturation, breadth-aware
+    for b in by_region.values():                           #    (probabilistic-OR: each region capped
+        prod *= (1 - min(1.0, b / SAT))                    #    at its own saturation, so one theatre
+    model_b = 100.0 * (1 - prod) if by_region else 0.0     #    cannot consume the whole proxy)
+    intensity_max = max((min(1.0, b / SAT) * 100 for b in by_region.values()), default=0.0)  # C
+    model_d = min(1.0, len(nat_tx) / SAT) * 100.0          # D: distinct impaired facilities (a node
+    #                                                        hit repeatedly counts once — repeat
+    #                                                        strike != repeat capacity)
+    alternative_models = {
+        "A_current_global_saturation": round(model_a, 2),
+        "B_per_region_saturation_breadth_aware": round(model_b, 2),
+        "C_breadth_affected_regions": len(by_region),
+        "C_intensity_max_region_pct": round(intensity_max, 2),
+        "D_distinct_facility_burden": round(model_d, 2),
+        "note": (
+            "A (current): voltage-weighted facility event-burden / global saturation. B: per-"
+            "region saturation combined breadth-aware, so one theatre cannot consume the proxy. "
+            "C: breadth (regions) and intensity (worst region) reported SEPARATELY, never one "
+            "scalar. D: count of distinct currently-impaired facilities (repeat strikes on a node "
+            "count once). E (remove from headline): see esdi_excluding_transmission on the "
+            "snapshot. None claims a percent of grid offline."
+        ),
+    }
+
     return {
         "saturation_constant": SATURATION_EVENTS,
         "raw_burden": round(raw_burden, 3),
@@ -572,6 +600,7 @@ def _transmission_sensitivity(live, facility_info, esdi_excluded):
         "distinct_facilities": len(nat_tx),
         "top_region_share_pct": top_share,
         "per_region_saturated": per_region,
+        "alternative_models": alternative_models,
         "note": (
             "Transmission is an event-burden against a saturation constant, not a national-grid "
             "capacity measure. It is dominated by 1-2 theatres and the headline value roughly "
@@ -646,6 +675,13 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
     }
     tx_esdi_excluded = {code for code, m in region_meta.items() if not m.get("esdi_included", True)}
     transmission_sensitivity = _transmission_sensitivity(live, facility_info, tx_esdi_excluded)
+    # Model E (§23): the headline recomputed WITHOUT transmission — the counterfactual the
+    # "remove transmission from the ESDI" option would produce, disclosed so the choice is visible.
+    _sw = SCORING["sector_weights"]
+    _nat_final = {s: national["sectors"][s][-1] / 100.0 for s in SECTORS}
+    _covered_no_tx = [s for s in covered if s != "transmission"]
+    esdi_excluding_transmission = _composite(_nat_final, _sw, _covered_no_tx) if _covered_no_tx else None
+    transmission_sensitivity["alternative_models"]["E_esdi_if_transmission_removed"] = esdi_excluding_transmission
 
     quantified = sum(
         1 for i in incidents
@@ -753,16 +789,20 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
     return {
         "as_of": as_of,
         "esdi": national["esdi"][-1],
-        # The same composite WITHOUT renormalising the uncovered sectors away (gas + coal
-        # counted present-at-zero). Disclosed so the headline's renormalisation uplift is
-        # visible, not silent (red-team, iteration 5).
-        "esdi_all_sectors": national["esdi_all_sectors"][-1],
+        # §27: a SENSITIVITY under the explicitly-false assumption that the uncovered gas & coal
+        # sectors are zero — NOT a second valid ESDI. Named to make the assumption unmissable.
+        # `esdi_all_sectors` is kept as a deprecated alias for N-1 payload compatibility.
+        "uncovered_zero_assumption_sensitivity": national["esdi_all_sectors"][-1],
+        "esdi_all_sectors": national["esdi_all_sectors"][-1],  # DEPRECATED alias (§27); use the field above
+        # Model E (§23): the headline if transmission were removed from the composite entirely.
+        "esdi_excluding_transmission": esdi_excluding_transmission,
         "esdi_renormalization_note": (
-            "The headline ESDI renormalises the covered sectors (their weights sum to less "
-            "than 1 because gas and coal are uncovered). esdi_all_sectors is the same figure "
-            "with gas and coal counted as present-at-zero; the gap is the uplift that "
-            "excluding them adds. Gas is not unmeasured -- it carries documented strikes that "
-            "score zero for want of a defensible denominator."
+            "The headline ESDI renormalises the covered sectors (their weights sum to less than 1 "
+            "because gas and coal are uncovered). The 'uncovered-zero-assumption sensitivity' is "
+            "the same figure computed under the explicitly FALSE assumption that gas and coal are "
+            "zero; the gap is the uplift that excluding them adds. It is a sensitivity, not a "
+            "measured ESDI — unknown stays unknown. Gas carries documented strikes that score zero "
+            "only for want of a defensible denominator."
         ),
         "sectors": {s: national["sectors"][s][-1] for s in SECTORS},
         "sectors_covered": covered,

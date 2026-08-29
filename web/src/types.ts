@@ -359,9 +359,13 @@ export interface Snapshot {
   as_of: string;
   build_time: string;
   esdi: number;
-  /** The composite WITHOUT renormalising the uncovered sectors (gas + coal counted at zero).
-   *  The gap `esdi - esdi_all_sectors` is the uplift that excluding them adds (iteration 5). */
+  /** §27: sensitivity under the explicitly-FALSE assumption that uncovered gas+coal are zero —
+   *  NOT a second valid ESDI. Prefer this clearly-named field. */
+  uncovered_zero_assumption_sensitivity?: number;
+  /** @deprecated §27 alias of uncovered_zero_assumption_sensitivity (kept for N-1 payloads). */
   esdi_all_sectors?: number;
+  /** Model E (§23): the headline if transmission were removed from the composite. */
+  esdi_excluding_transmission?: number | null;
   esdi_renormalization_note?: string;
   transmission_concentration?: {
     top: { name: string; region_code: string | null; pct: number }[];
@@ -377,6 +381,17 @@ export interface Snapshot {
     distinct_facilities: number;
     top_region_share_pct: number | null;
     per_region_saturated: { region_code: string | null; burden: number; saturated_value: number }[];
+    /** §23 alternative formulations (A current, B per-region, C breadth/intensity, D distinct
+     *  facilities, E ESDI if removed). */
+    alternative_models?: {
+      A_current_global_saturation: number;
+      B_per_region_saturation_breadth_aware: number;
+      C_breadth_affected_regions: number;
+      C_intensity_max_region_pct: number;
+      D_distinct_facility_burden: number;
+      E_esdi_if_transmission_removed?: number | null;
+      note: string;
+    };
     note: string;
     red_team_verdict: string;
   };

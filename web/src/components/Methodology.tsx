@@ -119,15 +119,20 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
             </p>
           )}
 
-          {s.esdi_all_sectors != null && (
-            <p style={{ color: "var(--amber)" }}>
-              The headline ESDI ({s.esdi.toFixed(1)}) renormalises the covered sectors. Counting
-              the uncovered gas &amp; coal sectors as present-at-zero instead gives{" "}
-              {s.esdi_all_sectors.toFixed(1)} — so excluding them lifts the headline by{" "}
-              {(s.esdi - s.esdi_all_sectors).toFixed(1)}. Gas is not unmeasured: it carries
-              documented strikes that score zero for want of a defensible denominator.
-            </p>
-          )}
+          {(s.uncovered_zero_assumption_sensitivity ?? s.esdi_all_sectors) != null && (() => {
+            const zero = (s.uncovered_zero_assumption_sensitivity ?? s.esdi_all_sectors)!;
+            return (
+              <p style={{ color: "var(--amber)" }}>
+                The headline ESDI ({s.esdi.toFixed(1)}) renormalises the covered sectors. The{" "}
+                <b>uncovered-sectors-zero sensitivity</b> recomputes it under the explicitly
+                <i> false</i> assumption that gas &amp; coal are zero, giving {zero.toFixed(1)} — so
+                excluding them lifts the headline by {(s.esdi - zero).toFixed(1)}. It is a
+                sensitivity under an assumption, <b>not a second valid ESDI</b>: unknown stays
+                unknown. Gas carries documented strikes that score zero only for want of a
+                defensible denominator.
+              </p>
+            );
+          })()}
           {s.experimental_indices?.gas_processing && (() => {
             const g = s.experimental_indices!.gas_processing!;
             return (
@@ -190,6 +195,18 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
                   {t.saturation_sweep.map((r) => `sat ${r.saturation}→${r.sector_value}`).join(", ")}.
                   Published as a sensitivity, not a tuning knob — the formula is unchanged.
                 </p>
+                {t.alternative_models && (
+                  <p style={{ color: "var(--text-faint)", fontSize: 10.5 }}>
+                    <b>Alternative formulations</b> (same data): A current {t.alternative_models.A_current_global_saturation};
+                    B per-region-capped {t.alternative_models.B_per_region_saturation_breadth_aware};
+                    C breadth {t.alternative_models.C_breadth_affected_regions} region(s) × intensity{" "}
+                    {t.alternative_models.C_intensity_max_region_pct} (worst theatre);
+                    D distinct-facility {t.alternative_models.D_distinct_facility_burden};
+                    {t.alternative_models.E_esdi_if_transmission_removed != null &&
+                      ` E: headline would be ${t.alternative_models.E_esdi_if_transmission_removed.toFixed(1)} without transmission.`}
+                    {" "}None claims a percent of grid offline.
+                  </p>
+                )}
                 <p style={{ color: "var(--text-faint)", fontSize: 10.5, fontStyle: "italic" }}>
                   Red-team verdict: {t.red_team_verdict}
                 </p>
