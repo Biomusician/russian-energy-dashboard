@@ -76,6 +76,7 @@ export interface Asset {
   lat: number;
   source: string;
   source_url: string | null;
+  note?: string | null;
 }
 
 export interface RegionEffects {
@@ -243,10 +244,26 @@ export interface Coverage {
   note: string;
 }
 
+export interface SchemaCheck {
+  dataVersion: number;
+  appVersion: number;
+  ok: boolean;
+  mode: "exact" | "back" | "forward" | "unsupported";
+}
+
 export interface Snapshot {
   as_of: string;
   build_time: string;
   esdi: number;
+  /** The composite WITHOUT renormalising the uncovered sectors (gas + coal counted at zero).
+   *  The gap `esdi - esdi_all_sectors` is the uplift that excluding them adds (iteration 5). */
+  esdi_all_sectors?: number;
+  esdi_renormalization_note?: string;
+  transmission_concentration?: {
+    top: { name: string; region_code: string | null; pct: number }[];
+    occupied_share_pct: number;
+    note: string;
+  };
   sectors: Record<string, number>;
   sectors_covered: string[];
   sectors_uncovered: string[];
@@ -265,6 +282,8 @@ export interface Snapshot {
   refinery_reconciliation: RefineryReconciliation | null;
   facet_counts: FacetCounts;
   parser_warnings: string[];
+  /** Data-contract version (iteration 5). Absent in pre-iteration-5 payloads -> treated as 1. */
+  schema_version?: number;
 }
 
 /** Full-corpus counts per UI dimension (iteration 4). Counters omit zero keys, so a key's
@@ -273,6 +292,9 @@ export interface Snapshot {
 export interface FacetCounts {
   asset_class: Record<string, number>;
   line_class: Record<string, number>;
+  /** Continental context trunk routes, kept SEPARATE from analytic line_class so a
+   *  continent of context pipelines can never imply thousands of disruption records (§15). */
+  context_route_class?: Record<string, number>;
   incident_asset_class: Record<string, number>;
   sector: Record<string, number>;
   cause: Record<string, number>;
@@ -314,4 +336,8 @@ export interface Bundle {
   contextLand: GeoJSON.FeatureCollection;
   contextBorders: GeoJSON.FeatureCollection;
   ocean: GeoJSON.FeatureCollection;
+  /** Result of the schema compatibility check performed at load time. Optional context
+   *  layers (rivers, pipeline networks) are lazy-loaded via loadContextLayer(), not held
+   *  on the bundle (§16). */
+  schema: SchemaCheck;
 }

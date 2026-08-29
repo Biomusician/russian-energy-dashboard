@@ -63,7 +63,8 @@
       "power_plant_other": 200,
       "substation": 100,
       "transmission_line": 46,
-      "coal": 150,
+      "coal_mine": 150,
+      "coal_terminal": 120,
       "interconnector": 100,
       "_default": 150
     },
@@ -139,8 +140,8 @@
     "electric_generation": "capacity_mw",
     "oil_logistics": "capacity_mtpa",
     "transmission": "event_burden",
-    "gas": "event_burden",
-    "coal": "event_burden"
+    "gas": "uncovered",
+    "coal": "uncovered"
   },
 
   "heating_season_months": [10, 11, 12, 1, 2, 3, 4],

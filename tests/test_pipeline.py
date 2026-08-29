@@ -509,8 +509,10 @@ def test_context_geography_has_no_analytic_infrastructure():
     land = json.loads((PROCESSED / "context_land.geojson").read_text(encoding="utf-8"))
     for f in land["features"]:
         props = f["properties"]
-        # only display metadata, never an event/score/capacity field
-        assert set(props) <= {"iso", "name", "label_lon", "label_lat"}, props
+        # only display metadata (iteration 5 added data-driven label priority), never an
+        # event/score/capacity field
+        assert set(props) <= {"iso", "name", "labelrank", "label_min_zoom",
+                              "label_lon", "label_lat"}, props
 
 
 def test_far_eastern_remains_disabled():
@@ -1100,11 +1102,13 @@ def test_facet_counts_match_the_processed_corpus():
                     reason="pipeline has not been run")
 def test_facet_counts_keep_asset_and_incident_kinds_distinct():
     """A class can have infrastructure but no incidents (LNG-style) or incidents but no
-    inventoried asset (refineries). The two counts are separate facets, never merged."""
+    inventoried point-asset (oil terminals/depots). The two counts are separate facets,
+    never merged. (Iteration 5 added a few struck refineries as linkable assets, so
+    refineries are no longer a clean incidents-but-no-asset example — oil terminals are.)"""
     fc = _snapshot()["facet_counts"]
-    # Refineries: incidents exist, but they are not in the point-asset layer.
-    assert fc["incident_asset_class"].get("refinery", 0) > 0
-    assert fc["asset_class"].get("refinery", 0) == 0
+    # Oil terminals/depots: incidents exist, but they are not in the point-asset layer.
+    assert fc["incident_asset_class"].get("oil_terminal", 0) > 0
+    assert fc["asset_class"].get("oil_terminal", 0) == 0
     # Substations: both an inventory and incidents — distinct, non-merged counts.
     assert fc["asset_class"].get("substation", 0) > 0
     assert fc["incident_asset_class"].get("substation", 0) > 0
@@ -1157,7 +1161,14 @@ def test_lng_assets_are_classified_and_sourced_at_admin_precision():
     for a in lng:
         assert a.get("precision") == "region", f"{a['asset_id']} must be admin-region precision"
         assert a.get("source_url"), f"{a['asset_id']} needs a source"
-        assert a.get("capacity_mtpa"), f"{a['asset_id']} needs a liquefaction capacity"
+        # Liquefaction terminals carry a liquefaction MTPA. Import/regasification terminals
+        # (iteration 5, e.g. the Kaliningrad FSRU) deliberately do NOT: their capacity is a
+        # different physical quantity, kept in the note so it can never be summed into a
+        # liquefaction denominator (§11).
+        note = (a.get("note") or "").lower()
+        is_import = "import" in note or "regas" in note
+        if not is_import:
+            assert a.get("capacity_mtpa"), f"{a['asset_id']} (liquefaction) needs a capacity"
 
 
 @pytest.mark.skipif(not (PROCESSED / "assets.json").exists(),
@@ -1168,8 +1179,10 @@ def test_gas_condensate_is_not_miscounted_as_lng():
     assets = json.loads((PROCESSED / "assets.json").read_text(encoding="utf-8"))
     for a in assets:
         if a["asset_class"] == "lng_terminal":
-            blob = f"{a['name']} {a.get('note','')}".lower()
-            assert "condensate" not in blob and "fractionation" not in blob, a["asset_id"]
+            # Key on the facility's identity (its name). A note may legitimately MENTION
+            # condensate to disclaim it (e.g. "distinct from the Ust-Luga condensate complex").
+            name = a["name"].lower()
+            assert "condensate" not in name and "fractionation" not in name, a["asset_id"]
 
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
@@ -1183,3 +1196,299 @@ def test_lng_inventory_does_not_invent_a_gas_denominator():
     assert "gas" in snap["sectors_uncovered"]
     assert snap["sectors"]["gas"] == 0
     assert snap["denominators"].get("gas") in (None, 0), "no gas denominator should be emitted"
+
+
+# --------------------------------------------------------------------------
+# Iteration 5: data-contract resilience — schema_version + manifest (§27)
+# --------------------------------------------------------------------------
+# The deploy-window failure that white-screened iteration 4 was new JS reading old data.
+# The contract now carries a schema_version and a manifest so a client can tell app/data
+# skew from a genuine outage, and so optional context layers can be absent without a crash.
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_snapshot_carries_schema_version():
+    from pipeline.config import SCHEMA_VERSION
+    snap = json.loads((PROCESSED / "snapshot.json").read_text(encoding="utf-8"))
+    assert snap.get("schema_version") == SCHEMA_VERSION
+
+
+@pytest.mark.skipif(not (PROCESSED / "data_manifest.json").exists(),
+                    reason="pipeline has not been run")
+def test_data_manifest_is_present_and_consistent():
+    from pipeline.config import SCHEMA_VERSION, OPTIONAL_CONTEXT_FILES
+    manifest = json.loads((PROCESSED / "data_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["schema_version"] == SCHEMA_VERSION
+    assert manifest.get("build_time")
+    names = {f["name"] for f in manifest["files"]}
+    # every file the frontend loads must be listed
+    for required in REQUIRED_WEB_FILES:
+        assert required in names, f"manifest omits frontend file {required}"
+    # the manifest never lists itself, and every listed file exists on disk
+    assert "data_manifest.json" not in names
+    for f in manifest["files"]:
+        assert (PROCESSED / f["name"]).exists(), f"manifest lists a missing file {f['name']}"
+        assert isinstance(f["bytes"], int) and f["bytes"] >= 0
+        # the optional flag must agree with the config-declared optional set
+        assert f["optional"] == (f["name"] in OPTIONAL_CONTEXT_FILES)
+    # the manifest must itself be mirrored to the web payload
+    assert (WEB_DATA / "data_manifest.json").exists(), "manifest must be mirrored to web/public/data"
+
+
+def test_optional_context_files_are_declared_optional_not_required():
+    """An optional context layer must never be in the frontend's required set, so a build
+    that omits it (or a stale edge that lacks it) can still load the core dashboard."""
+    from pipeline.config import OPTIONAL_CONTEXT_FILES
+    for name in OPTIONAL_CONTEXT_FILES:
+        assert name not in REQUIRED_WEB_FILES, (
+            f"{name} is optional context and must not be a required frontend file"
+        )
+
+
+# --------------------------------------------------------------------------
+# Iteration 5: broadened country context + rivers (§8-§10, §25)
+# --------------------------------------------------------------------------
+# Geographic context is independent of energy data: every country in frame gets a border
+# and a label anchor whether or not we hold any events there, and rivers are pure scenery.
+
+@pytest.mark.skipif(not (PROCESSED / "context_land.geojson").exists(), reason="pipeline not run")
+def test_context_includes_countries_with_no_energy_data():
+    land = json.loads((PROCESSED / "context_land.geojson").read_text(encoding="utf-8"))
+    isos = {f["properties"]["iso"] for f in land["features"]}
+    # zero-data neighbours must still be drawn (§9, §25)
+    for iso in ("MNG", "CHN", "KAZ", "POL", "MDA", "GEO"):
+        assert iso in isos, f"context must include {iso} even with no energy data"
+    # every country carries a label anchor + a data-driven reveal zoom
+    for f in land["features"]:
+        p = f["properties"]
+        assert "label_lon" in p and "label_lat" in p
+        assert "label_min_zoom" in p
+
+
+@pytest.mark.skipif(not (PROCESSED / "context_land.geojson").exists(), reason="pipeline not run")
+def test_context_excludes_russia_and_belarus():
+    """Russia and Belarus are analytic regions, not context. Because Natural Earth files
+    Crimea inside the Russian polygon, excluding Russia here keeps Crimea from ever being
+    painted as ordinary Russian context (§10)."""
+    land = json.loads((PROCESSED / "context_land.geojson").read_text(encoding="utf-8"))
+    isos = {f["properties"]["iso"] for f in land["features"]}
+    assert "RUS" not in isos and "BLR" not in isos
+
+
+@pytest.mark.skipif(not (PROCESSED / "rivers.geojson").exists(), reason="pipeline not run")
+def test_rivers_are_real_features_and_score_nothing():
+    """Rivers are published Natural Earth features (scalerank + geometry), pure geographic
+    context: they carry nothing that could enter a score, and the emphasis comes from
+    scalerank, not a hardcoded river list (§8)."""
+    rivers = json.loads((PROCESSED / "rivers.geojson").read_text(encoding="utf-8"))
+    assert rivers["features"], "rivers layer should not be empty"
+    for f in rivers["features"]:
+        p = f["properties"]
+        assert "scalerank" in p and "reveal_zoom" in p
+        assert f["geometry"]["type"] in ("LineString", "MultiLineString")
+        for forbidden in ("asset_class", "sector", "region_code", "capacity_mw", "capacity_mtpa"):
+            assert forbidden not in p, f"a river must not carry {forbidden}"
+    # the biggest Russian/European systems are captured (via scalerank, not a name list)
+    names = {f["properties"].get("label_name") for f in rivers["features"]}
+    assert "Volga" in names and "Danube" in names
+
+
+# --------------------------------------------------------------------------
+# Iteration 5: coal taxonomy split + inventory (§14, §35)
+# --------------------------------------------------------------------------
+# Generic "coal infrastructure" is split into coal_mine and coal_terminal. Coal-fired
+# GENERATION stays under electric generation, so a coal mine is never double-counted as a
+# power plant. Coal is now inventoried but has no qualifying disruption, so the coal SECTOR
+# stays unsupported: an inventory is not a score.
+
+def test_coal_class_split_into_mine_and_terminal():
+    from pipeline.config import ASSET_CLASSES, SECTOR_OF_CLASS
+    assert "coal_mine" in ASSET_CLASSES and "coal_terminal" in ASSET_CLASSES
+    assert "coal" not in ASSET_CLASSES, "the generic coal class must be gone after the split"
+    # both physical coal classes roll up to the coal sector...
+    assert SECTOR_OF_CLASS["coal_mine"] == "coal"
+    assert SECTOR_OF_CLASS["coal_terminal"] == "coal"
+    # ...while coal-fired generation stays under electric generation (no double count, §14)
+    assert SECTOR_OF_CLASS["power_plant_thermal"] == "electric_generation"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_coal_inventory_present_but_sector_unsupported():
+    """Coal mines and terminals are now in the corpus, but with no qualifying disruption the
+    coal sector stays uncovered and scores zero -- an inventory is not disruption (§14/§35)."""
+    snap = _snapshot()
+    fc = snap["facet_counts"]["asset_class"]
+    assert fc.get("coal_mine", 0) > 0 and fc.get("coal_terminal", 0) > 0, "coal inventory expected"
+    assert "coal" in snap["sectors_uncovered"]
+    assert snap["sectors"]["coal"] == 0
+    assert snap["denominators"].get("coal") in (None, 0), "no coal denominator should be emitted"
+
+
+@pytest.mark.skipif(not (PROCESSED / "assets.json").exists(),
+                    reason="pipeline has not been run")
+def test_coal_and_gas_capacities_kept_out_of_the_mtpa_field():
+    """Coal tonnage (Mt/y) and gas-processing throughput (bcm/y) are different units from
+    LNG liquefaction (MTPA). They live in the note, never in capacity_mtpa, so nothing can
+    later sum them into a single fake denominator (§12, §13)."""
+    assets = json.loads((PROCESSED / "assets.json").read_text(encoding="utf-8"))
+    for a in assets:
+        if a["asset_class"] in ("coal_mine", "coal_terminal", "gas_processing"):
+            assert not a.get("capacity_mtpa"), f"{a['asset_id']} must not carry an MTPA figure"
+            assert a.get("source_url"), f"{a['asset_id']} needs a source"
+            assert a.get("precision") == "region"
+
+
+# --------------------------------------------------------------------------
+# Iteration 5: event/recovery coverage expansion + candidate queue (§15-§18)
+# --------------------------------------------------------------------------
+# A candidate-event queue stages OSINT proposals; only analyst-approved rows enter the
+# scored corpus. Rejected/held candidates (unconfirmed 'repelled' claims, partisan-only
+# sabotage, weather outages) must never score.
+
+CANDIDATE = ROOT / "data" / "candidate" / "candidate_incidents.csv"
+
+
+def test_candidate_queue_exists_with_decisions():
+    import csv as _csv
+    assert CANDIDATE.exists(), "the analyst candidate queue must exist (§16)"
+    with open(CANDIDATE, encoding="utf-8", newline="") as fh:
+        rows = list(_csv.DictReader(fh))
+    statuses = {r["research_status"] for r in rows}
+    assert "accepted" in statuses and (statuses & {"rejected", "hold"}), \
+        "the queue must record both accepted and rejected/held candidates"
+    for r in rows:
+        assert r["decision_reason"], "every candidate needs a decision reason"
+
+
+@pytest.mark.skipif(not (PROCESSED / "incidents.json").exists(), reason="pipeline not run")
+def test_rejected_candidates_never_enter_scoring():
+    inc = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    blob = " ".join((i.get("asset_name") or "") + " " + (i.get("incident_id") or "") for i in inc).lower()
+    for term in ("russkaya", "blue stream", "mozyr", "bolshoe polpino"):
+        assert term not in blob, f"rejected/held candidate '{term}' leaked into the scored corpus"
+
+
+@pytest.mark.skipif(not (PROCESSED / "incidents.json").exists(), reason="pipeline not run")
+def test_recovery_records_key_to_real_incidents():
+    import csv as _csv
+    inc = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    ids = {i["incident_id"] for i in inc}
+    with open(ROOT / "data" / "curated" / "recovery.csv", encoding="utf-8", newline="") as fh:
+        recs = list(_csv.DictReader(fh))
+    orphans = [r["incident_id"] for r in recs if r["incident_id"] not in ids]
+    assert not orphans, f"recovery records with no matching incident: {orphans}"
+
+
+@pytest.mark.skipif(not (PROCESSED / "incidents.json").exists(), reason="pipeline not run")
+def test_no_exact_duplicate_incidents():
+    """Curated events must not duplicate a facility+date already in the corpus."""
+    import collections as _c
+    inc = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    seen = _c.Counter((i.get("asset_id"), i.get("date")) for i in inc)
+    dups = [k for k, v in seen.items() if v > 1]
+    assert not dups, f"exact (asset_id, date) duplicate incidents: {dups}"
+
+
+# --------------------------------------------------------------------------
+# Iteration 5: analytic vs context scope + continental pipeline network (§2,§7,§15,§36)
+# --------------------------------------------------------------------------
+# The context network is a SEPARATE, display-only layer. It is never joined to a region,
+# never scored, never an incident; its counts are kept apart from the analytic lines.
+
+def test_analytic_assets_and_lines_carry_analytic_scope():
+    if (PROCESSED / "assets.json").exists():
+        for a in json.loads((PROCESSED / "assets.json").read_text(encoding="utf-8")):
+            assert a.get("scope") == "analytic", f"{a['asset_id']} must be scope=analytic"
+    if (PROCESSED / "assets_lines.geojson").exists():
+        lines = json.loads((PROCESSED / "assets_lines.geojson").read_text(encoding="utf-8"))
+        for f in lines["features"]:
+            assert f["properties"].get("scope") == "analytic"
+
+
+@pytest.mark.skipif(not (PROCESSED / "context_gas_network.geojson").exists(),
+                    reason="context network not built")
+def test_context_network_is_scope_context_sourced_and_route_qualified():
+    for fn in ("context_gas_network.geojson", "context_oil_network.geojson"):
+        fc = json.loads((PROCESSED / fn).read_text(encoding="utf-8"))
+        for feat in fc["features"]:
+            p = feat["properties"]
+            assert p["scope"] == "context", f"{fn}: a network route must be scope=context"
+            assert p["route_quality"], "route-quality provenance must travel (§5)"
+            assert p["asset_class"] in ("pipeline_gas", "pipeline_oil")
+            assert feat["geometry"]["type"] in ("LineString", "MultiLineString")
+
+
+@pytest.mark.skipif(not (PROCESSED / "context_gas_network.geojson").exists(),
+                    reason="context network not built")
+def test_context_routes_never_score_and_create_no_incident():
+    """European and Far-Eastern context routes carry no region and generate no incident, so
+    they cannot enter ESDI, rankings, regional intensity or recovery (§7, §36)."""
+    inc = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    inc_ids = {i.get("asset_id") for i in inc}
+    for fn in ("context_gas_network.geojson", "context_oil_network.geojson"):
+        fc = json.loads((PROCESSED / fn).read_text(encoding="utf-8"))
+        for feat in fc["features"]:
+            p = feat["properties"]
+            assert "region_code" not in p, "a context route must not be region-scoped"
+            assert f"osm-way-{p.get('osm_id')}" not in inc_ids, "context route must not be an incident"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_context_route_facet_kept_separate_from_analytic_lines():
+    """A continent of context routes must not be conflated with analytic pipeline lines or
+    with incidents (§15)."""
+    fc = _snapshot()["facet_counts"]
+    assert "context_route_class" in fc and fc["context_route_class"], "context routes must be counted"
+    # the two counts are distinct dimensions
+    assert fc["line_class"].get("pipeline_gas", 0) != fc["context_route_class"].get("pipeline_gas")
+
+
+def test_context_network_files_are_declared_optional_and_lazy():
+    """The continental network files are optional context: a build that omits them, or a CDN
+    edge that lacks them mid-deploy, must not break the core dashboard (§16, §35)."""
+    from pipeline.config import OPTIONAL_CONTEXT_FILES
+    for name in ("context_gas_network.geojson", "context_oil_network.geojson", "rivers.geojson"):
+        assert name in OPTIONAL_CONTEXT_FILES
+        assert name not in REQUIRED_WEB_FILES, f"{name} is optional/lazy, never a required file"
+
+
+# --------------------------------------------------------------------------
+# Iteration 5: red-team disclosures (§37) — renormalization uplift, transmission theatre
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_headline_renormalization_uplift_is_disclosed():
+    """The headline ESDI renormalises the uncovered sectors away; the honest present-at-zero
+    figure and the gap must be emitted so the uplift is visible, not silent."""
+    snap = _snapshot()
+    assert "esdi_all_sectors" in snap
+    assert snap["esdi"] >= snap["esdi_all_sectors"]  # renormalisation can only lift the number
+    assert snap.get("esdi_renormalization_note")
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_transmission_concentration_disclosed():
+    """Transmission is theatre-concentrated; top contributors + occupied share are emitted so
+    'transmission N' is not misread as a national-grid figure."""
+    snap = _snapshot()
+    tc = snap.get("transmission_concentration")
+    assert tc and tc["top"], "transmission concentration must be disclosed"
+    assert sum(t["pct"] for t in tc["top"]) > 0
+    assert 0 <= tc["occupied_share_pct"] <= 100
+
+
+def test_gas_and_coal_are_labelled_uncovered_not_a_fake_basis():
+    """gas/coal must not advertise an 'event_burden' basis that build_index._share implements
+    only for transmission — that footgun would silently zero-score a sector if it were ever
+    moved into `covered` (red-team, iteration 5)."""
+    from pipeline.config import SECTOR_BASIS
+    assert SECTOR_BASIS["gas"] == "uncovered" and SECTOR_BASIS["coal"] == "uncovered"
+    assert SECTOR_BASIS["transmission"] == "event_burden"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_gas_and_coal_stay_out_of_covered():
+    snap = _snapshot()
+    assert "gas" in snap["sectors_uncovered"] and "coal" in snap["sectors_uncovered"]
+    assert "gas" not in snap["sectors_covered"] and "coal" not in snap["sectors_covered"]

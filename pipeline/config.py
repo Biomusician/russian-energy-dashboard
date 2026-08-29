@@ -15,6 +15,21 @@ PROCESSED = DATA / "processed"
 METHODOLOGY_DIR = ROOT / "methodology"
 WEB_DATA = ROOT / "web" / "public" / "data"
 
+# Data-contract version (iteration 5). Bump whenever the emitted JSON shape changes in a
+# way the frontend must be aware of. The frontend renders schema_version N and N-1 and
+# never white-screens on a one-version skew during a Vercel deploy window (see web/src/
+# data.ts, docs/DEPLOYMENT.md). Payloads emitted before this field existed are version 1.
+SCHEMA_VERSION = 2
+
+# Context layers a build MAY emit but that are not load-bearing: a stale CDN edge lacking
+# one must degrade the map, never crash it. The frontend loads these tolerantly and the
+# data_manifest marks them optional. Names are emitted filenames under data/processed/.
+OPTIONAL_CONTEXT_FILES = {
+    "rivers.geojson",
+    "context_gas_network.geojson",
+    "context_oil_network.geojson",
+}
+
 # Analysis window. The dashboard's time axis runs from here to the build date.
 WINDOW_START = "2022-01-01"
 
@@ -285,7 +300,8 @@ ASSET_CLASSES = {
     "pipeline_gas":         "Gas pipeline",
     "substation":           "Major substation",
     "transmission_line":    "Transmission line",
-    "coal":                 "Coal infrastructure",
+    "coal_mine":             "Coal mine",
+    "coal_terminal":         "Coal export terminal",
     "interconnector":       "Major interconnector",
 }
 
@@ -309,7 +325,8 @@ SECTOR_OF_CLASS = {
     "gas_processing":      "gas",
     "lng_terminal":        "gas",
     "pipeline_gas":        "gas",
-    "coal":                "coal",
+    "coal_mine":           "coal",
+    "coal_terminal":       "coal",
 }
 
 SECTORS = {
@@ -330,8 +347,12 @@ SECTOR_BASIS = {
     "electric_generation": "capacity",
     "oil_logistics":       "capacity",
     "transmission":        "event_burden",
-    "gas":                 "event_burden",
-    "coal":                "event_burden",
+    # gas and coal are UNCOVERED: no capacity denominator and (unlike transmission) no
+    # saturation model, so they never enter the composite. Do not relabel one
+    # "event_burden" without also implementing its branch in build_index._share, or the
+    # sector would join `covered` and score every facility at 0, silently dropping ESDI.
+    "gas":                 "uncovered",
+    "coal":                "uncovered",
 }
 
 DISRUPTION_CAUSES = {

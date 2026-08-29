@@ -30,7 +30,9 @@ Visibility = assets + network lines + incidents > 0.
 | Gas pipeline | 0 | 2575 | 2 | shown | — | 2577 | shown | — |
 | Major substation | 1449 | – | 6 | shown | — | 1455 | shown | — |
 | Transmission line | 0 | 5066 | 0 | shown | — | 5066 | shown | layer only |
-| **Coal** | **0** | **0** | **0** | **ZERO** | Facilities identified (Kuzbass basin in Kemerovo; Baltic coal export terminals — Ust-Luga, Murmansk); **not ingested this pass** | 0 | **hidden** | **DATA GAP, deferred** |
+| **Coal mine** | **0→7** | 0 | 0 | **ZERO** | **Ingested 7 AOI mines (Kuzbass, Krasnoyarsk, Irkutsk, Komi/Vorkuta, Novosibirsk), cited, admin precision** | 7 | **now shown** | **DATA GAP, resolved (iter 5)** |
+| **Coal terminal** | **0→6** | 0 | 0 | **ZERO** | **Ingested 6 coal export terminals (Ust-Luga/Rosterminalugol, Lavna, Murmansk, Taman, Tuapse, Azov)** | 6 | **now shown** | **DATA GAP, resolved (iter 5)** |
+| **Coal (sector)** | — | — | **0** | **ZERO** | No kinetic/sabotage coal disruption exists in the AOI (the port strikes were oil/gas); inventory ≠ disruption, so the coal SECTOR stays unsupported | 0 | n/a | **correct zero** |
 | **Major interconnector** | **0** | **0** | **0** | **ZERO** | HVDC/cross-border links are tagged `power=line` in OSM and already counted under transmission_line; no separate inventory | 0 | **hidden** | **CLASSIFICATION GAP** |
 
 **Sources investigated (infrastructure):** Global Energy Monitor gem.wiki terminal pages;

@@ -346,3 +346,65 @@ and pipeline capacity (bcm/y) are incompatible units and are **never summed** in
 "gas capacity". The gas sector therefore carries records (events and infrastructure) but a
 **score of 0** — record count is not the sector score. Gas re-enters the composite only if a
 defensible single-basis denominator is established.
+
+## 9. Analytic scope vs geographic/network context (iteration 5)
+
+Iteration 5 makes one distinction first-class: **what the dashboard SCORES** versus **what
+it DISPLAYS**. The map can depict much more of Eurasia than the degradation model covers.
+
+- **Analytic scope** is unchanged: Belarus + the monitored western-Russian federal districts
+  + the Siberian FD, plus **Crimea** under its documented occupied-unit methodology (§5a).
+  Everything analytic carries `scope="analytic"`. The Far Eastern FD stays outside the model.
+- **Context scope** (`scope="context"`) is display-only geography: the continental oil/gas
+  trunk network, the broadened country layer, and major rivers. **Nothing with
+  `scope="context"` can enter ESDI, regional intensity, rankings, recovery, or incident
+  counts.** `build_index` never reads the context files; regression tests enforce it.
+
+**Continental pipeline network.** A separate ingestion path (`build_context_network.py`)
+collects major **named `usage=transmission` oil/gas trunks ≥ 50 km** across Eurasia from
+**OpenStreetMap/Overpass (ODbL)**, tiled and de-duplicated against the analytic OSM lines by
+way id (one corridor, one line). **Global Energy Monitor's GGIT/GOIT are the authoritative
+trackers and the cited cross-reference**, but their bulk data is form-gated with no
+CI-fetchable URL, so OSM is the automatable feed. Route geometry is traced (`route_quality =
+"osm_mapped"`, drawn solid); a dashed treatment for `route_quality="approximate"` is reserved
+for a future GEM snapshot. Facet counts keep analytic pipeline lines and context routes as
+**separate dimensions** (`line_class` vs `context_route_class`) so context can never imply
+disruption.
+
+**Country geography & rivers.** The country layer is geographic, not a hand-picked list:
+every Natural Earth 50m admin-0 country intersecting the Eurasian context frame is drawn,
+except Russia/Belarus (analytic) — which also keeps Crimea, filed by Natural Earth inside the
+Russian polygon, from ever being painted as ordinary Russian context. Country-label priority
+is data-driven from Natural Earth **LABELRANK**; a zero-energy-data country still gets a
+border and a label. Major rivers come from Natural Earth `rivers_lake_centerlines`, emphasis
+by **scalerank**. Both are pure context — never scored.
+
+### 9a. Gas and coal: covered? (iteration 5 decision)
+
+- **Gas stays UNCOVERED.** LNG liquefaction (MTPA), gas processing (bcm/y) and pipeline flow
+  (bcm/y) are incommensurable and are never summed. No single "Gas" denominator is defensible,
+  so gas is exposed only as separate sub-measures and its weight is renormalised away — it
+  carries real records (including GPP strikes) but scores 0, which the UI states. Activating
+  gas was red-teamed and rejected as misleading.
+- **Coal stays UNSUPPORTED.** The `coal` asset class was split into `coal_mine` +
+  `coal_terminal` (coal-fired generation remains under electric generation — no double count).
+  Coal is now inventoried, but **no kinetic/sabotage disruption to AOI coal infrastructure
+  exists** in credible open sources, so the sector does not score. An inventory is not
+  disruption.
+
+### 9b. Curated strikes on inventoried refineries
+
+A curated strike on a refinery that is already in the national refining inventory now
+contributes that refinery's **full tracked capacity as exposure**, via an explicit
+`linked_asset_id` to a refinery asset — the identical treatment a wiki-sourced strike on the
+same refinery already receives. This is *exposure* (share of the tracked base sitting at a
+disrupted site), never a claim of quantified capacity loss (`capacity_affected` stays null,
+and the quantified-capacity count stays 0). It removes an inconsistency where a curated
+strike scored 0 only because it was curated rather than parsed from the wiki table.
+
+### 9c. Data contract
+
+The emitted payload carries `schema_version` and a `data_manifest.json` (files + sizes +
+optional flags). The frontend renders schema N and N-1, degrades on skew, and lazy-loads the
+optional context layers — a missing or late optional file yields an empty layer, never a
+white screen.

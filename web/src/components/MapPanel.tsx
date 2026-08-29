@@ -3,7 +3,7 @@ import maplibregl from "maplibre-gl";
 import type { FilterState } from "../App";
 import type { Bundle, Incident } from "../types";
 import { CLASS_COLOR, SEVERITY_STOPS } from "../palette";
-import { fmtNum } from "../data";
+import { fmtNum, loadContextLayer } from "../data";
 
 /** The map deliberately has no basemap.
  *
@@ -28,6 +28,10 @@ const EMPTY_STYLE: maplibregl.StyleSpecification = {
 // West/Black Sea zooms the western theatre where most disruption and Crimea sit.
 const AOI_BOUNDS: [number, number, number, number] = [17.5, 40.0, 120.0, 74.0];
 const WEST_BOUNDS: [number, number, number, number] = [20.0, 41.0, 62.0, 62.0];
+// Russia–Europe Network (iteration 5): frames the continental oil/gas trunk context, from
+// Atlantic Europe to the Russian Far East. The default view stays the analytic Full AOI —
+// this is an on-demand context frame, not the dashboard's home (§12).
+const NETWORK_BOUNDS: [number, number, number, number] = [-8.0, 36.0, 145.0, 73.0];
 
 // Context-country label anchors worth showing, plus the sea labels. Kept short so the
 // map does not turn into a name soup; positioned as HTML overlays (no glyph endpoint).
@@ -38,15 +42,12 @@ const SEA_LABELS: { name: string; lon: number; lat: number; size: number }[] = [
   { name: "BARENTS SEA", lon: 40.0, lat: 71.5, size: 10 },
 ];
 
-// Reveal zoom per context country: the major theatre states show at continental scale;
-// smaller/overlapping ones appear only as you zoom in. Deterministic label priority.
-const COUNTRY_MINZOOM: Record<string, number> = {
-  Ukraine: 0, Kazakhstan: 0, Turkey: 0, Finland: 0, Poland: 0, China: 0, Mongolia: 0,
-  Georgia: 2.6, Romania: 2.6, Norway: 2.6, Sweden: 2.8, Azerbaijan: 3.0, Moldova: 3.4,
-  Lithuania: 3.4, Latvia: 3.6, Estonia: 3.6, Bulgaria: 3.6, Armenia: 3.6,
-  Slovakia: 4.2, Hungary: 4.2, Czechia: 4.2, Germany: 4.2,
-  Kyrgyzstan: 4.0, Uzbekistan: 4.0, Turkmenistan: 4.0,
-};
+// Country label reveal-zoom is data-driven (iteration 5): each context feature carries a
+// `label_min_zoom` derived from Natural Earth's LABELRANK (see pipeline/build_context.py),
+// so label priority lives in the data, not a hand-maintained list here. Major states show
+// at continental scale; smaller ones appear on zoom-in; the greedy de-overlap below then
+// drops any that would collide.
+const DEFAULT_COUNTRY_MINZOOM = 3.4;
 
 interface HoverInfo {
   x: number;
@@ -59,7 +60,7 @@ interface HoverInfo {
   special: boolean;
 }
 
-interface ScreenLabel { name: string; x: number; y: number; size: number; kind: "country" | "sea" }
+interface ScreenLabel { name: string; x: number; y: number; size: number; kind: "country" | "sea" | "river" }
 
 export default function MapPanel({
   bundle, step, filters, selected, onSelect, incidentsByRegion,
@@ -76,6 +77,10 @@ export default function MapPanel({
   const [ready, setReady] = useState(false);
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [labels, setLabels] = useState<ScreenLabel[]>([]);
+  // Lazy-loaded context layers (§16): which files we've fetched, and the rivers FC (needed
+  // for the HTML label overlay, which the map source alone can't drive).
+  const loadedRef = useRef<Set<string>>(new Set());
+  const [ctxRivers, setCtxRivers] = useState<GeoJSON.FeatureCollection | null>(null);
 
   const regionMeta = useMemo(
     () => new Map(bundle.regions.map((r) => [r.code, r])),
@@ -134,7 +139,8 @@ export default function MapPanel({
     m.addControl(
       new maplibregl.AttributionControl({
         customAttribution:
-          "Boundaries: Natural Earth (public domain) · Grid &amp; pipelines: OpenStreetMap (ODbL) · " +
+          "Boundaries &amp; rivers: Natural Earth (public domain) · Grid, pipelines &amp; network " +
+          "context: OpenStreetMap (ODbL), cross-referenced with Global Energy Monitor GGIT/GOIT · " +
           "Generation: WRI Global Power Plant Database (CC BY 4.0) · Events: Wikipedia (CC BY-SA 4.0)",
       }),
       "bottom-right",
@@ -145,6 +151,11 @@ export default function MapPanel({
       m.addSource("ocean", { type: "geojson", data: bundle.ocean });
       m.addSource("context-land", { type: "geojson", data: bundle.contextLand });
       m.addSource("context-borders", { type: "geojson", data: bundle.contextBorders });
+      // Optional context layers start empty; they are lazy-loaded on first toggle (§16).
+      const EMPTY_FC: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+      m.addSource("rivers", { type: "geojson", data: EMPTY_FC });
+      m.addSource("context-gas-net", { type: "geojson", data: EMPTY_FC });
+      m.addSource("context-oil-net", { type: "geojson", data: EMPTY_FC });
 
       // Context geography is deliberately subordinate: darker than the analytic surface,
       // faint borders. The sea is a distinct, slightly-blue dark so the Black Sea reads
@@ -226,6 +237,57 @@ export default function MapPanel({
           ] as unknown as maplibregl.ExpressionSpecification,
         },
       });
+
+      // Rivers: geographic context only, never scored. Each feature reveals at its own
+      // scalerank-derived zoom, so the largest systems show at continental scale and smaller
+      // ones appear on zoom-in. Deliberately subordinate: thin, low-opacity, desaturated
+      // blue that reads as water without competing with the choropleth. Off by default.
+      m.addLayer({
+        id: "rivers",
+        type: "line",
+        source: "rivers",
+        layout: { visibility: "none" },
+        paint: {
+          "line-color": "#3f6b8c",
+          "line-width": [
+            "interpolate", ["linear"], ["zoom"],
+            2, ["case", ["<=", ["get", "scalerank"], 2], 0.7, 0.35],
+            8, ["case", ["<=", ["get", "scalerank"], 2], 2.4, 1.1],
+          ] as unknown as maplibregl.ExpressionSpecification,
+          "line-opacity": [
+            "case", [">=", ["zoom"], ["get", "reveal_zoom"]],
+            ["interpolate", ["linear"], ["zoom"], 2.5, 0.3, 7, 0.55],
+            0,
+          ] as unknown as maplibregl.ExpressionSpecification,
+        },
+      });
+
+      // Continental oil/gas CONTEXT network (§3-§8): trunk export/transit routes, scope
+      // "context", never scored. Deliberately subordinate — faint and thin at continental
+      // zoom, firmer on zoom-in — so the degradation surface dominates the analytic view
+      // and the trunks read at the Russia–Europe Network preset (§29). All OSM geometry is
+      // traced ("osm_mapped") and drawn solid; a route_quality="approximate" companion
+      // treatment (dashed) is reserved for a future GEM snapshot (§5). Off by default.
+      for (const [id, src, color] of [
+        ["context-gas-net", "context-gas-net", CLASS_COLOR.pipeline_gas],
+        ["context-oil-net", "context-oil-net", CLASS_COLOR.pipeline_oil],
+      ] as const) {
+        m.addLayer({
+          id,
+          type: "line",
+          source: src,
+          layout: { visibility: "none", "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-color": color,
+            "line-width": [
+              "interpolate", ["linear"], ["zoom"], 2, 0.5, 5, 1.0, 8, 1.9,
+            ] as unknown as maplibregl.ExpressionSpecification,
+            "line-opacity": [
+              "interpolate", ["linear"], ["zoom"], 2, 0.28, 4, 0.42, 8, 0.62,
+            ] as unknown as maplibregl.ExpressionSpecification,
+          },
+        });
+      }
 
       m.addLayer({
         id: "network",
@@ -405,20 +467,57 @@ export default function MapPanel({
     if (!m || !ready) return;
     m.setLayoutProperty("network", "visibility", filters.showLines ? "visible" : "none");
     m.setLayoutProperty("asset-dots", "visibility", filters.showAssets ? "visible" : "none");
+    m.setLayoutProperty("rivers", "visibility", filters.showRivers ? "visible" : "none");
+    m.setLayoutProperty("context-gas-net", "visibility", filters.showGasNetwork ? "visible" : "none");
+    m.setLayoutProperty("context-oil-net", "visibility", filters.showOilNetwork ? "visible" : "none");
     if (filters.showLines) {
       m.setFilter("network", ["in", ["get", "asset_class"], ["literal", [...filters.classes]]]);
     }
-  }, [ready, filters.showLines, filters.showAssets, filters.classes]);
+  }, [ready, filters.showLines, filters.showAssets, filters.showRivers,
+      filters.showGasNetwork, filters.showOilNetwork, filters.classes]);
+
+  // Lazy-load optional context layers on first toggle, then cache. Missing/late files
+  // degrade to empty; the core dashboard never waits on them (§16, §35).
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready) return;
+    const wanted: [boolean, string, string][] = [
+      [filters.showRivers, "rivers.geojson", "rivers"],
+      [filters.showGasNetwork, "context_gas_network.geojson", "context-gas-net"],
+      [filters.showOilNetwork, "context_oil_network.geojson", "context-oil-net"],
+    ];
+    for (const [on, file, src] of wanted) {
+      if (!on || loadedRef.current.has(file)) continue;
+      loadedRef.current.add(file);
+      loadContextLayer(file).then((fc) => {
+        (m.getSource(src) as maplibregl.GeoJSONSource | undefined)?.setData(fc);
+        if (file === "rivers.geojson") setCtxRivers(fc);
+      });
+    }
+  }, [ready, filters.showRivers, filters.showGasNetwork, filters.showOilNetwork]);
 
   // --- context labels, projected to screen coordinates on every move --------
   useEffect(() => {
     const m = map.current;
     if (!m || !ready) return;
+    // Country label anchors carry a data-driven reveal zoom (label_min_zoom) from the
+    // pipeline; the frontend no longer hardcodes per-country priority.
     const countryAnchors = bundle.contextLand.features.map((f) => ({
       name: (f.properties?.name as string) ?? "",
       lon: (f.properties?.label_lon as number) ?? 0,
       lat: (f.properties?.label_lat as number) ?? 0,
+      minZoom: (f.properties?.label_min_zoom as number) ?? DEFAULT_COUNTRY_MINZOOM,
     }));
+    // River label anchors: only the major named systems carry one (see build_context.py).
+    // Rivers are lazy-loaded, so this reads the loaded FC (empty until the toggle is on).
+    const riverAnchors = (ctxRivers?.features ?? [])
+      .filter((f) => f.properties?.label_name)
+      .map((f) => ({
+        name: (f.properties?.label_name as string) ?? "",
+        lon: (f.properties?.label_lon as number) ?? 0,
+        lat: (f.properties?.label_lat as number) ?? 0,
+        minZoom: (f.properties?.label_zoom as number) ?? 4.5,
+      }));
 
     const recompute = () => {
       const b = m.getBounds();
@@ -427,29 +526,34 @@ export default function MapPanel({
       const H = m.getContainer().clientHeight;
       const inView = (lon: number, lat: number) =>
         lon >= b.getWest() && lon <= b.getEast() && lat >= b.getSouth() && lat <= b.getNorth();
+      const onScreen = (x: number, y: number) => x >= 4 && x <= W - 4 && y >= 4 && y <= H - 4;
 
-      // Scale-dependent priority: at continental zoom show only the major surrounding
-      // states; reveal minor and overlapping ones as you zoom in. Deterministic, not
-      // arbitrary hiding.
-      const minZoomFor = (name: string): number =>
-        COUNTRY_MINZOOM[name] ?? 3.2;
-
-      type Cand = { name: string; x: number; y: number; size: number; kind: "country" | "sea"; prio: number };
+      type Cand = { name: string; x: number; y: number; size: number; kind: "country" | "sea" | "river"; prio: number };
       const cands: Cand[] = [];
+      // Seas first (prio 0), then countries by their reveal zoom, then rivers last so a
+      // river label never displaces a country label in a collision.
       for (const s of SEA_LABELS) {
         if (!inView(s.lon, s.lat)) continue;
         const p = m.project([s.lon, s.lat]);
         cands.push({ name: s.name, x: p.x, y: p.y, size: s.size, kind: "sea", prio: 0 });
       }
       for (const a of countryAnchors) {
-        if (!a.name || !inView(a.lon, a.lat) || z < minZoomFor(a.name)) continue;
+        if (!a.name || !inView(a.lon, a.lat) || z < a.minZoom) continue;
         const p = m.project([a.lon, a.lat]);
-        if (p.x < 4 || p.x > W - 4 || p.y < 4 || p.y > H - 4) continue;
-        cands.push({ name: a.name.toUpperCase(), x: p.x, y: p.y, size: 10, kind: "country", prio: minZoomFor(a.name) });
+        if (!onScreen(p.x, p.y)) continue;
+        cands.push({ name: a.name.toUpperCase(), x: p.x, y: p.y, size: 10, kind: "country", prio: a.minZoom });
+      }
+      if (filters.showRivers) {
+        for (const r of riverAnchors) {
+          if (!r.name || !inView(r.lon, r.lat) || z < r.minZoom) continue;
+          const p = m.project([r.lon, r.lat]);
+          if (!onScreen(p.x, p.y)) continue;
+          cands.push({ name: r.name, x: p.x, y: p.y, size: 9, kind: "river", prio: 100 + r.minZoom });
+        }
       }
 
       // Greedy de-overlap: seas first, then by ascending reveal-zoom (most important
-      // first). Skip any label whose box collides with one already placed.
+      // first), rivers last. Skip any label whose box collides with one already placed.
       cands.sort((u, v) => u.prio - v.prio);
       const placed: { x: number; y: number; w: number; h: number }[] = [];
       const out: ScreenLabel[] = [];
@@ -473,7 +577,7 @@ export default function MapPanel({
       m.off("move", recompute);
       m.off("resize", recompute);
     };
-  }, [ready, bundle.contextLand]);
+  }, [ready, bundle.contextLand, ctxRivers, filters.showRivers]);
 
   const flyTo = (bounds: [number, number, number, number]) => {
     map.current?.fitBounds(bounds, { padding: 28, duration: 700 });
@@ -521,6 +625,10 @@ export default function MapPanel({
       <div className="camera-controls">
         <button className="ghost" onClick={() => flyTo(AOI_BOUNDS)}>Full AOI</button>
         <button className="ghost" onClick={() => flyTo(WEST_BOUNDS)}>West / Black Sea</button>
+        <button className="ghost" onClick={() => flyTo(NETWORK_BOUNDS)}
+                title="Frame the Russia–Europe oil &amp; gas trunk network context">
+          Russia–Europe Network
+        </button>
         {currentActivityBounds && (
           <button className="ghost" onClick={() => flyTo(currentActivityBounds)}
                   title="Fit the administrative regions with unresolved disruption">

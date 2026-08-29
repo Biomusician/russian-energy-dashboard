@@ -2,7 +2,7 @@
 
 An open-source-only dashboard tracking publicly reported degradation of energy
 infrastructure across **Belarus, western Russia and the Siberian Federal District**,
-aggregated to administrative region (79 regions), from 2022 to the present.
+aggregated to administrative region (80 monitored units, Crimea included), from 2022 to the present.
 
 Every number traces to a public source. Where the data does not support a number, the
 dashboard says so rather than estimating one. Observed facts, external estimates and
@@ -14,11 +14,14 @@ as Ukraine, under Russian occupation, distinct styling and status. Since iterati
 qualifying events and a compatible denominator) while never being labelled a Russian region.
 Surrounding countries and the Black Sea are drawn as display-only context.
 
-> **Status:** MVP + iterations 1–3 + **iteration 4** (Crimea in the Monitored-Area ESDI with
-> status preserved; whole-corpus facet counts driving data-driven filter visibility; a full
-> zero-count audit; and LNG + gas-processing coverage — five LNG terminals, two GPPs, and two
-> documented gas-plant strikes). See [docs/ITERATION_4_REVIEW.md](docs/ITERATION_4_REVIEW.md)
-> and [docs/ZERO_COUNT_AUDIT.md](docs/ZERO_COUNT_AUDIT.md).
+> **Status:** MVP + iterations 1–4 + **iteration 5** (a first-class analytic-vs-context scope
+> model; a continental oil/gas trunk **network context** layer + major rivers + a broadened,
+> data-driven country layer, all lazy-loaded and never scored; **175 events / ~57% coverage**
+> via a candidate-event queue; **6 recovery episodes** with the median now shown; LNG/gas/coal
+> inventory depth with gas & coal kept honestly uncovered; and a `schema_version` +
+> `data_manifest.json` data contract). See
+> [docs/ITERATION_5_REVIEW.md](docs/ITERATION_5_REVIEW.md) and
+> [docs/ZERO_COUNT_AUDIT.md](docs/ZERO_COUNT_AUDIT.md).
 
 **Live site:** **https://russian-energy-dashboard.vercel.app** · **Deployment:** static
 Vite + MapLibre on Vercel, rebuilt daily by a GitHub Action; push-to-`main` auto-deploys.
@@ -37,7 +40,7 @@ answers one question:
 > time elapsed?
 
 **It is not a measurement of lost throughput or lost generation.** Open reporting
-almost never states how much capacity a given event removed. Of the 128 region-assigned
+almost never states how much capacity a given event removed. Of the 175 region-assigned
 events currently in the dataset, **zero** carry a quantified capacity effect — and the
 dashboard shows that ratio in its top ribbon rather than burying it. An exposure
 measure is what this data can honestly support; a "capacity offline" figure is not.
@@ -75,7 +78,7 @@ Wikipedia ───────────┘                                  
 
 Three deliberate choices:
 
-**No database.** The dataset is ~1,900 assets and ~130 events. Static JSON regenerated
+**No database.** The dataset is ~1,980 assets (plus a curated infrastructure supplement) and ~175 events. Static JSON regenerated
 by a scheduled job *is* the backend. A Postgres instance here would be infrastructure
 to maintain in exchange for nothing.
 
@@ -175,7 +178,8 @@ Effects · Repair burden · Sources).
 
 ## Documentation
 
-- [docs/ITERATION_4_REVIEW.md](docs/ITERATION_4_REVIEW.md) — **current state**: Crimea in the index, facet-driven UI, zero-count audit, LNG/gas coverage
+- [docs/ITERATION_5_REVIEW.md](docs/ITERATION_5_REVIEW.md) — **current state**: analytic/context scope model, network context + rivers, event/recovery growth, gas/coal depth, data contract
+- [docs/ITERATION_4_REVIEW.md](docs/ITERATION_4_REVIEW.md) — Crimea in the index, facet-driven UI, zero-count audit, LNG/gas coverage
 - [docs/ZERO_COUNT_AUDIT.md](docs/ZERO_COUNT_AUDIT.md) — every taxonomy/filter zero: researched, classified, ingested or hidden
 - [docs/ITERATION_3_REVIEW.md](docs/ITERATION_3_REVIEW.md) — generation/transmission split, regional intensity, episode recovery, CREA context, three-layer Effects
 - [docs/ITERATION_2_REVIEW.md](docs/ITERATION_2_REVIEW.md) — Crimea, context geography, incident-level recovery, denominator audit
@@ -192,19 +196,20 @@ Effects · Repair burden · Sources).
 
 ## Known limits, stated up front
 
-- **Coverage is ~43%.** The dataset enumerates 132 region-assigned events; the source
+- **Coverage is ~57%.** The dataset enumerates 175 region-assigned events; the source
   benchmark reports 305 strikes on Russian oil facilities in total. The gap is events
   that appear only in prose reporting, which this pipeline does not parse.
-- **Observed recovery is 3 distinct episodes** (6 records deduplicated by `episode_id`).
-  The "typical recovery" median un-suppresses only at **≥5 distinct episodes**; below that
-  the UI shows "records / episodes", never a median.
+- **Observed recovery is 6 distinct episodes** (13 records deduplicated by `episode_id`),
+  spanning refining, oil logistics and gas processing. The "typical recovery" median
+  un-suppresses at **≥5 distinct episodes**, so it is now shown (47 days) with its sample size.
 - **Siberian event coverage is n=1** (Omsk). The region is fully populated structurally
   but has barely been struck yet.
 - **Refining and oil logistics dominate.** They are the sectors with structured open
   data. Electric power is split into **generation** (capacity basis, ≈0 — barely struck)
-  and **transmission** (an event-burden proxy, never "% offline"). Gas and coal have no
-  capacity base and are excluded from the composite (their weights are redistributed
-  rather than counted as zero).
+  and **transmission** (an event-burden proxy, never "% offline"). Gas and coal are now
+  inventoried (LNG, gas-processing, coal mines and terminals) but stay **uncovered** in the
+  composite — incompatible units are never summed, and an inventory is not disruption; their
+  weights are redistributed rather than counted as zero.
 - **Modelled reconstitution horizons are assumptions, not measurements** — the single
   weakest input where no evidence exists. All live in `methodology/scoring.json`.
 - **Four of the nine requested regional effect categories are not modelled** and are

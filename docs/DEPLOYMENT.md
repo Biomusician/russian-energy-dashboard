@@ -176,3 +176,25 @@ Field definitions: [SCHEMA.md](SCHEMA.md).
 Zero on free tiers. Static hosting, ~4 MB of data, one scheduled Action run per day
 (~2–7 minutes depending on cache warmth). The only rate-limit risk is Overpass, which is
 why queries are cached for 30 days, serialised, and paced 10 seconds apart.
+
+---
+
+## Iteration 5 note — new context data in the daily build
+
+The daily `pipeline.run` now also fetches, in addition to the analytic OSM/WRI/Wikipedia/
+Natural Earth sources:
+
+- **Natural Earth 50m rivers** (`rivers.geojson`) — public domain, ~30-day cache.
+- **The continental oil/gas trunk network** (`context_gas_network.geojson`,
+  `context_oil_network.geojson`) from OSM/Overpass — four tiled queries, ~30-day cache.
+
+These are **display-only context** and are marked `optional` in `data_manifest.json`; the
+frontend **lazy-loads** them on first toggle, so a missing/late file never breaks the core
+dashboard. The context-network build is **fail-safe**: if Overpass is unreachable on a
+cache-less runner, it keeps the last committed network rather than emitting an empty file or
+crashing the build — so a bad Overpass day degrades to yesterday's context, consistent with
+the "one day stale beats bad data" rule.
+
+Infrastructure-source cadence is honest: OSM/Natural Earth/GEM change monthly at most; only
+the curated events and the daily rebuild timestamp move day to day. The GitHub Action still
+skips a commit when only `build_time` changed (`scripts/ci_data_changed.py`).

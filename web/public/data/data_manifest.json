@@ -1,0 +1,86 @@
+{
+  "schema_version": 2,
+  "build_time": "2026-08-29T16:38:02+00:00",
+  "files": [
+    {
+      "name": "assets.json",
+      "bytes": 623752,
+      "optional": false
+    },
+    {
+      "name": "incidents.json",
+      "bytes": 173101,
+      "optional": false
+    },
+    {
+      "name": "index_national.json",
+      "bytes": 11949,
+      "optional": false
+    },
+    {
+      "name": "index_regional.json",
+      "bytes": 561575,
+      "optional": false
+    },
+    {
+      "name": "refinery_inventory.json",
+      "bytes": 7736,
+      "optional": false
+    },
+    {
+      "name": "regions.json",
+      "bytes": 16726,
+      "optional": false
+    },
+    {
+      "name": "snapshot.json",
+      "bytes": 137567,
+      "optional": false
+    },
+    {
+      "name": "taxonomy.json",
+      "bytes": 1217,
+      "optional": false
+    },
+    {
+      "name": "assets_lines.geojson",
+      "bytes": 2386460,
+      "optional": false
+    },
+    {
+      "name": "context_borders.geojson",
+      "bytes": 121351,
+      "optional": false
+    },
+    {
+      "name": "context_gas_network.geojson",
+      "bytes": 69142,
+      "optional": true
+    },
+    {
+      "name": "context_land.geojson",
+      "bytes": 127779,
+      "optional": false
+    },
+    {
+      "name": "context_oil_network.geojson",
+      "bytes": 24603,
+      "optional": true
+    },
+    {
+      "name": "ocean.geojson",
+      "bytes": 291034,
+      "optional": false
+    },
+    {
+      "name": "regions.geojson",
+      "bytes": 433363,
+      "optional": false
+    },
+    {
+      "name": "rivers.geojson",
+      "bytes": 52178,
+      "optional": true
+    }
+  ]
+}

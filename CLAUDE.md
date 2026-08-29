@@ -17,7 +17,7 @@ Far Eastern FD is defined but not enabled; adding it there turns it on with no r
 Do not reintroduce the ambiguous "SFD" abbreviation — a test forbids it.
 
 Read [docs/METHODOLOGY.md](docs/METHODOLOGY.md) and, for the current state,
-[docs/ITERATION_2_REVIEW.md](docs/ITERATION_2_REVIEW.md), before changing anything that
+[docs/ITERATION_5_REVIEW.md](docs/ITERATION_5_REVIEW.md), before changing anything that
 produces a number.
 
 ## SCOPE BOUNDARY — never relaxed

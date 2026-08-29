@@ -504,7 +504,7 @@ export function ReconstitutionTab(p: TabProps) {
         <Tile label="Currently reconstituted" value={rs.resolved_count} />
         {rs.median_meaningful ? (
           <Tile
-            label="Median observed restoration"
+            label="Median observed restart (mixed facility types)"
             value={rs.median_observed_restoration_days}
             unit="days" kind="observed" n={rs.observed_restoration_episodes}
           />
@@ -521,6 +521,16 @@ export function ReconstitutionTab(p: TabProps) {
           small
         />
       </div>
+
+      {rs.median_meaningful && (
+        <Note>
+          The median pools {rs.observed_restoration_episodes} independent episodes across
+          different facility types — from a ~2-day oil-terminal restart to a ~205-day gas-plant
+          repair, and it mixes first-restart with full-reconstitution evidence. Read it as a
+          coarse central tendency, not a per-sector norm; no single sector yet has enough
+          episodes for its own median.
+        </Note>
+      )}
 
       {!rs.median_meaningful && (
         <Note warn>
