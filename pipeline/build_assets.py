@@ -240,7 +240,8 @@ def build():
 
     point_assets = plants + substations
 
-    write_json(PROCESSED / "assets.json", point_assets)
+    # assets.json is written by run.py AFTER the curated supplement is merged in, so the
+    # emitted file and the facet counts see the same asset list.
     write_json(
         PROCESSED / "assets_lines.geojson",
         {"type": "FeatureCollection", "features": line_features},

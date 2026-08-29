@@ -63,10 +63,15 @@ export interface Asset {
   asset_class: string;
   region_code: string;
   capacity_mw?: number | null;
+  capacity_mtpa?: number | null;
   fuel?: string | null;
   voltage_kv?: number | null;
   owner?: string | null;
   operator?: string | null;
+  status?: string | null;
+  /** "region" for curated assets placed at their region centroid (admin-level), absent for
+   *  automated point assets carrying their source's own public coordinate. */
+  precision?: string | null;
   lon: number;
   lat: number;
   source: string;

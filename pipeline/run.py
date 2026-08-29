@@ -95,6 +95,49 @@ def load_curated_incidents():
     return out
 
 
+def load_asset_supplement(region_meta):
+    """Curated infrastructure the automated feeds miss — currently AOI LNG terminals, which
+    are absent from WRI (power plants) and OSM points as inventoried here (iteration 4, §11).
+
+    Each row is placed at ADMIN-REGION precision: the asset sits at its region's
+    representative centroid, marked precision="region", never a sourced facility coordinate.
+    This fills the inventory gap that made the LNG layer a corpus-wide zero, without turning
+    the map into a facility-level deck. Every row carries a public source. Gas-condensate
+    complexes are NOT counted as LNG merely because an LNG producer owns them (§11)."""
+    path = CURATED / "assets_supplement.csv"
+    if not path.exists():
+        return []
+    out = []
+    for row in read_csv(path):
+        code = row.get("region_code")
+        meta = region_meta.get(code)
+        if not meta or not meta.get("centroid"):
+            log(f"  WARN asset supplement: unknown region {code} for {row.get('asset_id')}")
+            continue
+        lon, lat = meta["centroid"]
+        out.append({
+            "asset_id": row["asset_id"],
+            "name": row["name"],
+            "asset_class": row["asset_class"],
+            "fuel": None,
+            "region_code": code,
+            "capacity_mw": _num(row.get("capacity_mw")),
+            "capacity_mtpa": _num(row.get("capacity_mtpa")),
+            "commissioning_year": int(row["commissioning_year"]) if row.get("commissioning_year") else None,
+            "owner": row.get("operator") or None,
+            "status": row.get("status") or None,
+            "lon": lon,
+            "lat": lat,
+            "precision": "region",
+            "source": "Curated infrastructure supplement",
+            "source_url": row.get("source_url") or None,
+        })
+    if out:
+        by_class = collections.Counter(a["asset_class"] for a in out)
+        log(f"asset supplement: {len(out)} curated assets ({dict(by_class)}), admin-region precision")
+    return out
+
+
 def load_region_context():
     """Population and other structural regional context (Rosstat census, etc.).
 
@@ -260,6 +303,7 @@ def main():
     log("=" * 62)
 
     assets, lines, region_meta = build_assets.build()
+    assets += load_asset_supplement(region_meta)  # curated LNG etc., admin-region precision
     build_context.build()  # surrounding countries, borders, ocean — display only
     wiki_facilities, wiki_incidents, wiki_warnings = build_wikipedia()
     refineries, refining_total, refinery_reconciliation = build_refineries()
@@ -323,6 +367,7 @@ def main():
     snapshot["parser_warnings"] = wiki_warnings
     snapshot["build_time"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
+    write_json(PROCESSED / "assets.json", assets)
     write_json(PROCESSED / "incidents.json", incidents)
     write_json(PROCESSED / "index_national.json", national)
     write_json(PROCESSED / "index_regional.json", {"dates": national["dates"], "regions": regional})

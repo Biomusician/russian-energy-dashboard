@@ -1137,3 +1137,49 @@ def test_sector_record_count_is_not_the_sector_score():
     # ...but the gas sector is uncovered (score path), i.e. not in sectors_covered.
     assert "gas" in snap["sectors_uncovered"]
     assert snap["sectors"]["gas"] == 0
+
+
+# --------------------------------------------------------------------------
+# Iteration 4: LNG / gas ingestion — classification, provenance, no unit-mixing
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "assets.json").exists(),
+                    reason="pipeline has not been run")
+def test_lng_assets_are_classified_and_sourced_at_admin_precision():
+    """Curated LNG terminals must classify as lng_terminal, carry a public source and a
+    liquefaction capacity, sit at admin-region precision (never a facility coordinate), and
+    have unique ids that do not collide with the automated asset feeds."""
+    assets = json.loads((PROCESSED / "assets.json").read_text(encoding="utf-8"))
+    lng = [a for a in assets if a["asset_class"] == "lng_terminal"]
+    assert lng, "expected curated LNG terminals in the AOI"
+    ids = [a["asset_id"] for a in assets]
+    assert len(ids) == len(set(ids)), "asset ids must be unique across all feeds"
+    for a in lng:
+        assert a.get("precision") == "region", f"{a['asset_id']} must be admin-region precision"
+        assert a.get("source_url"), f"{a['asset_id']} needs a source"
+        assert a.get("capacity_mtpa"), f"{a['asset_id']} needs a liquefaction capacity"
+
+
+@pytest.mark.skipif(not (PROCESSED / "assets.json").exists(),
+                    reason="pipeline has not been run")
+def test_gas_condensate_is_not_miscounted_as_lng():
+    """A gas-condensate / fractionation complex is not LNG merely because an LNG producer
+    owns it (§11). No lng_terminal asset may be a condensate/fractionation facility."""
+    assets = json.loads((PROCESSED / "assets.json").read_text(encoding="utf-8"))
+    for a in assets:
+        if a["asset_class"] == "lng_terminal":
+            blob = f"{a['name']} {a.get('note','')}".lower()
+            assert "condensate" not in blob and "fractionation" not in blob, a["asset_id"]
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_lng_inventory_does_not_invent_a_gas_denominator():
+    """Adding LNG infrastructure must not silently create a gas composite denominator by
+    summing incompatible units (MTPA liquefaction + bcm pipeline + processing throughput).
+    Gas stays uncovered until a defensible base exists — assets present, score still zero."""
+    snap = _snapshot()
+    assert snap["facet_counts"]["asset_class"].get("lng_terminal", 0) > 0
+    assert "gas" in snap["sectors_uncovered"]
+    assert snap["sectors"]["gas"] == 0
+    assert snap["denominators"].get("gas") in (None, 0), "no gas denominator should be emitted"
