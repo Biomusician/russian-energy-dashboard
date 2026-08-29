@@ -299,6 +299,83 @@ def load_coverage_benchmark():
     return None
 
 
+# The oil-strike benchmark (the Wikipedia "reported strikes on Russian oil facilities" total)
+# describes ONE universe: kinetic attacks on oil facilities. Coverage against it must use a
+# matching numerator, or it mixes universes (iteration 6 correction, §3-§5).
+OIL_SECTORS = {"refining", "oil_logistics"}
+STRIKE_CAUSES = {"kinetic_strike", "sabotage"}
+_DISCOVERY_SOURCES = {
+    "refining": "Wikipedia strike table + curated OSINT",
+    "oil_logistics": "Wikipedia strike table + curated OSINT",
+    "electric_generation": "curated OSINT (Reuters/Astra/regional governors)",
+    "transmission": "curated OSINT (Reuters/Astra/regional governors)",
+    "gas": "curated OSINT + operator/industry inventory",
+    "coal": "operator/industry inventory (no disruption events found)",
+}
+
+
+def _build_coverage(in_aoi, benchmark, snapshot):
+    """Return (oil_benchmark, sector_matrix). Coverage is three DIFFERENT concepts kept
+    separate (§5): EVENT coverage (only the oil sectors have a defensible benchmark),
+    ASSET-INVENTORY coverage, and RECOVERY-EVIDENCE coverage. Non-oil sectors get an honest
+    descriptive state, never a fabricated completeness percentage."""
+    sec_of = lambda i: SECTOR_OF_CLASS.get(i.get("asset_class"))
+    events_by_sector = collections.Counter(sec_of(i) for i in in_aoi)
+    # numerator that matches the oil-facility strike benchmark universe
+    oil_strikes = sum(1 for i in in_aoi
+                      if sec_of(i) in OIL_SECTORS and i.get("cause") in STRIKE_CAUSES)
+
+    oil_benchmark = None
+    if benchmark and benchmark.get("reported_total_strikes"):
+        total = benchmark["reported_total_strikes"]
+        oil_benchmark = {
+            "reported_oil_strikes": total,
+            "enumerated_oil_strikes": oil_strikes,
+            "coverage_ratio": round(oil_strikes / total, 3),
+            "total_events_all_sectors": len(in_aoi),
+            "numerator_definition": (
+                "kinetic strikes and sabotage on refining and oil-logistics facilities in the "
+                "AOI — the same universe the benchmark counts"
+            ),
+            "benchmark_source": benchmark.get("source_url"),
+            "benchmark_categories": "reported strikes on Russian oil facilities",
+            "by_period": benchmark.get("by_period"),
+            "note": (
+                "Benchmark-aligned coverage: numerator and denominator are the SAME oil-strike "
+                "universe. Iterations 1-5 divided ALL energy events by this oil-only benchmark, "
+                "which mixed universes and overstated coverage; that is corrected here."
+            ),
+        }
+
+    rs_by_sector = snapshot["recovery_stats"]["by_sector"]
+    asset_fc = snapshot["facet_counts"]["asset_class"]
+    classes_of = collections.defaultdict(list)
+    for cls, sec in SECTOR_OF_CLASS.items():
+        classes_of[sec].append(cls)
+
+    matrix = {}
+    for sec in SECTORS:
+        rs = rs_by_sector.get(sec, {})
+        n = events_by_sector.get(sec, 0)
+        entry = {
+            "event_count": n,
+            "discovery_sources": _DISCOVERY_SOURCES.get(sec, "curated"),
+            "has_event_benchmark": sec in OIL_SECTORS,
+            "asset_inventory_count": sum(asset_fc.get(c, 0) for c in classes_of.get(sec, [])),
+            "recovery_episodes": rs.get("observed_restoration_episodes", 0),
+            "disrupted_facilities": rs.get("disrupted_facilities", 0),
+            "last_audit": snapshot["as_of"],
+        }
+        if sec in OIL_SECTORS:
+            entry["event_coverage_state"] = "oil-strike benchmark (shared, oil-sector level)"
+        else:
+            entry["event_coverage_state"] = (
+                "no events" if n == 0 else "thin" if n < 5 else "expanded but unbenchmarked"
+            )
+        matrix[sec] = entry
+    return oil_benchmark, matrix
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--as-of", default=dt.date.today().isoformat())
@@ -363,17 +440,23 @@ def main():
         region_context=region_context,
     )
 
-    enumerated = len(in_aoi)
-    if coverage and coverage.get("reported_total_strikes"):
-        coverage["enumerated_in_this_dataset"] = enumerated
-        coverage["coverage_ratio"] = round(
-            enumerated / coverage["reported_total_strikes"], 3
-        )
-
     snapshot["refinery_reconciliation"] = refinery_reconciliation
     snapshot["economic_context"] = crea
-    snapshot["coverage"] = coverage
     snapshot["facet_counts"] = _facet_counts(assets, lines, incidents, snapshot, ctx_net)
+
+    # Coverage is computed AFTER facet_counts/recovery_stats exist — the matrix reads them.
+    oil_benchmark, coverage_matrix = _build_coverage(in_aoi, coverage, snapshot)
+    if coverage and oil_benchmark:
+        # Correct the legacy top-level fields to the OIL-STRIKE universe (§4). enumerated now
+        # counts oil-sector strikes, not all energy events, so the ratio matches the benchmark.
+        coverage["enumerated_in_this_dataset"] = oil_benchmark["enumerated_oil_strikes"]
+        coverage["coverage_ratio"] = oil_benchmark["coverage_ratio"]
+        coverage["total_events_all_sectors"] = len(in_aoi)
+        coverage["numerator_definition"] = oil_benchmark["numerator_definition"]
+        coverage["note"] = oil_benchmark["note"]
+        coverage["oil_benchmark"] = oil_benchmark
+    snapshot["coverage"] = coverage
+    snapshot["coverage_matrix"] = coverage_matrix
     snapshot["parser_warnings"] = wiki_warnings
     snapshot["schema_version"] = SCHEMA_VERSION
     snapshot["build_time"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
@@ -418,9 +501,10 @@ def main():
     log("-" * 62)
     log(f"ESDI {snapshot['esdi']}  sectors " +
         "  ".join(f"{k}={v}" for k, v in snapshot["sectors"].items()))
-    if coverage:
-        log(f"coverage: {enumerated} enumerated / "
-            f"{coverage.get('reported_total_strikes')} reported")
+    if coverage and oil_benchmark:
+        log(f"coverage: {oil_benchmark['enumerated_oil_strikes']} oil-strikes enumerated / "
+            f"{oil_benchmark['reported_oil_strikes']} reported oil strikes "
+            f"({len(in_aoi)} total events across all sectors)")
     log("build complete")
 
 

@@ -237,11 +237,29 @@ export interface RefineryReconciliation {
 
 export interface Coverage {
   reported_total_strikes: number;
+  /** Iteration 6: now the OIL-SECTOR strike count (matches the oil benchmark universe), not
+   *  all energy events. See numerator_definition + total_events_all_sectors. */
   enumerated_in_this_dataset: number;
   coverage_ratio: number;
+  total_events_all_sectors?: number;
+  numerator_definition?: string;
   by_period: { period: string; strikes: number; cumulative: number }[];
   source_url: string;
   note: string;
+}
+
+/** Per-sector coverage matrix (iteration 6, §5). EVENT / ASSET-INVENTORY / RECOVERY-EVIDENCE
+ *  coverage are kept as separate concepts; only the oil sectors carry a defensible event
+ *  benchmark, others get an honest descriptive state, never a fabricated percentage. */
+export interface CoverageMatrixEntry {
+  event_count: number;
+  discovery_sources: string;
+  has_event_benchmark: boolean;
+  asset_inventory_count: number;
+  recovery_episodes: number;
+  disrupted_facilities: number;
+  event_coverage_state: string;
+  last_audit: string;
 }
 
 export interface SchemaCheck {
@@ -278,6 +296,7 @@ export interface Snapshot {
   regions: Record<string, RegionSnapshot>;
   not_modelled: Record<string, string>;
   coverage: Coverage | null;
+  coverage_matrix?: Record<string, CoverageMatrixEntry>;
   economic_context: EconomicContext | null;
   refinery_reconciliation: RefineryReconciliation | null;
   facet_counts: FacetCounts;

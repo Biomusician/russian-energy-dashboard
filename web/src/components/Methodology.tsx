@@ -110,12 +110,44 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
           <H>Coverage</H>
           {s.coverage && (
             <p>
-              This dataset enumerates {s.coverage.enumerated_in_this_dataset} region-assigned
-              events. The source benchmark reports {s.coverage.reported_total_strikes} strikes
-              on Russian oil facilities in total — so coverage is roughly{" "}
-              {Math.round(s.coverage.coverage_ratio * 100)}%. Events not individually
-              enumerated in open structured sources are absent, and the index is
-              correspondingly conservative.
+              <b>Oil-strike benchmark coverage ≈ {Math.round(s.coverage.coverage_ratio * 100)}%</b>:{" "}
+              {s.coverage.enumerated_in_this_dataset} enumerated oil-sector strikes vs the{" "}
+              {s.coverage.reported_total_strikes} reported strikes on Russian oil facilities. The
+              numerator and denominator are the same oil-strike universe — earlier iterations
+              divided <i>all</i> energy events ({s.coverage.total_events_all_sectors} across all
+              sectors) by this oil-only benchmark, which overstated coverage; that is corrected.
+              Other sectors have no known-total benchmark and are shown as unbenchmarked, never a
+              fabricated percentage.
+            </p>
+          )}
+          {s.coverage_matrix && (
+            <table className="cov-matrix" style={{ width: "100%", fontSize: 11, borderCollapse: "collapse", marginTop: 6 }}>
+              <thead><tr style={{ color: "var(--text-faint)", textAlign: "left" }}>
+                <th>Sector</th><th>Events</th><th>Assets</th><th>Recov.</th><th>Event coverage</th>
+              </tr></thead>
+              <tbody>
+                {Object.entries(s.coverage_matrix).map(([sec, m]) => (
+                  <tr key={sec} style={{ borderTop: "1px solid var(--line)" }}>
+                    <td>{titleCase(sec)}</td>
+                    <td>{m.event_count}</td>
+                    <td>{m.asset_inventory_count}</td>
+                    <td>{m.recovery_episodes}</td>
+                    <td style={{ color: m.has_event_benchmark ? "var(--text)" : "var(--text-faint)" }}>
+                      {m.has_event_benchmark ? "oil-strike benchmark" : m.event_coverage_state}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <p style={{ fontSize: 10.5, color: "var(--text-faint)", marginTop: 4 }}>
+            Three distinct concepts, never merged: <b>event coverage</b> (only the oil sectors have a
+            defensible benchmark), <b>asset-inventory coverage</b>, and <b>recovery-evidence coverage</b>.
+          </p>
+          {s.coverage && (
+            <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
+              Events not individually enumerated in open structured sources are absent, and the
+              index is correspondingly conservative.
             </p>
           )}
 

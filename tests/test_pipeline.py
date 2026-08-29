@@ -1492,3 +1492,60 @@ def test_gas_and_coal_stay_out_of_covered():
     snap = _snapshot()
     assert "gas" in snap["sectors_uncovered"] and "coal" in snap["sectors_uncovered"]
     assert "gas" not in snap["sectors_covered"] and "coal" not in snap["sectors_covered"]
+
+
+# --------------------------------------------------------------------------
+# Iteration 6: coverage universe correction (§3-§5)
+# --------------------------------------------------------------------------
+# The oil-strike benchmark describes ONE universe. Coverage against it must use a matching
+# numerator (oil-sector strikes), not all energy events; non-oil sectors get no fake %.
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_oil_coverage_uses_the_oil_strike_universe():
+    from pipeline.config import SECTOR_OF_CLASS
+    snap = _snapshot()
+    cov = snap["coverage"]
+    inc = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    oil_strikes = sum(
+        1 for i in inc
+        if SECTOR_OF_CLASS.get(i.get("asset_class")) in ("refining", "oil_logistics")
+        and i.get("cause") in ("kinetic_strike", "sabotage")
+    )
+    assert cov["enumerated_in_this_dataset"] == oil_strikes, "numerator must be oil-sector strikes only"
+    assert cov["enumerated_in_this_dataset"] < snap["incident_total"], "numerator must exclude non-oil events"
+    assert cov["total_events_all_sectors"] == snap["incident_total"]
+    assert cov["numerator_definition"]
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_non_oil_events_cannot_inflate_oil_coverage():
+    """A transmission/generation/gas event must never enter the oil-strike numerator."""
+    from pipeline.config import SECTOR_OF_CLASS
+    snap = _snapshot()
+    inc = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    non_oil = [i for i in inc if SECTOR_OF_CLASS.get(i.get("asset_class")) not in ("refining", "oil_logistics")]
+    assert non_oil, "corpus should contain non-oil events (else this test is vacuous)"
+    # the corrected numerator equals the oil-strike count; the OLD formula (all events) would
+    # have been strictly larger, so the correction actually lowered the reported coverage.
+    assert snap["coverage"]["enumerated_in_this_dataset"] == snap["incident_total"] - non_oil.__len__() \
+        or snap["coverage"]["enumerated_in_this_dataset"] < snap["incident_total"]
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_unbenchmarked_sectors_emit_no_fabricated_percentage():
+    snap = _snapshot()
+    for sec, e in snap["coverage_matrix"].items():
+        if not e["has_event_benchmark"]:
+            assert "%" not in e["event_coverage_state"], f"{sec} must not fabricate a coverage %"
+            assert e["event_coverage_state"] in (
+                "no events", "thin", "expanded but unbenchmarked",
+            ), f"{sec} state must be a defined descriptive state"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_coverage_matrix_keeps_event_inventory_recovery_distinct():
+    """EVENT coverage, ASSET-INVENTORY coverage and RECOVERY-EVIDENCE coverage are three
+    different concepts and are never merged into one number (§5)."""
+    snap = _snapshot()
+    for sec, e in snap["coverage_matrix"].items():
+        assert {"event_count", "asset_inventory_count", "recovery_episodes"} <= set(e)

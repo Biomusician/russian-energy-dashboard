@@ -91,15 +91,19 @@ export default function Ribbon({
       </div>
 
       <div className="ribbon-coverage">
-        <div className="eyebrow">Dataset coverage</div>
+        <div className="eyebrow">Oil-strike benchmark coverage</div>
         {coverage ? (
           <>
             <div className="num" style={{ fontSize: 17 }}>
               {coverage.enumerated_in_this_dataset}
               <span style={{ color: "var(--text-faint)", fontSize: 13 }}> / {coverage.reported_total_strikes}</span>
+              <span style={{ color: "var(--text-dim)", fontSize: 13 }}> ({Math.round(coverage.coverage_ratio * 100)}%)</span>
             </div>
-            <div style={{ fontSize: 10, color: "var(--text-dim)", lineHeight: 1.4 }}>
-              enumerated vs reported strikes ({Math.round(coverage.coverage_ratio * 100)}%)
+            <div style={{ fontSize: 10, color: "var(--text-dim)", lineHeight: 1.4 }}
+                 title={coverage.numerator_definition ?? undefined}>
+              oil-sector strikes vs the reported oil-strike benchmark. Other sectors are
+              unbenchmarked{coverage.total_events_all_sectors
+                ? ` (${coverage.total_events_all_sectors} events across all sectors)` : ""}.
             </div>
           </>
         ) : (
