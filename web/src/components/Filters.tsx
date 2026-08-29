@@ -104,6 +104,17 @@ export default function Filters({
           />
           Grid &amp; pipeline network
         </label>
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={filters.showRivers}
+            onChange={() => setFilters((f) => ({ ...f, showRivers: !f.showRivers }))}
+          />
+          Major rivers
+          <span className="tally" title="Geographic context only — never affects any score">
+            {bundle.rivers.features.length}
+          </span>
+        </label>
       </div>
 
       <Group

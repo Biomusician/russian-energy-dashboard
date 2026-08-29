@@ -14,6 +14,7 @@ export interface FilterState {
   confidences: Set<string>;
   showLines: boolean;
   showAssets: boolean;
+  showRivers: boolean;
   metric: "esdi" | "incidents";
 }
 
@@ -30,6 +31,7 @@ export default function App() {
     confidences: new Set(),
     showLines: false,
     showAssets: true,
+    showRivers: false,
     metric: "esdi",
   });
 

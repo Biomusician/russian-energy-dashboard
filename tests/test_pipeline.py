@@ -509,8 +509,10 @@ def test_context_geography_has_no_analytic_infrastructure():
     land = json.loads((PROCESSED / "context_land.geojson").read_text(encoding="utf-8"))
     for f in land["features"]:
         props = f["properties"]
-        # only display metadata, never an event/score/capacity field
-        assert set(props) <= {"iso", "name", "label_lon", "label_lat"}, props
+        # only display metadata (iteration 5 added data-driven label priority), never an
+        # event/score/capacity field
+        assert set(props) <= {"iso", "name", "labelrank", "label_min_zoom",
+                              "label_lon", "label_lat"}, props
 
 
 def test_far_eastern_remains_disabled():
@@ -1230,3 +1232,51 @@ def test_optional_context_files_are_declared_optional_not_required():
         assert name not in REQUIRED_WEB_FILES, (
             f"{name} is optional context and must not be a required frontend file"
         )
+
+
+# --------------------------------------------------------------------------
+# Iteration 5: broadened country context + rivers (§8-§10, §25)
+# --------------------------------------------------------------------------
+# Geographic context is independent of energy data: every country in frame gets a border
+# and a label anchor whether or not we hold any events there, and rivers are pure scenery.
+
+@pytest.mark.skipif(not (PROCESSED / "context_land.geojson").exists(), reason="pipeline not run")
+def test_context_includes_countries_with_no_energy_data():
+    land = json.loads((PROCESSED / "context_land.geojson").read_text(encoding="utf-8"))
+    isos = {f["properties"]["iso"] for f in land["features"]}
+    # zero-data neighbours must still be drawn (§9, §25)
+    for iso in ("MNG", "CHN", "KAZ", "POL", "MDA", "GEO"):
+        assert iso in isos, f"context must include {iso} even with no energy data"
+    # every country carries a label anchor + a data-driven reveal zoom
+    for f in land["features"]:
+        p = f["properties"]
+        assert "label_lon" in p and "label_lat" in p
+        assert "label_min_zoom" in p
+
+
+@pytest.mark.skipif(not (PROCESSED / "context_land.geojson").exists(), reason="pipeline not run")
+def test_context_excludes_russia_and_belarus():
+    """Russia and Belarus are analytic regions, not context. Because Natural Earth files
+    Crimea inside the Russian polygon, excluding Russia here keeps Crimea from ever being
+    painted as ordinary Russian context (§10)."""
+    land = json.loads((PROCESSED / "context_land.geojson").read_text(encoding="utf-8"))
+    isos = {f["properties"]["iso"] for f in land["features"]}
+    assert "RUS" not in isos and "BLR" not in isos
+
+
+@pytest.mark.skipif(not (PROCESSED / "rivers.geojson").exists(), reason="pipeline not run")
+def test_rivers_are_real_features_and_score_nothing():
+    """Rivers are published Natural Earth features (scalerank + geometry), pure geographic
+    context: they carry nothing that could enter a score, and the emphasis comes from
+    scalerank, not a hardcoded river list (§8)."""
+    rivers = json.loads((PROCESSED / "rivers.geojson").read_text(encoding="utf-8"))
+    assert rivers["features"], "rivers layer should not be empty"
+    for f in rivers["features"]:
+        p = f["properties"]
+        assert "scalerank" in p and "reveal_zoom" in p
+        assert f["geometry"]["type"] in ("LineString", "MultiLineString")
+        for forbidden in ("asset_class", "sector", "region_code", "capacity_mw", "capacity_mtpa"):
+            assert forbidden not in p, f"a river must not carry {forbidden}"
+    # the biggest Russian/European systems are captured (via scalerank, not a name list)
+    names = {f["properties"].get("label_name") for f in rivers["features"]}
+    assert "Volga" in names and "Danube" in names
