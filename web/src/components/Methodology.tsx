@@ -109,6 +109,38 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
               documented strikes that score zero for want of a defensible denominator.
             </p>
           )}
+          {s.experimental_indices?.gas_processing && (() => {
+            const g = s.experimental_indices!.gas_processing!;
+            return (
+              <>
+                <H>Gas processing — experimental (not in the headline)</H>
+                <p>
+                  Gas is uncovered in the headline ESDI because no defensible national
+                  denominator exists. As a separate, <b style={{ color: "var(--amber)" }}>experimental</b>{" "}
+                  measure only, disrupted gas-processing capacity is compared against a{" "}
+                  bottom-up census of {g.census_plants} publicly-sourced plants totalling{" "}
+                  {g.census_bcm_y} bcm/y raw gas. {g.struck_plants} of them carry a live
+                  disruption, giving a <b>within-census exposure of{" "}
+                  {g.within_census_exposure_pct != null ? `${g.within_census_exposure_pct}%` : "—"}</b>.
+                </p>
+                <p style={{ color: "var(--amber)", fontSize: 11 }}>
+                  This is <b>not</b> national gas-processing exposure. The census is a
+                  non-exhaustive sample — Russia processes far more gas than {g.census_bcm_y}{" "}
+                  bcm/y — so the ratio overstates the national picture and is deliberately kept
+                  out of the headline ESDI pending an independent red-team.{" "}
+                  {g.uncertain_bcm_y > 0 && `${g.uncertain_bcm_y} bcm/y of the census is flagged uncertain; `}
+                  {g.aggregate_bcm_y > 0 && `${g.aggregate_bcm_y} bcm/y is multi-plant aggregate. `}
+                  Capacities are structured bcm/y fields, never parsed from prose at scoring time.
+                </p>
+                {g.struck.length > 0 && (
+                  <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
+                    Live-disrupted plants:{" "}
+                    {g.struck.map((p) => `${p.name} (${p.bcm_y} bcm/y × ${p.disruption_weight})`).join(", ")}.
+                  </p>
+                )}
+              </>
+            );
+          })()}
           {s.transmission_concentration && s.transmission_concentration.top.length > 0 && (
             <p style={{ color: "var(--text-faint)" }}>
               Transmission is theatre-concentrated, not a national-grid measure: the top

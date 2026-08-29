@@ -286,6 +286,22 @@ export interface CoverageMatrixEntry {
   last_audit: string;
 }
 
+/** Experimental gas-processing exposure (iteration 6, §18). A WITHIN-CENSUS share, never a
+ *  national figure, and deliberately excluded from the headline ESDI. */
+export interface GasProcessingIndex {
+  experimental: boolean;
+  in_headline_esdi: boolean;
+  census_plants: number;
+  census_bcm_y: number;
+  struck_plants: number;
+  disrupted_bcm_y_weighted: number;
+  within_census_exposure_pct: number | null;
+  uncertain_bcm_y: number;
+  aggregate_bcm_y: number;
+  struck: { asset_id: string; name: string | null; bcm_y: number; disruption_weight: number }[];
+  caveat: string;
+}
+
 export interface SchemaCheck {
   dataVersion: number;
   appVersion: number;
@@ -321,6 +337,7 @@ export interface Snapshot {
   not_modelled: Record<string, string>;
   coverage: Coverage | null;
   coverage_matrix?: Record<string, CoverageMatrixEntry>;
+  experimental_indices?: { gas_processing: GasProcessingIndex | null };
   economic_context: EconomicContext | null;
   refinery_reconciliation: RefineryReconciliation | null;
   facet_counts: FacetCounts;

@@ -1630,6 +1630,59 @@ def test_coverage_matrix_keeps_event_inventory_recovery_distinct():
 
 
 # --------------------------------------------------------------------------
+# Iteration 6: experimental gas-processing sub-index (§16-§20)
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_experimental_gas_index_excluded_from_headline_esdi():
+    """§18: the gas-processing sub-index is experimental and must never enter the headline."""
+    snap = _snapshot()
+    g = (snap.get("experimental_indices") or {}).get("gas_processing")
+    assert g is not None, "experimental gas-processing index should be present"
+    assert g["experimental"] is True and g["in_headline_esdi"] is False
+    # Gas still contributes exactly zero to the composite.
+    assert snap["sectors"]["gas"] == 0.0
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_experimental_gas_index_is_within_census_not_national():
+    """§17: no national denominator. The share is disrupted vs the CENSUSED capacity, and the
+    weighted disrupted capacity can never exceed the census."""
+    snap = _snapshot()
+    g = snap["experimental_indices"]["gas_processing"]
+    assert g["census_bcm_y"] > 0 and g["census_plants"] >= 1
+    assert g["disrupted_bcm_y_weighted"] <= g["census_bcm_y"] + 1e-9
+    if g["within_census_exposure_pct"] is not None:
+        assert g["within_census_exposure_pct"] == pytest.approx(
+            100 * g["disrupted_bcm_y_weighted"] / g["census_bcm_y"], abs=0.1)
+    # The caveat must state it is not a national figure.
+    assert "not" in g["caveat"].lower() and "national" in g["caveat"].lower()
+
+
+def test_gas_processing_capacity_is_structured_not_prose():
+    """§16: GPP capacities live in an explicit bcm/y field, never parsed from the note text."""
+    import csv
+    path = ROOT / "data" / "curated" / "assets_supplement.csv"
+    with open(path, encoding="utf-8", newline="") as f:
+        gpps = [r for r in csv.DictReader(f) if r["asset_class"] == "gas_processing"]
+    assert gpps, "expected gas_processing rows"
+    for r in gpps:
+        assert r.get("capacity_bcm_y"), f"{r['asset_id']} needs a structured bcm/y capacity"
+        float(r["capacity_bcm_y"])  # must be numeric
+        assert r.get("capacity_status") in ("sourced", "aggregate", "uncertain"), r["asset_id"]
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_lng_and_condensate_not_counted_in_gpp_census():
+    """§19: LNG / gas-condensate complexes are kept separate from the gas-PROCESSING census."""
+    snap = _snapshot()
+    g = snap["experimental_indices"]["gas_processing"]
+    struck_ids = {p["asset_id"] for p in g["struck"]}
+    # The Novatek Ust-Luga gas-condensate/LNG complex is struck but is NOT a censused GPP.
+    assert "ust-luga-novatek-gas" not in struck_ids
+
+
+# --------------------------------------------------------------------------
 # Iteration 6: canonical refinery registry + linkage (§6-§9)
 # --------------------------------------------------------------------------
 # One stable id + alias set per refinery, so denominator and incidents resolve to the SAME

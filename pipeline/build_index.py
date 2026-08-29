@@ -182,10 +182,20 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
                 regional[code]["sectors"][s].append(round(min(1.0, rs.get(s, 0.0)) * 100, 2))
             regional[code]["esdi"].append(_composite(rs, sector_weights, covered))
 
+    # Bottom-up gas-processing census for the EXPERIMENTAL sub-index (§18). Only assets that
+    # carry an explicit bcm/y figure (structured, never parsed from prose) are counted.
+    gpp_census = [
+        {"asset_id": a["asset_id"], "name": a.get("name"), "bcm_y": a["capacity_bcm_y"],
+         "basis": a.get("capacity_basis"), "status": a.get("capacity_status"),
+         "region_code": a.get("region_code")}
+        for a in assets
+        if a.get("asset_class") == "gas_processing" and a.get("capacity_bcm_y")
+    ]
+
     snapshot = _snapshot(
         incidents, incidents_by_facility, facility_info, denominators,
         region_meta, national, regional, timeline, as_of, covered, recovery_by_incident,
-        region_context,
+        region_context, gpp_census=gpp_census,
     )
     return national, regional, snapshot
 
@@ -230,6 +240,7 @@ def _facility_registry(facilities, incidents, assets):
             "region_code": f.get("region_code"),
             "capacity_mtpa": f.get("capacity_mtpa"),
             "capacity_mw": f.get("capacity_mw"),
+            "capacity_bcm_y": f.get("capacity_bcm_y"),
         }
     # Curated incidents may name a facility that no source table lists.
     for inc in incidents:
@@ -241,6 +252,7 @@ def _facility_registry(facilities, incidents, assets):
         # treatment refineries get, since the index measures capacity exposed to
         # disruption rather than capacity proven lost.
         linked = by_asset.get(inc.get("linked_asset_id") or "")
+        self_asset = by_asset.get(inc["asset_id"])  # incident hitting an inventoried asset directly
         reg[inc["asset_id"]] = {
             "name": inc.get("asset_name"),
             "asset_class": cls,
@@ -248,6 +260,10 @@ def _facility_registry(facilities, incidents, assets):
             "region_code": inc.get("region_code"),
             "capacity_mtpa": inc.get("capacity_affected_mtpa") or (linked or {}).get("capacity_mtpa"),
             "capacity_mw": inc.get("capacity_affected_mw") or (linked or {}).get("capacity_mw"),
+            # bcm/y is carried for the experimental gas-processing index only (never MTPA/MW,
+            # so the headline denominators are untouched); a GPP incident resolves to its own
+            # inventoried supplement asset for the capacity figure.
+            "capacity_bcm_y": (linked or {}).get("capacity_bcm_y") or (self_asset or {}).get("capacity_bcm_y"),
             "voltage_kv": inc.get("voltage_kv") or (linked or {}).get("voltage_kv"),
             "linked_asset_id": inc.get("linked_asset_id"),
         }
@@ -443,9 +459,52 @@ def _incident_recovery_state(incident, record, today):
     return state
 
 
+def _gas_processing_index(gpp_census, live, today):
+    """EXPERIMENTAL gas-processing exposure (§18). A WITHIN-CENSUS share — the weighted
+    disrupted GPP capacity over the total CENSUSED capacity — and nothing more.
+
+    It is deliberately NOT part of the headline ESDI and carries no national denominator: the
+    census is a non-exhaustive, bottom-up sample of publicly-sourced GPP capacities (bcm/y raw
+    gas). Russia processes far more gas than the census holds, so this ratio OVERSTATES national
+    exposure and is gated out of the composite pending an independent red-team (§18, §35).
+    """
+    if not gpp_census:
+        return None
+    census_total = sum(g["bcm_y"] for g in gpp_census)
+    live_by_id = {x["asset_id"]: x for x in live}
+    disrupted, struck = 0.0, []
+    for g in gpp_census:
+        x = live_by_id.get(g["asset_id"])
+        w = x["disruption_weight"] if x else 0.0
+        if w > 0:
+            disrupted += g["bcm_y"] * w
+            struck.append({"asset_id": g["asset_id"], "name": g["name"],
+                           "bcm_y": g["bcm_y"], "disruption_weight": round(w, 3)})
+    uncertain = sum(g["bcm_y"] for g in gpp_census if g.get("status") == "uncertain")
+    aggregate = sum(g["bcm_y"] for g in gpp_census if g.get("status") == "aggregate")
+    return {
+        "experimental": True,
+        "in_headline_esdi": False,
+        "census_plants": len(gpp_census),
+        "census_bcm_y": round(census_total, 2),
+        "struck_plants": len(struck),
+        "disrupted_bcm_y_weighted": round(disrupted, 2),
+        "within_census_exposure_pct": round(100 * disrupted / census_total, 1) if census_total else None,
+        "uncertain_bcm_y": round(uncertain, 2),
+        "aggregate_bcm_y": round(aggregate, 2),
+        "struck": sorted(struck, key=lambda s: -s["bcm_y"]),
+        "caveat": (
+            "Within-census share only. The census is a non-exhaustive, bottom-up sample of "
+            "publicly-sourced gas-processing capacities (bcm/y raw gas) — NOT a national "
+            "denominator — so this is not national gas-processing exposure. Experimental: "
+            "excluded from the headline ESDI pending an independent red-team."
+        ),
+    }
+
+
 def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
               national, regional, timeline, as_of, covered, recovery_by_incident,
-              region_context=None):
+              region_context=None, gpp_census=None):
     region_context = region_context or {}
     today = dt.date.fromisoformat(as_of)
     heating = today.month in SCORING["heating_season_months"]
@@ -630,6 +689,11 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
         "assessed_degradation": _assessed_degradation(incidents, live, facility_info, today),
         "recovery_stats": _recovery_stats(live, incidents, recovery_by_incident, facility_info),
         "coverage_detail": _coverage_detail(incidents, recovery_by_incident),
+        # Experimental, non-headline measures (§18). Kept in a separate namespace so nothing can
+        # mistake them for the composite. Gas processing is the first: a within-census share.
+        "experimental_indices": {
+            "gas_processing": _gas_processing_index(gpp_census, live, today),
+        },
         "live_disruptions": live[:80],
         "regions": regions_out,
         "not_modelled": NOT_MODELLED,

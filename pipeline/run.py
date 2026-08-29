@@ -124,6 +124,14 @@ def load_asset_supplement(region_meta):
             "region_code": code,
             "capacity_mw": _num(row.get("capacity_mw")),
             "capacity_mtpa": _num(row.get("capacity_mtpa")),
+            # Gas processing is metered in bcm/y raw gas, not MTPA — kept in an explicit field
+            # (§16) so nothing parses a capacity out of prose at scoring time. Feeds ONLY the
+            # experimental gas-processing sub-index, never the headline ESDI denominators.
+            "capacity_bcm_y": _num(row.get("capacity_bcm_y")),
+            "capacity_basis": row.get("capacity_basis") or None,
+            "capacity_year": row.get("capacity_year") or None,
+            "capacity_source": row.get("capacity_source") or None,
+            "capacity_status": row.get("capacity_status") or None,
             "commissioning_year": int(row["commissioning_year"]) if row.get("commissioning_year") else None,
             "owner": row.get("operator") or None,
             "status": row.get("status") or None,
