@@ -6,7 +6,7 @@ map draws its own GeoJSON, so the running page makes zero external network reque
 
 **Repository:** https://github.com/Biomusician/russian-energy-dashboard (public)
 **Deployment branch:** `main`
-**Production URL:** _added after the first Vercel import (see §2)._
+**Production URL:** https://russian-energy-dashboard.vercel.app
 
 Architecture: **GitHub repo → daily GitHub Action rebuilds & commits the processed data →
 push triggers a Vercel production deploy.** Vercel builds only the static frontend; it
