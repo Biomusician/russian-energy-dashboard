@@ -252,6 +252,23 @@ export interface RefineryReconciliation {
   coverage_pct: number;
   gap_mtpa: number;
   excluded_non_fuels?: string[];
+  /** Iteration 7 (§6): denominator-completeness metadata. DENOMINATOR completeness, distinct
+   *  from event coverage. */
+  reference_nameplate_mtpa?: number;
+  reference_range_mtpa?: [number, number];
+  reference_crude_nameplate_mtpa?: number;
+  reference_year?: number;
+  reference_definition?: string;
+  denominator_coverage_pct?: number;
+  denominator_coverage_basis?: string;
+  facility_count?: number;
+  excluded_facility_count?: number;
+  excluded_condensate_splitters?: string[];
+  gap_decomposition?: {
+    excluded_condensate_splitters_mtpa: number;
+    conservative_basis_understatement_mtpa: number;
+    missing_crude_refineries_mtpa: number;
+  };
   /** Canonical refinery linkage completeness (iteration 6, §9) — identity/linkage, NOT
    *  disruption coverage. */
   canonical_linkage?: {

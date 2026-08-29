@@ -88,6 +88,25 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
             )}
           </ul>
 
+          {s.refinery_reconciliation?.reference_nameplate_mtpa && (() => {
+            const r = s.refinery_reconciliation!;
+            return (
+              <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
+                <b>Refining denominator completeness:</b> {r.tracked_mtpa} MTPA tracked ≈{" "}
+                {r.denominator_coverage_pct}% of a crude-fuels nameplate reference (~
+                {r.reference_crude_nameplate_mtpa} MTPA; full Russian nameplate{" "}
+                {r.reference_nameplate_mtpa} MTPA, range {r.reference_range_mtpa?.[0]}–
+                {r.reference_range_mtpa?.[1]}, {r.reference_year}). <b>No major crude refinery is
+                missing</b>: the gap is ~{r.gap_decomposition?.excluded_condensate_splitters_mtpa} MTPA
+                of gas-condensate splitters (Surgut, Ust-Luga, Astrakhan) excluded like Tobolsk, plus ~
+                {r.gap_decomposition?.conservative_basis_understatement_mtpa} MTPA because the tracked
+                figures use one consistent source ~10-15% below current nameplate — so reported
+                refining shares are conservative <i>upper</i> bounds. This is denominator
+                completeness, NOT event coverage.
+              </p>
+            );
+          })()}
+
           {s.refinery_reconciliation?.canonical_linkage && (
             <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
               Refineries resolve to a canonical registry (stable id + aliases), so the

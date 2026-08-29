@@ -1112,17 +1112,58 @@ def test_crea_series_sorted_by_reporting_month():
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
                     reason="pipeline has not been run")
 def test_refinery_reconciliation_is_lower_bound_not_padded():
-    """Tracked capacity must be <= the national estimate, and coverage must be the honest
-    ratio of the two — never forced to 100% by padding unlike facilities."""
+    """Tracked capacity must be <= the full nameplate reference, and coverage must be the honest
+    ratio against the LIKE-FOR-LIKE crude reference — never forced to 100% by padding."""
     snap = _snapshot()
     rec = snap.get("refinery_reconciliation")
     assert rec is not None, "refinery_reconciliation should be emitted"
     tracked = rec["tracked_mtpa"]
-    national = rec["national_public_estimate_mtpa"]
-    assert 0 < tracked <= national, "tracked capacity must not exceed the national estimate"
-    assert rec["gap_mtpa"] == pytest.approx(national - tracked, abs=0.2)
-    assert rec["coverage_pct"] == pytest.approx(100.0 * tracked / national, abs=0.6)
+    full = rec["national_public_estimate_mtpa"]      # full nameplate (incl. condensate + mini)
+    crude = rec["reference_crude_nameplate_mtpa"]    # like-for-like crude reference
+    assert 0 < tracked <= full, "tracked capacity must not exceed the full nameplate reference"
+    assert rec["gap_mtpa"] == pytest.approx(full - tracked, abs=0.2)
+    # Coverage is against the crude reference (~303), NOT the full 327 (universe mismatch).
+    assert rec["coverage_pct"] == pytest.approx(100.0 * tracked / crude, abs=0.6)
     assert rec["coverage_pct"] < 100.0, "coverage should be an honest lower bound, not 100%"
+
+
+def test_denominator_completeness_metadata_is_distinct_from_event_coverage(SNAP=None):
+    """§6: the refining denominator emits completeness metadata that is structurally SEPARATE
+    from event coverage, and the gap decomposition adds up with no missing crude refinery."""
+    snap = _snapshot()
+    rec = snap["refinery_reconciliation"]
+    # completeness fields present
+    for k in ("reference_nameplate_mtpa", "reference_crude_nameplate_mtpa", "reference_range_mtpa",
+              "denominator_coverage_pct", "gap_decomposition", "facility_count"):
+        assert k in rec, f"missing denominator metadata: {k}"
+    # crude reference < full (condensate removed), both positive
+    assert 0 < rec["reference_crude_nameplate_mtpa"] < rec["reference_nameplate_mtpa"]
+    # gap decomposition: condensate + basis + missing == full gap; missing crude refineries == 0
+    gd = rec["gap_decomposition"]
+    assert gd["missing_crude_refineries_mtpa"] == 0.0
+    total = (gd["excluded_condensate_splitters_mtpa"] + gd["conservative_basis_understatement_mtpa"]
+             + gd["missing_crude_refineries_mtpa"])
+    assert total == pytest.approx(rec["reference_nameplate_mtpa"] - rec["tracked_mtpa"], abs=0.6)
+    # DENOMINATOR coverage must not be confused with the OIL-STRIKE event coverage — different value.
+    cov = snap.get("coverage") or {}
+    if cov:
+        assert abs(rec["denominator_coverage_pct"] - cov["coverage_ratio"] * 100) > 1.0
+
+
+def test_denominator_sum_equals_registry_members():
+    """§36: the tracked denominator MTPA must equal the sum of non-excluded registry members —
+    no capacity double-counted, no exclusion silently counted."""
+    if not (PROCESSED / "refinery_inventory.json").exists():
+        pytest.skip("pipeline not run")
+    inv = json.loads((PROCESSED / "refinery_inventory.json").read_text(encoding="utf-8"))
+    members = [r for r in inv["refineries"]
+               if r.get("denominator_status") != "exclude" and r.get("capacity_mtpa")]
+    member_sum = round(sum(r["capacity_mtpa"] for r in members), 1)
+    assert member_sum == pytest.approx(inv["total_mtpa"], abs=0.15)
+    assert inv["reconciliation"]["tracked_refineries"] == len(members)
+    # canonical ids unique among members (no duplicate facility).
+    ids = [r["canonical_id"] for r in members if r.get("canonical_id")]
+    assert len(ids) == len(set(ids)), "duplicate canonical_id in the denominator"
 
 
 # --------------------------------------------------------------------------
