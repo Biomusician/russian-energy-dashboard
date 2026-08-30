@@ -30,7 +30,7 @@ const TABS: {
 
 export default function Dossier({
   bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSelect,
-  selectedAsset, onClearAsset, assetStruck,
+  selectedAsset, onClearAsset, assetStruck, compareRegions, onToggleCompare,
 }: {
   bundle: Bundle;
   step: number;
@@ -45,6 +45,9 @@ export default function Dossier({
   onClearAsset?: () => void;
   /** Whether the selected asset is named in disruption reporting (identity, not a location). */
   assetStruck?: boolean;
+  /** Regions pinned to the comparison tray (§17), and the toggle for the current one. */
+  compareRegions?: string[];
+  onToggleCompare?: (code: string) => void;
 }) {
   // Initial tab may be seeded from the URL hash (#tab=Recovery) — used for headless
   // visual QA of individual tabs; harmless in normal use.
@@ -76,7 +79,20 @@ export default function Dossier({
             {region ? `${region.district} · ${region.country === "RU" ? "Russia" : region.country === "BY" ? "Belarus" : "Ukraine (occupied)"}` : "Belarus, western Russia & Siberia + occupied Crimea"}
           </div>
         </div>
-        {region && <button className="ghost" onClick={() => onSelect(null)}>close</button>}
+        {region && (
+          <div style={{ display: "flex", gap: 6 }}>
+            {onToggleCompare && (
+              <button
+                className="ghost"
+                title="Pin this region to the comparison tray"
+                onClick={() => onToggleCompare(region.code)}
+              >
+                {compareRegions?.includes(region.code) ? "✓ comparing" : "+ compare"}
+              </button>
+            )}
+            <button className="ghost" onClick={() => onSelect(null)}>close</button>
+          </div>
+        )}
       </div>
 
       {selectedAsset && (

@@ -352,6 +352,36 @@ select.ghost {
 }
 .linklike:hover { text-decoration: underline; }
 
+/* Region comparison tray (§17): floats at the bottom of the map cell, over the choropleth. */
+.compare-tray {
+  grid-area: map;
+  align-self: end;
+  justify-self: center;
+  z-index: 6;
+  margin-bottom: 16px;
+  max-width: 94%;
+  background: rgba(9, 13, 18, 0.97);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px 10px 10px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+}
+.compare-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+.compare-cols { display: flex; gap: 10px; }
+.compare-col {
+  width: 158px; flex: none;
+  border: 1px solid var(--line-soft); border-radius: var(--radius);
+  padding: 7px 9px; background: var(--bg-inset);
+}
+.compare-col-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 3px; }
+.compare-x {
+  background: none; border: none; color: var(--text-faint); cursor: pointer;
+  font-size: 14px; line-height: 1; padding: 0 2px;
+}
+.compare-x:hover { color: var(--sev-5, #c23a30); }
+.compare-kv { display: flex; justify-content: space-between; gap: 8px; font-size: 10.5px; color: var(--text-dim); padding: 3px 0; }
+.compare-kv + .compare-kv { border-top: 1px solid var(--line-soft); }
+
 .kv { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 12px; }
 .kv + .kv { border-top: 1px solid var(--line-soft); }
 .kv .k { color: var(--text-dim); }

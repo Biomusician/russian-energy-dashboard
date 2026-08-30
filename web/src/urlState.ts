@@ -31,6 +31,7 @@ export interface DeepLink {
   showGasNetwork?: boolean;
   showOilNetwork?: boolean;
   camera?: CameraState;
+  compare?: string[];
 }
 
 const METRIC_CODE: Record<Metric, string> = {
@@ -64,6 +65,7 @@ export function encodeDeepLink(
     showGasNetwork: boolean;
     showOilNetwork: boolean;
     camera: CameraState | null;
+    compare: string[];
   },
 ): string {
   const p = new URLSearchParams();
@@ -93,6 +95,7 @@ export function encodeDeepLink(
   if (v.camera) {
     p.set("cam", `${v.camera.lng.toFixed(3)},${v.camera.lat.toFixed(3)},${v.camera.zoom.toFixed(2)}`);
   }
+  if (v.compare.length) p.set("cmp", v.compare.join(","));
   return p.toString();
 }
 
@@ -134,5 +137,7 @@ export function decodeDeepLink(search: string): DeepLink {
     const [lng, lat, zoom] = cam.split(",").map(Number);
     if ([lng, lat, zoom].every(Number.isFinite)) out.camera = { lng, lat, zoom };
   }
+  const cmp = p.get("cmp");
+  if (cmp) out.compare = cmp.split(",").filter(Boolean).slice(0, 3);
   return out;
 }

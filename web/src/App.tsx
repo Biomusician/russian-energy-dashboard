@@ -8,6 +8,7 @@ import MapPanel from "./components/MapPanel";
 import Dossier from "./components/Dossier";
 import Timeline from "./components/Timeline";
 import Methodology from "./components/Methodology";
+import ComparisonTray from "./components/ComparisonTray";
 
 /** Choropleth surfaces. The two "esdi_delta" surfaces are a DIVERGING change view (§14-15):
  *  how much a region's exposure index rose or fell over the trailing window, never a claim of
@@ -43,6 +44,13 @@ export default function App() {
   const [selected, setSelected] = useState<string | null>(initial.selected ?? null);
   const [selectedAsset, setSelectedAsset] = useState<{ asset: Asset; key: string } | null>(null);
   const [methodOpen, setMethodOpen] = useState(false);
+  // Region comparison tray (§17): up to three pinned regions; a fourth pushes out the oldest.
+  const [compareRegions, setCompareRegions] = useState<string[]>(initial.compare ?? []);
+  const toggleCompare = (code: string) =>
+    setCompareRegions((prev) =>
+      prev.includes(code) ? prev.filter((c) => c !== code)
+      : prev.length >= 3 ? [...prev.slice(1), code]
+      : [...prev, code]);
   // Camera is first-class shareable state (§22): seeded from the link, then kept in sync as
   // the user pans/zooms so the URL always reproduces the current frame.
   const [camera, setCamera] = useState<CameraState | null>(initial.camera ?? null);
@@ -163,9 +171,10 @@ export default function App() {
       showGasNetwork: filters.showGasNetwork,
       showOilNetwork: filters.showOilNetwork,
       camera,
+      compare: compareRegions,
     });
     window.history.replaceState(null, "", q ? `${window.location.pathname}?${q}` : window.location.pathname);
-  }, [bundle, filters, selected, step, camera]);
+  }, [bundle, filters, selected, step, camera, compareRegions]);
 
   if (error) {
     return (
@@ -227,6 +236,8 @@ export default function App() {
         selectedAsset={selectedAsset?.asset ?? null}
         onClearAsset={() => setSelectedAsset(null)}
         assetStruck={selectedAsset ? struckAssetIds.has(selectedAsset.asset.asset_id) : undefined}
+        compareRegions={compareRegions}
+        onToggleCompare={toggleCompare}
       />
       <Timeline
         bundle={bundle}
@@ -234,6 +245,14 @@ export default function App() {
         setStep={setStep}
         selected={selected}
         visibleIncidents={visibleIncidents}
+      />
+      <ComparisonTray
+        bundle={bundle}
+        step={step}
+        codes={compareRegions}
+        onRemove={(code) => setCompareRegions((p) => p.filter((c) => c !== code))}
+        onClear={() => setCompareRegions([])}
+        onSelect={selectRegion}
       />
       {methodOpen && <Methodology bundle={bundle} onClose={() => setMethodOpen(false)} />}
     </div>
