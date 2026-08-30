@@ -30,7 +30,8 @@ const TABS: {
 
 export default function Dossier({
   bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSelect,
-  selectedAsset, onClearAsset, assetStruck, assetAlsoHere, compareRegions, onToggleCompare,
+  selectedAsset, onClearAsset, assetStruck, assetAlsoHere, activeClasses,
+  compareRegions, onToggleCompare,
 }: {
   bundle: Bundle;
   step: number;
@@ -47,6 +48,8 @@ export default function Dossier({
   assetStruck?: boolean;
   /** Other assets on the same administrative centroid as the selected one (§9). */
   assetAlsoHere?: Asset[];
+  /** Active infrastructure-class filter, so panel counts match the rest of the dashboard. */
+  activeClasses?: Set<string>;
   /** Regions pinned to the comparison tray (§17), and the toggle for the current one. */
   compareRegions?: string[];
   onToggleCompare?: (code: string) => void;
@@ -67,7 +70,7 @@ export default function Dossier({
 
   const props: TabProps = {
     bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents,
-    onSelect, onTab: setTab,
+    onSelect, onTab: setTab, activeClasses,
   };
   const active = TABS.find((t) => t.key === tab) ?? TABS[0];
   const region = selected ? bundle.snapshot.regions[selected] : null;

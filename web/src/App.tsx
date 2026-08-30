@@ -285,6 +285,7 @@ export default function App() {
         onClearAsset={() => setSelectedAsset(null)}
         assetStruck={selectedAsset ? struckAssetIds.has(selectedAsset.asset.asset_id) : undefined}
         assetAlsoHere={selectedAlsoHere}
+        activeClasses={filters.classes}
         compareRegions={compareRegions}
         onToggleCompare={toggleCompare}
       />

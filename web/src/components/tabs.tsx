@@ -17,6 +17,10 @@ export interface TabProps {
   visibleIncidents: Incident[];
   onSelect: (code: string | null) => void;
   onTab: (tab: string) => void;
+  /** Infrastructure classes currently enabled in the left rail. Views that read rows the
+   *  incident filter does not already cover (e.g. the recovery-evidence log) apply it, so every
+   *  count in the panel answers the same filtered question. */
+  activeClasses?: Set<string>;
 }
 
 function Block({ title, right, children }: { title: React.ReactNode; right?: React.ReactNode; children: React.ReactNode }) {
@@ -93,11 +97,14 @@ export function WhatChangedTab(p: TabProps) {
   const regionName = (code: string | null | undefined) =>
     (code && bundle.snapshot.regions[code]?.name) || undefined;
 
+  // Reads the FILTERED incident set, like every other view — otherwise filtering the rail to
+  // refineries would still report substation events here and the number would contradict the
+  // map, the ribbon and the Recent tab.
   const newEvents = useMemo(
-    () => inWindow(bundle.incidents, (i) => i.date, windowStart, currentDate,
+    () => inWindow(p.visibleIncidents, (i) => i.date, windowStart, currentDate,
                    (i) => !selected || i.region_code === selected)
       .sort((a, b) => b.date.localeCompare(a.date)),
-    [bundle.incidents, windowStart, currentDate, selected],
+    [p.visibleIncidents, windowStart, currentDate, selected],
   );
 
   // Recovery evidence comes from the COMPLETE recovery_events log, never live_disruptions:
@@ -105,10 +112,12 @@ export function WhatChangedTab(p: TabProps) {
   // fully-restored facility is absent from it by construction — which would silently undercount
   // exactly the restorations this panel exists to surface.
   const newRecovery = useMemo(
-    () => inWindow(bundle.snapshot.recovery_events ?? [], (e) => e.evidence_date,
-                   windowStart, currentDate, (e) => !selected || e.region_code === selected)
-      .sort((a, b) => b.evidence_date.localeCompare(a.evidence_date)),
-    [bundle.snapshot.recovery_events, windowStart, currentDate, selected],
+    () => inWindow(
+      bundle.snapshot.recovery_events ?? [], (e) => e.evidence_date, windowStart, currentDate,
+      (e) => (!selected || e.region_code === selected)
+        && (!p.activeClasses || !e.asset_class || p.activeClasses.has(e.asset_class)),
+    ).sort((a, b) => b.evidence_date.localeCompare(a.evidence_date)),
+    [bundle.snapshot.recovery_events, windowStart, currentDate, selected, p.activeClasses],
   );
   const measuredDurations = newRecovery.filter((e) => e.counts_toward_observed_episodes).length;
 
