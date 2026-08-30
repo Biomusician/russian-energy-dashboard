@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { loadBundle } from "./data";
+import { addDays, loadBundle } from "./data";
 import type { Asset, Bundle, Incident } from "./types";
 import Ribbon from "./components/Ribbon";
 import Filters from "./components/Filters";
@@ -7,6 +7,15 @@ import MapPanel from "./components/MapPanel";
 import Dossier from "./components/Dossier";
 import Timeline from "./components/Timeline";
 import Methodology from "./components/Methodology";
+
+/** Choropleth surfaces. The two "esdi_delta" surfaces are a DIVERGING change view (§14-15):
+ *  how much a region's exposure index rose or fell over the trailing window, never a claim of
+ *  physical damage. */
+export type Metric = "esdi" | "incidents" | "esdi_delta_30d" | "esdi_delta_90d";
+
+/** Recent-activity halo window (§16). "activity" = new recorded events in the trailing window;
+ *  it is NOT current impairment and NOT damage. "cumulative" is every event to the scrubber. */
+export type ActivityWindow = "cumulative" | "30d" | "90d";
 
 export interface FilterState {
   classes: Set<string>;
@@ -17,7 +26,8 @@ export interface FilterState {
   showRivers: boolean;
   showGasNetwork: boolean;
   showOilNetwork: boolean;
-  metric: "esdi" | "incidents";
+  metric: Metric;
+  activityWindow: ActivityWindow;
 }
 
 export default function App() {
@@ -38,6 +48,7 @@ export default function App() {
     showGasNetwork: false,
     showOilNetwork: false,
     metric: "esdi",
+    activityWindow: "cumulative",
   });
 
   useEffect(() => {
@@ -89,6 +100,22 @@ export default function App() {
     [bundle],
   );
 
+  // Recent-activity halos (§16): count only the events RECORDED inside the trailing window,
+  // ending at the scrubber. This is "activity" (new reports), never current impairment. In
+  // "cumulative" mode we return undefined so the map keeps its original every-event-to-date
+  // halo. Windows are relative to the scrubber date, so they stay meaningful while scrubbing.
+  const haloByRegion = useMemo<Map<string, number> | undefined>(() => {
+    if (filters.activityWindow === "cumulative") return undefined;
+    const days = filters.activityWindow === "30d" ? 30 : 90;
+    const windowStart = addDays(currentDate, -days);
+    const m = new Map<string, number>();
+    for (const i of visibleIncidents) {
+      if (!i.region_code || i.date <= windowStart) continue;
+      m.set(i.region_code, (m.get(i.region_code) ?? 0) + 1);
+    }
+    return m;
+  }, [filters.activityWindow, visibleIncidents, currentDate]);
+
   // Selecting a region clears a stale asset sub-card unless the asset belongs to that region
   // (the asset-click path selects the asset's own region, so its sub-card is preserved).
   const selectRegion = (code: string | null) => {
@@ -139,6 +166,7 @@ export default function App() {
         selected={selected}
         onSelect={selectRegion}
         incidentsByRegion={incidentsByRegion}
+        haloByRegion={haloByRegion}
         selectedAssetKey={selectedAsset?.key ?? null}
         onSelectAsset={(asset, key) => setSelectedAsset(asset && key ? { asset, key } : null)}
       />

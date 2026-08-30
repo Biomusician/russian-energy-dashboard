@@ -49,6 +49,34 @@ export function severityColor(value: number): string {
   return color;
 }
 
+/** Diverging ramp for the "change in ESDI" choropleth (§14-15). This is deliberately a
+ *  DIFFERENT visual language from the sequential severity ramp: blue = the index FELL
+ *  (recovery / de-escalation), red = it ROSE, dark slate = ~unchanged. Blue never appears in
+ *  the exposure ramp, so a reader can never confuse "improved" with "low exposure". The scale
+ *  is symmetric and saturates near ±3, which covers the observed regional deltas (max ~2.8
+ *  over 30 days). It is a modelled DELTA of the exposure index, never a claim of physical
+ *  damage or repair — the legend and copy say so. */
+export const ESDI_DELTA_STOPS: [number, string][] = [
+  [-3, "#2f7dc4"],
+  [-1, "#3f8fb0"],
+  [-0.25, "#39616d"],
+  [0, "#313f4a"],
+  [0.25, "#6f5636"],
+  [1, "#c07a2c"],
+  [3, "#c23a30"],
+];
+
+export function esdiDeltaColor(value: number): string {
+  const stops = ESDI_DELTA_STOPS;
+  if (value <= stops[0][0]) return stops[0][1];
+  if (value >= stops[stops.length - 1][0]) return stops[stops.length - 1][1];
+  let color = stops[0][1];
+  for (const [stop, c] of stops) {
+    if (value >= stop) color = c;
+  }
+  return color;
+}
+
 export const CONFIDENCE_ORDER = ["confirmed", "probable", "possible", "unverified"] as const;
 
 export const CAUSE_COLOR: Record<string, string> = {

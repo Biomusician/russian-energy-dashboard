@@ -124,6 +124,15 @@ export function stepFor(dates: string[], date: string): number {
   return lo;
 }
 
+/** ISO date `delta` days from `iso` (delta may be negative). Deterministic — used for the
+ *  trend windows, which are always relative to the scrubber position, never wall-clock now. */
+export function addDays(iso: string, delta: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + delta);
+  return dt.toISOString().slice(0, 10);
+}
+
 export function fmtDate(iso: string): string {
   if (!iso) return "—";
   const [y, m, d] = iso.split("-");

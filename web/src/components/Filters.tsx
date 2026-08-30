@@ -88,7 +88,32 @@ export default function Filters({
         >
           <option value="esdi">Disruption exposure (ESDI)</option>
           <option value="incidents">Recorded events (count)</option>
+          <option value="esdi_delta_30d">Change in ESDI · last 30 days</option>
+          <option value="esdi_delta_90d">Change in ESDI · last 90 days</option>
         </select>
+        {(filters.metric === "esdi_delta_30d" || filters.metric === "esdi_delta_90d") && (
+          <div className="note" style={{ marginTop: 6 }}>
+            Diverging scale: blue where the index fell (de-escalation), red where it rose.
+            A modelled change in exposure, not observed physical damage.
+          </div>
+        )}
+      </div>
+
+      <div className="ctl-group">
+        <div className="eyebrow" style={{ marginBottom: 6 }}>Recent-activity halos</div>
+        <select
+          className="ghost"
+          value={filters.activityWindow}
+          onChange={(e) => setFilters((f) => ({ ...f, activityWindow: e.target.value as FilterState["activityWindow"] }))}
+        >
+          <option value="cumulative">All recorded events (to date)</option>
+          <option value="30d">Activity · last 30 days</option>
+          <option value="90d">Activity · last 90 days</option>
+        </select>
+        <div className="note" style={{ marginTop: 6 }}>
+          Halos size to how many events were <em>recorded</em> in the window ending at the
+          scrubber — recent activity, not current impairment or damage.
+        </div>
       </div>
 
       <div className="ctl-group">

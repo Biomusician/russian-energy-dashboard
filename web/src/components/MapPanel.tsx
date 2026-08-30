@@ -2,10 +2,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import type { FilterState } from "../App";
 import type { Asset, Bundle, Incident } from "../types";
-import { CLASS_COLOR, SEVERITY_STOPS } from "../palette";
-import { fmtNum, loadContextLayer } from "../data";
+import { CLASS_COLOR, ESDI_DELTA_STOPS, SEVERITY_STOPS } from "../palette";
+import { addDays, fmtNum, loadContextLayer, stepFor } from "../data";
 import { iconImageId, prewarmIcons } from "../icons";
 import { AssetHoverCard } from "./AssetDetail";
+
+/** Signed, fixed-precision delta for the "change in ESDI" surfaces (§14-15). */
+function fmtDelta(v: number): string {
+  return (v > 0 ? "+" : v < 0 ? "−" : "±") + Math.abs(v).toFixed(2);
+}
 
 /** The map deliberately has no basemap.
  *
@@ -571,14 +576,35 @@ export default function MapPanel({
   useEffect(() => {
     const m = map.current;
     if (!m || !ready) return;
+    // For a "change in ESDI" surface, the reference step is the timeline position `window`
+    // days before the scrubber; the value is the signed difference of the region's own ESDI
+    // series between then and now. This is a modelled index delta, never physical damage.
+    const dates = bundle.national.dates;
+    const deltaDays =
+      filters.metric === "esdi_delta_30d" ? 30 : filters.metric === "esdi_delta_90d" ? 90 : 0;
+    const refStep = deltaDays ? stepFor(dates, addDays(dates[step], -deltaDays)) : step;
     for (const r of bundle.regions) {
-      const value =
-        filters.metric === "esdi"
-          ? bundle.regional.regions[r.code]?.esdi[step] ?? 0
-          : incidentsByRegion.get(r.code)?.length ?? 0;
+      const series = bundle.regional.regions[r.code]?.esdi;
+      let value: number;
+      if (deltaDays) value = series ? (series[step] ?? 0) - (series[refStep] ?? 0) : 0;
+      else if (filters.metric === "esdi") value = series?.[step] ?? 0;
+      else value = incidentsByRegion.get(r.code)?.length ?? 0;
       m.setFeatureState({ source: "regions", id: r.code }, { value });
     }
-  }, [ready, step, filters.metric, bundle.regions, bundle.regional, incidentsByRegion]);
+  }, [ready, step, filters.metric, bundle.regions, bundle.regional, bundle.national.dates, incidentsByRegion]);
+
+  // Swap the choropleth ramp when the surface flips between sequential exposure/events and the
+  // DIVERGING change view, so "improved" (blue) can never read as "low exposure" (§14-15).
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready || !m.getLayer("regions-fill")) return;
+    const isDelta = filters.metric === "esdi_delta_30d" || filters.metric === "esdi_delta_90d";
+    const stops = isDelta ? ESDI_DELTA_STOPS : SEVERITY_STOPS;
+    m.setPaintProperty("regions-fill", "fill-color", [
+      "interpolate", ["linear"], ["coalesce", ["feature-state", "value"], 0],
+      ...stops.flatMap(([stop, color]) => [stop, color]),
+    ] as unknown as maplibregl.ExpressionSpecification);
+  }, [ready, filters.metric]);
 
   // --- selection ----------------------------------------------------------
   useEffect(() => {
@@ -753,7 +779,12 @@ export default function MapPanel({
     return [minx, miny, maxx, maxy];
   }, [bundle.snapshot.regions, regionMeta]);
 
-  const metricLabel = filters.metric === "esdi" ? "Disruption exposure" : "Recorded events";
+  const isDelta = filters.metric === "esdi_delta_30d" || filters.metric === "esdi_delta_90d";
+  const metricLabel =
+    filters.metric === "esdi" ? "Disruption exposure"
+    : filters.metric === "incidents" ? "Recorded events"
+    : filters.metric === "esdi_delta_30d" ? "Change in ESDI · 30 days"
+    : "Change in ESDI · 90 days";
 
   return (
     <div className="mapwrap">
@@ -797,16 +828,21 @@ export default function MapPanel({
       </div>
 
       <div className="map-legend">
-        <div className="eyebrow">{metricLabel}</div>
+        <div className="eyebrow">{isDelta ? "Change in ESDI" : metricLabel}</div>
         <div className="legend-scale">
-          {SEVERITY_STOPS.map(([stop, color]) => (
-            <i key={stop} style={{ background: color }} title={`≥ ${stop}`} />
+          {(isDelta ? ESDI_DELTA_STOPS : SEVERITY_STOPS).map(([stop, color]) => (
+            <i key={stop} style={{ background: color }} title={isDelta ? `${stop > 0 ? "+" : ""}${stop}` : `≥ ${stop}`} />
           ))}
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9.5, color: "var(--text-faint)", marginTop: 3 }}>
-          <span>low</span>
-          <span>high</span>
+          <span>{isDelta ? "improved" : "low"}</span>
+          <span>{isDelta ? "worsened" : "high"}</span>
         </div>
+        {isDelta && (
+          <div style={{ fontSize: 9, color: "var(--text-faint)", marginTop: 3, lineHeight: 1.35 }}>
+            Modelled index change over the window — not observed physical damage.
+          </div>
+        )}
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 7, borderTop: "1px solid var(--line)", paddingTop: 6 }}>
           <span style={{ width: 16, height: 8, border: "1px dashed #a98bfa", background: "#2a2438" }} />
           <span style={{ fontSize: 9.5, color: "var(--text-faint)" }}>Crimea — Ukraine, occupied (in index)</span>
@@ -826,7 +862,9 @@ export default function MapPanel({
             <>
               <div className="kv" style={{ marginTop: 5 }}>
                 <span className="k">{metricLabel}</span>
-                <span className="v">{filters.metric === "esdi" ? fmtNum(hover.value, 2) : hover.value}</span>
+                <span className="v">
+                  {isDelta ? fmtDelta(hover.value) : filters.metric === "esdi" ? fmtNum(hover.value, 2) : hover.value}
+                </span>
               </div>
               <div className="kv">
                 <span className="k">Events to date</span>
