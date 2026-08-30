@@ -68,6 +68,24 @@ const CLASS_PRIO: Record<string, number> = {
   substation: 7,
 };
 
+/** Zoom thresholds at which rivers reveal, mirroring the distinct `reveal_zoom` values
+ *  build_context.py derives from Natural Earth's scalerank. Exported so a test can assert the
+ *  shipped data never grows a threshold the style would silently swallow. */
+export const RIVER_REVEAL_STEPS = [0, 2.6, 3.4, 4.2, 5.0] as const;
+const RIVER_OPACITY = [0.42, 0.46, 0.5, 0.55, 0.6] as const;
+
+/** A top-level `step` on zoom whose every bucket boundary IS a real reveal threshold, so the
+ *  constant compared against `reveal_zoom` inside each bucket is exact. */
+export function buildRiverOpacity(): unknown[] {
+  const expr: unknown[] = ["step", ["zoom"]];
+  RIVER_REVEAL_STEPS.forEach((z, i) => {
+    const output = ["case", [">=", z, ["get", "reveal_zoom"]], RIVER_OPACITY[i], 0];
+    if (i === 0) expr.push(output);            // default, below the first boundary
+    else expr.push(z, output);
+  });
+  return expr;
+}
+
 /** Deterministic declutter priority: lower wins a collision, and also decides which member of a
  *  shared administrative centroid represents the stack. Class salience first, then published
  *  capacity/voltage, then whether the asset appears in disruption reporting, then precision.
@@ -380,17 +398,12 @@ export default function MapPanel({
           // reveal_zoom. MapLibre only allows ["zoom"] as the direct input to a top-level
           // interpolate/step (nesting it inside a "case" is rejected and the whole layer is
           // silently dropped — the iteration-5 defect), so the gate lives in the outputs.
-          // A "step" is used rather than "interpolate" because interpolating BETWEEN gated
-          // outputs blends across the gate: a river with reveal_zoom 5 was already ~30% opaque
-          // at z4, so the hard reveal the comment promised was not what shipped.
-          "line-opacity": [
-            "step", ["zoom"],
-            0,
-            2.5, ["case", [">=", 2.5, ["get", "reveal_zoom"]], 0.45, 0],
-            4, ["case", [">=", 4, ["get", "reveal_zoom"]], 0.5, 0],
-            5.5, ["case", [">=", 5.5, ["get", "reveal_zoom"]], 0.58, 0],
-            7, ["case", [">=", 7, ["get", "reveal_zoom"]], 0.65, 0],
-          ] as unknown as maplibregl.ExpressionSpecification,
+          // "step" rather than "interpolate": interpolating BETWEEN gated outputs blends across
+          // the gate, so a river showed at ~30% opacity below its own reveal zoom.
+          // The bucket boundaries are the DISTINCT reveal_zoom values the pipeline emits, which
+          // makes the comparison inside each bucket exact rather than approximate. A test
+          // (rivers.test.ts) fails if the data grows a threshold these buckets do not cover.
+          "line-opacity": buildRiverOpacity() as unknown as maplibregl.ExpressionSpecification,
         },
       });
 

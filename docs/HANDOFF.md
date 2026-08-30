@@ -34,6 +34,18 @@ as the release payload — it would freeze the live dashboard at a stale date.
 `test_release_payload_is_a_current_date_build_not_a_frozen_reference` now fails the suite if one
 is, so run a plain `python -m pipeline.run` before committing after any comparison run.
 
+**A `dataset-refresh[bot]` rebuilds and commits the data daily** (`.github/workflows/refresh.yml`:
+current-date `python -m pipeline.run`, then `pytest`). Consequences worth knowing:
+
+- Expect committed data files to change on `origin/main` without a human touching them, and
+  expect a merge conflict in `data/processed/` + `web/public/data/` on any branch that also
+  rebuilt. Resolve it by **regenerating** (`python -m pipeline.run`), never by picking a side —
+  the database is a build artifact.
+- The bot's build inherits whatever pipeline code is on main, so a pipeline change ships into the
+  daily payload automatically from the next run.
+- Any new test must pass against a bot-produced current-date payload, because the workflow runs
+  the suite immediately after rebuilding.
+
 - **Infrastructure icons** replace the old asset-dots. `src/icons.ts` is the single registry
   driving map + filter rows + legend (shape = function, colour = class identity, dashed frame =
   region-centroid placement). Icons rasterise **locally** to `addImage` — the zero-network
