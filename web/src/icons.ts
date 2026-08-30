@@ -87,7 +87,10 @@ export function hasIcon(cls: string): boolean {
 
 /** A full inline SVG string for a class, coloured by its class identity, optionally with the
  *  dashed region-placement frame. Used by the React legend/filter and to rasterise map images. */
-export function iconSVG(cls: string, opts: { size?: number; region?: boolean; color?: string } = {}): string {
+export function iconSVG(
+  cls: string,
+  opts: { size?: number; region?: boolean; color?: string; stacked?: boolean } = {},
+): string {
   const size = opts.size ?? 24;
   const color = opts.color ?? classColor(cls);
   const shape = ICON_SHAPES[cls];
@@ -99,12 +102,20 @@ export function iconSVG(cls: string, opts: { size?: number; region?: boolean; co
     // Dashed bracket frame = administrative-region placement (uncertainty), not a facility coordinate.
     ? `<path d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4" fill="none" stroke="${color}" stroke-width="1.4" stroke-dasharray="2 1.6" opacity="0.9"/>`
     : "";
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24">${body}${frame}</svg>`;
+  // "Stacked cards" backplate = SEVERAL assets share this administrative centroid. It is a
+  // cartographic marker for multiplicity, not a second location: the exact members are named in
+  // the hover/click card. Drawn behind the glyph and offset up-right so the shape stays readable.
+  const stack = opts.stacked
+    ? `<g fill="none" stroke="${color}" stroke-width="1.2" opacity="0.75">` +
+      `<rect x="7.5" y="2.6" width="14" height="14" rx="1.6"/>` +
+      `<rect x="5" y="5.1" width="14" height="14" rx="1.6" stroke-opacity="0.55"/></g>`
+    : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24">${stack}${body}${frame}</svg>`;
 }
 
-/** MapLibre image id for a class + precision variant. */
-export function iconImageId(cls: string, region: boolean): string {
-  return `asset-${hasIcon(cls) ? cls : "unknown"}${region ? "-region" : ""}`;
+/** MapLibre image id for a class + precision + multiplicity variant. */
+export function iconImageId(cls: string, region: boolean, stacked = false): string {
+  return `asset-${hasIcon(cls) ? cls : "unknown"}${region ? "-region" : ""}${stacked ? "-stack" : ""}`;
 }
 
 export const ICON_SCALE = 3;
@@ -119,18 +130,30 @@ let prewarmPromise: Promise<{ id: string; data: ImageData }[]> | null = null;
 export function prewarmIcons(): Promise<{ id: string; data: ImageData }[]> {
   if (prewarmPromise) return prewarmPromise;
   const px = 24 * ICON_SCALE;
-  const specs: { id: string; cls: string; region: boolean }[] = [];
+  const specs: { id: string; cls: string; region: boolean; stacked: boolean }[] = [];
+  // Every (class x precision x multiplicity) variant, including the "unknown" fallback, so no
+  // draw can ever miss an image and fall back to an undifferentiated dot.
   for (const cls of [...Object.keys(ICON_SHAPES), "__none__"]) {
     for (const region of [false, true]) {
-      specs.push({ id: iconImageId(cls === "__none__" ? "__none__" : cls, region), cls, region });
+      for (const stacked of [false, true]) {
+        specs.push({ id: iconImageId(cls, region, stacked), cls, region, stacked });
+      }
     }
   }
   prewarmPromise = Promise.all(
     specs.map((s) =>
-      rasterise(iconSVG(s.cls, { size: px, region: s.region }), px).then((data) => ({ id: s.id, data })),
+      rasterise(iconSVG(s.cls, { size: px, region: s.region, stacked: s.stacked }), px)
+        .then((data) => ({ id: s.id, data })),
     ),
   ).then((results) => results.filter((r): r is { id: string; data: ImageData } => r.data != null));
   return prewarmPromise;
+}
+
+/** Classes the map may render as points but that carry no deliberate shape. Should always be
+ *  empty: a new taxonomy class must get a designed glyph, not silently inherit the fallback
+ *  diamond. Surfaced in dev and asserted by a test so it cannot pass unnoticed. */
+export function unknownPointClasses(classes: Iterable<string>): string[] {
+  return [...new Set(classes)].filter((c) => c && !hasIcon(c)).sort();
 }
 
 function rasterise(svg: string, px: number): Promise<ImageData | null> {

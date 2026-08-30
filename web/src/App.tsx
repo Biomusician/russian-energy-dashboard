@@ -87,12 +87,22 @@ export default function App() {
         // Open at the deep-linked date if any, else at the present — the question a monitoring
         // dashboard is usually asked; the scrubber is there to walk backwards.
         setStep(initial.date ? stepFor(b.national.dates, initial.date) : b.national.dates.length - 1);
+        // A deep-linked region that no longer exists (renamed, rescoped, or simply mistyped) is
+        // dropped rather than left selected — a dossier for a phantom region is worse than none.
+        if (initial.selected && !b.snapshot.regions[initial.selected]) setSelected(null);
+        setCompareRegions((prev) => prev.filter((c) => b.snapshot.regions[c]));
+
         const allClasses = Object.keys(b.taxonomy.asset_classes);
         const allCauses = Object.keys(b.taxonomy.causes);
-        // A link may pin a filter SUBSET; otherwise everything is on. Intersect with the real
-        // key universe so a stale link can never inject a key the taxonomy no longer has.
-        const pick = (linked: string[] | undefined, all: string[]) =>
-          linked ? new Set(linked.filter((k) => all.includes(k))) : new Set(all);
+        // A link may pin a filter SUBSET; otherwise everything is on. Intersect with the real key
+        // universe so a stale link can never inject a key the taxonomy no longer has. If nothing
+        // survives the intersection the link is meaningless, so fall back to "all" rather than
+        // showing an empty map the reader cannot explain.
+        const pick = (linked: string[] | undefined, all: string[]) => {
+          if (!linked) return new Set(all);
+          const kept = linked.filter((k) => all.includes(k));
+          return new Set(kept.length ? kept : all);
+        };
         setFilters((f) => ({
           ...f,
           classes: pick(initial.classes, allClasses),
@@ -135,6 +145,16 @@ export default function App() {
     () => (bundle ? new Set(bundle.incidents.map((i) => i.asset_id).filter(Boolean)) : new Set<string>()),
     [bundle],
   );
+
+  // Other curated assets sharing the selected asset's administrative centroid (§9), so the
+  // dossier sub-card discloses the same multiplicity the stacked map marker signals.
+  const selectedAlsoHere = useMemo<Asset[]>(() => {
+    const a = selectedAsset?.asset;
+    if (!bundle || !a || a.precision !== "region") return [];
+    return bundle.assets.filter(
+      (o) => o !== a && o.precision === "region" && o.lon === a.lon && o.lat === a.lat,
+    );
+  }, [bundle, selectedAsset]);
 
   // Recent-activity halos (§16): count only the events RECORDED inside the trailing window,
   // ending at the scrubber. This is "activity" (new reports), never current impairment. In
@@ -264,6 +284,7 @@ export default function App() {
         selectedAsset={selectedAsset?.asset ?? null}
         onClearAsset={() => setSelectedAsset(null)}
         assetStruck={selectedAsset ? struckAssetIds.has(selectedAsset.asset.asset_id) : undefined}
+        assetAlsoHere={selectedAlsoHere}
         compareRegions={compareRegions}
         onToggleCompare={toggleCompare}
       />

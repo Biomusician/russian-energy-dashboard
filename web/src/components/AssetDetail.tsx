@@ -1,6 +1,6 @@
 import type { Asset } from "../types";
 import { CLASS_COLOR } from "../palette";
-import { fmtNum, titleCase } from "../data";
+import { displayName, fmtNum, titleCase } from "../data";
 import { iconSVG } from "../icons";
 
 /** Public, non-locating attributes for one infrastructure asset. The scope boundary is
@@ -24,12 +24,15 @@ export function assetRows(asset: Asset): [string, string][] {
 /** The shared inner body: icon header, attribute rows, source, precision note. Layout-neutral
  *  so it drops into both a floating card and an inline dossier block. */
 export function AssetAttributes({
-  asset, regionName, struck,
+  asset, regionName, struck, alsoHere,
 }: {
   asset: Asset;
   regionName?: string;
   /** Whether this asset is named in disruption reporting — identity only, never a location. */
   struck?: boolean;
+  /** Other assets sharing this administrative centroid. Named explicitly so a stacked marker is
+   *  never read as the only facility there (§9). */
+  alsoHere?: Asset[];
 }) {
   const region = asset.precision === "region";
   const rows = assetRows(asset);
@@ -66,24 +69,38 @@ export function AssetAttributes({
           Public-coordinate infrastructure point.
         </div>
       )}
+      {alsoHere && alsoHere.length > 0 && (
+        <div style={{ marginTop: 6, borderTop: "1px solid var(--line-soft)", paddingTop: 5 }}>
+          <div style={{ fontSize: 10, color: "var(--amber)", lineHeight: 1.4 }}>
+            {alsoHere.length + 1} assets share this administrative centroid — this marker stands
+            for all of them, not one facility:
+          </div>
+          <ul style={{ margin: "4px 0 0", paddingLeft: 14, fontSize: 10.5, color: "var(--text-dim)", lineHeight: 1.5 }}>
+            {alsoHere.slice(0, 5).map((a) => (
+              <li key={a.asset_id}>{displayName(a.name) || titleCase(a.asset_class)}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </>
   );
 }
 
 /** Floating hover card used on the map. Positioned at a screen point. */
 export function AssetHoverCard({
-  asset, x, y, regionName,
+  asset, x, y, regionName, alsoHere,
 }: {
   asset: Asset;
   x: number;
   y: number;
   regionName?: string;
+  alsoHere?: Asset[];
 }) {
   const region = asset.precision === "region";
   const color = CLASS_COLOR[asset.asset_class] ?? "#5b6b78";
   return (
     <div className="map-hover" style={{ left: x, top: y, borderColor: region ? "#e0b83a" : color, maxWidth: 232 }}>
-      <AssetAttributes asset={asset} regionName={regionName} />
+      <AssetAttributes asset={asset} regionName={regionName} alsoHere={alsoHere} />
     </div>
   );
 }

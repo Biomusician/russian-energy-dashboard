@@ -3,7 +3,7 @@ import maplibregl from "maplibre-gl";
 import type { FilterState, FlyTarget } from "../App";
 import type { Asset, Bundle, Incident } from "../types";
 import { CLASS_COLOR, ESDI_DELTA_STOPS, SEVERITY_STOPS } from "../palette";
-import { addDays, fmtDelta, fmtNum, loadContextLayer, stepFor } from "../data";
+import { fmtDelta, fmtNum, loadContextLayer, windowRef } from "../data";
 import { iconImageId, prewarmIcons } from "../icons";
 import { AssetHoverCard } from "./AssetDetail";
 import type { CameraState } from "../urlState";
@@ -104,7 +104,7 @@ export default function MapPanel({
   const [ready, setReady] = useState(false);
   const [assetLayersReady, setAssetLayersReady] = useState(false);
   const [hover, setHover] = useState<HoverInfo | null>(null);
-  const [assetHover, setAssetHover] = useState<{ x: number; y: number; asset: Asset } | null>(null);
+  const [assetHover, setAssetHover] = useState<{ x: number; y: number; asset: Asset; alsoHere: Asset[] } | null>(null);
   const [labels, setLabels] = useState<ScreenLabel[]>([]);
   // Lazy-loaded context layers (§16): which files we've fetched, and the rivers FC (needed
   // for the HTML label overlay, which the map source alone can't drive).
@@ -133,11 +133,40 @@ export default function MapPanel({
    *  declutter priority (§7: lower = placed first, wins collisions) from class → capacity/
    *  voltage → struck → region-precision. Priority is DISPLAY decluttering only, never target
    *  value. */
+  /** Region-precision assets placed on the SAME administrative centroid, grouped by that exact
+   *  point (§9 audit). 14 of 35 curated assets share a centroid with another — four LNG terminals
+   *  land on one Leningrad point — so with collision-declutter on, only one would ever draw and
+   *  the map would assert a facility that is actually several. One marker per centroid is drawn,
+   *  flagged "stacked", and the card names every member. The members are NOT displaced: inventing
+   *  offsets would fabricate geography the dataset does not have. */
+  const centroidGroups = useMemo(() => {
+    const byPoint = new Map<string, number[]>();
+    bundle.assets.forEach((a, i) => {
+      if (a.precision !== "region") return;
+      const k = `${a.lon},${a.lat}`;
+      const list = byPoint.get(k);
+      if (list) list.push(i);
+      else byPoint.set(k, [i]);
+    });
+    // index -> {count, members, representative}
+    const info = new Map<number, { count: number; members: number[]; rep: number }>();
+    for (const members of byPoint.values()) {
+      const rep = members[0];
+      for (const i of members) info.set(i, { count: members.length, members, rep });
+    }
+    return info;
+  }, [bundle.assets]);
+
   const assetPoints = useMemo<GeoJSON.FeatureCollection>(() => ({
     type: "FeatureCollection",
     features: bundle.assets.map((a, i) => {
       const region = a.precision === "region";
       const struck = struckAssetIds.has(a.asset_id);
+      const group = centroidGroups.get(i);
+      const stacked = (group?.count ?? 1) > 1;
+      // Only the group representative is drawn/hit-tested; the rest stay in the source so their
+      // feature ids (and therefore selection state) remain stable and addressable from search.
+      const rep = !group || group.rep === i;
       const classBase = (CLASS_PRIO[a.asset_class] ?? 6) * 1000;
       const capBoost = Math.min(400, (a.capacity_mw ?? 0) / 12 + (a.capacity_mtpa ?? 0) * 25 + (a.capacity_bcm_y ?? 0) * 20);
       const vBoost = Math.min(300, (a.voltage_kv ?? 0) / 2);
@@ -150,15 +179,17 @@ export default function MapPanel({
           asset_class: a.asset_class,
           name: a.name ?? "",
           region_code: a.region_code,
-          img: iconImageId(a.asset_class, region),
+          img: iconImageId(a.asset_class, region, stacked),
           region: region ? 1 : 0,
           struck: struck ? 1 : 0,
+          rep: rep ? 1 : 0,
+          stack: group?.count ?? 1,
           prio: Math.round(prio),
         },
         geometry: { type: "Point" as const, coordinates: [a.lon, a.lat] },
       };
     }),
-  }), [bundle.assets, struckAssetIds]);
+  }), [bundle.assets, struckAssetIds, centroidGroups]);
 
   /** One marker per region that has recorded events, sized by how many.
    *  Placed on the region centroid: these are region-scoped records, and putting a
@@ -562,7 +593,14 @@ export default function MapPanel({
       const asset = f && assetByKey.get(String(f.properties?.key ?? ""));
       if (!asset) return;
       m.getCanvas().style.cursor = "pointer";
-      setAssetHover({ x: e.point.x, y: e.point.y, asset });
+      // A stacked centroid marker stands for several assets; name the others so the marker is
+      // never read as the only facility there.
+      const idx = Number(String(f.properties?.key ?? "").split(":").pop());
+      const group = centroidGroups.get(idx);
+      const alsoHere = group
+        ? group.members.filter((j) => j !== idx).map((j) => bundle.assets[j]).filter(Boolean)
+        : [];
+      setAssetHover({ x: e.point.x, y: e.point.y, asset, alsoHere });
     };
     const leave = () => { setAssetHover(null); m.getCanvas().style.cursor = ""; };
     const click = (e: maplibregl.MapLayerMouseEvent) => {
@@ -600,10 +638,13 @@ export default function MapPanel({
     // clear-and-set is cheaper than iterating; we track the previous id in a ref).
     const prev = selectedAssetIdRef.current;
     if (prev != null) m.setFeatureState({ source: "assets", id: prev }, { selected: false });
-    const id = idOf(selectedAssetKey);
+    const picked = idOf(selectedAssetKey);
+    // Selecting a member hidden behind a shared centroid must highlight the marker that is
+    // actually drawn for it — the group representative — or the halo would land on nothing.
+    const id = picked != null ? (centroidGroups.get(picked)?.rep ?? picked) : null;
     if (id != null) m.setFeatureState({ source: "assets", id }, { selected: true });
     selectedAssetIdRef.current = id;
-  }, [ready, selectedAssetKey]);
+  }, [ready, selectedAssetKey, centroidGroups]);
 
   // --- choropleth values --------------------------------------------------
   useEffect(() => {
@@ -615,7 +656,8 @@ export default function MapPanel({
     const dates = bundle.national.dates;
     const deltaDays =
       filters.metric === "esdi_delta_30d" ? 30 : filters.metric === "esdi_delta_90d" ? 90 : 0;
-    const refStep = deltaDays ? stepFor(dates, addDays(dates[step], -deltaDays)) : step;
+    // Weekly series: resolve to the nearest earlier step, never past the scrubber.
+    const refStep = deltaDays ? windowRef(dates, step, deltaDays).comparisonStep : step;
     for (const r of bundle.regions) {
       const series = bundle.regional.regions[r.code]?.esdi;
       let value: number;
@@ -670,7 +712,13 @@ export default function MapPanel({
       m.setLayoutProperty("asset-symbols", "visibility", assetVis);
       m.setLayoutProperty("asset-hit", "visibility", assetVis);
       // Class visibility is applied as a layer filter (the source holds every asset).
-      const classFilter = ["in", ["get", "asset_class"], ["literal", [...filters.classes]]] as unknown as maplibregl.FilterSpecification;
+      // Only the representative of a shared administrative centroid is drawn or hit-tested, so a
+      // stack renders as one honest marker rather than N identical glyphs fighting for the pixel.
+      const classFilter = [
+        "all",
+        ["in", ["get", "asset_class"], ["literal", [...filters.classes]]],
+        ["==", ["get", "rep"], 1],
+      ] as unknown as maplibregl.FilterSpecification;
       m.setFilter("asset-symbols", classFilter);
       m.setFilter("asset-hit", classFilter);
     }
@@ -813,6 +861,9 @@ export default function MapPanel({
   }, [bundle.snapshot.regions, regionMeta]);
 
   const isDelta = filters.metric === "esdi_delta_30d" || filters.metric === "esdi_delta_90d";
+  const deltaSpanDays = isDelta
+    ? windowRef(bundle.national.dates, step, filters.metric === "esdi_delta_30d" ? 30 : 90).actualComparisonDays
+    : 0;
   const metricLabel =
     filters.metric === "esdi" ? "Disruption exposure"
     : filters.metric === "incidents" ? "Recorded events"
@@ -874,6 +925,9 @@ export default function MapPanel({
         {isDelta && (
           <div style={{ fontSize: 9, color: "var(--text-faint)", marginTop: 3, lineHeight: 1.35 }}>
             Modelled index change over the window — not observed physical damage.
+            {/* The series is weekly, so say the span actually compared rather than implying
+                an exact 30/90-day observation. */}
+            <br />Actual span compared: {deltaSpanDays} days.
           </div>
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 7, borderTop: "1px solid var(--line)", paddingTop: 6 }}>
@@ -914,6 +968,7 @@ export default function MapPanel({
           x={assetHover.x}
           y={assetHover.y}
           regionName={regionMeta.get(assetHover.asset.region_code)?.name}
+          alsoHere={assetHover.alsoHere}
         />
       )}
     </div>

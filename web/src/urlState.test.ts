@@ -101,3 +101,67 @@ describe("decodeDeepLink", () => {
     expect(decodeDeepLink("?a=30").activityWindow).toBe("30d");
   });
 });
+
+// §7 of the release gate: a hand-mangled or stale link must sanitise/default, never crash and
+// never produce a view that misrepresents what it is showing.
+describe("decodeDeepLink — hostile and malformed input", () => {
+  it("survives junk without throwing and yields an empty (all-default) link", () => {
+    for (const q of [
+      "", "?", "&&&", "m=", "a=", "d=", "r=", "cls=", "ly=", "cam=", "cmp=",
+      "m=%%%", "cam=,,", "cam=1", "cam=1,2", "d=2026-13-45x", "a=999", "%E0%A4%A",
+      "__proto__=x", "cls=__proto__", "ly=" + "x".repeat(5000),
+    ]) {
+      expect(() => decodeDeepLink(q)).not.toThrow();
+    }
+    expect(decodeDeepLink("m=%%%&a=999&d=nope").metric).toBeUndefined();
+  });
+
+  it("rejects an out-of-vocabulary metric and activity window", () => {
+    expect(decodeDeepLink("m=esdi_delta_7d").metric).toBeUndefined();
+    expect(decodeDeepLink("a=45").activityWindow).toBeUndefined();
+  });
+
+  it("rejects a structurally wrong date but keeps a well-formed one", () => {
+    expect(decodeDeepLink("d=28-08-2026").date).toBeUndefined();
+    expect(decodeDeepLink("d=2026-08-28").date).toBe("2026-08-28");
+  });
+
+  it("clamps an absurd zoom into the map's real range instead of blanking the map", () => {
+    expect(decodeDeepLink("cam=40,55,9999").camera!.zoom).toBe(9);
+    expect(decodeDeepLink("cam=40,55,-50").camera!.zoom).toBe(0);
+  });
+
+  it("clamps an off-globe camera centre", () => {
+    const c = decodeDeepLink("cam=999,-999,4").camera!;
+    expect(c.lng).toBe(180);
+    expect(c.lat).toBe(-85);
+  });
+
+  it("drops a camera that is not numeric at all", () => {
+    expect(decodeDeepLink("cam=north,west,close").camera).toBeUndefined();
+  });
+
+  it("de-duplicates a repeated compare list before capping", () => {
+    expect(decodeDeepLink("cmp=RU-ROS,RU-ROS,RU-ROS,RU-KDA").compare).toEqual(["RU-ROS", "RU-KDA"]);
+  });
+
+  it("trims whitespace in a compare list", () => {
+    expect(decodeDeepLink("cmp=%20RU-ROS%20,%20RU-KDA%20").compare).toEqual(["RU-ROS", "RU-KDA"]);
+  });
+
+  it("keeps unknown filter keys as strings for the app to intersect away", () => {
+    // Validation against the live taxonomy happens in App (it owns the key universe); the
+    // decoder must not silently discard, or a legitimate key could vanish on a taxonomy change.
+    expect(decodeDeepLink("cls=refinery,not_a_class").classes).toEqual(["refinery", "not_a_class"]);
+  });
+
+  it("never encodes a coordinate for a selected asset (scope)", () => {
+    // The link vocabulary has no asset-position key at all; only region code + camera exist.
+    const keys = [...new URLSearchParams(
+      "m=d30&a=90&r=RU-ROS&d=2026-06-01&cls=refinery&ly=lines&cam=42,49,4&cmp=RU-KDA",
+    ).keys()];
+    expect(keys).not.toContain("asset");
+    expect(keys).not.toContain("lat");
+    expect(keys).not.toContain("lon");
+  });
+});

@@ -1,5 +1,5 @@
 import type { Bundle } from "../types";
-import { addDays, fmtDelta, fmtNum, stepFor, titleCase } from "../data";
+import { fmtDelta, fmtNum, titleCase, windowRef } from "../data";
 import { severityColor } from "../palette";
 import { Sparkline } from "./ui";
 
@@ -19,7 +19,9 @@ export default function ComparisonTray({
 }) {
   if (codes.length < 2) return null;
   const dates = bundle.national.dates;
-  const refStep = stepFor(dates, addDays(dates[step], -90));
+  // Same weekly-series resolution as every other change view, so the columns are comparable.
+  const ref = windowRef(dates, step, 90);
+  const refStep = ref.comparisonStep;
 
   const cols = codes.map((code) => {
     const snap = bundle.snapshot.regions[code];
@@ -54,7 +56,9 @@ export default function ComparisonTray({
               <div className="num" style={{ fontSize: 22, color, lineHeight: 1.1 }}>{fmtNum(esdiNow, 1)}</div>
               <div className="eyebrow" style={{ marginBottom: 4 }}>ESDI{occupied ? " · occupied" : ""}</div>
               <Sparkline values={(series ?? []).slice(0, step + 1)} markIndex={step} width={150} height={30} color={color} ariaLabel={`${snap?.name ?? code} ESDI trajectory`} />
-              <div className="compare-kv"><span>90-day change</span><span className="num" style={{ color: changeColor }}>{fmtDelta(change)}</span></div>
+              <div className="compare-kv" title={`Weekly series: compared with ${ref.comparisonDate}, ${ref.actualComparisonDays} days back.`}>
+                <span>90-day change</span><span className="num" style={{ color: changeColor }}>{fmtDelta(change)}</span>
+              </div>
               <div className="compare-kv"><span>Events to date</span><span className="num">{snap?.incident_count ?? 0}</span></div>
               <div className="compare-kv"><span>Unresolved</span><span className="num">{snap?.unresolved_count ?? 0}</span></div>
               <div className="compare-kv">

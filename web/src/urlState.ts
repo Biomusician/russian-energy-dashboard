@@ -135,9 +135,25 @@ export function decodeDeepLink(search: string): DeepLink {
   const cam = p.get("cam");
   if (cam) {
     const [lng, lat, zoom] = cam.split(",").map(Number);
-    if ([lng, lat, zoom].every(Number.isFinite)) out.camera = { lng, lat, zoom };
+    // Clamp rather than reject a merely out-of-range camera: an absurd zoom or an off-globe
+    // centre from a mangled link should land somewhere sensible, not blank the map. Bounds match
+    // the map's own maxZoom and the valid lat/lon domain.
+    if ([lng, lat, zoom].every(Number.isFinite)) {
+      out.camera = {
+        lng: clamp(lng, -180, 180),
+        lat: clamp(lat, -85, 85),
+        zoom: clamp(zoom, 0, 9),
+      };
+    }
   }
   const cmp = p.get("cmp");
-  if (cmp) out.compare = cmp.split(",").filter(Boolean).slice(0, 3);
+  if (cmp) {
+    // De-duplicate before capping, so "A,A,A,B" keeps two regions rather than one.
+    out.compare = [...new Set(cmp.split(",").map((s) => s.trim()).filter(Boolean))].slice(0, 3);
+  }
   return out;
+}
+
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.min(hi, Math.max(lo, v));
 }

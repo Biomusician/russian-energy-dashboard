@@ -30,7 +30,7 @@ const TABS: {
 
 export default function Dossier({
   bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSelect,
-  selectedAsset, onClearAsset, assetStruck, compareRegions, onToggleCompare,
+  selectedAsset, onClearAsset, assetStruck, assetAlsoHere, compareRegions, onToggleCompare,
 }: {
   bundle: Bundle;
   step: number;
@@ -45,6 +45,8 @@ export default function Dossier({
   onClearAsset?: () => void;
   /** Whether the selected asset is named in disruption reporting (identity, not a location). */
   assetStruck?: boolean;
+  /** Other assets on the same administrative centroid as the selected one (§9). */
+  assetAlsoHere?: Asset[];
   /** Regions pinned to the comparison tray (§17), and the toggle for the current one. */
   compareRegions?: string[];
   onToggleCompare?: (code: string) => void;
@@ -109,6 +111,7 @@ export default function Dossier({
             asset={selectedAsset}
             regionName={bundle.snapshot.regions[selectedAsset.region_code]?.name}
             struck={assetStruck}
+            alsoHere={assetAlsoHere}
           />
         </div>
       )}

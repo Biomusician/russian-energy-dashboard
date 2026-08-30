@@ -156,3 +156,76 @@ export function titleCase(key: string): string {
 export function fmtDelta(v: number, digits = 2): string {
   return (v > 0 ? "+" : v < 0 ? "−" : "±") + Math.abs(v).toFixed(digits);
 }
+
+/** What a "last N days" comparison ACTUALLY resolved to.
+ *
+ *  The index series is weekly, so a "30-day change" is really a comparison against the nearest
+ *  earlier weekly step — typically 28 or 35 days back, and less near the start of the series.
+ *  Every consumer gets the real numbers so the UI can label a 28-day comparison honestly instead
+ *  of asserting an exact 30-day observation. `comparisonStep <= step` always, so a window can
+ *  never reach into the future of the scrubber. */
+export interface WindowRef {
+  requestedWindowDays: number;
+  actualComparisonDays: number;
+  comparisonDate: string;
+  comparisonStep: number;
+  /** True when the series starts less than the requested window before the scrubber, so the
+   *  comparison is necessarily shorter than asked for. */
+  truncatedBySeriesStart: boolean;
+}
+
+export function windowRef(dates: string[], step: number, requestedWindowDays: number): WindowRef {
+  const here = Math.max(0, Math.min(dates.length - 1, step));
+  const target = addDays(dates[here], -requestedWindowDays);
+  const comparisonStep = Math.min(here, stepFor(dates, target));
+  const comparisonDate = dates[comparisonStep];
+  return {
+    requestedWindowDays,
+    actualComparisonDays: daysBetween(comparisonDate, dates[here]),
+    comparisonDate,
+    comparisonStep,
+    truncatedBySeriesStart: comparisonStep === 0 && dates[0] > target,
+  };
+}
+
+/** Whole days from `a` to `b` (negative if b precedes a). */
+export function daysBetween(a: string, b: string): number {
+  const p = (iso: string) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    return Date.UTC(y, m - 1, d);
+  };
+  return Math.round((p(b) - p(a)) / 86400000);
+}
+
+/** Rows whose date falls in the half-open trailing window (windowStart, windowEnd].
+ *
+ *  Half-open on purpose: the window END is the scrubber date and is INCLUDED (something recorded
+ *  today is "what changed today"), while the start boundary is excluded so adjacent windows do
+ *  not double-count a row. Nothing dated after the scrubber can ever pass, which is what keeps
+ *  the panel honest when the reader scrubs into history. */
+export function inWindow<T>(
+  rows: readonly T[],
+  dateOf: (row: T) => string | null | undefined,
+  windowStart: string,
+  windowEnd: string,
+  keep?: (row: T) => boolean,
+): T[] {
+  return rows.filter((r) => {
+    const d = dateOf(r);
+    if (!d || d <= windowStart || d > windowEnd) return false;
+    return keep ? keep(r) : true;
+  });
+}
+
+/** First line of a name, for single-line UI rows.
+ *
+ *  A few curated corpus entries are multi-line complexes ("Ust-Luga Multimodal Complex\n* Ust-Luga
+ *  Oil JSC terminal\n* ..."). Rendered raw in a compact row that collapses into an unreadable run
+ *  of text, so rows take the head and mark that more is folded in. The underlying data is left
+ *  alone — this is presentation only. */
+export function displayName(name: string | null | undefined): string {
+  if (!name) return "";
+  const [head, ...rest] = name.split("\n");
+  const trimmed = head.trim();
+  return rest.some((r) => r.trim()) ? `${trimmed} (+${rest.filter((r) => r.trim()).length})` : trimmed;
+}

@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import type { Asset, Bundle } from "../types";
-import { titleCase } from "../data";
+import { displayName, titleCase } from "../data";
 import { iconSVG } from "../icons";
 
 /** Region / asset search (§21). Type a name to jump to a region or a piece of infrastructure.
@@ -79,7 +79,7 @@ export default function SearchBox({
                 <button key={`${a.asset_id}:${i}`} className="search-row" onClick={() => pickAsset(a, i)}>
                   <span className="search-glyph" aria-hidden="true"
                         dangerouslySetInnerHTML={{ __html: iconSVG(a.asset_class, { size: 15, region: a.precision === "region" }) }} />
-                  <span className="search-name">{a.name}</span>
+                  <span className="search-name">{displayName(a.name)}</span>
                   <span className="search-meta">{titleCase(a.asset_class)}</span>
                 </button>
               ))}

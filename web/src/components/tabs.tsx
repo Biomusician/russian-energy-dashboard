@@ -4,7 +4,7 @@
 
 import { useMemo, useState } from "react";
 import type { Bundle, CoverageDetail, Incident, LiveDisruption, RegionSnapshot } from "../types";
-import { addDays, fmtDate, fmtDelta, fmtNum, stepFor, titleCase } from "../data";
+import { addDays, displayName, fmtDate, fmtDelta, fmtNum, inWindow, titleCase, windowRef } from "../data";
 import { classColor, evidence, severityColor } from "../palette";
 import { Bar, EventRow, EvidenceChip, RecoveryLine, Sparkline, Tile } from "./ui";
 
@@ -52,8 +52,8 @@ function TrajectorySpark({ series, dates, step, color }: { series: number[] | un
   const upto = series.slice(0, step + 1);
   if (upto.length < 2) return null;
   const now = upto[upto.length - 1];
-  const refStep = stepFor(dates, addDays(dates[step], -90));
-  const change = now - (series[refStep] ?? 0);
+  const ref = windowRef(dates, step, 90);
+  const change = now - (series[ref.comparisonStep] ?? 0);
   const peak = Math.max(...upto);
   const changeColor = change > 0.05 ? "#e08a5a" : change < -0.05 ? "#4a9fd4" : "var(--text-dim)";
   return (
@@ -64,7 +64,9 @@ function TrajectorySpark({ series, dates, step, color }: { series: number[] | un
       </div>
       <Sparkline values={upto} markIndex={step} color={color ?? "var(--accent)"} ariaLabel="ESDI trajectory" />
       <div style={{ display: "flex", gap: 16, marginTop: 6, fontSize: 10.5, color: "var(--text-dim)" }}>
-        <span>90-day change <span className="num" style={{ color: changeColor }}>{fmtDelta(change)}</span></span>
+        <span title={`Weekly series: compared with ${fmtDate(ref.comparisonDate)}, ${ref.actualComparisonDays} days back.`}>
+          90-day change <span className="num" style={{ color: changeColor }}>{fmtDelta(change)}</span>
+        </span>
         <span>peak to date <span className="num">{fmtNum(peak, 1)}</span></span>
       </div>
     </div>
@@ -82,30 +84,37 @@ export function WhatChangedTab(p: TabProps) {
   const { bundle, step, selected, currentDate, onTab } = p;
   const [win, setWin] = useState<number>(30);
   const dates = bundle.national.dates;
+  // Every window is a half-open interval (windowStart, currentDate] anchored on the SCRUBBER,
+  // never on wall-clock now — so scrubbing into history shows that week's picture and nothing
+  // dated after it can appear.
   const windowStart = addDays(currentDate, -win);
-  const refStep = stepFor(dates, windowStart);
+  const ref = windowRef(dates, step, win);
   const scope = selected ? bundle.snapshot.regions[selected] : null;
   const regionName = (code: string | null | undefined) =>
     (code && bundle.snapshot.regions[code]?.name) || undefined;
 
   const newEvents = useMemo(
-    () => bundle.incidents
-      .filter((i) => i.date > windowStart && i.date <= currentDate && (!selected || i.region_code === selected))
+    () => inWindow(bundle.incidents, (i) => i.date, windowStart, currentDate,
+                   (i) => !selected || i.region_code === selected)
       .sort((a, b) => b.date.localeCompare(a.date)),
     [bundle.incidents, windowStart, currentDate, selected],
   );
 
+  // Recovery evidence comes from the COMPLETE recovery_events log, never live_disruptions:
+  // that array holds only facilities still carrying disruption weight (and is truncated), so a
+  // fully-restored facility is absent from it by construction — which would silently undercount
+  // exactly the restorations this panel exists to surface.
   const newRecovery = useMemo(
-    () => bundle.snapshot.live_disruptions.filter((d) => {
-      const od = d.recovery.observed_date;
-      return !!od && od > windowStart && od <= currentDate && (!selected || d.region_code === selected);
-    }),
-    [bundle.snapshot.live_disruptions, windowStart, currentDate, selected],
+    () => inWindow(bundle.snapshot.recovery_events ?? [], (e) => e.evidence_date,
+                   windowStart, currentDate, (e) => !selected || e.region_code === selected)
+      .sort((a, b) => b.evidence_date.localeCompare(a.evidence_date)),
+    [bundle.snapshot.recovery_events, windowStart, currentDate, selected],
   );
+  const measuredDurations = newRecovery.filter((e) => e.counts_toward_observed_episodes).length;
 
   const series = selected ? bundle.regional.regions[selected]?.esdi : bundle.national.esdi;
   const esdiNow = series?.[step] ?? 0;
-  const esdiThen = series?.[refStep] ?? 0;
+  const esdiThen = series?.[ref.comparisonStep] ?? 0;
   const esdiDelta = esdiNow - esdiThen;
   const deltaColor = esdiDelta > 0.05 ? "#e08a5a" : esdiDelta < -0.05 ? "#4a9fd4" : "var(--text-dim)";
 
@@ -127,7 +136,8 @@ export function WhatChangedTab(p: TabProps) {
           Three independent measures over the {win} days to {fmtDate(currentDate)}
           {scope ? ` in ${scope.name}` : " across the monitored area"}. Shown separately on
           purpose: a new event, a new restoration, and a change in the exposure index are
-          different things and never sum.
+          different things and never sum. Everything is anchored on the timeline position, so
+          nothing dated after {fmtDate(currentDate)} appears.
         </Note>
       </Block>
 
@@ -153,25 +163,69 @@ export function WhatChangedTab(p: TabProps) {
         right={<span className="num" style={{ fontSize: 15, color: "var(--green)" }}>{newRecovery.length}</span>}
       >
         {newRecovery.length === 0 ? (
-          <Note>No restoration observed in this window. Absence of evidence is not restoration.</Note>
+          <Note>No restoration evidence dated in this window. Absence of evidence is not restoration.</Note>
         ) : (
-          newRecovery.slice(0, 6).map((d, i) => (
-            <div key={i} style={{ padding: "6px 0", borderBottom: i < Math.min(6, newRecovery.length) - 1 ? "1px solid var(--line-soft)" : undefined }}>
-              <div className="event-top">
-                <span className="event-name">{d.name ?? titleCase(d.asset_class ?? "facility")}</span>
-                <span className="num" style={{ fontSize: 11, color: "var(--text-dim)" }}>{fmtDate(d.recovery.observed_date!)}</span>
+          <>
+            {newRecovery.slice(0, 6).map((e, i) => (
+              <div key={`${e.episode_id}:${e.evidence_date_kind}`}
+                   style={{ padding: "6px 0", borderBottom: i < Math.min(6, newRecovery.length) - 1 ? "1px solid var(--line-soft)" : undefined }}>
+                <div className="event-top">
+                  <span className="event-name">{displayName(e.asset_name) || titleCase(e.asset_class ?? "facility")}</span>
+                  <span className="num" style={{ fontSize: 11, color: "var(--text-dim)", whiteSpace: "nowrap" }}>{fmtDate(e.evidence_date)}</span>
+                </div>
+                <div className="event-meta">
+                  {/* A partial restart is not a full restoration; the row says which it is. */}
+                  <span className="tag">
+                    {e.evidence_date_kind === "partial_restart" ? "partial restart" : "restoration observed"}
+                  </span>
+                  {e.evidence_family && <span className="tag">{titleCase(e.evidence_family)}</span>}
+                  <EvidenceChip kind={e.scoring_evidence_kind} />
+                  {e.counts_toward_observed_episodes && e.observed_days != null && (
+                    <span className="tag">{fmtNum(e.observed_days, 0)} d to restore</span>
+                  )}
+                  {!selected && e.region_code && <span className="tag">{regionName(e.region_code)}</span>}
+                </div>
+                {e.what_source_establishes && (
+                  <div style={{ fontSize: 10.5, color: "var(--text-dim)", marginTop: 4, lineHeight: 1.45 }}>
+                    {e.what_source_establishes}
+                  </div>
+                )}
+                {e.sources.length > 0 && (
+                  <div className="src-list">
+                    {e.sources.slice(0, 2).map((s, n) => (
+                      <a key={n} href={s.url} target="_blank" rel="noreferrer noopener">↗ source</a>
+                    ))}
+                  </div>
+                )}
               </div>
-              {!selected && d.region_code && <div className="eyebrow" style={{ marginTop: 2 }}>{regionName(d.region_code)}</div>}
-              <RecoveryLine r={d.recovery} />
-            </div>
-          ))
+            ))}
+            {newRecovery.length > 6 && (
+              <button className="linklike" onClick={() => onTab("Reconstitution")}>
+                +{newRecovery.length - 6} more — open the Recovery tab
+              </button>
+            )}
+            <Note>
+              {measuredDurations} of these {newRecovery.length === 1 ? "is" : "are"} a measured
+              restoration duration; the rest are dated evidence without a usable duration.
+            </Note>
+          </>
         )}
       </Block>
 
       <Block title="Change in exposure index (ESDI)">
         <KV k={scope ? `${scope.name} — now` : "Monitored area — now"} v={<span className="num">{fmtNum(esdiNow, 2)}</span>} />
-        <KV k={`${win} days ago · ${fmtDate(dates[refStep])}`} v={<span className="num">{fmtNum(esdiThen, 2)}</span>} />
+        <KV
+          k={`Compared with ${fmtDate(ref.comparisonDate)}`}
+          v={<span className="num">{fmtNum(esdiThen, 2)}</span>}
+          hint={`The index series is weekly, so the nearest earlier step to ${win} days back is used.`}
+        />
         <KV k="Change over the window" v={<span className="num" style={{ color: deltaColor }}>{fmtDelta(esdiDelta)}</span>} />
+        <Note>
+          {/* Never assert an exact 30/90-day observation when the weekly series resolved to a
+              different span — say the real one. */}
+          Actual comparison span: <b>{ref.actualComparisonDays} days</b> (asked for {win}).
+          {ref.truncatedBySeriesStart && " The series begins less than a full window before this date."}
+        </Note>
         <Note>
           A modelled change in the exposure index — driven by new events and by recovery
           decay — not a measure of observed physical damage. On the map, the “Change in ESDI”
