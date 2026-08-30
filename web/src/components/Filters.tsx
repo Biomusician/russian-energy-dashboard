@@ -170,6 +170,27 @@ export default function Filters({
         icon={(k) => k}
       />
 
+      {/* Icon grammar legend (§11): these same glyphs mark the map, so shape = function and
+          colour = class identity are learned once and read everywhere. The precision frame is
+          the one piece the map adds that the rows cannot show, so it is spelled out here. */}
+      <div className="ctl-group icon-key">
+        <div className="eyebrow" style={{ marginBottom: 6 }}>Reading the map markers</div>
+        <div className="note" style={{ marginTop: 0 }}>
+          Shape shows the infrastructure function; colour repeats the type identity above.
+          Disruption is never drawn on the marker — it stays on the region shading and halo.
+        </div>
+        <div className="precision-key">
+          <span className="pk-swatch" aria-hidden="true"
+                dangerouslySetInnerHTML={{ __html: iconSVG("refinery", { size: 20 }) }} />
+          <span>Solid — a mapped public facility coordinate.</span>
+        </div>
+        <div className="precision-key">
+          <span className="pk-swatch" aria-hidden="true"
+                dangerouslySetInnerHTML={{ __html: iconSVG("refinery", { size: 20, region: true }) }} />
+          <span>Dashed frame — placed on its administrative region, not a facility location.</span>
+        </div>
+      </div>
+
       <Group
         title="Disruption cause"
         keys={causeKeys}

@@ -3,8 +3,9 @@ import maplibregl from "maplibre-gl";
 import type { FilterState } from "../App";
 import type { Asset, Bundle, Incident } from "../types";
 import { CLASS_COLOR, SEVERITY_STOPS } from "../palette";
-import { fmtNum, loadContextLayer, titleCase } from "../data";
-import { iconImageId, prewarmIcons, iconSVG } from "../icons";
+import { fmtNum, loadContextLayer } from "../data";
+import { iconImageId, prewarmIcons } from "../icons";
+import { AssetHoverCard } from "./AssetDetail";
 
 /** The map deliberately has no basemap.
  *
@@ -837,54 +838,12 @@ export default function MapPanel({
       )}
 
       {assetHover && (
-        <AssetCard
+        <AssetHoverCard
           asset={assetHover.asset}
           x={assetHover.x}
           y={assetHover.y}
           regionName={regionMeta.get(assetHover.asset.region_code)?.name}
         />
-      )}
-    </div>
-  );
-}
-
-/** Compact infrastructure hover card (§9). Public attributes only — NEVER a coordinate,
- *  distance, range, or route. Region-precision assets say so prominently. */
-function AssetCard({ asset, x, y, regionName }: { asset: Asset; x: number; y: number; regionName?: string }) {
-  const region = asset.precision === "region";
-  const color = CLASS_COLOR[asset.asset_class] ?? "#5b6b78";
-  const rows: [string, string][] = [];
-  if (asset.capacity_mw) rows.push(["Capacity", `${fmtNum(asset.capacity_mw, 0)} MW`]);
-  if (asset.capacity_mtpa) rows.push(["Capacity", `${fmtNum(asset.capacity_mtpa, 1)} MTPA`]);
-  if (asset.capacity_bcm_y) rows.push(["Capacity", `${fmtNum(asset.capacity_bcm_y, 2)} bcm/y raw gas`]);
-  if (asset.voltage_kv) rows.push(["Voltage", `${fmtNum(asset.voltage_kv, 0)} kV`]);
-  if (asset.fuel) rows.push(["Fuel", titleCase(asset.fuel)]);
-  if (asset.operator || asset.owner) rows.push(["Operator", asset.operator || asset.owner || ""]);
-  if (asset.status) rows.push(["Status", titleCase(asset.status)]);
-  return (
-    <div className="map-hover" style={{ left: x, top: y, borderColor: region ? "#e0b83a" : color, maxWidth: 230 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span style={{ width: 18, height: 18, flex: "0 0 auto" }}
-              dangerouslySetInnerHTML={{ __html: iconSVG(asset.asset_class, { size: 18, region }) }} />
-        <span style={{ fontSize: 12 }}>{asset.name || titleCase(asset.asset_class)}</span>
-      </div>
-      <div className="eyebrow" style={{ marginTop: 2 }}>
-        {titleCase(asset.asset_class)}{regionName ? ` · ${regionName}` : ""}
-      </div>
-      {rows.map(([k, v], i) => (
-        <div className="kv" key={i}><span className="k">{k}</span><span className="v">{v}</span></div>
-      ))}
-      {asset.source && (
-        <div className="kv"><span className="k">Source</span><span className="v" style={{ fontSize: 10 }}>{asset.source}</span></div>
-      )}
-      {region ? (
-        <div style={{ fontSize: 10, color: "var(--amber)", marginTop: 5, lineHeight: 1.4 }}>
-          Administrative-region placement — not a facility location.
-        </div>
-      ) : (
-        <div style={{ fontSize: 9.5, color: "var(--text-faint)", marginTop: 5 }}>
-          Public-coordinate infrastructure point.
-        </div>
       )}
     </div>
   );

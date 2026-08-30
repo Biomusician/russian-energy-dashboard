@@ -226,6 +226,10 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 /* Infrastructure icon glyph in the type filter (§11) — same registry as the map/legend. */
 .check .asset-glyph { width: 15px; height: 15px; flex: none; display: inline-flex; opacity: 0.92; }
 .check .asset-glyph svg { width: 15px; height: 15px; display: block; }
+
+.precision-key { display: flex; align-items: center; gap: 8px; margin-top: 7px; font-size: 10.5px; color: var(--text-dim); line-height: 1.35; }
+.precision-key .pk-swatch { width: 20px; height: 20px; flex: none; display: inline-flex; }
+.precision-key .pk-swatch svg { width: 20px; height: 20px; display: block; }
 .check .tally { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--text-faint); }
 
 .btn-row { display: flex; gap: 6px; padding: 8px var(--pad); }
@@ -314,6 +318,23 @@ select.ghost {
 }
 
 /* ---------- dossier ---------- */
+
+/* Selected-infrastructure sub-card (§10): a distinct block above the region tabs, tinted by
+   the accent so it reads as "the asset you clicked", separate from the region dossier. */
+.asset-subcard {
+  margin: 0 var(--pad) 12px;
+  padding: 9px 11px;
+  background: var(--bg-inset);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+}
+.asset-subcard-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
 
 .kv { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 12px; }
 .kv + .kv { border-top: 1px solid var(--line-soft); }

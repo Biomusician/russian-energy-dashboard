@@ -82,6 +82,20 @@ export default function App() {
     return m;
   }, [visibleIncidents]);
 
+  // Asset ids named anywhere in disruption reporting (identity, not a location) — lets the
+  // dossier sub-card say whether the selected asset appears in events.
+  const struckAssetIds = useMemo(
+    () => (bundle ? new Set(bundle.incidents.map((i) => i.asset_id).filter(Boolean)) : new Set<string>()),
+    [bundle],
+  );
+
+  // Selecting a region clears a stale asset sub-card unless the asset belongs to that region
+  // (the asset-click path selects the asset's own region, so its sub-card is preserved).
+  const selectRegion = (code: string | null) => {
+    setSelected(code);
+    setSelectedAsset((a) => (a && a.asset.region_code === code ? a : null));
+  };
+
   if (error) {
     return (
       <div className="empty" style={{ padding: 40 }}>
@@ -123,7 +137,7 @@ export default function App() {
         step={step}
         filters={filters}
         selected={selected}
-        onSelect={setSelected}
+        onSelect={selectRegion}
         incidentsByRegion={incidentsByRegion}
         selectedAssetKey={selectedAsset?.key ?? null}
         onSelectAsset={(asset, key) => setSelectedAsset(asset && key ? { asset, key } : null)}
@@ -135,7 +149,10 @@ export default function App() {
         currentDate={currentDate}
         incidentsByRegion={incidentsByRegion}
         visibleIncidents={visibleIncidents}
-        onSelect={setSelected}
+        onSelect={selectRegion}
+        selectedAsset={selectedAsset?.asset ?? null}
+        onClearAsset={() => setSelectedAsset(null)}
+        assetStruck={selectedAsset ? struckAssetIds.has(selectedAsset.asset.asset_id) : undefined}
       />
       <Timeline
         bundle={bundle}

@@ -6,7 +6,7 @@
 
 - **as_of**: 2026-08-28
 - **Headline ESDI (monitored area)**: 18.49
-- **ESDI, gas+coal counted at zero**: 15.72
+- **Uncovered-sector zero-assumption sensitivity**: 15.72
 - **Sector exposures**: refining 33.35, electric_generation 0.02, transmission 21.37, oil_logistics 9.50, gas 0.00, coal 0.00
 
 ## Coverage
@@ -14,7 +14,7 @@
 - **Total events across all sectors**: 175
 
 ## Recovery
-- **Observed-restoration episodes (national)**: n = 9
+- **Observed-restoration episodes (monitored area)**: n = 9
 - **Recovery records / partial / full / estimate**: 26 / 13 / 10 / 3
 - **Per-class medians (n ≥ 3)**: refining 47.0d
 - **Pooled cross-class median (mixed-infrastructure, not headline)**: 22.0

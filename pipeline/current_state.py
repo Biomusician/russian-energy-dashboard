@@ -52,7 +52,8 @@ def render(snapshot, test_count):
         "",
         f"- **as_of**: {s.get('as_of')}",
         f"- **Headline ESDI (monitored area)**: {f(s.get('esdi'))}",
-        f"- **ESDI, gas+coal counted at zero**: {f(s.get('esdi_all_sectors'))}",
+        f"- **Uncovered-sector zero-assumption sensitivity**: "
+        f"{f(s.get('uncovered_zero_assumption_sensitivity', s.get('esdi_all_sectors')))}",
         "- **Sector exposures**: "
         + ", ".join(f"{k} {f(v)}" for k, v in sectors.items()),
         "",
@@ -63,7 +64,7 @@ def render(snapshot, test_count):
         f"- **Total events across all sectors**: {cov.get('total_events_all_sectors')}",
         "",
         "## Recovery",
-        f"- **Observed-restoration episodes (national)**: n = {rs.get('observed_restoration_episodes')}",
+        f"- **Observed-restoration episodes (monitored area)**: n = {rs.get('observed_restoration_episodes')}",
         f"- **Recovery records / partial / full / estimate**: "
         f"{rs.get('recovery_record_count')} / {rs.get('partial_restart_episodes')} / "
         f"{rs.get('full_reconstitution_episodes')} / {rs.get('estimate_episodes')}",
