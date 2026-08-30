@@ -267,7 +267,53 @@ observed physical damage**, **Crimea's analytic inclusion ≠ a sovereignty stat
 
 ## 11. Independent UX / analytic red-team
 
-<!-- RED_TEAM_SECTION -->
+An independent adversarial pass was run against the **production build**, with access to the
+running app, the source and the shipped data. Initial verdict: **DO NOT SHIP — 4 DEFECT, 9
+UX-AMBIGUITY.** Every finding was reproduced before being acted on. All defects and all
+significant ambiguities are fixed; the four MINORs judged worth fixing were fixed too.
+
+### Defects
+
+| # | Finding | Disposition |
+|---|---|---|
+| 1 | The map's most-read line disclaimed **order-of-battle** concepts — "permanent and administrative basing", "no current unit positions, readiness" — vocabulary inherited from a sibling ORBAT project. It disclaimed things that do not exist in this product while omitting the two caveats that do. | **Fixed.** Rewritten in `MapPanel` and `Methodology` to the real boundary (centroid placement, modelled index, no undamaged-asset assessment). Verified no such word appears anywhere in the rendered UI. |
+| 2 | The infrastructure-type filter did **not** apply to the exposure choropleth, so one screen asserted "Krasnodar · 0 events" beside "exposure 3.3". | **Fixed by disclosure.** ESDI is precomputed across all classes; recomputing it per filter would be a scoring change, which §1 forbids. The legend now states the index covers all classes and points at "Recorded events", which *does* follow the filter. |
+| 3 | Shared-centroid representatives were `members[0]`, chosen before and independently of the class filter. Groups are class-mixed, so **both struck refineries** (Novoshakhtinsk, Orsk) drew as coal-terminal and gas-processing glyphs — and vanished entirely under a "refineries only" filter while their cards still promised a marker. | **Fixed.** The representative is now the most salient member *passing the active filter* (shared `assetPrio`). Regression-tested against the shipped data; verified live that the refinery draws under `?cls=refinery`. |
+| 4 | The ribbon showed as-at-build recovery counts beside a time-scrubbed index with nothing to distinguish them — "18 events to date" next to "52 currently impaired". | **Fixed.** The three ribbon stats and the Overview row carry the existing amber `· current` marker plus a tooltip. |
+
+### Ambiguities
+
+| # | Finding | Disposition |
+|---|---|---|
+| 5 | The delta axis said "improved / worsened", and **a region with no new events always falls** because the index decays on a modelled half-life — so a month with four refinery strikes displayed as broad improvement. | **Fixed.** Relabelled "index fell / index rose"; the decay behaviour is stated in both the legend and the rail. |
+| 6 | At the home view icons rendered ~6 px at 50% opacity, where shape, the dashed precision frame and the stack plate are all imperceptible — including the precision distinction the scope rules require. | **Fixed.** z2 size 0.26 → 0.42, opacity 0.5 → 0.75. |
+| 7 | The stack backplate merged into one box at map sizes and read as a selection highlight. | **Fixed.** Offset widened to 4 units and filled with the page ground. |
+| 8 | Shape and colour collisions: refinery vs gas processing (both banded columns); LNG vs oil terminal (washed-out snowflake, adjacent teals); three classes effectively invisible on the ground; substation and thermal in one amber family, with substations 73% of point assets. | **Fixed.** Gas processing redrawn as sphere + flare; LNG tank de-opacified with a heavier snowflake; contrast lifted 2.65–4.74 → 4.50–9.22 for the three dark classes; substation moved to the grid slate, 169° from thermal. |
+| 9 | Search flew to **z7 on a region centroid**, asserting a precision the card denies and writing it into the shareable URL, where the qualifying card does not travel. | **Fixed.** Region-precision assets now frame their region bbox (verified z5.9). |
+| 10 | The delta legend had no ticks, and "unchanged" was indistinguishable from "no events ever recorded" — both `±0.00`. | **Fixed.** Added ≤−3 / 0 / ≥+3 ticks and a hover line: "no recorded events here — nothing to change, not a measured zero". |
+| 11 | Activity halos — the loudest mark on the map — had no legend entry and share the kinetic-strike red. | **Fixed.** Legend row added with the disambiguating sentence. |
+| 12 | Camera controls occluded the scope note below ~1580 px viewport. | **Fixed.** Left-anchored and wrapping. |
+| 13 | A flat 10 px hit target around ~1,900 assets tiled the AOI and stole every region hover, making the choropleth's own per-region values unreadable. | **Fixed.** Hit radius now scales with zoom (3.5 px at z2 → 10 px at z6). |
+
+### Minors fixed
+
+14 network preset framed to 145°E where the trunks were invisible (tightened, widths lifted);
+15 rivers reveal interpolated *between* gated outputs so a river appeared at ~30% opacity below
+its own reveal zoom (converted to `step`; colour lifted off the choropleth teals); 16 hover card
+leaked when the pointer left the canvas; 17 comparison tray undiscoverable and non-collapsible
+(rail hint with live pinned count + collapse control); 18 layout collapsed below ~1180 px (now
+scrolls); 19 copy — unconditional plurals, "Lng Terminal" acronym casing, and search rows lacking
+a region.
+
+### What the red-team confirmed as sound
+
+Zero third-party runtime requests and **zero console messages of any kind** across ~15
+navigations, layer toggles and lazy loads; no coordinate, distance, bearing or route anywhere in
+the UI, with `AssetDetail.tsx` acting as a single enforced chokepoint; no prospective-targeting
+affordance, with all four ranking metrics retrospective; URL state round-tripping correctly with
+defaults kept out; the shared-centroid disclosure wording; and "What changed" — singled out as
+"the strongest thing in the product" for holding its three measures deliberately separate and for
+its window honesty.
 
 ---
 
@@ -279,12 +325,12 @@ observed physical damage**, **Crimea's analytic inclusion ≠ a sovereignty stat
 | Frozen regression build, isolated from release artifacts | ✅ 18.49, reverted; tree clean |
 | Frozen invariant (iter 7 == iter 8) | ✅ 18.49 == 18.49 |
 | Python tests | ✅ **158** (was 155) |
-| Frontend tests | ✅ **85** (was 33, was 10 pre-iteration) |
+| Frontend tests | ✅ **90** (was 33, was 10 pre-iteration) |
 | Typecheck (`tsc -b`) | ✅ clean |
 | Production `vite build` | ✅ clean |
 | Debug artifacts stripped | ✅ `__map` absent from production JS; no `window.__*` globals |
 | Zero third-party runtime requests | ✅ verified in bundle and live |
-| Independent UX red-team | see §11 |
+| Independent UX red-team | ✅ run; 4 DEFECT + 9 UX-AMBIGUITY all fixed (§11) |
 | Clean git tree | ✅ |
 
 ---
