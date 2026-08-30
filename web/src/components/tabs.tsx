@@ -169,9 +169,21 @@ export function WhatChangedTab(p: TabProps) {
 
       <Block
         title="New restoration evidence"
-        right={<span className="num" style={{ fontSize: 15, color: "var(--green)" }}>{newRecovery.length}</span>}
+        right={
+          <span className="num" style={{ fontSize: 15, color: "var(--green)" }}>
+            {bundle.snapshot.recovery_events ? newRecovery.length : "—"}
+          </span>
+        }
       >
-        {newRecovery.length === 0 ? (
+        {/* "Unavailable" and "none" are different states and must not look alike (modelling rule
+            7). A CDN edge can briefly serve a payload predating recovery_events during a deploy;
+            reporting that as zero restorations would be a confident wrong answer. */}
+        {!bundle.snapshot.recovery_events ? (
+          <Note warn>
+            Restoration evidence is unavailable in this data payload — not zero. Reload in a moment;
+            if it persists the dataset predates the recovery-evidence log.
+          </Note>
+        ) : newRecovery.length === 0 ? (
           <Note>No restoration evidence dated in this window. Absence of evidence is not restoration.</Note>
         ) : (
           <>

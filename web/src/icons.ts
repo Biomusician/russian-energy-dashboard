@@ -136,6 +136,10 @@ export function prewarmIcons(): Promise<{ id: string; data: ImageData }[]> {
   for (const cls of [...Object.keys(ICON_SHAPES), "__none__"]) {
     for (const region of [false, true]) {
       for (const stacked of [false, true]) {
+        // Only administrative-centroid assets can share a point, so a stacked marker is always
+        // also region-placed; rasterising the impossible pairing would be a quarter of this
+        // work thrown away.
+        if (stacked && !region) continue;
         specs.push({ id: iconImageId(cls, region, stacked), cls, region, stacked });
       }
     }
