@@ -5,6 +5,40 @@ import type { Incident, RecoveryState } from "../types";
 import { CAUSE_COLOR, evidence, severityColor } from "../palette";
 import { fmtDate, fmtNum, titleCase } from "../data";
 
+/** A dependency-free inline SVG sparkline (§18-19). Draws a value series as a filled line with
+ *  the current scrubber position marked, so the dossier shows a trajectory at a glance rather
+ *  than a single point in time. Scaled to the series' own min/max; purely presentational. */
+export function Sparkline({
+  values, width = 168, height = 36, color = "var(--accent)", markIndex, ariaLabel,
+}: {
+  values: number[];
+  width?: number;
+  height?: number;
+  color?: string;
+  markIndex?: number;
+  ariaLabel?: string;
+}) {
+  if (!values || values.length < 2) return null;
+  const pad = 3;
+  const w = width - pad * 2;
+  const h = height - pad * 2;
+  const max = Math.max(...values);
+  const min = Math.min(...values, 0);
+  const span = max - min || 1;
+  const px = (i: number) => pad + (i / (values.length - 1)) * w;
+  const py = (v: number) => pad + h - ((v - min) / span) * h;
+  const line = values.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(" ");
+  const area = `${pad.toFixed(1)},${(pad + h).toFixed(1)} ${line} ${(pad + w).toFixed(1)},${(pad + h).toFixed(1)}`;
+  const mi = markIndex != null ? Math.max(0, Math.min(values.length - 1, markIndex)) : null;
+  return (
+    <svg width={width} height={height} role="img" aria-label={ariaLabel} style={{ display: "block", overflow: "visible" }}>
+      <polyline points={area} fill={color} fillOpacity={0.12} stroke="none" />
+      <polyline points={line} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+      {mi != null && <circle cx={px(mi)} cy={py(values[mi])} r={2.6} fill={color} />}
+    </svg>
+  );
+}
+
 export function EvidenceChip({ kind, text }: { kind: string; text?: string }) {
   const e = evidence(kind);
   return (

@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import type { Bundle, CoverageDetail, Incident, LiveDisruption, RegionSnapshot } from "../types";
 import { addDays, fmtDate, fmtDelta, fmtNum, stepFor, titleCase } from "../data";
 import { classColor, evidence, severityColor } from "../palette";
-import { Bar, EventRow, EvidenceChip, RecoveryLine, Tile } from "./ui";
+import { Bar, EventRow, EvidenceChip, RecoveryLine, Sparkline, Tile } from "./ui";
 
 export interface TabProps {
   bundle: Bundle;
@@ -42,6 +42,33 @@ function KV({ k, v, hint }: { k: string; v: React.ReactNode; hint?: string }) {
 
 function Note({ children, warn }: { children: React.ReactNode; warn?: boolean }) {
   return <div className={`note${warn ? " warn" : ""}`}>{children}</div>;
+}
+
+/** Inline ESDI trajectory (§18-19). Shows the series only UP TO the scrubber — never "future"
+ *  relative to the selected date — with the current point marked, the 90-day change, and the
+ *  peak-to-date. A trend at a glance without leaving the dossier. */
+function TrajectorySpark({ series, dates, step, color }: { series: number[] | undefined; dates: string[]; step: number; color?: string }) {
+  if (!series || series.length < 2) return null;
+  const upto = series.slice(0, step + 1);
+  if (upto.length < 2) return null;
+  const now = upto[upto.length - 1];
+  const refStep = stepFor(dates, addDays(dates[step], -90));
+  const change = now - (series[refStep] ?? 0);
+  const peak = Math.max(...upto);
+  const changeColor = change > 0.05 ? "#e08a5a" : change < -0.05 ? "#4a9fd4" : "var(--text-dim)";
+  return (
+    <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--line-soft)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
+        <span className="eyebrow">ESDI trajectory</span>
+        <span style={{ fontSize: 10.5, color: "var(--text-faint)" }}>{fmtDate(dates[0])} → {fmtDate(dates[step])}</span>
+      </div>
+      <Sparkline values={upto} markIndex={step} color={color ?? "var(--accent)"} ariaLabel="ESDI trajectory" />
+      <div style={{ display: "flex", gap: 16, marginTop: 6, fontSize: 10.5, color: "var(--text-dim)" }}>
+        <span>90-day change <span className="num" style={{ color: changeColor }}>{fmtDelta(change)}</span></span>
+        <span>peak to date <span className="num">{fmtNum(peak, 1)}</span></span>
+      </div>
+    </div>
+  );
 }
 
 // ============================================================ WHAT CHANGED
@@ -169,6 +196,7 @@ export function OverviewTab(p: TabProps) {
       .slice(0, 12);
     return (
       <div className="tab-body">
+        <TrajectorySpark series={bundle.national.esdi} dates={bundle.national.dates} step={step} />
         <Block title="Monitored-area picture">
           <KV k="Disruption exposure (ESDI)" v={fmtNum(bundle.national.esdi[step], 1)} />
           <KV k="Events to date" v={p.visibleIncidents.length} />
@@ -214,6 +242,13 @@ export function OverviewTab(p: TabProps) {
         </div>
         <div className="meter"><i style={{ width: `${Math.min(100, esdiNow * 4)}%`, background: isOccupied ? "var(--violet)" : severityColor(esdiNow) }} /></div>
       </div>
+
+      <TrajectorySpark
+        series={bundle.regional.regions[region.code]?.esdi}
+        dates={bundle.national.dates}
+        step={step}
+        color={isOccupied ? "var(--violet)" : severityColor(esdiNow)}
+      />
 
       <Block title="Recorded activity">
         <KV k="Events to date" v={regionIncidents.length} />
