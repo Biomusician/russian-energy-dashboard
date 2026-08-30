@@ -4,10 +4,10 @@
 > A test (`test_current_state_doc_is_in_sync`) fails if this drifts from the build.
 > Other docs should link here instead of re-quoting these numbers (§2).
 
-- **as_of**: 2026-08-29
-- **Headline ESDI (monitored area)**: 18.17
-- **ESDI, gas+coal counted at zero**: 15.45
-- **Sector exposures**: refining 32.85, electric_generation 0.02, transmission 20.88, oil_logistics 9.28, gas 0.00, coal 0.00
+- **as_of**: 2026-08-28
+- **Headline ESDI (monitored area)**: 18.49
+- **ESDI, gas+coal counted at zero**: 15.72
+- **Sector exposures**: refining 33.35, electric_generation 0.02, transmission 21.37, oil_logistics 9.50, gas 0.00, coal 0.00
 
 ## Coverage
 - **Oil-strike benchmark coverage**: 47.2% (144 enumerated oil-sector strikes / 305 reported)
@@ -24,11 +24,11 @@
 - **Canonical linkage (identity, NOT disruption coverage)**: 27/34 refineries struck = 85.6% of denominator MTPA
 
 ## Gas processing (experimental, NOT in headline ESDI)
-- **Within-census exposure**: 26.7% (2 of 12 censused plants, 91.91 bcm/y total)
+- **Within-census exposure**: 27.0% (2 of 12 censused plants, 91.91 bcm/y total)
 
 ## Transmission (event-burden, theatre-concentrated)
-- **Headline value**: 20.88 at saturation 8.0
-- **Sensitivity range across saturations**: 10.44–41.76
+- **Headline value**: 21.37 at saturation 8.0
+- **Sensitivity range across saturations**: 10.68–42.74
 - **Top-theatre share**: 54.5% over 3 region(s)
 
 ## Strategic effects (source-backed, observational)
