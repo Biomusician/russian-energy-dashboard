@@ -2,21 +2,33 @@
  *  Asset classes come from the pipeline; anything without an entry here falls back
  *  to a neutral grey rather than throwing or silently vanishing. */
 
+/** Class identity colours. Chosen against the #05070a map ground; several were lifted in
+ *  iteration 8 after a contrast audit found three classes effectively invisible and two pairs
+ *  separable only by hue at map sizes (where shape is no longer legible). */
 export const CLASS_COLOR: Record<string, string> = {
   power_plant_thermal: "#f2b134",
   power_plant_nuclear: "#a98bfa",
   power_plant_hydro: "#3fb6f5",
-  power_plant_other: "#6b7d8c",
+  // was #6b7d8c — too dark to read against the ground
+  power_plant_other: "#9fb2c0",
   refinery: "#f0534a",
   oil_terminal: "#fb7185",
   pipeline_oil: "#f7862f",
   pipeline_gas: "#2ad4ee",
   gas_processing: "#2dd4bf",
-  lng_terminal: "#14b8a6",
-  substation: "#e0b83a",
-  transmission_line: "#40566a",
+  // was #14b8a6 — adjacent to gas_processing's teal, so the two were one colour at icon sizes
+  lng_terminal: "#7ee0d0",
+  // was #e0b83a — the same yellow family as thermal, and substations are 73% of all point assets,
+  // so the map read as one undifferentiated amber swarm. Moved to the far side of the wheel from
+  // thermal (169 deg apart) and into the same slate family as transmission_line, which is the
+  // honest grouping: they are one subsystem, they never share a mark (points vs lines), and this
+  // lets the least analytically salient class recede instead of competing with generation.
+  substation: "#9ab8d4",
+  // was #40566a — invisible against the ground
+  transmission_line: "#5f7a92",
   coal_mine: "#94a3b8",
-  coal_terminal: "#78716c",
+  // was #78716c — invisible against the ground
+  coal_terminal: "#b3a99f",
   interconnector: "#c084fc",
 };
 

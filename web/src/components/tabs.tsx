@@ -4,7 +4,7 @@
 
 import { useMemo, useState } from "react";
 import type { Bundle, CoverageDetail, Incident, LiveDisruption, RegionSnapshot } from "../types";
-import { addDays, displayName, fmtDate, fmtDelta, fmtNum, inWindow, titleCase, windowRef } from "../data";
+import { addDays, displayName, fmtDate, fmtDelta, fmtNum, inWindow, plural, titleCase, windowRef } from "../data";
 import { classColor, evidence, severityColor } from "../palette";
 import { Bar, EventRow, EvidenceChip, RecoveryLine, Sparkline, Tile } from "./ui";
 
@@ -226,8 +226,9 @@ export function WhatChangedTab(p: TabProps) {
               </button>
             )}
             <Note>
-              {measuredDurations} of these {newRecovery.length === 1 ? "is" : "are"} a measured
-              restoration duration; the rest are dated evidence without a usable duration.
+              {measuredDurations === newRecovery.length
+                ? `All ${newRecovery.length === 1 ? "of this is" : "of these are"} a measured restoration duration.`
+                : `${measuredDurations} of ${plural(newRecovery.length, "row")} ${measuredDurations === 1 ? "is" : "are"} a measured restoration duration; the rest are dated evidence without a usable duration.`}
             </Note>
           </>
         )}
@@ -275,7 +276,13 @@ export function OverviewTab(p: TabProps) {
         <Block title="Monitored-area picture">
           <KV k="Disruption exposure (ESDI)" v={fmtNum(bundle.national.esdi[step], 1)} />
           <KV k="Events to date" v={p.visibleIncidents.length} />
-          <KV k="Facilities currently impaired" v={bundle.snapshot.recovery_stats.unresolved_count} />
+          {/* Timeline-linked count above, as-at-build count below: without the marker the pair
+              reads as impossible when scrubbed into history (18 events, 52 impaired). */}
+          <KV
+            k="Facilities currently impaired"
+            v={<>{bundle.snapshot.recovery_stats.unresolved_count}<span style={{ color: "var(--amber)", fontSize: 10 }}> · current</span></>}
+            hint="As at the latest build — this does not follow the timeline scrubber."
+          />
           <KV k="Refining base tracked" v={`${fmtNum(bundle.snapshot.denominators.refining_mtpa, 0)} MTPA`} />
         </Block>
         <Block title="Most affected regions" right={<button className="ghost" style={{ padding: "1px 6px", fontSize: 10 }} onClick={() => p.onTab("Rankings")}>rankings ›</button>}>
@@ -371,7 +378,7 @@ function RegionMini({ region, value, count, onSelect }: { region: RegionSnapshot
     <div className="kv" style={{ cursor: "pointer", alignItems: "center" }} onClick={() => onSelect(region.code)}>
       <span className="k" style={{ flex: 1 }}>
         {region.name}
-        <span style={{ color: "var(--text-faint)", fontSize: 10.5 }}> · {count} events · {region.district}</span>
+        <span style={{ color: "var(--text-faint)", fontSize: 10.5 }}> · {plural(count, "event")} · {region.district}</span>
       </span>
       <span style={{ width: 62 }}>
         <span className="meter" style={{ marginTop: 0 }}>

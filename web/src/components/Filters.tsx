@@ -31,7 +31,7 @@ function fallbackFacets(bundle: Bundle): FacetCounts {
 /** Left rail. Every toggle carries a live tally so an empty layer reads as
  *  "nothing recorded here" rather than as a broken filter. */
 export default function Filters({
-  bundle, filters, setFilters, onPickRegion, onPickAsset,
+  bundle, filters, setFilters, onPickRegion, onPickAsset, compareCount = 0,
 }: {
   bundle: Bundle;
   filters: FilterState;
@@ -39,6 +39,8 @@ export default function Filters({
   visibleIncidents: Incident[];
   onPickRegion: (code: string) => void;
   onPickAsset: (asset: Asset, index: number) => void;
+  /** How many regions are pinned to the comparison tray, for the rail hint. */
+  compareCount?: number;
 }) {
   const { taxonomy } = bundle;
   // Normally the pipeline emits facet_counts. During a deploy the CDN can briefly serve an
@@ -84,6 +86,13 @@ export default function Filters({
 
       <div className="ctl-group">
         <SearchBox bundle={bundle} onPickRegion={onPickRegion} onPickAsset={onPickAsset} />
+        {/* The comparison tray's only entry point was a button that appears after a region is
+            selected, so the feature was invisible until you happened to find it. */}
+        <div className="note" style={{ marginTop: 8 }}>
+          Search a region or facility to jump to it. Select a region, then
+          <b> + compare</b> in its header, to pin up to three side by side
+          {compareCount > 0 && <> — <b>{compareCount} pinned</b></>}.
+        </div>
       </div>
 
       <div className="ctl-group">
@@ -100,8 +109,10 @@ export default function Filters({
         </select>
         {(filters.metric === "esdi_delta_30d" || filters.metric === "esdi_delta_90d") && (
           <div className="note" style={{ marginTop: 6 }}>
-            Diverging scale: blue where the index fell (de-escalation), red where it rose.
-            A modelled change in exposure, not observed physical damage.
+            Diverging scale: blue where the index fell, red where it rose. A modelled change in
+            exposure, not observed physical damage — a region with <em>no new recorded events
+            always falls</em>, because the index decays on a modelled half-life. Falling is not
+            observed repair.
           </div>
         )}
       </div>

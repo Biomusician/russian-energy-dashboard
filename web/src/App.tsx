@@ -189,7 +189,15 @@ export default function App() {
   const pickAssetFromSearch = (asset: Asset, index: number) => {
     setSelectedAsset({ asset, key: `${asset.asset_id}:${index}` });
     if (asset.region_code) setSelected(asset.region_code);
-    setFlyTarget({ center: [asset.lon, asset.lat], zoom: 7, nonce: ++flyNonce.current });
+    // A region-precision asset has no facility coordinate, so flying to a tight point frame would
+    // make a precision claim the card explicitly denies — and would write that precision into the
+    // shareable URL, where the qualifying card does not travel. Frame its REGION instead.
+    const meta = asset.region_code ? bundle?.regions.find((r) => r.code === asset.region_code) : null;
+    if (asset.precision === "region" && meta?.bbox) {
+      setFlyTarget({ bounds: meta.bbox, nonce: ++flyNonce.current });
+    } else {
+      setFlyTarget({ center: [asset.lon, asset.lat], zoom: 7, nonce: ++flyNonce.current });
+    }
   };
 
   // Mirror the shareable view into the URL (§20-22). replaceState, so scrubbing and panning
@@ -258,6 +266,7 @@ export default function App() {
         visibleIncidents={visibleIncidents}
         onPickRegion={pickRegionFromSearch}
         onPickAsset={pickAssetFromSearch}
+        compareCount={compareRegions.length}
       />
       <MapPanel
         bundle={bundle}

@@ -147,8 +147,19 @@ export function fmtNum(n: number | null | undefined, digits = 1): string {
   return n.toLocaleString("en-GB", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 
+/** Acronyms that must not be sentence-cased ("Lng Terminal" reads as a typo, and the left rail
+ *  spells the same class "LNG terminal"). */
+const ACRONYMS: Record<string, string> = { lng: "LNG", gpp: "GPP", chp: "CHP", npp: "NPP", hv: "HV" };
+
 export function titleCase(key: string): string {
-  return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return key
+    .replace(/_/g, " ")
+    .replace(/\b\w+/g, (w) => ACRONYMS[w.toLowerCase()] ?? w.charAt(0).toUpperCase() + w.slice(1));
+}
+
+/** "1 event" / "2 events" — an unconditional plural is a small tell that nobody read the output. */
+export function plural(n: number, one: string, many = `${one}s`): string {
+  return `${n} ${n === 1 ? one : many}`;
 }
 
 /** Signed, fixed-precision delta (e.g. "+1.21", "−0.69", "±0.00") for the change views. Uses a

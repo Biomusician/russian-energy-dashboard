@@ -36,7 +36,11 @@ const WEST_BOUNDS: [number, number, number, number] = [20.0, 41.0, 62.0, 62.0];
 // Russia–Europe Network (iteration 5): frames the continental oil/gas trunk context, from
 // Atlantic Europe to the Russian Far East. The default view stays the analytic Full AOI —
 // this is an on-demand context frame, not the dashboard's home (§12).
-const NETWORK_BOUNDS: [number, number, number, number] = [-8.0, 36.0, 145.0, 73.0];
+// Tightened in iteration 8: the old frame reached to 145°E, zooming out far enough to show China
+// and Korea, at which scale the trunk lines (0.5px at 28% opacity) were invisible — a named
+// preset that produced an apparently empty map. This frames the Europe–western-Russia corridor
+// where the trunks actually run.
+const NETWORK_BOUNDS: [number, number, number, number] = [-2.0, 39.0, 90.0, 70.0];
 
 // Context-country label anchors worth showing, plus the sea labels. Kept short so the
 // map does not turn into a name soup; positioned as HTML overlays (no glyph endpoint).
@@ -63,6 +67,19 @@ const CLASS_PRIO: Record<string, number> = {
   coal_terminal: 4, coal_mine: 4, interconnector: 4, power_plant_other: 5,
   substation: 7,
 };
+
+/** Deterministic declutter priority: lower wins a collision, and also decides which member of a
+ *  shared administrative centroid represents the stack. Class salience first, then published
+ *  capacity/voltage, then whether the asset appears in disruption reporting, then precision.
+ *  DISPLAY ordering only — never a ranking of target value. */
+function assetPrio(a: Asset, struck: Set<string>): number {
+  const classBase = (CLASS_PRIO[a.asset_class] ?? 6) * 1000;
+  const capBoost = Math.min(400, (a.capacity_mw ?? 0) / 12 + (a.capacity_mtpa ?? 0) * 25 + (a.capacity_bcm_y ?? 0) * 20);
+  const vBoost = Math.min(300, (a.voltage_kv ?? 0) / 2);
+  return Math.round(
+    classBase - capBoost - vBoost - (struck.has(a.asset_id) ? 600 : 0) - (a.precision === "region" ? 250 : 0),
+  );
+}
 
 interface HoverInfo {
   x: number;
@@ -148,14 +165,22 @@ export default function MapPanel({
       if (list) list.push(i);
       else byPoint.set(k, [i]);
     });
-    // index -> {count, members, representative}
-    const info = new Map<number, { count: number; members: number[]; rep: number }>();
+    // The representative is the most analytically salient member that PASSES THE ACTIVE CLASS
+    // FILTER, not simply the first one. Groups are class-mixed in the real data — Novoshakhtinsk
+    // Refinery shares a centroid with Port of Azov coal terminal, Orsk Refinery with Orenburg GPP
+    // — so a fixed first-member rep both drew a refinery as a coal-terminal glyph and made those
+    // two struck refineries vanish entirely under a "refineries only" filter. Picking by
+    // declutter priority (which already ranks class, capacity and struck-ness) fixes both.
+    const info = new Map<number, { count: number; members: number[]; rep: number | null }>();
     for (const members of byPoint.values()) {
-      const rep = members[0];
+      const eligible = members.filter((i) => filters.classes.has(bundle.assets[i].asset_class));
+      const rep = eligible.length
+        ? eligible.reduce((best, i) => (assetPrio(bundle.assets[i], struckAssetIds) < assetPrio(bundle.assets[best], struckAssetIds) ? i : best))
+        : null;
       for (const i of members) info.set(i, { count: members.length, members, rep });
     }
     return info;
-  }, [bundle.assets]);
+  }, [bundle.assets, filters.classes, struckAssetIds]);
 
   const assetPoints = useMemo<GeoJSON.FeatureCollection>(() => ({
     type: "FeatureCollection",
@@ -167,10 +192,7 @@ export default function MapPanel({
       // Only the group representative is drawn/hit-tested; the rest stay in the source so their
       // feature ids (and therefore selection state) remain stable and addressable from search.
       const rep = !group || group.rep === i;
-      const classBase = (CLASS_PRIO[a.asset_class] ?? 6) * 1000;
-      const capBoost = Math.min(400, (a.capacity_mw ?? 0) / 12 + (a.capacity_mtpa ?? 0) * 25 + (a.capacity_bcm_y ?? 0) * 20);
-      const vBoost = Math.min(300, (a.voltage_kv ?? 0) / 2);
-      const prio = classBase - capBoost - vBoost - (struck ? 600 : 0) - (region ? 250 : 0);
+      const prio = assetPrio(a, struckAssetIds);
       return {
         type: "Feature" as const,
         id: i,
@@ -346,21 +368,28 @@ export default function MapPanel({
         source: "rivers",
         layout: { visibility: "none" },
         paint: {
-          "line-color": "#3f6b8c",
+          // Lifted from #3f6b8c, which sat inside the choropleth's own teal range and made rivers
+          // hard to pick out over exactly the regions being analysed.
+          "line-color": "#6fa8cc",
           "line-width": [
             "interpolate", ["linear"], ["zoom"],
             2, ["case", ["<=", ["get", "scalerank"], 2], 0.7, 0.35],
             8, ["case", ["<=", ["get", "scalerank"], 2], 2.4, 1.1],
           ] as unknown as maplibregl.ExpressionSpecification,
           // Per-feature reveal: a river stays invisible until the zoom passes its own
-          // reveal_zoom, then fades in. MapLibre only allows ["zoom"] as the direct input to
-          // a top-level interpolate/step (nesting it inside a "case" is rejected and the whole
-          // layer is dropped), so the per-feature gate lives in the interpolate STOP OUTPUTS.
+          // reveal_zoom. MapLibre only allows ["zoom"] as the direct input to a top-level
+          // interpolate/step (nesting it inside a "case" is rejected and the whole layer is
+          // silently dropped — the iteration-5 defect), so the gate lives in the outputs.
+          // A "step" is used rather than "interpolate" because interpolating BETWEEN gated
+          // outputs blends across the gate: a river with reveal_zoom 5 was already ~30% opaque
+          // at z4, so the hard reveal the comment promised was not what shipped.
           "line-opacity": [
-            "interpolate", ["linear"], ["zoom"],
-            2.5, ["case", [">=", 2.5, ["get", "reveal_zoom"]], 0.3, 0],
-            7, ["case", [">=", 7, ["get", "reveal_zoom"]], 0.55, 0],
-            9, ["case", [">=", 9, ["get", "reveal_zoom"]], 0.55, 0],
+            "step", ["zoom"],
+            0,
+            2.5, ["case", [">=", 2.5, ["get", "reveal_zoom"]], 0.45, 0],
+            4, ["case", [">=", 4, ["get", "reveal_zoom"]], 0.5, 0],
+            5.5, ["case", [">=", 5.5, ["get", "reveal_zoom"]], 0.58, 0],
+            7, ["case", [">=", 7, ["get", "reveal_zoom"]], 0.65, 0],
           ] as unknown as maplibregl.ExpressionSpecification,
         },
       });
@@ -382,11 +411,13 @@ export default function MapPanel({
           layout: { visibility: "none", "line-cap": "round", "line-join": "round" },
           paint: {
             "line-color": color,
+            // Lifted at continental zoom so the trunks are actually visible in the network
+            // preset; still subordinate to the analytic surface.
             "line-width": [
-              "interpolate", ["linear"], ["zoom"], 2, 0.5, 5, 1.0, 8, 1.9,
+              "interpolate", ["linear"], ["zoom"], 2, 0.9, 5, 1.4, 8, 2.1,
             ] as unknown as maplibregl.ExpressionSpecification,
             "line-opacity": [
-              "interpolate", ["linear"], ["zoom"], 2, 0.28, 4, 0.42, 8, 0.62,
+              "interpolate", ["linear"], ["zoom"], 2, 0.5, 4, 0.6, 8, 0.72,
             ] as unknown as maplibregl.ExpressionSpecification,
           },
         });
@@ -493,12 +524,16 @@ export default function MapPanel({
           "icon-image": ["get", "img"] as unknown as maplibregl.ExpressionSpecification,
           "icon-allow-overlap": false,
           "symbol-sort-key": ["get", "prio"] as unknown as maplibregl.ExpressionSpecification,
-          "icon-size": ["interpolate", ["linear"], ["zoom"], 2, 0.26, 3.4, 0.34, 6, 0.5, 9, 0.72] as unknown as maplibregl.ExpressionSpecification,
+          // At the Full-AOI home view the old 0.26 scale rendered a 6 px smudge at 50% opacity,
+          // where shape, the dashed precision frame and the stacked backplate are all
+          // imperceptible — i.e. the whole symbology grammar was shown at a size that cannot
+          // carry it, including the precision distinction the scope rules require.
+          "icon-size": ["interpolate", ["linear"], ["zoom"], 2, 0.42, 3.4, 0.5, 6, 0.62, 9, 0.8] as unknown as maplibregl.ExpressionSpecification,
           "icon-padding": 2,
           "visibility": filters.showAssets ? "visible" : "none",
         },
         paint: {
-          "icon-opacity": ["interpolate", ["linear"], ["zoom"], 2, 0.5, 5.0, 0.95] as unknown as maplibregl.ExpressionSpecification,
+          "icon-opacity": ["interpolate", ["linear"], ["zoom"], 2, 0.75, 5.0, 0.95] as unknown as maplibregl.ExpressionSpecification,
           "icon-halo-color": ["case", ["boolean", ["feature-state", "selected"], false], "#2ad4ee", "#05070a"] as unknown as maplibregl.ExpressionSpecification,
           "icon-halo-width": ["case", ["boolean", ["feature-state", "selected"], false], 2.2, 0.7] as unknown as maplibregl.ExpressionSpecification,
           "icon-halo-blur": 0.4,
@@ -512,7 +547,15 @@ export default function MapPanel({
         source: "assets",
         minzoom: 2,
         layout: { "visibility": filters.showAssets ? "visible" : "none" },
-        paint: { "circle-radius": 10, "circle-color": "#000000", "circle-opacity": 0 },
+        paint: {
+          // A flat 10 px target around ~1,900 assets tiled most of the AOI at low zoom and stole
+          // every region hover, making the choropleth's per-region value unreadable — the
+          // choropleth is the primary analytic surface. Scale the target with zoom so assets
+          // only win the pointer once they are actually separable.
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 2, 3.5, 4, 6, 6, 10] as unknown as maplibregl.ExpressionSpecification,
+          "circle-color": "#000000",
+          "circle-opacity": 0,
+        },
       }, m.getLayer("disruption-halo") ? "disruption-halo" : undefined);
 
       setAssetLayersReady(true);
@@ -618,10 +661,15 @@ export default function MapPanel({
     m.on("mousemove", "asset-hit", move);
     m.on("mouseleave", "asset-hit", leave);
     m.on("click", "asset-hit", click);
+    // Leaving the canvas entirely does not fire the layer's mouseleave, so the card would hang
+    // over the UI indefinitely after the pointer moved to the left rail.
+    const canvas = m.getCanvasContainer();
+    canvas.addEventListener("mouseleave", leave);
     return () => {
       m.off("mousemove", "asset-hit", move);
       m.off("mouseleave", "asset-hit", leave);
       m.off("click", "asset-hit", click);
+      canvas.removeEventListener("mouseleave", leave);
     };
   }, [ready, assetLayersReady, assetByKey, onSelectAsset, onSelect, selectedAssetKey]);
 
@@ -864,6 +912,11 @@ export default function MapPanel({
   const deltaSpanDays = isDelta
     ? windowRef(bundle.national.dates, step, filters.metric === "esdi_delta_30d" ? 30 : 90).actualComparisonDays
     : 0;
+  // ESDI (and its deltas) are precomputed per region over every class; only the event-count
+  // surface responds to the type filter.
+  const indexIgnoresClassFilter =
+    filters.metric !== "incidents"
+    && filters.classes.size < Object.keys(bundle.taxonomy.asset_classes).length;
   const metricLabel =
     filters.metric === "esdi" ? "Disruption exposure"
     : filters.metric === "incidents" ? "Recorded events"
@@ -901,9 +954,15 @@ export default function MapPanel({
       </div>
 
       <div className="map-scope-note">
-        Permanent and administrative basing only, aggregated to administrative region.
-        This is a damage-assessment view of publicly reported disruption — it holds no
-        current unit positions, readiness or operational status.
+        {/* This note must disclaim what THIS product actually is. It previously carried
+            order-of-battle vocabulary ("basing", "unit positions", "readiness") inherited from a
+            sibling project, which disclaimed things that do not exist here and omitted the two
+            caveats that matter: centroid placement and a modelled index. */}
+        Publicly reported disruption to energy infrastructure, aggregated to administrative
+        region. Facility markers show published permanent locations; a dashed marker is placed
+        on an administrative centroid and is not a facility location. Exposure is a modelled
+        index of capacity at disrupted sites — not measured loss, and never an assessment of
+        undamaged infrastructure.
         <span style={{ display: "block", marginTop: 4, color: "var(--violet)" }}>
           Crimea (dashed outline) is internationally recognised as Ukraine, under Russian
           occupation. It is shown as a separate unit and is included in the Monitored-Area
@@ -918,9 +977,18 @@ export default function MapPanel({
             <i key={stop} style={{ background: color }} title={isDelta ? `${stop > 0 ? "+" : ""}${stop}` : `≥ ${stop}`} />
           ))}
         </div>
+        {/* Numeric ticks: without them a reader cannot tell a 0.26 move from a 2.8 move, and the
+            saturating ends are invisible. */}
+        {isDelta && (
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "var(--text-faint)", marginTop: 2, fontFamily: "var(--mono)" }}>
+            <span>≤−3</span><span>0</span><span>≥+3</span>
+          </div>
+        )}
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9.5, color: "var(--text-faint)", marginTop: 3 }}>
-          <span>{isDelta ? "improved" : "low"}</span>
-          <span>{isDelta ? "worsened" : "high"}</span>
+          {/* "improved / worsened" invites a judgement about the world; the index only fell or
+              rose, and it falls on its own through decay. */}
+          <span>{isDelta ? "index fell" : "low"}</span>
+          <span>{isDelta ? "index rose" : "high"}</span>
         </div>
         {isDelta && (
           <div style={{ fontSize: 9, color: "var(--text-faint)", marginTop: 3, lineHeight: 1.35 }}>
@@ -928,10 +996,32 @@ export default function MapPanel({
             {/* The series is weekly, so say the span actually compared rather than implying
                 an exact 30/90-day observation. */}
             <br />Actual span compared: {deltaSpanDays} days.
+            {/* A region with no new events always falls, because the index decays on a modelled
+                half-life. Without this the most available reading of a blue map is "things got
+                better", which the data does not support. */}
+            <br />A region with no new recorded events always falls: the index decays on a
+            modelled half-life. Falling is not observed repair.
           </div>
         )}
+        {/* The exposure index is precomputed per region across ALL classes; it cannot follow the
+            type filter without redefining the measure. Say so rather than let a filtered view be
+            read as "refinery exposure". The event-count surface DOES follow the filter. */}
+        {indexIgnoresClassFilter && (
+          <div style={{ fontSize: 9, color: "var(--amber)", marginTop: 4, lineHeight: 1.35 }}>
+            Infrastructure-type filter is active, but this index covers <b>all</b> classes —
+            the shading does not narrow to your selection. Switch to “Recorded events” for a
+            filtered surface.
+          </div>
+        )}
+        {/* The halo is the loudest mark on the map and was the only channel with no key. */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 7, borderTop: "1px solid var(--line)", paddingTop: 6 }}>
-          <span style={{ width: 16, height: 8, border: "1px dashed #a98bfa", background: "#2a2438" }} />
+          <span style={{ width: 14, height: 14, borderRadius: "50%", border: "1px solid #f0534a", background: "rgba(240,83,74,0.14)", flex: "0 0 auto" }} />
+          <span style={{ fontSize: 9.5, color: "var(--text-faint)", lineHeight: 1.3 }}>
+            Recorded events, sized by count, on the region centroid — activity, not current damage
+          </span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5 }}>
+          <span style={{ width: 16, height: 8, border: "1px dashed #a98bfa", background: "#2a2438", flex: "0 0 auto" }} />
           <span style={{ fontSize: 9.5, color: "var(--text-faint)" }}>Crimea — Ukraine, occupied (in index)</span>
         </div>
       </div>
@@ -957,6 +1047,13 @@ export default function MapPanel({
                 <span className="k">Events to date</span>
                 <span className="v">{hover.incidents}</span>
               </div>
+              {/* A region with nothing ever recorded also reads ±0.00 on the delta surface. That
+                  is "no basis to change", not "measured as unchanged" — unknown is not zero. */}
+              {isDelta && hover.incidents === 0 && (
+                <div style={{ fontSize: 10, color: "var(--amber)", marginTop: 5, lineHeight: 1.4 }}>
+                  No recorded events here — nothing to change, not a measured zero.
+                </div>
+              )}
             </>
           )}
         </div>

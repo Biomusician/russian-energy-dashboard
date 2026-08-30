@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Bundle } from "../types";
 import { fmtDelta, fmtNum, titleCase, windowRef } from "../data";
 import { severityColor } from "../palette";
@@ -17,6 +18,7 @@ export default function ComparisonTray({
   onClear: () => void;
   onSelect: (code: string) => void;
 }) {
+  const [collapsed, setCollapsed] = useState(false);
   if (codes.length < 2) return null;
   const dates = bundle.national.dates;
   // Same weekly-series resolution as every other change view, so the columns are comparable.
@@ -39,8 +41,16 @@ export default function ComparisonTray({
     <div className="compare-tray">
       <div className="compare-head">
         <span className="eyebrow">Region comparison</span>
-        <button className="ghost" style={{ padding: "1px 7px", fontSize: 10 }} onClick={onClear}>clear all</button>
+        <div style={{ display: "flex", gap: 4 }}>
+          <button className="ghost" style={{ padding: "1px 7px", fontSize: 10 }}
+                  title={collapsed ? "Show the comparison columns" : "Collapse — keeps the pinned regions"}
+                  onClick={() => setCollapsed((c) => !c)}>
+            {collapsed ? `show (${codes.length})` : "collapse"}
+          </button>
+          <button className="ghost" style={{ padding: "1px 7px", fontSize: 10 }} onClick={onClear}>clear all</button>
+        </div>
       </div>
+      {collapsed ? null : (
       <div className="compare-cols">
         {cols.map(({ code, snap, series, esdiNow, change, topSector, occupied }) => {
           const color = occupied ? "var(--violet)" : severityColor(esdiNow);
@@ -69,6 +79,7 @@ export default function ComparisonTray({
           );
         })}
       </div>
+      )}
     </div>
   );
 }

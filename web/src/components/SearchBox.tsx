@@ -18,6 +18,8 @@ export default function SearchBox({
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
+  const regionName = (code: string | null | undefined) =>
+    (code && bundle.regions.find((r) => r.code === code)?.name) || "";
 
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -80,7 +82,12 @@ export default function SearchBox({
                   <span className="search-glyph" aria-hidden="true"
                         dangerouslySetInnerHTML={{ __html: iconSVG(a.asset_class, { size: 15, region: a.precision === "region" }) }} />
                   <span className="search-name">{displayName(a.name)}</span>
-                  <span className="search-meta">{titleCase(a.asset_class)}</span>
+                  {/* Region as well as class: two similarly-named facilities in different
+                      oblasts were otherwise indistinguishable in the result list. */}
+                  <span className="search-meta">
+                    {titleCase(a.asset_class)}
+                    {regionName(a.region_code) ? ` · ${regionName(a.region_code)}` : ""}
+                  </span>
                 </button>
               ))}
             </div>

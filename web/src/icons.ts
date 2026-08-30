@@ -41,15 +41,20 @@ export const ICON_SHAPES: Record<string, string> = {
   oil_terminal:
     '<ellipse cx="12" cy="8" rx="8" ry="2.4"/><path d="M4 8v9c0 1.3 3.6 2.4 8 2.4s8-1.1 8-2.4V8z"/>' +
     '<path d="M12 11.5c-1.2 1.6-2 2.6-2 3.6a2 2 0 0 0 4 0c0-1-.8-2-2-3.6z" fill="#05070a"/>',
-  // Processing tower topped with a gas flame.
+  // Spherical pressure vessel + flare stack. Deliberately NOT another banded vertical column:
+  // against the refinery's tall fractionation tower the two were one silhouette at map sizes,
+  // leaving colour as the only channel separating them.
   gas_processing:
-    '<path d="M9 22V11h6v11z"/><path d="M8 14h8M8 18h8" stroke="#05070a" stroke-width="1.1"/>' +
-    '<path d="M12 2c2 2.2 3.4 3.8 3.4 5.8A3.4 3.4 0 0 1 8.6 7.8C8.6 6.4 9.4 5.6 10 4.6c.2 1.2.9 1.6 1.5 1.9C11 5 11.2 3.6 12 2z"/>',
-  // Cryogenic LNG tank: squat tank + snowflake (cold) so it never reads as ordinary oil storage.
+    '<circle cx="9.5" cy="15" r="5.5"/>' +
+    '<path d="M6.5 10.5h6M5.6 19h7.8" stroke="#05070a" stroke-width="1.1" fill="none"/>' +
+    '<path d="M17 22V9h2.6v13z"/>' +
+    '<path d="M18.3 2c1.5 1.7 2.5 2.9 2.5 4.4a2.5 2.5 0 0 1-5 0c0-1 .6-1.7 1-2.4.2.9.6 1.2 1 1.4-.4-1-.2-2.2.5-3.4z"/>',
+  // Cryogenic LNG tank + snowflake. Full-opacity tank and a heavier snowflake: at 0.55 the
+  // snowflake washed out and the shape collapsed to the same squat cylinder as an oil terminal.
   lng_terminal:
-    '<path d="M4 9a8 3 0 0 1 16 0v8c0 1.3-3.6 2.4-8 2.4S4 18.3 4 17z" opacity="0.55"/>' +
-    '<ellipse cx="12" cy="9" rx="8" ry="2.6" opacity="0.55"/>' +
-    '<path d="M12 5v9M8.1 6.8l7.8 5.4M15.9 6.8l-7.8 5.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+    '<path d="M4 9a8 3 0 0 1 16 0v8c0 1.3-3.6 2.4-8 2.4S4 18.3 4 17z"/>' +
+    '<ellipse cx="12" cy="9" rx="8" ry="2.6"/>' +
+    '<path d="M12 5.6v10.6M8 7.6l8 6.6M16 7.6l-8 6.6" stroke="#05070a" stroke-width="2.2" stroke-linecap="round" fill="none"/>',
   // Transformer coils (two interlocked rings) = electrical node.
   substation:
     '<circle cx="9" cy="12" r="4.4" fill="none" stroke="currentColor" stroke-width="1.9"/>' +
@@ -105,10 +110,13 @@ export function iconSVG(
   // "Stacked cards" backplate = SEVERAL assets share this administrative centroid. It is a
   // cartographic marker for multiplicity, not a second location: the exact members are named in
   // the hover/click card. Drawn behind the glyph and offset up-right so the shape stays readable.
+  // Offset far enough (4 units) that the plates stay separable at map sizes — at the previous
+  // 2.5 they merged into a single thin box and read as a selection highlight rather than
+  // "several". Filled with the page ground so the rear plates read as cards behind the glyph.
   const stack = opts.stacked
-    ? `<g fill="none" stroke="${color}" stroke-width="1.2" opacity="0.75">` +
-      `<rect x="7.5" y="2.6" width="14" height="14" rx="1.6"/>` +
-      `<rect x="5" y="5.1" width="14" height="14" rx="1.6" stroke-opacity="0.55"/></g>`
+    ? `<g stroke="${color}" stroke-width="1.3" fill="#05070a">` +
+      `<rect x="9" y="1.5" width="13.5" height="13.5" rx="1.6" stroke-opacity="0.5"/>` +
+      `<rect x="5" y="5.5" width="13.5" height="13.5" rx="1.6" stroke-opacity="0.8"/></g>`
     : "";
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24">${stack}${body}${frame}</svg>`;
 }

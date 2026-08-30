@@ -49,8 +49,11 @@ export default function Ribbon({
           cross-class median — a 2-day terminal restart and a 205-day gas-plant repair are not
           one repair time. The mixed median is shown only as a caveated sub-line, never the
           lead number; per-class medians live in the Recovery tab. */}
-      <div className="esdi-block" style={{ gap: 20 }}>
-        <RecoveryStat value={rs.unresolved_count} label="Unresolved impairments" color="var(--amber)" />
+      {/* These three are as-at-build snapshot counts; only the ESDI to their left follows the
+          scrubber. Scrubbed to 2024 the ribbon otherwise showed a 2024 index beside 2026 recovery
+          counts with nothing to tell them apart — an arithmetically impossible reading. */}
+      <div className="esdi-block" style={{ gap: 20 }} title="Current as at the latest build — these do not follow the timeline scrubber.">
+        <RecoveryStat value={rs.unresolved_count} label="Unresolved impairments" color="var(--amber)" current />
         <RecoveryStat
           value={`${rs.observed_restoration_episodes}`}
           label="Observed-restoration episodes"
@@ -58,8 +61,9 @@ export default function Ribbon({
             ? `mixed-infra median ${rs.median_observed_restoration_days}d — not a per-sector norm`
             : `< ${rs.min_median_episodes} for a pooled median`}
           color="var(--green)"
+          current
         />
-        <RecoveryStat value={rs.full_reconstitution_episodes} label="Reconstitution episodes" color="var(--green)" />
+        <RecoveryStat value={rs.full_reconstitution_episodes} label="Reconstitution episodes" color="var(--green)" current />
       </div>
 
       <div className="sector-strip">
@@ -111,11 +115,20 @@ export default function Ribbon({
   );
 }
 
-function RecoveryStat({ value, label, sub, color }: { value: React.ReactNode; label: string; sub?: string; color: string }) {
+function RecoveryStat({
+  value, label, sub, color, current,
+}: {
+  value: React.ReactNode; label: string; sub?: string; color: string;
+  /** Marks a value that is as-at-build and does NOT follow the timeline scrubber. */
+  current?: boolean;
+}) {
   return (
     <div className="esdi-meta" style={{ gap: 2 }}>
       <div className="num" style={{ fontSize: 26, lineHeight: 1, color }}>{value}</div>
-      <div className="eyebrow" style={{ maxWidth: 96, lineHeight: 1.3 }}>{label}</div>
+      <div className="eyebrow" style={{ maxWidth: 96, lineHeight: 1.3 }}>
+        {label}
+        {current && <span style={{ color: "var(--amber)" }}> · current</span>}
+      </div>
       {sub && <div style={{ fontSize: 9.5, color: "var(--text-faint)", fontFamily: "var(--mono)" }}>{sub}</div>}
     </div>
   );
