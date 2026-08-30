@@ -6,6 +6,7 @@ import { CLASS_COLOR, ESDI_DELTA_STOPS, SEVERITY_STOPS } from "../palette";
 import { addDays, fmtDelta, fmtNum, loadContextLayer, stepFor } from "../data";
 import { iconImageId, prewarmIcons } from "../icons";
 import { AssetHoverCard } from "./AssetDetail";
+import type { CameraState } from "../urlState";
 
 /** The map deliberately has no basemap.
  *
@@ -78,7 +79,7 @@ interface ScreenLabel { name: string; x: number; y: number; size: number; kind: 
 
 export default function MapPanel({
   bundle, step, filters, selected, onSelect, incidentsByRegion,
-  selectedAssetKey, onSelectAsset, haloByRegion,
+  selectedAssetKey, onSelectAsset, haloByRegion, initialCamera, onCamera,
 }: {
   bundle: Bundle;
   step: number;
@@ -89,6 +90,10 @@ export default function MapPanel({
   selectedAssetKey?: string | null;
   onSelectAsset?: (asset: Asset | null, key: string | null) => void;
   haloByRegion?: Map<string, number>;
+  /** Camera to open at (§22), from a shared link. Absent = the default Full-AOI frame. */
+  initialCamera?: CameraState | null;
+  /** Reports the settled camera after each pan/zoom so App can mirror it into the URL. */
+  onCamera?: (cam: CameraState) => void;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -178,11 +183,14 @@ export default function MapPanel({
   // --- init ---------------------------------------------------------------
   useEffect(() => {
     if (!container.current || map.current) return;
+    // A shared link opens at its saved frame (§22); otherwise fit the Full-AOI bounds.
+    const cam = initialCamera;
     const m = new maplibregl.Map({
       container: container.current,
       style: EMPTY_STYLE,
-      bounds: AOI_BOUNDS,
-      fitBoundsOptions: { padding: 28 },
+      ...(cam
+        ? { center: [cam.lng, cam.lat] as [number, number], zoom: cam.zoom }
+        : { bounds: AOI_BOUNDS, fitBoundsOptions: { padding: 28 } }),
       attributionControl: false,
       maxZoom: 9,
       dragRotate: false,
@@ -396,6 +404,23 @@ export default function MapPanel({
     // Sources are seeded once; later changes are pushed by the effects below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Mirror the settled camera to the parent for the URL (§22). Armed on a short delay so the
+  // one-off initial fit does NOT write a camera into an otherwise-default link; every real pan,
+  // zoom, or camera-preset flyTo after that is reported on moveend.
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready || !onCamera) return;
+    let armed = false;
+    const arm = window.setTimeout(() => { armed = true; }, 500);
+    const report = () => {
+      if (!armed) return;
+      const c = m.getCenter();
+      onCamera({ lng: c.lng, lat: c.lat, zoom: m.getZoom() });
+    };
+    m.on("moveend", report);
+    return () => { window.clearTimeout(arm); m.off("moveend", report); };
+  }, [ready, onCamera]);
 
   // --- infrastructure icons + symbol layers (added AFTER the style loads and the images are
   //     registered, so a symbol layer never references a missing image and stalls the map) ---

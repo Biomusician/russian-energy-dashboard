@@ -128,6 +128,7 @@ export function stepFor(dates: string[], date: string): number {
  *  trend windows, which are always relative to the scrubber position, never wall-clock now. */
 export function addDays(iso: string, delta: number): string {
   const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return iso; // empty/malformed -> pass through rather than throw
   const dt = new Date(Date.UTC(y, m - 1, d));
   dt.setUTCDate(dt.getUTCDate() + delta);
   return dt.toISOString().slice(0, 10);

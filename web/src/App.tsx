@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { addDays, loadBundle } from "./data";
+import { addDays, loadBundle, stepFor } from "./data";
 import type { Asset, Bundle, Incident } from "./types";
+import { decodeDeepLink, encodeDeepLink, type CameraState } from "./urlState";
 import Ribbon from "./components/Ribbon";
 import Filters from "./components/Filters";
 import MapPanel from "./components/MapPanel";
@@ -30,42 +31,57 @@ export interface FilterState {
   activityWindow: ActivityWindow;
 }
 
+const ALL_CONFIDENCES = ["confirmed", "probable", "possible", "unverified"];
+
 export default function App() {
+  // Deep-link the sender was looking at (§20-22), read once. Absent keys fall back to defaults.
+  const initial = useMemo(() => decodeDeepLink(window.location.search), []);
+
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(initial.selected ?? null);
   const [selectedAsset, setSelectedAsset] = useState<{ asset: Asset; key: string } | null>(null);
   const [methodOpen, setMethodOpen] = useState(false);
+  // Camera is first-class shareable state (§22): seeded from the link, then kept in sync as
+  // the user pans/zooms so the URL always reproduces the current frame.
+  const [camera, setCamera] = useState<CameraState | null>(initial.camera ?? null);
 
   const [filters, setFilters] = useState<FilterState>({
     classes: new Set(),
     causes: new Set(),
     confidences: new Set(),
-    showLines: false,
-    showAssets: true,
-    showRivers: false,
-    showGasNetwork: false,
-    showOilNetwork: false,
-    metric: "esdi",
-    activityWindow: "cumulative",
+    showLines: initial.showLines ?? false,
+    showAssets: initial.showAssets ?? true,
+    showRivers: initial.showRivers ?? false,
+    showGasNetwork: initial.showGasNetwork ?? false,
+    showOilNetwork: initial.showOilNetwork ?? false,
+    metric: initial.metric ?? "esdi",
+    activityWindow: initial.activityWindow ?? "cumulative",
   });
 
   useEffect(() => {
     loadBundle()
       .then((b) => {
         setBundle(b);
-        // Open at the present, which is the question a monitoring dashboard is
-        // usually asked; the scrubber is there to walk backwards.
-        setStep(b.national.dates.length - 1);
+        // Open at the deep-linked date if any, else at the present — the question a monitoring
+        // dashboard is usually asked; the scrubber is there to walk backwards.
+        setStep(initial.date ? stepFor(b.national.dates, initial.date) : b.national.dates.length - 1);
+        const allClasses = Object.keys(b.taxonomy.asset_classes);
+        const allCauses = Object.keys(b.taxonomy.causes);
+        // A link may pin a filter SUBSET; otherwise everything is on. Intersect with the real
+        // key universe so a stale link can never inject a key the taxonomy no longer has.
+        const pick = (linked: string[] | undefined, all: string[]) =>
+          linked ? new Set(linked.filter((k) => all.includes(k))) : new Set(all);
         setFilters((f) => ({
           ...f,
-          classes: new Set(Object.keys(b.taxonomy.asset_classes)),
-          causes: new Set(Object.keys(b.taxonomy.causes)),
-          confidences: new Set(["confirmed", "probable", "possible", "unverified"]),
+          classes: pick(initial.classes, allClasses),
+          causes: pick(initial.causes, allCauses),
+          confidences: pick(initial.confidences, ALL_CONFIDENCES),
         }));
       })
       .catch((e) => setError(String(e.message ?? e)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const currentDate = bundle ? bundle.national.dates[step] : "";
@@ -105,7 +121,7 @@ export default function App() {
   // "cumulative" mode we return undefined so the map keeps its original every-event-to-date
   // halo. Windows are relative to the scrubber date, so they stay meaningful while scrubbing.
   const haloByRegion = useMemo<Map<string, number> | undefined>(() => {
-    if (filters.activityWindow === "cumulative") return undefined;
+    if (filters.activityWindow === "cumulative" || !currentDate) return undefined;
     const days = filters.activityWindow === "30d" ? 30 : 90;
     const windowStart = addDays(currentDate, -days);
     const m = new Map<string, number>();
@@ -122,6 +138,34 @@ export default function App() {
     setSelected(code);
     setSelectedAsset((a) => (a && a.asset.region_code === code ? a : null));
   };
+
+  // Mirror the shareable view into the URL (§20-22). replaceState, so scrubbing and panning
+  // never floods browser history; only NON-DEFAULT state is written, so an untouched dashboard
+  // keeps a clean URL. Runs after the bundle is loaded, so the key universes are known.
+  useEffect(() => {
+    if (!bundle) return;
+    const dates = bundle.national.dates;
+    const q = encodeDeepLink({
+      metric: filters.metric,
+      activityWindow: filters.activityWindow,
+      date: dates[step] ?? null,
+      latestDate: dates[dates.length - 1],
+      selected,
+      classes: filters.classes,
+      causes: filters.causes,
+      confidences: filters.confidences,
+      allClasses: Object.keys(bundle.taxonomy.asset_classes),
+      allCauses: Object.keys(bundle.taxonomy.causes),
+      allConfidences: ALL_CONFIDENCES,
+      showLines: filters.showLines,
+      showAssets: filters.showAssets,
+      showRivers: filters.showRivers,
+      showGasNetwork: filters.showGasNetwork,
+      showOilNetwork: filters.showOilNetwork,
+      camera,
+    });
+    window.history.replaceState(null, "", q ? `${window.location.pathname}?${q}` : window.location.pathname);
+  }, [bundle, filters, selected, step, camera]);
 
   if (error) {
     return (
@@ -169,6 +213,8 @@ export default function App() {
         haloByRegion={haloByRegion}
         selectedAssetKey={selectedAsset?.key ?? null}
         onSelectAsset={(asset, key) => setSelectedAsset(asset && key ? { asset, key } : null)}
+        initialCamera={initial.camera ?? null}
+        onCamera={setCamera}
       />
       <Dossier
         bundle={bundle}
