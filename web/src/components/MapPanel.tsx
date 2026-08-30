@@ -3,14 +3,9 @@ import maplibregl from "maplibre-gl";
 import type { FilterState } from "../App";
 import type { Asset, Bundle, Incident } from "../types";
 import { CLASS_COLOR, ESDI_DELTA_STOPS, SEVERITY_STOPS } from "../palette";
-import { addDays, fmtNum, loadContextLayer, stepFor } from "../data";
+import { addDays, fmtDelta, fmtNum, loadContextLayer, stepFor } from "../data";
 import { iconImageId, prewarmIcons } from "../icons";
 import { AssetHoverCard } from "./AssetDetail";
-
-/** Signed, fixed-precision delta for the "change in ESDI" surfaces (§14-15). */
-function fmtDelta(v: number): string {
-  return (v > 0 ? "+" : v < 0 ? "−" : "±") + Math.abs(v).toFixed(2);
-}
 
 /** The map deliberately has no basemap.
  *

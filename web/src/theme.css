@@ -336,6 +336,22 @@ select.ghost {
   margin-bottom: 5px;
 }
 
+/* Small segmented control (What-changed window picker). */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.seg-btn {
+  background: transparent; border: none; color: var(--text-dim);
+  font: inherit; font-size: 10.5px; padding: 2px 8px; cursor: pointer;
+}
+.seg-btn + .seg-btn { border-left: 1px solid var(--line); }
+.seg-btn.on { background: var(--accent-dim); color: #eaf7fb; }
+.seg-btn:hover:not(.on) { color: var(--text); }
+
+.linklike {
+  background: none; border: none; color: var(--accent); cursor: pointer;
+  font: inherit; font-size: 11px; padding: 6px 0 2px; text-align: left;
+}
+.linklike:hover { text-decoration: underline; }
+
 .kv { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 12px; }
 .kv + .kv { border-top: 1px solid var(--line-soft); }
 .kv .k { color: var(--text-dim); }

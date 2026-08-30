@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Asset, Bundle, Incident } from "../types";
 import {
   CostsTab, EffectsTab, OverviewTab, RankingsTab, RecentTab,
-  ReconstitutionTab, SourcesTab, type TabProps,
+  ReconstitutionTab, SourcesTab, WhatChangedTab, type TabProps,
 } from "./tabs";
 import { AssetAttributes } from "./AssetDetail";
 
@@ -19,6 +19,7 @@ const TABS: {
   badge?: (p: TabProps) => number | null;
 }[] = [
   { key: "Overview", label: "Overview", Comp: OverviewTab },
+  { key: "WhatChanged", label: "What changed", Comp: WhatChangedTab },
   { key: "Rankings", label: "Rankings", Comp: RankingsTab },
   { key: "Recent", label: "Recent", Comp: RecentTab, badge: (p) => Math.min(10, p.visibleIncidents.length) },
   { key: "Reconstitution", label: "Recovery", Comp: ReconstitutionTab, badge: (p) => p.bundle.snapshot.recovery_stats.unresolved_count },

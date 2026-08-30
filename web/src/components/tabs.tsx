@@ -4,7 +4,7 @@
 
 import { useMemo, useState } from "react";
 import type { Bundle, CoverageDetail, Incident, LiveDisruption, RegionSnapshot } from "../types";
-import { fmtDate, fmtNum, titleCase } from "../data";
+import { addDays, fmtDate, fmtDelta, fmtNum, stepFor, titleCase } from "../data";
 import { classColor, evidence, severityColor } from "../palette";
 import { Bar, EventRow, EvidenceChip, RecoveryLine, Tile } from "./ui";
 
@@ -42,6 +42,117 @@ function KV({ k, v, hint }: { k: string; v: React.ReactNode; hint?: string }) {
 
 function Note({ children, warn }: { children: React.ReactNode; warn?: boolean }) {
   return <div className={`note${warn ? " warn" : ""}`}>{children}</div>;
+}
+
+// ============================================================ WHAT CHANGED
+
+/** §13/§23 — the trailing-window "what changed" digest. Three DELIBERATELY separate measures
+ *  over the last 7 / 30 / 90 days to the scrubber: new recorded events, new restoration
+ *  evidence, and the change in the exposure index. They are never merged into one number
+ *  because they answer different questions and are not additive. Scopes to the selected region
+ *  when one is chosen, otherwise the whole monitored area. */
+export function WhatChangedTab(p: TabProps) {
+  const { bundle, step, selected, currentDate, onTab } = p;
+  const [win, setWin] = useState<number>(30);
+  const dates = bundle.national.dates;
+  const windowStart = addDays(currentDate, -win);
+  const refStep = stepFor(dates, windowStart);
+  const scope = selected ? bundle.snapshot.regions[selected] : null;
+  const regionName = (code: string | null | undefined) =>
+    (code && bundle.snapshot.regions[code]?.name) || undefined;
+
+  const newEvents = useMemo(
+    () => bundle.incidents
+      .filter((i) => i.date > windowStart && i.date <= currentDate && (!selected || i.region_code === selected))
+      .sort((a, b) => b.date.localeCompare(a.date)),
+    [bundle.incidents, windowStart, currentDate, selected],
+  );
+
+  const newRecovery = useMemo(
+    () => bundle.snapshot.live_disruptions.filter((d) => {
+      const od = d.recovery.observed_date;
+      return !!od && od > windowStart && od <= currentDate && (!selected || d.region_code === selected);
+    }),
+    [bundle.snapshot.live_disruptions, windowStart, currentDate, selected],
+  );
+
+  const series = selected ? bundle.regional.regions[selected]?.esdi : bundle.national.esdi;
+  const esdiNow = series?.[step] ?? 0;
+  const esdiThen = series?.[refStep] ?? 0;
+  const esdiDelta = esdiNow - esdiThen;
+  const deltaColor = esdiDelta > 0.05 ? "#e08a5a" : esdiDelta < -0.05 ? "#4a9fd4" : "var(--text-dim)";
+
+  return (
+    <>
+      <Block
+        title="What changed"
+        right={
+          <div className="seg">
+            {[7, 30, 90].map((w) => (
+              <button key={w} className={`seg-btn${win === w ? " on" : ""}`} onClick={() => setWin(w)}>
+                {w}d
+              </button>
+            ))}
+          </div>
+        }
+      >
+        <Note>
+          Three independent measures over the {win} days to {fmtDate(currentDate)}
+          {scope ? ` in ${scope.name}` : " across the monitored area"}. Shown separately on
+          purpose: a new event, a new restoration, and a change in the exposure index are
+          different things and never sum.
+        </Note>
+      </Block>
+
+      <Block title="New recorded events" right={<span className="num" style={{ fontSize: 15 }}>{newEvents.length}</span>}>
+        {newEvents.length === 0 ? (
+          <Note>No events recorded in this window.</Note>
+        ) : (
+          <>
+            {newEvents.slice(0, 6).map((i) => (
+              <EventRow key={i.incident_id} incident={i} showRegion={!selected} regionName={regionName(i.region_code)} />
+            ))}
+            {newEvents.length > 6 && (
+              <button className="linklike" onClick={() => onTab("Recent")}>
+                +{newEvents.length - 6} more — open the Recent tab
+              </button>
+            )}
+          </>
+        )}
+      </Block>
+
+      <Block
+        title="New restoration evidence"
+        right={<span className="num" style={{ fontSize: 15, color: "var(--green)" }}>{newRecovery.length}</span>}
+      >
+        {newRecovery.length === 0 ? (
+          <Note>No restoration observed in this window. Absence of evidence is not restoration.</Note>
+        ) : (
+          newRecovery.slice(0, 6).map((d, i) => (
+            <div key={i} style={{ padding: "6px 0", borderBottom: i < Math.min(6, newRecovery.length) - 1 ? "1px solid var(--line-soft)" : undefined }}>
+              <div className="event-top">
+                <span className="event-name">{d.name ?? titleCase(d.asset_class ?? "facility")}</span>
+                <span className="num" style={{ fontSize: 11, color: "var(--text-dim)" }}>{fmtDate(d.recovery.observed_date!)}</span>
+              </div>
+              {!selected && d.region_code && <div className="eyebrow" style={{ marginTop: 2 }}>{regionName(d.region_code)}</div>}
+              <RecoveryLine r={d.recovery} />
+            </div>
+          ))
+        )}
+      </Block>
+
+      <Block title="Change in exposure index (ESDI)">
+        <KV k={scope ? `${scope.name} — now` : "Monitored area — now"} v={<span className="num">{fmtNum(esdiNow, 2)}</span>} />
+        <KV k={`${win} days ago · ${fmtDate(dates[refStep])}`} v={<span className="num">{fmtNum(esdiThen, 2)}</span>} />
+        <KV k="Change over the window" v={<span className="num" style={{ color: deltaColor }}>{fmtDelta(esdiDelta)}</span>} />
+        <Note>
+          A modelled change in the exposure index — driven by new events and by recovery
+          decay — not a measure of observed physical damage. On the map, the “Change in ESDI”
+          choropleth shows this per region (blue = fell, red = rose).
+        </Note>
+      </Block>
+    </>
+  );
 }
 
 // ============================================================ OVERVIEW

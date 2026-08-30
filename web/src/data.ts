@@ -149,3 +149,9 @@ export function fmtNum(n: number | null | undefined, digits = 1): string {
 export function titleCase(key: string): string {
   return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
+
+/** Signed, fixed-precision delta (e.g. "+1.21", "−0.69", "±0.00") for the change views. Uses a
+ *  real minus sign so a negative never looks like a hyphenated range. */
+export function fmtDelta(v: number, digits = 2): string {
+  return (v > 0 ? "+" : v < 0 ? "−" : "±") + Math.abs(v).toFixed(digits);
+}
