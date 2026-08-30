@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, loadBundle, stepFor } from "./data";
 import type { Asset, Bundle, Incident } from "./types";
 import { decodeDeepLink, encodeDeepLink, type CameraState } from "./urlState";
@@ -18,6 +18,15 @@ export type Metric = "esdi" | "incidents" | "esdi_delta_30d" | "esdi_delta_90d";
 /** Recent-activity halo window (§16). "activity" = new recorded events in the trailing window;
  *  it is NOT current impairment and NOT damage. "cumulative" is every event to the scrubber. */
 export type ActivityWindow = "cumulative" | "30d" | "90d";
+
+/** A one-shot request for the map to frame something (from search, §21). The nonce lets the same
+ *  target be re-triggered; bounds fits a region bbox, center+zoom frames an asset point. */
+export interface FlyTarget {
+  bounds?: [number, number, number, number];
+  center?: [number, number];
+  zoom?: number;
+  nonce: number;
+}
 
 export interface FilterState {
   classes: Set<string>;
@@ -51,6 +60,9 @@ export default function App() {
       prev.includes(code) ? prev.filter((c) => c !== code)
       : prev.length >= 3 ? [...prev.slice(1), code]
       : [...prev, code]);
+  // Search-driven map framing (§21). A monotonically increasing nonce re-triggers the same target.
+  const [flyTarget, setFlyTarget] = useState<FlyTarget | null>(null);
+  const flyNonce = useRef(0);
   // Camera is first-class shareable state (§22): seeded from the link, then kept in sync as
   // the user pans/zooms so the URL always reproduces the current frame.
   const [camera, setCamera] = useState<CameraState | null>(initial.camera ?? null);
@@ -147,6 +159,19 @@ export default function App() {
     setSelectedAsset((a) => (a && a.asset.region_code === code ? a : null));
   };
 
+  // Search picks (§21): select the target and ask the map to frame it. A region fits its bbox; an
+  // asset is centred at its public point and its containing region dossier opens alongside.
+  const pickRegionFromSearch = (code: string) => {
+    selectRegion(code);
+    const meta = bundle?.regions.find((r) => r.code === code);
+    if (meta?.bbox) setFlyTarget({ bounds: meta.bbox, nonce: ++flyNonce.current });
+  };
+  const pickAssetFromSearch = (asset: Asset, index: number) => {
+    setSelectedAsset({ asset, key: `${asset.asset_id}:${index}` });
+    if (asset.region_code) setSelected(asset.region_code);
+    setFlyTarget({ center: [asset.lon, asset.lat], zoom: 7, nonce: ++flyNonce.current });
+  };
+
   // Mirror the shareable view into the URL (§20-22). replaceState, so scrubbing and panning
   // never floods browser history; only NON-DEFAULT state is written, so an untouched dashboard
   // keeps a clean URL. Runs after the bundle is loaded, so the key universes are known.
@@ -211,6 +236,8 @@ export default function App() {
         filters={filters}
         setFilters={setFilters}
         visibleIncidents={visibleIncidents}
+        onPickRegion={pickRegionFromSearch}
+        onPickAsset={pickAssetFromSearch}
       />
       <MapPanel
         bundle={bundle}
@@ -224,6 +251,7 @@ export default function App() {
         onSelectAsset={(asset, key) => setSelectedAsset(asset && key ? { asset, key } : null)}
         initialCamera={initial.camera ?? null}
         onCamera={setCamera}
+        flyTarget={flyTarget}
       />
       <Dossier
         bundle={bundle}

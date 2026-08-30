@@ -352,6 +352,37 @@ select.ghost {
 }
 .linklike:hover { text-decoration: underline; }
 
+/* Region / facility search (§21): sits at the top of the left rail; results drop below. */
+.search-box { position: relative; width: 100%; }
+.search-input {
+  width: 100%; box-sizing: border-box;
+  background: var(--bg-inset); border: 1px solid var(--line);
+  color: var(--text); border-radius: var(--radius);
+  padding: 6px 9px; font: inherit; font-size: 12px;
+}
+.search-input:focus { outline: none; border-color: var(--accent-dim); }
+.search-input::placeholder { color: var(--text-faint); }
+.search-results {
+  position: absolute; left: 0; right: 0; top: calc(100% + 4px);
+  z-index: 20; background: rgba(9, 13, 18, 0.98);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  max-height: 330px; overflow-y: auto;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+}
+.search-group { padding: 6px 8px; }
+.search-group + .search-group { border-top: 1px solid var(--line-soft); }
+.search-row {
+  display: flex; align-items: center; gap: 7px; width: 100%;
+  background: none; border: none; color: var(--text); cursor: pointer;
+  padding: 5px 4px; text-align: left; font: inherit; font-size: 12px;
+}
+.search-row:hover { background: var(--bg-panel-2); }
+.search-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-meta { color: var(--text-faint); font-size: 10px; flex: none; }
+.search-glyph { width: 15px; height: 15px; flex: none; display: inline-flex; }
+.search-glyph svg { width: 15px; height: 15px; display: block; }
+.search-empty { padding: 10px; color: var(--text-faint); font-size: 11px; }
+
 /* Region comparison tray (§17): floats at the bottom of the map cell, over the choropleth. */
 .compare-tray {
   grid-area: map;

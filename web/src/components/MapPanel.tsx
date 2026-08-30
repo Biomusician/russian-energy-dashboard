@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
-import type { FilterState } from "../App";
+import type { FilterState, FlyTarget } from "../App";
 import type { Asset, Bundle, Incident } from "../types";
 import { CLASS_COLOR, ESDI_DELTA_STOPS, SEVERITY_STOPS } from "../palette";
 import { addDays, fmtDelta, fmtNum, loadContextLayer, stepFor } from "../data";
@@ -79,7 +79,7 @@ interface ScreenLabel { name: string; x: number; y: number; size: number; kind: 
 
 export default function MapPanel({
   bundle, step, filters, selected, onSelect, incidentsByRegion,
-  selectedAssetKey, onSelectAsset, haloByRegion, initialCamera, onCamera,
+  selectedAssetKey, onSelectAsset, haloByRegion, initialCamera, onCamera, flyTarget,
 }: {
   bundle: Bundle;
   step: number;
@@ -94,6 +94,8 @@ export default function MapPanel({
   initialCamera?: CameraState | null;
   /** Reports the settled camera after each pan/zoom so App can mirror it into the URL. */
   onCamera?: (cam: CameraState) => void;
+  /** One-shot request to frame a search hit (§21); re-triggered by its nonce. */
+  flyTarget?: FlyTarget | null;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -421,6 +423,17 @@ export default function MapPanel({
     m.on("moveend", report);
     return () => { window.clearTimeout(arm); m.off("moveend", report); };
   }, [ready, onCamera]);
+
+  // Frame a search hit (§21): fit a region's bbox, or centre an asset's public point. Keyed on
+  // the target nonce so re-picking the same place flies again. Capped zoom keeps region-precision
+  // framing honest — a centroid asset never zooms in as if it were a precise facility fix.
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready || !flyTarget) return;
+    if (flyTarget.bounds) m.fitBounds(flyTarget.bounds, { padding: 50, duration: 800, maxZoom: 7.5 });
+    else if (flyTarget.center) m.flyTo({ center: flyTarget.center, zoom: flyTarget.zoom ?? 7, duration: 800 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, flyTarget?.nonce]);
 
   // --- infrastructure icons + symbol layers (added AFTER the style loads and the images are
   //     registered, so a symbol layer never references a missing image and stalls the map) ---

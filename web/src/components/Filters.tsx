@@ -1,9 +1,10 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { FilterState } from "../App";
-import type { Bundle, FacetCounts, Incident } from "../types";
+import type { Asset, Bundle, FacetCounts, Incident } from "../types";
 import { CAUSE_COLOR, classColor } from "../palette";
 import { titleCase } from "../data";
 import { iconSVG } from "../icons";
+import SearchBox from "./SearchBox";
 
 /** Recompute facet counts from the raw bundle when snapshot.facet_counts is absent — a
  *  resilience fallback for the brief deploy window where the CDN may serve an older
@@ -30,12 +31,14 @@ function fallbackFacets(bundle: Bundle): FacetCounts {
 /** Left rail. Every toggle carries a live tally so an empty layer reads as
  *  "nothing recorded here" rather than as a broken filter. */
 export default function Filters({
-  bundle, filters, setFilters,
+  bundle, filters, setFilters, onPickRegion, onPickAsset,
 }: {
   bundle: Bundle;
   filters: FilterState;
   setFilters: Dispatch<SetStateAction<FilterState>>;
   visibleIncidents: Incident[];
+  onPickRegion: (code: string) => void;
+  onPickAsset: (asset: Asset, index: number) => void;
 }) {
   const { taxonomy } = bundle;
   // Normally the pipeline emits facet_counts. During a deploy the CDN can briefly serve an
@@ -77,6 +80,10 @@ export default function Filters({
     <aside className="panel filters">
       <div className="section-head">
         <h2 style={{ fontSize: 12 }}>Layers &amp; filters</h2>
+      </div>
+
+      <div className="ctl-group">
+        <SearchBox bundle={bundle} onPickRegion={onPickRegion} onPickAsset={onPickAsset} />
       </div>
 
       <div className="ctl-group">
