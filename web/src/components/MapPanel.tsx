@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import type { FilterState } from "../App";
-import type { Bundle, Incident } from "../types";
+import type { Asset, Bundle, Incident } from "../types";
 import { CLASS_COLOR, SEVERITY_STOPS } from "../palette";
-import { fmtNum, loadContextLayer } from "../data";
+import { fmtNum, loadContextLayer, titleCase } from "../data";
+import { iconImageId, prewarmIcons, iconSVG } from "../icons";
 
 /** The map deliberately has no basemap.
  *
@@ -14,9 +15,11 @@ import { fmtNum, loadContextLayer } from "../data";
  *  network requests, works offline, and cannot break when someone else's tile server
  *  changes its terms.
  *
- *  No symbol layers either -- text rendering in MapLibre needs a glyph endpoint, which
- *  would reintroduce exactly that external dependency. Region names live in the
- *  hover card and the dossier instead. */
+ *  TEXT symbol layers are still avoided — MapLibre text needs a glyph endpoint, which would
+ *  reintroduce that external dependency, so region/sea/country names stay HTML overlays.
+ *  ICON-ONLY symbol layers, however, need no glyph service: the infrastructure icons
+ *  (iteration 8) are rasterised locally from inline SVG and registered with addImage(), so
+ *  the zero-third-party-request invariant is fully preserved (see src/icons.ts). */
 
 const EMPTY_STYLE: maplibregl.StyleSpecification = {
   version: 8,
@@ -49,6 +52,16 @@ const SEA_LABELS: { name: string; lon: number; lat: number; size: number }[] = [
 // drops any that would collide.
 const DEFAULT_COUNTRY_MINZOOM = 3.4;
 
+// Declutter priority by class (§7): the analytically dense classes (refineries, gas/LNG,
+// generation) win collisions over the substation swarm. This is DISPLAY decluttering only —
+// capacity/voltage refine it, and it is never a target-value ranking.
+const CLASS_PRIO: Record<string, number> = {
+  refinery: 0, gas_processing: 1, lng_terminal: 1, oil_terminal: 2,
+  power_plant_nuclear: 2, power_plant_hydro: 3, power_plant_thermal: 3,
+  coal_terminal: 4, coal_mine: 4, interconnector: 4, power_plant_other: 5,
+  substation: 7,
+};
+
 interface HoverInfo {
   x: number;
   y: number;
@@ -64,6 +77,7 @@ interface ScreenLabel { name: string; x: number; y: number; size: number; kind: 
 
 export default function MapPanel({
   bundle, step, filters, selected, onSelect, incidentsByRegion,
+  selectedAssetKey, onSelectAsset, haloByRegion,
 }: {
   bundle: Bundle;
   step: number;
@@ -71,11 +85,18 @@ export default function MapPanel({
   selected: string | null;
   onSelect: (code: string | null) => void;
   incidentsByRegion: Map<string, Incident[]>;
+  selectedAssetKey?: string | null;
+  onSelectAsset?: (asset: Asset | null, key: string | null) => void;
+  haloByRegion?: Map<string, number>;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
+  const assetClickRef = useRef(false);
+  const selectedAssetIdRef = useRef<number | null>(null);
   const [ready, setReady] = useState(false);
+  const [assetLayersReady, setAssetLayersReady] = useState(false);
   const [hover, setHover] = useState<HoverInfo | null>(null);
+  const [assetHover, setAssetHover] = useState<{ x: number; y: number; asset: Asset } | null>(null);
   const [labels, setLabels] = useState<ScreenLabel[]>([]);
   // Lazy-loaded context layers (§16): which files we've fetched, and the rivers FC (needed
   // for the HTML label overlay, which the map source alone can't drive).
@@ -87,40 +108,71 @@ export default function MapPanel({
     [bundle.regions],
   );
 
-  /** Points for the infrastructure overlay, rebuilt when the class filter changes. */
+  // Asset ids that appear in disruption reporting — feeds the declutter priority and the
+  // asset card's "recorded incidents" line. Canonical-identity, not coordinates.
+  const struckAssetIds = useMemo(
+    () => new Set(bundle.incidents.map((i) => i.asset_id).filter(Boolean)),
+    [bundle.incidents],
+  );
+  const assetByKey = useMemo(
+    () => new Map(bundle.assets.map((a, i) => [`${a.asset_id}:${i}`, a])),
+    [bundle.assets],
+  );
+
+  /** Points for the infrastructure overlay — ALL assets (class visibility is applied by the
+   *  layer filter, not by rebuilding this source, so hover keys stay stable and toggling a
+   *  class is cheap). Each feature carries its precision-aware icon image, and a deterministic
+   *  declutter priority (§7: lower = placed first, wins collisions) from class → capacity/
+   *  voltage → struck → region-precision. Priority is DISPLAY decluttering only, never target
+   *  value. */
   const assetPoints = useMemo<GeoJSON.FeatureCollection>(() => ({
     type: "FeatureCollection",
-    features: bundle.assets
-      .filter((a) => filters.classes.has(a.asset_class))
-      .map((a) => ({
+    features: bundle.assets.map((a, i) => {
+      const region = a.precision === "region";
+      const struck = struckAssetIds.has(a.asset_id);
+      const classBase = (CLASS_PRIO[a.asset_class] ?? 6) * 1000;
+      const capBoost = Math.min(400, (a.capacity_mw ?? 0) / 12 + (a.capacity_mtpa ?? 0) * 25 + (a.capacity_bcm_y ?? 0) * 20);
+      const vBoost = Math.min(300, (a.voltage_kv ?? 0) / 2);
+      const prio = classBase - capBoost - vBoost - (struck ? 600 : 0) - (region ? 250 : 0);
+      return {
         type: "Feature" as const,
+        id: i,
         properties: {
+          key: `${a.asset_id}:${i}`,
           asset_class: a.asset_class,
           name: a.name ?? "",
-          capacity_mw: a.capacity_mw ?? 0,
           region_code: a.region_code,
+          img: iconImageId(a.asset_class, region),
+          region: region ? 1 : 0,
+          struck: struck ? 1 : 0,
+          prio: Math.round(prio),
         },
         geometry: { type: "Point" as const, coordinates: [a.lon, a.lat] },
-      })),
-  }), [bundle.assets, filters.classes]);
+      };
+    }),
+  }), [bundle.assets, struckAssetIds]);
 
   /** One marker per region that has recorded events, sized by how many.
    *  Placed on the region centroid: these are region-scoped records, and putting a
    *  dot on a facility's real coordinates would imply a precision the dataset does
    *  not have and the scope boundary does not want. */
   const disruptionPoints = useMemo<GeoJSON.FeatureCollection>(() => {
+    // Halo size is the ACTIVITY count for the chosen window (§16), supplied by the app; when
+    // absent it falls back to the cumulative filtered event count (the original behaviour).
+    const counts = haloByRegion
+      ?? new Map([...incidentsByRegion].map(([code, list]) => [code, list.length]));
     const feats: GeoJSON.Feature[] = [];
-    for (const [code, list] of incidentsByRegion) {
+    for (const [code, count] of counts) {
       const meta = regionMeta.get(code);
-      if (!meta) continue;
+      if (!meta || count <= 0) continue;
       feats.push({
         type: "Feature",
-        properties: { code, count: list.length, name: meta.name },
+        properties: { code, count, name: meta.name },
         geometry: { type: "Point", coordinates: meta.centroid },
       });
     }
     return { type: "FeatureCollection", features: feats };
-  }, [incidentsByRegion, regionMeta]);
+  }, [incidentsByRegion, regionMeta, haloByRegion]);
 
   // --- init ---------------------------------------------------------------
   useEffect(() => {
@@ -135,6 +187,7 @@ export default function MapPanel({
       dragRotate: false,
     });
     map.current = m;
+    if (import.meta.env.DEV) (window as unknown as { __map?: maplibregl.Map }).__map = m;
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
     m.addControl(
       new maplibregl.AttributionControl({
@@ -147,6 +200,9 @@ export default function MapPanel({
     );
 
     m.on("load", () => {
+      // The infrastructure SYMBOL layers are intentionally NOT added here. A symbol layer that
+      // references not-yet-registered icon images keeps isStyleLoaded() false, which stalls the
+      // whole map. They are added later (see the icon effect) once the images are registered.
       // --- context geography (drawn first, underneath everything analytic) ---
       m.addSource("ocean", { type: "geojson", data: bundle.ocean });
       m.addSource("context-land", { type: "geojson", data: bundle.contextLand });
@@ -254,10 +310,15 @@ export default function MapPanel({
             2, ["case", ["<=", ["get", "scalerank"], 2], 0.7, 0.35],
             8, ["case", ["<=", ["get", "scalerank"], 2], 2.4, 1.1],
           ] as unknown as maplibregl.ExpressionSpecification,
+          // Per-feature reveal: a river stays invisible until the zoom passes its own
+          // reveal_zoom, then fades in. MapLibre only allows ["zoom"] as the direct input to
+          // a top-level interpolate/step (nesting it inside a "case" is rejected and the whole
+          // layer is dropped), so the per-feature gate lives in the interpolate STOP OUTPUTS.
           "line-opacity": [
-            "case", [">=", ["zoom"], ["get", "reveal_zoom"]],
-            ["interpolate", ["linear"], ["zoom"], 2.5, 0.3, 7, 0.55],
-            0,
+            "interpolate", ["linear"], ["zoom"],
+            2.5, ["case", [">=", 2.5, ["get", "reveal_zoom"]], 0.3, 0],
+            7, ["case", [">=", 7, ["get", "reveal_zoom"]], 0.55, 0],
+            9, ["case", [">=", 9, ["get", "reveal_zoom"]], 0.55, 0],
           ] as unknown as maplibregl.ExpressionSpecification,
         },
       });
@@ -307,38 +368,6 @@ export default function MapPanel({
         },
       });
 
-      // Individual infrastructure sites only appear once zoomed past the continental
-      // scale (iteration 3 declutter). At Full AOI the choropleth + event halos carry
-      // the signal; thousands of equally-prominent dots would bury it. As you zoom in,
-      // big plants fade in first (minzoom 3.6), then the rest (minzoom 4.6).
-      m.addLayer({
-        id: "asset-dots",
-        type: "circle",
-        source: "assets",
-        minzoom: 3.6,
-        paint: {
-          "circle-radius": [
-            "interpolate", ["linear"], ["zoom"],
-            3.6, ["case", [">", ["get", "capacity_mw"], 1000], 1.8, 0.8],
-            8, ["case", [">", ["get", "capacity_mw"], 1000], 7, 3.4],
-          ] as unknown as maplibregl.ExpressionSpecification,
-          "circle-color": [
-            "match", ["get", "asset_class"],
-            ...Object.entries(CLASS_COLOR).flatMap(([k, v]) => [k, v]),
-            "#5b6b78",
-          ] as unknown as maplibregl.ExpressionSpecification,
-          // Fade the smaller sites in gradually so the transition is not a hard pop, and
-          // keep big plants more prominent than minor ones.
-          "circle-opacity": [
-            "interpolate", ["linear"], ["zoom"],
-            3.6, ["case", [">", ["get", "capacity_mw"], 1000], 0.7, 0.0],
-            5.0, 0.85,
-          ] as unknown as maplibregl.ExpressionSpecification,
-          "circle-stroke-width": 0.4,
-          "circle-stroke-color": "#05070a",
-        },
-      });
-
       m.addLayer({
         id: "disruption-halo",
         type: "circle",
@@ -366,6 +395,61 @@ export default function MapPanel({
     // Sources are seeded once; later changes are pushed by the effects below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // --- infrastructure icons + symbol layers (added AFTER the style loads and the images are
+  //     registered, so a symbol layer never references a missing image and stalls the map) ---
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready || m.getLayer("asset-symbols")) return;
+    let cancelled = false;
+    prewarmIcons().then((imgs) => {
+      if (cancelled || !map.current) return;
+      for (const { id, data } of imgs) {
+        try { if (!m.hasImage(id)) m.addImage(id, data, { pixelRatio: 3 }); } catch { /* raced */ }
+      }
+      // SHAPE = infrastructure type. `symbol-sort-key` = the per-feature priority so the dense
+      // substation swarm yields collisions to refineries/plants/terminals; icon-allow-overlap
+      // false lets MapLibre drop colliding low-priority icons (no allow-overlap-everywhere clutter).
+      m.addLayer({
+        id: "asset-symbols",
+        type: "symbol",
+        source: "assets",
+        // minzoom matches the Full-AOI home view (~z2.1): at the wide view the collision
+        // declutter (icon-allow-overlap:false + symbol-sort-key) shows only the highest-
+        // priority icons; more reveal on zoom-in. A higher floor would leave the home view
+        // with no infrastructure at all, which is the opposite of §2's intent.
+        minzoom: 2,
+        layout: {
+          "icon-image": ["get", "img"] as unknown as maplibregl.ExpressionSpecification,
+          "icon-allow-overlap": false,
+          "symbol-sort-key": ["get", "prio"] as unknown as maplibregl.ExpressionSpecification,
+          "icon-size": ["interpolate", ["linear"], ["zoom"], 2, 0.26, 3.4, 0.34, 6, 0.5, 9, 0.72] as unknown as maplibregl.ExpressionSpecification,
+          "icon-padding": 2,
+          "visibility": filters.showAssets ? "visible" : "none",
+        },
+        paint: {
+          "icon-opacity": ["interpolate", ["linear"], ["zoom"], 2, 0.5, 5.0, 0.95] as unknown as maplibregl.ExpressionSpecification,
+          "icon-halo-color": ["case", ["boolean", ["feature-state", "selected"], false], "#2ad4ee", "#05070a"] as unknown as maplibregl.ExpressionSpecification,
+          "icon-halo-width": ["case", ["boolean", ["feature-state", "selected"], false], 2.2, 0.7] as unknown as maplibregl.ExpressionSpecification,
+          "icon-halo-blur": 0.4,
+        },
+      }, m.getLayer("disruption-halo") ? "disruption-halo" : undefined);
+
+      // Transparent generous hit target under the icons for reliable hover/click. No dots return.
+      m.addLayer({
+        id: "asset-hit",
+        type: "circle",
+        source: "assets",
+        minzoom: 2,
+        layout: { "visibility": filters.showAssets ? "visible" : "none" },
+        paint: { "circle-radius": 10, "circle-color": "#000000", "circle-opacity": 0 },
+      }, m.getLayer("disruption-halo") ? "disruption-halo" : undefined);
+
+      setAssetLayersReady(true);
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
 
   // --- interaction --------------------------------------------------------
   useEffect(() => {
@@ -405,6 +489,9 @@ export default function MapPanel({
     };
 
     const click = (e: maplibregl.MapLayerMouseEvent) => {
+      // An asset click (topmost layer, fires first) sets this flag so the region click
+      // beneath it does not also toggle and cancel the selection.
+      if (assetClickRef.current) return;
       const f = e.features?.[0];
       if (!f) return;
       const code = String(f.id ?? f.properties?.code ?? "");
@@ -426,6 +513,58 @@ export default function MapPanel({
       }
     };
   }, [ready, selected, onSelect, regionMeta, incidentsByRegion]);
+
+  // --- asset (infrastructure icon) interaction ----------------------------
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready || !assetLayersReady) return;
+    const move = (e: maplibregl.MapLayerMouseEvent) => {
+      const f = e.features?.[0];
+      const asset = f && assetByKey.get(String(f.properties?.key ?? ""));
+      if (!asset) return;
+      m.getCanvas().style.cursor = "pointer";
+      setAssetHover({ x: e.point.x, y: e.point.y, asset });
+    };
+    const leave = () => { setAssetHover(null); m.getCanvas().style.cursor = ""; };
+    const click = (e: maplibregl.MapLayerMouseEvent) => {
+      const f = e.features?.[0];
+      const key = f ? String(f.properties?.key ?? "") : "";
+      const asset = assetByKey.get(key);
+      if (!asset) return;
+      assetClickRef.current = true;
+      window.setTimeout(() => { assetClickRef.current = false; }, 0);
+      const deselect = key === selectedAssetKey;
+      onSelectAsset?.(deselect ? null : asset, deselect ? null : key);
+      // Open the containing region dossier alongside the asset card (§10).
+      if (!deselect && asset.region_code) onSelect(asset.region_code);
+    };
+    m.on("mousemove", "asset-hit", move);
+    m.on("mouseleave", "asset-hit", leave);
+    m.on("click", "asset-hit", click);
+    return () => {
+      m.off("mousemove", "asset-hit", move);
+      m.off("mouseleave", "asset-hit", leave);
+      m.off("click", "asset-hit", click);
+    };
+  }, [ready, assetLayersReady, assetByKey, onSelectAsset, onSelect, selectedAssetKey]);
+
+  // Selected-asset feature-state drives the icon halo. The key encodes the feature id (index).
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready) return;
+    const idOf = (key: string | null | undefined) => {
+      if (!key) return null;
+      const n = Number(key.slice(key.lastIndexOf(":") + 1));
+      return Number.isFinite(n) ? n : null;
+    };
+    // Clear all, then set the selected one (the asset set is small enough that a targeted
+    // clear-and-set is cheaper than iterating; we track the previous id in a ref).
+    const prev = selectedAssetIdRef.current;
+    if (prev != null) m.setFeatureState({ source: "assets", id: prev }, { selected: false });
+    const id = idOf(selectedAssetKey);
+    if (id != null) m.setFeatureState({ source: "assets", id }, { selected: true });
+    selectedAssetIdRef.current = id;
+  }, [ready, selectedAssetKey]);
 
   // --- choropleth values --------------------------------------------------
   useEffect(() => {
@@ -466,14 +605,22 @@ export default function MapPanel({
     const m = map.current;
     if (!m || !ready) return;
     m.setLayoutProperty("network", "visibility", filters.showLines ? "visible" : "none");
-    m.setLayoutProperty("asset-dots", "visibility", filters.showAssets ? "visible" : "none");
+    if (m.getLayer("asset-symbols")) {
+      const assetVis = filters.showAssets ? "visible" : "none";
+      m.setLayoutProperty("asset-symbols", "visibility", assetVis);
+      m.setLayoutProperty("asset-hit", "visibility", assetVis);
+      // Class visibility is applied as a layer filter (the source holds every asset).
+      const classFilter = ["in", ["get", "asset_class"], ["literal", [...filters.classes]]] as unknown as maplibregl.FilterSpecification;
+      m.setFilter("asset-symbols", classFilter);
+      m.setFilter("asset-hit", classFilter);
+    }
     m.setLayoutProperty("rivers", "visibility", filters.showRivers ? "visible" : "none");
     m.setLayoutProperty("context-gas-net", "visibility", filters.showGasNetwork ? "visible" : "none");
     m.setLayoutProperty("context-oil-net", "visibility", filters.showOilNetwork ? "visible" : "none");
     if (filters.showLines) {
       m.setFilter("network", ["in", ["get", "asset_class"], ["literal", [...filters.classes]]]);
     }
-  }, [ready, filters.showLines, filters.showAssets, filters.showRivers,
+  }, [ready, assetLayersReady, filters.showLines, filters.showAssets, filters.showRivers,
       filters.showGasNetwork, filters.showOilNetwork, filters.classes]);
 
   // Lazy-load optional context layers on first toggle, then cache. Missing/late files
@@ -686,6 +833,57 @@ export default function MapPanel({
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {assetHover && (
+        <AssetCard
+          asset={assetHover.asset}
+          x={assetHover.x}
+          y={assetHover.y}
+          regionName={regionMeta.get(assetHover.asset.region_code)?.name}
+        />
+      )}
+    </div>
+  );
+}
+
+/** Compact infrastructure hover card (§9). Public attributes only — NEVER a coordinate,
+ *  distance, range, or route. Region-precision assets say so prominently. */
+function AssetCard({ asset, x, y, regionName }: { asset: Asset; x: number; y: number; regionName?: string }) {
+  const region = asset.precision === "region";
+  const color = CLASS_COLOR[asset.asset_class] ?? "#5b6b78";
+  const rows: [string, string][] = [];
+  if (asset.capacity_mw) rows.push(["Capacity", `${fmtNum(asset.capacity_mw, 0)} MW`]);
+  if (asset.capacity_mtpa) rows.push(["Capacity", `${fmtNum(asset.capacity_mtpa, 1)} MTPA`]);
+  if (asset.capacity_bcm_y) rows.push(["Capacity", `${fmtNum(asset.capacity_bcm_y, 2)} bcm/y raw gas`]);
+  if (asset.voltage_kv) rows.push(["Voltage", `${fmtNum(asset.voltage_kv, 0)} kV`]);
+  if (asset.fuel) rows.push(["Fuel", titleCase(asset.fuel)]);
+  if (asset.operator || asset.owner) rows.push(["Operator", asset.operator || asset.owner || ""]);
+  if (asset.status) rows.push(["Status", titleCase(asset.status)]);
+  return (
+    <div className="map-hover" style={{ left: x, top: y, borderColor: region ? "#e0b83a" : color, maxWidth: 230 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span style={{ width: 18, height: 18, flex: "0 0 auto" }}
+              dangerouslySetInnerHTML={{ __html: iconSVG(asset.asset_class, { size: 18, region }) }} />
+        <span style={{ fontSize: 12 }}>{asset.name || titleCase(asset.asset_class)}</span>
+      </div>
+      <div className="eyebrow" style={{ marginTop: 2 }}>
+        {titleCase(asset.asset_class)}{regionName ? ` · ${regionName}` : ""}
+      </div>
+      {rows.map(([k, v], i) => (
+        <div className="kv" key={i}><span className="k">{k}</span><span className="v">{v}</span></div>
+      ))}
+      {asset.source && (
+        <div className="kv"><span className="k">Source</span><span className="v" style={{ fontSize: 10 }}>{asset.source}</span></div>
+      )}
+      {region ? (
+        <div style={{ fontSize: 10, color: "var(--amber)", marginTop: 5, lineHeight: 1.4 }}>
+          Administrative-region placement — not a facility location.
+        </div>
+      ) : (
+        <div style={{ fontSize: 9.5, color: "var(--text-faint)", marginTop: 5 }}>
+          Public-coordinate infrastructure point.
         </div>
       )}
     </div>

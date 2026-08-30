@@ -64,6 +64,8 @@ export interface Asset {
   region_code: string;
   capacity_mw?: number | null;
   capacity_mtpa?: number | null;
+  capacity_bcm_y?: number | null;
+  capacity_basis?: string | null;
   fuel?: string | null;
   voltage_kv?: number | null;
   owner?: string | null;

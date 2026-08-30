@@ -3,6 +3,7 @@ import type { FilterState } from "../App";
 import type { Bundle, FacetCounts, Incident } from "../types";
 import { CAUSE_COLOR, classColor } from "../palette";
 import { titleCase } from "../data";
+import { iconSVG } from "../icons";
 
 /** Recompute facet counts from the raw bundle when snapshot.facet_counts is absent — a
  *  resilience fallback for the brief deploy window where the CDN may serve an older
@@ -166,6 +167,7 @@ export default function Filters({
         onAll={(on) => setAll("classes", classKeys, on)}
         color={(k) => classColor(k)}
         tally={classTotal}
+        icon={(k) => k}
       />
 
       <Group
@@ -201,7 +203,7 @@ export default function Filters({
 }
 
 function Group({
-  title, keys, labels, active, onToggle, onAll, color, tally,
+  title, keys, labels, active, onToggle, onAll, color, tally, icon,
 }: {
   title: string;
   keys: string[];
@@ -211,6 +213,9 @@ function Group({
   onAll: (on: boolean) => void;
   color: (k: string) => string;
   tally: (k: string) => number;
+  /** When set, the row shows the infrastructure ICON glyph (same registry as the map) for
+   *  this class instead of a plain colour swatch (§11). */
+  icon?: (k: string) => string;
 }) {
   return (
     <div className="ctl-group">
@@ -224,7 +229,10 @@ function Group({
       {keys.map((k) => (
         <label key={k} className="check">
           <input type="checkbox" checked={active.has(k)} onChange={() => onToggle(k)} />
-          <span className="swatch" style={{ background: color(k) }} />
+          {icon
+            ? <span className="asset-glyph" aria-hidden="true"
+                    dangerouslySetInnerHTML={{ __html: iconSVG(icon(k), { size: 15 }) }} />
+            : <span className="swatch" style={{ background: color(k) }} />}
           {labels[k] ?? k}
           <span className="tally">{tally(k)}</span>
         </label>

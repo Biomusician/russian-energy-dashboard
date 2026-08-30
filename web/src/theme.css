@@ -223,6 +223,9 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .check .swatch {
   width: 9px; height: 9px; border-radius: 2px; flex: none;
 }
+/* Infrastructure icon glyph in the type filter (§11) — same registry as the map/legend. */
+.check .asset-glyph { width: 15px; height: 15px; flex: none; display: inline-flex; opacity: 0.92; }
+.check .asset-glyph svg { width: 15px; height: 15px; display: block; }
 .check .tally { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--text-faint); }
 
 .btn-row { display: flex; gap: 6px; padding: 8px var(--pad); }

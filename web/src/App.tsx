@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { loadBundle } from "./data";
-import type { Bundle, Incident } from "./types";
+import type { Asset, Bundle, Incident } from "./types";
 import Ribbon from "./components/Ribbon";
 import Filters from "./components/Filters";
 import MapPanel from "./components/MapPanel";
@@ -25,6 +25,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<{ asset: Asset; key: string } | null>(null);
   const [methodOpen, setMethodOpen] = useState(false);
 
   const [filters, setFilters] = useState<FilterState>({
@@ -124,6 +125,8 @@ export default function App() {
         selected={selected}
         onSelect={setSelected}
         incidentsByRegion={incidentsByRegion}
+        selectedAssetKey={selectedAsset?.key ?? null}
+        onSelectAsset={(asset, key) => setSelectedAsset(asset && key ? { asset, key } : null)}
       />
       <Dossier
         bundle={bundle}
