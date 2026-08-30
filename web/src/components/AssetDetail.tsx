@@ -1,0 +1,106 @@
+import type { Asset } from "../types";
+import { CLASS_COLOR } from "../palette";
+import { displayName, fmtNum, titleCase } from "../data";
+import { iconSVG } from "../icons";
+
+/** Public, non-locating attributes for one infrastructure asset. The scope boundary is
+ *  enforced HERE, in one place, so neither the map hover card nor the dossier sub-card can
+ *  ever leak a coordinate: this renders capacity / voltage / fuel / operator / status /
+ *  source only — never lat, lon, distance, range, bearing, or route. Region-precision assets
+ *  say plainly that their placement is an administrative centroid, not a facility location. */
+
+export function assetRows(asset: Asset): [string, string][] {
+  const rows: [string, string][] = [];
+  if (asset.capacity_mw) rows.push(["Capacity", `${fmtNum(asset.capacity_mw, 0)} MW`]);
+  if (asset.capacity_mtpa) rows.push(["Capacity", `${fmtNum(asset.capacity_mtpa, 1)} MTPA`]);
+  if (asset.capacity_bcm_y) rows.push(["Capacity", `${fmtNum(asset.capacity_bcm_y, 2)} bcm/y raw gas`]);
+  if (asset.voltage_kv) rows.push(["Voltage", `${fmtNum(asset.voltage_kv, 0)} kV`]);
+  if (asset.fuel) rows.push(["Fuel", titleCase(asset.fuel)]);
+  if (asset.operator || asset.owner) rows.push(["Operator", asset.operator || asset.owner || ""]);
+  if (asset.status) rows.push(["Status", titleCase(asset.status)]);
+  return rows;
+}
+
+/** The shared inner body: icon header, attribute rows, source, precision note. Layout-neutral
+ *  so it drops into both a floating card and an inline dossier block. */
+export function AssetAttributes({
+  asset, regionName, struck, alsoHere,
+}: {
+  asset: Asset;
+  regionName?: string;
+  /** Whether this asset is named in disruption reporting — identity only, never a location. */
+  struck?: boolean;
+  /** Other assets sharing this administrative centroid. Named explicitly so a stacked marker is
+   *  never read as the only facility there (§9). */
+  alsoHere?: Asset[];
+}) {
+  const region = asset.precision === "region";
+  const rows = assetRows(asset);
+  return (
+    <>
+      <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+        <span style={{ width: 20, height: 20, flex: "0 0 auto" }}
+              dangerouslySetInnerHTML={{ __html: iconSVG(asset.asset_class, { size: 20, region }) }} />
+        <span style={{ fontSize: 12.5, lineHeight: 1.2 }}>{asset.name || titleCase(asset.asset_class)}</span>
+      </div>
+      <div className="eyebrow" style={{ marginTop: 3 }}>
+        {titleCase(asset.asset_class)}{regionName ? ` · ${regionName}` : ""}
+      </div>
+      {rows.map(([k, v], i) => (
+        <div className="kv" key={i}><span className="k">{k}</span><span className="v">{v}</span></div>
+      ))}
+      {asset.source && (
+        <div className="kv"><span className="k">Source</span><span className="v" style={{ fontSize: 10 }}>{asset.source}</span></div>
+      )}
+      {struck != null && (
+        <div className="kv">
+          <span className="k">In disruption reporting</span>
+          <span className="v" style={{ color: struck ? "var(--amber)" : "var(--text-faint)" }}>
+            {struck ? "yes — named in events" : "not named"}
+          </span>
+        </div>
+      )}
+      {region ? (
+        <div style={{ fontSize: 10, color: "var(--amber)", marginTop: 6, lineHeight: 1.4 }}>
+          Administrative-region placement — not a facility location.
+        </div>
+      ) : (
+        <div style={{ fontSize: 9.5, color: "var(--text-faint)", marginTop: 6 }}>
+          Public-coordinate infrastructure point.
+        </div>
+      )}
+      {alsoHere && alsoHere.length > 0 && (
+        <div style={{ marginTop: 6, borderTop: "1px solid var(--line-soft)", paddingTop: 5 }}>
+          <div style={{ fontSize: 10, color: "var(--amber)", lineHeight: 1.4 }}>
+            {alsoHere.length + 1} assets share this administrative centroid — this marker stands
+            for all of them, not one facility:
+          </div>
+          <ul style={{ margin: "4px 0 0", paddingLeft: 14, fontSize: 10.5, color: "var(--text-dim)", lineHeight: 1.5 }}>
+            {alsoHere.slice(0, 5).map((a) => (
+              <li key={a.asset_id}>{displayName(a.name) || titleCase(a.asset_class)}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </>
+  );
+}
+
+/** Floating hover card used on the map. Positioned at a screen point. */
+export function AssetHoverCard({
+  asset, x, y, regionName, alsoHere,
+}: {
+  asset: Asset;
+  x: number;
+  y: number;
+  regionName?: string;
+  alsoHere?: Asset[];
+}) {
+  const region = asset.precision === "region";
+  const color = CLASS_COLOR[asset.asset_class] ?? "#5b6b78";
+  return (
+    <div className="map-hover" style={{ left: x, top: y, borderColor: region ? "#e0b83a" : color, maxWidth: 232 }}>
+      <AssetAttributes asset={asset} regionName={regionName} alsoHere={alsoHere} />
+    </div>
+  );
+}

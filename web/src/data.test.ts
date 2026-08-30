@@ -1,5 +1,38 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { schemaCompatibility, grabOptional, SUPPORTED_SCHEMA } from "./data";
+import { schemaCompatibility, grabOptional, SUPPORTED_SCHEMA, addDays, fmtDelta } from "./data";
+
+// §13-16 trend windows: addDays underpins every trailing-window computation and must handle
+// month/year boundaries and a non-leap February, and must never throw on an empty date (which
+// a deep link with a non-default activity window can present before the bundle has loaded).
+describe("addDays", () => {
+  it("subtracts a 30-day window across a month boundary", () => {
+    expect(addDays("2026-08-28", -30)).toBe("2026-07-29");
+  });
+  it("subtracts a 90-day window across three months", () => {
+    expect(addDays("2026-08-28", -90)).toBe("2026-05-30");
+  });
+  it("crosses a year boundary backwards", () => {
+    expect(addDays("2026-01-01", -1)).toBe("2025-12-31");
+  });
+  it("handles a non-leap February (2026 is not a leap year)", () => {
+    expect(addDays("2026-03-01", -1)).toBe("2026-02-28");
+  });
+  it("is identity for a zero delta", () => {
+    expect(addDays("2026-08-28", 0)).toBe("2026-08-28");
+  });
+  it("passes an empty/malformed date through rather than throwing", () => {
+    expect(addDays("", -30)).toBe("");
+    expect(addDays("not-a-date", -30)).toBe("not-a-date");
+  });
+});
+
+// §14-15/§18-19 change views use a real minus sign so a negative delta never reads as a range.
+describe("fmtDelta", () => {
+  it("prefixes a positive with +", () => expect(fmtDelta(1.21)).toBe("+1.21"));
+  it("prefixes a negative with a real minus (U+2212)", () => expect(fmtDelta(-0.69)).toBe("−0.69"));
+  it("marks an exact zero with ±", () => expect(fmtDelta(0)).toBe("±0.00"));
+  it("respects the digits argument", () => expect(fmtDelta(-4.783, 1)).toBe("−4.8"));
+});
 
 // §27/§32 deploy-window resilience: a partially-propagated Vercel deploy may serve older
 // data (or lack an optional layer) to a newer bundle. It must degrade, never white-screen.

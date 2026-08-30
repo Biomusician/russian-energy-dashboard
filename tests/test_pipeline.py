@@ -746,6 +746,56 @@ def test_recovery_stats_present_with_episode_counts():
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
                     reason="pipeline has not been run")
+def test_recovery_events_is_complete_not_a_live_disruptions_subset():
+    """recovery_events must hold EVERY dated restoration observation in the corpus.
+
+    Regression guard for the iteration-8 defect: a "what recovery landed recently?" view was
+    reading live_disruptions, which only carries facilities whose disruption weight is still
+    > 0 and is truncated to 80 — so a FULLY-RECOVERED facility vanishes from it. That made the
+    view structurally blind to exactly the episodes it was asking about (1 of 9 visible).
+    """
+    snap = _snapshot()
+    events = snap["recovery_events"]
+    assert events, "recovery_events must not be empty when recovery records exist"
+
+    # It must be strictly richer than what live_disruptions could ever expose.
+    live_dated = sum(1 for d in snap["live_disruptions"] if d["recovery"].get("observed_date"))
+    assert len(events) > live_dated
+
+    # The observed-DURATION episode count must reconcile exactly with recovery_stats. These are
+    # two different questions (evidence arrived vs duration measured) and must not be conflated.
+    counted = [e for e in events if e["counts_toward_observed_episodes"]]
+    assert len(counted) == snap["recovery_stats"]["observed_restoration_episodes"]
+    for e in counted:
+        assert e["evidence_date_kind"] == "observed_restoration"
+        assert e["scoring_evidence_kind"] == "observed"
+        assert e["observed_days"]
+
+    # Every row is dated, typed, and deduplicated by (episode, kind).
+    keys = set()
+    for e in events:
+        assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", e["evidence_date"]), e["evidence_date"]
+        assert e["evidence_date_kind"] in ("observed_restoration", "partial_restart")
+        key = (e["episode_id"], e["evidence_date_kind"])
+        assert key not in keys, f"duplicate episode/kind row: {key}"
+        keys.add(key)
+
+    # Sorted by evidence date, so a client can window it without re-sorting.
+    assert [e["evidence_date"] for e in events] == sorted(e["evidence_date"] for e in events)
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
+def test_recovery_events_carry_no_location_beyond_admin_region():
+    """Scope: the recovery log is evidence about facilities, not a geographic index."""
+    snap = _snapshot()
+    banned = {"lat", "lon", "latitude", "longitude", "coordinates", "geometry", "distance_km"}
+    for e in snap["recovery_events"]:
+        assert not (set(e) & banned), f"recovery_events leaked location keys: {set(e) & banned}"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                    reason="pipeline has not been run")
 def test_recovery_evidence_kinds_distinguish_observed_from_estimated():
     """Observed / estimated / modelled recovery must be structurally distinct."""
     snap = _snapshot()
@@ -2100,6 +2150,35 @@ def test_current_state_doc_is_in_sync():
     assert actual == expected, (
         "docs/CURRENT_STATE.md is stale vs the built snapshot — rebuild to regenerate it. "
         "This is the drift guard: headline counts must not be hand-maintained."
+    )
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_release_payload_is_a_current_date_build_not_a_frozen_reference():
+    """The committed/release payload must be a CURRENT-DATE build.
+
+    Two different builds are legitimate and deliberately produce different headlines:
+
+        production   python -m pipeline.run                     -> as_of = build day
+        regression   python -m pipeline.run --as-of 2026-08-28   -> the frozen comparison point
+
+    The frozen build exists ONLY for apples-to-apples methodology comparison across iterations;
+    ESDI moves with time decay, so shipping a frozen payload would freeze the live dashboard at
+    a stale date and silently misreport the present. A frozen build is detectable because its
+    as_of lags its build_time; a production build has them on the same day.
+
+    If this fails after a regression run, rebuild the release payload with a plain
+    `python -m pipeline.run` before committing.
+    """
+    snap = _snapshot()
+    as_of = dt.date.fromisoformat(snap["as_of"])
+    built = dt.datetime.fromisoformat(snap["build_time"]).date()
+    lag = (built - as_of).days
+    # 1 day of slack absorbs a UTC build_time crossing local midnight.
+    assert lag <= 1, (
+        f"release payload looks like a FROZEN regression build: as_of={as_of} but it was built "
+        f"on {built} ({lag} days later). Regenerate with `python -m pipeline.run` (no --as-of) "
+        f"before committing. The frozen build belongs in a comparison run, not the release tree."
     )
 
 

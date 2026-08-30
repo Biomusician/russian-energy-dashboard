@@ -1,8 +1,10 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { FilterState } from "../App";
-import type { Bundle, FacetCounts, Incident } from "../types";
+import type { Asset, Bundle, FacetCounts, Incident } from "../types";
 import { CAUSE_COLOR, classColor } from "../palette";
 import { titleCase } from "../data";
+import { iconSVG } from "../icons";
+import SearchBox from "./SearchBox";
 
 /** Recompute facet counts from the raw bundle when snapshot.facet_counts is absent — a
  *  resilience fallback for the brief deploy window where the CDN may serve an older
@@ -29,12 +31,16 @@ function fallbackFacets(bundle: Bundle): FacetCounts {
 /** Left rail. Every toggle carries a live tally so an empty layer reads as
  *  "nothing recorded here" rather than as a broken filter. */
 export default function Filters({
-  bundle, filters, setFilters,
+  bundle, filters, setFilters, onPickRegion, onPickAsset, compareCount = 0,
 }: {
   bundle: Bundle;
   filters: FilterState;
   setFilters: Dispatch<SetStateAction<FilterState>>;
   visibleIncidents: Incident[];
+  onPickRegion: (code: string) => void;
+  onPickAsset: (asset: Asset, index: number) => void;
+  /** How many regions are pinned to the comparison tray, for the rail hint. */
+  compareCount?: number;
 }) {
   const { taxonomy } = bundle;
   // Normally the pipeline emits facet_counts. During a deploy the CDN can briefly serve an
@@ -79,6 +85,17 @@ export default function Filters({
       </div>
 
       <div className="ctl-group">
+        <SearchBox bundle={bundle} onPickRegion={onPickRegion} onPickAsset={onPickAsset} />
+        {/* The comparison tray's only entry point was a button that appears after a region is
+            selected, so the feature was invisible until you happened to find it. */}
+        <div className="note" style={{ marginTop: 8 }}>
+          Search a region or facility to jump to it. Select a region, then
+          <b> + compare</b> in its header, to pin up to three side by side
+          {compareCount > 0 && <> — <b>{compareCount} pinned</b></>}.
+        </div>
+      </div>
+
+      <div className="ctl-group">
         <div className="eyebrow" style={{ marginBottom: 6 }}>Choropleth</div>
         <select
           className="ghost"
@@ -87,7 +104,34 @@ export default function Filters({
         >
           <option value="esdi">Disruption exposure (ESDI)</option>
           <option value="incidents">Recorded events (count)</option>
+          <option value="esdi_delta_30d">Change in ESDI · last 30 days</option>
+          <option value="esdi_delta_90d">Change in ESDI · last 90 days</option>
         </select>
+        {(filters.metric === "esdi_delta_30d" || filters.metric === "esdi_delta_90d") && (
+          <div className="note" style={{ marginTop: 6 }}>
+            Diverging scale: blue where the index fell, red where it rose. A modelled change in
+            exposure, not observed physical damage — a region with <em>no new recorded events
+            always falls</em>, because the index decays on a modelled half-life. Falling is not
+            observed repair.
+          </div>
+        )}
+      </div>
+
+      <div className="ctl-group">
+        <div className="eyebrow" style={{ marginBottom: 6 }}>Recent-activity halos</div>
+        <select
+          className="ghost"
+          value={filters.activityWindow}
+          onChange={(e) => setFilters((f) => ({ ...f, activityWindow: e.target.value as FilterState["activityWindow"] }))}
+        >
+          <option value="cumulative">All recorded events (to date)</option>
+          <option value="30d">Activity · last 30 days</option>
+          <option value="90d">Activity · last 90 days</option>
+        </select>
+        <div className="note" style={{ marginTop: 6 }}>
+          Halos size to how many events were <em>recorded</em> in the window ending at the
+          scrubber — recent activity, not current impairment or damage.
+        </div>
       </div>
 
       <div className="ctl-group">
@@ -166,7 +210,29 @@ export default function Filters({
         onAll={(on) => setAll("classes", classKeys, on)}
         color={(k) => classColor(k)}
         tally={classTotal}
+        icon={(k) => k}
       />
+
+      {/* Icon grammar legend (§11): these same glyphs mark the map, so shape = function and
+          colour = class identity are learned once and read everywhere. The precision frame is
+          the one piece the map adds that the rows cannot show, so it is spelled out here. */}
+      <div className="ctl-group icon-key">
+        <div className="eyebrow" style={{ marginBottom: 6 }}>Reading the map markers</div>
+        <div className="note" style={{ marginTop: 0 }}>
+          Shape shows the infrastructure function; colour repeats the type identity above.
+          Disruption is never drawn on the marker — it stays on the region shading and halo.
+        </div>
+        <div className="precision-key">
+          <span className="pk-swatch" aria-hidden="true"
+                dangerouslySetInnerHTML={{ __html: iconSVG("refinery", { size: 20 }) }} />
+          <span>Solid — a mapped public facility coordinate.</span>
+        </div>
+        <div className="precision-key">
+          <span className="pk-swatch" aria-hidden="true"
+                dangerouslySetInnerHTML={{ __html: iconSVG("refinery", { size: 20, region: true }) }} />
+          <span>Dashed frame — placed on its administrative region, not a facility location.</span>
+        </div>
+      </div>
 
       <Group
         title="Disruption cause"
@@ -201,7 +267,7 @@ export default function Filters({
 }
 
 function Group({
-  title, keys, labels, active, onToggle, onAll, color, tally,
+  title, keys, labels, active, onToggle, onAll, color, tally, icon,
 }: {
   title: string;
   keys: string[];
@@ -211,6 +277,9 @@ function Group({
   onAll: (on: boolean) => void;
   color: (k: string) => string;
   tally: (k: string) => number;
+  /** When set, the row shows the infrastructure ICON glyph (same registry as the map) for
+   *  this class instead of a plain colour swatch (§11). */
+  icon?: (k: string) => string;
 }) {
   return (
     <div className="ctl-group">
@@ -224,7 +293,10 @@ function Group({
       {keys.map((k) => (
         <label key={k} className="check">
           <input type="checkbox" checked={active.has(k)} onChange={() => onToggle(k)} />
-          <span className="swatch" style={{ background: color(k) }} />
+          {icon
+            ? <span className="asset-glyph" aria-hidden="true"
+                    dangerouslySetInnerHTML={{ __html: iconSVG(icon(k), { size: 15 }) }} />
+            : <span className="swatch" style={{ background: color(k) }} />}
           {labels[k] ?? k}
           <span className="tally">{tally(k)}</span>
         </label>

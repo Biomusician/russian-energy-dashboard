@@ -2,21 +2,33 @@
  *  Asset classes come from the pipeline; anything without an entry here falls back
  *  to a neutral grey rather than throwing or silently vanishing. */
 
+/** Class identity colours. Chosen against the #05070a map ground; several were lifted in
+ *  iteration 8 after a contrast audit found three classes effectively invisible and two pairs
+ *  separable only by hue at map sizes (where shape is no longer legible). */
 export const CLASS_COLOR: Record<string, string> = {
   power_plant_thermal: "#f2b134",
   power_plant_nuclear: "#a98bfa",
   power_plant_hydro: "#3fb6f5",
-  power_plant_other: "#6b7d8c",
+  // was #6b7d8c — too dark to read against the ground
+  power_plant_other: "#9fb2c0",
   refinery: "#f0534a",
   oil_terminal: "#fb7185",
   pipeline_oil: "#f7862f",
   pipeline_gas: "#2ad4ee",
   gas_processing: "#2dd4bf",
-  lng_terminal: "#14b8a6",
-  substation: "#e0b83a",
-  transmission_line: "#40566a",
+  // was #14b8a6 — adjacent to gas_processing's teal, so the two were one colour at icon sizes
+  lng_terminal: "#7ee0d0",
+  // was #e0b83a — the same yellow family as thermal, and substations are 73% of all point assets,
+  // so the map read as one undifferentiated amber swarm. Moved to the far side of the wheel from
+  // thermal (169 deg apart) and into the same slate family as transmission_line, which is the
+  // honest grouping: they are one subsystem, they never share a mark (points vs lines), and this
+  // lets the least analytically salient class recede instead of competing with generation.
+  substation: "#9ab8d4",
+  // was #40566a — invisible against the ground
+  transmission_line: "#5f7a92",
   coal_mine: "#94a3b8",
-  coal_terminal: "#78716c",
+  // was #78716c — invisible against the ground
+  coal_terminal: "#b3a99f",
   interconnector: "#c084fc",
 };
 
@@ -44,6 +56,34 @@ export const SEVERITY_STOPS: [number, string][] = [
 export function severityColor(value: number): string {
   let color = SEVERITY_STOPS[0][1];
   for (const [stop, c] of SEVERITY_STOPS) {
+    if (value >= stop) color = c;
+  }
+  return color;
+}
+
+/** Diverging ramp for the "change in ESDI" choropleth (§14-15). This is deliberately a
+ *  DIFFERENT visual language from the sequential severity ramp: blue = the index FELL
+ *  (recovery / de-escalation), red = it ROSE, dark slate = ~unchanged. Blue never appears in
+ *  the exposure ramp, so a reader can never confuse "improved" with "low exposure". The scale
+ *  is symmetric and saturates near ±3, which covers the observed regional deltas (max ~2.8
+ *  over 30 days). It is a modelled DELTA of the exposure index, never a claim of physical
+ *  damage or repair — the legend and copy say so. */
+export const ESDI_DELTA_STOPS: [number, string][] = [
+  [-3, "#2f7dc4"],
+  [-1, "#3f8fb0"],
+  [-0.25, "#39616d"],
+  [0, "#313f4a"],
+  [0.25, "#6f5636"],
+  [1, "#c07a2c"],
+  [3, "#c23a30"],
+];
+
+export function esdiDeltaColor(value: number): string {
+  const stops = ESDI_DELTA_STOPS;
+  if (value <= stops[0][0]) return stops[0][1];
+  if (value >= stops[stops.length - 1][0]) return stops[stops.length - 1][1];
+  let color = stops[0][1];
+  for (const [stop, c] of stops) {
     if (value >= stop) color = c;
   }
   return color;

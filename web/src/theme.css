@@ -66,6 +66,14 @@ body { -webkit-font-smoothing: antialiased; }
   background: var(--line-soft);
 }
 
+/* Below ~1180px the three columns squeeze the map row to nothing and the absolutely-positioned
+   map overlays scatter across the ribbon and dossier. Scroll horizontally rather than render an
+   unreadable layout — this is a dense analytical dashboard, not a responsive marketing page. */
+@media (max-width: 1180px) {
+  html, body { overflow-x: auto; }
+  .shell { min-width: 1180px; }
+}
+
 /* Wider analytical panel on large intel displays so the seven-tab strip and its
    badges never clip (iteration 3, §17). */
 @media (min-width: 1800px) { .shell { grid-template-columns: 300px minmax(0, 1fr) 440px; } }
@@ -223,6 +231,13 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .check .swatch {
   width: 9px; height: 9px; border-radius: 2px; flex: none;
 }
+/* Infrastructure icon glyph in the type filter (§11) — same registry as the map/legend. */
+.check .asset-glyph { width: 15px; height: 15px; flex: none; display: inline-flex; opacity: 0.92; }
+.check .asset-glyph svg { width: 15px; height: 15px; display: block; }
+
+.precision-key { display: flex; align-items: center; gap: 8px; margin-top: 7px; font-size: 10.5px; color: var(--text-dim); line-height: 1.35; }
+.precision-key .pk-swatch { width: 20px; height: 20px; flex: none; display: inline-flex; }
+.precision-key .pk-swatch svg { width: 20px; height: 20px; display: block; }
 .check .tally { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--text-faint); }
 
 .btn-row { display: flex; gap: 6px; padding: 8px var(--pad); }
@@ -311,6 +326,102 @@ select.ghost {
 }
 
 /* ---------- dossier ---------- */
+
+/* Selected-infrastructure sub-card (§10): a distinct block above the region tabs, tinted by
+   the accent so it reads as "the asset you clicked", separate from the region dossier. */
+.asset-subcard {
+  margin: 0 var(--pad) 12px;
+  padding: 9px 11px;
+  background: var(--bg-inset);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+}
+.asset-subcard-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+/* Small segmented control (What-changed window picker). */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.seg-btn {
+  background: transparent; border: none; color: var(--text-dim);
+  font: inherit; font-size: 10.5px; padding: 2px 8px; cursor: pointer;
+}
+.seg-btn + .seg-btn { border-left: 1px solid var(--line); }
+.seg-btn.on { background: var(--accent-dim); color: #eaf7fb; }
+.seg-btn:hover:not(.on) { color: var(--text); }
+
+.linklike {
+  background: none; border: none; color: var(--accent); cursor: pointer;
+  font: inherit; font-size: 11px; padding: 6px 0 2px; text-align: left;
+}
+.linklike:hover { text-decoration: underline; }
+
+/* Region / facility search (§21): sits at the top of the left rail; results drop below. */
+.search-box { position: relative; width: 100%; }
+.search-input {
+  width: 100%; box-sizing: border-box;
+  background: var(--bg-inset); border: 1px solid var(--line);
+  color: var(--text); border-radius: var(--radius);
+  padding: 6px 9px; font: inherit; font-size: 12px;
+}
+.search-input:focus { outline: none; border-color: var(--accent-dim); }
+.search-input::placeholder { color: var(--text-faint); }
+.search-results {
+  position: absolute; left: 0; right: 0; top: calc(100% + 4px);
+  z-index: 20; background: rgba(9, 13, 18, 0.98);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  max-height: 330px; overflow-y: auto;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+}
+.search-group { padding: 6px 8px; }
+.search-group + .search-group { border-top: 1px solid var(--line-soft); }
+.search-row {
+  display: flex; align-items: center; gap: 7px; width: 100%;
+  background: none; border: none; color: var(--text); cursor: pointer;
+  padding: 5px 4px; text-align: left; font: inherit; font-size: 12px;
+}
+.search-row:hover { background: var(--bg-panel-2); }
+.search-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-meta { color: var(--text-faint); font-size: 10px; flex: none; }
+.search-glyph { width: 15px; height: 15px; flex: none; display: inline-flex; }
+.search-glyph svg { width: 15px; height: 15px; display: block; }
+.search-empty { padding: 10px; color: var(--text-faint); font-size: 11px; }
+
+/* Region comparison tray (§17): floats at the bottom of the map cell, over the choropleth. */
+.compare-tray {
+  grid-area: map;
+  align-self: end;
+  justify-self: center;
+  z-index: 6;
+  /* Sits above the legend, so keep it clear of the bottom-left corner it used to cover. */
+  margin-bottom: 16px;
+  margin-left: 300px;
+  max-width: 94%;
+  background: rgba(9, 13, 18, 0.97);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px 10px 10px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+}
+.compare-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+.compare-cols { display: flex; gap: 10px; }
+.compare-col {
+  width: 158px; flex: none;
+  border: 1px solid var(--line-soft); border-radius: var(--radius);
+  padding: 7px 9px; background: var(--bg-inset);
+}
+.compare-col-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 3px; }
+.compare-x {
+  background: none; border: none; color: var(--text-faint); cursor: pointer;
+  font-size: 14px; line-height: 1; padding: 0 2px;
+}
+.compare-x:hover { color: var(--sev-5, #c23a30); }
+.compare-kv { display: flex; justify-content: space-between; gap: 8px; font-size: 10.5px; color: var(--text-dim); padding: 3px 0; }
+.compare-kv + .compare-kv { border-top: 1px solid var(--line-soft); }
 
 .kv { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 12px; }
 .kv + .kv { border-top: 1px solid var(--line-soft); }
@@ -590,14 +701,18 @@ a { color: var(--accent); }
   text-shadow: 0 1px 2px rgba(5, 8, 12, 0.9);
 }
 
+/* Left-anchored (was centred) so it cannot slide under the right-anchored scope note: at a map
+   column narrower than ~880px the two overlapped and the buttons occluded the scope disclaimer.
+   Offset clears the zoom control in the top-left. */
 .camera-controls {
   position: absolute;
   top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 52px;
   z-index: 4;
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
+  max-width: calc(100% - 340px);
   background: rgba(9, 13, 18, 0.9);
   border: 1px solid var(--line);
   border-radius: var(--radius);

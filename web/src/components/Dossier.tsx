@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import type { Bundle, Incident } from "../types";
+import type { Asset, Bundle, Incident } from "../types";
 import {
   CostsTab, EffectsTab, OverviewTab, RankingsTab, RecentTab,
-  ReconstitutionTab, SourcesTab, type TabProps,
+  ReconstitutionTab, SourcesTab, WhatChangedTab, type TabProps,
 } from "./tabs";
+import { AssetAttributes } from "./AssetDetail";
 
 /** The right rail is a tabbed analytical panel. The central map stays the primary
  *  visualization; these tabs give it analytical depth without displacing it. Tab
@@ -18,6 +19,7 @@ const TABS: {
   badge?: (p: TabProps) => number | null;
 }[] = [
   { key: "Overview", label: "Overview", Comp: OverviewTab },
+  { key: "WhatChanged", label: "What changed", Comp: WhatChangedTab },
   { key: "Rankings", label: "Rankings", Comp: RankingsTab },
   { key: "Recent", label: "Recent", Comp: RecentTab, badge: (p) => Math.min(10, p.visibleIncidents.length) },
   { key: "Reconstitution", label: "Recovery", Comp: ReconstitutionTab, badge: (p) => p.bundle.snapshot.recovery_stats.unresolved_count },
@@ -28,6 +30,8 @@ const TABS: {
 
 export default function Dossier({
   bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSelect,
+  selectedAsset, onClearAsset, assetStruck, assetAlsoHere, activeClasses,
+  compareRegions, onToggleCompare,
 }: {
   bundle: Bundle;
   step: number;
@@ -36,6 +40,19 @@ export default function Dossier({
   incidentsByRegion: Map<string, Incident[]>;
   visibleIncidents: Incident[];
   onSelect: (code: string | null) => void;
+  /** The infrastructure asset chosen on the map (§10). Shown as a sub-card above the
+   *  region tabs; null when nothing is selected. */
+  selectedAsset?: Asset | null;
+  onClearAsset?: () => void;
+  /** Whether the selected asset is named in disruption reporting (identity, not a location). */
+  assetStruck?: boolean;
+  /** Other assets on the same administrative centroid as the selected one (§9). */
+  assetAlsoHere?: Asset[];
+  /** Active infrastructure-class filter, so panel counts match the rest of the dashboard. */
+  activeClasses?: Set<string>;
+  /** Regions pinned to the comparison tray (§17), and the toggle for the current one. */
+  compareRegions?: string[];
+  onToggleCompare?: (code: string) => void;
 }) {
   // Initial tab may be seeded from the URL hash (#tab=Recovery) — used for headless
   // visual QA of individual tabs; harmless in normal use.
@@ -53,7 +70,7 @@ export default function Dossier({
 
   const props: TabProps = {
     bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents,
-    onSelect, onTab: setTab,
+    onSelect, onTab: setTab, activeClasses,
   };
   const active = TABS.find((t) => t.key === tab) ?? TABS[0];
   const region = selected ? bundle.snapshot.regions[selected] : null;
@@ -67,8 +84,40 @@ export default function Dossier({
             {region ? `${region.district} · ${region.country === "RU" ? "Russia" : region.country === "BY" ? "Belarus" : "Ukraine (occupied)"}` : "Belarus, western Russia & Siberia + occupied Crimea"}
           </div>
         </div>
-        {region && <button className="ghost" onClick={() => onSelect(null)}>close</button>}
+        {region && (
+          <div style={{ display: "flex", gap: 6 }}>
+            {onToggleCompare && (
+              <button
+                className="ghost"
+                title="Pin this region to the comparison tray"
+                onClick={() => onToggleCompare(region.code)}
+              >
+                {compareRegions?.includes(region.code) ? "✓ comparing" : "+ compare"}
+              </button>
+            )}
+            <button className="ghost" onClick={() => onSelect(null)}>close</button>
+          </div>
+        )}
       </div>
+
+      {selectedAsset && (
+        <div className="asset-subcard">
+          <div className="asset-subcard-head">
+            <span className="eyebrow">Selected infrastructure</span>
+            {onClearAsset && (
+              <button className="ghost" style={{ padding: "1px 7px", fontSize: 10 }} onClick={onClearAsset}>
+                clear
+              </button>
+            )}
+          </div>
+          <AssetAttributes
+            asset={selectedAsset}
+            regionName={bundle.snapshot.regions[selectedAsset.region_code]?.name}
+            struck={assetStruck}
+            alsoHere={assetAlsoHere}
+          />
+        </div>
+      )}
 
       <div className="tabbar" role="tablist">
         {TABS.map((t) => {

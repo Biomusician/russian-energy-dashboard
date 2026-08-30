@@ -270,10 +270,11 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
           <H>Scope boundary</H>
           <p>
             This models publicly reported damage to energy infrastructure, aggregated to
-            administrative region. It holds no current unit positions, no readiness
-            state, no vulnerability or gap assessment, and no ranking of undamaged
-            assets. Range-to-target data present in one upstream source is deliberately
-            not ingested.
+            administrative region. It holds no operational status for any facility, no
+            vulnerability or gap assessment, and no ranking of undamaged assets. Facility
+            positions are published permanent locations or administrative centroids, never
+            inferred from reporting. Range-to-target data present in one upstream source is
+            deliberately not ingested.
           </p>
 
           <H>Not modelled</H>

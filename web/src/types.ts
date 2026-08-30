@@ -64,6 +64,8 @@ export interface Asset {
   region_code: string;
   capacity_mw?: number | null;
   capacity_mtpa?: number | null;
+  capacity_bcm_y?: number | null;
+  capacity_basis?: string | null;
   fuel?: string | null;
   voltage_kv?: number | null;
   owner?: string | null;
@@ -208,6 +210,34 @@ export interface RecoveryStats {
     median_observed_restoration_days: number | null;
   }>;
   note: string;
+}
+
+/** One dated restoration observation (iteration 8). The COMPLETE log lives here, not in
+ *  live_disruptions — that array only carries facilities still carrying disruption weight and is
+ *  truncated, so fully-recovered facilities are absent from it by construction. */
+export interface RecoveryEvent {
+  incident_id: string;
+  episode_id: string;
+  asset_id: string;
+  asset_name: string | null;
+  asset_class: string | null;
+  sector: string | null;
+  region_code: string | null;
+  incident_date: string;
+  /** The date the restoration evidence attaches to — what a trailing window filters on. */
+  evidence_date: string;
+  evidence_date_kind: "observed_restoration" | "partial_restart";
+  recovery_status: string | null;
+  recovery_kind?: string | null;
+  evidence_family?: string | null;
+  scoring_evidence_kind: EvidenceKind;
+  observed_days: number | null;
+  /** True iff this row is one of recovery_stats.observed_restoration_episodes (a measured
+   *  duration). Evidence can be real and dated without yielding a usable duration. */
+  counts_toward_observed_episodes: boolean;
+  what_source_establishes?: string | null;
+  source_quality?: string | null;
+  sources: { url: string }[];
 }
 
 export interface AssessedDegradation {
@@ -407,6 +437,9 @@ export interface Snapshot {
   recovery_stats: RecoveryStats;
   coverage_detail: CoverageDetail;
   live_disruptions: LiveDisruption[];
+  /** Complete dated recovery-evidence log. Optional: an N-1 payload served by a lagging CDN
+   *  edge during a deploy predates it, and the UI degrades to "no evidence" rather than break. */
+  recovery_events?: RecoveryEvent[];
   regions: Record<string, RegionSnapshot>;
   not_modelled: Record<string, string>;
   coverage: Coverage | null;

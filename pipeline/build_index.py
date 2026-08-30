@@ -846,9 +846,88 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             "gas_processing": _gas_processing_index(gpp_census, live, today),
         },
         "live_disruptions": live[:80],
+        # COMPLETE recovery-evidence log, independent of live_disruptions (iteration 8 defect
+        # fix). live_disruptions holds only facilities whose disruption weight is still > 0 and
+        # is capped at 80, so a FULLY-RECOVERED facility drops out of it entirely — which made
+        # it unusable as a source for "what restoration evidence arrived recently". This array
+        # is derived from the same recovery_by_incident map that recovery_stats already counts,
+        # so it is presentation/data-access only and changes no score.
+        "recovery_events": _recovery_events(incidents, recovery_by_incident, facility_info),
         "regions": regions_out,
         "not_modelled": NOT_MODELLED,
     }
+
+
+def _recovery_events(incidents, recovery_by_incident, facility_info):
+    """Every dated restoration observation in the corpus, one row per (episode, evidence date).
+
+    Exists so a client can ask "what recovery evidence landed in this window?" without going
+    through live_disruptions, which is a CURRENT-IMPAIRMENT view: it excludes facilities whose
+    weight has decayed to zero and is truncated, and therefore systematically hides exactly the
+    fully-restored episodes such a question is about.
+
+    Deduplicated by (episode, date-kind) on the same principle recovery_stats uses: rows are not
+    sample size, distinct episodes are. Emits both kinds of dated evidence and says which is
+    which, so a partial restart is never silently counted as a full restoration.
+    """
+    inc_by_id = {i["incident_id"]: i for i in incidents}
+    seen = set()
+    events = []
+    for incident_id, rec in sorted(recovery_by_incident.items()):
+        inc = inc_by_id.get(incident_id)
+        if inc is None:
+            continue  # orphaned record (episode merged/removed) — same rule as recovery_stats
+        episode = inc.get("episode_id") or incident_id
+        asset_id = inc.get("asset_id")
+        info = facility_info.get(asset_id, {})
+        _h, kind, _c = recovery.assess(inc.get("asset_class"), rec)
+        status = rec.get("recovery_status")
+        family = rec.get("evidence_family") or recovery.evidence_family(status, rec.get("recovery_kind"))
+        # A record can carry a full-restoration date and/or a partial-restart date; both are
+        # dated restoration evidence, and each is emitted once per episode.
+        for date_kind, date_value in (
+            ("observed_restoration", rec.get("observed_date")),
+            ("partial_restart", rec.get("partial_operations_resumed_at")),
+        ):
+            if not date_value:
+                continue
+            key = (episode, date_kind)
+            if key in seen:
+                continue
+            seen.add(key)
+            events.append({
+                "incident_id": incident_id,
+                "episode_id": episode,
+                "asset_id": asset_id,
+                "asset_name": inc.get("asset_name") or info.get("name"),
+                "asset_class": inc.get("asset_class"),
+                "sector": SECTOR_OF_CLASS.get(inc.get("asset_class")),
+                "region_code": inc.get("region_code") or info.get("region_code"),
+                "incident_date": inc.get("date"),
+                # The date the evidence attaches to — what a trailing-window query filters on.
+                "evidence_date": date_value,
+                "evidence_date_kind": date_kind,
+                "recovery_status": status,
+                "recovery_kind": rec.get("recovery_kind"),
+                "evidence_family": family,
+                "scoring_evidence_kind": kind,
+                "observed_days": rec.get("observed_days"),
+                # Whether THIS row is one of recovery_stats.observed_restoration_episodes — i.e.
+                # it contributes an observed DURATION to the medians. A record can carry a real
+                # restoration date while its duration is modelled or absent: that is still
+                # restoration evidence, but it is not a median sample. Keeping the two counts
+                # separate stops "evidence arrived" from being read as "duration measured".
+                "counts_toward_observed_episodes": bool(
+                    date_kind == "observed_restoration"
+                    and kind == "observed"
+                    and rec.get("observed_days")
+                ),
+                "what_source_establishes": rec.get("what_source_establishes"),
+                "source_quality": rec.get("source_quality"),
+                "sources": rec.get("sources", []),
+            })
+    events.sort(key=lambda e: (e["evidence_date"], e["episode_id"], e["evidence_date_kind"]))
+    return events
 
 
 def _assessed_degradation(incidents, live, facility_info, today):
