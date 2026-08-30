@@ -18,8 +18,21 @@ Current, durable state of the project. Read this first when resuming.
 
 ## Iteration 8 end state (theme: symbology, trend views & analyst UX — features, not scoring)
 
-Committed on `iteration-8`. **Frozen ESDI unchanged at 18.49** — a visualisation/navigation pass
-only; no scoring, weights, or corpus touched. See [ITERATION_8_REVIEW.md](ITERATION_8_REVIEW.md).
+Merged from `iteration-8`. A visualisation/navigation pass only; no scoring, weights, or corpus
+touched. See [ITERATION_8_REVIEW.md](ITERATION_8_REVIEW.md).
+
+**Read this first — the two builds.** Production and the frozen reference are different on
+purpose and both are correct:
+
+| Build | Command | as_of | ESDI |
+|---|---|---|---|
+| production / release | `python -m pipeline.run` | build day | moves with time decay |
+| frozen regression | `python -m pipeline.run --as-of 2026-08-28` | 2026-08-28 | **18.49**, stable across iterations |
+
+The frozen build is for apples-to-apples methodology comparison ONLY and must never be committed
+as the release payload — it would freeze the live dashboard at a stale date.
+`test_release_payload_is_a_current_date_build_not_a_frozen_reference` now fails the suite if one
+is, so run a plain `python -m pipeline.run` before committing after any comparison run.
 
 - **Infrastructure icons** replace the old asset-dots. `src/icons.ts` is the single registry
   driving map + filter rows + legend (shape = function, colour = class identity, dashed frame =
@@ -33,7 +46,23 @@ only; no scoring, weights, or corpus touched. See [ITERATION_8_REVIEW.md](ITERAT
   date, region, filters, layers, compare set, camera; only non-defaults written), ESDI-trajectory
   **sparklines**, a 3-region **comparison tray**, and region/facility **search** (public names only).
 - Two defects fixed in passing: asset-symbols `minzoom` 3.4→2 (icons now show at the home view);
-  `rivers` `line-opacity` reformulated (invalid nested `["zoom"]` had silently dropped the layer).
+  `rivers` `line-opacity` reformulated (invalid nested `["zoom"]` had silently dropped the layer
+  since iteration 5 — proven against MapLibre's own style validator).
+
+**Release-gate findings (read before touching recovery or trend views):**
+
+- **`live_disruptions` is NOT the recovery record.** It holds only facilities whose disruption
+  weight is still > 0 and is capped at 80, so fully-recovered facilities are absent by
+  construction. Using it to answer "what recovery landed recently?" undercounted 9 episodes to 1.
+  The complete log is **`snapshot.recovery_events`** (emitted by `_recovery_events()`), one row per
+  (episode, evidence date), with `counts_toward_observed_episodes` marking the subset that carries
+  a measured duration. Ask which question you mean before choosing a source.
+- **"30/90-day change" is really 28–35 / 84–91 days** — the index series is weekly. Always resolve
+  a window through `data.windowRef()`, which reports `actualComparisonDays` and `comparisonDate`
+  and can never resolve past the scrubber. All four change surfaces share it.
+- **14 of 35 region-precision assets share a centroid with another.** The map draws one stacked
+  marker per centroid and names every member; never jitter them apart — inventing offsets would
+  fabricate geography the dataset does not have.
 
 ## Iteration 7 end state (theme: analytic integrity, not features)
 
