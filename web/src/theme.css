@@ -808,3 +808,46 @@ a { color: var(--accent); }
   padding: 5px 0;
   border-radius: 3px;
 }
+
+/* Canonical route detail panel (iteration 10 §16). Anchored bottom-left rather than following
+   the cursor: unlike the hover card this is persistent and readable, and it must not sit over
+   the region dossier on the right. Scrolls internally so a route with many source mappings
+   cannot push the panel off the map. */
+.route-detail {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 5;
+  width: 300px;
+  /* Use nearly the whole map height: the map pane can be short on a laptop, and a detail panel
+     that reserves space it does not need is a panel the reader has to scroll for no reason. */
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+  background: rgba(9, 13, 18, 0.97);
+  border: 1px solid var(--accent-dim);
+  border-radius: var(--radius);
+  padding: 9px 11px 11px;
+}
+
+.route-detail .section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.route-detail .section-head h2 { margin: 0; }
+
+.route-detail .kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  padding: 1.5px 0;
+}
+
+.route-detail .kv .k { color: var(--text-dim); flex: 0 0 auto; }
+.route-detail .kv .v { text-align: right; }

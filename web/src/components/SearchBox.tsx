@@ -1,6 +1,6 @@
-import { useMemo, useRef, useState } from "react";
-import type { Asset, Bundle } from "../types";
-import { displayName, titleCase } from "../data";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { Asset, Bundle, PipelineEntity } from "../types";
+import { displayName, loadPipelineRegistry, titleCase } from "../data";
 import { iconSVG } from "../icons";
 
 /** Region / asset search (§21). Type a name to jump to a region or a piece of infrastructure.
@@ -18,12 +18,21 @@ export default function SearchBox({
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
+  // Canonical pipelines are searchable by ALIAS as well as name (§24), which is the point:
+  // a reader who knows the line as "Дружба" or "Barátság" should not have to know we call it
+  // "Druzhba corridor". Loaded lazily on first focus so it costs nothing until used.
+  const [entities, setEntities] = useState<PipelineEntity[]>([]);
   const regionName = (code: string | null | undefined) =>
     (code && bundle.regions.find((r) => r.code === code)?.name) || "";
 
+  useEffect(() => {
+    if (!open || entities.length) return;
+    void loadPipelineRegistry().then((r) => setEntities(Object.values(r.entities)));
+  }, [open, entities.length]);
+
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    if (needle.length < 2) return { regions: [], assets: [] };
+    if (needle.length < 2) return { regions: [], assets: [], pipelines: [] };
     const regions = bundle.regions
       .filter((r) => r.name.toLowerCase().includes(needle))
       .slice(0, 6);
@@ -32,10 +41,23 @@ export default function SearchBox({
       .map((a, i) => ({ a, i }))
       .filter(({ a }) => (a.name ?? "").toLowerCase().includes(needle))
       .slice(0, 8);
-    return { regions, assets };
-  }, [q, bundle.regions, bundle.assets]);
+    // Only CURATED entities are offered. The auto-derived ones carry a source's raw name and an
+    // `auto-osm-rel-…` id, which is not an identity a reader should be searching against.
+    const pipelines = entities
+      .filter((e) => e.curated)
+      .map((e) => {
+        const name = e.canonical_name.toLowerCase();
+        const alias = (e.aliases ?? []).find((a) => a.toLowerCase().includes(needle));
+        if (name.includes(needle)) return { e, via: null as string | null };
+        return alias ? { e, via: alias } : null;
+      })
+      .filter((x): x is { e: PipelineEntity; via: string | null } => x !== null)
+      .slice(0, 6);
+    return { regions, assets, pipelines };
+  }, [q, bundle.regions, bundle.assets, entities]);
 
-  const has = results.regions.length > 0 || results.assets.length > 0;
+  const has =
+    results.regions.length > 0 || results.assets.length > 0 || results.pipelines.length > 0;
 
   const pickRegion = (code: string) => { onPickRegion(code); reset(); };
   const pickAsset = (a: Asset, i: number) => { onPickAsset(a, i); reset(); };
@@ -48,8 +70,8 @@ export default function SearchBox({
         className="search-input"
         type="text"
         value={q}
-        placeholder="Search region or facility…"
-        aria-label="Search for a region or facility"
+        placeholder="Search region, facility or pipeline…"
+        aria-label="Search for a region, facility or pipeline"
         onChange={(e) => { setQ(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
         onKeyDown={(e) => {
@@ -62,7 +84,7 @@ export default function SearchBox({
       />
       {open && q.trim().length >= 2 && (
         <div className="search-results">
-          {!has && <div className="search-empty">No region or facility matches “{q.trim()}”.</div>}
+          {!has && <div className="search-empty">No region, facility or pipeline matches “{q.trim()}”.</div>}
           {results.regions.length > 0 && (
             <div className="search-group">
               <div className="eyebrow">Regions</div>
@@ -71,6 +93,22 @@ export default function SearchBox({
                   <span className="search-name">{r.name}</span>
                   <span className="search-meta">{r.district}</span>
                 </button>
+              ))}
+            </div>
+          )}
+          {results.pipelines.length > 0 && (
+            <div className="search-group">
+              <div className="eyebrow">Pipelines</div>
+              {results.pipelines.map(({ e, via }) => (
+                <div key={e.canonical_pipeline_id} className="search-row" style={{ cursor: "default" }}>
+                  <span className="search-name">{e.canonical_name}</span>
+                  <span className="search-meta">
+                    {titleCase(e.commodity)} · {titleCase(e.entity_level)}
+                    {/* Say WHICH alias matched, so a Cyrillic or Hungarian query visibly
+                        resolves to the canonical entity rather than seeming to match nothing. */}
+                    {via ? ` · matched “${via}”` : ""}
+                  </span>
+                </div>
               ))}
             </div>
           )}

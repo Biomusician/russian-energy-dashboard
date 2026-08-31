@@ -1,0 +1,35 @@
+canonical_node_id,node_name,node_type,aliases,country,geography_precision,lon,lat,source_url,source_date,note
+NODE_TORZHOK,Torzhok hub,hub,,RU,none,,,https://www.gem.wiki/Northern_Tyumen_Regions_(SRTO)%E2%80%93Torzhok_Gas_Pipeline,2026-08-30,Named gas transmission hub; no defensible public coordinate held
+NODE_SOSNOGORSKAYA,Sosnogorskaya CS,compressor_station,,RU,none,,,https://www.gem.wiki/Ukhta-Torzhok_(Yamal)_Gas_Pipeline,2026-08-30,Compressor station named by the operator source; deliberately not geocoded
+NODE_NOVOGRYAZOVETSKAYA,Novogryazovetskaya CS 17,compressor_station,,RU,none,,,https://www.gem.wiki/Ukhta-Torzhok_(Yamal)_Gas_Pipeline,2026-08-30,
+NODE_PORTOVAYA,Portovaya CS,compressor_station,,RU,none,,,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,2026-08-30,
+NODE_SLAVYANSKAYA,Slavyanskaya CS,compressor_station,,RU,none,,,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,2026-08-30,Onshore origin of Nord Stream 2 near Ust-Luga
+NODE_GREIFSWALD,Greifswald,landfall,Greifswald|Lubmin,DE,none,,,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,2026-08-30,Nord Stream landfall; OPAL and NEL connect here
+NODE_KONDRATKI,Kondratki,border_point,,PL,none,,,https://www.gaz-system.pl/en/transmission-system/transmission-infrastructure/transit-gas-pipeline-system.html,2026-08-30,PL-BY border crossing of Yamal-Europe
+NODE_MALLNOW,Mallnow / Gorzyca,border_point,Mallnow|Gorzyca,DE,none,,,https://www.gaz-system.pl/en/transmission-system/transmission-infrastructure/transit-gas-pipeline-system.html,2026-08-30,PL-DE border point; ENTSOG pointKey ITP-00096 EIC 21Z000000000056S
+NODE_SUDZHA,Sudzha GMS,measuring_station,Sudzha|Sudzha (RU) / Ukraine (UA),RU,none,,,https://www.gem.wiki/Urengoy-Pomary-Uzhgorod_Gas_Pipeline,2026-08-30,RU-UA border gas measuring station
+NODE_VELKE_KAPUSANY,Velke Kapusany,border_point,Velké Kapušany|Uzhhorod (UA) - Velké Kapušany (SK),SK,none,,,https://www.eustream.sk/en/about-us/press/news/zastavenie-toku-zemneho-plynu-z-ukrajiny-vstupnom-bode-velke-kapusany-ukrajinsko-slovenskej-hranici.html,2025-01-01,UA-SK entry point; Eustream confirmed the transit halt here
+NODE_PISAREVKA,Pisarevka GMS,measuring_station,Pisarevka|Pisarevka (RU)/Ukraine (UA),RU,none,,,https://www.gem.wiki/Petrovsk-Novopskov_Gas_Pipeline,2026-08-30,
+NODE_SOKHRANOVKA,Sokhranovka,border_point,Sokhranovka|Sokhranovka (RU) / Ukraine (UA),RU,none,,,https://www.gem.wiki/Soyuz_Gas_Pipeline,2026-08-30,RU-UA border crossing of Soyuz
+NODE_DOLYNA,Dolyna,junction,,UA,none,,,https://www.gem.wiki/Soyuz_Gas_Pipeline,2026-08-30,Soyuz meets the Northern Lights Ivatsevichy-Kobryn-Dolyna branch
+NODE_ALEXANDROV_GAY,Alexandrov Gay,junction,,RU,none,,,https://en.wikipedia.org/wiki/Central_Asia%E2%80%93Center_gas_pipeline_system,2026-08-30,Central Asia-Center meets Soyuz and Orenburg-Novopskov
+NODE_LULEBURGAZ,Luleburgaz,interconnection,,TR,none,,,http://turkstream.info/project/,2026-08-30,TurkStream string 1 enters the Turkish network
+NODE_MALKOCLAR,Malkoclar / Strandzha 2,border_point,,TR,none,,,https://www.gem.wiki/TurkStream_Gas_Pipeline,2026-08-30,TR-BG interconnection; TurkStream string 2 to the Trans-Balkan system
+NODE_KIREEVO,Kireevo / Zaychar,border_point,,BG,none,,,https://www.gem.wiki/Balkan_Stream_gas_pipeline,2026-08-30,BG-RS interconnection
+NODE_SAMSUN,Samsun / Durusu,landfall,,TR,none,,,https://en.wikipedia.org/wiki/Blue_Stream,2026-08-30,Blue Stream terminal
+NODE_HEIHE,Blagoveshchensk / Heihe,border_point,,CN,none,,,https://en.wikipedia.org/wiki/Power_of_Siberia,2026-08-30,RU-CN gas border crossing; Amur river tunnels
+NODE_MOZYR,Mozyr,splitting_point,,BY,none,,,https://en.wikipedia.org/wiki/Druzhba_pipeline,2026-08-30,Druzhba splits into northern and southern branches
+NODE_UNECHA,Unecha,junction,,RU,none,,,https://www.gem.wiki/Baltic_Pipeline_System_2,2026-08-30,Druzhba junction and origin of BPS-2
+NODE_ADAMOWO,Adamowo,border_point,,PL,none,,,https://en.wikipedia.org/wiki/Druzhba_pipeline,2026-08-30,
+NODE_SCHWEDT,Schwedt,terminal,,DE,none,,,https://en.wikipedia.org/wiki/Druzhba_pipeline,2026-08-30,Druzhba northern branch terminus
+NODE_FENYESLITKE,Fenyeslitke,border_point,,HU,none,,,https://molgroup.info/en/investor-relations/investor-news/first-batches-of-crude-oil-via-the-druzhba-pipeline-received-in-hungary-and-slovakia,2026-04-21,MOL delivery point
+NODE_BUDKOVCE,Budkovce,border_point,,SK,none,,,https://molgroup.info/en/investor-relations/investor-news/first-batches-of-crude-oil-via-the-druzhba-pipeline-received-in-hungary-and-slovakia,2026-04-21,MOL delivery point
+NODE_TAISHET,Taishet,junction,,RU,none,,,https://www.gem.wiki/Omsk-Irkutsk_Oil_Pipeline,2026-08-30,Omsk-Irkutsk links with ESPO here; ESPO-1 origin
+NODE_SKOVORODINO,Skovorodino,junction,,RU,none,,,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,2026-08-30,ESPO-1 meets ESPO-2; Skovorodino-Mohe branches here
+NODE_MOHE,Mohe,border_point,,CN,none,,,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,2026-08-30,RU-CN oil border crossing
+NODE_DAQING,Daqing,interconnection,,CN,none,,,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,2026-08-30,CNPC network connection
+NODE_KOZMINO,Kozmino,terminal,,RU,none,,,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,2026-08-30,ESPO-2 marine terminus
+NODE_PRIMORSK,Primorsk,terminal,,RU,none,,,https://en.wikipedia.org/wiki/Baltic_Pipeline_System,2026-08-30,BPS-1 terminus
+NODE_UST_LUGA,Ust-Luga,terminal,,RU,none,,,https://www.gem.wiki/Baltic_Pipeline_System_2,2026-08-30,BPS-2 terminus; distinct from the Slavyanskaya CS gas node
+NODE_YUZHNAYA_OZEREYEVKA,Yuzhnaya Ozereyevka,terminal,,RU,none,,,https://www.cpc.ru/EN/about/Pages/general.aspx,2026-08-30,CPC marine terminal — physically and commercially separate from Transneft Sheskharis
+NODE_SHESKHARIS,Sheskharis complex,terminal,,RU,none,,,https://www.gem.wiki/Tikhoretsk-Novorossiysk_Oil_Pipeline,2026-08-30,Transneft Novorossiysk complex; NOT the CPC terminal

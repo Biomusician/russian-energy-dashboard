@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import type { FilterState, FlyTarget } from "../App";
-import type { Asset, Bundle, Incident } from "../types";
+import type { Asset, Bundle, Incident, PipelineRegistry } from "../types";
 import { CLASS_COLOR, ESDI_DELTA_STOPS, SEVERITY_STOPS } from "../palette";
-import { displayName, fmtDelta, fmtNum, loadContextLayer, titleCase, windowRef } from "../data";
+import { displayName, fmtDelta, fmtNum, loadContextLayer, loadPipelineRegistry, titleCase, windowRef } from "../data";
 import { iconImageId, prewarmIcons } from "../icons";
 import { AssetHoverCard } from "./AssetDetail";
+import { RouteDetail } from "./RouteDetail";
 import type { CameraState } from "../urlState";
 
 /** The map deliberately has no basemap.
@@ -116,6 +117,9 @@ interface ScreenLabel { name: string; x: number; y: number; size: number; kind: 
  *  no coordinate readout, no distance, no vulnerability measure. */
 interface RouteProps {
   pipeline_id: string;
+  canonical_pipeline_id: string | null;
+  canonical_name: string | null;
+  drawn_length_km: number;
   name: string | null;
   asset_class: string;
   operator: string | null;
@@ -169,6 +173,10 @@ export default function MapPanel({
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [assetHover, setAssetHover] = useState<{ x: number; y: number; asset: Asset; alsoHere: Asset[] } | null>(null);
   const [routeHover, setRouteHover] = useState<{ x: number; y: number; props: RouteProps } | null>(null);
+  // Clicking a route opens the canonical detail panel (§16). The registry is fetched on the
+  // FIRST click rather than at load: it is entity-level metadata nobody needs until they ask.
+  const [selectedRoute, setSelectedRoute] = useState<RouteProps | null>(null);
+  const [registry, setRegistry] = useState<PipelineRegistry | null>(null);
   const [labels, setLabels] = useState<ScreenLabel[]>([]);
   // Lazy-loaded context layers (§16): which files we've fetched, and the rivers FC (needed
   // for the HTML label overlay, which the map source alone can't drive).
@@ -752,10 +760,21 @@ export default function MapPanel({
       setRouteHover({ x: e.point.x, y: e.point.y, props: f.properties as unknown as RouteProps });
     };
     const leave = () => { setRouteHover(null); m.getCanvas().style.cursor = ""; };
+    const click = (e: maplibregl.MapLayerMouseEvent) => {
+      const f = e.features?.[0];
+      if (!f) return;
+      // Stop the region choropleth underneath from also toggling, exactly as an asset click does.
+      assetClickRef.current = true;
+      window.setTimeout(() => { assetClickRef.current = false; }, 0);
+      const props = f.properties as unknown as RouteProps;
+      setSelectedRoute((prev) => (prev?.pipeline_id === props.pipeline_id ? null : props));
+      void loadPipelineRegistry().then(setRegistry);
+    };
     const present = layers.filter((l) => m.getLayer(l));
     for (const l of present) {
       m.on("mousemove", l, move);
       m.on("mouseleave", l, leave);
+      m.on("click", l, click);
     }
     const canvas = m.getCanvasContainer();
     canvas.addEventListener("mouseleave", leave);
@@ -763,6 +782,7 @@ export default function MapPanel({
       for (const l of present) {
         m.off("mousemove", l, move);
         m.off("mouseleave", l, leave);
+        m.off("click", l, click);
       }
       canvas.removeEventListener("mouseleave", leave);
     };
@@ -1203,7 +1223,16 @@ export default function MapPanel({
       {/* Card precedence: the most specific thing under the cursor wins. All three layers fire
           their own mousemove, so without this a region, a route and an asset card stack on top
           of one another at the same point. */}
-      {routeHover && !assetHover && <RouteHoverCard {...routeHover} />}
+      {routeHover && !assetHover && !selectedRoute && <RouteHoverCard {...routeHover} />}
+      {selectedRoute && (
+        <RouteDetail
+          entity={registry?.entities[selectedRoute.canonical_pipeline_id ?? ""] ?? null}
+          routeLengthKm={selectedRoute.route_length_km}
+          drawnLengthKm={selectedRoute.drawn_length_km}
+          componentCount={selectedRoute.component_count}
+          onClose={() => setSelectedRoute(null)}
+        />
+      )}
 
       {assetHover && (
         <AssetHoverCard

@@ -264,16 +264,45 @@ and hid the entire West Siberian trunk corridor; see `PIPELINE_GAP_AUDIT.md` for
 Route geometry is OSM-traced (`route_quality="osm_mapped"`); cadence is monthly at most, not
 daily.
 
-**Global Energy Monitor's GGIT (gas, November 2025) and GOIT (oil/NGL, June 2026)** are the
-authoritative trackers and remain the cited cross-reference. Their licence is **CC BY 4.0,
-verified verbatim, and permits raw redistribution with attribution** — the earlier note in this
-file that there is "no stable CI-fetchable URL" was correct about the *authoritative* download
-(a per-request form) but is not a licence limitation, and is not true of every GEM path. Two
-ungated paths exist and are deliberately NOT used: the public CDN map GeoJSON omits the
-`RouteAccuracy` field, so route quality could not be labelled honestly, and the
-`goit-ggit-pipeline-routes` GitHub repo carries no LICENSE file and contains re-imported OSM.
-See `PIPELINE_SOURCE_AUDIT.md` for the acquisition procedure and the manifest a snapshot must
-carry.
+**Global Energy Monitor's GGIT (gas) and GOIT (oil/NGL)**, CC BY 4.0 — verified verbatim, raw
+redistribution permitted with attribution. Ingested in iteration 10 (1,917 rows for the monitored
+area) via `pipeline/import_gem.py`.
+
+**What is actually ingested is a PROVISIONAL snapshot, not a citable release.** The distinction
+is load-bearing and is carried in the data:
+
+| Path | Used | Why |
+|---|---|---|
+| Quarterly release (request form) | **not yet** | Citable and versioned, retains `RouteAccuracy = "no route"` parent rows. Needs a human to download it once — the importer is built and fixture-tested and will take it. |
+| `goit-ggit-data-ops` `map-data` branch | **yes, provisional** | Full 54/50-column schema **including `RouteAccuracy`**, unauthenticated, refreshed daily. But generated from GEM's live backend sheet: **no release identifier**, changes without notice, and drops the null-geometry parent rows. |
+| DigitalOcean CDN map GeoJSON | no | Genuinely lacks `RouteAccuracy` (31/24 keys), so route quality could not be labelled honestly. |
+| `goit-ggit-pipeline-routes` repo | no | No LICENSE file, and contains re-imported OSM. |
+
+An earlier version of this section said the *only* ungated paths omitted `RouteAccuracy`. That
+was true of the CDN objects and **not** of the `map-data` branch, which is the path the repo now
+runs on. Everything from it is stamped `provisional: true, release: null` in
+`data/vendor/gem/MANIFEST.json`, marked in `pipeline_source_map.csv`, and the importer **refuses**
+a `--release` label on a file with no `no route` rows — the signature of the live export — so
+unversioned data cannot be laundered into a citation.
+
+**Attribution:** "Global Energy Monitor, Global Gas / Oil Infrastructure Tracker, live backend
+export (no release identifier), retrieved 2026-08-30. Filtered to the monitored area."
+
+`RouteAccuracy` is mapped conservatively and the source value is preserved verbatim: only
+`very high (within meters)` and `high` become `gem_traced`; `very low (straight line/schematic)`
+and `no route` become `topology_only`. 698 of the 1,917 rows are `topology_only`, and **no GEM
+geometry is ingested at all** — only attributes — so GEM cannot contribute a drawn kilometre.
+
+See `PIPELINE_SOURCE_AUDIT.md` for the acquisition procedure and the manifest a snapshot carries.
+
+**ENTSOG Transparency Platform** (iteration 10) — the European TSOs' own register of where their
+systems connect, used as an INDEPENDENT topology source rather than a third opinion about
+geometry. Bounded to interconnections with at least one side in RU/BY/UA: 68 of 1,184 rows, 36
+distinct points, 53 with EIC codes, 6 matched to canonical nodes. Native identifiers (`pointKey`,
+`pointEicCode`, operator and balancing-zone keys) are preserved. `tpMapX`/`tpMapY` are **never
+read** — they are positions on ENTSOG's schematic network diagram, not geography. Live API with
+no release identifier, so it is cited as a dated snapshot. Turkey is not an ENTSOG member, so the
+TurkStream and Blue Stream landfalls do not appear.
 
 ## 8. Major rivers — Natural Earth (public domain), iteration 5
 

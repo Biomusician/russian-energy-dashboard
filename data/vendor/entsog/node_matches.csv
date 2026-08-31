@@ -1,0 +1,17 @@
+canonical_node_id,source_system,source_id,point_eic,confidence,evidence,source_native
+NODE_VELKE_KAPUSANY,entsog_point,ITP-00117,21Z000000000085L,strong,"ENTSOG point label 'Uzhhorod (UA) - Velké Kapušany (SK)' matches the canonical node name, and the node's country is one of the two the point joins (SK/UA)",Uzhhorod (UA) - Velké Kapušany (SK)
+NODE_VELKE_KAPUSANY,entsog_point,ITP-00117,21Z000000000085L,strong,"ENTSOG point label 'Uzhhorod (UA) - Velké Kapušany (SK)' matches the canonical node name, and the node's country is one of the two the point joins (UA/SK)",Uzhhorod (UA) - Velké Kapušany (SK)
+NODE_GREIFSWALD,entsog_point,ITP-00120,,strong,"ENTSOG point label 'Greifswald' matches the canonical node name, and the node's country is one of the two the point joins (DE/RU)",Greifswald
+NODE_GREIFSWALD,entsog_point,ITP-00120,,strong,"ENTSOG point label 'Greifswald' matches the canonical node name, and the node's country is one of the two the point joins (RU/DE)",Greifswald
+NODE_GREIFSWALD,entsog_point,ITP-00120,,strong,"ENTSOG point label 'Greifswald' matches the canonical node name, and the node's country is one of the two the point joins (RU/DE)",Greifswald
+NODE_GREIFSWALD,entsog_point,ITP-00120,,strong,"ENTSOG point label 'Greifswald' matches the canonical node name, and the node's country is one of the two the point joins (RU/DE)",Greifswald
+NODE_GREIFSWALD,entsog_point,ITP-00120,,strong,"ENTSOG point label 'Greifswald' matches the canonical node name, and the node's country is one of the two the point joins (RU/DE)",Greifswald
+NODE_GREIFSWALD,entsog_point,ITP-00120,,strong,"ENTSOG point label 'Greifswald' matches the canonical node name, and the node's country is one of the two the point joins (RU/DE)",Greifswald
+NODE_GREIFSWALD,entsog_point,ITP-00120,,strong,"ENTSOG point label 'Greifswald' matches the canonical node name, and the node's country is one of the two the point joins (RU/DE)",Greifswald
+NODE_GREIFSWALD,entsog_point,ITP-00120,,strong,"ENTSOG point label 'Greifswald' matches the canonical node name, and the node's country is one of the two the point joins (RU/DE)",Greifswald
+NODE_GREIFSWALD,entsog_point,ITP-00120,,strong,"ENTSOG point label 'Greifswald' matches the canonical node name, and the node's country is one of the two the point joins (RU/DE)",Greifswald
+NODE_PISAREVKA,entsog_point,ITP-00179,21Z000000000183L,strong,"ENTSOG point label 'Pisarevka (RU)/Ukraine (UA)' matches the canonical node name, and the node's country is one of the two the point joins (RU/UA)",Pisarevka (RU)/Ukraine (UA)
+NODE_SOKHRANOVKA,entsog_point,ITP-00183,21Z000000000187D,strong,"ENTSOG point label 'Sokhranovka (RU) / Ukraine (UA)' matches the canonical node name, and the node's country is one of the two the point joins (RU/UA)",Sokhranovka (RU) / Ukraine (UA)
+NODE_SUDZHA,entsog_point,ITP-00184,21Z000000000188B,strong,"ENTSOG point label 'Sudzha (RU) / Ukraine (UA)' matches the canonical node name, and the node's country is one of the two the point joins (RU/UA)",Sudzha (RU) / Ukraine (UA)
+NODE_MOZYR,entsog_point,ITP-00446,21Z000000000181P,strong,"ENTSOG point label 'Mozyr' matches the canonical node name, and the node's country is one of the two the point joins (BY/UA)",Mozyr
+NODE_GREIFSWALD,entsog_point,ITP-00120,,strong,"ENTSOG point label 'Greifswald' matches the canonical node name, and the node's country is one of the two the point joins (RU/DE)",Greifswald

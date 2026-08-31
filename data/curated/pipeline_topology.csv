@@ -1,55 +1,55 @@
-subject,relation,object,at_point,substance,source_quality,source_url,note
-SRTO_TORZHOK,connects_to,YAMAL_EUROPE,Torzhok hub,gas,secondary_citing_operator,https://www.gem.wiki/Northern_Tyumen_Regions_(SRTO)%E2%80%93Torzhok_Gas_Pipeline,GEM citing Gazprom
-SRTO_TORZHOK,connects_to,TORZHOK_MINSK_IVATSEVICHI,Torzhok hub,gas,secondary_citing_operator,https://www.gem.wiki/Northern_Tyumen_Regions_(SRTO)%E2%80%93Torzhok_Gas_Pipeline,
-YAMAL_EUROPE,enters_network_of,POLAND,Kondratki,gas,tso_primary,https://www.gaz-system.pl/en/transmission-system/transmission-infrastructure/transit-gas-pipeline-system.html,GAZ-SYSTEM is designated operator of the Polish section
-YAMAL_EUROPE,enters_network_of,GERMANY,Gorzyca / Mallnow,gas,tso_primary,https://www.gaz-system.pl/en/transmission-system/transmission-infrastructure/transit-gas-pipeline-system.html,
-YAMAL_EUROPE,connects_to,YAGAL_NORD,Mallnow CS,gas,secondary_citing_operator,https://www.gem.wiki/Yamal-Europe_Gas_Pipeline,
-BOVANENKOVO_UKHTA_1,connects_to,UKHTA_TORZHOK_1,Sosnogorskaya CS,gas,secondary_citing_operator,https://www.gem.wiki/Ukhta-Torzhok_(Yamal)_Gas_Pipeline,GEM citing archived Gazprom project page
-BOVANENKOVO_UKHTA_2,connects_to,UKHTA_TORZHOK_2,Sosnogorskaya CS,gas,secondary_citing_operator,https://www.gem.wiki/Ukhta-Torzhok_(Yamal)_2_Gas_Pipeline,
-UKHTA_TORZHOK_1,connects_to,POCHINKI_GRYAZOVETS,Novogryazovetskaya CS 17,gas,secondary_citing_operator,https://www.gem.wiki/Ukhta-Torzhok_(Yamal)_Gas_Pipeline,route ends at Gryazovets despite the name
-UKHTA_TORZHOK_1,connects_to,GRYAZOVETS_VYBORG_1,Novogryazovetskaya CS 17,gas,secondary_citing_operator,https://www.gem.wiki/Ukhta-Torzhok_(Yamal)_Gas_Pipeline,
-UKHTA_TORZHOK_2,connects_to,GRYAZOVETS_VYBORG_2,Novogryazovetskaya CS 17,gas,secondary_citing_operator,https://www.gem.wiki/Ukhta-Torzhok_(Yamal)_2_Gas_Pipeline,
-GRYAZOVETS_VYBORG,connects_to,NORD_STREAM_1,Portovaya CS,gas,secondary_citing_operator,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,
-GRYAZOVETS_VYBORG,branch_of,NORTHERN_LIGHTS,,gas,encyclopedic,https://en.wikipedia.org/wiki/Gryazovets%E2%80%93Vyborg_gas_pipeline,
-NORD_STREAM_1,connects_to,OPAL,Greifswald,gas,secondary_citing_operator,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,
-NORD_STREAM_1,connects_to,NEL,Greifswald,gas,secondary_citing_operator,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,
-NORD_STREAM_2,originates_at,SLAVYANSKAYA_CS_UST_LUGA,Ust-Luga,gas,secondary_citing_operator,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,never entered service
-URENGOY_POMARY_UZHHOROD,crosses_border_RU_UA,UKRAINE_GTS,Sudzha GMS,gas,secondary_citing_operator,https://www.gem.wiki/Urengoy-Pomary-Uzhgorod_Gas_Pipeline,transit zero since 2025-01-01
-UKRAINE_GTS,enters_network_of,SLOVAKIA,Velke Kapusany,gas,tso_primary,https://www.eustream.sk/en/about-us/press/news/zastavenie-toku-zemneho-plynu-z-ukrajiny-vstupnom-bode-velke-kapusany-ukrajinsko-slovenskej-hranici.html,Eustream confirms halt
-URENGOY_PETROVSK,connects_to,PETROVSK_NOVOPSKOV,Petrovsk,gas,secondary,https://www.gem.wiki/Petrovsk-Novopskov_Gas_Pipeline,
-PETROVSK_NOVOPSKOV,crosses_border_RU_UA,UKRAINE_GTS,Pisarevka GMS,gas,secondary,https://www.gem.wiki/Petrovsk-Novopskov_Gas_Pipeline,
-SOYUZ,crosses_border_RU_UA,UKRAINE_GTS,Sokhranovka,gas,secondary_citing_operator,https://www.gem.wiki/Soyuz_Gas_Pipeline,mothballed as of 2023-08
-SOYUZ,connects_to,NORTHERN_LIGHTS_IVATSEVICHY_KOBRYN_DOLYNA,Dolyna,gas,secondary_citing_operator,https://www.gem.wiki/Soyuz_Gas_Pipeline,
-SOYUZ,connects_to,ORENBURG_NOVOPSKOV,,gas,secondary_citing_operator,https://www.gem.wiki/Soyuz_Gas_Pipeline,
-CENTRAL_ASIA_CENTER,connects_to,SOYUZ,Alexandrov Gay,gas,encyclopedic,https://en.wikipedia.org/wiki/Central_Asia%E2%80%93Center_gas_pipeline_system,corroborated by Soyuz route
-CENTRAL_ASIA_CENTER,connects_to,ORENBURG_NOVOPSKOV,Alexandrov Gay,gas,encyclopedic,https://en.wikipedia.org/wiki/Central_Asia%E2%80%93Center_gas_pipeline_system,
-TURKSTREAM_STRING_1,connects_to,TURKISH_GAS_NETWORK,Luleburgaz,gas,operator_primary,http://turkstream.info/project/,operator states it directly
-TURKSTREAM_STRING_2,terminates_at,TURKISH_BULGARIAN_BORDER,,gas,operator_primary,http://turkstream.info/project/,
-TURKSTREAM_STRING_2,connects_to,TRANS_BALKAN_SYSTEM,Malkoclar,gas,secondary_citing_operator,https://www.gem.wiki/TurkStream_Gas_Pipeline,
-BALKAN_STREAM,enters_network_of,BULGARIA,Strandzha 2 / Malkoclar,gas,secondary_citing_tso,https://www.gem.wiki/Balkan_Stream_gas_pipeline,citing Bulgartransgaz TYNDP
-BALKAN_STREAM,enters_network_of,SERBIA,Kireevo / Zaychar,gas,secondary_citing_tso,https://www.gem.wiki/Balkan_Stream_gas_pipeline,
-POWER_OF_SIBERIA,crosses_border_RU_CN,CHINA,Blagoveshchensk / Heihe,gas,encyclopedic,https://en.wikipedia.org/wiki/Power_of_Siberia,
-POWER_OF_SIBERIA,connects_to,CNPC_HEIHE_SHANGHAI,Heihe,gas,encyclopedic,https://en.wikipedia.org/wiki/Power_of_Siberia,
-BUKHARA_URAL,connects_to,URENGOY_CHELYABINSK,,gas,secondary,https://www.gem.wiki/Bukhara-Ural_Gas_Pipeline,
-BUKHARA_URAL,connects_to,ZHANAZHOL_AKTOBE,,gas,secondary,https://www.gem.wiki/Bukhara-Ural_Gas_Pipeline,
-BLUE_STREAM,connects_to,BOTAS_NETWORK,Samsun / Durusu,gas,encyclopedic,https://en.wikipedia.org/wiki/Blue_Stream,
-DRUZHBA,splits_at,DRUZHBA_NORTH_AND_SOUTH,Mozyr,oil,encyclopedic,https://en.wikipedia.org/wiki/Druzhba_pipeline,
-DRUZHBA_NORTH,terminates_at,SCHWEDT,via Adamowo,oil,encyclopedic,https://en.wikipedia.org/wiki/Druzhba_pipeline,Russian crude halted; Kazakh crude since 2023-12
-DRUZHBA_SOUTH,delivers_to,HUNGARY,Fenyeslitke,oil,operator_primary,https://molgroup.info/en/investor-relations/investor-news/first-batches-of-crude-oil-via-the-druzhba-pipeline-received-in-hungary-and-slovakia,MOL investor news
-DRUZHBA_SOUTH,delivers_to,SLOVAKIA,Budkovce,oil,operator_primary,https://molgroup.info/en/investor-relations/investor-news/first-batches-of-crude-oil-via-the-druzhba-pipeline-received-in-hungary-and-slovakia,
-BPS_2,connects_to,DRUZHBA,Unecha,oil,secondary,https://www.gem.wiki/Baltic_Pipeline_System_2,the link enabling redirection to seaborne export
-BPS_2,terminates_at,UST_LUGA_TERMINAL,Ust-Luga,oil,secondary,https://www.gem.wiki/Baltic_Pipeline_System_2,
-BPS_2,branches_to,KIRISHI_REFINERY,,oil,secondary,https://www.gem.wiki/Baltic_Pipeline_System_2,
-BPS_1,terminates_at,PRIMORSK_TERMINAL,Primorsk,oil,encyclopedic,https://en.wikipedia.org/wiki/Baltic_Pipeline_System,
-OMSK_IRKUTSK,connects_to,ESPO,Taishet,oil,secondary,https://www.gem.wiki/Omsk-Irkutsk_Oil_Pipeline,corroborated by ESPO-1 origin
-ESPO_1,connects_to,ESPO_2,Skovorodino,oil,secondary,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,
-SKOVORODINO_MOHE,branches_from,ESPO_1,Skovorodino,oil,secondary,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,
-SKOVORODINO_MOHE,crosses_border_RU_CN,CHINA,Mohe,oil,secondary,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,
-SKOVORODINO_MOHE,connects_to,CNPC_NETWORK,Daqing,oil,secondary,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,second line from 2018-01-01
-ESPO_2,terminates_at,KOZMINO_PORT,Kozmino,oil,secondary,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,
-CPC,terminates_at,YUZHNAYA_OZEREYEVKA_MARINE_TERMINAL,Yuzhnaya Ozereyevka,oil,operator_primary,https://www.cpc.ru/EN/about/Pages/general.aspx,separate node from Transneft Sheskharis
-CPC,receives_from,KASHAGAN,,oil,encyclopedic,https://en.wikipedia.org/wiki/Caspian_Pipeline_Consortium,since 2016-10-14
-CPC,receives_from,KARACHAGANAK,,oil,encyclopedic,https://en.wikipedia.org/wiki/Caspian_Pipeline_Consortium,since 2016-10-14
-TIKHORETSK_NOVOROSSIYSK_2,delivers_to,SHESKHARIS_COMPLEX,Novorossiysk,oil,secondary,https://www.gem.wiki/Tikhoretsk-Novorossiysk_Oil_Pipeline,
-TIKHORETSK_NOVOROSSIYSK_3,delivers_to,SHESKHARIS_COMPLEX,Novorossiysk,oil,secondary,https://www.gem.wiki/Tikhoretsk-Novorossiysk_Oil_Pipeline,
-KRYMSK_GRUSHOVAYA,delivers_to,GRUSHOVAYA_SITE,,oil,secondary,https://www.gem.wiki/Tikhoretsk-Novorossiysk_Oil_Pipeline,
+subject,relation,object,at_point,substance,source_quality,source_url,note,subject_id,object_id,node_id,linkage,linkage_reason
+SRTO_TORZHOK,connects_to,YAMAL_EUROPE,Torzhok hub,gas,secondary_citing_operator,https://www.gem.wiki/Northern_Tyumen_Regions_(SRTO)%E2%80%93Torzhok_Gas_Pipeline,GEM citing Gazprom,SRTO_TORZHOK,YAMAL_EUROPE,NODE_TORZHOK,full,
+SRTO_TORZHOK,connects_to,TORZHOK_MINSK_IVATSEVICHI,Torzhok hub,gas,secondary_citing_operator,https://www.gem.wiki/Northern_Tyumen_Regions_(SRTO)%E2%80%93Torzhok_Gas_Pipeline,,SRTO_TORZHOK,,NODE_TORZHOK,partial,unresolved: object_id
+YAMAL_EUROPE,enters_network_of,POLAND,Kondratki,gas,tso_primary,https://www.gaz-system.pl/en/transmission-system/transmission-infrastructure/transit-gas-pipeline-system.html,GAZ-SYSTEM is designated operator of the Polish section,YAMAL_EUROPE,,NODE_KONDRATKI,partial,"object 'POLAND' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+YAMAL_EUROPE,enters_network_of,GERMANY,Gorzyca / Mallnow,gas,tso_primary,https://www.gaz-system.pl/en/transmission-system/transmission-infrastructure/transit-gas-pipeline-system.html,,YAMAL_EUROPE,,NODE_MALLNOW,partial,"object 'GERMANY' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+YAMAL_EUROPE,connects_to,YAGAL_NORD,Mallnow CS,gas,secondary_citing_operator,https://www.gem.wiki/Yamal-Europe_Gas_Pipeline,,YAMAL_EUROPE,,NODE_MALLNOW,partial,"object 'YAGAL_NORD' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+BOVANENKOVO_UKHTA_1,connects_to,UKHTA_TORZHOK_1,Sosnogorskaya CS,gas,secondary_citing_operator,https://www.gem.wiki/Ukhta-Torzhok_(Yamal)_Gas_Pipeline,GEM citing archived Gazprom project page,BOVANENKOVO_UKHTA_1,UKHTA_TORZHOK_1,NODE_SOSNOGORSKAYA,full,
+BOVANENKOVO_UKHTA_2,connects_to,UKHTA_TORZHOK_2,Sosnogorskaya CS,gas,secondary_citing_operator,https://www.gem.wiki/Ukhta-Torzhok_(Yamal)_2_Gas_Pipeline,,BOVANENKOVO_UKHTA_2,UKHTA_TORZHOK_2,NODE_SOSNOGORSKAYA,full,
+UKHTA_TORZHOK_1,connects_to,POCHINKI_GRYAZOVETS,Novogryazovetskaya CS 17,gas,secondary_citing_operator,https://www.gem.wiki/Ukhta-Torzhok_(Yamal)_Gas_Pipeline,route ends at Gryazovets despite the name,UKHTA_TORZHOK_1,,NODE_NOVOGRYAZOVETSKAYA,partial,unresolved: object_id
+UKHTA_TORZHOK_1,connects_to,GRYAZOVETS_VYBORG_1,Novogryazovetskaya CS 17,gas,secondary_citing_operator,https://www.gem.wiki/Ukhta-Torzhok_(Yamal)_Gas_Pipeline,,UKHTA_TORZHOK_1,GRYAZOVETS_VYBORG,NODE_NOVOGRYAZOVETSKAYA,full,
+UKHTA_TORZHOK_2,connects_to,GRYAZOVETS_VYBORG_2,Novogryazovetskaya CS 17,gas,secondary_citing_operator,https://www.gem.wiki/Ukhta-Torzhok_(Yamal)_2_Gas_Pipeline,,UKHTA_TORZHOK_2,GRYAZOVETS_VYBORG,NODE_NOVOGRYAZOVETSKAYA,full,
+GRYAZOVETS_VYBORG,connects_to,NORD_STREAM_1,Portovaya CS,gas,secondary_citing_operator,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,,GRYAZOVETS_VYBORG,NORD_STREAM_1,NODE_PORTOVAYA,full,
+GRYAZOVETS_VYBORG,branch_of,NORTHERN_LIGHTS,,gas,encyclopedic,https://en.wikipedia.org/wiki/Gryazovets%E2%80%93Vyborg_gas_pipeline,,GRYAZOVETS_VYBORG,NORTHERN_LIGHTS,,partial,no canonical node is documented for this connection point
+NORD_STREAM_1,connects_to,OPAL,Greifswald,gas,secondary_citing_operator,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,,NORD_STREAM_1,,NODE_GREIFSWALD,partial,"object 'OPAL' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+NORD_STREAM_1,connects_to,NEL,Greifswald,gas,secondary_citing_operator,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,,NORD_STREAM_1,,NODE_GREIFSWALD,partial,"object 'NEL' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+NORD_STREAM_2,originates_at,SLAVYANSKAYA_CS_UST_LUGA,Ust-Luga,gas,secondary_citing_operator,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,never entered service,NORD_STREAM_2,,NODE_UST_LUGA,partial,"object 'SLAVYANSKAYA_CS_UST_LUGA' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+URENGOY_POMARY_UZHHOROD,crosses_border_RU_UA,UKRAINE_GTS,Sudzha GMS,gas,secondary_citing_operator,https://www.gem.wiki/Urengoy-Pomary-Uzhgorod_Gas_Pipeline,transit zero since 2025-01-01,URENGOY_POMARY_UZHHOROD,,NODE_SUDZHA,partial,"object 'UKRAINE_GTS' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+UKRAINE_GTS,enters_network_of,SLOVAKIA,Velke Kapusany,gas,tso_primary,https://www.eustream.sk/en/about-us/press/news/zastavenie-toku-zemneho-plynu-z-ukrajiny-vstupnom-bode-velke-kapusany-ukrajinsko-slovenskej-hranici.html,Eustream confirms halt,,,NODE_VELKE_KAPUSANY,partial,"object 'SLOVAKIA' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+URENGOY_PETROVSK,connects_to,PETROVSK_NOVOPSKOV,Petrovsk,gas,secondary,https://www.gem.wiki/Petrovsk-Novopskov_Gas_Pipeline,,,,,unresolved,neither end is a canonical entity; assertion retained because the connection itself is sourced and may resolve as the registry grows
+PETROVSK_NOVOPSKOV,crosses_border_RU_UA,UKRAINE_GTS,Pisarevka GMS,gas,secondary,https://www.gem.wiki/Petrovsk-Novopskov_Gas_Pipeline,,,,NODE_PISAREVKA,partial,"object 'UKRAINE_GTS' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+SOYUZ,crosses_border_RU_UA,UKRAINE_GTS,Sokhranovka,gas,secondary_citing_operator,https://www.gem.wiki/Soyuz_Gas_Pipeline,mothballed as of 2023-08,SOYUZ,,NODE_SOKHRANOVKA,partial,"object 'UKRAINE_GTS' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+SOYUZ,connects_to,NORTHERN_LIGHTS_IVATSEVICHY_KOBRYN_DOLYNA,Dolyna,gas,secondary_citing_operator,https://www.gem.wiki/Soyuz_Gas_Pipeline,,SOYUZ,,NODE_DOLYNA,partial,unresolved: object_id
+SOYUZ,connects_to,ORENBURG_NOVOPSKOV,,gas,secondary_citing_operator,https://www.gem.wiki/Soyuz_Gas_Pipeline,,SOYUZ,,,partial,no canonical node is documented for this connection point
+CENTRAL_ASIA_CENTER,connects_to,SOYUZ,Alexandrov Gay,gas,encyclopedic,https://en.wikipedia.org/wiki/Central_Asia%E2%80%93Center_gas_pipeline_system,corroborated by Soyuz route,CENTRAL_ASIA_CENTER,SOYUZ,NODE_ALEXANDROV_GAY,full,
+CENTRAL_ASIA_CENTER,connects_to,ORENBURG_NOVOPSKOV,Alexandrov Gay,gas,encyclopedic,https://en.wikipedia.org/wiki/Central_Asia%E2%80%93Center_gas_pipeline_system,,CENTRAL_ASIA_CENTER,,NODE_ALEXANDROV_GAY,partial,unresolved: object_id
+TURKSTREAM_STRING_1,connects_to,TURKISH_GAS_NETWORK,Luleburgaz,gas,operator_primary,http://turkstream.info/project/,operator states it directly,TURKSTREAM,,NODE_LULEBURGAZ,partial,"object 'TURKISH_GAS_NETWORK' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+TURKSTREAM_STRING_2,terminates_at,TURKISH_BULGARIAN_BORDER,,gas,operator_primary,http://turkstream.info/project/,,TURKSTREAM,,,partial,"object 'TURKISH_BULGARIAN_BORDER' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+TURKSTREAM_STRING_2,connects_to,TRANS_BALKAN_SYSTEM,Malkoclar,gas,secondary_citing_operator,https://www.gem.wiki/TurkStream_Gas_Pipeline,,TURKSTREAM,,NODE_MALKOCLAR,partial,"object 'TRANS_BALKAN_SYSTEM' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+BALKAN_STREAM,enters_network_of,BULGARIA,Strandzha 2 / Malkoclar,gas,secondary_citing_tso,https://www.gem.wiki/Balkan_Stream_gas_pipeline,citing Bulgartransgaz TYNDP,,,NODE_MALKOCLAR,partial,"object 'BULGARIA' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+BALKAN_STREAM,enters_network_of,SERBIA,Kireevo / Zaychar,gas,secondary_citing_tso,https://www.gem.wiki/Balkan_Stream_gas_pipeline,,,,NODE_KIREEVO,partial,"object 'SERBIA' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+POWER_OF_SIBERIA,crosses_border_RU_CN,CHINA,Blagoveshchensk / Heihe,gas,encyclopedic,https://en.wikipedia.org/wiki/Power_of_Siberia,,POWER_OF_SIBERIA,,NODE_HEIHE,partial,"object 'CHINA' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+POWER_OF_SIBERIA,connects_to,CNPC_HEIHE_SHANGHAI,Heihe,gas,encyclopedic,https://en.wikipedia.org/wiki/Power_of_Siberia,,POWER_OF_SIBERIA,,NODE_HEIHE,partial,"object 'CNPC_HEIHE_SHANGHAI' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+BUKHARA_URAL,connects_to,URENGOY_CHELYABINSK,,gas,secondary,https://www.gem.wiki/Bukhara-Ural_Gas_Pipeline,,BUKHARA_URAL,,,partial,no canonical node is documented for this connection point
+BUKHARA_URAL,connects_to,ZHANAZHOL_AKTOBE,,gas,secondary,https://www.gem.wiki/Bukhara-Ural_Gas_Pipeline,,BUKHARA_URAL,,,partial,no canonical node is documented for this connection point
+BLUE_STREAM,connects_to,BOTAS_NETWORK,Samsun / Durusu,gas,encyclopedic,https://en.wikipedia.org/wiki/Blue_Stream,,BLUE_STREAM,BOTAS_NETWORK,NODE_SAMSUN,full,
+DRUZHBA,splits_at,DRUZHBA_NORTH_AND_SOUTH,Mozyr,oil,encyclopedic,https://en.wikipedia.org/wiki/Druzhba_pipeline,,DRUZHBA,,NODE_MOZYR,partial,unresolved: object_id
+DRUZHBA_NORTH,terminates_at,SCHWEDT,via Adamowo,oil,encyclopedic,https://en.wikipedia.org/wiki/Druzhba_pipeline,Russian crude halted; Kazakh crude since 2023-12,DRUZHBA_NORTH,,NODE_ADAMOWO,partial,"object 'SCHWEDT' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+DRUZHBA_SOUTH,delivers_to,HUNGARY,Fenyeslitke,oil,operator_primary,https://molgroup.info/en/investor-relations/investor-news/first-batches-of-crude-oil-via-the-druzhba-pipeline-received-in-hungary-and-slovakia,MOL investor news,DRUZHBA_SOUTH,,NODE_FENYESLITKE,partial,"object 'HUNGARY' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+DRUZHBA_SOUTH,delivers_to,SLOVAKIA,Budkovce,oil,operator_primary,https://molgroup.info/en/investor-relations/investor-news/first-batches-of-crude-oil-via-the-druzhba-pipeline-received-in-hungary-and-slovakia,,DRUZHBA_SOUTH,,NODE_BUDKOVCE,partial,"object 'SLOVAKIA' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+BPS_2,connects_to,DRUZHBA,Unecha,oil,secondary,https://www.gem.wiki/Baltic_Pipeline_System_2,the link enabling redirection to seaborne export,BPS_2,DRUZHBA,NODE_UNECHA,full,
+BPS_2,terminates_at,UST_LUGA_TERMINAL,Ust-Luga,oil,secondary,https://www.gem.wiki/Baltic_Pipeline_System_2,,BPS_2,,NODE_UST_LUGA,partial,"object 'UST_LUGA_TERMINAL' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+BPS_2,branches_to,KIRISHI_REFINERY,,oil,secondary,https://www.gem.wiki/Baltic_Pipeline_System_2,,BPS_2,,,partial,no canonical node is documented for this connection point
+BPS_1,terminates_at,PRIMORSK_TERMINAL,Primorsk,oil,encyclopedic,https://en.wikipedia.org/wiki/Baltic_Pipeline_System,,BPS_1,,NODE_PRIMORSK,partial,unresolved: object_id
+OMSK_IRKUTSK,connects_to,ESPO,Taishet,oil,secondary,https://www.gem.wiki/Omsk-Irkutsk_Oil_Pipeline,corroborated by ESPO-1 origin,OMSK_IRKUTSK,ESPO,NODE_TAISHET,full,
+ESPO_1,connects_to,ESPO_2,Skovorodino,oil,secondary,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,,ESPO_1,ESPO_2,NODE_SKOVORODINO,full,
+SKOVORODINO_MOHE,branches_from,ESPO_1,Skovorodino,oil,secondary,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,,SKOVORODINO_MOHE,ESPO_1,NODE_SKOVORODINO,full,
+SKOVORODINO_MOHE,crosses_border_RU_CN,CHINA,Mohe,oil,secondary,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,,SKOVORODINO_MOHE,,NODE_MOHE,partial,"object 'CHINA' is a foreign network, terminal or non-Russian pipeline deliberately outside the canonical registry"
+SKOVORODINO_MOHE,connects_to,CNPC_NETWORK,Daqing,oil,secondary,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,second line from 2018-01-01,SKOVORODINO_MOHE,,NODE_DAQING,partial,unresolved: object_id
+ESPO_2,terminates_at,KOZMINO_PORT,Kozmino,oil,secondary,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,,ESPO_2,,NODE_KOZMINO,partial,unresolved: object_id
+CPC,terminates_at,YUZHNAYA_OZEREYEVKA_MARINE_TERMINAL,Yuzhnaya Ozereyevka,oil,operator_primary,https://www.cpc.ru/EN/about/Pages/general.aspx,separate node from Transneft Sheskharis,CPC,,NODE_YUZHNAYA_OZEREYEVKA,partial,unresolved: object_id
+CPC,receives_from,KASHAGAN,,oil,encyclopedic,https://en.wikipedia.org/wiki/Caspian_Pipeline_Consortium,since 2016-10-14,CPC,,,partial,no canonical node is documented for this connection point
+CPC,receives_from,KARACHAGANAK,,oil,encyclopedic,https://en.wikipedia.org/wiki/Caspian_Pipeline_Consortium,since 2016-10-14,CPC,,,partial,no canonical node is documented for this connection point
+TIKHORETSK_NOVOROSSIYSK_2,delivers_to,SHESKHARIS_COMPLEX,Novorossiysk,oil,secondary,https://www.gem.wiki/Tikhoretsk-Novorossiysk_Oil_Pipeline,,,,NODE_SHESKHARIS,partial,"unresolved: subject_id, object_id"
+TIKHORETSK_NOVOROSSIYSK_3,delivers_to,SHESKHARIS_COMPLEX,Novorossiysk,oil,secondary,https://www.gem.wiki/Tikhoretsk-Novorossiysk_Oil_Pipeline,,,,NODE_SHESKHARIS,partial,"unresolved: subject_id, object_id"
+KRYMSK_GRUSHOVAYA,delivers_to,GRUSHOVAYA_SITE,,oil,secondary,https://www.gem.wiki/Tikhoretsk-Novorossiysk_Oil_Pipeline,,,,,unresolved,neither end is a canonical entity; assertion retained because the connection itself is sourced and may resolve as the registry grows

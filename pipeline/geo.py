@@ -149,7 +149,37 @@ def representative_point(geom):
     return best_centre
 
 
+def segment_distance(pt, start, end):
+    """Distance from `pt` to the SEGMENT start-end.
+
+    This is the metric every Douglas-Peucker caller in this project should use. The obvious
+    alternative — distance to the infinite LINE through the two anchors — is the textbook DP
+    formulation and is correct while the anchors are far apart, but it fails badly when they are
+    close together: every point of an excursion that leaves and returns near its own start lies on
+    that line, scores ~0, and is deleted whole. Iteration 9 measured that erasing 690 stitched
+    pipeline components (216 km) before it was caught, including a 25.7 km stretch of
+    Уренгой — Петровск drawn as an 80 m stub.
+
+    Clamping the projection parameter to [0, 1] is the entire fix.
+    """
+    x, y = pt[0], pt[1]
+    x0, y0 = start[0], start[1]
+    x1, y1 = end[0], end[1]
+    dx, dy = x1 - x0, y1 - y0
+    if dx == 0 and dy == 0:
+        return math.hypot(x - x0, y - y0)
+    t = ((x - x0) * dx + (y - y0) * dy) / (dx * dx + dy * dy)
+    t = 0.0 if t < 0.0 else (1.0 if t > 1.0 else t)
+    return math.hypot(x - (x0 + t * dx), y - (y0 + t * dy))
+
+
 def _perpendicular_distance(pt, start, end):
+    """Deprecated alias kept only so nothing silently changes meaning mid-refactor.
+
+    Distance to the infinite line. Do not use for polyline/ring simplification — see
+    `segment_distance`. Retained because it is the honest name for what it computes, and a future
+    caller may legitimately want a line distance.
+    """
     x, y = pt[0], pt[1]
     x0, y0 = start[0], start[1]
     x1, y1 = end[0], end[1]
@@ -157,6 +187,35 @@ def _perpendicular_distance(pt, start, end):
     if dx == 0 and dy == 0:
         return math.hypot(x - x0, y - y0)
     return abs(dy * x - dx * y + x1 * y0 - y1 * x0) / math.hypot(dx, dy)
+
+
+def simplify_line(points, tolerance):
+    """Douglas-Peucker for an OPEN polyline. Endpoints are always kept; interior vertices are
+    ordinary candidates for removal, so nothing downstream may rely on a specific one surviving.
+
+    One implementation, used by every open-line caller: analytic transmission lines and pipelines,
+    rivers, and the context network. They had drifted into four near-identical copies, three of
+    which carried the infinite-line bug.
+    """
+    if len(points) <= 2:
+        return list(points)
+    keep = [False] * len(points)
+    keep[0] = keep[-1] = True
+    stack = [(0, len(points) - 1)]
+    while stack:
+        first, last = stack.pop()
+        if last <= first + 1:
+            continue
+        worst, idx = -1.0, first
+        for i in range(first + 1, last):
+            d = segment_distance(points[i], points[first], points[last])
+            if d > worst:
+                worst, idx = d, i
+        if worst > tolerance:
+            keep[idx] = True
+            stack.append((first, idx))
+            stack.append((idx, last))
+    return [p for p, k in zip(points, keep) if k]
 
 
 def simplify_ring(ring, tolerance):
@@ -173,7 +232,10 @@ def simplify_ring(ring, tolerance):
         max_dist = -1.0
         index = first
         for i in range(first + 1, last):
-            d = _perpendicular_distance(ring[i], ring[first], ring[last])
+            # Segment distance, not line distance: a ring's first and last points are the SAME
+            # point, so the infinite "line" through them is degenerate and the metric that assumes
+            # otherwise mis-scores the whole ring on the first split.
+            d = segment_distance(ring[i], ring[first], ring[last])
             if d > max_dist:
                 max_dist, index = d, i
         if max_dist > tolerance:

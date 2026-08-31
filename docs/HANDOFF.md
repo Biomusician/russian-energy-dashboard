@@ -44,12 +44,23 @@ Rules that are now structural, and are tested:
 
 **Traps a future session will hit:**
 
-- `geo._perpendicular_distance` measures to the INFINITE LINE. That is fine for well-separated
-  anchors and wrong for chains that return near their start — it erased 690 components / 216 km
-  before it was caught. `build_pipeline_network` has its own point-to-SEGMENT version;
-  `build_assets`, `build_context` and `geo.simplify_ring` **still use the broken one**.
+- Douglas-Peucker must measure to the SEGMENT, not the infinite line. The infinite-line metric
+  erased 690 components / 216 km before it was caught. **Fixed in iteration 10:**
+  `geo.segment_distance` is now the single implementation and `build_assets`, `build_context`,
+  `build_pipeline_network` and `geo.simplify_ring` all use it. `_perpendicular_distance` remains
+  only as a deprecated alias with no callers; a test enforces that there is exactly one metric.
+- Open-line DP applied to a CLOSED chain deletes it: `simplify_line` keeps first and last, which
+  on a loop are the same point, and the component then falls below 2 points. That silently
+  dropped 646 components / 201 km. `_simplify` now dispatches to `simplify_ring` for closed
+  chains. Same failure class as the erasure bug, different door.
+- `weld()` must never join two chains whose endpoints are IDENTICAL. A zero-length "gap" means
+  `stitch()` already saw that node and refused to walk it, because it is a junction of degree
+  != 2; welding there re-joins what the junction rule separated. It was doing 119 such welds.
 - OSM models some systems as a superroute PLUS its child relations, so summing route lengths
-  double-counts ~13%. Use `distinct_network_km`, not `total_length_km`, for network extent.
+  double-counts ~25,500 km. Use `distinct_network_km`, not `total_length_km`, for network extent.
+  `distinct_network_km` is now an EXACT union of member-way lengths; until iteration 10 it
+  apportioned route length by way COUNT, which was order-dependent (a 5,638 km spread across
+  orderings) and credited a whole corridor to whichever relation the loop reached first.
 - OSM `substance=oil` covers refined products too. Exolum tags 235 members `oil` and zero `fuel`;
   only the NAME rule excludes it.
 - ENTSOG has **no pipeline entity** — operator/point/balancing-zone only — and its `tpMapX/Y` are
@@ -161,10 +172,14 @@ made numbers more defensible, not larger. Highlights:
   glyph there and it updates the map, the filter rows, and the legend together. Never hardcode a
   shape in a component. The map registers icons via local rasterisation only — do not reach for a
   glyph endpoint or sprite CDN (it would break the zero-network invariant).
-- **The committed data is pinned to the FROZEN reference (`--as-of 2026-08-28`, ESDI 18.49)** as of
-  iteration 8, not a real-date build. `--as-of` still defaults to `date.today()`, so a plain
-  `python -m pipeline.run` will regenerate real-date and change the headline — rebuild with
-  `--as-of 2026-08-28` to keep the frozen reference, or deliberately choose real-date.
+- **The committed data is a CURRENT-DATE build.** (This bullet previously said the opposite — that
+  the payload was pinned to the frozen 2026-08-28 reference. That was the iteration-8 mistake,
+  corrected later in that same iteration; the stale wording survived and contradicted the "two
+  builds" table above it until iteration 10.) A plain `python -m pipeline.run` is correct and is
+  what the refresh bot runs. `--as-of 2026-08-28` is **comparison-only** and must never be
+  committed; `test_release_payload_is_a_current_date_build_not_a_frozen_reference` fails the suite
+  if it is, and `test_docs_do_not_claim_the_release_payload_is_frozen` fails if a doc starts
+  claiming otherwise again.
 - **MapLibre only allows `["zoom"]` as the direct input to a top-level interpolate/step.** Nesting
   it inside a `case`/comparison makes `addLayer` reject the layer silently (it fires an error event,
   doesn't throw). If a map layer "disappears", check its paint expressions for a nested `["zoom"]`.

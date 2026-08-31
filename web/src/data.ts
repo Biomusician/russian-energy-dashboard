@@ -7,7 +7,7 @@
  *  white-screening the whole dashboard; and a one-version schema skew (N or N-1) is
  *  tolerated. See docs/DEPLOYMENT.md. */
 
-import type { Bundle, SchemaCheck } from "./types";
+import type { Bundle, SchemaCheck, PipelineRegistry } from "./types";
 
 const BASE = `${import.meta.env.BASE_URL}data`;
 
@@ -239,4 +239,20 @@ export function displayName(name: string | null | undefined): string {
   const [head, ...rest] = name.split("\n");
   const trimmed = head.trim();
   return rest.some((r) => r.trim()) ? `${trimmed} (+${rest.filter((r) => r.trim()).length})` : trimmed;
+}
+
+/** Canonical pipeline registry: entity identity, source mappings, temporal status and
+ *  segment-weighted geometry completeness, keyed by canonical id.
+ *
+ *  Lazy like the network layers, and for the same reason — it is only needed once a reader
+ *  clicks a route, so it must not sit in the first paint. Absent file degrades to an empty
+ *  registry: the route panel then shows what the feature itself carries and says the rest is
+ *  unavailable, rather than the app failing. */
+let registryCache: PipelineRegistry | null = null;
+export async function loadPipelineRegistry(): Promise<PipelineRegistry> {
+  if (registryCache) return registryCache;
+  registryCache = await grabOptional<PipelineRegistry>("pipeline_registry.json", {
+    entities: {}, nodes: {}, generated_note: "",
+  });
+  return registryCache;
 }

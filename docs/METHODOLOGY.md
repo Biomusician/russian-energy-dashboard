@@ -362,7 +362,7 @@ it DISPLAYS**. The map can depict much more of Eurasia than the degradation mode
   `scope="context"` can enter ESDI, regional intensity, rankings, recovery, or incident
   counts.** `build_index` never reads the context files; regression tests enforce it.
 
-**Continental pipeline network.** A separate ingestion path (`build_context_network.py`)
+**Continental pipeline network.** A separate ingestion path (`build_pipeline_network.py`)
 collects major **named `usage=transmission` oil/gas trunks ≥ 50 km** across Eurasia from
 **OpenStreetMap/Overpass (ODbL)**, tiled and de-duplicated against the analytic OSM lines by
 way id (one corridor, one line). **Global Energy Monitor's GGIT/GOIT are the authoritative

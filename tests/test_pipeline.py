@@ -638,6 +638,47 @@ def test_no_source_text_claims_crimea_is_out_of_the_composite():
         f"  {p}: {f[:140]}" for p, f in hits)
 
 
+def test_docs_do_not_claim_the_release_payload_is_frozen():
+    """Lint: fail the build if a doc asserts the committed payload is the frozen reference.
+
+    Production data is CURRENT-DATE; 2026-08-28 is comparison-only. Iteration 8 briefly committed
+    a frozen payload, corrected it, and left a stale HANDOFF bullet saying the opposite — which
+    sat directly beneath the corrected table for two iterations. A runtime guard already stops a
+    frozen payload SHIPPING (test_release_payload_is_a_current_date_build_not_a_frozen_reference);
+    this stops the DOCS from telling a future session to create one.
+    """
+    import re
+    claim_subject = ("committed data", "committed payload", "release payload", "the payload",
+                     "committed build")
+    claim_frozen = ("pinned to the frozen", "is the frozen", "frozen reference", "--as-of 2026-08-28")
+    # Sentences that legitimately describe the frozen build as comparison-only.
+    exempt = ("comparison-only", "comparison only", "regression-only", "regression only",
+              "never be committed", "must never", "previously said", "was the iteration-8 mistake",
+              "not a real-date build", "fails the suite", "stale")
+    files = [ROOT / "docs" / f for f in ("HANDOFF.md", "SOURCES.md", "METHODOLOGY.md",
+                                         "SCHEMA.md", "CURRENT_STATE.md")]
+    files += [ROOT / "README.md", ROOT / "CLAUDE.md"]
+    hits = []
+    for path in files:
+        if not path.exists():
+            continue
+        # Collapse markdown line-wrapping BEFORE splitting into sentences: a wrapped sentence is
+        # still one sentence, and splitting on newlines severs a claim from the clause that
+        # qualifies it (which is exactly how this test first failed on its own fix).
+        text = " ".join(path.read_text(encoding="utf-8").lower().split())
+        for frag in re.split(r"\.", text):
+            frag = " ".join(frag.split())
+            if not any(s in frag for s in claim_subject):
+                continue
+            if not any(c in frag for c in claim_frozen):
+                continue
+            if any(e in frag for e in exempt):
+                continue
+            hits.append((path.name, frag))
+    assert not hits, ("a doc claims the release payload is the frozen build:\n"
+                      + "\n".join(f"  {p}: {f[:140]}" for p, f in hits))
+
+
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
                     reason="pipeline has not been run")
 def test_crimea_now_contributes_to_the_monitored_area_index():
@@ -1826,7 +1867,7 @@ def test_long_route_of_short_ways_survives_the_trunk_threshold():
     ways = [[(30.0 + i * 0.2, 55.0), (30.0 + (i + 1) * 0.2, 55.0)] for i in range(25)]
     for w in ways:
         assert B._length_km(w) < B.MIN_TRUNK_KM, "fixture must use sub-threshold members"
-    routes, _ = B.build_routes([_relation(1, "Test Trunk", "gas", ways)], {})
+    routes, _, _ = B.build_routes([_relation(1, "Test Trunk", "gas", ways)], {})
     assert len(routes) == 1, "a long route of short ways must survive"
     assert routes[0]["length_km"] >= B.MIN_TRUNK_KM
     assert routes[0]["member_count"] == 25
@@ -1835,7 +1876,7 @@ def test_long_route_of_short_ways_survives_the_trunk_threshold():
 def test_relation_members_are_stitched_into_one_ordered_component():
     from pipeline import build_pipeline_network as B
     ways = [[(30.0 + i * 0.2, 55.0), (30.0 + (i + 1) * 0.2, 55.0)] for i in range(25)]
-    routes, _ = B.build_routes([_relation(2, "Contiguous", "gas", ways)], {})
+    routes, _, _ = B.build_routes([_relation(2, "Contiguous", "gas", ways)], {})
     assert len(routes[0]["components"]) == 1, "contiguous members must form ONE component"
     coords = routes[0]["components"][0]
     xs = [c[0] for c in coords]
@@ -1849,7 +1890,7 @@ def test_members_supplied_out_of_order_and_reversed_still_stitch():
     ways[5].reverse()
     ways[11].reverse()
     shuffled = ways[7:] + ways[:7]
-    routes, _ = B.build_routes([_relation(3, "Jumbled", "gas", shuffled)], {})
+    routes, _, _ = B.build_routes([_relation(3, "Jumbled", "gas", shuffled)], {})
     assert len(routes[0]["components"]) == 1
 
 
@@ -1858,7 +1899,7 @@ def test_unnamed_short_members_inherit_identity_from_the_relation():
     from pipeline import build_pipeline_network as B
     ways = [[(40.0 + i * 0.3, 60.0), (40.0 + (i + 1) * 0.3, 60.0)] for i in range(20)]
     rel = _relation(4, "Named Only On The Relation", "oil", ways)
-    routes, _ = B.build_routes([rel], {})          # NO member tags supplied at all
+    routes, _, _ = B.build_routes([rel], {})          # NO member tags supplied at all
     assert len(routes) == 1
     assert routes[0]["canonical_name"] == "Named Only On The Relation"
     assert routes[0]["asset_class"] == "pipeline_oil"
@@ -1870,12 +1911,12 @@ def test_substance_falls_back_to_member_tags_then_name():
     rel = _relation(5, "No Substance Here", None, ways)
     ids = [m["ref"] for m in rel["members"]]
     # member majority decides
-    routes, _ = B.build_routes([rel], {i: {"substance": "gas"} for i in ids})
+    routes, _, _ = B.build_routes([rel], {i: {"substance": "gas"} for i in ids})
     assert routes[0]["asset_class"] == "pipeline_gas"
     assert routes[0]["substance_basis"] == "member_substance_majority"
     # with no tags anywhere, a Russian-language name still resolves it
     rel2 = _relation(6, "Магистральный нефтепровод Тест", None, ways)
-    routes2, _ = B.build_routes([rel2], {})
+    routes2, _, _ = B.build_routes([rel2], {})
     assert routes2[0]["asset_class"] == "pipeline_oil"
     assert routes2[0]["substance_basis"] == "route_name_hint"
 
@@ -1938,7 +1979,7 @@ def test_proximity_alone_never_creates_a_connector():
     from pipeline import build_pipeline_network as B
     a = [(30.0, 55.0), (31.0, 55.0)]
     b = [(31.00001, 55.0), (32.0, 55.0)]          # ~1 m away, but a different relation
-    r1, _ = B.build_routes([_relation(7, "A", "gas", [a] * 1 + [[(30.0, 55.0), (30.9, 55.0)]])], {})
+    r1, _, _ = B.build_routes([_relation(7, "A", "gas", [a] * 1 + [[(30.0, 55.0), (30.9, 55.0)]])], {})
     chains = B.stitch([a, b])
     assert len(chains) == 2, "stitch() must not join on proximity — only exact shared endpoints"
 
@@ -1962,6 +2003,53 @@ def test_weld_never_exceeds_its_tolerance():
     assert welds == 0 and len(chains) == 2
 
 
+def test_every_simplifier_shares_one_correct_metric():
+    """There must be exactly ONE distance metric behind every Douglas-Peucker caller.
+
+    The project had five near-identical DP copies; three carried the infinite-line metric that
+    erased 690 pipeline components in iteration 9. `geo._perpendicular_distance` is retained under
+    an honest name but no simplifier may use it.
+    """
+    from pipeline import geo
+    # The correct metric: a point beyond a short segment is far from it, not on it.
+    assert geo.segment_distance((10, 0), (0, 0), (0.001, 0)) > 9.9
+    assert geo._perpendicular_distance((10, 0), (0, 0), (0.001, 0)) == 0.0   # why it was wrong
+    # Degenerate segment (a ring's shared first/last point) falls back to point distance.
+    assert geo.segment_distance((3, 4), (0, 0), (0, 0)) == pytest.approx(5.0)
+
+    src_files = ["build_assets.py", "build_context.py", "build_pipeline_network.py", "geo.py"]
+    for name in src_files:
+        text = (ROOT / "pipeline" / name).read_text(encoding="utf-8")
+        for line in text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("#") or stripped.startswith("*"):
+                continue          # comments may name it when explaining the history
+            if "_perpendicular_distance(" in line and "def _perpendicular_distance" not in line:
+                assert "geo._perpendicular_distance" not in line, (
+                    f"{name} calls the infinite-line metric; use geo.segment_distance")
+
+
+def test_simplify_line_preserves_an_out_and_back_excursion():
+    """The shared open-line simplifier must not collapse a chain that returns near its start."""
+    from pipeline import geo
+    pts = [(0.0, 0.0), (0.5, 0.0), (1.0, 0.0), (0.5, 0.0), (0.001, 0.0)]
+    assert len(geo.simplify_line(pts, 0.01)) >= 3
+    # endpoints always survive
+    out = geo.simplify_line([(0.0, 0.0), (0.5, 0.4), (1.0, 0.0)], 0.001)
+    assert out[0] == (0.0, 0.0) and out[-1] == (1.0, 0.0)
+
+
+def test_simplify_ring_keeps_rings_closed_and_never_inverts_area():
+    from pipeline import geo
+    import math as _m
+    ring = [(_m.cos(t / 40 * 2 * _m.pi), _m.sin(t / 40 * 2 * _m.pi)) for t in range(41)]
+    out = geo.simplify_ring(ring, 0.01)
+    assert out[0] == out[-1], "a simplified ring must stay closed"
+    assert len(out) >= 4
+    area = abs(sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(out, out[1:]))) / 2
+    assert 0.5 * _m.pi < area < 1.2 * _m.pi, "ring area must survive simplification"
+
+
 def test_simplify_measures_distance_to_the_segment_not_the_infinite_line():
     """GIS red-team finding: DP with a point-to-LINE metric erases excursions.
 
@@ -1971,8 +2059,10 @@ def test_simplify_measures_distance_to_the_segment_not_the_infinite_line():
     including 25.7 km of Уренгой — Петровск drawn as an 80 m stub.
     """
     from pipeline import build_pipeline_network as B
+    from pipeline import geo
     # A point 10 units beyond a 0.001-long segment: on the LINE, far from the SEGMENT.
-    assert B._segment_distance((10, 0), (0, 0), (0.001, 0)) > 9.9
+    # (Iteration 10 moved this metric into geo so every simplifier shares one implementation.)
+    assert geo.segment_distance((10, 0), (0, 0), (0.001, 0)) > 9.9
     # An out-and-back excursion must survive simplification rather than collapse.
     pts = [(0.0, 0.0), (0.5, 0.0), (1.0, 0.0), (0.5, 0.0), (0.001, 0.0)]
     assert len(B._simplify(pts, 0.01)) >= 3
@@ -2055,7 +2145,7 @@ def test_context_route_is_not_dropped_for_overlapping_the_analytic_feed():
     ways = [[(40.0 + i * 0.3, 60.0), (40.0 + (i + 1) * 0.3, 60.0)] for i in range(20)]
     rel = _relation(8, "Overlaps Analytic", "gas", ways)
     ids = [m["ref"] for m in rel["members"]]
-    routes, _ = B.build_routes([rel], {}, analytic_osm_ids=set(ids))
+    routes, _, _ = B.build_routes([rel], {}, analytic_osm_ids=set(ids))
     assert len(routes) == 1, "an overlapping route must be KEPT, not deleted"
     assert routes[0]["analytic_overlap"] is True, "overlap must be MARKED so the UI can dedupe"
 
@@ -2581,3 +2671,413 @@ def test_canonical_linkage_is_identity_not_disruption_coverage():
     assert 0 < cl["pct_denominator_mtpa_struck"] <= 100
     # Naftan is a Belarusian refinery, intentionally outside the Russian denominator
     assert "Naftan refinery (Novopolotsk)" in cl["incidents_unresolved_to_registry"]
+
+
+# --------------------------------------------------------------------------------------
+# GEM importer — the validation contract (iteration 10 §6, addendum §8)
+#
+# The GEM trackers are delivered through a request form, so the file that reaches this
+# repo is chosen by a human. The importer's whole reason to exist is that a wrong file
+# must fail loudly. These tests are the specification of "loudly".
+# --------------------------------------------------------------------------------------
+
+FIXTURES = ROOT / "tests" / "fixtures"
+
+
+def _gem():
+    from pipeline import import_gem
+    return import_gem
+
+
+def test_gem_importer_reads_a_well_formed_release():
+    g = _gem()
+    records, manifest = g.run(FIXTURES / "gem_ggit_sample.geojson", "GGIT",
+                              release="2025-11", dry_run=True)
+    assert len(records) == 6
+    assert manifest["release"] == "2025-11"
+    assert manifest["provisional"] is False
+    assert manifest["licence"] == "CC-BY-4.0"
+    assert len(manifest["sha256"]) == 64
+
+
+def test_gem_importer_refuses_a_swapped_tracker():
+    """The likeliest human error: dropping the oil export in as the gas one."""
+    g = _gem()
+    with pytest.raises(g.ImportError_, match="gas only"):
+        g.run(FIXTURES / "gem_goit_sample.geojson", "GGIT", release="2025-11", dry_run=True)
+    with pytest.raises(g.ImportError_, match="oil/NGL only"):
+        g.run(FIXTURES / "gem_ggit_sample.geojson", "GOIT", release="2026-06", dry_run=True)
+
+
+def test_gem_importer_refuses_an_unknown_route_accuracy():
+    """An accuracy value we do not recognise must never be bucketed as traced geometry."""
+    g = _gem()
+    with pytest.raises(g.ImportError_, match="unrecognised RouteAccuracy"):
+        g.run(FIXTURES / "gem_bad_accuracy.geojson", "GGIT", release="2025-11", dry_run=True)
+
+
+def test_gem_importer_refuses_a_missing_required_column():
+    g = _gem()
+    with pytest.raises(g.ImportError_, match="required columns missing"):
+        g.run(FIXTURES / "gem_missing_column.geojson", "GGIT", release="2025-11", dry_run=True)
+
+
+def test_gem_importer_refuses_a_citable_import_without_a_release_label():
+    """A release import that cannot be cited is not a release import."""
+    g = _gem()
+    with pytest.raises(g.ImportError_, match="needs --release"):
+        g.run(FIXTURES / "gem_ggit_sample.geojson", "GGIT", release=None, dry_run=True)
+
+
+def test_gem_route_accuracy_maps_conservatively():
+    """Nothing below `high` may claim traced geometry; `no route` carries none at all.
+
+    This is the GENERALIZED != MAPPED rule expressed as a table. If someone widens
+    `gem_traced` to include `medium`, this fails.
+    """
+    g = _gem()
+    assert g.ROUTE_QUALITY["very high (within meters)"] == "gem_traced"
+    assert g.ROUTE_QUALITY["high"] == "gem_traced"
+    assert g.ROUTE_QUALITY["medium"] == "gem_generalized"
+    assert g.ROUTE_QUALITY["low"] == "gem_generalized"
+    assert g.ROUTE_QUALITY["very low (straight line/schematic)"] == "topology_only"
+    assert g.ROUTE_QUALITY["no route"] == "topology_only"
+    # every accuracy GEM can emit has a mapping, and only one tier is "traced"
+    assert set(g.ROUTE_QUALITY) == g.ROUTE_ACCURACY_VALUES
+    assert sorted(k for k, v in g.ROUTE_QUALITY.items() if v == "gem_traced") == [
+        "high", "very high (within meters)"]
+
+
+def test_gem_importer_preserves_source_native_values():
+    """Addendum §7: the source's own vocabulary survives next to our normalisation."""
+    g = _gem()
+    records, _ = g.run(FIXTURES / "gem_ggit_sample.geojson", "GGIT",
+                       release="2025-11", dry_run=True)
+    schematic = [r for r in records if r["route_quality"] == "topology_only"]
+    assert {r["route_accuracy_native"] for r in schematic} == {
+        "very low (straight line/schematic)", "no route"}
+    parent = [r for r in records if r["route_type_native"] == "Included in other ProjectID"]
+    assert len(parent) == 1 and parent[0]["has_geometry"] is False
+
+
+def test_gem_importer_treats_the_double_dash_sentinel_as_unknown_not_zero():
+    """GEM writes "--" for unknown. Reading that as 0 would invent a capacity of zero."""
+    g = _gem()
+    records, _ = g.run(FIXTURES / "gem_ggit_sample.geojson", "GGIT",
+                       release="2025-11", dry_run=True)
+    unknown = [r for r in records if r["name"] == "Test Low Route"][0]
+    assert unknown["length_km_known"] is None
+    assert unknown["capacity"] is None
+    known = [r for r in records if r["name"] == "Test Traced Trunk"][0]
+    assert known["capacity"] == "30"
+
+
+def test_gem_map_data_import_is_stamped_provisional():
+    """The live map-data branch has no release identifier and must never look citable."""
+    g = _gem()
+    records, manifest = g.run(FIXTURES / "gem_ggit_sample.geojson", "GGIT",
+                              release=None, provisional=True, dry_run=True)
+    assert manifest["provisional"] is True
+    assert manifest["release"] is None
+    assert "no release identifier" in manifest["citation"]
+    assert "NO release identifier" in manifest["provisional_note"]
+    assert all(r["release"] is None and r["provisional"] for r in records)
+
+
+# --------------------------------------------------------------------------------------
+# Canonical registry: identity, hierarchy, and the double-count trap (iteration 10 §26-28)
+# --------------------------------------------------------------------------------------
+
+def _registry():
+    from pipeline import pipeline_registry
+    return pipeline_registry
+
+
+def test_registry_vocabularies_stay_closed():
+    """Every closed vocabulary is closed for a reason; widening one must be deliberate."""
+    r = _registry()
+    assert r.ENTITY_LEVELS == ("system", "corridor", "pipeline", "branch", "physical_segment")
+    assert r.RELATIONSHIPS == ("represents", "part_of", "aggregates")
+    assert r.MATCH_CONFIDENCE == ("exact", "strong", "possible", "unresolved")
+    # The whole point of rule 6: only these two may ever be applied without a human.
+    assert r.AUTO_MERGE_CONFIDENCE == ("exact", "strong")
+    assert set(r.AUTO_MERGE_CONFIDENCE) < set(r.MATCH_CONFIDENCE)
+    assert "possible" not in r.AUTO_MERGE_CONFIDENCE
+    assert "unresolved" not in r.AUTO_MERGE_CONFIDENCE
+
+
+def test_status_kinds_are_tracked_separately():
+    """Physical / operational / commercial-flow must not collapse into one status field.
+
+    Yamal–Europe is the case that forces this: the pipe is intact, and commercial transit is
+    zero. Any single "status" would have to pick one and publish a falsehood.
+    """
+    r = _registry()
+    assert r.STATUS_KINDS == ("physical", "operational", "commercial_flow")
+    records = r.load_status()
+    yamal = [s for s in records if s["canonical_pipeline_id"] == "YAMAL_EUROPE"]
+    kinds = {s["status_kind"] for s in yamal}
+    assert {"physical", "commercial_flow"} <= kinds, "Yamal–Europe needs both kinds to be honest"
+    physical = r.status_at(yamal, "physical", "2026-01-01")
+    flow = r.status_at(yamal, "commercial_flow", "2026-01-01")
+    assert physical and physical["status_value"] == "intact"
+    assert flow and flow["status_value"] == "zero_transit"
+
+
+def test_status_is_a_function_of_time_not_a_column():
+    """The same pipeline answers differently on different dates. That is the design."""
+    r = _registry()
+    records = [s for s in r.load_status()
+               if s["canonical_pipeline_id"] == "YAMAL_EUROPE"]
+    before = r.status_at(records, "commercial_flow", "2021-06-01")
+    after = r.status_at(records, "commercial_flow", "2026-01-01")
+    assert before is not None and after is not None
+    assert before["status_value"] != after["status_value"], (
+        "commercial flow must differ across the 2022 transit halt")
+
+
+def test_registry_hierarchy_is_acyclic_and_parents_exist():
+    r = _registry()
+    entities = r.load_registry()
+    for cid, e in entities.items():
+        parent = e.get("parent_id")
+        if parent:
+            assert parent in entities, f"{cid} points at missing parent {parent}"
+    for cid in entities:
+        assert not r._has_cycle(entities, cid), f"hierarchy cycle reachable from {cid}"
+
+
+def test_a_corridor_is_not_the_sum_of_its_children():
+    """Guards the double-count trap that §28 exists for.
+
+    NORTHERN_LIGHTS is modelled as a corridor whose children are the Ukhta–Torzhok strings, and
+    OSM models BOTH the system relation and each string. Adding a parent's length to its
+    children's lengths counts the same pipe several times. The network report must therefore
+    carry a de-duplicated extent, and it must be smaller than the sum.
+    """
+    quality = json.loads((PROCESSED / "pipeline_network_quality.json").read_text(encoding="utf-8"))
+    gas = quality["pipeline_gas"]
+    assert gas["distinct_network_km"] < gas["total_length_km"], (
+        "summing route lengths double-counts hierarchy; a distinct measure must exist")
+    # The gap is large enough to matter — this is not a rounding artefact.
+    assert gas["total_length_km"] - gas["distinct_network_km"] > 1000
+
+    entities = _registry().load_registry()
+    children = [c for c, e in entities.items() if e.get("parent_id") == "NORTHERN_LIGHTS"]
+    assert children, "NORTHERN_LIGHTS must retain its constituent strings"
+    assert entities["NORTHERN_LIGHTS"]["entity_level"] == "corridor"
+    for c in children:
+        assert entities[c]["entity_level"] in ("pipeline", "branch", "physical_segment")
+
+
+def test_only_confident_matches_are_auto_applied():
+    """`possible` and `unresolved` mappings must never reach the canonical source map."""
+    r = _registry()
+    entities = r.load_registry()
+    for m in r.load_source_map():
+        assert m["confidence"] in r.AUTO_MERGE_CONFIDENCE, (
+            f"{m['canonical_pipeline_id']}<-{m['source_id']} is {m['confidence']}; "
+            "anything below `strong` belongs in the review queue, not the source map")
+        assert m["canonical_pipeline_id"] in entities
+        assert m["relationship"] in r.RELATIONSHIPS
+
+
+@pytest.mark.skipif(not (ROOT / "data" / "review" / "pipeline_match_review.csv").exists(),
+                    reason="review queue is a build artifact; absent on a fresh clone")
+def test_the_review_queue_preserves_disagreement_rather_than_resolving_it():
+    """Rule 5. At least one row must record a genuine source conflict left unresolved."""
+    rows = list(csv.DictReader(
+        (ROOT / "data" / "review" / "pipeline_match_review.csv").open(encoding="utf-8")))
+    assert rows, "the review queue must not be empty while ambiguities exist"
+    unresolved = [r for r in rows if r["disposition"] == "UNRESOLVED"]
+    assert unresolved, "a queue with no unresolved rows has resolved something it should not have"
+    for r in unresolved:
+        assert r["conflicting_evidence"].strip(), (
+            "an unresolved row must say what the conflict IS, not merely that one exists")
+    rejected = [r for r in rows if r["disposition"] == "REJECTED"]
+    assert rejected, "a matcher that never rejects anything is not being checked"
+
+
+def test_topology_only_nodes_carry_no_invented_geography():
+    """Addendum §6: never geocode a topology-only assertion just to make it drawable."""
+    nodes = _registry().load_nodes()
+    assert nodes
+    for nid, n in nodes.items():
+        if n["geography_precision"] != "coordinate":
+            assert n.get("lon") is None and n.get("lat") is None, (
+                f"{nid} has {n['geography_precision']} precision but carries coordinates")
+
+
+def test_geometry_completeness_never_estimates_the_missing_length():
+    """Addendum §10. A gap COUNT is honest; a gap LENGTH would be invented."""
+    from pipeline.build_pipeline_network import geometry_completeness
+    route = {"drawn_length_km": 100.0, "route_quality": "osm_mapped",
+             "components": [[(0, 0), (1, 1)], [(5, 5), (6, 6)], [(9, 9), (10, 10)]]}
+    g = geometry_completeness(route)
+    assert g["unresolved_gap_count"] == 2
+    assert not any("unresolved" in k and "km" in k for k in g), (
+        "no key may report unresolved gap LENGTH — the straight line is not the pipe")
+
+
+# --------------------------------------------------------------------------------------
+# Regressions for defects found by the independent red-teams (iteration 10 §29/§30).
+# Each of these shipped. Each is now pinned.
+# --------------------------------------------------------------------------------------
+
+def test_weld_never_rejoins_what_the_junction_rule_separated():
+    """G1. `stitch` stops at a node of degree != 2 so a chain cannot run out along one string
+    and back along its twin. Those chains END ON THE SAME COORDINATE, so a naive weld saw a
+    zero-length gap and undid the decision one line later - 119 times in the real corpus."""
+    from pipeline import build_pipeline_network as B
+    chains = B.stitch([[(0.0, 0.0), (1.0, 0.0)],
+                       [(1.0, 0.0), (2.0, 0.5)],
+                       [(1.0, 0.0), (2.0, -0.5)]])
+    assert len(chains) == 3, "the junction must split the route into three chains"
+    welded, n, _ = B.weld(chains)
+    assert n == 0, "a zero-length gap is a shared junction node, not a gap to weld"
+    assert len(welded) == 3
+
+
+def test_a_closed_loop_survives_simplification():
+    """G6. `simplify_line` keeps first and last; on a loop those are one point, so the component
+    collapsed below 2 points and was dropped. 646 components / 201 km vanished that way."""
+    import math
+    from pipeline import build_pipeline_network as B
+    loop = [(30 + 0.004 * math.cos(t / 12 * 2 * math.pi),
+             55 + 0.0023 * math.sin(t / 12 * 2 * math.pi)) for t in range(13)]
+    assert loop[0] == loop[-1]
+    out = B._round(B._simplify(loop, 0.01))
+    assert len(out) >= 3, "a closed loop must not be simplified out of existence"
+    assert out[0] == out[-1], "and must stay closed"
+
+
+def test_a_way_listed_twice_in_a_relation_is_used_once():
+    """G3. 12 relations list a way more than once - 1,320 km of geometry drawn twice."""
+    from pipeline import build_pipeline_network as B
+    pts = [{"lon": 30.0 + i * 0.2, "lat": 55.0} for i in range(12)]
+    rel = {"id": 99, "tags": {"name": "Dup", "substance": "gas", "type": "route",
+                              "route": "pipeline"},
+           "members": [{"type": "way", "ref": 7, "geometry": pts},
+                       {"type": "way", "ref": 7, "geometry": pts}]}
+    routes, _stats, way_km = B.build_routes([rel], {7: {"substance": "gas"}}, min_km=0.0)
+    assert routes
+    assert routes[0]["osm_way_ids"] == [7], "the same way must appear once"
+    assert len(way_km) == 1
+
+
+def test_distinct_network_km_is_an_exact_union_not_an_apportionment():
+    """G4. The old estimator apportioned route length by member-way COUNT, which assumed every
+    way was the same size and was ORDER-DEPENDENT (a 5,638 km spread on identical data)."""
+    from pipeline import build_pipeline_network as B
+
+    def route(pid, ids, km):
+        return {"asset_class": "pipeline_gas", "osm_way_ids": ids, "length_km": km,
+                "components": [[]], "route_quality": "osm_mapped", "drawn_length_km": km,
+                "pipeline_id": pid, "welds": 0, "max_weld_km": 0.0,
+                "geometry_source": "osm_relation",
+                "substance_basis": "relation_substance_tag", "analytic_overlap": False}
+
+    routes = [route("a", [1, 2], 300.0), route("b", [2, 3], 300.0)]
+    way_lengths = {1: 100.0, 2: 200.0, 3: 50.0}          # way 2 is shared and is the big one
+    gas = B.quality_report(routes, way_lengths)["pipeline_gas"]
+    assert gas["distinct_network_km"] == 350.0, "exact union of way lengths, each counted once"
+    # and it must not depend on the order the routes arrive in
+    assert B.quality_report(list(reversed(routes)), way_lengths)["pipeline_gas"][
+        "distinct_network_km"] == 350.0
+
+
+def test_gap_ledger_counts_each_gap_once():
+    """G7/C4. Every component used to report its nearest neighbour independently, so a mutual
+    pair was counted twice - 1,000 'adjacencies' for 651 real ones, inflating the total 26%."""
+    from pipeline import analyse_pipeline_gaps as G
+    comps = [(0, [(30.0, 55.0), (30.5, 55.0)]),
+             (1, [(31.0, 55.0), (31.5, 55.0)]),
+             (2, [(32.0, 55.0), (32.5, 55.0)])]
+    gaps = G.gaps_for_route(comps)
+    assert len(gaps) == len(comps) - 1, "N components are separated by exactly N-1 gaps"
+    pairs = {frozenset((g["component"], g["nearest_component"])) for g in gaps}
+    assert len(pairs) == len(gaps), "no gap may be reported twice"
+
+
+def test_a_facility_capacity_survives_a_later_incident():
+    """C3. Incidents are date-sorted and the registry used to `continue` on a seen asset_id, so
+    the EARLIEST incident fixed capacity and a later `linked_asset_id` was discarded. A 2,214 MW
+    station with a live disruption scored 0 MW."""
+    from pipeline.build_index import _facility_registry
+    assets = [{"asset_id": "wri-X", "capacity_mw": 2214.0}]
+    incidents = [
+        {"asset_id": "plant-a", "asset_name": "Plant A", "asset_class": "power_plant_thermal",
+         "region_code": "RU-ROS", "date": "2025-07-23"},
+        {"asset_id": "plant-a", "asset_name": "Plant A", "asset_class": "power_plant_thermal",
+         "region_code": "RU-ROS", "date": "2026-01-12", "linked_asset_id": "wri-X"},
+    ]
+    reg = _facility_registry([], incidents, assets)
+    assert reg["plant-a"]["capacity_mw"] == 2214.0
+
+
+def test_gem_map_data_cannot_be_imported_as_a_citable_release():
+    """C9. Passing --release on the live map-data export would launder unversioned data into a
+    citation. Releases retain `RouteAccuracy = 'no route'` rows; map-data drops them."""
+    g = _gem()
+    live_like = json.loads((FIXTURES / "gem_ggit_sample.geojson").read_text(encoding="utf-8"))
+    live_like["features"] = [f for f in live_like["features"]
+                             if f["properties"]["RouteAccuracy"] != "no route"]
+    tmp = FIXTURES / "_tmp_live_like.geojson"
+    tmp.write_text(json.dumps(live_like), encoding="utf-8")
+    try:
+        with pytest.raises(g.ImportError_, match="no route"):
+            g.run(tmp, "GGIT", release="2025-11", dry_run=True)
+        # the same file is fine when it is honest about what it is
+        _records, manifest = g.run(tmp, "GGIT", release=None, provisional=True, dry_run=True)
+        assert manifest["provisional"] is True
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
+def test_gem_name_matches_are_never_stamped_exact():
+    """G12. This matcher compares NAMES. `exact` is auto-mergeable, so claiming it would let name
+    similarity become canonical silently - the failure the module exists to prevent."""
+    from pipeline import reconcile_gem as R
+    from pipeline.pipeline_registry import load_registry
+    rows = R.load_gem()
+    if not rows:
+        pytest.skip("GEM vendor snapshot absent")
+    auto, _review = R.reconcile(rows, list(load_registry().values()))
+    assert auto
+    assert all(a["confidence"] in ("strong", "possible") for a in auto)
+    # a GEM segment is PART OF the canonical entity, never an aggregate of it
+    assert all(a["relationship"] in ("represents", "part_of") for a in auto)
+
+
+def test_a_gem_match_contradicted_by_status_is_demoted():
+    """G13. A cancelled/retired/proposed asset bound by name to an operating entity is the RV-009
+    failure. It must never reach `strong`, which is auto-mergeable."""
+    from pipeline import reconcile_gem as R
+    entity = {"canonical_pipeline_id": "X", "countries": ["RU"]}
+    assert R._contradictions({"status_native": "cancelled", "countries": ["Russia"]}, entity)
+    assert R._contradictions({"status_native": "operating", "countries": ["China"]}, entity)
+    assert not R._contradictions({"status_native": "operating", "countries": ["Russia"]}, entity)
+
+
+def test_every_alias_that_is_a_nickname_carries_a_source():
+    """Aliases are durable canonical identity. Eight unsourced project nicknames were removed
+    rather than kept on the strength of sounding familiar."""
+    from pipeline import pipeline_registry as R
+    for cid, records in R.load_aliases().items():
+        for a in records:
+            assert a["alias_type"] in R.ALIAS_TYPES, f"{cid}: {a['alias_type']}"
+            if a["alias_type"] not in R.SELF_EVIDENCING:
+                assert a["source_url"], (
+                    f"{cid}: {a['alias']!r} is a {a['alias_type']} with no source")
+
+
+def test_topology_only_connections_never_gain_geography():
+    """The dossier reports a connection whose point has no public coordinate; it must say so
+    rather than inventing one. Every node without `coordinate` precision stays undrawable."""
+    from pipeline import pipeline_registry as R
+    nodes = R.load_nodes()
+    for t in R.load_topology():
+        assert t["linkage"] in ("full", "partial", "unresolved"), t
+        n = nodes.get(t["node_id"] or "")
+        if n and n["geography_precision"] != "coordinate":
+            assert n["lon"] is None and n["lat"] is None

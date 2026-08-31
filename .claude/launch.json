@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "dashboard",
-      "runtimeExecutable": "..\scripts\npm.cmd",
+      "runtimeExecutable": "../scripts/npm.cmd",
       "runtimeArgs": ["run", "dev", "--", "--port", "5178", "--strictPort"],
       "cwd": "web",
       "port": 5178

@@ -228,6 +228,10 @@ def _haversine(a, b):
     return 6371.0 * math.hypot(math.radians(x2 - x1) * math.cos(mlat), math.radians(y2 - y1))
 
 
+# Below this, two endpoints are the same OSM node rather than a gap across one. 1 mm.
+_ZERO_GAP_KM = 1e-6
+
+
 def weld(chains, tolerance_km=WELD_TOLERANCE_KM):
     """Join same-route components whose endpoints are within `tolerance_km`.
 
@@ -244,6 +248,14 @@ def weld(chains, tolerance_km=WELD_TOLERANCE_KM):
                 for ai, a in ((0, chains[i][0]), (1, chains[i][-1])):
                     for bj, b in ((0, chains[j][0]), (1, chains[j][-1])):
                         d = _haversine(a, b)
+                        # A gap of exactly zero is not a gap: the endpoints ARE the same node,
+                        # which means stitch() already saw it and refused to walk through —
+                        # because it is a junction of degree != 2. Welding there re-joins what
+                        # the junction rule deliberately separated, letting a chain run out
+                        # along one string and back along its twin. Weld closes GAPS; it must
+                        # never re-make a decision stitch() already made.
+                        if d <= _ZERO_GAP_KM:
+                            continue
                         if d <= tolerance_km and (best is None or d < best[0]):
                             best = (d, i, j, ai, bj)
         if best is None:
@@ -262,53 +274,23 @@ def weld(chains, tolerance_km=WELD_TOLERANCE_KM):
     return chains, welds, round(max_gap, 4)
 
 
-def _segment_distance(pt, start, end):
-    """Distance from a point to the SEGMENT start-end, not to the infinite line through it.
-
-    `geo._perpendicular_distance` measures to the infinite line, which is the textbook
-    Douglas-Peucker formulation and is fine when the two anchors are far apart. It fails badly
-    when they are close: a chain that leaves and returns near its own start has every interior
-    point sitting on the line through those two anchors, scores ~0, and is deleted whole. Measured
-    on the real corpus that erased 690 stitched components — 216 km of real pipeline — silently,
-    because the collapsed chain then fell below the two-point minimum and was dropped.
-    """
-    x, y = pt[0], pt[1]
-    x0, y0 = start[0], start[1]
-    x1, y1 = end[0], end[1]
-    dx, dy = x1 - x0, y1 - y0
-    if dx == 0 and dy == 0:
-        return math.hypot(x - x0, y - y0)
-    t = ((x - x0) * dx + (y - y0) * dy) / (dx * dx + dy * dy)
-    t = max(0.0, min(1.0, t))                      # clamp to the segment
-    return math.hypot(x - (x0 + t * dx), y - (y0 + t * dy))
-
-
 def _simplify(pts, tolerance):
-    """Douglas-Peucker on an open polyline, using point-to-SEGMENT distance (see above).
+    """Douglas-Peucker, dispatching on whether the chain is CLOSED.
 
-    The chain's two extreme endpoints are always kept. Interior way-junction vertices are NOT
-    guaranteed to survive — they are ordinary DP candidates — so nothing downstream should rely
-    on a junction coordinate being present in the output.
+    `simplify_line` keeps `points[0]` and `points[-1]`. On a closed loop those are the same
+    coordinate, so it keeps one point twice, `_round` collapses the pair, and the component is
+    dropped for having fewer than 2 points. That silently erased 646 components (201.3 km) of
+    real pipe — loops around compressor stations and terminals — which then vanished from the map
+    while remaining inside `route_length_km`.
+
+    `simplify_ring` exists for exactly this shape and preserves closure, so a closed chain is
+    routed to it. Same failure class as the iteration-9 erasure bug, reached from a different
+    direction: an open-line algorithm applied to a shape that is not an open line.
     """
-    if len(pts) <= 2:
-        return [list(p) for p in pts]
-    keep = [False] * len(pts)
-    keep[0] = keep[-1] = True
-    stack = [(0, len(pts) - 1)]
-    while stack:
-        first, last = stack.pop()
-        if last <= first + 1:
-            continue
-        md, idx = -1.0, first
-        for i in range(first + 1, last):
-            d = _segment_distance(pts[i], pts[first], pts[last])
-            if d > md:
-                md, idx = d, i
-        if md > tolerance:
-            keep[idx] = True
-            stack.append((first, idx))
-            stack.append((idx, last))
-    return [list(p) for p, k in zip(pts, keep) if k]
+    pts = [tuple(p) for p in pts]
+    if len(pts) > 3 and pts[0] == pts[-1]:
+        return [list(p) for p in geo.simplify_ring(pts, tolerance)]
+    return [list(p) for p in geo.simplify_line(pts, tolerance)]
 
 
 def _round(pts, precision=COORD_PRECISION):
@@ -390,12 +372,16 @@ def build_routes(relations, member_tags, analytic_osm_ids=None, min_km=MIN_TRUNK
                  tolerance=TOLERANCE):
     """Reconstruct canonical routes from OSM pipeline route relations.
 
-    Returns (routes, stats). Each route is a dict carrying its canonical identity, the stitched
-    components, and full provenance. Nothing is dropped for overlapping the analytic feed.
+    Returns (routes, stats, way_km). `way_km` maps each member way id to its own measured
+    length, so network extent can be an exact union rather than an apportionment.
+
+    Each route is a dict carrying its canonical identity, the stitched components, and full
+    provenance. Nothing is dropped for overlapping the analytic feed.
     """
     analytic_osm_ids = set(analytic_osm_ids or ())
     routes = []
     stats = collections.Counter()
+    way_km = {}
 
     for rel in relations:
         tags = rel.get("tags", {}) or {}
@@ -412,8 +398,19 @@ def build_routes(relations, member_tags, analytic_osm_ids=None, min_km=MIN_TRUNK
             stats["relations_substance_unresolved"] += 1
             continue
 
-        ways = [[(p["lon"], p["lat"]) for p in m["geometry"] if p] for m in members]
-        member_ids = [m["ref"] for m in members]
+        # A relation may list the same way twice (12 do, for 1,320.8 km of redundant
+        # geometry). It is still ONE piece of pipe: using it twice doubles it on the map and
+        # inflates the member count that `distinct_network_km` divides by.
+        seen_refs, ways, member_ids = set(), [], []
+        for m in members:
+            ref = m["ref"]
+            if ref in seen_refs:
+                continue
+            seen_refs.add(ref)
+            pts = [(p["lon"], p["lat"]) for p in m["geometry"] if p]
+            ways.append(pts)
+            member_ids.append(ref)
+            way_km[ref] = _length_km(pts)
         chains = stitch(ways)
         raw_components = len(chains)
         chains, welds, max_weld_km = weld(chains)
@@ -455,7 +452,7 @@ def build_routes(relations, member_tags, analytic_osm_ids=None, min_km=MIN_TRUNK
         })
         stats["routes_built"] += 1
         stats[f"routes_{cls}"] += 1
-    return routes, stats
+    return routes, stats, way_km
 
 
 def build_named_way_routes(way_elements, claimed_way_ids, analytic_osm_ids=None,
@@ -486,7 +483,10 @@ def build_named_way_routes(way_elements, claimed_way_ids, analytic_osm_ids=None,
             groups[(name, cls)].append((el["id"], pts, tags))
 
     routes = []
+    way_km = {}
     for (name, cls), items in groups.items():
+        for wid, pts, _tags in items:
+            way_km[wid] = _length_km(pts)
         # NO weld here. Welding is justified only by shared relation membership — OSM asserting
         # two components are one pipeline. A shared name string is not that assertion, so joining
         # name-grouped components across a gap would be exactly the proximity rule this module
@@ -530,7 +530,7 @@ def build_named_way_routes(way_elements, claimed_way_ids, analytic_osm_ids=None,
             "source_vertex_spacing_km": spacing_km,
             "geometry_source": "osm_named_ways",
         })
-    return routes
+    return routes, way_km
 
 
 def to_features(routes):
@@ -545,6 +545,11 @@ def to_features(routes):
                 "type": "Feature",
                 "properties": {
                     "pipeline_id": r["pipeline_id"],
+                    "canonical_pipeline_id": r.get("canonical_pipeline_id"),
+                    "canonical_name": r.get("canonical_name_registry"),
+                    "entity_level": r.get("entity_level") or "pipeline",
+                    "parent_id": r.get("parent_id"),
+                    "match_confidence": r.get("match_confidence") or "unresolved",
                     "asset_class": r["asset_class"],
                     "scope": "context",
                     "name": r["canonical_name"],
@@ -568,7 +573,230 @@ def to_features(routes):
     return feats
 
 
-def quality_report(routes):
+def _containment(routes, min_share=0.9):
+    """Measured parent->child edges: route B is inside route A when >=90% of B's member ways are
+    also A's and A is larger.
+
+    This is how OSM's superroutes are detected without guessing from names — Сияние Севера
+    contains 12 strings, Yamal–Lubmin contains 6 — and it is the same overlap that made a naive
+    sum of route lengths double-count ~13% of the network.
+    """
+    ways = {r["pipeline_id"]: set(r["osm_way_ids"]) for r in routes}
+    parent = {}
+    for b, wb in ways.items():
+        if not wb:
+            continue
+        best = None
+        for a, wa in ways.items():
+            if a == b or len(wa) <= len(wb):
+                continue
+            if len(wa & wb) / len(wb) >= min_share:
+                # smallest qualifying parent = the immediate one
+                if best is None or len(wa) < len(ways[best]):
+                    best = a
+        if best:
+            parent[b] = best
+    return parent
+
+
+def apply_registry(routes, entities):
+    """Attach canonical identity to each reconstructed route.
+
+    A route is matched to a canonical entity through the explicit source map, never by name. The
+    mapping is many-to-many by design, so a route may be claimed by more than one entity (a
+    superroute AND the string it contains); the FINEST-grained claim wins for display, because a
+    reader clicking a line wants the pipeline, not the continent-spanning system it belongs to.
+    """
+    by_source = {}
+    for e in entities.values():
+        for sr in e["source_records"]:
+            by_source.setdefault(sr["source_id"], []).append((e, sr))
+    depth = {}
+
+    def _depth(cid):
+        if cid in depth:
+            return depth[cid]
+        e = entities.get(cid)
+        depth[cid] = 0 if not e or not e["parent_id"] else _depth(e["parent_id"]) + 1
+        return depth[cid]
+
+    for r in routes:
+        sid = str(r.get("osm_relation_id") or r["pipeline_id"])
+        claims = by_source.get(sid, [])
+        if claims:
+            # deepest entity = most specific
+            e, sr = max(claims, key=lambda c: _depth(c[0]["canonical_pipeline_id"]))
+            r["canonical_pipeline_id"] = e["canonical_pipeline_id"]
+            r["canonical_name_registry"] = e["canonical_name"]
+            r["entity_level"] = e["entity_level"]
+            r["parent_id"] = e["parent_id"]
+            r["match_confidence"] = sr["confidence"]
+            r["all_canonical_claims"] = [c[0]["canonical_pipeline_id"] for c in claims]
+        else:
+            r["canonical_pipeline_id"] = None
+            r["canonical_name_registry"] = None
+            r["entity_level"] = "pipeline"       # an uncurated route is a pipeline by default
+            r["parent_id"] = None
+            r["match_confidence"] = "unresolved"
+            r["all_canonical_claims"] = []
+    return routes
+
+
+def geometry_completeness(route):
+    """Segment-weighted geometry breakdown for one route.
+
+    Route COUNT is a poor measure: a 2,000 km line with a 10 km gap and a 200 km line missing
+    180 km are both "fragmented". Kilometres of each quality are measurable and reported.
+
+    Unresolved length deliberately is NOT estimated. The distance between two mapped components
+    is not the length of the missing pipe — the real route between them may be far longer, and
+    inventing a figure would be exactly the false precision this project refuses. The gap COUNT
+    is reported instead.
+    """
+    drawn = route["drawn_length_km"]
+    q = route["route_quality"]
+    detailed = drawn if q == "osm_mapped" else 0.0
+    generalized = drawn if q in ("osm_generalized", "gem_generalized") else 0.0
+    return {
+        "detailed_geometry_km": round(detailed, 1),
+        "generalized_geometry_km": round(generalized, 1),
+        "unresolved_gap_count": max(0, len(route["components"]) - 1),
+        "detailed_geometry_pct": round(100.0 * detailed / drawn, 1) if drawn else 0.0,
+        "generalized_geometry_pct": round(100.0 * generalized / drawn, 1) if drawn else 0.0,
+    }
+
+
+def canonical_coverage(routes, entities):
+    """How canonical the "canonical registry" actually is — measured in KILOMETRES.
+
+    Entity counts flatter the result: 36 curated entities against 464 routes reads as 8% coverage,
+    while those 36 include the largest trunk systems in the dataset. Kilometres of DISTINCT mapped
+    pipe attached to a curated identity is the honest measure, and it is the one reported.
+
+    Deduplicated by OSM way, so a corridor and the strings inside it cannot both claim the same
+    kilometre — otherwise curated coverage would be inflated precisely where hierarchy is richest.
+    """
+    curated = {cid for cid, e in entities.items() if e.get("curated")}
+    # Curated routes claim their ways FIRST, so a kilometre shared between a curated corridor and
+    # an auto-derived route counts once, on the curated side. Deterministic: sorted by id.
+    ordered = sorted(routes, key=lambda r: (r.get("canonical_pipeline_id") not in curated,
+                                            r["pipeline_id"]))
+    seen, total_km, cur_km = set(), 0.0, 0.0
+    for r in ordered:
+        ids = r["osm_way_ids"]
+        new_ids = [w for w in ids if w not in seen]
+        if not new_ids:
+            continue
+        # Same attribution as `distinct_network_km`: km apportioned by SHARE OF MEMBER WAYS, not
+        # by per-way length, because per-way lengths are not carried. Ways within one route are
+        # of broadly similar size, so this is a close approximation — but it is an approximation,
+        # and it is described as one wherever the number is published.
+        km = r["length_km"] * (len(new_ids) / max(1, len(ids)))
+        total_km += km
+        if r.get("canonical_pipeline_id") in curated:
+            cur_km += km
+        seen.update(new_ids)
+    return {
+        "curated_entities": len(curated),
+        "auto_derived_entities": len(entities) - len(curated),
+        "routes": len(routes),
+        "routes_attached_to_curated": sum(
+            1 for r in routes if r.get("canonical_pipeline_id") in curated),
+        "distinct_km_total": round(total_km, 1),
+        "distinct_km_curated": round(cur_km, 1),
+        "distinct_km_curated_pct": round(100.0 * cur_km / total_km, 1) if total_km else 0.0,
+    }
+
+
+def registry_payload(entities, nodes, routes):
+    """Everything the route detail panel needs, keyed by canonical id.
+
+    Emitted separately from the GeoJSON on purpose: this is entity-level and the GeoJSON is
+    component-level, so folding it into feature properties would repeat the same registry entry
+    on all 125 components of a fragmented route.
+
+    Temporal status is emitted as INTERVALS, not as a resolved current value. The client can then
+    ask "what was true on date D" instead of being handed one mutable answer — which is the whole
+    reason status is modelled with validity intervals rather than a status column.
+    """
+    from pipeline import pipeline_registry
+
+    status_by_entity = collections.defaultdict(list)
+    for s in pipeline_registry.load_status():
+        status_by_entity[s["canonical_pipeline_id"]].append(s)
+    sources_by_entity = collections.defaultdict(list)
+    for m in pipeline_registry.load_source_map():
+        sources_by_entity[m["canonical_pipeline_id"]].append(m)
+
+    # Documented connections, attached to BOTH ends when both are canonical. This is the payload
+    # that lets the dossier answer "what does this connect to" without a line being drawn: a
+    # connection is known when its endpoints are named and sourced, whether or not the route
+    # between them is mapped.
+    nodes = pipeline_registry.load_nodes()
+    node_sources = pipeline_registry.load_node_sources()
+    topo_by_entity = collections.defaultdict(list)
+    for t in pipeline_registry.load_topology():
+        node = nodes.get(t["node_id"] or "")
+        entry = {
+            **{k: t[k] for k in ("relation", "at_point", "substance", "source_quality",
+                                 "source_url", "linkage", "linkage_reason", "note")},
+            "node_id": t["node_id"],
+            "node_name": node["node_name"] if node else (t["at_point"] or None),
+            "node_type": node["node_type"] if node else None,
+            "node_country": node["country"] if node else None,
+            # Carried so the UI can say WHY nothing is drawn, rather than silently omitting it.
+            "node_geography_precision": node["geography_precision"] if node else None,
+            "node_sources": node_sources.get(t["node_id"] or "", []),
+        }
+        if t["subject_id"]:
+            topo_by_entity[t["subject_id"]].append(
+                {**entry, "other": t["object_id"] or t["object"], "other_id": t["object_id"],
+                 "direction": "from"})
+        if t["object_id"] and t["object_id"] != t["subject_id"]:
+            topo_by_entity[t["object_id"]].append(
+                {**entry, "other": t["subject_id"] or t["subject"], "other_id": t["subject_id"],
+                 "direction": "to"})
+
+    # Roll route-level geometry up to the canonical entity: one entity may own several routes.
+    geom = collections.defaultdict(lambda: {"detailed_geometry_km": 0.0,
+                                            "generalized_geometry_km": 0.0,
+                                            "unresolved_gap_count": 0, "routes": 0})
+    for r in routes:
+        cid = r.get("canonical_pipeline_id")
+        if not cid:
+            continue
+        g = geometry_completeness(r)
+        agg = geom[cid]
+        agg["detailed_geometry_km"] += g["detailed_geometry_km"]
+        agg["generalized_geometry_km"] += g["generalized_geometry_km"]
+        agg["unresolved_gap_count"] += g["unresolved_gap_count"]
+        agg["routes"] += 1
+
+    out = {}
+    for cid, e in entities.items():
+        agg = geom.get(cid)
+        out[cid] = {
+            **{k: e.get(k) for k in ("canonical_pipeline_id", "canonical_name", "aliases",
+                                     "commodity", "subtype", "entity_level", "parent_id",
+                                     "operator", "owner", "countries", "start_area", "end_area",
+                                     "note", "curated")},
+            "child_ids": sorted(c for c, v in entities.items() if v.get("parent_id") == cid),
+            "sources": sources_by_entity.get(cid, []),
+            "status": status_by_entity.get(cid, []),
+            "connections": topo_by_entity.get(cid, []),
+            "alias_records": e.get("alias_records") or [],
+            "geometry": ({k: (round(v, 1) if isinstance(v, float) else v)
+                          for k, v in agg.items()} if agg else None),
+        }
+    return {"entities": out, "nodes": nodes,
+            "coverage": canonical_coverage(routes, entities),
+            "generated_note": ("Status is emitted as validity intervals, never as a single "
+                               "current value; geometry is segment-weighted and unresolved gap "
+                               "length is deliberately not estimated.")}
+
+
+def quality_report(routes, way_lengths=None):
+    way_lengths = way_lengths or {}
     """Deterministic continuity/quality metrics (§12). Topology completeness and geometry
     completeness are reported separately: a single-component route is topologically continuous,
     which is NOT the same as its geometry being accurate."""
@@ -582,15 +810,39 @@ def quality_report(routes):
         # pipe twice. Both numbers are published: the sum is "length across routes", and the
         # union over distinct member way ids is the actual network extent. Conflating them would
         # overstate the network by ~13%.
-        seen_ways, distinct_km = set(), 0.0
+        # Exact union over distinct member ways, using each way's own measured length. The
+        # previous apportionment (route length x share of member COUNT) assumed every way in a
+        # route was the same size; it was wrong by ~1.6% and, worse, ORDER-DEPENDENT — the same
+        # data gave a 5,638 km spread across route orderings, and it credited a whole corridor's
+        # kilometres to whichever relation the loop happened to reach first. Nord Stream was the
+        # visible symptom: an unidentified legacy relation took all 2,448.7 km and the two real
+        # pipelines were docked to 349.9 and 704.4.
+        seen_ways, distinct_km, unmeasured = set(), 0.0, 0
         for r in rs:
-            new_ids = [w for w in r["osm_way_ids"] if w not in seen_ways]
-            if new_ids:
-                share = len(new_ids) / max(1, len(r["osm_way_ids"]))
-                distinct_km += r["length_km"] * share
-                seen_ways.update(new_ids)
+            for w in r["osm_way_ids"]:
+                if w in seen_ways:
+                    continue
+                seen_ways.add(w)
+                if w in way_lengths:
+                    distinct_km += way_lengths[w]
+                else:
+                    unmeasured += 1
+        # Canonical-entity counts, so a system and the strings inside it are not counted as
+        # equivalent "pipelines". Routes with no canonical claim count as their own entity.
+        canon = set()
+        for r in rs:
+            canon.add(r.get("canonical_pipeline_id") or r["pipeline_id"])
+        levels = collections.Counter(r.get("entity_level") or "pipeline" for r in rs)
+        det = sum(geometry_completeness(r)["detailed_geometry_km"] for r in rs)
+        gen = sum(geometry_completeness(r)["generalized_geometry_km"] for r in rs)
+        gaps = sum(geometry_completeness(r)["unresolved_gap_count"] for r in rs)
         out[cls] = {
             "routes": len(rs),
+            "canonical_entities": len(canon),
+            "by_entity_level": dict(levels),
+            "detailed_geometry_km": round(det, 1),
+            "generalized_geometry_km": round(gen, 1),
+            "unresolved_gap_count": gaps,
             "total_length_km": round(sum(r["length_km"] for r in rs), 1),
             "distinct_network_km": round(distinct_km, 1),
             "drawn_length_km": round(sum(r["drawn_length_km"] for r in rs), 1),
@@ -617,15 +869,30 @@ def build(relations=None, member_tags=None, way_elements=None, analytic_osm_ids=
         relations, member_tags = data["relations"], data["member_tags"]
     member_tags = member_tags or {}
 
-    routes, stats = build_routes(relations, member_tags, analytic_osm_ids, tolerance=tolerance)
+    routes, stats, way_lengths = build_routes(relations, member_tags, analytic_osm_ids,
+                                              tolerance=tolerance)
+    # Named-way routes are appended BEFORE the registry runs. Previously the registry was built
+    # from relation routes only and then these were bolted on, so 183 of 464 routes (244 of 1,292
+    # drawn features) carried `canonical_pipeline_id: null` and resolved to nothing in the
+    # payload — while the module docstring claimed the registry "always covers the whole network".
+    # It now does.
     claimed = {w for r in routes for w in r["osm_way_ids"]}
     if way_elements:
-        routes += build_named_way_routes(way_elements, claimed, analytic_osm_ids,
-                                         tolerance=tolerance)
+        named, named_km = build_named_way_routes(way_elements, claimed, analytic_osm_ids,
+                                                 tolerance=tolerance)
+        routes += named
+        way_lengths.update(named_km)
+
+    # Canonical identity + hierarchy from the curated registry (never from name equality).
+    from pipeline import pipeline_registry
+    entities, nodes, problems = pipeline_registry.build(routes, containment=_containment(routes))
+    for p in problems:
+        log(f"  registry PROBLEM {p}")
+    apply_registry(routes, entities)
 
     gas = to_features([r for r in routes if r["asset_class"] == "pipeline_gas"])
     oil = to_features([r for r in routes if r["asset_class"] == "pipeline_oil"])
-    report = quality_report(routes)
+    report = quality_report(routes, way_lengths)
 
     if write:
         gas_path = PROCESSED / "context_gas_network.geojson"
@@ -640,6 +907,8 @@ def build(relations=None, member_tags=None, way_elements=None, analytic_osm_ids=
         write_json(gas_path, {"type": "FeatureCollection", "features": gas})
         write_json(oil_path, {"type": "FeatureCollection", "features": oil})
         write_json(PROCESSED / "pipeline_network_quality.json", report)
+        write_json(PROCESSED / "pipeline_registry.json",
+                   registry_payload(entities, nodes, routes))
         mb = sum((PROCESSED / f).stat().st_size for f in
                  ("context_gas_network.geojson", "context_oil_network.geojson")) / 1e6
         log(f"pipeline-network: {report['pipeline_gas']['routes']} gas + "
