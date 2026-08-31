@@ -328,12 +328,30 @@ function Group({
 function CoverageRow({ label, c }: { label: string; c?: NetworkCoverageClass }) {
   if (!c) return null;
   const mapped = c.route_quality.osm_mapped ?? 0;
+  // Report the DE-DUPLICATED extent as the headline. Summing route lengths double-counts every
+  // corridor that is modelled both as a system and as its constituent strings — 17,870 km of the
+  // gas network is exactly that, and it is a correct hierarchy rather than a duplicate. Showing
+  // the sum as "km of pipeline" would overstate the network by that amount.
+  const distinct = c.distinct_network_km;
+  const overlap = distinct != null ? Math.max(0, c.total_length_km - distinct) : null;
   return (
     <div className="cov-row">
       <div className="cov-head">
         <span>{label}</span>
-        <span className="num">{c.routes} routes · {Math.round(c.total_length_km).toLocaleString("en-GB")} km</span>
+        <span className="num">
+          {c.routes} routes · {Math.round(distinct ?? c.total_length_km).toLocaleString("en-GB")} km
+        </span>
       </div>
+      {overlap != null && overlap > 1 && (
+        <div className="cov-kv" title={
+          "Route lengths sum to " + Math.round(c.total_length_km).toLocaleString("en-GB") +
+          " km, but a system and the strings inside it are both modelled, so that total counts " +
+          "shared pipe more than once. The figure above counts each kilometre once."
+        }>
+          <span>Counted once (shared by parent routes)</span>
+          <span className="num">−{Math.round(overlap).toLocaleString("en-GB")} km</span>
+        </div>
+      )}
       <div className="cov-kv"><span>Continuous end to end</span>
         <span className="num">{c.single_component_routes}</span></div>
       <div className="cov-kv"><span>With unmapped gaps</span>

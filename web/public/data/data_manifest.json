@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-08-31T03:18:04+00:00",
+  "build_time": "2026-08-31T03:36:09+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -25,6 +25,11 @@
     {
       "name": "pipeline_network_quality.json",
       "bytes": 1352,
+      "optional": false
+    },
+    {
+      "name": "pipeline_registry.json",
+      "bytes": 174056,
       "optional": false
     },
     {

@@ -627,6 +627,61 @@ def geometry_completeness(route):
     }
 
 
+def registry_payload(entities, nodes, routes):
+    """Everything the route detail panel needs, keyed by canonical id.
+
+    Emitted separately from the GeoJSON on purpose: this is entity-level and the GeoJSON is
+    component-level, so folding it into feature properties would repeat the same registry entry
+    on all 125 components of a fragmented route.
+
+    Temporal status is emitted as INTERVALS, not as a resolved current value. The client can then
+    ask "what was true on date D" instead of being handed one mutable answer — which is the whole
+    reason status is modelled with validity intervals rather than a status column.
+    """
+    from pipeline import pipeline_registry
+
+    status_by_entity = collections.defaultdict(list)
+    for s in pipeline_registry.load_status():
+        status_by_entity[s["canonical_pipeline_id"]].append(s)
+    sources_by_entity = collections.defaultdict(list)
+    for m in pipeline_registry.load_source_map():
+        sources_by_entity[m["canonical_pipeline_id"]].append(m)
+
+    # Roll route-level geometry up to the canonical entity: one entity may own several routes.
+    geom = collections.defaultdict(lambda: {"detailed_geometry_km": 0.0,
+                                            "generalized_geometry_km": 0.0,
+                                            "unresolved_gap_count": 0, "routes": 0})
+    for r in routes:
+        cid = r.get("canonical_pipeline_id")
+        if not cid:
+            continue
+        g = geometry_completeness(r)
+        agg = geom[cid]
+        agg["detailed_geometry_km"] += g["detailed_geometry_km"]
+        agg["generalized_geometry_km"] += g["generalized_geometry_km"]
+        agg["unresolved_gap_count"] += g["unresolved_gap_count"]
+        agg["routes"] += 1
+
+    out = {}
+    for cid, e in entities.items():
+        agg = geom.get(cid)
+        out[cid] = {
+            **{k: e.get(k) for k in ("canonical_pipeline_id", "canonical_name", "aliases",
+                                     "commodity", "subtype", "entity_level", "parent_id",
+                                     "operator", "owner", "countries", "start_area", "end_area",
+                                     "note", "curated")},
+            "child_ids": sorted(c for c, v in entities.items() if v.get("parent_id") == cid),
+            "sources": sources_by_entity.get(cid, []),
+            "status": status_by_entity.get(cid, []),
+            "geometry": ({k: (round(v, 1) if isinstance(v, float) else v)
+                          for k, v in agg.items()} if agg else None),
+        }
+    return {"entities": out, "nodes": nodes,
+            "generated_note": ("Status is emitted as validity intervals, never as a single "
+                               "current value; geometry is segment-weighted and unresolved gap "
+                               "length is deliberately not estimated.")}
+
+
 def quality_report(routes):
     """Deterministic continuity/quality metrics (§12). Topology completeness and geometry
     completeness are reported separately: a single-component route is topologically continuous,
@@ -719,6 +774,8 @@ def build(relations=None, member_tags=None, way_elements=None, analytic_osm_ids=
         write_json(gas_path, {"type": "FeatureCollection", "features": gas})
         write_json(oil_path, {"type": "FeatureCollection", "features": oil})
         write_json(PROCESSED / "pipeline_network_quality.json", report)
+        write_json(PROCESSED / "pipeline_registry.json",
+                   registry_payload(entities, nodes, routes))
         mb = sum((PROCESSED / f).stat().st_size for f in
                  ("context_gas_network.geojson", "context_oil_network.geojson")) / 1e6
         log(f"pipeline-network: {report['pipeline_gas']['routes']} gas + "

@@ -2782,3 +2782,136 @@ def test_gem_map_data_import_is_stamped_provisional():
     assert "no release identifier" in manifest["citation"]
     assert "NO release identifier" in manifest["provisional_note"]
     assert all(r["release"] is None and r["provisional"] for r in records)
+
+
+# --------------------------------------------------------------------------------------
+# Canonical registry: identity, hierarchy, and the double-count trap (iteration 10 §26-28)
+# --------------------------------------------------------------------------------------
+
+def _registry():
+    from pipeline import pipeline_registry
+    return pipeline_registry
+
+
+def test_registry_vocabularies_stay_closed():
+    """Every closed vocabulary is closed for a reason; widening one must be deliberate."""
+    r = _registry()
+    assert r.ENTITY_LEVELS == ("system", "corridor", "pipeline", "branch", "physical_segment")
+    assert r.RELATIONSHIPS == ("represents", "part_of", "aggregates")
+    assert r.MATCH_CONFIDENCE == ("exact", "strong", "possible", "unresolved")
+    # The whole point of rule 6: only these two may ever be applied without a human.
+    assert r.AUTO_MERGE_CONFIDENCE == ("exact", "strong")
+    assert set(r.AUTO_MERGE_CONFIDENCE) < set(r.MATCH_CONFIDENCE)
+    assert "possible" not in r.AUTO_MERGE_CONFIDENCE
+    assert "unresolved" not in r.AUTO_MERGE_CONFIDENCE
+
+
+def test_status_kinds_are_tracked_separately():
+    """Physical / operational / commercial-flow must not collapse into one status field.
+
+    Yamal–Europe is the case that forces this: the pipe is intact, and commercial transit is
+    zero. Any single "status" would have to pick one and publish a falsehood.
+    """
+    r = _registry()
+    assert r.STATUS_KINDS == ("physical", "operational", "commercial_flow")
+    records = r.load_status()
+    yamal = [s for s in records if s["canonical_pipeline_id"] == "YAMAL_EUROPE"]
+    kinds = {s["status_kind"] for s in yamal}
+    assert {"physical", "commercial_flow"} <= kinds, "Yamal–Europe needs both kinds to be honest"
+    physical = r.status_at(yamal, "physical", "2026-01-01")
+    flow = r.status_at(yamal, "commercial_flow", "2026-01-01")
+    assert physical and physical["status_value"] == "intact"
+    assert flow and flow["status_value"] == "zero_transit"
+
+
+def test_status_is_a_function_of_time_not_a_column():
+    """The same pipeline answers differently on different dates. That is the design."""
+    r = _registry()
+    records = [s for s in r.load_status()
+               if s["canonical_pipeline_id"] == "YAMAL_EUROPE"]
+    before = r.status_at(records, "commercial_flow", "2021-06-01")
+    after = r.status_at(records, "commercial_flow", "2026-01-01")
+    assert before is not None and after is not None
+    assert before["status_value"] != after["status_value"], (
+        "commercial flow must differ across the 2022 transit halt")
+
+
+def test_registry_hierarchy_is_acyclic_and_parents_exist():
+    r = _registry()
+    entities = r.load_registry()
+    for cid, e in entities.items():
+        parent = e.get("parent_id")
+        if parent:
+            assert parent in entities, f"{cid} points at missing parent {parent}"
+    for cid in entities:
+        assert not r._has_cycle(entities, cid), f"hierarchy cycle reachable from {cid}"
+
+
+def test_a_corridor_is_not_the_sum_of_its_children():
+    """Guards the double-count trap that §28 exists for.
+
+    NORTHERN_LIGHTS is modelled as a corridor whose children are the Ukhta–Torzhok strings, and
+    OSM models BOTH the system relation and each string. Adding a parent's length to its
+    children's lengths counts the same pipe several times. The network report must therefore
+    carry a de-duplicated extent, and it must be smaller than the sum.
+    """
+    quality = json.loads((PROCESSED / "pipeline_network_quality.json").read_text(encoding="utf-8"))
+    gas = quality["pipeline_gas"]
+    assert gas["distinct_network_km"] < gas["total_length_km"], (
+        "summing route lengths double-counts hierarchy; a distinct measure must exist")
+    # The gap is large enough to matter — this is not a rounding artefact.
+    assert gas["total_length_km"] - gas["distinct_network_km"] > 1000
+
+    entities = _registry().load_registry()
+    children = [c for c, e in entities.items() if e.get("parent_id") == "NORTHERN_LIGHTS"]
+    assert children, "NORTHERN_LIGHTS must retain its constituent strings"
+    assert entities["NORTHERN_LIGHTS"]["entity_level"] == "corridor"
+    for c in children:
+        assert entities[c]["entity_level"] in ("pipeline", "branch", "physical_segment")
+
+
+def test_only_confident_matches_are_auto_applied():
+    """`possible` and `unresolved` mappings must never reach the canonical source map."""
+    r = _registry()
+    entities = r.load_registry()
+    for m in r.load_source_map():
+        assert m["confidence"] in r.AUTO_MERGE_CONFIDENCE, (
+            f"{m['canonical_pipeline_id']}<-{m['source_id']} is {m['confidence']}; "
+            "anything below `strong` belongs in the review queue, not the source map")
+        assert m["canonical_pipeline_id"] in entities
+        assert m["relationship"] in r.RELATIONSHIPS
+
+
+def test_the_review_queue_preserves_disagreement_rather_than_resolving_it():
+    """Rule 5. At least one row must record a genuine source conflict left unresolved."""
+    rows = list(csv.DictReader(
+        (ROOT / "data" / "review" / "pipeline_match_review.csv").open(encoding="utf-8")))
+    assert rows, "the review queue must not be empty while ambiguities exist"
+    unresolved = [r for r in rows if r["disposition"] == "UNRESOLVED"]
+    assert unresolved, "a queue with no unresolved rows has resolved something it should not have"
+    for r in unresolved:
+        assert r["conflicting_evidence"].strip(), (
+            "an unresolved row must say what the conflict IS, not merely that one exists")
+    rejected = [r for r in rows if r["disposition"] == "REJECTED"]
+    assert rejected, "a matcher that never rejects anything is not being checked"
+
+
+def test_topology_only_nodes_carry_no_invented_geography():
+    """Addendum §6: never geocode a topology-only assertion just to make it drawable."""
+    nodes = _registry().load_nodes()
+    assert nodes
+    for nid, n in nodes.items():
+        if n["geography_precision"] != "coordinate":
+            assert n.get("lon") is None and n.get("lat") is None, (
+                f"{nid} has {n['geography_precision']} precision but carries coordinates")
+
+
+def test_geometry_completeness_never_estimates_the_missing_length():
+    """Addendum §10. A gap COUNT is honest; a gap LENGTH would be invented."""
+    from pipeline.build_pipeline_network import geometry_completeness
+    route = {"drawn_length_km": 100.0, "route_quality": "osm_mapped",
+             "components": [[(0, 0), (1, 1)], [(5, 5), (6, 6)], [(9, 9), (10, 10)]]}
+    g = geometry_completeness(route)
+    assert g["unresolved_gap_count"] == 2
+    assert not any("unresolved" in k and "km" in k for k in g), (
+        "no key may report unresolved gap LENGTH — the straight line is not the pipe")

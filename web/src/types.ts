@@ -245,7 +245,19 @@ export interface RecoveryEvent {
  *  deliberately separate numbers. Never a disruption measure; never enters ESDI. */
 export interface NetworkCoverageClass {
   routes: number;
+  /** Sum of every route's length. DOUBLE-COUNTS by design where a system relation and its
+   *  constituent strings are both modelled — that is a correct hierarchy, not a duplicate. Use
+   *  `distinct_network_km` for "how much pipe is there"; use this only for "how much did the
+   *  routes total", which is a different question. */
   total_length_km: number;
+  /** Union of the underlying ways: each kilometre counted once regardless of how many routes
+   *  claim it. This is the honest answer to network extent. */
+  distinct_network_km?: number;
+  detailed_geometry_km?: number;
+  generalized_geometry_km?: number;
+  unresolved_gap_count?: number;
+  canonical_entities?: number;
+  by_entity_level?: Record<string, number>;
   single_component_routes: number;
   multi_component_routes: number;
   total_components: number;
@@ -536,4 +548,81 @@ export interface Bundle {
    *  layers (rivers, pipeline networks) are lazy-loaded via loadContextLayer(), not held
    *  on the bundle (§16). */
   schema: SchemaCheck;
+}
+
+// --- canonical pipeline registry (iteration 10) -------------------------------------------
+// Identity, source mappings, temporal status and geometry completeness for one pipeline
+// entity. Kept separate from the route GeoJSON because that is component-level: a fragmented
+// route has up to 125 components, and repeating the registry on each would be absurd.
+
+/** One source record mapped to a canonical entity. Many-to-many in both directions. */
+export interface PipelineSourceMapping {
+  source_system: string;
+  source_id: string;
+  /** `represents` one-to-one · `aggregates` source covers several of ours · `part_of` inverse. */
+  relationship: string;
+  confidence: string;
+  evidence: string | null;
+  /** The source's own name, preserved verbatim so a judgement can be revisited. */
+  source_native: string | null;
+}
+
+/** A status assertion valid over an interval. Three KINDS are tracked separately, because a
+ *  pipe can be physically intact, operationally available, and carrying zero commercial flow
+ *  all at once — collapsing them into one "status" loses exactly the distinction that matters. */
+export interface PipelineStatusRecord {
+  status_kind: "physical" | "operational" | "commercial_flow" | string;
+  status_value: string;
+  valid_from: string | null;
+  valid_to: string | null;
+  observed_at: string | null;
+  source_url: string | null;
+  source_date: string | null;
+  source_tier: string | null;
+  note: string | null;
+}
+
+export interface PipelineEntity {
+  canonical_pipeline_id: string;
+  canonical_name: string;
+  aliases: string[];
+  commodity: string;
+  subtype: string | null;
+  entity_level: string;
+  parent_id: string | null;
+  child_ids: string[];
+  operator: string | null;
+  owner: string | null;
+  countries: string[];
+  start_area: string | null;
+  end_area: string | null;
+  note: string | null;
+  curated: boolean;
+  sources: PipelineSourceMapping[];
+  status: PipelineStatusRecord[];
+  /** Segment-weighted. `unresolved_gap_count` is a COUNT: the missing length is deliberately
+   *  never estimated, because the straight line between two components is not the pipe. */
+  geometry: {
+    detailed_geometry_km: number;
+    generalized_geometry_km: number;
+    unresolved_gap_count: number;
+    routes: number;
+  } | null;
+}
+
+export interface PipelineNode {
+  canonical_node_id: string;
+  node_name: string;
+  node_type: string;
+  country: string | null;
+  /** Only `coordinate` precision may carry lon/lat. A topology-only node stays undrawable. */
+  geography_precision: string;
+  lon?: number | null;
+  lat?: number | null;
+}
+
+export interface PipelineRegistry {
+  entities: Record<string, PipelineEntity>;
+  nodes: Record<string, PipelineNode>;
+  generated_note: string;
 }
