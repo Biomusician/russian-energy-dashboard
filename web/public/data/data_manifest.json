@@ -1,20 +1,10 @@
 {
   "schema_version": 2,
-  "build_time": "2026-08-31T03:06:55+00:00",
+  "build_time": "2026-08-31T03:18:04+00:00",
   "files": [
     {
       "name": "assets.json",
       "bytes": 628729,
-      "optional": false
-    },
-    {
-      "name": "gem_ggit_records.json",
-      "bytes": 962866,
-      "optional": false
-    },
-    {
-      "name": "gem_goit_records.json",
-      "bytes": 317532,
       "optional": false
     },
     {
@@ -49,7 +39,7 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 200311,
+      "bytes": 200817,
       "optional": false
     },
     {

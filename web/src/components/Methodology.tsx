@@ -76,7 +76,18 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
           <H>Denominators</H>
           <ul>
             <li>Refining: {s.denominators.refining_mtpa} MTPA across the tracked <b>Russian</b> national refinery inventory (the monitored-area aggregate is Belarus + Russian regions + Crimea, but this capacity denominator is Russia-only).</li>
-            <li>Electric generation: {s.denominators.electric_generation_mw.toLocaleString("en-GB")} MW installed in the area of interest (a capacity share).</li>
+            <li>
+              Electric generation: {s.denominators.electric_generation_mw.toLocaleString("en-GB")} MW installed in the area of interest (a capacity share).
+              {s.denominator_basis?.electric_generation_mw && (
+                <div style={{ color: "var(--amber)", marginTop: 3 }}>
+                  Known limitation: this is a <b>{s.denominator_basis.electric_generation_mw.census_vintage}</b> census
+                  from {s.denominator_basis.electric_generation_mw.source}, frozen {s.denominator_basis.electric_generation_mw.source_frozen}.
+                  It {s.denominator_basis.electric_generation_mw.known_bias}. Measured effect on the
+                  headline is below published precision (±0.005 ESDI), because generation disruption
+                  is currently ~44 MW; the figure is disclosed rather than corrected so the series stays comparable.
+                </div>
+              )}
+            </li>
             <li>Transmission: an event/recovery-burden measure against a saturation of {s.denominators.transmission_saturation_events} weighted concurrent facility-events — never a capacity-offline claim.</li>
             <li>Oil logistics uses the refining base as a proxy; it has no published throughput denominator.</li>
             {s.sectors_uncovered.length > 0 && (

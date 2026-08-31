@@ -449,6 +449,14 @@ export interface Snapshot {
   sectors_uncovered: string[];
   heating_season: boolean;
   denominators: { refining_mtpa: number; electric_generation_mw: number; transmission_saturation_events: number };
+  /** Census vintage per denominator. A capacity base without its date reads as current when it is not. */
+  denominator_basis?: Record<string, {
+    source: string;
+    census_vintage: string;
+    source_frozen?: string;
+    known_bias?: string;
+    audit?: string;
+  }>;
   incident_total: number;
   incidents_with_quantified_capacity: number;
   assessed_degradation: AssessedDegradation;

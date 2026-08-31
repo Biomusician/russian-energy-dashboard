@@ -932,6 +932,7 @@ export function EffectsTab(p: TabProps) {
   const sectorNow = (s: string) => (region ? region.sectors[s] ?? 0 : bundle.national.sectors[s]?.[step] ?? 0);
   const ad = bundle.snapshot.assessed_degradation;
   const econ = bundle.snapshot.economic_context;
+  const genBasis = bundle.snapshot.denominator_basis?.electric_generation_mw;
 
   return (
     <div className="tab-body">
@@ -1002,7 +1003,16 @@ export function EffectsTab(p: TabProps) {
         ) : (
           <>
             <KV k="Tracked refining base" v={`${fmtNum(bundle.snapshot.denominators.refining_mtpa, 0)} MTPA`} />
-            <KV k="Tracked generation base" v={`${bundle.snapshot.denominators.electric_generation_mw.toLocaleString("en-GB")} MW`} />
+            <KV
+              k="Tracked generation base"
+              v={
+                <>
+                  {bundle.snapshot.denominators.electric_generation_mw.toLocaleString("en-GB")} MW
+                  {genBasis ? <span style={{ color: "var(--text-faint)" }}> · {genBasis.census_vintage.split(" (")[0]} census</span> : null}
+                </>
+              }
+              hint={genBasis ? `${genBasis.source} — ${genBasis.census_vintage}. ${genBasis.known_bias ?? ""}` : undefined}
+            />
             <KV k="Heating season" v={heating ? "active (Oct–Apr)" : "out of season"} />
           </>
         )}

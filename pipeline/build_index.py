@@ -835,6 +835,24 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             "electric_generation_mw": round(denominators["national"]["electric_generation"]),
             "transmission_saturation_events": SATURATION_EVENTS,
         },
+        # A denominator without its census date is a number a reader will assume is current.
+        # WRI's Russian rows stop at commissioning year 2018 and it has no retirement field, so
+        # this one is neither current nor correctable from the sources in this repo. Stating that
+        # is a LABEL, not a score change: see docs/GENERATION_DENOMINATOR_AUDIT.md, which measures
+        # the headline's exposure to the error at +/-0.005 ESDI — below published precision.
+        "denominator_basis": {
+            "electric_generation_mw": {
+                "source": "WRI Global Power Plant Database v1.3.0",
+                "census_vintage": "2018 (newest Russian commissioning year; no retirement field)",
+                "source_frozen": "2022-01-26",
+                "known_bias": "over-counts post-2018 retirements, under-counts post-2018 additions",
+                "audit": "docs/GENERATION_DENOMINATOR_AUDIT.md",
+            },
+            "refining_mtpa": {
+                "source": "curated refinery registry (data/curated/refineries_canonical.csv)",
+                "census_vintage": "maintained per-incident; see refinery_reconciliation",
+            },
+        },
         "incident_total": len(incidents),
         "incidents_with_quantified_capacity": quantified,
         "assessed_degradation": _assessed_degradation(incidents, live, facility_info, today),
