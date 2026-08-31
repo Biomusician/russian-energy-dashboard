@@ -54,6 +54,21 @@ verified by point-in-polygon tests during the build.
 - **URL:** `raw.githubusercontent.com/wri/global-power-plant-database/master/output_database/global_power_plant_database.csv`
 - **Licence:** CC BY 4.0
 - **Coverage used:** 569 RUS + BLR plants → **432 inside the AOI**, 179,662 MW
+- **⚠ FROZEN, AND IT HAS NO STATUS FIELD.** The file's last data commit is **2022-01-26** and it
+  touched AUS/IND/USA/GBR only, so the Russian records are older still (`year_of_capacity_data`
+  is empty for 552 of 569 rows). WRI states the database is "not currently maintained". The
+  `datasets.wri.org` "last updated" date is CMS churn, not data. The pipeline is also pinned to
+  `output_database/`, which WRI's README describes as the *bleeding-edge* branch rather than the
+  vetted v1.3.0 release — immaterial while the file is frozen, but worth knowing.
+- **⚠ KNOWN DEFECT, NOT YET CORRECTED (iteration 9 finding).** Because there is no status column,
+  the AOI denominator carries plants that have since retired. Cross-checking GEM's August 2026
+  Global Integrated Power Tracker against this file for RU+BY: GEM reports **22,831 MW retired in
+  Russia** that WRI cannot distinguish from operating capacity, and the coal fleet reconciles as
+  GEM-operating 37,278 + GEM-retired 10,839 ≈ WRI 46,072 MW. Wind is the starkest gap — WRI 42 MW
+  against GEM 2,605 MW. This is a **generation-denominator correctness problem**, so it is
+  recorded here and in `POWER_SOURCE_RECONCILIATION.md` rather than silently fixed: changing the
+  denominator moves every historical ESDI value and requires a frozen replay plus an independent
+  methodology red-team (iteration 9 brief §30).
 
 Carries capacity in MW, primary fuel, commissioning year, owner, and a per-plant source
 URL — none of which OSM's `power=plant` provides reliably. Each plant record retains
@@ -237,14 +252,28 @@ in [COST_SOURCES.md](COST_SOURCES.md).
 
 ## 7. Continental pipeline network context — OpenStreetMap (ODbL), iteration 5
 
-`pipeline/build_context_network.py` collects major named `usage=transmission` oil/gas trunk
-routes (≥ 50 km) across Eurasia from **OpenStreetMap via Overpass (ODbL)**, deduplicated
-against the analytic OSM lines. These are `scope="context"` — display-only, never scored.
-**Global Energy Monitor's Global Gas/Oil Infrastructure Trackers (GGIT/GOIT, CC BY 4.0)** are
-the authoritative trackers and the cited cross-reference, but their bulk data is delivered
-behind a per-request download form with no stable CI-fetchable URL, so OSM is the automatable
-feed. Route geometry is OSM-traced (`route_quality="osm_mapped"`); cadence is monthly at most,
-not daily.
+`pipeline/build_pipeline_network.py` reconstructs canonical trunk ROUTES from
+**OpenStreetMap `type=route` + `route=pipeline` relations via Overpass (ODbL)**, assembling each
+route from its member ways before applying any length threshold. These are `scope="context"` —
+display-only, never scored. Overlap with the analytic OSM lines is MARKED (`analytic_overlap`),
+never removed, because the context toggle is independent of the analytic one in the UI.
+
+Iteration 9 replaced a way-at-a-time extraction that applied a 50 km minimum to each OSM way and
+queried four bands with a hole across 56–120°E. That cost 161,899 km of relation-member geometry
+and hid the entire West Siberian trunk corridor; see `PIPELINE_GAP_AUDIT.md` for the measurements.
+Route geometry is OSM-traced (`route_quality="osm_mapped"`); cadence is monthly at most, not
+daily.
+
+**Global Energy Monitor's GGIT (gas, November 2025) and GOIT (oil/NGL, June 2026)** are the
+authoritative trackers and remain the cited cross-reference. Their licence is **CC BY 4.0,
+verified verbatim, and permits raw redistribution with attribution** — the earlier note in this
+file that there is "no stable CI-fetchable URL" was correct about the *authoritative* download
+(a per-request form) but is not a licence limitation, and is not true of every GEM path. Two
+ungated paths exist and are deliberately NOT used: the public CDN map GeoJSON omits the
+`RouteAccuracy` field, so route quality could not be labelled honestly, and the
+`goit-ggit-pipeline-routes` GitHub repo carries no LICENSE file and contains re-imported OSM.
+See `PIPELINE_SOURCE_AUDIT.md` for the acquisition procedure and the manifest a snapshot must
+carry.
 
 ## 8. Major rivers — Natural Earth (public domain), iteration 5
 
