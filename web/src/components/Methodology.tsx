@@ -287,7 +287,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
           <H>Scope boundary</H>
           <p>
             This models publicly reported damage to energy infrastructure, aggregated to
-            administrative region. It holds no operational status for any facility, no
+            administrative region. It holds no operational status for individual FACILITIES. Major export pipelines carry publicly reported physical and commercial-flow status as dated, sourced intervals — that is public structural reporting, not a live feed., no
             vulnerability or gap assessment, and no ranking of undamaged assets. Facility
             positions are published permanent locations or administrative centroids, never
             inferred from reporting. Range-to-target data present in one upstream source is
@@ -320,6 +320,8 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
 
           <H>Sources</H>
           <ul>
+            <li>Global Energy Monitor GGIT / GOIT (CC BY 4.0) — pipeline identity and route quality cross-reference. Currently a <b>provisional live export with no release identifier</b>, not a citable quarterly release.</li>
+            <li>ENTSOG Transparency Platform — cross-border connection points and operators. Topology only; ENTSOG’s schematic diagram coordinates are never used as geography.</li>
             <li>Natural Earth 10m admin-1 boundaries — public domain</li>
             <li>WRI Global Power Plant Database v1.3 — CC BY 4.0</li>
             <li>OpenStreetMap via Overpass — ODbL</li>

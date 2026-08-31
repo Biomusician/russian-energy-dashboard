@@ -149,7 +149,7 @@ export function RouteDetail({
                 {records.map((r, i) => (
                   <div key={i} style={{ fontSize: 9.5, color: i === 0 ? "var(--text-dim)" : "var(--text-faint)", lineHeight: 1.4, paddingLeft: 2 }}>
                     {fmtInterval(r)} — {titleCase(r.status_value)}
-                    {r.source_date ? ` · source ${r.source_date}` : ""}
+                    {r.source_date ? ` · ${r.source_date === r.observed_at ? "recorded" : "source"} ${r.source_date}` : ""}
                     {r.note ? ` · ${r.note}` : ""}
                   </div>
                 ))}
@@ -288,9 +288,13 @@ export function RouteDetail({
         </div>
       )}
 
+      {/* Say precisely what this panel does and does not assert. An earlier version denied
+          reporting operational status while rendering it two sections above — the disclaimer
+          was inherited from the map's context-layer note, where it is correct. */}
       <div style={{ fontSize: 9.5, color: "var(--text-faint)", marginTop: 8, lineHeight: 1.35 }}>
-        Permanent infrastructure and publicly documented routing. Never an operational status,
-        a flow measurement, or a current condition.
+        Permanent infrastructure, publicly documented routing, and publicly reported status —
+        each dated and sourced. Status is what a source stated for the interval shown, not a
+        live reading: nothing here is measured flow, real-time condition, or capacity utilisation.
       </div>
     </div>
   );
