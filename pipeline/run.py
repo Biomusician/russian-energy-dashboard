@@ -623,7 +623,16 @@ def main():
 
 
 def _mirror_to_web():
+    """Copy the processed payload into the web bundle, and PRUNE what the pipeline no longer
+    produces. Without the prune, a file that stops being generated lingers in `web/public/data`
+    and ships forever — 1.28 MB of GEM records did exactly that, deployed and never loaded."""
     WEB_DATA.mkdir(parents=True, exist_ok=True)
+    produced = {p.name for p in PROCESSED.glob("*.json")} | {p.name for p in PROCESSED.glob("*.geojson")}
+    stale = [p for p in WEB_DATA.iterdir()
+             if p.suffix in (".json", ".geojson") and p.name not in produced]
+    for p in stale:
+        p.unlink()
+        log(f"web: pruned stale {p.name}")
     copied = 0
     for path in PROCESSED.glob("*.json"):
         shutil.copy2(path, WEB_DATA / path.name)
