@@ -74,6 +74,24 @@ def _classify(value):
     return None
 
 
+# Route names that identify a REFINED-PRODUCTS or multi-product system. OSM's `substance=oil`
+# is used loosely and is applied to product pipelines as well as crude: Exolum's "Canalización de
+# Derivados del Petróleo" ("petroleum derivatives") carries 235 members tagged `oil`, and NATO's
+# CEPS is a multi-product military network. Neither is crude oil transmission, which is what this
+# class means and what GOIT scopes. The list is deliberately short and literal — each entry is a
+# phrase that states the system carries products, not a guess from context.
+_REFINED_PRODUCT_NAME_TOKENS = (
+    "derivados del petróleo", "derivados del petroleo", "productos petrolíferos",
+    "produits pétroliers", "refined product", "products pipeline", "multiproduct",
+    "multi-product", "central europe pipeline system", "нефтепродукт",
+)
+
+
+def _is_refined_products(name):
+    n = (name or "").lower()
+    return any(t in n for t in _REFINED_PRODUCT_NAME_TOKENS)
+
+
 def _name_hint(name):
     """Last-resort substance hint from a route name. Only used when no substance tag exists
     anywhere on the relation or its members; recorded in provenance so it is auditable."""
@@ -243,12 +261,28 @@ def _route_substance(rel_tags, member_tags, name):
     Order: the relation's own tag, then a majority vote of member way tags, then a name hint.
     Returns (class, basis) so provenance can record which rule fired.
     """
+    # A system whose own name says it carries products is not crude transmission, whatever its
+    # members are tagged. Checked first so no downstream rule can override it.
+    if _is_refined_products(name):
+        return None, "refined_products_excluded"
+
     direct = _classify(rel_tags.get("substance"))
     if direct:
         return direct, "relation_substance_tag"
-    votes = collections.Counter(c for c in (_classify(t.get("substance")) for t in member_tags) if c)
-    if votes:
-        return votes.most_common(1)[0][0], "member_substance_majority"
+
+    # Vote over the RAW member substance values, not over the ones that happen to classify.
+    # Filtering first lets a refined-product system be captured by a handful of loosely-tagged
+    # members: Exolum's "Canalización de Derivados del Petróleo" has 188 members tagged `fuel`
+    # and a few tagged `oil`, and the pre-filtered vote made a Spanish products network into a
+    # crude oil trunk. If the DOMINANT tagged substance is one we exclude, the route is excluded.
+    raw = collections.Counter(
+        (t.get("substance") or "").strip().lower() for t in member_tags if t.get("substance"))
+    if raw:
+        top = raw.most_common(1)[0][0]
+        cls = _classify(top)
+        if cls:
+            return cls, "member_substance_majority"
+        return None, "member_substance_excluded"
     hint = _name_hint(name)
     if hint:
         return hint, "route_name_hint"

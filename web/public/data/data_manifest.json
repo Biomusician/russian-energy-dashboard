@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-08-31T01:46:44+00:00",
+  "build_time": "2026-08-31T01:52:07+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -24,7 +24,7 @@
     },
     {
       "name": "pipeline_network_quality.json",
-      "bytes": 817,
+      "bytes": 797,
       "optional": false
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 199776,
+      "bytes": 199756,
       "optional": false
     },
     {
@@ -69,7 +69,7 @@
     },
     {
       "name": "context_oil_network.geojson",
-      "bytes": 195723,
+      "bytes": 169467,
       "optional": true
     },
     {

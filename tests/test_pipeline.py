@@ -1892,6 +1892,47 @@ def test_oil_and_gas_are_never_conflated_and_non_hydrocarbons_are_excluded():
         assert B._classify(v) is None, f"{v!r} must not be classified as oil or gas"
 
 
+def test_refined_product_systems_never_enter_the_crude_oil_class():
+    """OSM's `substance=oil` is used loosely and covers product pipelines too.
+
+    Found in the built output: Exolum's "Canalización de Derivados del Petróleo" carries 235
+    members tagged `oil` and was classified as crude transmission — a 3,123 km Spanish products
+    network inside a Russian crude-export view. Two rules now prevent it: the substance vote runs
+    over RAW member values (so a dominant `fuel` tag excludes the route), and a name that states
+    the system carries products excludes it outright.
+    """
+    from pipeline import build_pipeline_network as B
+    ways = [[(0.0 + i * 0.3, 40.0), (0.0 + (i + 1) * 0.3, 40.0)] for i in range(20)]
+
+    # (a) name says products, members say oil -> excluded
+    rel = _relation(20, "Canalización de Derivados del Petróleo Subterránea Exolum", None, ways)
+    ids = [m["ref"] for m in rel["members"]]
+    cls, basis = B._route_substance(rel["tags"], [{"substance": "oil"}] * len(ids), rel["tags"]["name"])
+    assert cls is None and basis == "refined_products_excluded"
+
+    # (b) dominant member substance is excluded -> route excluded, not captured by a few oil tags
+    rel2 = _relation(21, "Some Products Network", None, ways)
+    tags = [{"substance": "fuel"}] * 18 + [{"substance": "oil"}] * 2
+    cls2, basis2 = B._route_substance(rel2["tags"], tags, rel2["tags"]["name"])
+    assert cls2 is None and basis2 == "member_substance_excluded"
+
+    # (c) a genuine crude route is still classified
+    rel3 = _relation(22, "Нефтепровод Дружба", None, ways)
+    cls3, _ = B._route_substance(rel3["tags"], [{"substance": "oil"}] * 20, rel3["tags"]["name"])
+    assert cls3 == "pipeline_oil"
+
+
+@pytest.mark.skipif(not (PROCESSED / "context_oil_network.geojson").exists(),
+                    reason="context network not built")
+def test_built_network_contains_no_refined_product_systems():
+    for fn in ("context_gas_network.geojson", "context_oil_network.geojson"):
+        fc = json.loads((PROCESSED / fn).read_text(encoding="utf-8"))
+        for feat in fc["features"]:
+            name = (feat["properties"].get("name") or "").lower()
+            for token in ("derivados del petr", "exolum", "central europe pipeline system"):
+                assert token not in name, f"{fn}: refined-product system leaked in — {name[:50]}"
+
+
 def test_proximity_alone_never_creates_a_connector():
     """Two segments with NO shared route identity must never be joined, however close."""
     from pipeline import build_pipeline_network as B
