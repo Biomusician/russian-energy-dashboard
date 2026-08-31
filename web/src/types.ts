@@ -240,6 +240,24 @@ export interface RecoveryEvent {
   sources: { url: string }[];
 }
 
+/** Source-coverage metrics for the CONTEXT pipeline network (iteration 9). Describes how
+ *  completely the network is sourced — topology completeness and geometry completeness are
+ *  deliberately separate numbers. Never a disruption measure; never enters ESDI. */
+export interface NetworkCoverageClass {
+  routes: number;
+  total_length_km: number;
+  single_component_routes: number;
+  multi_component_routes: number;
+  total_components: number;
+  largest_route_components: number;
+  routes_overlapping_analytic: number;
+  geometry_source: Record<string, number>;
+  route_quality: Record<string, number>;
+  substance_basis: Record<string, number>;
+}
+
+export type NetworkCoverage = Record<string, NetworkCoverageClass>;
+
 export interface AssessedDegradation {
   quantified_incident_count: number;
   total_incident_count: number;
@@ -440,6 +458,8 @@ export interface Snapshot {
   /** Complete dated recovery-evidence log. Optional: an N-1 payload served by a lagging CDN
    *  edge during a deploy predates it, and the UI degrades to "no evidence" rather than break. */
   recovery_events?: RecoveryEvent[];
+  /** Context-network source coverage (iteration 9). Optional for the same deploy-window reason. */
+  network_coverage?: NetworkCoverage;
   regions: Record<string, RegionSnapshot>;
   not_modelled: Record<string, string>;
   coverage: Coverage | null;

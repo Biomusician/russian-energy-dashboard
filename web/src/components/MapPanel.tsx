@@ -3,7 +3,7 @@ import maplibregl from "maplibre-gl";
 import type { FilterState, FlyTarget } from "../App";
 import type { Asset, Bundle, Incident } from "../types";
 import { CLASS_COLOR, ESDI_DELTA_STOPS, SEVERITY_STOPS } from "../palette";
-import { fmtDelta, fmtNum, loadContextLayer, windowRef } from "../data";
+import { displayName, fmtDelta, fmtNum, loadContextLayer, titleCase, windowRef } from "../data";
 import { iconImageId, prewarmIcons } from "../icons";
 import { AssetHoverCard } from "./AssetDetail";
 import type { CameraState } from "../urlState";
@@ -112,6 +112,34 @@ interface HoverInfo {
 
 interface ScreenLabel { name: string; x: number; y: number; size: number; kind: "country" | "sea" | "river" }
 
+/** Properties carried by a context pipeline route component. Public route attributes only —
+ *  no coordinate readout, no distance, no vulnerability measure. */
+interface RouteProps {
+  pipeline_id: string;
+  name: string | null;
+  asset_class: string;
+  operator: string | null;
+  status: string | null;
+  route_quality: string;
+  geometry_source: string;
+  substance_basis: string;
+  analytic_overlap: boolean;
+  route_length_km: number;
+  component_index: number;
+  component_count: number;
+}
+
+/** How each route-quality value should be described to a reader. Deliberately explicit that a
+ *  generalized or schematic route is NOT a surveyed line. */
+const ROUTE_QUALITY_LABEL: Record<string, string> = {
+  osm_mapped: "Mapped — traced route geometry (OpenStreetMap)",
+  osm_generalized: "Generalized — sparsely traced, approximate between vertices",
+  gem_traced: "Source-traced route geometry",
+  gem_generalized: "Generalized route — approximate, not a surveyed line",
+  topology_only: "Connection known; geographic route unresolved",
+  unresolved: "Route geometry unresolved",
+};
+
 export default function MapPanel({
   bundle, step, filters, selected, onSelect, incidentsByRegion,
   selectedAssetKey, onSelectAsset, haloByRegion, initialCamera, onCamera, flyTarget,
@@ -140,6 +168,7 @@ export default function MapPanel({
   const [assetLayersReady, setAssetLayersReady] = useState(false);
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [assetHover, setAssetHover] = useState<{ x: number; y: number; asset: Asset; alsoHere: Asset[] } | null>(null);
+  const [routeHover, setRouteHover] = useState<{ x: number; y: number; props: RouteProps } | null>(null);
   const [labels, setLabels] = useState<ScreenLabel[]>([]);
   // Lazy-loaded context layers (§16): which files we've fetched, and the rivers FC (needed
   // for the HTML label overlay, which the map source alone can't drive).
@@ -407,12 +436,22 @@ export default function MapPanel({
         },
       });
 
-      // Continental oil/gas CONTEXT network (§3-§8): trunk export/transit routes, scope
-      // "context", never scored. Deliberately subordinate — faint and thin at continental
-      // zoom, firmer on zoom-in — so the degradation surface dominates the analytic view
-      // and the trunks read at the Russia–Europe Network preset (§29). All OSM geometry is
-      // traced ("osm_mapped") and drawn solid; a route_quality="approximate" companion
-      // treatment (dashed) is reserved for a future GEM snapshot (§5). Off by default.
+      // Continental oil/gas CONTEXT network: trunk export/transit routes, scope "context",
+      // never scored. Deliberately subordinate — faint and thin at continental zoom, firmer on
+      // zoom-in — so the degradation surface dominates the analytic view.
+      //
+      // Iteration 9: these are now canonical ROUTES reconstructed from OSM relations rather
+      // than loose ways, and the layer is SELF-CONTAINED — it carries routes the analytic feed
+      // also has, because its toggle is independent. Overlap is marked, not deleted; the
+      // double-draw is handled here (see the analytic-overlap filter in the visibility effect)
+      // rather than by withholding data from the file.
+      //
+      // Dash pattern encodes ROUTE QUALITY, so an approximate route can never look mapped:
+      //   solid   osm_mapped / gem_traced     — a traced route
+      //   dashed  gem_generalized             — a generalized or endpoint-derived route
+      //   dotted  topology_only               — connection known, geographic route unresolved
+      // Only osm_mapped exists in the data today; the other cases are styled but will not
+      // appear until a source that carries them is ingested (the whole-corpus-zero rule).
       for (const [id, src, color] of [
         ["context-gas-net", "context-gas-net", CLASS_COLOR.pipeline_gas],
         ["context-oil-net", "context-oil-net", CLASS_COLOR.pipeline_oil],
@@ -432,7 +471,22 @@ export default function MapPanel({
             "line-opacity": [
               "interpolate", ["linear"], ["zoom"], 2, 0.5, 4, 0.6, 8, 0.72,
             ] as unknown as maplibregl.ExpressionSpecification,
+            "line-dasharray": [
+              "match", ["get", "route_quality"],
+              "osm_generalized", ["literal", [3, 2]],
+              "gem_generalized", ["literal", [3, 2]],
+              "topology_only", ["literal", [1, 2.5]],
+              ["literal", [1]],
+            ] as unknown as maplibregl.ExpressionSpecification,
           },
+        });
+        // Transparent wide hit target: a 1–2 px line is unhoverable at continental zoom.
+        m.addLayer({
+          id: `${id}-hit`,
+          type: "line",
+          source: src,
+          layout: { visibility: "none", "line-cap": "round", "line-join": "round" },
+          paint: { "line-color": "#000000", "line-opacity": 0, "line-width": 12 },
         });
       }
 
@@ -686,6 +740,34 @@ export default function MapPanel({
     };
   }, [ready, assetLayersReady, assetByKey, onSelectAsset, onSelect, selectedAssetKey]);
 
+  // --- context pipeline route hover (§19) ---------------------------------
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready) return;
+    const layers = ["context-gas-net-hit", "context-oil-net-hit"];
+    const move = (e: maplibregl.MapLayerMouseEvent) => {
+      const f = e.features?.[0];
+      if (!f) return;
+      m.getCanvas().style.cursor = "pointer";
+      setRouteHover({ x: e.point.x, y: e.point.y, props: f.properties as unknown as RouteProps });
+    };
+    const leave = () => { setRouteHover(null); m.getCanvas().style.cursor = ""; };
+    const present = layers.filter((l) => m.getLayer(l));
+    for (const l of present) {
+      m.on("mousemove", l, move);
+      m.on("mouseleave", l, leave);
+    }
+    const canvas = m.getCanvasContainer();
+    canvas.addEventListener("mouseleave", leave);
+    return () => {
+      for (const l of present) {
+        m.off("mousemove", l, move);
+        m.off("mouseleave", l, leave);
+      }
+      canvas.removeEventListener("mouseleave", leave);
+    };
+  }, [ready]);
+
   // Selected-asset feature-state drives the icon halo. The key encodes the feature id (index).
   useEffect(() => {
     const m = map.current;
@@ -784,13 +866,27 @@ export default function MapPanel({
       m.setFilter("asset-hit", classFilter);
     }
     m.setLayoutProperty("rivers", "visibility", filters.showRivers ? "visible" : "none");
-    m.setLayoutProperty("context-gas-net", "visibility", filters.showGasNetwork ? "visible" : "none");
-    m.setLayoutProperty("context-oil-net", "visibility", filters.showOilNetwork ? "visible" : "none");
+    // The context layer is complete on its own, so when the ANALYTIC line layer is also on the
+    // shared corridors would draw twice. Suppress the overlapping context routes in that case
+    // only — the data still contains them, and turning the analytic layer off restores them.
+    // This is the §2 rule: the frontend decides what to draw, the pipeline does not decide what
+    // to withhold.
+    const overlapFilter = filters.showLines
+      ? (["!=", ["get", "analytic_overlap"], true] as unknown as maplibregl.FilterSpecification)
+      : null;
+    for (const [id, on] of [["context-gas-net", filters.showGasNetwork],
+                            ["context-oil-net", filters.showOilNetwork]] as const) {
+      for (const layer of [id, `${id}-hit`]) {
+        if (!m.getLayer(layer)) continue;
+        m.setLayoutProperty(layer, "visibility", on ? "visible" : "none");
+        m.setFilter(layer, overlapFilter);
+      }
+    }
     if (filters.showLines) {
       m.setFilter("network", ["in", ["get", "asset_class"], ["literal", [...filters.classes]]]);
     }
   }, [ready, assetLayersReady, filters.showLines, filters.showAssets, filters.showRivers,
-      filters.showGasNetwork, filters.showOilNetwork, filters.classes]);
+      filters.showGasNetwork, filters.showOilNetwork, filters.classes, assetLayersReady]);
 
   // Lazy-load optional context layers on first toggle, then cache. Missing/late files
   // degrade to empty; the core dashboard never waits on them (§16, §35).
@@ -921,6 +1017,18 @@ export default function MapPanel({
     return [minx, miny, maxx, maxy];
   }, [bundle.snapshot.regions, regionMeta]);
 
+  // Route-quality values actually present in the built network, for the legend.
+  const routeQualities = useMemo(() => {
+    const cov = bundle.snapshot.network_coverage;
+    if (!cov) return [];
+    const seen = new Set<string>();
+    for (const [cls, v] of Object.entries(cov)) {
+      const on = cls === "pipeline_gas" ? filters.showGasNetwork : filters.showOilNetwork;
+      if (on) for (const q of Object.keys(v.route_quality ?? {})) seen.add(q);
+    }
+    return [...seen].sort();
+  }, [bundle.snapshot.network_coverage, filters.showGasNetwork, filters.showOilNetwork]);
+
   const isDelta = filters.metric === "esdi_delta_30d" || filters.metric === "esdi_delta_90d";
   const deltaSpanDays = isDelta
     ? windowRef(bundle.national.dates, step, filters.metric === "esdi_delta_30d" ? 30 : 90).actualComparisonDays
@@ -1026,6 +1134,26 @@ export default function MapPanel({
             filtered surface.
           </div>
         )}
+        {/* Route-quality key (§20). Rendered ONLY for qualities the built data actually
+            contains, and only while a network layer is on — inventing a "generalized" swatch to
+            fill out the legend would advertise a distinction the corpus does not make. */}
+        {(filters.showGasNetwork || filters.showOilNetwork) && routeQualities.length > 0 && (
+          <div style={{ marginTop: 7, borderTop: "1px solid var(--line)", paddingTop: 6 }}>
+            <div className="eyebrow" style={{ marginBottom: 4 }}>Pipeline route geometry</div>
+            {routeQualities.map((q) => (
+              <div key={q} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                <svg width="20" height="6" style={{ flex: "0 0 auto" }} aria-hidden="true">
+                  <line x1="0" y1="3" x2="20" y2="3" stroke="var(--text-dim)" strokeWidth="1.6"
+                        strokeDasharray={q === "gem_generalized" || q === "osm_generalized" ? "4 2" : q === "topology_only" ? "1 2" : undefined} />
+                </svg>
+                <span style={{ fontSize: 9.5, color: "var(--text-faint)", lineHeight: 1.3 }}>
+                  {ROUTE_QUALITY_LABEL[q] ?? q}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* The halo is the loudest mark on the map and was the only channel with no key. */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 7, borderTop: "1px solid var(--line)", paddingTop: 6 }}>
           <span style={{ width: 14, height: 14, borderRadius: "50%", border: "1px solid #f0534a", background: "rgba(240,83,74,0.14)", flex: "0 0 auto" }} />
@@ -1039,7 +1167,7 @@ export default function MapPanel({
         </div>
       </div>
 
-      {hover && (
+      {hover && !assetHover && !routeHover && (
         <div className="map-hover" style={{ left: hover.x, top: hover.y, borderColor: hover.special ? "#a98bfa" : undefined }}>
           <div style={{ fontSize: 12 }}>{hover.name}</div>
           <div className="eyebrow" style={{ marginTop: 2 }}>{hover.district}</div>
@@ -1072,6 +1200,11 @@ export default function MapPanel({
         </div>
       )}
 
+      {/* Card precedence: the most specific thing under the cursor wins. All three layers fire
+          their own mousemove, so without this a region, a route and an asset card stack on top
+          of one another at the same point. */}
+      {routeHover && !assetHover && <RouteHoverCard {...routeHover} />}
+
       {assetHover && (
         <AssetHoverCard
           asset={assetHover.asset}
@@ -1081,6 +1214,47 @@ export default function MapPanel({
           alsoHere={assetHover.alsoHere}
         />
       )}
+    </div>
+  );
+}
+
+/** Context pipeline route detail (§19). Public route attributes only: name, commodity, status,
+ *  operator, and — importantly — how good the drawn geometry actually is. Never a coordinate,
+ *  a distance, a range, or any measure of consequence. */
+function RouteHoverCard({ x, y, props }: { x: number; y: number; props: RouteProps }) {
+  const color = CLASS_COLOR[props.asset_class] ?? "#5b6b78";
+  const commodity = props.asset_class === "pipeline_oil" ? "Crude oil / liquids" : "Natural gas";
+  const fragmented = Number(props.component_count) > 1;
+  return (
+    <div className="map-hover" style={{ left: x, top: y, borderColor: color, maxWidth: 258 }}>
+      <div style={{ fontSize: 12, lineHeight: 1.25 }}>{displayName(props.name) || "Unnamed route"}</div>
+      <div className="eyebrow" style={{ marginTop: 3 }}>{commodity} · context route</div>
+      <div className="kv"><span className="k">Route length</span>
+        <span className="v">{fmtNum(props.route_length_km, 0)} km</span></div>
+      {props.operator && (
+        <div className="kv"><span className="k">Operator</span><span className="v">{props.operator}</span></div>
+      )}
+      {props.status && (
+        <div className="kv"><span className="k">Status</span><span className="v">{titleCase(props.status)}</span></div>
+      )}
+      <div className="kv"><span className="k">Geometry</span>
+        <span className="v" style={{ fontSize: 10 }}>
+          {props.geometry_source === "osm_relation" ? "OSM route relation" : "OSM named ways"}
+        </span></div>
+      <div style={{ fontSize: 10, color: "var(--text-dim)", marginTop: 5, lineHeight: 1.4 }}>
+        {ROUTE_QUALITY_LABEL[props.route_quality] ?? props.route_quality}
+      </div>
+      {fragmented && (
+        // Say plainly that the drawn piece is part of a route with unmapped gaps, rather than
+        // letting a reader assume the corridor simply ends here.
+        <div style={{ fontSize: 10, color: "var(--amber)", marginTop: 4, lineHeight: 1.4 }}>
+          Drawn in {props.component_count} pieces — the gaps are unmapped in the source, not
+          breaks in the pipeline.
+        </div>
+      )}
+      <div style={{ fontSize: 9.5, color: "var(--text-faint)", marginTop: 5, lineHeight: 1.35 }}>
+        Geographic context only — never scored, and not an operational status.
+      </div>
     </div>
   );
 }

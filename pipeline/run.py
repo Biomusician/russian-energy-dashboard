@@ -14,7 +14,8 @@ import collections
 import datetime as dt
 import shutil
 
-from pipeline import build_assets, build_context, build_context_network, build_index
+from pipeline import build_assets, build_context, build_index, build_pipeline_network
+from pipeline import fetch_osm, fetch_osm_pipelines
 from pipeline.config import (
     ANALYTIC_CONCEPTS, ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, EVIDENCE_KINDS,
     OPTIONAL_CONTEXT_FILES, PROCESSED, SCHEMA_VERSION, SECTOR_OF_CLASS, SECTORS,
@@ -23,7 +24,7 @@ from pipeline.config import (
 from pipeline.fetch_refineries import build as build_refineries
 from pipeline.fetch_wikipedia import build as build_wikipedia
 from pipeline.recovery import load_recovery_records
-from pipeline.util import fetch_json, log, read_csv, write_json
+from pipeline.util import fetch_json, log, read_csv, read_json, write_json
 
 COVERAGE_PAGE = "2025%E2%80%932026_Russian_fuel_crisis"
 COVERAGE_URL = "https://en.wikipedia.org/wiki/2025%E2%80%932026_Russian_fuel_crisis"
@@ -449,10 +450,25 @@ def main():
     assets, lines, region_meta = build_assets.build()
     assets += load_asset_supplement(region_meta)  # curated LNG etc., admin-region precision
     build_context.build()  # surrounding countries, borders, ocean, rivers — display only
-    # Continental oil/gas trunk CONTEXT network (§3-§8): a SEPARATE path, scope=context,
-    # deduped against the analytic OSM lines by way id, never scored.
+    # Continental oil/gas trunk CONTEXT network: a SEPARATE path, scope=context, never scored.
+    #
+    # Iteration 9 replaced the way-at-a-time builder with relation-aware reconstruction. The old
+    # one asked "is this OSM way 50 km long?" of each fragment of a trunk line and deleted
+    # anything the analytic feed also carried, which cost 161,899 km of route geometry and hid
+    # the Russian backbone whenever the analytic layer was off (docs/PIPELINE_GAP_AUDIT.md).
+    # Overlap with the analytic feed is now MARKED, not removed — the context layer has to stand
+    # on its own because its toggle is independent in the UI.
     analytic_osm_ids = {f["properties"].get("osm_id") for f in lines if f["properties"].get("osm_id")}
-    ctx_net = build_context_network.build(analytic_osm_ids)
+    osm_pipes = fetch_osm_pipelines.fetch_all()
+    # Named trunk ways that belong to no relation still deserve a route. Re-reading the analytic
+    # OSM fetch is free (it is served from the same on-disk cache build_assets just used).
+    osm_ways = fetch_osm.fetch_all()
+    ctx_net = build_pipeline_network.build(
+        relations=osm_pipes["relations"],
+        member_tags=osm_pipes["member_tags"],
+        way_elements=osm_ways.get("pipeline_gas", []) + osm_ways.get("pipeline_oil", []),
+        analytic_osm_ids=analytic_osm_ids,
+    )
     wiki_facilities, wiki_incidents, wiki_warnings = build_wikipedia()
     refineries, refining_total, refinery_reconciliation = build_refineries()
     curated = load_curated_incidents()
@@ -528,6 +544,14 @@ def main():
     # Source-backed observed effects (§25-28), keyed to incidents in the AOI universe.
     snapshot["strategic_effects"] = load_effects({i["incident_id"] for i in in_aoi})
     snapshot["facet_counts"] = _facet_counts(assets, lines, incidents, snapshot, ctx_net)
+
+    # Network SOURCE COVERAGE (iteration 9, §21). Deliberately in the snapshot rather than a
+    # separate fetch: it is small, and it belongs next to the other "how good is the evidence"
+    # metadata. This describes how completely the CONTEXT network is sourced — it is not a
+    # disruption measure and never enters ESDI.
+    quality_path = PROCESSED / "pipeline_network_quality.json"
+    if quality_path.exists():
+        snapshot["network_coverage"] = read_json(quality_path)
 
     # Coverage is computed AFTER facet_counts/recovery_stats exist — the matrix reads them.
     oil_benchmark, coverage_matrix = _build_coverage(in_aoi, coverage, snapshot)

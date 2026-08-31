@@ -5,6 +5,7 @@ cross, and the cheapest way to keep a future change from drifting over it is to 
 the build when it does.
 """
 
+import csv
 import datetime as dt
 import json
 import re
@@ -1790,6 +1791,346 @@ def test_context_route_facet_kept_separate_from_analytic_lines():
     assert "context_route_class" in fc and fc["context_route_class"], "context routes must be counted"
     # the two counts are distinct dimensions
     assert fc["line_class"].get("pipeline_gas", 0) != fc["context_route_class"].get("pipeline_gas")
+
+
+
+# --------------------------------------------------------------------------
+# Iteration 9: relation-aware pipeline reconstruction
+# --------------------------------------------------------------------------
+# The defect these pin: the old builder applied a 50 km minimum to each OSM WAY, so a trunk line
+# split into many short ways scored zero and vanished. docs/PIPELINE_GAP_AUDIT.md measured
+# 161,899 km of relation-member geometry missing from the shipped output as a result.
+
+def _way(coords):
+    return [{"lon": x, "lat": y} for x, y in coords]
+
+
+def _relation(rid, name, substance, ways, member_ids=None):
+    ids = member_ids or list(range(1000 + rid * 100, 1000 + rid * 100 + len(ways)))
+    return {
+        "id": rid, "type": "relation",
+        "tags": {"type": "route", "route": "pipeline", "name": name, **({"substance": substance} if substance else {})},
+        "members": [{"type": "way", "ref": i, "role": "", "geometry": _way(w)}
+                    for i, w in zip(ids, ways)],
+    }
+
+
+def test_long_route_of_short_ways_survives_the_trunk_threshold():
+    """A 500 km trunk composed of many sub-50 km ways must be RETAINED.
+
+    This is the exact case the old per-way filter destroyed: 65 named routes vanished although
+    their members totalled well over the threshold.
+    """
+    from pipeline import build_pipeline_network as B
+    # 25 contiguous ways of ~0.2 deg lon each at 55N -> ~320 km total, no single way near 50 km
+    ways = [[(30.0 + i * 0.2, 55.0), (30.0 + (i + 1) * 0.2, 55.0)] for i in range(25)]
+    for w in ways:
+        assert B._length_km(w) < B.MIN_TRUNK_KM, "fixture must use sub-threshold members"
+    routes, _ = B.build_routes([_relation(1, "Test Trunk", "gas", ways)], {})
+    assert len(routes) == 1, "a long route of short ways must survive"
+    assert routes[0]["length_km"] >= B.MIN_TRUNK_KM
+    assert routes[0]["member_count"] == 25
+
+
+def test_relation_members_are_stitched_into_one_ordered_component():
+    from pipeline import build_pipeline_network as B
+    ways = [[(30.0 + i * 0.2, 55.0), (30.0 + (i + 1) * 0.2, 55.0)] for i in range(25)]
+    routes, _ = B.build_routes([_relation(2, "Contiguous", "gas", ways)], {})
+    assert len(routes[0]["components"]) == 1, "contiguous members must form ONE component"
+    coords = routes[0]["components"][0]
+    xs = [c[0] for c in coords]
+    assert xs == sorted(xs), "the stitched component must be ordered along the route"
+
+
+def test_members_supplied_out_of_order_and_reversed_still_stitch():
+    """OSM member order and way direction are not guaranteed."""
+    from pipeline import build_pipeline_network as B
+    ways = [[(30.0 + i * 0.2, 55.0), (30.0 + (i + 1) * 0.2, 55.0)] for i in range(25)]
+    ways[5].reverse()
+    ways[11].reverse()
+    shuffled = ways[7:] + ways[:7]
+    routes, _ = B.build_routes([_relation(3, "Jumbled", "gas", shuffled)], {})
+    assert len(routes[0]["components"]) == 1
+
+
+def test_unnamed_short_members_inherit_identity_from_the_relation():
+    """A member way needs no name of its own; the route carries the identity."""
+    from pipeline import build_pipeline_network as B
+    ways = [[(40.0 + i * 0.3, 60.0), (40.0 + (i + 1) * 0.3, 60.0)] for i in range(20)]
+    rel = _relation(4, "Named Only On The Relation", "oil", ways)
+    routes, _ = B.build_routes([rel], {})          # NO member tags supplied at all
+    assert len(routes) == 1
+    assert routes[0]["canonical_name"] == "Named Only On The Relation"
+    assert routes[0]["asset_class"] == "pipeline_oil"
+
+
+def test_substance_falls_back_to_member_tags_then_name():
+    from pipeline import build_pipeline_network as B
+    ways = [[(40.0 + i * 0.3, 60.0), (40.0 + (i + 1) * 0.3, 60.0)] for i in range(20)]
+    rel = _relation(5, "No Substance Here", None, ways)
+    ids = [m["ref"] for m in rel["members"]]
+    # member majority decides
+    routes, _ = B.build_routes([rel], {i: {"substance": "gas"} for i in ids})
+    assert routes[0]["asset_class"] == "pipeline_gas"
+    assert routes[0]["substance_basis"] == "member_substance_majority"
+    # with no tags anywhere, a Russian-language name still resolves it
+    rel2 = _relation(6, "Магистральный нефтепровод Тест", None, ways)
+    routes2, _ = B.build_routes([rel2], {})
+    assert routes2[0]["asset_class"] == "pipeline_oil"
+    assert routes2[0]["substance_basis"] == "route_name_hint"
+
+
+def test_oil_and_gas_are_never_conflated_and_non_hydrocarbons_are_excluded():
+    from pipeline import build_pipeline_network as B
+    assert B._classify("gas") == "pipeline_gas"
+    assert B._classify("natural_gas") == "pipeline_gas"
+    assert B._classify("oil") == "pipeline_oil"
+    assert B._classify("crude oil") == "pipeline_oil"
+    # neither class: refined products, and everything that merely contains a token
+    for v in ("fuel", "water", "sewage", "steam", "ethylene", "hydrogen", "carbon_dioxide",
+              "hot_water", "gasoline", "biogas", ""):
+        assert B._classify(v) is None, f"{v!r} must not be classified as oil or gas"
+
+
+def test_refined_product_systems_never_enter_the_crude_oil_class():
+    """OSM's `substance=oil` is used loosely and covers product pipelines too.
+
+    Found in the built output: Exolum's "Canalización de Derivados del Petróleo" carries 235
+    members tagged `oil` and was classified as crude transmission — a 3,123 km Spanish products
+    network inside a Russian crude-export view. Two rules now prevent it: the substance vote runs
+    over RAW member values (so a dominant `fuel` tag excludes the route), and a name that states
+    the system carries products excludes it outright.
+    """
+    from pipeline import build_pipeline_network as B
+    ways = [[(0.0 + i * 0.3, 40.0), (0.0 + (i + 1) * 0.3, 40.0)] for i in range(20)]
+
+    # (a) name says products, members say oil -> excluded
+    rel = _relation(20, "Canalización de Derivados del Petróleo Subterránea Exolum", None, ways)
+    ids = [m["ref"] for m in rel["members"]]
+    cls, basis = B._route_substance(rel["tags"], [{"substance": "oil"}] * len(ids), rel["tags"]["name"])
+    assert cls is None and basis == "refined_products_excluded"
+
+    # (b) dominant member substance is excluded -> route excluded, not captured by a few oil tags
+    rel2 = _relation(21, "Some Products Network", None, ways)
+    tags = [{"substance": "fuel"}] * 18 + [{"substance": "oil"}] * 2
+    cls2, basis2 = B._route_substance(rel2["tags"], tags, rel2["tags"]["name"])
+    assert cls2 is None and basis2 == "member_substance_excluded"
+
+    # (c) a genuine crude route is still classified
+    rel3 = _relation(22, "Нефтепровод Дружба", None, ways)
+    cls3, _ = B._route_substance(rel3["tags"], [{"substance": "oil"}] * 20, rel3["tags"]["name"])
+    assert cls3 == "pipeline_oil"
+
+
+@pytest.mark.skipif(not (PROCESSED / "context_oil_network.geojson").exists(),
+                    reason="context network not built")
+def test_built_network_contains_no_refined_product_systems():
+    for fn in ("context_gas_network.geojson", "context_oil_network.geojson"):
+        fc = json.loads((PROCESSED / fn).read_text(encoding="utf-8"))
+        for feat in fc["features"]:
+            name = (feat["properties"].get("name") or "").lower()
+            for token in ("derivados del petr", "exolum", "central europe pipeline system"):
+                assert token not in name, f"{fn}: refined-product system leaked in — {name[:50]}"
+
+
+def test_proximity_alone_never_creates_a_connector():
+    """Two segments with NO shared route identity must never be joined, however close."""
+    from pipeline import build_pipeline_network as B
+    a = [(30.0, 55.0), (31.0, 55.0)]
+    b = [(31.00001, 55.0), (32.0, 55.0)]          # ~1 m away, but a different relation
+    r1, _ = B.build_routes([_relation(7, "A", "gas", [a] * 1 + [[(30.0, 55.0), (30.9, 55.0)]])], {})
+    chains = B.stitch([a, b])
+    assert len(chains) == 2, "stitch() must not join on proximity — only exact shared endpoints"
+
+
+def test_weld_closes_only_tiny_same_route_gaps_and_records_them():
+    from pipeline import build_pipeline_network as B
+    a = [(30.0, 55.0), (31.0, 55.0)]
+    near = [(31.0005, 55.0), (32.0, 55.0)]        # ~32 m — same route, unsnapped node
+    far = [(35.0, 55.0), (36.0, 55.0)]            # ~250 km away — a real gap
+    chains, welds, max_km = B.weld([a, near, far])
+    assert welds == 1, "only the sub-tolerance gap may be welded"
+    assert max_km <= B.WELD_TOLERANCE_KM
+    assert len(chains) == 2, "the real gap must remain a visible gap"
+
+
+def test_weld_never_exceeds_its_tolerance():
+    from pipeline import build_pipeline_network as B
+    a = [(30.0, 55.0), (31.0, 55.0)]
+    b = [(31.5, 55.0), (32.0, 55.0)]              # ~32 km apart
+    chains, welds, _ = B.weld([a, b])
+    assert welds == 0 and len(chains) == 2
+
+
+def test_simplify_measures_distance_to_the_segment_not_the_infinite_line():
+    """GIS red-team finding: DP with a point-to-LINE metric erases excursions.
+
+    When a chain's two anchors are close together, every interior point lies on the infinite
+    line through them, scores ~0, and is deleted — collapsing the chain below two points, where
+    it is dropped entirely. On the real corpus that silently erased 690 components / 216 km,
+    including 25.7 km of Уренгой — Петровск drawn as an 80 m stub.
+    """
+    from pipeline import build_pipeline_network as B
+    # A point 10 units beyond a 0.001-long segment: on the LINE, far from the SEGMENT.
+    assert B._segment_distance((10, 0), (0, 0), (0.001, 0)) > 9.9
+    # An out-and-back excursion must survive simplification rather than collapse.
+    pts = [(0.0, 0.0), (0.5, 0.0), (1.0, 0.0), (0.5, 0.0), (0.001, 0.0)]
+    assert len(B._simplify(pts, 0.01)) >= 3
+
+
+def test_stitch_stops_at_junctions_so_parallel_strings_are_not_overlaid():
+    """A node where 3+ ways meet is a branch. Walking through it arbitrarily can run out along
+    one string and back along its twin, drawing one LineString on top of itself."""
+    from pipeline import build_pipeline_network as B
+    trunk = [(0.0, 0.0), (1.0, 0.0)]
+    branch_a = [(1.0, 0.0), (2.0, 0.5)]
+    branch_b = [(1.0, 0.0), (2.0, -0.5)]
+    chains = B.stitch([trunk, branch_a, branch_b])
+    assert len(chains) == 3, "a Y-junction must yield three edge-disjoint paths, not one folded line"
+    for c in chains:
+        assert len(c) == 2
+
+
+def test_generic_descriptive_names_never_become_routes():
+    """"перемычка" (jumper) and "лупинг" (loop) are common nouns. Grouping every way carrying
+    one into a single 'route' fabricated a 153-component entity spanning 2,934 km."""
+    from pipeline import build_pipeline_network as B
+    for generic in ("перемычка", "лупинг", "отвод", "loop", "Branch", "  нитка  "):
+        assert B._is_generic_name(generic), f"{generic!r} must be rejected as an identity"
+    for real in ("Уренгой — Помары — Ужгород", "Дружба", "Nord Stream", "Ямал — Европа"):
+        assert not B._is_generic_name(real), f"{real!r} is a real route name"
+
+
+def test_named_way_routes_are_never_welded():
+    """Welding is justified by shared RELATION membership — OSM asserting one pipeline. A shared
+    name string is not that assertion, so the named-way path must not weld across gaps."""
+    src = (ROOT / "pipeline" / "build_pipeline_network.py").read_text(encoding="utf-8")
+    body = src.split("def build_named_way_routes")[1].split("\ndef ")[0]
+    assert "weld(" not in body, "the named-way path must not weld"
+
+
+def test_route_quality_is_measured_from_source_density_not_asserted():
+    """OSM ships 5,387-vertex corridors and 3-point placeholders under identical tags. Labelling
+    both 'mapped' asserts a confidence the geometry does not have."""
+    from pipeline import build_pipeline_network as B
+    dense = [[(30.0 + i * 0.01, 55.0) for i in range(400)]]          # ~0.6 km spacing
+    sparse = [[(30.0, 55.0), (60.0, 55.0), (90.0, 55.0)]]            # ~1000 km spacing
+    assert B._measured_quality(dense)[0] == "osm_mapped"
+    assert B._measured_quality(sparse)[0] == "topology_only"
+    mid = [[(30.0 + i * 0.3, 55.0) for i in range(40)]]              # ~19 km spacing
+    assert B._measured_quality(mid)[0] == "osm_generalized"
+
+
+@pytest.mark.skipif(not (PROCESSED / "pipeline_network_quality.json").exists(),
+                    reason="context network not built")
+def test_network_length_distinguishes_sum_of_routes_from_distinct_network():
+    """OSM models some systems as a superroute PLUS its child relations, so summing route
+    lengths counts shared pipe twice. Publishing only the sum overstated the network ~13%."""
+    q = json.loads((PROCESSED / "pipeline_network_quality.json").read_text(encoding="utf-8"))
+    for cls in ("pipeline_gas", "pipeline_oil"):
+        v = q[cls]
+        assert v["distinct_network_km"] <= v["total_length_km"]
+        # drawn geometry is always shorter than the source it was simplified from
+        assert v["drawn_length_km"] <= v["total_length_km"]
+        assert "welds" in v and "max_weld_km" in v, "weld provenance must be published"
+        assert v["max_weld_km"] <= 0.1 + 1e-9
+
+
+def test_simplification_preserves_endpoints():
+    from pipeline import build_pipeline_network as B
+    pts = [(30.0 + i * 0.01, 55.0 + (0.02 if i % 2 else 0.0)) for i in range(200)]
+    simp = B._simplify(pts, 0.04)
+    assert tuple(simp[0]) == pts[0] and tuple(simp[-1]) == pts[-1]
+    assert len(simp) < len(pts)
+
+
+def test_context_route_is_not_dropped_for_overlapping_the_analytic_feed():
+    """The context layer must stand alone: its toggle is independent of the analytic layer.
+
+    The old builder deleted 17,535 km of trunk — Druzhba, Urengoy–Pomary–Uzhhorod — from the
+    context network purely because the analytic feed also carried those ways, so enabling
+    "Gas pipelines" without "Grid & pipeline network" showed no Russian backbone.
+    """
+    from pipeline import build_pipeline_network as B
+    ways = [[(40.0 + i * 0.3, 60.0), (40.0 + (i + 1) * 0.3, 60.0)] for i in range(20)]
+    rel = _relation(8, "Overlaps Analytic", "gas", ways)
+    ids = [m["ref"] for m in rel["members"]]
+    routes, _ = B.build_routes([rel], {}, analytic_osm_ids=set(ids))
+    assert len(routes) == 1, "an overlapping route must be KEPT, not deleted"
+    assert routes[0]["analytic_overlap"] is True, "overlap must be MARKED so the UI can dedupe"
+
+
+@pytest.mark.skipif(not (PROCESSED / "context_gas_network.geojson").exists(),
+                    reason="context network not built")
+def test_built_context_network_carries_route_identity_and_provenance():
+    for fn in ("context_gas_network.geojson", "context_oil_network.geojson"):
+        fc = json.loads((PROCESSED / fn).read_text(encoding="utf-8"))
+        assert fc["features"], f"{fn} must not be empty"
+        for feat in fc["features"]:
+            p = feat["properties"]
+            assert p["pipeline_id"], "every component must carry its canonical route id"
+            assert p["geometry_source"] in ("osm_relation", "osm_named_ways")
+            assert p["substance_basis"] in (
+                "relation_substance_tag", "member_substance_majority",
+                "route_name_hint", "way_substance_tag")
+            assert isinstance(p["analytic_overlap"], bool)
+            # A component index must be consistent with its route's component count.
+            assert 0 <= p["component_index"] < p["component_count"]
+
+
+def test_curated_pipeline_topology_is_sourced_and_carries_no_geometry():
+    """Published connection facts are TOPOLOGY, never a licence to draw a route.
+
+    Each row asserts that two named systems meet at a named point, with a source. The file must
+    contain no coordinates of any kind: 'topology known' and 'geometry known' are different
+    states, and a schematic operator map is schematic topology.
+    """
+    path = ROOT / "data" / "curated" / "pipeline_topology.csv"
+    if not path.exists():
+        pytest.skip("topology file not present")
+    rows = list(csv.DictReader(path.read_text(encoding="utf-8").splitlines()))
+    assert rows, "topology file must not be empty"
+    banned = {"lat", "lon", "latitude", "longitude", "coordinates", "geometry", "wkt",
+              "distance_km", "bearing"}
+    assert not (set(rows[0]) & banned), "topology rows must carry no geometry"
+    for r in rows:
+        assert r["subject"] and r["object"], "every assertion needs both ends"
+        assert r["substance"] in ("gas", "oil"), f"bad substance {r['substance']!r}"
+        assert r["source_url"].startswith("http"), f"unsourced assertion: {r['subject']}"
+        assert r["source_quality"] in (
+            "operator_primary", "tso_primary", "secondary_citing_operator",
+            "secondary_citing_tso", "secondary", "encyclopedic",
+        ), f"unknown source tier {r['source_quality']!r}"
+
+
+def test_topology_assertions_are_not_used_to_synthesise_route_geometry():
+    """Guard the Type-C rule: a known connection must never become a drawn line.
+
+    If a future change starts reading the topology file inside the network builder, this fails —
+    the honest treatment is a dossier/hover disclosure or an explicitly schematic style, never a
+    straight line pretending to be a pipe.
+    """
+    src = (ROOT / "pipeline" / "build_pipeline_network.py").read_text(encoding="utf-8")
+    assert "pipeline_topology" not in src, (
+        "the geometry builder must not consume curated topology assertions — "
+        "topology known is not geometry known"
+    )
+
+
+@pytest.mark.skipif(not (PROCESSED / "pipeline_network_quality.json").exists(),
+                    reason="context network not built")
+def test_network_quality_report_separates_topology_from_geometry():
+    q = json.loads((PROCESSED / "pipeline_network_quality.json").read_text(encoding="utf-8"))
+    for cls in ("pipeline_gas", "pipeline_oil"):
+        v = q[cls]
+        assert v["routes"] > 0
+        # continuity is reported, not asserted away: a fragmented route stays fragmented
+        assert v["single_component_routes"] + v["multi_component_routes"] == v["routes"]
+        assert v["total_components"] >= v["routes"]
+        # route_quality must never claim more than the source supports. osm_generalized and
+        # topology_only are MEASURED from source vertex density, not asserted.
+        assert set(v["route_quality"]) <= {"osm_mapped", "osm_generalized", "gem_traced",
+                                           "gem_generalized", "topology_only", "unresolved"}
 
 
 def test_context_network_files_are_declared_optional_and_lazy():
