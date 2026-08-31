@@ -1,0 +1,30 @@
+canonical_pipeline_id,source_system,source_id,relationship,confidence,evidence,source_native
+NORTHERN_LIGHTS,osm_relation,8197671,aggregates,exact,Relation is the multi-string system; contains 12 child routes by measured member containment,Сияние Севера
+UKHTA_TORZHOK_1,osm_relation,17195755,represents,exact,Relation name is the string number exactly,Ухта — Торжок 1
+UKHTA_TORZHOK_1,osm_relation,17187562,represents,strong,Same string modelled with its real endpoints; operator sources end this route at Gryazovets,Ухта — Торжок (Ухта — Грязовец)
+UKHTA_TORZHOK_2,osm_relation,17195757,represents,exact,Relation name is the string number exactly,Ухта — Торжок 2
+UKHTA_TORZHOK_2,osm_relation,17187563,represents,strong,Same string; the (Ямал) qualifier is the Mega-Yamal alias,Ухта — Торжок 2 (Ямал)
+UKHTA_TORZHOK_3,osm_relation,17195758,represents,exact,Relation name is the string number exactly,Ухта — Торжок 3
+BOVANENKOVO_UKHTA_1,osm_relation,8197672,represents,exact,Relation name is the string number exactly,Бованенково — Ухта 1
+BOVANENKOVO_UKHTA_2,osm_relation,17153616,represents,exact,Relation name is the string number exactly,Бованенково — Ухта 2
+YAMAL_EUROPE,osm_relation,8197673,represents,exact,Belarusian-language name of the same export trunk,Ямал — Еўропа
+YAMAL_EUROPE,osm_relation,13766932,aggregates,strong,Superroute spanning the full Yamal-to-Lubmin corridor; contains Bovanenkovo-Ukhta children,Yamal — Lubmin
+SRTO_TORZHOK,osm_relation,17192148,represents,exact,Relation name matches canonical name exactly,СРТО — Торжок
+URENGOY_POMARY_UZHHOROD,osm_relation,8198213,represents,exact,Relation name matches canonical name exactly,Уренгой — Помары — Ужгород
+NORD_STREAM_1,osm_relation,16489839,represents,exact,Relation name matches canonical name exactly,Nord Stream 1
+NORD_STREAM_2,osm_relation,16489915,represents,exact,Relation name matches canonical name exactly,Nord Stream 2
+TURKSTREAM,osm_relation,11700013,represents,exact,Relation name matches canonical name exactly,TurkStream
+BLUE_STREAM,osm_relation,8214463,represents,exact,Relation name matches canonical name exactly,Blue Stream
+POWER_OF_SIBERIA,osm_relation,14262534,represents,exact,Relation name matches canonical name exactly,Сила Сибири
+DRUZHBA,osm_relation,8198211,part_of,strong,One of two relations named Druzhba; corridor-level parent holds both,Дружба
+DRUZHBA,osm_relation,8214264,part_of,strong,One of two relations named Druzhba; corridor-level parent holds both,Дружба
+ESPO,osm_relation,8199712,aggregates,exact,Relation spans Taishet to Kozmino i.e. both ESPO-1 and ESPO-2,Восточная Сибирь - Тихий океан
+SURGUT_POLOTSK,osm_relation,8203889,represents,exact,Bilingual relation name matches canonical name,Нефтепровод «Сургут – Полоцк»
+OMSK_IRKUTSK,osm_relation,8199928,represents,exact,Relation name matches canonical name exactly,Магистральный нефтепровод Омск - Иркутск
+BOTAS_NETWORK,osm_relation,1690067,aggregates,exact,National transmission network modelled as one relation; NOT a single physical pipeline,BOTAŞ Doğal Gaz Boru Hatları
+BUKHARA_URAL,osm_relation,8208125,part_of,strong,Trilingual relation covering line 1 of the two-line corridor,Buxoro — Ural 1
+GRYAZOVETS_VYBORG,osm_relation,8197668,aggregates,exact,String 1 of the two-string feeder,Грязовец — Выборг 1
+GRYAZOVETS_VYBORG,osm_relation,17615440,aggregates,exact,String 2 of the two-string feeder,Грязовец — Выборг 2
+CPC,gem_goit,P0646,represents,strong,Tengiz->Novorossiysk-2 terminal and the CPC shareholder list; see review RV-005,Caspian Pipeline
+SURGUT_POLOTSK,gem_goit,P2428,represents,strong,"Endpoints Surgut->Polotsk, Transneft 100%; GEM names it through Gorky; see review RV-006",Surgut-Gorky-Polotsk Oil Pipeline
+UKHTA_TORZHOK_2,gem_ggit,P1439,represents,strong,"Operating, Ukhta->Gryazovets; GEM '(Yamal) 2' qualifier; see review RV-007",Ukhta-Torzhok (Yamal) 2 Gas Pipeline

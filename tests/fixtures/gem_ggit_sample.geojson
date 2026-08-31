@@ -1,0 +1,207 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "ProjectID": "P0001",
+    "PipelineName": "Test Traced Trunk",
+    "SegmentName": null,
+    "Status": "operating",
+    "Fuel": "Gas",
+    "CountriesOrAreas": "Russia",
+    "Owner": "Gazprom",
+    "Parent": "Gazprom",
+    "StartLocation": "A",
+    "StartCountryOrArea": "Russia",
+    "EndLocation": "B",
+    "EndCountryOrArea": "Russia",
+    "LengthKnownKm": "900",
+    "Capacity": "30",
+    "CapacityUnits": "bcm/y",
+    "RouteAccuracy": "high",
+    "RouteType": "Mapped route (at any accuracy)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      37.0,
+      55.0
+     ],
+     [
+      38.0,
+      55.5
+     ],
+     [
+      39.0,
+      56.0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "ProjectID": "P0002",
+    "PipelineName": "Test Medium Route",
+    "SegmentName": null,
+    "Status": "operating",
+    "Fuel": "Gas",
+    "CountriesOrAreas": "Russia",
+    "Owner": "Gazprom",
+    "Parent": "Gazprom",
+    "StartLocation": "A",
+    "StartCountryOrArea": "Russia",
+    "EndLocation": "B",
+    "EndCountryOrArea": "Russia",
+    "LengthKnownKm": "400",
+    "Capacity": "--",
+    "CapacityUnits": "bcm/y",
+    "RouteAccuracy": "medium",
+    "RouteType": "Mapped route (at any accuracy)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      40.0,
+      56.0
+     ],
+     [
+      42.0,
+      57.0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "ProjectID": "P0003",
+    "PipelineName": "Test Low Route",
+    "SegmentName": null,
+    "Status": "operating",
+    "Fuel": "Gas",
+    "CountriesOrAreas": "Russia",
+    "Owner": "Gazprom",
+    "Parent": "Gazprom",
+    "StartLocation": "A",
+    "StartCountryOrArea": "Russia",
+    "EndLocation": "B",
+    "EndCountryOrArea": "Russia",
+    "LengthKnownKm": "--",
+    "Capacity": "--",
+    "CapacityUnits": "bcm/y",
+    "RouteAccuracy": "low",
+    "RouteType": "Mapped route (at any accuracy)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      44.0,
+      57.0
+     ],
+     [
+      46.0,
+      58.0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "ProjectID": "P0004",
+    "PipelineName": "Test Schematic",
+    "SegmentName": null,
+    "Status": "operating",
+    "Fuel": "Gas",
+    "CountriesOrAreas": "Russia",
+    "Owner": "Gazprom",
+    "Parent": "Gazprom",
+    "StartLocation": "A",
+    "StartCountryOrArea": "Russia",
+    "EndLocation": "B",
+    "EndCountryOrArea": "Russia",
+    "LengthKnownKm": "--",
+    "Capacity": "--",
+    "CapacityUnits": "bcm/y",
+    "RouteAccuracy": "very low (straight line/schematic)",
+    "RouteType": "Mapped route (at any accuracy)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      48.0,
+      58.0
+     ],
+     [
+      52.0,
+      59.0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "ProjectID": "P0005",
+    "PipelineName": "Test Parent Row",
+    "SegmentName": null,
+    "Status": "operating",
+    "Fuel": "Gas",
+    "CountriesOrAreas": "Russia",
+    "Owner": "Gazprom",
+    "Parent": "Gazprom",
+    "StartLocation": "A",
+    "StartCountryOrArea": "Russia",
+    "EndLocation": "B",
+    "EndCountryOrArea": "Russia",
+    "LengthKnownKm": "--",
+    "Capacity": "--",
+    "CapacityUnits": "bcm/y",
+    "RouteAccuracy": "no route",
+    "RouteType": "Included in other ProjectID"
+   },
+   "geometry": null
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "ProjectID": "P0006",
+    "PipelineName": "Test Foreign",
+    "SegmentName": null,
+    "Status": "operating",
+    "Fuel": "Gas",
+    "CountriesOrAreas": "Germany",
+    "Owner": "Gazprom",
+    "Parent": "Gazprom",
+    "StartLocation": "A",
+    "StartCountryOrArea": "Russia",
+    "EndLocation": "B",
+    "EndCountryOrArea": "Germany",
+    "LengthKnownKm": "--",
+    "Capacity": "--",
+    "CapacityUnits": "bcm/y",
+    "RouteAccuracy": "high",
+    "RouteType": "Mapped route (at any accuracy)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      10.0,
+      50.0
+     ],
+     [
+      11.0,
+      50.5
+     ]
+    ]
+   }
+  }
+ ]
+}

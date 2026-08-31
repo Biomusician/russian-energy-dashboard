@@ -506,6 +506,11 @@ def to_features(routes):
                 "type": "Feature",
                 "properties": {
                     "pipeline_id": r["pipeline_id"],
+                    "canonical_pipeline_id": r.get("canonical_pipeline_id"),
+                    "canonical_name": r.get("canonical_name_registry"),
+                    "entity_level": r.get("entity_level") or "pipeline",
+                    "parent_id": r.get("parent_id"),
+                    "match_confidence": r.get("match_confidence") or "unresolved",
                     "asset_class": r["asset_class"],
                     "scope": "context",
                     "name": r["canonical_name"],
@@ -529,6 +534,99 @@ def to_features(routes):
     return feats
 
 
+def _containment(routes, min_share=0.9):
+    """Measured parent->child edges: route B is inside route A when >=90% of B's member ways are
+    also A's and A is larger.
+
+    This is how OSM's superroutes are detected without guessing from names — Сияние Севера
+    contains 12 strings, Yamal–Lubmin contains 6 — and it is the same overlap that made a naive
+    sum of route lengths double-count ~13% of the network.
+    """
+    ways = {r["pipeline_id"]: set(r["osm_way_ids"]) for r in routes}
+    parent = {}
+    for b, wb in ways.items():
+        if not wb:
+            continue
+        best = None
+        for a, wa in ways.items():
+            if a == b or len(wa) <= len(wb):
+                continue
+            if len(wa & wb) / len(wb) >= min_share:
+                # smallest qualifying parent = the immediate one
+                if best is None or len(wa) < len(ways[best]):
+                    best = a
+        if best:
+            parent[b] = best
+    return parent
+
+
+def apply_registry(routes, entities):
+    """Attach canonical identity to each reconstructed route.
+
+    A route is matched to a canonical entity through the explicit source map, never by name. The
+    mapping is many-to-many by design, so a route may be claimed by more than one entity (a
+    superroute AND the string it contains); the FINEST-grained claim wins for display, because a
+    reader clicking a line wants the pipeline, not the continent-spanning system it belongs to.
+    """
+    by_source = {}
+    for e in entities.values():
+        for sr in e["source_records"]:
+            by_source.setdefault(sr["source_id"], []).append((e, sr))
+    depth = {}
+
+    def _depth(cid):
+        if cid in depth:
+            return depth[cid]
+        e = entities.get(cid)
+        depth[cid] = 0 if not e or not e["parent_id"] else _depth(e["parent_id"]) + 1
+        return depth[cid]
+
+    for r in routes:
+        sid = str(r.get("osm_relation_id") or r["pipeline_id"])
+        claims = by_source.get(sid, [])
+        if claims:
+            # deepest entity = most specific
+            e, sr = max(claims, key=lambda c: _depth(c[0]["canonical_pipeline_id"]))
+            r["canonical_pipeline_id"] = e["canonical_pipeline_id"]
+            r["canonical_name_registry"] = e["canonical_name"]
+            r["entity_level"] = e["entity_level"]
+            r["parent_id"] = e["parent_id"]
+            r["match_confidence"] = sr["confidence"]
+            r["all_canonical_claims"] = [c[0]["canonical_pipeline_id"] for c in claims]
+        else:
+            r["canonical_pipeline_id"] = None
+            r["canonical_name_registry"] = None
+            r["entity_level"] = "pipeline"       # an uncurated route is a pipeline by default
+            r["parent_id"] = None
+            r["match_confidence"] = "unresolved"
+            r["all_canonical_claims"] = []
+    return routes
+
+
+def geometry_completeness(route):
+    """Segment-weighted geometry breakdown for one route.
+
+    Route COUNT is a poor measure: a 2,000 km line with a 10 km gap and a 200 km line missing
+    180 km are both "fragmented". Kilometres of each quality are measurable and reported.
+
+    Unresolved length deliberately is NOT estimated. The distance between two mapped components
+    is not the length of the missing pipe — the real route between them may be far longer, and
+    inventing a figure would be exactly the false precision this project refuses. The gap COUNT
+    is reported instead.
+    """
+    drawn = route["drawn_length_km"]
+    q = route["route_quality"]
+    detailed = drawn if q == "osm_mapped" else 0.0
+    generalized = drawn if q in ("osm_generalized", "gem_generalized") else 0.0
+    return {
+        "detailed_geometry_km": round(detailed, 1),
+        "generalized_geometry_km": round(generalized, 1),
+        "unresolved_gap_count": max(0, len(route["components"]) - 1),
+        "detailed_geometry_pct": round(100.0 * detailed / drawn, 1) if drawn else 0.0,
+        "generalized_geometry_pct": round(100.0 * generalized / drawn, 1) if drawn else 0.0,
+    }
+
+
 def quality_report(routes):
     """Deterministic continuity/quality metrics (§12). Topology completeness and geometry
     completeness are reported separately: a single-component route is topologically continuous,
@@ -550,8 +648,22 @@ def quality_report(routes):
                 share = len(new_ids) / max(1, len(r["osm_way_ids"]))
                 distinct_km += r["length_km"] * share
                 seen_ways.update(new_ids)
+        # Canonical-entity counts, so a system and the strings inside it are not counted as
+        # equivalent "pipelines". Routes with no canonical claim count as their own entity.
+        canon = set()
+        for r in rs:
+            canon.add(r.get("canonical_pipeline_id") or r["pipeline_id"])
+        levels = collections.Counter(r.get("entity_level") or "pipeline" for r in rs)
+        det = sum(geometry_completeness(r)["detailed_geometry_km"] for r in rs)
+        gen = sum(geometry_completeness(r)["generalized_geometry_km"] for r in rs)
+        gaps = sum(geometry_completeness(r)["unresolved_gap_count"] for r in rs)
         out[cls] = {
             "routes": len(rs),
+            "canonical_entities": len(canon),
+            "by_entity_level": dict(levels),
+            "detailed_geometry_km": round(det, 1),
+            "generalized_geometry_km": round(gen, 1),
+            "unresolved_gap_count": gaps,
             "total_length_km": round(sum(r["length_km"] for r in rs), 1),
             "distinct_network_km": round(distinct_km, 1),
             "drawn_length_km": round(sum(r["drawn_length_km"] for r in rs), 1),
@@ -579,6 +691,12 @@ def build(relations=None, member_tags=None, way_elements=None, analytic_osm_ids=
     member_tags = member_tags or {}
 
     routes, stats = build_routes(relations, member_tags, analytic_osm_ids, tolerance=tolerance)
+    # Canonical identity + hierarchy from the curated registry (never from name equality).
+    from pipeline import pipeline_registry
+    entities, nodes, problems = pipeline_registry.build(routes, containment=_containment(routes))
+    for p in problems:
+        log(f"  registry PROBLEM {p}")
+    apply_registry(routes, entities)
     claimed = {w for r in routes for w in r["osm_way_ids"]}
     if way_elements:
         routes += build_named_way_routes(way_elements, claimed, analytic_osm_ids,

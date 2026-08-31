@@ -1,0 +1,37 @@
+canonical_pipeline_id,canonical_name,aliases,commodity,subtype,entity_level,parent_id,operator,owner,countries,start_area,end_area,note
+UGSS,Unified Gas Supply System,ЕСГ|Единая система газоснабжения|UGSS,gas,transmission_network,system,,Gazprom,Gazprom,RU,,,Russian national gas transmission system; parent of the domestic trunk corridors below
+NORTHERN_LIGHTS,Northern Lights system,Сияние Севера|Siyaniye Severa|Northern Lights,gas,multi_string_corridor,corridor,UGSS,Gazprom,Gazprom,RU|BY,Urengoy,Torzhok,Multi-string system; OSM models it as one relation containing its constituent strings
+UKHTA_TORZHOK_1,Ukhta–Torzhok 1,Ухта — Торжок|Ukhta-Torzhok (Yamal),gas,string,pipeline,NORTHERN_LIGHTS,Gazprom Transgaz Ukhta,Gazprom,RU,Sosnogorskaya CS,Novogryazovetskaya CS,Route terminates at Gryazovets despite the name
+UKHTA_TORZHOK_2,Ukhta–Torzhok 2,Ухта — Торжок 2|Mega-Yamal|Мега-Ямал,gas,string,pipeline,NORTHERN_LIGHTS,Gazprom Transgaz Ukhta,Gazprom,RU,Sosnogorskaya CS,Novogryazovetskaya CS,Commissioned December 2018
+UKHTA_TORZHOK_3,Ukhta–Torzhok 3,Ухта — Торжок 3,gas,string,pipeline,NORTHERN_LIGHTS,Gazprom Transgaz Ukhta,Gazprom,RU,Sosnogorskaya CS,Novogryazovetskaya CS,Third string; separated from string 1 after a substring auto-match error (see review RV-003)
+BOVANENKOVO_UKHTA,Bovanenkovo–Ukhta corridor,Бованенково — Ухта|Bovanenkovo-Ukhta,gas,multi_string_corridor,corridor,UGSS,Gazprom,Gazprom,RU,Bovanenkovskoye field,Ukhta,Corridor of parallel strings BU-1/BU-2/BU-3
+BOVANENKOVO_UKHTA_1,Bovanenkovo–Ukhta 1,Бованенково — Ухта 1|BU-1,gas,string,pipeline,BOVANENKOVO_UKHTA,Gazprom,Gazprom,RU,Bovanenkovskoye field,Sosnogorskaya CS,
+BOVANENKOVO_UKHTA_2,Bovanenkovo–Ukhta 2,Бованенково — Ухта 2|BU-2,gas,string,pipeline,BOVANENKOVO_UKHTA,Gazprom,Gazprom,RU,Bovanenkovskoye field,Sosnogorskaya CS,
+YAMAL_EUROPE,Yamal–Europe,Ямал — Европа|Ямал — Еўропа|Yamal-Europe|EuRoPol Gaz,gas,export_trunk,pipeline,,Gazprom/GAZ-SYSTEM/Gascade,Gazprom,RU|BY|PL|DE,Torzhok,Mallnow,"Length contested: 1660 km commonly cited vs Gazprom ""over 2000 km"" — different scopes"
+SRTO_TORZHOK,SRTO–Torzhok,СРТО — Торжок|Northern Tyumen Regions–Torzhok|Northern Tyumen Regions (SRTO)–Torzhok,gas,export_trunk,pipeline,UGSS,Gazprom Transgaz Ukhta,Gazprom,RU,Northern Tyumen fields,Torzhok,Capacity varies by section (20.5–28.5 bcm/y); not a single number
+BROTHERHOOD,Brotherhood corridor,Братство|Bratstvo|Trans-Siberian,gas,export_corridor,corridor,,Gazprom/GTSOU,,RU|UA|SK,Urengoy,Uzhhorod,Ukrainian transit corridor; several trunk lines share this route
+URENGOY_POMARY_UZHHOROD,Urengoy–Pomary–Uzhhorod,Уренгой — Помары — Ужгород|Urengoy-Pomary-Uzhgorod|Urengoy-Pomary-Uzhhorod,gas,export_trunk,pipeline,BROTHERHOOD,Gazprom/GTSOU,,RU|UA,Urengoy field,Uzhhorod,Crosses RU-UA border at Sudzha GMS
+PROGRESS,Progress,Прогресс|Yamburg–Western Border,gas,export_trunk,pipeline,BROTHERHOOD,Gazprom/GTSOU,,RU|UA,Yamburg field,Uzhhorod,Ukrainian route co-located with Urengoy–Pomary–Uzhhorod
+SOYUZ,Soyuz,Союз|Orenburg–Western Border,gas,export_trunk,pipeline,,Gazprom/GTSOU,,RU|KZ|UA,Orenburg,Uzhhorod,Crosses RU-UA border at Sokhranovka
+NORD_STREAM_1,Nord Stream 1,Nord Stream|Северо-Европейский газопровод,gas,subsea_export,pipeline,,Nord Stream AG,Nord Stream AG,RU|DE,Portovaya Bay,Greifswald,Two lines; three of four Nord Stream lines inoperable after Sept 2022
+NORD_STREAM_2,Nord Stream 2,NS2|Nord Stream 2,gas,subsea_export,pipeline,,Nord Stream 2 AG,,RU|DE,Slavyanskaya CS,Greifswald,Never entered service
+GRYAZOVETS_VYBORG,Gryazovets–Vyborg,Грязовец — Выборг|Gryazovets-Vyborg,gas,feeder,pipeline,NORTHERN_LIGHTS,Gazprom,Gazprom,RU,Gryazovets,Portovaya CS,Onshore feed for Nord Stream 1
+TURKSTREAM,TurkStream,Турецкий поток|TürkAkım|Turkish Stream|TurkStream,gas,subsea_export,pipeline,,Gazprom/BOTAS,,RU|TR,Russkaya CS,Kiyikoy,Two strings; 31.5 bcm/y total
+BLUE_STREAM,Blue Stream,Голубой поток|Mavi Akım|Blue Stream,gas,subsea_export,pipeline,,Gazprom/BOTAS,,RU|TR,Izobilnoye,Samsun,
+POWER_OF_SIBERIA,Power of Siberia,Сила Сибири|China–Russia East-Route|Power of Siberia,gas,export_trunk,pipeline,,Gazprom,Gazprom,RU|CN,Chayanda field,Blagoveshchensk,61 bcm/y system capacity; 38 bcm/y contracted to China
+SAKHALIN_KHABAROVSK_VLADIVOSTOK,Sakhalin–Khabarovsk–Vladivostok,СХВ|Sakhalin-Khabarovsk-Vladivostok,gas,transmission,pipeline,,Gazprom,Gazprom,RU,Sakhalin,Vladivostok,
+BUKHARA_URAL,Bukhara–Urals,Бухара — Урал|Buxoro — Ural|Bukhara-Ural,gas,import_trunk,corridor,,Gazprom/Uztransgaz,,UZ|KZ|RU,Gazli,Chelyabinsk/Yekaterinburg,Two lines BU-I and BU-II
+CENTRAL_ASIA_CENTER,Central Asia–Center,Средняя Азия — Центр|CAC|САЦ|Central Asia–Center,gas,import_trunk,corridor,,Gazprom/Turkmengaz,,TM|UZ|KZ|RU,Dauletabad,Alexandrov Gay,
+BOTAS_NETWORK,BOTAS national gas network,BOTAŞ Doğal Gaz Boru Hatları,gas,transmission_network,system,,BOTAS,BOTAS,TR,,,Turkish national network — a NETWORK not a single pipeline; OSM models it as one relation
+DRUZHBA,Druzhba corridor,Дружба|Friendship Pipeline|Przyjaźń|Ropovod Družba|Barátság|Druzhba,oil,export_corridor,corridor,,Transneft and partners,,RU|BY|PL|DE|UA|SK|CZ|HU,Almetyevsk,Mozyr split,Quoted in barrels/day not Mt/y — do not convert silently
+DRUZHBA_NORTH,Druzhba northern branch,Дружба север,oil,branch,branch,DRUZHBA,Transneft/Gomeltransneft/PERN,,BY|PL|DE,Mozyr,Schwedt,Carries Kazakh crude to Germany since Dec 2023
+DRUZHBA_SOUTH,Druzhba southern branch,Дружба юг,oil,branch,branch,DRUZHBA,Transneft/UkrTransNafta/MOL,,BY|UA|SK|HU,Mozyr,Uzhhorod,Delivery points Fenyeslitke (HU) and Budkovce (SK)
+ESPO,Eastern Siberia–Pacific Ocean,ВСТО|Восточная Сибирь - Тихий океан|ESPO|Eastern Siberia–Pacific Ocean,oil,export_corridor,corridor,,Transneft,Transneft,RU,Taishet,Kozmino,Total length contested 4740 vs 4857 km
+ESPO_1,ESPO-1,ВСТО-1,oil,segment,pipeline,ESPO,Transneft-Vostok,Transneft,RU,Taishet,Skovorodino,2694 km / 80 Mt/y
+ESPO_2,ESPO-2,ВСТО-2,oil,segment,pipeline,ESPO,Transneft-Vostok,Transneft,RU,Skovorodino,Kozmino,2046 km / 50 Mt/y
+SKOVORODINO_MOHE,Skovorodino–Mohe,Сковородино — Мохэ,oil,branch,branch,ESPO,Transneft/CNPC,,RU|CN,Skovorodino,Mohe,30 Mt/y after second line from 2018-01-01
+BPS_1,Baltic Pipeline System,БТС|BPS-1|Baltic Pipeline System 1,oil,export_trunk,pipeline,,Transneft,Transneft,RU,Timan-Pechora/Volga,Primorsk,Length not established from a primary source
+BPS_2,Baltic Pipeline System 2,БТС-2|BPS-2|Unecha–Ust-Luga,oil,export_trunk,pipeline,,Transneft,Transneft,RU,Unecha,Ust-Luga,The link that let Druzhba-north volumes redirect to seaborne export
+SURGUT_POLOTSK,Surgut–Polotsk,Сургут — Полоцк|Нафтаправод Сургут – Полацк,oil,transmission,pipeline,,Transneft,Transneft,RU|BY,Surgut,Polotsk,Capacity unverified; only figure found is implausible
+OMSK_IRKUTSK,Omsk–Irkutsk,Омск — Иркутск,oil,transmission,pipeline,,Transneft,Transneft,RU,Omsk,Irkutsk,Links with ESPO at Taishet
+CPC,Caspian Pipeline Consortium,КТК|CPC|Tengiz–Novorossiysk,oil,export_trunk,pipeline,,Caspian Pipeline Consortium,Consortium,KZ|RU,Tengiz field,Yuzhnaya Ozereyevka,Terminal is separate from Transneft Sheskharis; capacity contested 83 Mt/y vs 1.4 mb/d

@@ -1,10 +1,20 @@
 {
   "schema_version": 2,
-  "build_time": "2026-08-31T02:38:28+00:00",
+  "build_time": "2026-08-31T03:06:55+00:00",
   "files": [
     {
       "name": "assets.json",
       "bytes": 628729,
+      "optional": false
+    },
+    {
+      "name": "gem_ggit_records.json",
+      "bytes": 962866,
+      "optional": false
+    },
+    {
+      "name": "gem_goit_records.json",
+      "bytes": 317532,
       "optional": false
     },
     {
@@ -24,7 +34,7 @@
     },
     {
       "name": "pipeline_network_quality.json",
-      "bytes": 1016,
+      "bytes": 1352,
       "optional": false
     },
     {
@@ -39,7 +49,7 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 199975,
+      "bytes": 200311,
       "optional": false
     },
     {
@@ -59,7 +69,7 @@
     },
     {
       "name": "context_gas_network.geojson",
-      "bytes": 940411,
+      "bytes": 1117780,
       "optional": true
     },
     {
@@ -69,7 +79,7 @@
     },
     {
       "name": "context_oil_network.geojson",
-      "bytes": 174354,
+      "bytes": 200288,
       "optional": true
     },
     {

@@ -2671,3 +2671,114 @@ def test_canonical_linkage_is_identity_not_disruption_coverage():
     assert 0 < cl["pct_denominator_mtpa_struck"] <= 100
     # Naftan is a Belarusian refinery, intentionally outside the Russian denominator
     assert "Naftan refinery (Novopolotsk)" in cl["incidents_unresolved_to_registry"]
+
+
+# --------------------------------------------------------------------------------------
+# GEM importer — the validation contract (iteration 10 §6, addendum §8)
+#
+# The GEM trackers are delivered through a request form, so the file that reaches this
+# repo is chosen by a human. The importer's whole reason to exist is that a wrong file
+# must fail loudly. These tests are the specification of "loudly".
+# --------------------------------------------------------------------------------------
+
+FIXTURES = ROOT / "tests" / "fixtures"
+
+
+def _gem():
+    from pipeline import import_gem
+    return import_gem
+
+
+def test_gem_importer_reads_a_well_formed_release():
+    g = _gem()
+    records, manifest = g.run(FIXTURES / "gem_ggit_sample.geojson", "GGIT",
+                              release="2025-11", dry_run=True)
+    assert len(records) == 6
+    assert manifest["release"] == "2025-11"
+    assert manifest["provisional"] is False
+    assert manifest["licence"] == "CC-BY-4.0"
+    assert len(manifest["sha256"]) == 64
+
+
+def test_gem_importer_refuses_a_swapped_tracker():
+    """The likeliest human error: dropping the oil export in as the gas one."""
+    g = _gem()
+    with pytest.raises(g.ImportError_, match="gas only"):
+        g.run(FIXTURES / "gem_goit_sample.geojson", "GGIT", release="2025-11", dry_run=True)
+    with pytest.raises(g.ImportError_, match="oil/NGL only"):
+        g.run(FIXTURES / "gem_ggit_sample.geojson", "GOIT", release="2026-06", dry_run=True)
+
+
+def test_gem_importer_refuses_an_unknown_route_accuracy():
+    """An accuracy value we do not recognise must never be bucketed as traced geometry."""
+    g = _gem()
+    with pytest.raises(g.ImportError_, match="unrecognised RouteAccuracy"):
+        g.run(FIXTURES / "gem_bad_accuracy.geojson", "GGIT", release="2025-11", dry_run=True)
+
+
+def test_gem_importer_refuses_a_missing_required_column():
+    g = _gem()
+    with pytest.raises(g.ImportError_, match="required columns missing"):
+        g.run(FIXTURES / "gem_missing_column.geojson", "GGIT", release="2025-11", dry_run=True)
+
+
+def test_gem_importer_refuses_a_citable_import_without_a_release_label():
+    """A release import that cannot be cited is not a release import."""
+    g = _gem()
+    with pytest.raises(g.ImportError_, match="needs --release"):
+        g.run(FIXTURES / "gem_ggit_sample.geojson", "GGIT", release=None, dry_run=True)
+
+
+def test_gem_route_accuracy_maps_conservatively():
+    """Nothing below `high` may claim traced geometry; `no route` carries none at all.
+
+    This is the GENERALIZED != MAPPED rule expressed as a table. If someone widens
+    `gem_traced` to include `medium`, this fails.
+    """
+    g = _gem()
+    assert g.ROUTE_QUALITY["very high (within meters)"] == "gem_traced"
+    assert g.ROUTE_QUALITY["high"] == "gem_traced"
+    assert g.ROUTE_QUALITY["medium"] == "gem_generalized"
+    assert g.ROUTE_QUALITY["low"] == "gem_generalized"
+    assert g.ROUTE_QUALITY["very low (straight line/schematic)"] == "topology_only"
+    assert g.ROUTE_QUALITY["no route"] == "topology_only"
+    # every accuracy GEM can emit has a mapping, and only one tier is "traced"
+    assert set(g.ROUTE_QUALITY) == g.ROUTE_ACCURACY_VALUES
+    assert sorted(k for k, v in g.ROUTE_QUALITY.items() if v == "gem_traced") == [
+        "high", "very high (within meters)"]
+
+
+def test_gem_importer_preserves_source_native_values():
+    """Addendum §7: the source's own vocabulary survives next to our normalisation."""
+    g = _gem()
+    records, _ = g.run(FIXTURES / "gem_ggit_sample.geojson", "GGIT",
+                       release="2025-11", dry_run=True)
+    schematic = [r for r in records if r["route_quality"] == "topology_only"]
+    assert {r["route_accuracy_native"] for r in schematic} == {
+        "very low (straight line/schematic)", "no route"}
+    parent = [r for r in records if r["route_type_native"] == "Included in other ProjectID"]
+    assert len(parent) == 1 and parent[0]["has_geometry"] is False
+
+
+def test_gem_importer_treats_the_double_dash_sentinel_as_unknown_not_zero():
+    """GEM writes "--" for unknown. Reading that as 0 would invent a capacity of zero."""
+    g = _gem()
+    records, _ = g.run(FIXTURES / "gem_ggit_sample.geojson", "GGIT",
+                       release="2025-11", dry_run=True)
+    unknown = [r for r in records if r["name"] == "Test Low Route"][0]
+    assert unknown["length_km_known"] is None
+    assert unknown["capacity"] is None
+    known = [r for r in records if r["name"] == "Test Traced Trunk"][0]
+    assert known["capacity"] == "30"
+
+
+def test_gem_map_data_import_is_stamped_provisional():
+    """The live map-data branch has no release identifier and must never look citable."""
+    g = _gem()
+    records, manifest = g.run(FIXTURES / "gem_ggit_sample.geojson", "GGIT",
+                              release=None, provisional=True, dry_run=True)
+    assert manifest["provisional"] is True
+    assert manifest["release"] is None
+    assert "no release identifier" in manifest["citation"]
+    assert "NO release identifier" in manifest["provisional_note"]
+    assert all(r["release"] is None and r["provisional"] for r in records)

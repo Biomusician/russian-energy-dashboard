@@ -1,0 +1,75 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "ProjectID": "P9001",
+    "PipelineName": "Test Oil Trunk",
+    "SegmentName": null,
+    "Status": "operating",
+    "Fuel": "Oil",
+    "CountriesOrAreas": "Russia",
+    "Owner": "Gazprom",
+    "Parent": "Gazprom",
+    "StartLocation": "A",
+    "StartCountryOrArea": "Russia",
+    "EndLocation": "B",
+    "EndCountryOrArea": "Russia",
+    "LengthKnownKm": "1200",
+    "Capacity": "40",
+    "CapacityUnits": "mtpa",
+    "RouteAccuracy": "high",
+    "RouteType": "Mapped route (at any accuracy)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      50.0,
+      55.0
+     ],
+     [
+      52.0,
+      56.0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "ProjectID": "P9002",
+    "PipelineName": "Test NGL Line",
+    "SegmentName": null,
+    "Status": "operating",
+    "Fuel": "NGL",
+    "CountriesOrAreas": "Russia",
+    "Owner": "Gazprom",
+    "Parent": "Gazprom",
+    "StartLocation": "A",
+    "StartCountryOrArea": "Russia",
+    "EndLocation": "B",
+    "EndCountryOrArea": "Russia",
+    "LengthKnownKm": "--",
+    "Capacity": "--",
+    "CapacityUnits": "bcm/y",
+    "RouteAccuracy": "medium",
+    "RouteType": "Mapped route (at any accuracy)"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      54.0,
+      56.0
+     ],
+     [
+      55.0,
+      57.0
+     ]
+    ]
+   }
+  }
+ ]
+}

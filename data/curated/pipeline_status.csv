@@ -1,0 +1,28 @@
+canonical_pipeline_id,status_kind,status_value,valid_from,valid_to,observed_at,source_url,source_date,source_tier,note
+YAMAL_EUROPE,physical,intact,,,2026-08-30,https://www.gaz-system.pl/en/transmission-system/transmission-infrastructure/transit-gas-pipeline-system.html,2026-08-30,tso_primary,Physically intact; see commercial_flow for transit
+YAMAL_EUROPE,commercial_flow,flowing,,2022-05-11,2026-08-30,https://www.gem.wiki/Yamal-Europe_Gas_Pipeline,2026-08-30,secondary_citing_operator,Westward transit until Gazprom halted flows through Poland
+YAMAL_EUROPE,commercial_flow,zero_transit,2022-05-11,,2026-08-30,https://www.gem.wiki/Yamal-Europe_Gas_Pipeline,2026-08-30,secondary_citing_operator,No westward transit; reverse east flow used 2021-2022
+YAMAL_EUROPE,operational,idle,2022-05-11,,2026-08-30,https://www.gem.wiki/Yamal-Europe_Gas_Pipeline,2026-08-30,secondary_citing_operator,
+URENGOY_POMARY_UZHHOROD,physical,intact,,,2026-08-30,https://www.gem.wiki/Urengoy-Pomary-Uzhgorod_Gas_Pipeline,2026-08-30,secondary_citing_operator,Asset exists; transit does not
+URENGOY_POMARY_UZHHOROD,commercial_flow,flowing,,2025-01-01,2026-08-30,https://www.spglobal.com/energy/en/news-research/latest-news/natural-gas/010125-russian-gas-flows-via-ukraine-suspended-as-transit-deal-expires,2026-01-01,secondary,Transit under the 2019 Gazprom-Naftogaz agreement
+URENGOY_POMARY_UZHHOROD,commercial_flow,zero_transit,2025-01-01,,2026-08-30,https://www.eustream.sk/en/about-us/press/news/zastavenie-toku-zemneho-plynu-z-ukrajiny-vstupnom-bode-velke-kapusany-ukrajinsko-slovenskej-hranici.html,2025-01-01,tso_primary,Transit stopped 07:00 Kyiv 2025-01-01; Eustream confirms Velke Kapusany halt. GEM wiki still says operating in Aug 2026 — TSO wins
+PROGRESS,commercial_flow,zero_transit,2025-01-01,,2026-08-30,https://www.eustream.sk/en/about-us/press/news/zastavenie-toku-zemneho-plynu-z-ukrajiny-vstupnom-bode-velke-kapusany-ukrajinsko-slovenskej-hranici.html,2025-01-01,tso_primary,Shares the Uzhhorod corridor and the same transit halt
+NORD_STREAM_1,physical,damaged,2022-09-26,,2026-08-30,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,2026-08-30,secondary_citing_operator,Three of four Nord Stream lines rendered inoperable by the explosions
+NORD_STREAM_1,commercial_flow,zero_transit,2022-08-31,,2026-08-30,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,2026-08-30,secondary_citing_operator,Flows halted 2022-08-31 before the explosions
+NORD_STREAM_1,operational,mothballed,2022-09-26,,2026-08-30,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,2026-08-30,secondary_citing_operator,
+NORD_STREAM_2,physical,intact,,,2026-08-30,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,2026-08-30,secondary_citing_operator,One string reportedly undamaged; engineering source not verified
+NORD_STREAM_2,operational,never_operated,,,2026-08-30,https://www.gem.wiki/Nord_Stream_Gas_Pipeline,2026-08-30,secondary_citing_operator,Germany withheld certification 2022-02-22
+SOYUZ,operational,mothballed,2023-08-01,,2026-08-30,https://www.gem.wiki/Soyuz_Gas_Pipeline,2023-08-01,secondary_citing_operator,Mothballed as of August 2023
+TURKSTREAM,physical,intact,,,2026-08-30,http://turkstream.info/project/,2026-08-30,operator_primary,
+TURKSTREAM,commercial_flow,flowing,2020-01-08,,2026-08-30,http://turkstream.info/project/,2026-08-30,operator_primary,Commissioned January 2020
+BLUE_STREAM,commercial_flow,contracted_only,2025-12-01,2026-12-31,2026-08-30,https://en.wikipedia.org/wiki/Blue_Stream,2026-08-30,encyclopedic,BOTAS one-year renewal covering ~22 bcm/y combined with TurkStream; expires end-2026
+POWER_OF_SIBERIA,commercial_flow,flowing,2019-12-02,,2026-08-30,https://en.wikipedia.org/wiki/Power_of_Siberia,2026-08-30,encyclopedic,Deliveries to China from 2019-12-02
+DRUZHBA_NORTH,physical,intact,,,2026-08-30,https://en.wikipedia.org/wiki/Druzhba_pipeline,2026-08-30,encyclopedic,
+DRUZHBA_NORTH,commercial_flow,flowing,,2023-02-01,2026-08-30,https://en.wikipedia.org/wiki/Druzhba_pipeline,2026-08-30,encyclopedic,Russian crude to Poland and Germany
+DRUZHBA_NORTH,commercial_flow,reversed,2023-12-01,,2026-08-30,https://en.wikipedia.org/wiki/Druzhba_pipeline,2026-08-30,encyclopedic,Repurposed — Germany imports Kazakh crude via the northern branch
+DRUZHBA_SOUTH,commercial_flow,flowing,2026-04-21,,2026-08-30,https://molgroup.info/en/investor-relations/investor-news/first-batches-of-crude-oil-via-the-druzhba-pipeline-received-in-hungary-and-slovakia,2026-04-21,operator_primary,MOL confirms first crude at Fenyeslitke and Budkovce after a ~3-month break
+DRUZHBA_SOUTH,physical,damaged,2026-01-27,2026-04-21,2026-08-30,https://molgroup.info/en/investor-relations/investor-news/first-batches-of-crude-oil-via-the-druzhba-pipeline-received-in-hungary-and-slovakia,2026-04-21,operator_primary,Infrastructure damage near the Brody hub; Ukrtransnafta lifted force majeure 2026-04-21
+ESPO_1,commercial_flow,flowing,2009-12-01,,2026-08-30,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,2026-08-30,secondary,
+ESPO_2,commercial_flow,flowing,2012-12-01,,2026-08-30,https://www.gem.wiki/Eastern_Siberia%E2%80%93Pacific_Ocean_Oil_Pipeline,2026-08-30,secondary,
+BPS_2,commercial_flow,flowing,2012-03-01,,2026-08-30,https://www.gem.wiki/Baltic_Pipeline_System_2,2026-08-30,secondary,
+CPC,commercial_flow,reduced,2025-01-01,,2026-08-30,https://www.cpc.ru/EN/about/Pages/general.aspx,2026-08-30,operator_primary,Flows reduced 30-40% after 2025 attacks; storm damage 2022 and legal suspension 2022 also disrupted
