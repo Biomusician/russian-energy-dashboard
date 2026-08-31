@@ -5,6 +5,7 @@ cross, and the cheapest way to keep a future change from drifting over it is to 
 the build when it does.
 """
 
+import csv
 import datetime as dt
 import json
 import re
@@ -1960,6 +1961,45 @@ def test_built_context_network_carries_route_identity_and_provenance():
             assert isinstance(p["analytic_overlap"], bool)
             # A component index must be consistent with its route's component count.
             assert 0 <= p["component_index"] < p["component_count"]
+
+
+def test_curated_pipeline_topology_is_sourced_and_carries_no_geometry():
+    """Published connection facts are TOPOLOGY, never a licence to draw a route.
+
+    Each row asserts that two named systems meet at a named point, with a source. The file must
+    contain no coordinates of any kind: 'topology known' and 'geometry known' are different
+    states, and a schematic operator map is schematic topology.
+    """
+    path = ROOT / "data" / "curated" / "pipeline_topology.csv"
+    if not path.exists():
+        pytest.skip("topology file not present")
+    rows = list(csv.DictReader(path.read_text(encoding="utf-8").splitlines()))
+    assert rows, "topology file must not be empty"
+    banned = {"lat", "lon", "latitude", "longitude", "coordinates", "geometry", "wkt",
+              "distance_km", "bearing"}
+    assert not (set(rows[0]) & banned), "topology rows must carry no geometry"
+    for r in rows:
+        assert r["subject"] and r["object"], "every assertion needs both ends"
+        assert r["substance"] in ("gas", "oil"), f"bad substance {r['substance']!r}"
+        assert r["source_url"].startswith("http"), f"unsourced assertion: {r['subject']}"
+        assert r["source_quality"] in (
+            "operator_primary", "tso_primary", "secondary_citing_operator",
+            "secondary_citing_tso", "secondary", "encyclopedic",
+        ), f"unknown source tier {r['source_quality']!r}"
+
+
+def test_topology_assertions_are_not_used_to_synthesise_route_geometry():
+    """Guard the Type-C rule: a known connection must never become a drawn line.
+
+    If a future change starts reading the topology file inside the network builder, this fails —
+    the honest treatment is a dossier/hover disclosure or an explicitly schematic style, never a
+    straight line pretending to be a pipe.
+    """
+    src = (ROOT / "pipeline" / "build_pipeline_network.py").read_text(encoding="utf-8")
+    assert "pipeline_topology" not in src, (
+        "the geometry builder must not consume curated topology assertions — "
+        "topology known is not geometry known"
+    )
 
 
 @pytest.mark.skipif(not (PROCESSED / "pipeline_network_quality.json").exists(),
