@@ -74,15 +74,20 @@ def _classify(value):
     return None
 
 
-# Route names that identify a REFINED-PRODUCTS or multi-product system. OSM's `substance=oil`
-# is used loosely and is applied to product pipelines as well as crude: Exolum's "Canalización de
-# Derivados del Petróleo" ("petroleum derivatives") carries 235 members tagged `oil`, and NATO's
-# CEPS is a multi-product military network. Neither is crude oil transmission, which is what this
-# class means and what GOIT scopes. The list is deliberately short and literal — each entry is a
-# phrase that states the system carries products, not a guess from context.
+# Route names that identify a REFINED-PRODUCTS or multi-product system.
+#
+# OSM's substance=oil is used loosely and is applied to product pipelines as well as crude.
+# Exolum's "Canalización de Derivados del Petróleo" ("petroleum derivatives") tags 235 of its
+# members substance=oil and NONE as fuel — so no substance-vote rule can catch it, and only the
+# NAME can. NATO's CEPS is likewise a multi-product military network. Neither is crude oil
+# transmission, which is what this class means and what GOIT scopes.
+#
+# The list is deliberately short and literal: each entry is a phrase in which the system states
+# that it carries products. Nothing here is inferred from context.
 _REFINED_PRODUCT_NAME_TOKENS = (
     "derivados del petróleo", "derivados del petroleo", "productos petrolíferos",
     "produits pétroliers", "refined product", "products pipeline", "multiproduct",
+    "produktenleitung", "produkten",
     "multi-product", "central europe pipeline system", "нефтепродукт",
 )
 
@@ -90,6 +95,36 @@ _REFINED_PRODUCT_NAME_TOKENS = (
 def _is_refined_products(name):
     n = (name or "").lower()
     return any(t in n for t in _REFINED_PRODUCT_NAME_TOKENS)
+
+
+# Common nouns that describe a piece of pipe rather than name a route. Grouping ways by these
+# manufactured entities: every way tagged "перемычка" (jumper) across a 3,000 km corridor became
+# one 153-component "route" with an id and a length. A descriptive noun is not an identity.
+_GENERIC_NAME_TOKENS = {
+    "перемычка", "лупинг", "отвод", "нитка", "газопровод", "нефтепровод", "труба",
+    "loop", "spur", "branch", "connector", "interconnector", "jumper", "pipeline",
+    "gasleitung", "leitung", "gasoducto", "oleoducto", "pipe",
+}
+
+
+def _is_generic_name(name):
+    """True when a name is a bare descriptive noun with nothing identifying attached."""
+    n = (name or "").strip().lower()
+    if not n:
+        return True
+    # Strip punctuation-ish separators and see what is left.
+    words = [w for w in n.replace("«", " ").replace("»", " ").replace("-", " ").split() if w]
+    if not words:
+        return True
+    return all(w in _GENERIC_NAME_TOKENS for w in words)
+
+
+def _bbox_diagonal_km(chains):
+    xs = [p[0] for c in chains for p in c]
+    ys = [p[1] for c in chains for p in c]
+    if not xs:
+        return 0.0
+    return _haversine((min(xs), min(ys)), (max(xs), max(ys)))
 
 
 def _name_hint(name):
@@ -135,6 +170,14 @@ def stitch(ways):
         ends[_key(s[0])].append(i)
         ends[_key(s[-1])].append(i)
 
+    # A node where three or more ways meet is a JUNCTION — a branch, a parallel string joining,
+    # a spur. Walking through one arbitrarily lets a chain run out along one string and back
+    # along its twin, producing a single LineString laid on top of itself: measured on the real
+    # corpus, 7 components drew 757 km of line for ~379 km of corridor. Chains therefore stop at
+    # junctions, and each edge-disjoint path is emitted as its own component.
+    def degree(node):
+        return len(ends.get(node, ()))
+
     used = [False] * len(segs)
     chains = []
     for start in range(len(segs)):
@@ -142,15 +185,12 @@ def stitch(ways):
             continue
         used[start] = True
         chain = list(segs[start])
-        # extend forward, then backward, consuming any unused segment sharing the live endpoint
         for direction in (1, 0):
             while True:
                 tip = _key(chain[-1] if direction else chain[0])
-                nxt = None
-                for cand in ends.get(tip, ()):
-                    if not used[cand]:
-                        nxt = cand
-                        break
+                if degree(tip) != 2:
+                    break                       # dead end, or a junction: stop here
+                nxt = next((c for c in ends.get(tip, ()) if not used[c]), None)
                 if nxt is None:
                     break
                 used[nxt] = True
@@ -222,9 +262,34 @@ def weld(chains, tolerance_km=WELD_TOLERANCE_KM):
     return chains, welds, round(max_gap, 4)
 
 
+def _segment_distance(pt, start, end):
+    """Distance from a point to the SEGMENT start-end, not to the infinite line through it.
+
+    `geo._perpendicular_distance` measures to the infinite line, which is the textbook
+    Douglas-Peucker formulation and is fine when the two anchors are far apart. It fails badly
+    when they are close: a chain that leaves and returns near its own start has every interior
+    point sitting on the line through those two anchors, scores ~0, and is deleted whole. Measured
+    on the real corpus that erased 690 stitched components — 216 km of real pipeline — silently,
+    because the collapsed chain then fell below the two-point minimum and was dropped.
+    """
+    x, y = pt[0], pt[1]
+    x0, y0 = start[0], start[1]
+    x1, y1 = end[0], end[1]
+    dx, dy = x1 - x0, y1 - y0
+    if dx == 0 and dy == 0:
+        return math.hypot(x - x0, y - y0)
+    t = ((x - x0) * dx + (y - y0) * dy) / (dx * dx + dy * dy)
+    t = max(0.0, min(1.0, t))                      # clamp to the segment
+    return math.hypot(x - (x0 + t * dx), y - (y0 + t * dy))
+
+
 def _simplify(pts, tolerance):
-    """Douglas-Peucker on an open polyline. Endpoints are always kept, so stitched junctions
-    and country crossings survive simplification."""
+    """Douglas-Peucker on an open polyline, using point-to-SEGMENT distance (see above).
+
+    The chain's two extreme endpoints are always kept. Interior way-junction vertices are NOT
+    guaranteed to survive — they are ordinary DP candidates — so nothing downstream should rely
+    on a junction coordinate being present in the output.
+    """
     if len(pts) <= 2:
         return [list(p) for p in pts]
     keep = [False] * len(pts)
@@ -236,7 +301,7 @@ def _simplify(pts, tolerance):
             continue
         md, idx = -1.0, first
         for i in range(first + 1, last):
-            d = geo._perpendicular_distance(pts[i], pts[first], pts[last])
+            d = _segment_distance(pts[i], pts[first], pts[last])
             if d > md:
                 md, idx = d, i
         if md > tolerance:
@@ -293,6 +358,34 @@ def _pipeline_id(kind, ident):
     return f"osm-{kind}-{ident}"
 
 
+# Mean distance between consecutive SOURCE vertices, above which a route is not a traced line.
+# OSM contains both 5,387-vertex corridors and 3-point placeholders under identical tags — one
+# shipped route averages 173 km between vertices and another contains a single 632 km straight
+# run. Publishing both as "mapped" asserts a confidence the geometry does not have, so quality is
+# measured from the source geometry rather than assumed from the source NAME.
+GENERALIZED_SPACING_KM = 10.0
+SCHEMATIC_SPACING_KM = 50.0
+
+
+def _measured_quality(chains):
+    """Route quality inferred from source vertex density, with the measurement that decided it.
+
+    Deliberately computed BEFORE simplification: this describes how finely the SOURCE traced the
+    route, not how finely we chose to draw it.
+    """
+    verts = sum(len(c) for c in chains)
+    length = sum(_length_km(c) for c in chains)
+    segments = max(1, verts - len(chains))
+    spacing = length / segments
+    if spacing >= SCHEMATIC_SPACING_KM:
+        q = "topology_only"
+    elif spacing >= GENERALIZED_SPACING_KM:
+        q = "osm_generalized"
+    else:
+        q = "osm_mapped"
+    return q, round(spacing, 2)
+
+
 def build_routes(relations, member_tags, analytic_osm_ids=None, min_km=MIN_TRUNK_KM,
                  tolerance=TOLERANCE):
     """Reconstruct canonical routes from OSM pipeline route relations.
@@ -330,6 +423,7 @@ def build_routes(relations, member_tags, analytic_osm_ids=None, min_km=MIN_TRUNK
             continue
 
         overlap = bool(set(member_ids) & analytic_osm_ids)
+        quality, spacing_km = _measured_quality(chains)
         simplified = []
         for c in chains:
             s = _round(_simplify(c, tolerance))
@@ -353,8 +447,10 @@ def build_routes(relations, member_tags, analytic_osm_ids=None, min_km=MIN_TRUNK
             "welds": welds,
             "max_weld_km": max_weld_km,
             "length_km": round(total_km, 1),
+            "drawn_length_km": round(sum(_length_km([tuple(p) for p in c]) for c in simplified), 1),
             "analytic_overlap": overlap,
-            "route_quality": "osm_mapped",
+            "route_quality": quality,
+            "source_vertex_spacing_km": spacing_km,
             "geometry_source": "osm_relation",
         })
         stats["routes_built"] += 1
@@ -378,9 +474,11 @@ def build_named_way_routes(way_elements, claimed_way_ids, analytic_osm_ids=None,
             continue
         tags = el.get("tags", {}) or {}
         name = tags.get("name") or tags.get("name:en")
-        if not name:
+        if not name or _is_generic_name(name):
             continue
-        cls = _classify(tags.get("substance"))
+        # Goes through the full substance resolver, so the refined-products rules apply here too
+        # rather than only on the relation path.
+        cls, _basis = _route_substance({"substance": tags.get("substance")}, [tags], name)
         if cls is None:
             continue
         pts = [(p["lon"], p["lat"]) for p in (el.get("geometry") or []) if p]
@@ -389,16 +487,26 @@ def build_named_way_routes(way_elements, claimed_way_ids, analytic_osm_ids=None,
 
     routes = []
     for (name, cls), items in groups.items():
+        # NO weld here. Welding is justified only by shared relation membership — OSM asserting
+        # two components are one pipeline. A shared name string is not that assertion, so joining
+        # name-grouped components across a gap would be exactly the proximity rule this module
+        # refuses. They stay as separate components.
         chains = stitch([pts for _, pts, _ in items])
         raw_components = len(chains)
-        chains, welds, max_weld_km = weld(chains)
+        welds, max_weld_km = 0, 0.0
         total_km = sum(_length_km(c) for c in chains)
         if total_km < min_km:
+            continue
+        # A name shared by scattered fragments across a continent is a coincidence of wording,
+        # not a route. If the group's bounding box is far larger than the pipe it contains, the
+        # "route" is an artefact of grouping and must not be published as an entity.
+        if _bbox_diagonal_km(chains) > max(200.0, total_km * 1.5):
             continue
         ids = [i for i, _, _ in items]
         simplified = [s for s in (_round(_simplify(c, tolerance)) for c in chains) if len(s) >= 2]
         if not simplified:
             continue
+        quality, spacing_km = _measured_quality(chains)
         operator = next((t.get("operator") for _, _, t in items if t.get("operator")), None)
         digest = hashlib.sha1(f"{name}|{cls}".encode("utf-8")).hexdigest()[:12]
         routes.append({
@@ -416,8 +524,10 @@ def build_named_way_routes(way_elements, claimed_way_ids, analytic_osm_ids=None,
             "welds": welds,
             "max_weld_km": max_weld_km,
             "length_km": round(total_km, 1),
+            "drawn_length_km": round(sum(_length_km([tuple(p) for p in c]) for c in simplified), 1),
             "analytic_overlap": bool(set(ids) & analytic_osm_ids),
-            "route_quality": "osm_mapped",
+            "route_quality": quality,
+            "source_vertex_spacing_km": spacing_km,
             "geometry_source": "osm_named_ways",
         })
     return routes
@@ -446,6 +556,10 @@ def to_features(routes):
                     "analytic_overlap": r["analytic_overlap"],
                     "osm_relation_id": r["osm_relation_id"],
                     "route_length_km": r["length_km"],
+                    "drawn_length_km": r["drawn_length_km"],
+                    "source_vertex_spacing_km": r["source_vertex_spacing_km"],
+                    "welds": r["welds"],
+                    "max_weld_km": r["max_weld_km"],
                     "component_index": i,
                     "component_count": n,
                 },
@@ -463,9 +577,25 @@ def quality_report(routes):
         rs = [r for r in routes if r["asset_class"] == cls]
         comps = [len(r["components"]) for r in rs]
         continuous = sum(1 for c in comps if c == 1)
+        # OSM models some systems as a superroute PLUS its constituent line relations, so the
+        # same physical way can belong to two routes. Summing route lengths therefore counts that
+        # pipe twice. Both numbers are published: the sum is "length across routes", and the
+        # union over distinct member way ids is the actual network extent. Conflating them would
+        # overstate the network by ~13%.
+        seen_ways, distinct_km = set(), 0.0
+        for r in rs:
+            new_ids = [w for w in r["osm_way_ids"] if w not in seen_ways]
+            if new_ids:
+                share = len(new_ids) / max(1, len(r["osm_way_ids"]))
+                distinct_km += r["length_km"] * share
+                seen_ways.update(new_ids)
         out[cls] = {
             "routes": len(rs),
             "total_length_km": round(sum(r["length_km"] for r in rs), 1),
+            "distinct_network_km": round(distinct_km, 1),
+            "drawn_length_km": round(sum(r["drawn_length_km"] for r in rs), 1),
+            "welds": sum(r["welds"] for r in rs),
+            "max_weld_km": round(max([r["max_weld_km"] for r in rs] or [0]), 4),
             "single_component_routes": continuous,
             "multi_component_routes": len(rs) - continuous,
             "total_components": sum(comps),

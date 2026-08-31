@@ -1962,6 +1962,80 @@ def test_weld_never_exceeds_its_tolerance():
     assert welds == 0 and len(chains) == 2
 
 
+def test_simplify_measures_distance_to_the_segment_not_the_infinite_line():
+    """GIS red-team finding: DP with a point-to-LINE metric erases excursions.
+
+    When a chain's two anchors are close together, every interior point lies on the infinite
+    line through them, scores ~0, and is deleted — collapsing the chain below two points, where
+    it is dropped entirely. On the real corpus that silently erased 690 components / 216 km,
+    including 25.7 km of Уренгой — Петровск drawn as an 80 m stub.
+    """
+    from pipeline import build_pipeline_network as B
+    # A point 10 units beyond a 0.001-long segment: on the LINE, far from the SEGMENT.
+    assert B._segment_distance((10, 0), (0, 0), (0.001, 0)) > 9.9
+    # An out-and-back excursion must survive simplification rather than collapse.
+    pts = [(0.0, 0.0), (0.5, 0.0), (1.0, 0.0), (0.5, 0.0), (0.001, 0.0)]
+    assert len(B._simplify(pts, 0.01)) >= 3
+
+
+def test_stitch_stops_at_junctions_so_parallel_strings_are_not_overlaid():
+    """A node where 3+ ways meet is a branch. Walking through it arbitrarily can run out along
+    one string and back along its twin, drawing one LineString on top of itself."""
+    from pipeline import build_pipeline_network as B
+    trunk = [(0.0, 0.0), (1.0, 0.0)]
+    branch_a = [(1.0, 0.0), (2.0, 0.5)]
+    branch_b = [(1.0, 0.0), (2.0, -0.5)]
+    chains = B.stitch([trunk, branch_a, branch_b])
+    assert len(chains) == 3, "a Y-junction must yield three edge-disjoint paths, not one folded line"
+    for c in chains:
+        assert len(c) == 2
+
+
+def test_generic_descriptive_names_never_become_routes():
+    """"перемычка" (jumper) and "лупинг" (loop) are common nouns. Grouping every way carrying
+    one into a single 'route' fabricated a 153-component entity spanning 2,934 km."""
+    from pipeline import build_pipeline_network as B
+    for generic in ("перемычка", "лупинг", "отвод", "loop", "Branch", "  нитка  "):
+        assert B._is_generic_name(generic), f"{generic!r} must be rejected as an identity"
+    for real in ("Уренгой — Помары — Ужгород", "Дружба", "Nord Stream", "Ямал — Европа"):
+        assert not B._is_generic_name(real), f"{real!r} is a real route name"
+
+
+def test_named_way_routes_are_never_welded():
+    """Welding is justified by shared RELATION membership — OSM asserting one pipeline. A shared
+    name string is not that assertion, so the named-way path must not weld across gaps."""
+    src = (ROOT / "pipeline" / "build_pipeline_network.py").read_text(encoding="utf-8")
+    body = src.split("def build_named_way_routes")[1].split("\ndef ")[0]
+    assert "weld(" not in body, "the named-way path must not weld"
+
+
+def test_route_quality_is_measured_from_source_density_not_asserted():
+    """OSM ships 5,387-vertex corridors and 3-point placeholders under identical tags. Labelling
+    both 'mapped' asserts a confidence the geometry does not have."""
+    from pipeline import build_pipeline_network as B
+    dense = [[(30.0 + i * 0.01, 55.0) for i in range(400)]]          # ~0.6 km spacing
+    sparse = [[(30.0, 55.0), (60.0, 55.0), (90.0, 55.0)]]            # ~1000 km spacing
+    assert B._measured_quality(dense)[0] == "osm_mapped"
+    assert B._measured_quality(sparse)[0] == "topology_only"
+    mid = [[(30.0 + i * 0.3, 55.0) for i in range(40)]]              # ~19 km spacing
+    assert B._measured_quality(mid)[0] == "osm_generalized"
+
+
+@pytest.mark.skipif(not (PROCESSED / "pipeline_network_quality.json").exists(),
+                    reason="context network not built")
+def test_network_length_distinguishes_sum_of_routes_from_distinct_network():
+    """OSM models some systems as a superroute PLUS its child relations, so summing route
+    lengths counts shared pipe twice. Publishing only the sum overstated the network ~13%."""
+    q = json.loads((PROCESSED / "pipeline_network_quality.json").read_text(encoding="utf-8"))
+    for cls in ("pipeline_gas", "pipeline_oil"):
+        v = q[cls]
+        assert v["distinct_network_km"] <= v["total_length_km"]
+        # drawn geometry is always shorter than the source it was simplified from
+        assert v["drawn_length_km"] <= v["total_length_km"]
+        assert "welds" in v and "max_weld_km" in v, "weld provenance must be published"
+        assert v["max_weld_km"] <= 0.1 + 1e-9
+
+
 def test_simplification_preserves_endpoints():
     from pipeline import build_pipeline_network as B
     pts = [(30.0 + i * 0.01, 55.0 + (0.02 if i % 2 else 0.0)) for i in range(200)]
@@ -2053,9 +2127,10 @@ def test_network_quality_report_separates_topology_from_geometry():
         # continuity is reported, not asserted away: a fragmented route stays fragmented
         assert v["single_component_routes"] + v["multi_component_routes"] == v["routes"]
         assert v["total_components"] >= v["routes"]
-        # route_quality must never claim more than the source supports
-        assert set(v["route_quality"]) <= {"osm_mapped", "gem_traced", "gem_generalized",
-                                           "topology_only", "unresolved"}
+        # route_quality must never claim more than the source supports. osm_generalized and
+        # topology_only are MEASURED from source vertex density, not asserted.
+        assert set(v["route_quality"]) <= {"osm_mapped", "osm_generalized", "gem_traced",
+                                           "gem_generalized", "topology_only", "unresolved"}
 
 
 def test_context_network_files_are_declared_optional_and_lazy():

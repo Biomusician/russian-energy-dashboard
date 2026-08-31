@@ -133,6 +133,7 @@ interface RouteProps {
  *  generalized or schematic route is NOT a surveyed line. */
 const ROUTE_QUALITY_LABEL: Record<string, string> = {
   osm_mapped: "Mapped — traced route geometry (OpenStreetMap)",
+  osm_generalized: "Generalized — sparsely traced, approximate between vertices",
   gem_traced: "Source-traced route geometry",
   gem_generalized: "Generalized route — approximate, not a surveyed line",
   topology_only: "Connection known; geographic route unresolved",
@@ -472,6 +473,7 @@ export default function MapPanel({
             ] as unknown as maplibregl.ExpressionSpecification,
             "line-dasharray": [
               "match", ["get", "route_quality"],
+              "osm_generalized", ["literal", [3, 2]],
               "gem_generalized", ["literal", [3, 2]],
               "topology_only", ["literal", [1, 2.5]],
               ["literal", [1]],
@@ -1142,7 +1144,7 @@ export default function MapPanel({
               <div key={q} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
                 <svg width="20" height="6" style={{ flex: "0 0 auto" }} aria-hidden="true">
                   <line x1="0" y1="3" x2="20" y2="3" stroke="var(--text-dim)" strokeWidth="1.6"
-                        strokeDasharray={q === "gem_generalized" ? "4 2" : q === "topology_only" ? "1 2" : undefined} />
+                        strokeDasharray={q === "gem_generalized" || q === "osm_generalized" ? "4 2" : q === "topology_only" ? "1 2" : undefined} />
                 </svg>
                 <span style={{ fontSize: 9.5, color: "var(--text-faint)", lineHeight: 1.3 }}>
                   {ROUTE_QUALITY_LABEL[q] ?? q}
