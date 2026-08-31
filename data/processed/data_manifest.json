@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-08-30T19:59:42+00:00",
+  "build_time": "2026-08-31T01:30:44+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -20,6 +20,11 @@
     {
       "name": "index_regional.json",
       "bytes": 563847,
+      "optional": false
+    },
+    {
+      "name": "pipeline_network_quality.json",
+      "bytes": 817,
       "optional": false
     },
     {
@@ -54,7 +59,7 @@
     },
     {
       "name": "context_gas_network.geojson",
-      "bytes": 69142,
+      "bytes": 965328,
       "optional": true
     },
     {
@@ -64,7 +69,7 @@
     },
     {
       "name": "context_oil_network.geojson",
-      "bytes": 24603,
+      "bytes": 195723,
       "optional": true
     },
     {
