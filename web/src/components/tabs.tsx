@@ -35,6 +35,21 @@ function Block({ title, right, children }: { title: React.ReactNode; right?: Rea
   );
 }
 
+/** Vintage caveat for any figure derived from the WRI generation census.
+ *
+ *  Regional `installed_mw` is the denominator behind `regional_intensity.electric_generation`,
+ *  and that is where the stale census bites hardest — Moscow Oblast's regional composite is
+ *  100% generation-driven, so it moves ~12% under a realistic denominator correction against
+ *  ~0.03 ESDI nationally. The disclosure was originally attached only to the national figure,
+ *  which is the one place the error is smallest. */
+function genBasisHint(bundle: Bundle): string | undefined {
+  const b = bundle.snapshot.denominator_basis?.electric_generation_mw;
+  if (!b) return undefined;
+  return `${b.source} — ${b.census_vintage}. ${b.known_bias ?? ""} `
+    + "Regional generation intensity is computed against this base, so it carries the same "
+    + "vintage limitation. See docs/GENERATION_DENOMINATOR_AUDIT.md.";
+}
+
 function KV({ k, v, hint }: { k: string; v: React.ReactNode; hint?: string }) {
   return (
     <div className="kv" title={hint}>
@@ -354,7 +369,11 @@ export function OverviewTab(p: TabProps) {
       </Block>
 
       <Block title="Network & sectors" right={<button className="ghost" style={{ padding: "1px 6px", fontSize: 10 }} onClick={() => p.onTab("Effects")}>effects ›</button>}>
-        <KV k="Installed generation" v={`${region.installed_mw.toLocaleString("en-GB")} MW`} />
+        <KV
+          k="Installed generation"
+          v={`${region.installed_mw.toLocaleString("en-GB")} MW`}
+          hint={genBasisHint(bundle)}
+        />
         <KV k="Tracked substations (≥220 kV)" v={region.tracked_substations} />
         <KV k="Tracked HV lines (≥330 kV)" v={region.tracked_transmission_lines} />
         <KV k="Transmission burden" v={fmtNum(region.effects.transmission_burden, 2)} hint="weighted burden of recently-disrupted transmission facilities (not % offline)" />
@@ -996,7 +1015,11 @@ export function EffectsTab(p: TabProps) {
         {region ? (
           <>
             <KV k="Region population" v={region.population_millions != null ? `${fmtNum(region.population_millions, 1)} m` : "—"} hint="population POTENTIALLY exposed — not population actually affected" />
-            <KV k="Installed generation" v={`${region.installed_mw.toLocaleString("en-GB")} MW`} />
+            <KV
+          k="Installed generation"
+          v={`${region.installed_mw.toLocaleString("en-GB")} MW`}
+          hint={genBasisHint(bundle)}
+        />
             <KV k="Tracked substations / HV lines" v={`${region.tracked_substations} / ${region.tracked_transmission_lines}`} />
             <KV k="Heating season" v={heating ? "active (Oct–Apr)" : "out of season"} />
           </>

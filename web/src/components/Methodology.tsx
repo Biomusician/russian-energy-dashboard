@@ -82,9 +82,15 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
                 <div style={{ color: "var(--amber)", marginTop: 3 }}>
                   Known limitation: this is a <b>{s.denominator_basis.electric_generation_mw.census_vintage}</b> census
                   from {s.denominator_basis.electric_generation_mw.source}, frozen {s.denominator_basis.electric_generation_mw.source_frozen}.
-                  It {s.denominator_basis.electric_generation_mw.known_bias}. Measured effect on the
-                  headline is below published precision (±0.005 ESDI), because generation disruption
-                  is currently ~44 MW; the figure is disclosed rather than corrected so the series stays comparable.
+                  It {s.denominator_basis.electric_generation_mw.known_bias}. This is a
+                  <b> known material limitation</b>, not a rounding detail: a realistic correction
+                  shifts the published second decimal both today and across the series (max ~0.029
+                  ESDI nationally), and moves <b>Moscow Oblast's regional generation intensity by
+                  about 12%</b>, because that region's composite is entirely generation-driven.
+                  It is disclosed rather than corrected because applying a present-day fleet
+                  backwards across 2022–2026 would assert 2026 retirements in 2022 — a different
+                  error, not a fix. Correcting it needs per-unit commissioning and retirement
+                  dates, which no source currently in this repo supplies.
                 </div>
               )}
             </li>

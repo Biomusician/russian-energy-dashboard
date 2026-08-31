@@ -40,40 +40,64 @@ inversely proportional to the denominator and each scenario is one multiplicatio
 renormalises over covered sectors (weights: refining 0.35, generation 0.20, transmission 0.10,
 oil logistics 0.20; gas and coal are uncovered, not zero-disruption).
 
-Published baseline: **ESDI 17.86**, generation score **0.02 %** on **219,992 MW**, which implies
-**44 MW** of decay-weighted disrupted generating capacity.
+Baseline: generation **0.07 %** on **219,992 MW** — about **154 MW** of decay-weighted disrupted
+generating capacity.
 
-| Scenario | Denominator | Generation score | ESDI | Δ |
-|---|---:|---:|---:|---:|
-| Published (WRI, ~2018 census) | 219,992 MW | 0.0200 % | 17.8647 | — |
-| GEM Aug-2026 operating basis | 251,687 MW | 0.0175 % | 17.8641 | −0.0006 |
-| WRI less GEM-retired (the naive "−23 GW" fix) | 197,001 MW | 0.0223 % | 17.8653 | +0.0005 |
-| Hypothetical: denominator halved | 109,996 MW | 0.0400 % | 17.8694 | +0.0047 |
-| Hypothetical: generation disruption forced to **zero** | n/a | 0.0000 % | 17.8600 | −0.0047 |
+**Maximum movement at today's date, including deleting the sector outright: ±0.0165.** The
+headline is published to two decimal places, so **the denominator can change it today.**
 
-**Maximum movement across every scenario, including deleting the sector outright: ±0.0047.**
-The headline is published to two decimal places. The denominator error *cannot* move it.
+## Full-history sweep
 
-Regionally the same holds, and more strongly: **no region has a non-zero generation intensity**,
-so no regional figure is exposed to the denominator either.
+Today is one step in a 245-step national series and 80 regional series. Sweeping every timestep
+under each scenario (`sweep()` in the audit script):
 
-### What that does and does not mean
+| Scenario | Max \|ΔESDI\| national | Date | Max \|ΔESDI\| regional | Region |
+|---|---:|---|---:|---|
+| GEM Aug-2026 operating basis | **0.0287** | 2025-11-29 | 0.0287 | RU-MOS |
+| WRI less GEM-retired | 0.0267 | 2025-11-29 | 0.0267 | RU-MOS |
+| Denominator halved (bound) | 0.2282 | 2025-11-29 | 0.2282 | RU-MOS |
+| Sector deleted (absolute bound) | 0.2282 | 2025-11-29 | 0.2282 | RU-MOS |
 
-It does **not** mean the denominator is correct. It means the denominator is currently
-**analytically inert**, because measured generation disruption is 44 MW against a fleet of
-~220 GW — four thousandths of one percent. The error is real; it has nowhere to propagate.
+**Regional ordering first changes on 2025-07-26.** National generation disruption peaked at
+0.44 % around 2025-11-29 — six times today's level.
 
-Two consequences, and they point opposite ways:
+## Regional exposure — the largest effect, and the one nearly missed
 
-- **The scoring risk is nil**, so the §22 instruction not to deploy a correction costs nothing.
-- **The disclosure defect is real and should be treated as one.** `electric_generation_mw:
-  219992` is published in `snapshot.json` and rendered in the UI as a plain figure. It is a
-  ~2018 census with no vintage attached, and a reader has no way to know that. That is fixable
-  without touching a score — see Recommendation.
+**Moscow Oblast (RU-MOS) publishes `regional_intensity.electric_generation = 0.29` against an
+`installed_mw` of 14,589 — a WRI-derived regional denominator.** Its regional composite is
+100 % generation-driven (`covered_sectors: ["electric_generation"]`), so it moves with the
+denominator roughly one-for-one: about ±12 % under the realistic scenarios, an order of magnitude
+more than the national headline.
 
-If generation disruption ever becomes material (a sustained campaign against power stations
-rather than the substation-focused pattern to date), this conclusion expires immediately. The
-sensitivity should be re-run whenever the generation sector score exceeds ~1 %.
+**78 regions publish `installed_mw` from this same 2018 census.** An earlier draft of this
+document asserted that "no region has a non-zero generation intensity"; that was **false** — it
+came from reading the wrong key (`regional_intensity.electric_generation` rather than
+`regional_intensity.sectors.electric_generation`) and was never measured. The regional exposure
+is the *largest* effect of the stale denominator, not the absent one.
+
+## A scoring bug was suppressing the number this audit measures
+
+The independent analytic red-team found that `_facility_registry` in `build_index.py` used to
+`continue` on an `asset_id` it had already seen. Incidents arrive date-sorted, so the **earliest**
+incident fixed a facility's capacity and every later one was discarded — including a later
+`linked_asset_id`.
+
+Novocherkasskaya GRES was struck twice. The first record carried no link; the second linked it to
+a **2,214 MW** inventoried plant. The second was thrown away, and a station with a confirmed live
+disruption contributed **0 MW**.
+
+Fixed: capacity fields are now folded across every incident for a facility, first non-null per
+field. Effects:
+
+- Decay-weighted disrupted generation: **44 MW → 154 MW** (3.5×).
+- Generation sector score: **0.02 % → 0.07 %**.
+- National ESDI on 2026-08-31: **17.86 → 17.57** (most of that difference is one extra day of
+  decay; the linkage fix raises generation and lowers nothing).
+- Current-date denominator sensitivity: **0.0047 → 0.0165**, i.e. from below publication
+  precision to above it.
+
+**The earlier "analytically inert" conclusion was therefore doubly wrong:** it was scoped to a
+single timestep, and it rested on a number a bug was suppressing 3.5×.
 
 ## Historical sensitivity — NOT computed, and why
 
@@ -111,14 +135,19 @@ Until then the honest position is the one stated above: a dated census, its vint
 
 ## Recommendation
 
-1. **Do not change the denominator.** Confirmed by measurement, not by instruction alone — the
-   maximum achievable movement is 20× smaller than the published precision.
+1. **Do not change the denominator in this iteration** — but not because it is harmless. It is
+   not: it moves published values nationally and materially more regionally. A corrected
+   present-day denominator applied backwards across 2022-2026 would assert 2026 retirements in
+   2022, which is a different error, not a fix. The blocker is the missing temporal basis, and
+   this is now a **known material defect awaiting a source**, not a curiosity.
 2. **Disclose the vintage.** Publish the denominator's basis and census date alongside the value
    (`"basis": "WRI GPPD, Russian rows dated to 2018, no retirement field"`), so the figure cannot
    be read as current. This is a labelling change and touches no score.
 3. **Acquire GIPT before attempting the historical series**, not after.
-4. **Re-run this audit whenever the generation sector score exceeds ~1 %**, at which point the
-   inertness argument no longer holds.
+4. **Disclose the vintage on REGIONAL figures too**, not only the national one — that is where
+   the exposure is largest.
+5. **Re-run `sweep()` whenever generation incidents are added.** Break-even for moving the second
+   decimal is a generation score near 0.17 %, not the 1 % an earlier draft guessed.
 
 ## Provenance
 

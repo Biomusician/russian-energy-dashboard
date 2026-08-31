@@ -76,9 +76,35 @@ def load_gem():
     return rows
 
 
+# GEM statuses that describe something not built, no longer built, or never operated. Binding one
+# of these to an operating canonical entity is the RV-009 failure (a cancelled Yamal-Europe 2
+# matched an operating trunk by name), so it is detected rather than left to a reader.
+_NOT_OPERATING = {"cancelled", "proposed", "shelved", "retired", "mothballed", "construction",
+                  "pre-construction", "idle"}
+
+
+def _contradictions(row, entity):
+    """Reasons this name match is probably NOT the same asset."""
+    out = []
+    status = (row.get("status_native") or "").strip().lower()
+    if status in _NOT_OPERATING:
+        out.append(f"GEM status is '{status}' — the registry entity is treated as built")
+    reg_countries = {c.strip().upper() for c in (entity.get("countries") or [])}
+    gem_countries = {c.strip().upper()[:2] for c in (row.get("countries") or [])}
+    ISO = {"RUSSIA": "RU", "BELARUS": "BY", "UKRAINE": "UA", "GERMANY": "DE", "POLAND": "PL",
+           "CHINA": "CN", "KAZAKHSTAN": "KZ", "TURKEY": "TR", "SLOVAKIA": "SK", "HUNGARY": "HU",
+           "CZECHIA": "CZ", "UZBEKISTAN": "UZ", "TURKMENISTAN": "TM"}
+    gem_iso = {ISO.get(c.strip().upper(), c.strip().upper()[:2])
+               for c in (row.get("countries") or [])}
+    if reg_countries and gem_iso and not (reg_countries & gem_iso):
+        out.append(f"no country overlap: registry {sorted(reg_countries)} vs GEM {sorted(gem_iso)}")
+    return out
+
+
 def reconcile(gem_rows, entities):
-    """-> (auto_map, review_rows). Only `exact` ever reaches auto_map."""
+    """-> (auto_map, review_rows). Nothing here is `exact`; see the confidence note below."""
     keys = registry_keys(entities)
+    entity_by_id = {e["canonical_pipeline_id"]: e for e in entities}
     by_name = collections.defaultdict(list)
     for r in gem_rows:
         by_name[normalise(r["name"])].append(r)
@@ -92,15 +118,33 @@ def reconcile(gem_rows, entities):
         display = group[0]["name"]
 
         if len(hits) == 1:
-            # One canonical entity, N GEM segments. N>1 is `aggregates` by construction.
-            rel = "represents" if len(ids) == 1 else "aggregates"
+            # RELATIONSHIP DIRECTION. GEM splits a pipeline into per-country / per-phase
+            # SEGMENTS, so each GEM row is a PART OF the canonical entity. `aggregates` means the
+            # opposite — one source record covering several of ours, as an OSM superroute does —
+            # and writing it here inverted the hierarchy on 54 of 66 rows.
+            rel = "represents" if len(ids) == 1 else "part_of"
             for pid in ids:
+                row = next(r for r in group if r["gem_project_id"] == pid)
+                # CONFIDENCE. This matcher compares NAMES. A name match is not an identity match,
+                # and this iteration has two proofs: three OSM relations are called "Nord Stream",
+                # and "Yamal Europe 2" is a cancelled project whose name matches an operating
+                # trunk. `exact` is auto-mergeable, so claiming it here would let name similarity
+                # become canonical silently — the exact failure this module's docstring forbids.
+                # Name equality against a curated alias is `strong` evidence and no more.
+                conf = "strong"
+                flags = _contradictions(row, entity_by_id[hits[0]])
+                if flags:
+                    # A status or country contradiction is not a weak match, it is a probable
+                    # WRONG match: a cancelled or foreign asset bound to an operating one.
+                    conf = "possible"
                 auto.append({
                     "canonical_pipeline_id": hits[0],
                     "source_system": "gem_ggit" if group[0]["commodity"] == "gas" else "gem_goit",
                     "source_id": pid,
                     "relationship": rel,
-                    "confidence": "exact",
+                    "confidence": conf,
+                    "gem_status": row.get("status_native"),
+                    "contradictions": "; ".join(flags),
                     "evidence": (f"Normalised name equality with a registry name/alias; "
                                  f"{len(ids)} GEM segment(s) share this name"),
                     "source_native": display,
@@ -139,8 +183,8 @@ def write(auto, review):
     PROPOSAL.parent.mkdir(parents=True, exist_ok=True)
     with open(PROPOSAL, "w", encoding="utf-8", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=["canonical_pipeline_id", "source_system", "source_id",
-                                           "relationship", "confidence", "evidence",
-                                           "source_native"])
+                                           "relationship", "confidence", "gem_status",
+                                           "contradictions", "evidence", "source_native"])
         w.writeheader()
         w.writerows(sorted(auto, key=lambda r: (r["canonical_pipeline_id"], r["source_id"])))
     with open(REVIEW, "w", encoding="utf-8", newline="") as fh:

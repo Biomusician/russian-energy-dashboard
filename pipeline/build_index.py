@@ -245,6 +245,7 @@ def _facility_registry(facilities, incidents, assets):
     for f in facilities:
         cls = f.get("asset_class")
         reg[f["asset_id"]] = {
+            "_from_source_table": True,
             "name": f.get("name"),
             "asset_class": cls,
             "sector": SECTOR_OF_CLASS.get(cls),
@@ -254,17 +255,26 @@ def _facility_registry(facilities, incidents, assets):
             "capacity_bcm_y": f.get("capacity_bcm_y"),
         }
     # Curated incidents may name a facility that no source table lists.
+    #
+    # CAPACITY IS A PROPERTY OF THE FACILITY, NOT OF ONE INCIDENT. This loop used to `continue`
+    # on an asset_id it had already seen, so the EARLIEST incident fixed the capacity and every
+    # later one was discarded — including a later `linked_asset_id`. Novocherkasskaya GRES was
+    # struck twice; the first record carried no link, the second linked it to a 2,214 MW
+    # inventoried plant, and the second was thrown away. The station scored a live disruption
+    # worth 0 MW. Fields are now folded across every incident for the facility, first non-null
+    # wins per field, so a later link can fill a gap but cannot overwrite a known value.
     for inc in incidents:
-        if inc["asset_id"] in reg:
-            continue
         cls = inc.get("asset_class")
         # A curated incident may name an inventoried asset via linked_asset_id. When
         # it does, the facility's FULL capacity becomes the exposure base -- the same
         # treatment refineries get, since the index measures capacity exposed to
         # disruption rather than capacity proven lost.
+        if inc["asset_id"] in reg and reg[inc["asset_id"]].get("_from_source_table"):
+            continue                     # a source-table facility is authoritative; do not fold
         linked = by_asset.get(inc.get("linked_asset_id") or "")
         self_asset = by_asset.get(inc["asset_id"])  # incident hitting an inventoried asset directly
-        reg[inc["asset_id"]] = {
+        prev = reg.get(inc["asset_id"], {})
+        candidate = {
             "name": inc.get("asset_name"),
             "asset_class": cls,
             "sector": SECTOR_OF_CLASS.get(cls),
@@ -278,6 +288,10 @@ def _facility_registry(facilities, incidents, assets):
             "voltage_kv": inc.get("voltage_kv") or (linked or {}).get("voltage_kv"),
             "linked_asset_id": inc.get("linked_asset_id"),
         }
+        # First non-null per field, earlier incidents winning ties — so this is order-stable and
+        # a later record can only ADD information, never revise it away.
+        reg[inc["asset_id"]] = {k: (prev.get(k) if prev.get(k) is not None else v)
+                                for k, v in candidate.items()}
     return reg
 
 

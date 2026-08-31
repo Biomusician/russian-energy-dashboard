@@ -16,17 +16,65 @@ Reproduce the counts with:
 | — by level | 2 system · 7 corridor · 24 pipeline · 3 branch |
 | — by commodity | 24 gas · 12 oil |
 | — with a structural parent | 16 |
-| Auto-derived entities (one per unmatched OSM route) | 255 |
-| **Total in the emitted payload** | **291** |
+| Auto-derived entities (one per unmatched route) | 438 |
 | Source mappings (canonical) | 29 — 26 OSM · 3 GEM |
 | — relationship | 20 `represents` · 6 `aggregates` · 3 `part_of` |
 | — confidence | 20 `exact` · 9 `strong` |
-| Entities carrying ≥1 source | 22 |
+| Aliases (sourced) | 80 across 7 types |
 | Temporal status records | 27 across 15 entities |
 | — by kind | 16 commercial flow · 7 physical · 4 operational |
-| Canonical nodes | 34 |
-| Topology assertions | 54 (46 with a resolved subject, 44 with a resolved node) |
+| Canonical nodes | 34 — **all** `geography_precision: none` |
+| — with an independent ENTSOG mapping | 6 (with EIC codes) |
+| Topology assertions | 54 — 12 fully linked · 40 partial · 2 unresolved |
 | Review queue | 11 rows — 4 accepted · 3 unresolved · 3 rejected · 1 unmatched |
+
+### Canonical coverage, measured in kilometres
+
+Entity counts flatter this badly. 36 curated entities against 474 total reads as 7.6 % coverage,
+while those 36 include the largest trunk systems in the dataset. **Kilometres of distinct mapped
+pipe attached to a curated identity is the honest measure:**
+
+| | |
+|---|---:|
+| Distinct mapped pipe geometry | 191,202 km |
+| — attached to a **curated** canonical entity | **53,884 km (28.2 %)** |
+| — attached to an auto-derived entity | 137,318 km (71.8 %) |
+| — with **no** canonical identity at all | **0 km** |
+
+The last row was 20.4 % until this iteration: 183 named-way routes (244 drawn features) were
+built *after* the registry ran and so carried `canonical_pipeline_id: null`, while the module
+docstring claimed the registry "always covers the whole network". The registry now runs last and
+the claim is true.
+
+**28.2 % by kilometre is the number to quote.** The network is *identified* end to end; it is
+*canonically curated* for a little over a quarter of its length. Describing the whole network as
+canonically reconciled would be false.
+
+## GEM reconciliation state
+
+| | |
+|---|---:|
+| GEM rows ingested (monitored area) | 1,917 |
+| — carrying GEM's own schematic/straight-line geometry | 698 |
+| Proposed mappings | 65 |
+| — `strong` (normalised name equality against a curated alias) | 49 |
+| — `possible` (demoted: status or country contradiction) | 16 |
+| — `exact` | **0** |
+| Canonical GEM mappings (hand-verified) | 3 |
+
+**Nothing GEM produces is stamped `exact`.** `exact` is auto-mergeable, and this matcher compares
+*names*. Two proofs from this iteration that a name match is not an identity match: three OSM
+relations are called "Nord Stream", and "Yamal Europe 2" is a cancelled Belarus→Slovakia project
+whose name matches an operating trunk.
+
+Sixteen proposals were demoted to `possible` by an automatic contradiction check —
+`DRUZHBA ← P2020` is a **cancelled** Unecha–Wilhelmshaven project, `POWER_OF_SIBERIA ← P3208` is
+**cancelled**, `BPS_1 ← P5333` is **retired**, and two ESPO candidates are China-only with no
+country overlap. Each is exactly the failure RV-009 rejected by hand; the check now catches the
+class rather than the instance.
+
+The three canonical GEM rows are marked in the curated data as deriving from a **provisional**
+live export with no release identifier, so they cannot be mistaken for a citable release.
 
 ## The four separations the schema exists to protect
 
@@ -63,7 +111,7 @@ where `Ukhta–Torzhok 1` swallowed strings 2 and 3 (review RV-002/RV-003).
 
 The strict matcher initially missed Druzhba, Bukhara–Urals, Baltic Pipeline System 1 and eleven
 others, because GEM's name and ours differed by a word. **Fourteen aliases were added to the
-registry; the matcher was not relaxed.** Auto-mapping then rose from 31 rows to 66.
+registry; the matcher was not relaxed.** Auto-mapping then rose from 31 rows to 65.
 
 That distinction matters. Adding an alias is a human asserting "these two names denote the same
 thing", recorded in curated data and reviewable. Widening a matcher is a machine guessing it, once,
@@ -86,11 +134,19 @@ RV-010 is a caution about arithmetic evidence: r2006544's 2,448.7 km is within 0
 Nord Stream 1's length, which made "NS1, both lines" look obvious. Way-level membership refuted it
 — 4 of its ways are NS1's, 2 are NS2's. A plausible number is not a source.
 
-### 66 GEM mappings are proposed, not canonical
+RV-010 originally added that this ghost relation's length was "excluded from network extent by
+`distinct_network_km`". **The GIS red-team proved that false.** Under the old apportionment,
+network extent was allocated by member-way *count* in build order, and r2006544 sat ahead of both
+real pipelines — so it took all 2,448.7 km while NS1 was docked to 349.9 and NS2 to 704.4. The
+extent total happened to be right; the attribution was backwards. `distinct_network_km` is now an
+exact union of way lengths, which is order-independent and makes the claim true for the first
+time. Recorded here because "the total came out right" concealed a wrong mechanism for a whole
+iteration.
 
-`data/review/gem_source_map_proposal.csv` holds 66 auto-matched rows covering 22 entities. They
-are **not** in `data/curated/pipeline_source_map.csv`, which carries only the 3 hand-verified GEM
-mappings.
+### 65 GEM mappings are proposed, not canonical
+
+`data/review/gem_source_map_proposal.csv` holds 65 auto-matched rows. They are **not** in
+`data/curated/pipeline_source_map.csv`, which carries only the 3 hand-verified GEM mappings.
 
 The rule permits `exact` to auto-merge, and these are exact *name* matches. They have not been
 promoted because Nord Stream demonstrated that **an exact name match is not an exact identity

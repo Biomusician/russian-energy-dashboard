@@ -582,6 +582,40 @@ export interface PipelineStatusRecord {
   note: string | null;
 }
 
+/** One sourced connection assertion, attached to both canonical ends where both exist.
+ *  A connection can be KNOWN without being DRAWABLE — that is the whole reason nodes carry
+ *  `geography_precision` and are allowed to have none. */
+export interface PipelineConnection {
+  relation: string;
+  other: string;
+  other_id: string | null;
+  direction: "from" | "to";
+  node_id: string | null;
+  node_name: string | null;
+  node_type: string | null;
+  node_country: string | null;
+  /** `none` here means the connection point has no public coordinate and nothing is drawn. */
+  node_geography_precision: string | null;
+  node_sources: { source_system: string; source_id: string; point_eic: string | null }[];
+  substance: string | null;
+  source_quality: string | null;
+  source_url: string | null;
+  linkage: string | null;
+  linkage_reason: string | null;
+  note: string | null;
+}
+
+/** An alias with provenance. A project nickname must point at an artifact that attests it;
+ *  native names, romanisations, translations and abbreviations evidence themselves. */
+export interface PipelineAlias {
+  alias: string;
+  alias_type: string;
+  language: string | null;
+  source_url: string | null;
+  source_date: string | null;
+  note: string | null;
+}
+
 export interface PipelineEntity {
   canonical_pipeline_id: string;
   canonical_name: string;
@@ -600,6 +634,8 @@ export interface PipelineEntity {
   curated: boolean;
   sources: PipelineSourceMapping[];
   status: PipelineStatusRecord[];
+  connections: PipelineConnection[];
+  alias_records: PipelineAlias[];
   /** Segment-weighted. `unresolved_gap_count` is a COUNT: the missing length is deliberately
    *  never estimated, because the straight line between two components is not the pipe. */
   geometry: {

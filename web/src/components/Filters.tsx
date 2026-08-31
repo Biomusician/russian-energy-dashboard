@@ -329,9 +329,10 @@ function CoverageRow({ label, c }: { label: string; c?: NetworkCoverageClass }) 
   if (!c) return null;
   const mapped = c.route_quality.osm_mapped ?? 0;
   // Report the DE-DUPLICATED extent as the headline. Summing route lengths double-counts every
-  // corridor that is modelled both as a system and as its constituent strings — 17,870 km of the
-  // gas network is exactly that, and it is a correct hierarchy rather than a duplicate. Showing
-  // the sum as "km of pipeline" would overstate the network by that amount.
+  // corridor modelled both as a system and as its constituent strings — a correct hierarchy, not
+  // a duplicate, but presenting the sum as "km of pipeline" overstates the network. The overlap
+  // shown below is `total_length_km - distinct_network_km`; do not quote a constant here, it
+  // changes with the data (an earlier comment said 17,870 while the line rendered 23,228).
   const distinct = c.distinct_network_km;
   const overlap = distinct != null ? Math.max(0, c.total_length_km - distinct) : null;
   return (
@@ -339,7 +340,7 @@ function CoverageRow({ label, c }: { label: string; c?: NetworkCoverageClass }) 
       <div className="cov-head">
         <span>{label}</span>
         <span className="num">
-          {c.routes} routes · {Math.round(distinct ?? c.total_length_km).toLocaleString("en-GB")} km
+          {c.canonical_entities ?? c.routes} pipelines · {Math.round(distinct ?? c.total_length_km).toLocaleString("en-GB")} km
         </span>
       </div>
       {overlap != null && overlap > 1 && (
@@ -348,7 +349,7 @@ function CoverageRow({ label, c }: { label: string; c?: NetworkCoverageClass }) 
           " km, but a system and the strings inside it are both modelled, so that total counts " +
           "shared pipe more than once. The figure above counts each kilometre once."
         }>
-          <span>Counted once (shared by parent routes)</span>
+          <span>Shared pipe, not counted twice</span>
           <span className="num">−{Math.round(overlap).toLocaleString("en-GB")} km</span>
         </div>
       )}

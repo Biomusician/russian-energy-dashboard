@@ -15,8 +15,10 @@ WHAT THIS DOES NOT DO: it does not close anything. Nothing here writes geometry,
 classification never becomes a licence to interpolate. `UNRESOLVED GAP > INVENTED LINE`. The
 output is a ledger a human reads, and the counts that make the network's incompleteness visible.
 
-Gap length is measured endpoint-to-nearest-endpoint between components of the SAME route, which
-is a lower bound on the missing pipe: real pipe does not run in straight lines.
+Gap length is the straight-line separation between two components of the SAME route, and is a
+LOWER BOUND on the missing pipe: real pipe does not run in straight lines. The gaps reported are
+the N-1 edges of a MINIMUM SPANNING TREE over each route's components — the set that would have
+to be closed to make the route continuous, each counted exactly once.
 """
 
 import argparse
@@ -78,28 +80,48 @@ def load_components(path):
 
 
 def gaps_for_route(components):
-    """Nearest-endpoint distance from each component to any other, as an undirected chain.
+    """The N-1 gaps that actually separate a route's N components.
 
-    Greedy nearest-neighbour rather than an exact tour: with up to 125 components the exact
-    problem is a TSP, and the ledger only needs each component's closest neighbour to
-    characterise the gap. Reported as a LOWER BOUND, and labelled as one.
+    Two earlier bugs lived here and both inflated the ledger:
+
+      1. Every component reported its nearest neighbour independently, so a mutual pair was
+         counted TWICE. 1,000 "adjacencies" were 651 distinct pairs; the headline total was 26%
+         too high, and Ukhta-Torzhok's single 414 km gap appeared as two.
+      2. Reporting only each component's CLOSEST neighbour biased the bands toward small gaps —
+         a component's large separation was never counted at all.
+
+    A minimum spanning tree over the components fixes both: exactly N-1 edges, each counted once,
+    and the set of gaps a reader would have to close to make the route continuous. That is the
+    honest question. Prim's algorithm, O(n^2), fine at n<=125.
     """
     ends = [(i, c[0], c[-1]) for i, c in components if len(c) >= 2]
-    out = []
-    for idx, (i, a_start, a_end) in enumerate(ends):
+    if len(ends) < 2:
+        return []
+
+    def sep(a, b):
+        """Closest approach between two components, endpoint to endpoint."""
         best = None
-        for jdx, (j, b_start, b_end) in enumerate(ends):
-            if idx == jdx:
-                continue
-            for pa in (a_start, a_end):
-                for pb in (b_start, b_end):
-                    d = haversine(pa, pb)
-                    if best is None or d < best[0]:
-                        best = (d, j, pa)
-        if best:
-            out.append({"component": i, "nearest_component": best[1],
-                        "gap_km": round(best[0], 3), "at_lon": round(best[2][0], 4),
-                        "at_lat": round(best[2][1], 4)})
+        for pa in (a[1], a[2]):
+            for pb in (b[1], b[2]):
+                d = haversine(pa, pb)
+                if best is None or d < best[0]:
+                    best = (d, pa)
+        return best
+
+    inside, outside = [0], list(range(1, len(ends)))
+    out = []
+    while outside:
+        best = None
+        for i in inside:
+            for j in outside:
+                d, at = sep(ends[i], ends[j])
+                if best is None or d < best[0]:
+                    best = (d, i, j, at)
+        d, i, j, at = best
+        out.append({"component": ends[i][0], "nearest_component": ends[j][0],
+                    "gap_km": round(d, 3), "at_lon": round(at[0], 4), "at_lat": round(at[1], 4)})
+        inside.append(j)
+        outside.remove(j)
     return out
 
 
@@ -146,7 +168,8 @@ def main(argv=None):
 
     rows, per_route, summary = analyse()
     total = sum(summary.values())
-    log(f"pipeline-gaps: {len(per_route)} fragmented routes, {total} component adjacencies")
+    log(f"pipeline-gaps: {len(per_route)} fragmented routes, {total} gaps "
+        f"(spanning-tree edges, each counted once)")
     for _, name in BANDS:
         n = summary.get(name, 0)
         if n:

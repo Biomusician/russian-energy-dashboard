@@ -1,0 +1,81 @@
+canonical_pipeline_id,alias,alias_type,language,source_url,source_date,note
+UGSS,ЕСГ,abbreviation,ru,,,Standard abbreviation of the canonical or native name
+UGSS,Единая система газоснабжения,native_name,ru,,,Name in the operator's own language
+UGSS,UGSS,abbreviation,en,,,Standard abbreviation of the canonical or native name
+NORTHERN_LIGHTS,Сияние Севера,native_name,ru,,,Name in the operator's own language
+NORTHERN_LIGHTS,Siyaniye Severa,transliteration,ru,,,Deterministic romanisation of the native name
+NORTHERN_LIGHTS,Northern Lights,translation,en,,,Direct translation of the native name
+UKHTA_TORZHOK_1,Ухта — Торжок,native_name,ru,,,Name in the operator's own language
+UKHTA_TORZHOK_1,Ukhta-Torzhok (Yamal),project_name,en,gem:P0767,,GEM PipelineName 'Ukhta-Torzhok (Yamal) Gas Pipeline'
+UKHTA_TORZHOK_2,Ухта — Торжок 2,native_name,ru,,,Name in the operator's own language
+UKHTA_TORZHOK_3,Ухта — Торжок 3,native_name,ru,,,Name in the operator's own language
+BOVANENKOVO_UKHTA,Бованенково — Ухта,native_name,ru,,,Name in the operator's own language
+BOVANENKOVO_UKHTA,Bovanenkovo-Ukhta,transliteration,en,,,Deterministic romanisation of the native name
+BOVANENKOVO_UKHTA_1,Бованенково — Ухта 1,native_name,ru,,,Name in the operator's own language
+BOVANENKOVO_UKHTA_1,BU-1,abbreviation,en,,,Standard abbreviation of the canonical or native name
+BOVANENKOVO_UKHTA_2,Бованенково — Ухта 2,native_name,ru,,,Name in the operator's own language
+BOVANENKOVO_UKHTA_2,BU-2,abbreviation,en,,,Standard abbreviation of the canonical or native name
+YAMAL_EUROPE,Ямал — Европа,native_name,ru,,,Name in the operator's own language
+YAMAL_EUROPE,Ямал — Еўропа,native_name,be,,,Name in the operator's own language
+YAMAL_EUROPE,Yamal-Europe,transliteration,en,,,Deterministic romanisation of the native name
+SRTO_TORZHOK,СРТО — Торжок,native_name,ru,,,Name in the operator's own language
+SRTO_TORZHOK,Northern Tyumen Regions–Torzhok,translation,en,,,Direct translation of the native name
+SRTO_TORZHOK,Northern Tyumen Regions (SRTO)–Torzhok,translation,en,,,Direct translation of the native name
+BROTHERHOOD,Братство,native_name,ru,,,Name in the operator's own language
+BROTHERHOOD,Bratstvo,transliteration,ru,,,Deterministic romanisation of the native name
+URENGOY_POMARY_UZHHOROD,Уренгой — Помары — Ужгород,native_name,ru,,,Name in the operator's own language
+URENGOY_POMARY_UZHHOROD,Urengoy-Pomary-Uzhgorod,transliteration,en,,,Deterministic romanisation of the native name
+URENGOY_POMARY_UZHHOROD,Urengoy-Pomary-Uzhhorod,transliteration,en,,,Deterministic romanisation of the native name
+PROGRESS,Прогресс,native_name,ru,,,Name in the operator's own language
+PROGRESS,Yamburg–Western Border,translation,en,,,Direct translation of the native name
+SOYUZ,Союз,native_name,ru,,,Name in the operator's own language
+SOYUZ,Orenburg–Western Border,translation,en,,,Direct translation of the native name
+NORD_STREAM_1,Северо-Европейский газопровод,native_name,ru,,,Name in the operator's own language
+NORD_STREAM_2,NS2,abbreviation,en,,,Standard abbreviation of the canonical or native name
+NORD_STREAM_2,Nord Stream 2,project_name,en,osm:relation/16489915,,OSM route relation name
+GRYAZOVETS_VYBORG,Грязовец — Выборг,native_name,ru,,,Name in the operator's own language
+GRYAZOVETS_VYBORG,Gryazovets-Vyborg,transliteration,en,,,Deterministic romanisation of the native name
+TURKSTREAM,Турецкий поток,native_name,ru,,,Name in the operator's own language
+TURKSTREAM,TürkAkım,native_name,tr,,,Name in the operator's own language
+TURKSTREAM,Turkish Stream,translation,en,,,Direct translation of the native name
+TURKSTREAM,TurkStream,project_name,en,osm:relation/11700013,,OSM route relation name
+BLUE_STREAM,Голубой поток,native_name,ru,,,Name in the operator's own language
+BLUE_STREAM,Mavi Akım,native_name,tr,,,Name in the operator's own language
+BLUE_STREAM,Blue Stream,project_name,en,osm:relation/8214463,,OSM route relation name
+POWER_OF_SIBERIA,Сила Сибири,native_name,ru,,,Name in the operator's own language
+POWER_OF_SIBERIA,Power of Siberia,project_name,en,gem:P2352,,GEM PipelineName
+SAKHALIN_KHABAROVSK_VLADIVOSTOK,СХВ,abbreviation,ru,,,Standard abbreviation of the canonical or native name
+SAKHALIN_KHABAROVSK_VLADIVOSTOK,Sakhalin-Khabarovsk-Vladivostok,transliteration,en,,,Deterministic romanisation of the native name
+BUKHARA_URAL,Бухара — Урал,native_name,ru,,,Name in the operator's own language
+BUKHARA_URAL,Buxoro — Ural,native_name,uz,,,Name in the operator's own language
+BUKHARA_URAL,Bukhara-Ural,transliteration,en,,,Deterministic romanisation of the native name
+CENTRAL_ASIA_CENTER,Средняя Азия — Центр,native_name,ru,,,Name in the operator's own language
+CENTRAL_ASIA_CENTER,CAC,abbreviation,en,,,Standard abbreviation of the canonical or native name
+CENTRAL_ASIA_CENTER,САЦ,abbreviation,ru,,,Standard abbreviation of the canonical or native name
+CENTRAL_ASIA_CENTER,Central Asia–Center,translation,en,,,Direct translation of the native name
+BOTAS_NETWORK,BOTAŞ Doğal Gaz Boru Hatları,native_name,tr,,,Name in the operator's own language
+DRUZHBA,Дружба,native_name,ru,,,Name in the operator's own language
+DRUZHBA,Friendship Pipeline,translation,en,,,Direct translation of the native name
+DRUZHBA,Przyjaźń,native_name,pl,,,Name in the operator's own language
+DRUZHBA,Ropovod Družba,native_name,sk,,,Name in the operator's own language
+DRUZHBA,Barátság,native_name,hu,,,Name in the operator's own language
+DRUZHBA,Druzhba,transliteration,en,,,Deterministic romanisation of the native name
+DRUZHBA_NORTH,Дружба север,native_name,ru,,,Name in the operator's own language
+DRUZHBA_SOUTH,Дружба юг,native_name,ru,,,Name in the operator's own language
+ESPO,ВСТО,abbreviation,ru,,,Standard abbreviation of the canonical or native name
+ESPO,Восточная Сибирь - Тихий океан,native_name,ru,,,Name in the operator's own language
+ESPO,ESPO,abbreviation,en,,,Standard abbreviation of the canonical or native name
+ESPO,Eastern Siberia–Pacific Ocean,translation,en,,,Direct translation of the native name
+ESPO_1,ВСТО-1,abbreviation,ru,,,Standard abbreviation of the canonical or native name
+ESPO_2,ВСТО-2,abbreviation,ru,,,Standard abbreviation of the canonical or native name
+SKOVORODINO_MOHE,Сковородино — Мохэ,native_name,ru,,,Name in the operator's own language
+BPS_1,БТС,abbreviation,ru,,,Standard abbreviation of the canonical or native name
+BPS_1,BPS-1,abbreviation,en,,,Standard abbreviation of the canonical or native name
+BPS_1,Baltic Pipeline System 1,project_name,en,gem:P0651,,GEM PipelineName
+BPS_2,БТС-2,abbreviation,ru,,,Standard abbreviation of the canonical or native name
+BPS_2,BPS-2,abbreviation,en,,,Standard abbreviation of the canonical or native name
+SURGUT_POLOTSK,Сургут — Полоцк,native_name,ru,,,Name in the operator's own language
+SURGUT_POLOTSK,Нафтаправод Сургут – Полацк,native_name,be,,,Name in the operator's own language
+OMSK_IRKUTSK,Омск — Иркутск,native_name,ru,,,Name in the operator's own language
+CPC,КТК,abbreviation,ru,,,Standard abbreviation of the canonical or native name
+CPC,CPC,abbreviation,en,,,Standard abbreviation of the canonical or native name

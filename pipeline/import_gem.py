@@ -140,6 +140,20 @@ def validate(features, tracker, release, provisional):
     if tracker == "GOIT" and fuels and not fuels <= {"oil", "ngl", "oil, ngl", "oil/ngl"}:
         raise ImportError_(f"GOIT should contain oil/NGL only; found Fuel values {sorted(fuels)}")
 
+    # A release import must actually BE a release. The map-data branch is generated from the live
+    # backend sheet and drops every `RouteAccuracy == "no route"` row; a citable release keeps
+    # them. So a file with zero `no route` rows claiming to be a release is almost certainly the
+    # live export with a --release flag bolted on, which would launder unversioned data into a
+    # citation. Refuse rather than accept the label at face value.
+    if not provisional:
+        accuracies = [(_clean(p.get("RouteAccuracy")) or "").lower() for p, _ in features]
+        if "no route" not in accuracies:
+            raise ImportError_(
+                "this file contains no `RouteAccuracy = \"no route\"` rows. Citable GEM releases "
+                "retain those null-geometry parent rows; the public map-data branch drops them. "
+                "This looks like the live map-data export — import it with `--source map-data` "
+                "(no --release), or supply the actual release download.")
+
     bad = sorted({(_clean(p.get("RouteAccuracy")) or "").lower() for p, _ in features}
                  - ROUTE_ACCURACY_VALUES)
     if bad:

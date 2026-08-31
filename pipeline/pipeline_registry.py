@@ -96,15 +96,46 @@ def _split(value):
     return [v.strip() for v in (value or "").split("|") if v.strip()]
 
 
+# An alias is durable canonical identity, so it carries provenance like any other claim.
+# Native-language names, romanisations, translations and standard abbreviations are deterministic
+# forms of the canonical name and evidence themselves. A PROJECT NICKNAME does not: it must point
+# at an artifact that attests it, or it does not belong in the registry at all. Eight unsourced
+# nicknames were removed rather than kept on the strength of sounding familiar.
+ALIAS_TYPES = ("native_name", "transliteration", "translation", "abbreviation",
+               "project_name", "operator_name", "historical")
+
+# Types that need no external source: each is a mechanical restatement of the canonical name.
+SELF_EVIDENCING = ("native_name", "transliteration", "translation", "abbreviation")
+
+
+def load_aliases():
+    """{canonical_pipeline_id: [alias record]} from the sourced alias table."""
+    out = {}
+    for r in _rows("pipeline_aliases.csv"):
+        cid = r["canonical_pipeline_id"].strip()
+        out.setdefault(cid, []).append({
+            "alias": r["alias"].strip(),
+            "alias_type": (r.get("alias_type") or "").strip(),
+            "language": (r.get("language") or "").strip() or None,
+            "source_url": (r.get("source_url") or "").strip() or None,
+            "source_date": (r.get("source_date") or "").strip() or None,
+            "note": (r.get("note") or "").strip() or None,
+        })
+    return out
+
+
 def load_registry():
     """Curated canonical entities. Returns {canonical_pipeline_id: entity}."""
     out = {}
+    aliases = load_aliases()
     for r in _rows("pipeline_registry.csv"):
         cid = r["canonical_pipeline_id"].strip()
         out[cid] = {
             "canonical_pipeline_id": cid,
             "canonical_name": r["canonical_name"].strip(),
-            "aliases": _split(r.get("aliases")),
+            # Flat list for matching and search; the provenance-carrying records alongside it.
+            "aliases": [a["alias"] for a in aliases.get(r["canonical_pipeline_id"].strip(), [])],
+            "alias_records": aliases.get(r["canonical_pipeline_id"].strip(), []),
             "commodity": (r.get("commodity") or "").strip(),
             "subtype": (r.get("subtype") or "").strip() or None,
             "entity_level": (r.get("entity_level") or "").strip(),
@@ -160,6 +191,60 @@ def load_status():
     return out
 
 
+def load_topology():
+    """Sourced connection assertions. A connection can be KNOWN without being DRAWABLE.
+
+    `linkage` records how far each assertion resolves into the registry:
+      full        subject, object and node are all canonical
+      partial     at least one end is canonical; the reason says which is not and why
+      unresolved  neither end is canonical yet — kept because the assertion itself is sourced
+
+    A partial row is not a defect. Most objects here are foreign networks, terminals and
+    non-Russian pipelines that this atlas deliberately does not model; recording the connection
+    to them is still real topology.
+    """
+    out = []
+    for r in _rows("pipeline_topology.csv"):
+        out.append({
+            "subject": (r.get("subject") or "").strip(),
+            "subject_id": (r.get("subject_id") or "").strip() or None,
+            "relation": (r.get("relation") or "").strip(),
+            "object": (r.get("object") or "").strip(),
+            "object_id": (r.get("object_id") or "").strip() or None,
+            "at_point": (r.get("at_point") or "").strip() or None,
+            "node_id": (r.get("node_id") or "").strip() or None,
+            "substance": (r.get("substance") or "").strip() or None,
+            "source_quality": (r.get("source_quality") or "").strip() or None,
+            "source_url": (r.get("source_url") or "").strip() or None,
+            "linkage": (r.get("linkage") or "").strip() or None,
+            "linkage_reason": (r.get("linkage_reason") or "").strip() or None,
+            "note": (r.get("note") or "").strip() or None,
+        })
+    return out
+
+
+def load_node_sources():
+    """Independent source mappings for canonical nodes (currently ENTSOG).
+
+    Read from the vendor snapshot rather than a curated file: these are produced by an importer
+    and re-derived on refresh, so hand-editing them would be overwritten.
+    """
+    path = CURATED.parent / "vendor" / "entsog" / "node_matches.csv"
+    out = {}
+    if not path.exists():
+        return out
+    with path.open(encoding="utf-8", newline="") as fh:
+        for r in csv.DictReader(fh):
+            nid = r["canonical_node_id"]
+            rec = {"source_system": r["source_system"], "source_id": r["source_id"],
+                   "point_eic": (r.get("point_eic") or "").strip() or None,
+                   "confidence": r.get("confidence"),
+                   "source_native": r.get("source_native")}
+            if rec not in out.setdefault(nid, []):
+                out[nid].append(rec)
+    return out
+
+
 def load_nodes():
     """Canonical connection points. Geography is optional by design."""
     out = {}
@@ -172,6 +257,10 @@ def load_nodes():
             "canonical_node_id": nid,
             "node_name": r["node_name"].strip(),
             "node_type": (r.get("node_type") or "").strip(),
+            # Sources spell the same border point differently (diacritics, the neighbouring
+            # town's name, an operator's own label). Aliases let a match be made by curation
+            # rather than by loosening the matcher.
+            "aliases": _split(r.get("aliases")),
             "country": (r.get("country") or "").strip() or None,
             "geography_precision": prec,
             # Only a `coordinate`-precision node may carry lon/lat at all. Anything else keeps
@@ -315,6 +404,15 @@ def build(routes, containment=None):
             break
 
     for e in entities.values():
+        for a in e.get("alias_records") or []:
+            if a["alias_type"] not in ALIAS_TYPES:
+                problems.append(f"{e['canonical_pipeline_id']}: bad alias_type "
+                                f"{a['alias_type']!r} on {a['alias']!r}")
+            # A nickname is a CLAIM about what something is called. It needs a source, or it is
+            # hearsay that has quietly become identity.
+            elif a["alias_type"] not in SELF_EVIDENCING and not a["source_url"]:
+                problems.append(f"{e['canonical_pipeline_id']}: alias {a['alias']!r} is a "
+                                f"{a['alias_type']} with no source_url")
         if e["entity_level"] not in ENTITY_LEVELS:
             problems.append(f"{e['canonical_pipeline_id']}: bad entity_level {e['entity_level']!r}")
         if e["commodity"] not in COMMODITIES:

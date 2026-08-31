@@ -16,7 +16,7 @@
  *      on a name that merely looked similar.
  */
 
-import type { PipelineEntity, PipelineStatusRecord } from "../types";
+import type { PipelineConnection, PipelineEntity, PipelineStatusRecord } from "../types";
 import { fmtNum, titleCase } from "../data";
 
 /** What each status kind actually asserts. Spelled out because the distinction is the point. */
@@ -24,6 +24,20 @@ const STATUS_KIND_LABEL: Record<string, { label: string; hint: string }> = {
   physical: { label: "Physical", hint: "Whether the pipe itself is intact. Says nothing about use." },
   operational: { label: "Operational", hint: "Whether it is available to run. Says nothing about volumes." },
   commercial_flow: { label: "Commercial flow", hint: "Whether gas or oil is actually moving under contract." },
+};
+
+/** Assertion verbs, phrased for a reader. Kept explicit rather than de-underscored on the fly so
+ *  that a new relation in the data shows up as an obvious gap instead of as mangled prose. */
+const RELATION_LABEL: Record<string, string> = {
+  connects_to: "connects to",
+  enters_network_of: "enters the network of",
+  crosses_border_RU_UA: "crosses the RU–UA border into",
+  crosses_border_RU_CN: "crosses the RU–CN border into",
+  originates_at: "originates at",
+  terminates_at: "terminates at",
+  delivers_to: "delivers to",
+  splits_at: "splits at",
+  branch_of: "is a branch of",
 };
 
 const CONFIDENCE_COLOR: Record<string, string> = {
@@ -179,6 +193,57 @@ export function RouteDetail({
           missing length is not estimated — the straight line between two mapped pieces is not the
           pipe that runs between them.
         </div>
+      )}
+
+      {/* --- documented connections (§13) ---------------------------------------------
+          The analytic payoff of the node model. A connection is reported when its endpoints are
+          named and sourced, whether or not the route between them is mapped — and when the
+          connection point has no public coordinate, the panel SAYS SO rather than omitting the
+          connection or inventing a position for it. */}
+      {entity.connections?.length > 0 && (
+        <>
+          <div className="eyebrow" style={{ marginTop: 10 }}>
+            Documented connections ({entity.connections.length})
+          </div>
+          {entity.connections.map((c: PipelineConnection, i: number) => (
+            <div key={i} style={{ marginBottom: 6, paddingLeft: 2 }}>
+              <div style={{ fontSize: 10.5, lineHeight: 1.35 }}>
+                {RELATION_LABEL[c.relation] ?? c.relation.replace(/_/g, " ")}{" "}
+                <b>{c.other_id ?? c.other}</b>
+                {c.node_name ? <> at <b>{c.node_name}</b></> : null}
+                {c.node_type ? <span style={{ color: "var(--text-faint)" }}> ({c.node_type.replace(/_/g, " ")})</span> : null}
+              </div>
+              {c.node_geography_precision === "none" && (
+                <div style={{ fontSize: 9.5, color: "var(--amber)", lineHeight: 1.35 }}>
+                  Connection point documented; precise public route geometry unavailable — nothing
+                  is drawn for this link.
+                </div>
+              )}
+              {c.node_sources?.length > 0 && (
+                <div style={{ fontSize: 9.5, color: "var(--text-dim)", lineHeight: 1.35 }}>
+                  Confirmed independently by {c.node_sources.map((s) =>
+                    `${s.source_system} ${s.source_id}${s.point_eic ? ` (EIC ${s.point_eic})` : ""}`
+                  ).join(", ")}
+                </div>
+              )}
+              <div style={{ fontSize: 9.5, color: "var(--text-faint)", lineHeight: 1.35 }}>
+                {c.source_quality ? `${c.source_quality.replace(/_/g, " ")}` : "source recorded"}
+                {c.source_url ? <> · <a href={c.source_url} target="_blank" rel="noreferrer noopener"
+                  style={{ color: "var(--text-faint)" }}>source</a></> : null}
+                {c.linkage && c.linkage !== "full" ? ` · ${c.linkage} linkage` : ""}
+              </div>
+              {c.linkage_reason && c.linkage !== "full" && (
+                <div style={{ fontSize: 9.5, color: "var(--text-faint)", lineHeight: 1.35 }}>
+                  {c.linkage_reason}
+                </div>
+              )}
+            </div>
+          ))}
+          <div style={{ fontSize: 9.5, color: "var(--text-faint)", lineHeight: 1.35 }}>
+            Documented permanent connections between systems. Never a flow, a direction of
+            current operation, or a routing claim.
+          </div>
+        </>
       )}
 
       {/* --- sources ----------------------------------------------------------------- */}

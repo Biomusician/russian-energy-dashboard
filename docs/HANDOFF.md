@@ -44,12 +44,23 @@ Rules that are now structural, and are tested:
 
 **Traps a future session will hit:**
 
-- `geo._perpendicular_distance` measures to the INFINITE LINE. That is fine for well-separated
-  anchors and wrong for chains that return near their start — it erased 690 components / 216 km
-  before it was caught. `build_pipeline_network` has its own point-to-SEGMENT version;
-  `build_assets`, `build_context` and `geo.simplify_ring` **still use the broken one**.
+- Douglas-Peucker must measure to the SEGMENT, not the infinite line. The infinite-line metric
+  erased 690 components / 216 km before it was caught. **Fixed in iteration 10:**
+  `geo.segment_distance` is now the single implementation and `build_assets`, `build_context`,
+  `build_pipeline_network` and `geo.simplify_ring` all use it. `_perpendicular_distance` remains
+  only as a deprecated alias with no callers; a test enforces that there is exactly one metric.
+- Open-line DP applied to a CLOSED chain deletes it: `simplify_line` keeps first and last, which
+  on a loop are the same point, and the component then falls below 2 points. That silently
+  dropped 646 components / 201 km. `_simplify` now dispatches to `simplify_ring` for closed
+  chains. Same failure class as the erasure bug, different door.
+- `weld()` must never join two chains whose endpoints are IDENTICAL. A zero-length "gap" means
+  `stitch()` already saw that node and refused to walk it, because it is a junction of degree
+  != 2; welding there re-joins what the junction rule separated. It was doing 119 such welds.
 - OSM models some systems as a superroute PLUS its child relations, so summing route lengths
-  double-counts ~13%. Use `distinct_network_km`, not `total_length_km`, for network extent.
+  double-counts ~25,500 km. Use `distinct_network_km`, not `total_length_km`, for network extent.
+  `distinct_network_km` is now an EXACT union of member-way lengths; until iteration 10 it
+  apportioned route length by way COUNT, which was order-dependent (a 5,638 km spread across
+  orderings) and credited a whole corridor to whichever relation the loop reached first.
 - OSM `substance=oil` covers refined products too. Exolum tags 235 members `oil` and zero `fuel`;
   only the NAME rule excludes it.
 - ENTSOG has **no pipeline entity** — operator/point/balancing-zone only — and its `tpMapX/Y` are
