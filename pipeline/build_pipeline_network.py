@@ -262,53 +262,14 @@ def weld(chains, tolerance_km=WELD_TOLERANCE_KM):
     return chains, welds, round(max_gap, 4)
 
 
-def _segment_distance(pt, start, end):
-    """Distance from a point to the SEGMENT start-end, not to the infinite line through it.
-
-    `geo._perpendicular_distance` measures to the infinite line, which is the textbook
-    Douglas-Peucker formulation and is fine when the two anchors are far apart. It fails badly
-    when they are close: a chain that leaves and returns near its own start has every interior
-    point sitting on the line through those two anchors, scores ~0, and is deleted whole. Measured
-    on the real corpus that erased 690 stitched components — 216 km of real pipeline — silently,
-    because the collapsed chain then fell below the two-point minimum and was dropped.
-    """
-    x, y = pt[0], pt[1]
-    x0, y0 = start[0], start[1]
-    x1, y1 = end[0], end[1]
-    dx, dy = x1 - x0, y1 - y0
-    if dx == 0 and dy == 0:
-        return math.hypot(x - x0, y - y0)
-    t = ((x - x0) * dx + (y - y0) * dy) / (dx * dx + dy * dy)
-    t = max(0.0, min(1.0, t))                      # clamp to the segment
-    return math.hypot(x - (x0 + t * dx), y - (y0 + t * dy))
-
-
 def _simplify(pts, tolerance):
-    """Douglas-Peucker on an open polyline, using point-to-SEGMENT distance (see above).
+    """Douglas-Peucker on an open polyline via geo.simplify_line (point-to-SEGMENT metric).
 
     The chain's two extreme endpoints are always kept. Interior way-junction vertices are NOT
     guaranteed to survive — they are ordinary DP candidates — so nothing downstream should rely
     on a junction coordinate being present in the output.
     """
-    if len(pts) <= 2:
-        return [list(p) for p in pts]
-    keep = [False] * len(pts)
-    keep[0] = keep[-1] = True
-    stack = [(0, len(pts) - 1)]
-    while stack:
-        first, last = stack.pop()
-        if last <= first + 1:
-            continue
-        md, idx = -1.0, first
-        for i in range(first + 1, last):
-            d = _segment_distance(pts[i], pts[first], pts[last])
-            if d > md:
-                md, idx = d, i
-        if md > tolerance:
-            keep[idx] = True
-            stack.append((first, idx))
-            stack.append((idx, last))
-    return [list(p) for p, k in zip(pts, keep) if k]
+    return [list(p) for p in geo.simplify_line([tuple(p) for p in pts], tolerance)]
 
 
 def _round(pts, precision=COORD_PRECISION):

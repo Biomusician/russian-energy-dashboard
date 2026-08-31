@@ -172,27 +172,10 @@ def build_osm_lines(index, elements, asset_class):
 
 
 def _simplify_line(points, tolerance):
-    """Douglas-Peucker on an open line (geo.simplify_ring assumes a closed ring)."""
-    if len(points) <= 2:
-        return points
-    keep = [False] * len(points)
-    keep[0] = keep[-1] = True
-    stack = [(0, len(points) - 1)]
-    while stack:
-        first, last = stack.pop()
-        if last <= first + 1:
-            continue
-        worst = -1.0
-        idx = first
-        for i in range(first + 1, last):
-            d = geo._perpendicular_distance(points[i], points[first], points[last])
-            if d > worst:
-                worst, idx = d, i
-        if worst > tolerance:
-            keep[idx] = True
-            stack.append((first, idx))
-            stack.append((idx, last))
-    return [p for p, k in zip(points, keep) if k]
+    """Douglas-Peucker on an open line. Delegates to geo.simplify_line so every simplifier in the
+    project shares one (correct, point-to-SEGMENT) metric — this copy previously carried the
+    infinite-line bug fixed in iteration 9's pipeline builder."""
+    return geo.simplify_line(points, tolerance)
 
 
 def _coords(el):

@@ -120,27 +120,9 @@ def _line_parts(geom):
 
 
 def _simplify_line(coords, tolerance):
-    """Douglas-Peucker for an OPEN polyline. Unlike geo.simplify_ring this never closes
-    the line back onto its start -- a river is not a ring."""
-    if len(coords) <= 2:
-        return coords
-    keep = [False] * len(coords)
-    keep[0] = keep[-1] = True
-    stack = [(0, len(coords) - 1)]
-    while stack:
-        first, last = stack.pop()
-        if last <= first + 1:
-            continue
-        max_dist, index = -1.0, first
-        for i in range(first + 1, last):
-            d = geo._perpendicular_distance(coords[i], coords[first], coords[last])
-            if d > max_dist:
-                max_dist, index = d, i
-        if max_dist > tolerance:
-            keep[index] = True
-            stack.append((first, index))
-            stack.append((index, last))
-    return [p for p, k in zip(coords, keep) if k]
+    """Douglas-Peucker for an OPEN polyline (a river is not a ring). Delegates to
+    geo.simplify_line so the corrected point-to-SEGMENT metric is used here too."""
+    return geo.simplify_line(coords, tolerance)
 
 
 def _clip_line(geom, tolerance):

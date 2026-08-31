@@ -638,6 +638,47 @@ def test_no_source_text_claims_crimea_is_out_of_the_composite():
         f"  {p}: {f[:140]}" for p, f in hits)
 
 
+def test_docs_do_not_claim_the_release_payload_is_frozen():
+    """Lint: fail the build if a doc asserts the committed payload is the frozen reference.
+
+    Production data is CURRENT-DATE; 2026-08-28 is comparison-only. Iteration 8 briefly committed
+    a frozen payload, corrected it, and left a stale HANDOFF bullet saying the opposite — which
+    sat directly beneath the corrected table for two iterations. A runtime guard already stops a
+    frozen payload SHIPPING (test_release_payload_is_a_current_date_build_not_a_frozen_reference);
+    this stops the DOCS from telling a future session to create one.
+    """
+    import re
+    claim_subject = ("committed data", "committed payload", "release payload", "the payload",
+                     "committed build")
+    claim_frozen = ("pinned to the frozen", "is the frozen", "frozen reference", "--as-of 2026-08-28")
+    # Sentences that legitimately describe the frozen build as comparison-only.
+    exempt = ("comparison-only", "comparison only", "regression-only", "regression only",
+              "never be committed", "must never", "previously said", "was the iteration-8 mistake",
+              "not a real-date build", "fails the suite", "stale")
+    files = [ROOT / "docs" / f for f in ("HANDOFF.md", "SOURCES.md", "METHODOLOGY.md",
+                                         "SCHEMA.md", "CURRENT_STATE.md")]
+    files += [ROOT / "README.md", ROOT / "CLAUDE.md"]
+    hits = []
+    for path in files:
+        if not path.exists():
+            continue
+        # Collapse markdown line-wrapping BEFORE splitting into sentences: a wrapped sentence is
+        # still one sentence, and splitting on newlines severs a claim from the clause that
+        # qualifies it (which is exactly how this test first failed on its own fix).
+        text = " ".join(path.read_text(encoding="utf-8").lower().split())
+        for frag in re.split(r"\.", text):
+            frag = " ".join(frag.split())
+            if not any(s in frag for s in claim_subject):
+                continue
+            if not any(c in frag for c in claim_frozen):
+                continue
+            if any(e in frag for e in exempt):
+                continue
+            hits.append((path.name, frag))
+    assert not hits, ("a doc claims the release payload is the frozen build:\n"
+                      + "\n".join(f"  {p}: {f[:140]}" for p, f in hits))
+
+
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
                     reason="pipeline has not been run")
 def test_crimea_now_contributes_to_the_monitored_area_index():
@@ -1962,6 +2003,53 @@ def test_weld_never_exceeds_its_tolerance():
     assert welds == 0 and len(chains) == 2
 
 
+def test_every_simplifier_shares_one_correct_metric():
+    """There must be exactly ONE distance metric behind every Douglas-Peucker caller.
+
+    The project had five near-identical DP copies; three carried the infinite-line metric that
+    erased 690 pipeline components in iteration 9. `geo._perpendicular_distance` is retained under
+    an honest name but no simplifier may use it.
+    """
+    from pipeline import geo
+    # The correct metric: a point beyond a short segment is far from it, not on it.
+    assert geo.segment_distance((10, 0), (0, 0), (0.001, 0)) > 9.9
+    assert geo._perpendicular_distance((10, 0), (0, 0), (0.001, 0)) == 0.0   # why it was wrong
+    # Degenerate segment (a ring's shared first/last point) falls back to point distance.
+    assert geo.segment_distance((3, 4), (0, 0), (0, 0)) == pytest.approx(5.0)
+
+    src_files = ["build_assets.py", "build_context.py", "build_pipeline_network.py", "geo.py"]
+    for name in src_files:
+        text = (ROOT / "pipeline" / name).read_text(encoding="utf-8")
+        for line in text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("#") or stripped.startswith("*"):
+                continue          # comments may name it when explaining the history
+            if "_perpendicular_distance(" in line and "def _perpendicular_distance" not in line:
+                assert "geo._perpendicular_distance" not in line, (
+                    f"{name} calls the infinite-line metric; use geo.segment_distance")
+
+
+def test_simplify_line_preserves_an_out_and_back_excursion():
+    """The shared open-line simplifier must not collapse a chain that returns near its start."""
+    from pipeline import geo
+    pts = [(0.0, 0.0), (0.5, 0.0), (1.0, 0.0), (0.5, 0.0), (0.001, 0.0)]
+    assert len(geo.simplify_line(pts, 0.01)) >= 3
+    # endpoints always survive
+    out = geo.simplify_line([(0.0, 0.0), (0.5, 0.4), (1.0, 0.0)], 0.001)
+    assert out[0] == (0.0, 0.0) and out[-1] == (1.0, 0.0)
+
+
+def test_simplify_ring_keeps_rings_closed_and_never_inverts_area():
+    from pipeline import geo
+    import math as _m
+    ring = [(_m.cos(t / 40 * 2 * _m.pi), _m.sin(t / 40 * 2 * _m.pi)) for t in range(41)]
+    out = geo.simplify_ring(ring, 0.01)
+    assert out[0] == out[-1], "a simplified ring must stay closed"
+    assert len(out) >= 4
+    area = abs(sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(out, out[1:]))) / 2
+    assert 0.5 * _m.pi < area < 1.2 * _m.pi, "ring area must survive simplification"
+
+
 def test_simplify_measures_distance_to_the_segment_not_the_infinite_line():
     """GIS red-team finding: DP with a point-to-LINE metric erases excursions.
 
@@ -1971,8 +2059,10 @@ def test_simplify_measures_distance_to_the_segment_not_the_infinite_line():
     including 25.7 km of Уренгой — Петровск drawn as an 80 m stub.
     """
     from pipeline import build_pipeline_network as B
+    from pipeline import geo
     # A point 10 units beyond a 0.001-long segment: on the LINE, far from the SEGMENT.
-    assert B._segment_distance((10, 0), (0, 0), (0.001, 0)) > 9.9
+    # (Iteration 10 moved this metric into geo so every simplifier shares one implementation.)
+    assert geo.segment_distance((10, 0), (0, 0), (0.001, 0)) > 9.9
     # An out-and-back excursion must survive simplification rather than collapse.
     pts = [(0.0, 0.0), (0.5, 0.0), (1.0, 0.0), (0.5, 0.0), (0.001, 0.0)]
     assert len(B._simplify(pts, 0.01)) >= 3

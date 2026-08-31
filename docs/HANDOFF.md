@@ -161,10 +161,14 @@ made numbers more defensible, not larger. Highlights:
   glyph there and it updates the map, the filter rows, and the legend together. Never hardcode a
   shape in a component. The map registers icons via local rasterisation only — do not reach for a
   glyph endpoint or sprite CDN (it would break the zero-network invariant).
-- **The committed data is pinned to the FROZEN reference (`--as-of 2026-08-28`, ESDI 18.49)** as of
-  iteration 8, not a real-date build. `--as-of` still defaults to `date.today()`, so a plain
-  `python -m pipeline.run` will regenerate real-date and change the headline — rebuild with
-  `--as-of 2026-08-28` to keep the frozen reference, or deliberately choose real-date.
+- **The committed data is a CURRENT-DATE build.** (This bullet previously said the opposite — that
+  the payload was pinned to the frozen 2026-08-28 reference. That was the iteration-8 mistake,
+  corrected later in that same iteration; the stale wording survived and contradicted the "two
+  builds" table above it until iteration 10.) A plain `python -m pipeline.run` is correct and is
+  what the refresh bot runs. `--as-of 2026-08-28` is **comparison-only** and must never be
+  committed; `test_release_payload_is_a_current_date_build_not_a_frozen_reference` fails the suite
+  if it is, and `test_docs_do_not_claim_the_release_payload_is_frozen` fails if a doc starts
+  claiming otherwise again.
 - **MapLibre only allows `["zoom"]` as the direct input to a top-level interpolate/step.** Nesting
   it inside a `case`/comparison makes `addLayer` reject the layer silently (it fires an error event,
   doesn't throw). If a map layer "disappears", check its paint expressions for a nested `["zoom"]`.
