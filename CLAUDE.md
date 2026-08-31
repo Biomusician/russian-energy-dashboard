@@ -104,6 +104,20 @@ Do not re-litigate without a good reason:
   external glyph endpoint — region names go in the hover card and dossier.
 - **Taxonomy is data.** Asset classes, sectors and causes come from `taxonomy.json`. The
   frontend never hardcodes them.
+- **Pipeline routes are reconstructed from OSM route RELATIONS, not from ways.** A trunk line is
+  a chain of ways split wherever a tag changes; judging each piece by its own length destroyed
+  most of the network (`docs/PIPELINE_GAP_AUDIT.md`). Assemble the route, *then* threshold, *then*
+  simplify. Segments join only on exactly-shared endpoints — the one distance rule (≤100 m) applies
+  solely between components of the same relation, where OSM has already asserted they are one
+  pipeline, and every such join is counted in provenance.
+- **The context network is self-contained.** Its toggle is independent of the analytic layer, so
+  overlap is MARKED (`analytic_overlap`) and the frontend suppresses double-draw. The pipeline
+  never withholds data to make the map tidier.
+- **Topology known ≠ geometry known.** Sourced connection facts live in
+  `data/curated/pipeline_topology.csv` and must never be turned into a drawn line; tests enforce
+  both halves of that.
+- **Route/geometry quality is measured, never asserted.** OSM ships 5,000-vertex corridors and
+  3-point placeholders under identical tags, so quality is derived from source vertex density.
 
 ## This machine
 
