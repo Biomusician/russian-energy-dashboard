@@ -235,6 +235,13 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .check .asset-glyph { width: 15px; height: 15px; flex: none; display: inline-flex; opacity: 0.92; }
 .check .asset-glyph svg { width: 15px; height: 15px; display: block; }
 
+/* Network route source-coverage panel (iteration 9, §21). */
+.net-coverage { margin-top: 9px; border-top: 1px solid var(--line-soft); padding-top: 8px; }
+.cov-row + .cov-row { margin-top: 8px; }
+.cov-head { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--text); margin-bottom: 3px; }
+.cov-head .num { color: var(--text-dim); font-size: 10px; }
+.cov-kv { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; color: var(--text-dim); padding: 1.5px 0; }
+
 .precision-key { display: flex; align-items: center; gap: 8px; margin-top: 7px; font-size: 10.5px; color: var(--text-dim); line-height: 1.35; }
 .precision-key .pk-swatch { width: 20px; height: 20px; flex: none; display: inline-flex; }
 .precision-key .pk-swatch svg { width: 20px; height: 20px; display: block; }

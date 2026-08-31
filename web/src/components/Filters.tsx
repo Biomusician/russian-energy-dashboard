@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { FilterState } from "../App";
-import type { Asset, Bundle, FacetCounts, Incident } from "../types";
+import type { Asset, Bundle, FacetCounts, Incident, NetworkCoverageClass } from "../types";
 import { CAUSE_COLOR, classColor } from "../palette";
 import { titleCase } from "../data";
 import { iconSVG } from "../icons";
@@ -75,6 +75,7 @@ export default function Filters({
 
   // Context trunk-route counts are a SEPARATE facet from analytic line_class (§15). A
   // network toggle appears only if the corpus actually holds context routes for it.
+  const coverage = bundle.snapshot.network_coverage;
   const gasCtx = fc.context_route_class?.pipeline_gas ?? 0;
   const oilCtx = fc.context_route_class?.pipeline_oil ?? 0;
 
@@ -183,9 +184,24 @@ export default function Filters({
             </label>
           )}
           <div className="note" style={{ marginTop: 4 }}>
-            Continental trunk routes (OSM, cross-referenced with GEM) shown as geographic
-            context — never scored, never counted as incidents.
+            Continental trunk routes reconstructed from OpenStreetMap pipeline route relations,
+            shown as geographic context — never scored, never counted as incidents.
           </div>
+          {/* Network SOURCE COVERAGE (§21) — how completely the network is sourced, which is a
+              different question from how much disruption there is. Only rendered for a layer the
+              reader has actually turned on, and only when the data carries it. */}
+          {coverage && (filters.showGasNetwork || filters.showOilNetwork) && (
+            <div className="net-coverage">
+              <div className="eyebrow" style={{ marginBottom: 4 }}>Route source coverage</div>
+              {filters.showGasNetwork && <CoverageRow label="Gas" c={coverage.pipeline_gas} />}
+              {filters.showOilNetwork && <CoverageRow label="Oil" c={coverage.pipeline_oil} />}
+              <div className="note" style={{ marginTop: 6 }}>
+                “Continuous” means the route assembled into one unbroken piece from its source
+                geometry. A fragmented route is missing mapping, not necessarily missing pipe —
+                and a continuous route is not therefore an accurate one.
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -305,3 +321,27 @@ function Group({
   );
 }
 
+
+/** One class's route-source coverage. Reports topology completeness (did the route assemble
+ *  into one piece?) and geometry provenance separately — a generalized route can be
+ *  topologically complete and still geographically approximate. */
+function CoverageRow({ label, c }: { label: string; c?: NetworkCoverageClass }) {
+  if (!c) return null;
+  const mapped = c.route_quality.osm_mapped ?? 0;
+  return (
+    <div className="cov-row">
+      <div className="cov-head">
+        <span>{label}</span>
+        <span className="num">{c.routes} routes · {Math.round(c.total_length_km).toLocaleString("en-GB")} km</span>
+      </div>
+      <div className="cov-kv"><span>Continuous end to end</span>
+        <span className="num">{c.single_component_routes}</span></div>
+      <div className="cov-kv"><span>With unmapped gaps</span>
+        <span className="num">{c.multi_component_routes}</span></div>
+      <div className="cov-kv"><span>Traced geometry</span>
+        <span className="num">{mapped}</span></div>
+      <div className="cov-kv"><span>Generalized / schematic</span>
+        <span className="num">{c.routes - mapped}</span></div>
+    </div>
+  );
+}

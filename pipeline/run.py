@@ -24,7 +24,7 @@ from pipeline.config import (
 from pipeline.fetch_refineries import build as build_refineries
 from pipeline.fetch_wikipedia import build as build_wikipedia
 from pipeline.recovery import load_recovery_records
-from pipeline.util import fetch_json, log, read_csv, write_json
+from pipeline.util import fetch_json, log, read_csv, read_json, write_json
 
 COVERAGE_PAGE = "2025%E2%80%932026_Russian_fuel_crisis"
 COVERAGE_URL = "https://en.wikipedia.org/wiki/2025%E2%80%932026_Russian_fuel_crisis"
@@ -544,6 +544,14 @@ def main():
     # Source-backed observed effects (§25-28), keyed to incidents in the AOI universe.
     snapshot["strategic_effects"] = load_effects({i["incident_id"] for i in in_aoi})
     snapshot["facet_counts"] = _facet_counts(assets, lines, incidents, snapshot, ctx_net)
+
+    # Network SOURCE COVERAGE (iteration 9, §21). Deliberately in the snapshot rather than a
+    # separate fetch: it is small, and it belongs next to the other "how good is the evidence"
+    # metadata. This describes how completely the CONTEXT network is sourced — it is not a
+    # disruption measure and never enters ESDI.
+    quality_path = PROCESSED / "pipeline_network_quality.json"
+    if quality_path.exists():
+        snapshot["network_coverage"] = read_json(quality_path)
 
     # Coverage is computed AFTER facet_counts/recovery_stats exist — the matrix reads them.
     oil_benchmark, coverage_matrix = _build_coverage(in_aoi, coverage, snapshot)
