@@ -32,6 +32,7 @@ function fallbackFacets(bundle: Bundle): FacetCounts {
  *  "nothing recorded here" rather than as a broken filter. */
 export default function Filters({
   bundle, filters, setFilters, onPickRegion, onPickAsset, compareCount = 0,
+  drawer = false, open = false, onCloseDrawer,
 }: {
   bundle: Bundle;
   filters: FilterState;
@@ -41,6 +42,10 @@ export default function Filters({
   onPickAsset: (asset: Asset, index: number) => void;
   /** How many regions are pinned to the comparison tray, for the rail hint. */
   compareCount?: number;
+  /** True when this rail is presented as an overlay drawer rather than docked. */
+  drawer?: boolean;
+  open?: boolean;
+  onCloseDrawer?: () => void;
 }) {
   const { taxonomy } = bundle;
   // Normally the pipeline emits facet_counts. During a deploy the CDN can briefly serve an
@@ -80,7 +85,15 @@ export default function Filters({
   const oilCtx = fc.context_route_class?.pipeline_oil ?? 0;
 
   return (
-    <aside className="panel filters">
+    <aside
+      id="filters-panel"
+      className={`panel filters${drawer && open ? " drawer-open" : ""}`}
+      aria-hidden={drawer && !open}>
+      {drawer && (
+        <div className="drawer-close">
+          <button className="ghost" onClick={onCloseDrawer} aria-label="Close layers panel">close ✕</button>
+        </div>
+      )}
       <div className="section-head">
         <h2 style={{ fontSize: 12 }}>Layers &amp; filters</h2>
       </div>

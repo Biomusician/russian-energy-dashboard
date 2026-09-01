@@ -147,6 +147,7 @@ const ROUTE_QUALITY_LABEL: Record<string, string> = {
 export default function MapPanel({
   bundle, step, filters, selected, onSelect, incidentsByRegion,
   selectedAssetKey, onSelectAsset, haloByRegion, initialCamera, onCamera, flyTarget,
+  layoutSignal,
 }: {
   bundle: Bundle;
   step: number;
@@ -163,6 +164,9 @@ export default function MapPanel({
   onCamera?: (cam: CameraState) => void;
   /** One-shot request to frame a search hit (§21); re-triggered by its nonce. */
   flyTarget?: FlyTarget | null;
+  /** Changes whenever the responsive mode or a dock/undock alters the container.
+   *  Used only to trigger a resize — the map is never recreated. */
+  layoutSignal?: string;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -638,6 +642,59 @@ export default function MapPanel({
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
+
+  // --- container resize (hotfix §12) --------------------------------------------------------
+  // MapLibre sizes its canvas from the container at construction and then only on window
+  // resize. Every new path in this hotfix changes the container WITHOUT a window resize —
+  // docking or undocking a rail, entering map focus, crossing a responsive breakpoint — and a
+  // canvas that has not caught up renders a stale, letterboxed, or blank strip.
+  //
+  // A ResizeObserver on the actual element is the reliable signal. Observations are coalesced
+  // into one resize per animation frame: dragging a window edge fires continuously, and calling
+  // resize() per event is how a smooth drag becomes a stutter.
+  useEffect(() => {
+    const el = container.current;
+    if (!el) return;
+    // Deliberately NOT gated on `ready`. The failure this guards against is a container that is
+    // 0x0 when MapLibre is constructed — in that state the style never finishes and `ready`
+    // never becomes true, so an observer waiting for `ready` could never rescue it. It attaches
+    // as soon as the element exists and calls resize() on whatever map instance is present.
+    let timer = 0;
+    let lastW = 0;
+    let lastH = 0;
+    const observer = new ResizeObserver((entries) => {
+      const box = entries[0]?.contentRect;
+      if (!box) return;
+      // Sub-pixel jitter from a CSS transition should not queue work.
+      if (Math.abs(box.width - lastW) < 1 && Math.abs(box.height - lastH) < 1) return;
+      lastW = box.width;
+      lastH = box.height;
+      // Debounced with a TIMER rather than rAF: rAF is suspended in a hidden tab, so a
+      // rAF-scheduled resize would never run for a container that changed while the tab was in
+      // the background — exactly when a resize is most likely to have been missed.
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        // A container can legitimately be 0x0 mid-transition; resizing to that produces the
+        // blank-canvas failure this project has already hit once.
+        if (box.width > 0 && box.height > 0) map.current?.resize();
+      }, 32);
+    });
+    observer.observe(el);
+    return () => {
+      window.clearTimeout(timer);
+      observer.disconnect();
+    };
+  }, []);
+
+  // Drawer transitions animate for ~160ms, so the container's final size is not known when the
+  // mode flips. Resize once at the end rather than on every intermediate frame; the observer
+  // above catches the intermediate states anyway, this just guarantees the last one.
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready) return;
+    const t = window.setTimeout(() => m.resize(), 200);
+    return () => window.clearTimeout(t);
+  }, [ready, layoutSignal]);
 
   // --- interaction --------------------------------------------------------
   useEffect(() => {

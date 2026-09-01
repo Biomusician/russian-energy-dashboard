@@ -52,11 +52,32 @@ html, body, #root {
 body { -webkit-font-smoothing: antialiased; }
 
 /* ---------- layout ---------- */
+/*
+   MAP-FIRST. The map is the workspace; every other surface yields space before it does.
+   Three modes, set on <html data-layout> by useLayoutMode (width AND height aware):
+
+     wide     filters | MAP | dossier          both rails docked
+     compact  filters | MAP  + dossier drawer  dossier floats over the map, dismissible
+     narrow   MAP      + both as drawers       map is effectively the whole workspace
+
+   What this replaced, and why:
+     - Fixed 292/400px rails that GREW to 320/500 above 2400px. Extra screen must go to the
+       map, not to the rails. They are now clamp()ed and capped.
+     - A <=1340px rule that stacked the dossier UNDER the map in a 1.35:1 split. At 1280x720
+       that left the map 241px tall, 27% of the viewport. A dismissible overlay costs the map
+       nothing when closed.
+     - min-width:1180 + overflow-x:auto, which turned a narrow viewport into a horizontally
+       scrolling desktop and pushed map overlays off-screen where they could not be reached.
+*/
 
 .shell {
   display: grid;
+  /* Rails scale with the viewport and are CAPPED, so a larger screen gives its extra pixels
+     to the map. min values are the narrowest at which each rail is still usable. */
+  --rail-filters: clamp(212px, 14vw, 264px);
+  --rail-dossier: clamp(300px, 19vw, 380px);
   grid-template-rows: auto minmax(0, 1fr) auto;
-  grid-template-columns: 292px minmax(0, 1fr) 400px;
+  grid-template-columns: var(--rail-filters) minmax(0, 1fr) var(--rail-dossier);
   grid-template-areas:
     "ribbon ribbon ribbon"
     "filters map dossier"
@@ -64,24 +85,13 @@ body { -webkit-font-smoothing: antialiased; }
   height: 100%;
   gap: 1px;
   background: var(--line-soft);
+  min-width: 0;
+  position: relative;
 }
-
-/* Below ~1180px the three columns squeeze the map row to nothing and the absolutely-positioned
-   map overlays scatter across the ribbon and dossier. Scroll horizontally rather than render an
-   unreadable layout — this is a dense analytical dashboard, not a responsive marketing page. */
-@media (max-width: 1180px) {
-  html, body { overflow-x: auto; }
-  .shell { min-width: 1180px; }
-}
-
-/* Wider analytical panel on large intel displays so the seven-tab strip and its
-   badges never clip (iteration 3, §17). */
-@media (min-width: 1800px) { .shell { grid-template-columns: 300px minmax(0, 1fr) 440px; } }
-@media (min-width: 2400px) { .shell { grid-template-columns: 320px minmax(0, 1fr) 500px; } }
 
 .ribbon   { grid-area: ribbon; }
 .filters  { grid-area: filters; }
-.mapwrap  { grid-area: map; position: relative; }
+.mapwrap  { grid-area: map; position: relative; min-width: 0; min-height: 0; }
 .dossier  { grid-area: dossier; }
 .timeline { grid-area: timeline; }
 
@@ -91,17 +101,142 @@ body { -webkit-font-smoothing: antialiased; }
   overflow-x: hidden;
 }
 
-/* Laptop: the dossier collapses under the map rather than squeezing it. */
-@media (max-width: 1340px) {
-  .shell {
-    grid-template-columns: 240px minmax(0, 1fr);
-    grid-template-areas:
-      "ribbon ribbon"
-      "filters map"
-      "filters dossier"
-      "timeline timeline";
-    grid-template-rows: auto minmax(0, 1.35fr) minmax(0, 1fr) auto;
-  }
+/* --- compact: the dossier undocks ------------------------------------------------------ */
+html[data-layout="compact"] .shell {
+  grid-template-columns: var(--rail-filters) minmax(0, 1fr);
+  grid-template-areas:
+    "ribbon ribbon"
+    "filters map"
+    "timeline timeline";
+}
+
+/* --- narrow: both rails undock; the map is the page ------------------------------------ */
+html[data-layout="narrow"] .shell {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "ribbon"
+    "map"
+    "timeline";
+}
+
+/* --- undocked panels become overlay drawers -------------------------------------------- */
+/* position:absolute is load-bearing: it is what makes the drawer cost the map zero width.
+   The layout-metrics helper treats an absolutely-positioned panel as stealing nothing, which
+   is exactly right, because a closed drawer is not chrome. */
+html[data-layout="compact"] .dossier,
+html[data-layout="narrow"] .dossier,
+html[data-layout="narrow"] .filters,
+html[data-mapfocus="on"] .dossier,
+html[data-mapfocus="on"] .filters {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 40;
+  box-shadow: -14px 0 34px rgba(0, 0, 0, 0.55);
+  transition: transform 160ms ease-out;
+  will-change: transform;
+}
+
+html[data-layout="compact"] .dossier,
+html[data-layout="narrow"] .dossier,
+html[data-mapfocus="on"] .dossier {
+  right: 0;
+  left: auto;
+  width: min(400px, 92vw);
+  border-left: 1px solid var(--line);
+  transform: translateX(101%);
+}
+
+html[data-layout="narrow"] .filters,
+html[data-mapfocus="on"] .filters {
+  left: 0;
+  right: auto;
+  width: min(320px, 88vw);
+  border-right: 1px solid var(--line);
+  box-shadow: 14px 0 34px rgba(0, 0, 0, 0.55);
+  transform: translateX(-101%);
+}
+
+html[data-layout="compact"] .dossier.drawer-open,
+html[data-layout="narrow"] .dossier.drawer-open,
+html[data-layout="narrow"] .filters.drawer-open,
+html[data-mapfocus="on"] .dossier.drawer-open,
+html[data-mapfocus="on"] .filters.drawer-open { transform: translateX(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .dossier, .filters { transition: none; }
+}
+
+/* --- map-focus: user-invoked, independent of the responsive mode ------------------------ */
+/* A separate axis on purpose. Responsive mode is imposed by the viewport; map focus is chosen
+   by a person and must restore exactly the panel state they had. */
+html[data-mapfocus="on"] .shell {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "ribbon"
+    "map"
+    "timeline";
+}
+
+/* --- drawer affordances ---------------------------------------------------------------- */
+.drawer-toggles {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 30;
+  display: flex;
+  gap: 6px;
+}
+.drawer-toggles.right { left: auto; right: 10px; }
+
+.drawer-btn {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+  background: rgba(9, 13, 18, 0.94);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 5px 9px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.drawer-btn:hover { border-color: var(--accent-dim); }
+.drawer-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.drawer-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.drawer-btn .count {
+  font-size: 9.5px;
+  background: var(--accent-dim);
+  color: var(--bg-panel);
+  border-radius: 7px;
+  padding: 0 5px;
+  line-height: 14px;
+}
+
+.drawer-close {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
+  padding: 6px 8px 0;
+  background: var(--bg-panel);
+}
+
+/* Scrim: makes click-away-to-dismiss discoverable and stops a stray map drag behind an open
+   drawer. Present only while a drawer is open, never when everything is docked. */
+.drawer-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 35;
+  background: rgba(3, 5, 7, 0.32);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
 }
 
 /* ---------- typography ---------- */
@@ -144,7 +279,37 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
   align-items: stretch;
   gap: 0;
   min-height: 92px;
+  /* The measured failure. min-height was 92, but the flex children carry their own min-widths,
+     so below ~1500px the row WRAPPED: 115px at 1920, 141px at 1366, 186px at 1280, 215px at
+     1024. It was the largest single consumer of vertical space, bigger than the timeline, and
+     it grew exactly when space was scarcest. It no longer wraps; the metric strip scrolls. */
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
+
+/* Compact chrome on short viewports. Nothing analytical is removed: the sector strip becomes
+   horizontally scrollable rather than dropping cells. */
+html[data-chrome="compact"] .ribbon { min-height: 0; }
+html[data-chrome="compact"] .ribbon-brand { padding: 6px 12px; min-width: 178px; }
+html[data-chrome="compact"] .ribbon-title { font-size: 12px; }
+html[data-chrome="compact"] .ribbon-sub { display: none; }
+html[data-chrome="compact"] .esdi-block { padding: 5px 12px; }
+html[data-chrome="compact"] .esdi-value { font-size: 26px; }
+html[data-chrome="compact"] .ribbon-scroll { overflow-x: auto; overflow-y: hidden; }
+html[data-chrome="compact"] .ribbon-scroll::-webkit-scrollbar { height: 4px; }
+
+/* The strip that is allowed to scroll rather than wrap. */
+.ribbon-scroll {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+.ribbon-scroll::-webkit-scrollbar { height: 5px; }
+.ribbon-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
 
 .ribbon-brand {
   padding: 12px 18px;
@@ -495,6 +660,17 @@ select.ghost {
   gap: 18px;
   min-height: 96px;
 }
+
+/* Compact timeline keeps every control that matters — date, play/pause, scrubber, position —
+   and gives back the padding and chart height. Measured 111px -> ~62px. */
+html[data-chrome="compact"] .timeline {
+  min-height: 0;
+  padding: 5px 12px 6px;
+  gap: 12px;
+}
+html[data-chrome="compact"] .tl-date { font-size: 14px; }
+html[data-chrome="compact"] .tl-controls { min-width: 186px; gap: 8px; }
+html[data-chrome="compact"] .tl-sub { display: none; }
 
 .tl-controls { display: flex; align-items: center; gap: 10px; min-width: 232px; }
 
@@ -851,3 +1027,128 @@ a { color: var(--accent); }
 
 .route-detail .kv .k { color: var(--text-dim); flex: 0 0 auto; }
 .route-detail .kv .v { text-align: right; }
+
+
+/* Visually hidden but announced — used for the live layout-mode notice. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+
+/* ---------- compact chrome: measured tuning (hotfix §9/§10) ----------
+   The ribbon's height is content-driven, not min-height-driven: every flex child stretches to
+   the tallest, and the tallest was a sector cell plus a paragraph of coverage prose. Reducing
+   min-height alone changed nothing.
+
+   Nothing analytical is deleted. Long explanatory prose is clamped to one or two lines and
+   keeps its full text in a title tooltip, and the sector strip scrolls horizontally rather than
+   dropping cells — progressive disclosure, not removal. */
+
+html[data-chrome="compact"] .sector-cell {
+  padding: 4px 11px;
+}
+html[data-chrome="compact"] .sector-cell .num,
+html[data-chrome="compact"] .sector-cell > div[style*="font-size: 19"] {
+  font-size: 14px !important;
+  margin-top: 1px !important;
+}
+html[data-chrome="compact"] .sector-bar { margin-top: 3px; height: 2px; }
+
+html[data-chrome="compact"] .ribbon-coverage { padding: 4px 12px; max-width: 300px; }
+html[data-chrome="compact"] .ribbon-coverage .num { font-size: 14px !important; }
+/* The prose stays present and fully readable on hover; it just stops setting the row height. */
+html[data-chrome="compact"] .ribbon-coverage > div:not(.eyebrow):not(.num),
+html[data-chrome="compact"] .esdi-meta > div:not(.eyebrow),
+html[data-chrome="compact"] .rstat-sub {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+html[data-chrome="compact"] .esdi-block { padding: 4px 12px; }
+html[data-chrome="compact"] .esdi-value { font-size: 24px; line-height: 1.05; }
+
+/* The sparkline is decoration next to the scrubber; it does not need 91px on a 720px screen. */
+html[data-chrome="compact"] .tl-chart { height: 34px; }
+html[data-chrome="compact"] .tl-chart svg,
+html[data-chrome="compact"] .tl-chart canvas { height: 34px !important; }
+
+/* ---------- responsive map overlays (hotfix §11) ----------
+   The scope note measured 268x218 on a 1067x504 map — 11% of the workspace, permanently. It is
+   important text, so it is not deleted: on a constrained map it collapses to a marker that
+   expands on hover or focus. */
+.map-scope-note.collapsible {
+  max-width: 268px;
+  transition: max-height 140ms ease-out;
+}
+html[data-chrome="compact"] .map-scope-note {
+  max-width: 214px;
+  max-height: 34px;
+  overflow: hidden;
+  cursor: help;
+}
+html[data-chrome="compact"] .map-scope-note:hover,
+html[data-chrome="compact"] .map-scope-note:focus-within {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+/* A hint that there is more, so the collapse is discoverable rather than a truncation bug. */
+html[data-chrome="compact"] .map-scope-note::after {
+  content: " more…";
+  color: var(--accent);
+  font-size: 10px;
+}
+html[data-chrome="compact"] .map-scope-note:hover::after,
+html[data-chrome="compact"] .map-scope-note:focus-within::after { content: ""; }
+
+/* Camera presets: a row of four buttons is fine at 1900px and crowds a 1000px map. The row
+   scrolls rather than wrapping over the map or clipping off its right edge. */
+html[data-chrome="compact"] .camera-controls {
+  left: 46px;
+  max-width: calc(100% - 220px);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+html[data-chrome="compact"] .camera-controls::-webkit-scrollbar { display: none; }
+
+/* Legend: keep the scale, fold the explanatory rows away until asked for. */
+html[data-chrome="compact"] .map-legend { max-width: 260px; }
+html[data-chrome="compact"] .map-legend .legend-note { display: none; }
+html[data-chrome="compact"] .map-legend:hover .legend-note { display: block; }
+
+/* ---------- comparison tray (hotfix §17) ----------
+   The tray was offset by a hard-coded `margin-left: 300px` tied to the filters rail's presumed
+   width. That constant is wrong in every new mode. It is now anchored to the map area instead,
+   which is correct in all three. */
+/* The 300px was chosen to clear the legend in the bottom-left of a WIDE layout. In compact and
+   narrow the legend is smaller and the rail may not exist, so the constant became an arbitrary
+   shove to the right that pushed the tray off a narrow map. Clearance is now relative. */
+html[data-chrome="compact"] .compare-tray {
+  margin-left: 0;
+  margin-bottom: 10px;
+  max-width: calc(100% - 20px);
+  max-height: 38vh;
+  overflow-y: auto;
+}
+html[data-chrome="compact"] .compare-cols { overflow-x: auto; }
+html[data-layout="narrow"] .compare-tray,
+html[data-mapfocus="on"] .compare-tray { margin-left: 0; max-width: calc(100% - 16px); }
+
+/* ---------- dossier tab strip (hotfix §16) ----------
+   Seven tabs wrapped to three rows in a 400px drawer and ate the top third of it. One row that
+   scrolls keeps every tab reachable without spending vertical space. */
+.tabbar {
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.tabbar::-webkit-scrollbar { height: 3px; }
+.tabbar::-webkit-scrollbar-thumb { background: var(--line); }
+.tabbar > * { flex: 0 0 auto; white-space: nowrap; }

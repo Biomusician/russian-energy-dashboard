@@ -9,6 +9,8 @@ import Dossier from "./components/Dossier";
 import Timeline from "./components/Timeline";
 import Methodology from "./components/Methodology";
 import ComparisonTray from "./components/ComparisonTray";
+import { useLayoutMode } from "./useLayoutMode";
+import { LayoutChrome } from "./components/LayoutChrome";
 
 /** Choropleth surfaces. The two "esdi_delta" surfaces are a DIVERGING change view (§14-15):
  *  how much a region's exposure index rose or fell over the trailing window, never a claim of
@@ -229,6 +231,83 @@ export default function App() {
     window.history.replaceState(null, "", q ? `${window.location.pathname}?${q}` : window.location.pathname);
   }, [bundle, filters, selected, step, camera, compareRegions]);
 
+  // --- responsive layout (hotfix) ---------------------------------------------------------
+  // The mode is imposed by the viewport; map focus is chosen by the user. Kept as two separate
+  // axes so that leaving map focus restores what the person had, rather than what the window
+  // size implies.
+  const layoutMode = useLayoutMode();
+  // Shown on the Layers button so a collapsed drawer never hides the fact that a filter is on.
+  const activeFilterCount = useMemo(() => {
+    let n = 0;
+    if (filters.causes.size) n += 1;
+    if (filters.confidences.size && filters.confidences.size < ALL_CONFIDENCES.length) n += 1;
+    if (filters.activityWindow !== "cumulative") n += 1;
+    if (filters.showRivers) n += 1;
+    if (filters.showGasNetwork) n += 1;
+    if (filters.showOilNetwork) n += 1;
+    if (!filters.showLines) n += 1;
+    if (!filters.showAssets) n += 1;
+    return n;
+  }, [filters]);
+  const [mapFocus, setMapFocus] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [dossierOpen, setDossierOpen] = useState(false);
+
+  // Which panels are drawers right now. Docked panels ignore the open flags entirely, so panel
+  // STATE never has to be duplicated or reset when the mode changes — only its presentation.
+  const filtersIsDrawer = mapFocus || layoutMode === "narrow";
+  const dossierIsDrawer = mapFocus || layoutMode !== "wide";
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-mapfocus", mapFocus ? "on" : "off");
+  }, [mapFocus]);
+
+  // Compact chrome is a HEIGHT question, not a width one: the ribbon and timeline cost the same
+  // absolute pixels at every width, so they only become expensive when the viewport is short.
+  useEffect(() => {
+    const apply = () => {
+      // <= 900, not < 900. A 1600x900 desktop keeps the full three-column layout, and with
+      // full-height chrome (126px ribbon + 111px timeline) that left the map at 49% — just under
+      // target. Compacting the chrome at exactly 900 brings it to ~56% while keeping all three
+      // columns, which is the better trade: the rich desktop survives, the bars give way.
+      const compact = window.innerHeight <= 900 || mapFocus;
+      document.documentElement.setAttribute("data-chrome", compact ? "compact" : "full");
+    };
+    apply();
+    window.addEventListener("resize", apply);
+    // Same reasoning as useLayoutMode: the resize event is not guaranteed for every change to
+    // the CSS viewport, so observe the root element too.
+    const ro = new ResizeObserver(apply);
+    ro.observe(document.documentElement);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", apply);
+    };
+  }, [mapFocus]);
+
+  // Selecting a region or an asset should reveal the dossier when it is a drawer — otherwise a
+  // click appears to do nothing. It must NOT force the drawer open again on every re-render,
+  // so this keys on the selection changing, not on its current value.
+  const prevSelection = useRef<string | null>(null);
+  useEffect(() => {
+    const key = selected ?? (selectedAsset ? selectedAsset.key : null);
+    if (key && key !== prevSelection.current && dossierIsDrawer) setDossierOpen(true);
+    prevSelection.current = key;
+  }, [selected, selectedAsset, dossierIsDrawer]);
+
+  // Escape closes the topmost drawer. Non-modal drawers must not trap focus, so this is the
+  // dismissal path rather than a focus trap.
+  useEffect(() => {
+    if (!filtersOpen && !dossierOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (dossierOpen) setDossierOpen(false);
+      else if (filtersOpen) setFiltersOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [filtersOpen, dossierOpen]);
+
   if (error) {
     return (
       <div className="empty" style={{ padding: 40 }}>
@@ -253,6 +332,20 @@ export default function App() {
 
   return (
     <div className="shell">
+      <LayoutChrome
+        mode={layoutMode}
+        mapFocus={mapFocus}
+        onToggleMapFocus={() => setMapFocus((v) => !v)}
+        filtersIsDrawer={filtersIsDrawer}
+        dossierIsDrawer={dossierIsDrawer}
+        filtersOpen={filtersOpen}
+        dossierOpen={dossierOpen}
+        onToggleFilters={() => setFiltersOpen((v) => !v)}
+        onToggleDossier={() => setDossierOpen((v) => !v)}
+        onCloseDrawers={() => { setFiltersOpen(false); setDossierOpen(false); }}
+        activeFilterCount={activeFilterCount}
+        hasSelection={Boolean(selected || selectedAsset)}
+      />
       <Ribbon
         bundle={bundle}
         step={step}
@@ -260,6 +353,9 @@ export default function App() {
         onOpenMethodology={() => setMethodOpen(true)}
       />
       <Filters
+        drawer={filtersIsDrawer}
+        open={filtersOpen}
+        onCloseDrawer={() => setFiltersOpen(false)}
         bundle={bundle}
         filters={filters}
         setFilters={setFilters}
@@ -281,8 +377,12 @@ export default function App() {
         initialCamera={initial.camera ?? null}
         onCamera={setCamera}
         flyTarget={flyTarget}
+        layoutSignal={`${layoutMode}:${mapFocus}:${filtersIsDrawer}:${dossierIsDrawer}`}
       />
       <Dossier
+        drawer={dossierIsDrawer}
+        open={dossierOpen}
+        onCloseDrawer={() => setDossierOpen(false)}
         bundle={bundle}
         step={step}
         selected={selected}
