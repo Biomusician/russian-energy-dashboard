@@ -52,6 +52,7 @@ export default function Ribbon({
       {/* These three are as-at-build snapshot counts; only the ESDI to their left follows the
           scrubber. Scrubbed to 2024 the ribbon otherwise showed a 2024 index beside 2026 recovery
           counts with nothing to tell them apart — an arithmetically impossible reading. */}
+      <div className="ribbon-scroll">
       <div className="esdi-block" style={{ gap: 20 }} title="Current as at the latest build — these do not follow the timeline scrubber.">
         <RecoveryStat value={rs.unresolved_count} label="Unresolved impairments" color="var(--amber)" current />
         <RecoveryStat
@@ -110,6 +111,7 @@ export default function Ribbon({
         <div style={{ fontSize: 10, color: "var(--text-faint)" }}>
           {snapshot.incidents_with_quantified_capacity} of {snapshot.incident_total} have quantified capacity effect
         </div>
+      </div>
       </div>
     </header>
   );

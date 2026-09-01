@@ -29,10 +29,15 @@ const TABS: {
 ];
 
 export default function Dossier({
-  bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSelect,
+    drawer = false, open = false, onCloseDrawer,
+bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSelect,
   selectedAsset, onClearAsset, assetStruck, assetAlsoHere, activeClasses,
   compareRegions, onToggleCompare,
 }: {
+  /** True when the dossier is presented as an overlay drawer rather than docked. */
+  drawer?: boolean;
+  open?: boolean;
+  onCloseDrawer?: () => void;
   bundle: Bundle;
   step: number;
   selected: string | null;
@@ -76,7 +81,15 @@ export default function Dossier({
   const region = selected ? bundle.snapshot.regions[selected] : null;
 
   return (
-    <aside className="panel dossier">
+    <aside
+      id="dossier-panel"
+      className={`panel dossier${drawer && open ? " drawer-open" : ""}`}
+      aria-hidden={drawer && !open}>
+      {drawer && (
+        <div className="drawer-close">
+          <button className="ghost" onClick={onCloseDrawer} aria-label="Close dossier">close ✕</button>
+        </div>
+      )}
       <div className="section-head">
         <div>
           <h2 style={{ fontSize: 13 }}>{region ? region.name : "Monitored-area picture"}</h2>
