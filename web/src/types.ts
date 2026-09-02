@@ -548,6 +548,11 @@ export interface Bundle {
   contextLand: GeoJSON.FeatureCollection;
   contextBorders: GeoJSON.FeatureCollection;
   ocean: GeoJSON.FeatureCollection;
+  /** Build-to-build change ledger (iteration 11). Small and needed for the ribbon's delta
+   *  chip on first paint, so it loads with the bundle rather than lazily. Null when the
+   *  payload predates it — the UI then says the comparison is unavailable rather than
+   *  showing a delta of zero, which would claim a quiet build that was never compared. */
+  buildChanges: BuildChanges | null;
   /** Result of the schema compatibility check performed at load time. Optional context
    *  layers (rivers, pipeline networks) are lazy-loaded via loadContextLayer(), not held
    *  on the bundle (§16). */
@@ -764,4 +769,80 @@ export interface RegionExplanation {
   zero_basis: "no_contributing_facilities" | "impairment_present_but_unscorable" | null;
   unscored_sectors: string[];
   zero_note: string | null;
+}
+
+/* ---------------------------------------------------------------------------
+ * Build-to-build change ledger (iteration 11 §7-§10). Mirrors pipeline/diff_builds.py.
+ * ------------------------------------------------------------------------- */
+
+/** world = something happened · data = the record changed, the world did not ·
+ *  decay = nothing changed, time passed · methodology = we changed how we measure. */
+export type ChangeNature = "world" | "data" | "decay" | "methodology";
+
+export interface BuildChange {
+  category: string;
+  nature: ChangeNature;
+  id: string;
+  asset_id: string | null;
+  label: string;
+  date: string | null;
+  detail: string;
+  sources?: number;
+  fields?: string[];
+  urls?: string[];
+  rescales_sector?: boolean;
+}
+
+export interface SectorAttributionRow {
+  sector: string;
+  index_points_before: number;
+  index_points_after: number;
+  delta: number;
+  sector_value_before: number;
+  sector_value_after: number;
+  weight_changed: boolean;
+  rescaled: boolean;
+}
+
+export interface FacilityAttributionRow {
+  sector: string;
+  asset_id: string;
+  name: string | null;
+  sector_points_before: number;
+  sector_points_after: number;
+  delta: number;
+  entered: boolean;
+  left: boolean;
+  /** False where a cap, a denominator change or a weight change means this row is an account
+   *  of where movement sits rather than a decomposition of what caused it. */
+  attribution_exact: boolean;
+  non_additive_reason: string | null;
+}
+
+export interface BuildChanges {
+  previous_build: string | null;
+  previous_as_of: string | null;
+  current_build: string | null;
+  current_as_of: string | null;
+  esdi_before: number | null;
+  esdi_after: number | null;
+  esdi_delta: number | null;
+  decay_only: boolean;
+  as_of_direction?: "forward" | "backward" | "same_date";
+  decay_only_note: string | null;
+  change_count: number;
+  by_nature: Record<ChangeNature, number>;
+  by_category: Record<string, number>;
+  changes: BuildChange[];
+  sector_attribution: {
+    rows: SectorAttributionRow[];
+    sum_of_sector_deltas: number;
+    headline_delta: number;
+    exact: boolean;
+  } | null;
+  facility_attribution: FacilityAttributionRow[];
+  rescaled_sectors: string[];
+  /** Present only when there was no previous build to compare against. */
+  unavailable_reason?: string;
+  attribution_note: string | null;
 }

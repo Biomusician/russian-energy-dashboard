@@ -1,5 +1,5 @@
 import type { Bundle } from "../types";
-import { fmtDate, fmtNum } from "../data";
+import { fmtDate, fmtDelta, fmtNum } from "../data";
 import { severityColor } from "../palette";
 import { ExplainButton } from "./ui";
 import type { InspectTarget } from "./Inspector";
@@ -47,7 +47,10 @@ export default function Ribbon({
           <div style={{ fontSize: 10.5, color: "var(--text-faint)", maxWidth: 180, lineHeight: 1.4 }}>
             Belarus + monitored Russian regions + Crimea. Capacity at disrupted sites — not measured loss.
           </div>
-          <ExplainButton label="the Monitored-Area ESDI" onClick={() => onExplain({ kind: "headline" })} />
+          <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+            <ExplainButton label="the Monitored-Area ESDI" onClick={() => onExplain({ kind: "headline" })} />
+            <BuildDelta bundle={bundle} isLatest={isLatest} onExplain={onExplain} />
+          </div>
         </div>
       </div>
 
@@ -145,5 +148,47 @@ function RecoveryStat({
       </div>
       {sub && <div style={{ fontSize: 9.5, color: "var(--text-faint)", fontFamily: "var(--mono)" }}>{sub}</div>}
     </div>
+  );
+}
+
+/** Movement since the previous build, and the way into the change ledger (§7-§10).
+ *
+ *  Shown only at the live end of the timeline. Scrubbed into the past the headline is a
+ *  historical value, and a "since last build" delta beside it would be comparing two different
+ *  things — exactly the mistake the recovery counters were caveated for.
+ */
+function BuildDelta({
+  bundle, isLatest, onExplain,
+}: { bundle: Bundle; isLatest: boolean; onExplain: (t: InspectTarget) => void }) {
+  const bc = bundle.buildChanges;
+  if (!isLatest || !bc) return null;
+
+  // No previous build is not the same as a build in which nothing changed.
+  if (bc.esdi_delta === null) {
+    return (
+      <button className="explain-btn" onClick={() => onExplain({ kind: "build" })}>
+        no prior build
+      </button>
+    );
+  }
+
+  const substantive = bc.change_count;
+  const label = bc.decay_only
+    ? "decay only"
+    : substantive === 0
+      ? "no changes"
+      : `${substantive} change${substantive === 1 ? "" : "s"}`;
+
+  return (
+    <button
+      className="explain-btn build-delta"
+      onClick={() => onExplain({ kind: "build" })}
+      title="What changed since the previous build"
+    >
+      <span className={bc.esdi_delta > 0 ? "up" : bc.esdi_delta < 0 ? "down" : ""}>
+        {fmtDelta(bc.esdi_delta)}
+      </span>
+      {" "}since last build · {label}
+    </button>
   );
 }

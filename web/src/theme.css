@@ -1375,3 +1375,76 @@ button.linkish:hover { text-decoration: underline; }
 .sector-cell.as-button:focus-visible .cell-explain { opacity: 1; color: var(--accent); }
 /* Touch input has no hover, so the hint would never appear. Show it permanently there. */
 @media (hover: none) { .cell-explain { opacity: 1; } }
+
+/* ---------- change ledger (iteration 11 §7-§10) ---------- */
+
+.build-delta .up { color: var(--red); }
+.build-delta .down { color: var(--green); }
+
+.ledger-head {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin-bottom: 5px;
+}
+.ledger-head .big { font-size: 22px; color: var(--text); }
+.ledger-head .arrow { color: var(--text-faint); }
+.ledger-head .delta { font-size: 14px; }
+.ledger-head .delta.up { color: var(--red); }
+.ledger-head .delta.down { color: var(--green); }
+
+/* The decay statement gets its own treatment because it is the claim most likely to be
+   misread as good news. It is not news at all. */
+.decay-note {
+  border-left: 2px solid var(--amber);
+  padding: 7px 9px;
+  background: rgba(242, 177, 52, 0.07);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.nature-group { margin-top: 12px; }
+.nature-group h4 {
+  font-size: 12px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 2px;
+}
+.nature-group h4 .count {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-faint);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 6px;
+}
+.nature-group.world h4 { color: var(--amber); }
+.nature-group.methodology h4 { color: var(--accent); }
+.nature-group > p.small { margin-bottom: 6px; }
+
+.change-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 2px; }
+.change-row:disabled { cursor: default; opacity: 0.85; }
+.change-detail {
+  grid-column: 1 / -1;
+  font-size: 10.5px;
+  color: var(--text-faint);
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.flag {
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0 4px;
+  margin-left: 6px;
+  white-space: nowrap;
+}
+.flag.warn { color: var(--amber); border-color: var(--amber); }
+
+table.mini td .flag { margin-left: 5px; }

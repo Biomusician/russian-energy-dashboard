@@ -7,7 +7,9 @@
  *  white-screening the whole dashboard; and a one-version schema skew (N or N-1) is
  *  tolerated. See docs/DEPLOYMENT.md. */
 
-import type { Bundle, SchemaCheck, PipelineRegistry, RegionExplanation } from "./types";
+import type {
+  Bundle, SchemaCheck, PipelineRegistry, RegionExplanation, BuildChanges,
+} from "./types";
 
 const BASE = `${import.meta.env.BASE_URL}data`;
 
@@ -83,6 +85,10 @@ export async function loadBundle(): Promise<Bundle> {
   // Rivers and the continental pipeline networks are NOT loaded here. They are off by
   // default and can be large, so they lazy-load on first toggle via loadContextLayer()
   // below — keeping the analytic dashboard's first paint fast (§16).
+  // Absent on an N-1 payload or a lagging edge -> null, which the UI reports as "no
+  // comparison available" rather than as a build in which nothing changed.
+  const buildChanges = await grabOptional<BuildChanges | null>("build_changes.json", null);
+
   const schema = schemaCompatibility(snapshot.schema_version);
   if (schema.mode !== "exact") {
     console.warn(
@@ -94,6 +100,7 @@ export async function loadBundle(): Promise<Bundle> {
   return {
     snapshot, national, regional, incidents, regions, assets, taxonomy,
     regionsGeo, linesGeo, contextLand, contextBorders, ocean,
+    buildChanges,
     schema,
   };
 }

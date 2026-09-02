@@ -18,9 +18,10 @@
 
 import { useEffect, useState } from "react";
 import type {
-  Bundle, ContributingFacility, Incident, RegionExplanation, SectorExplanation,
+  Bundle, BuildChange, ChangeNature, ContributingFacility, Incident, RegionExplanation,
+  SectorExplanation,
 } from "../types";
-import { fmtDate, fmtNum, loadRegionalExplanations, titleCase } from "../data";
+import { fmtDate, fmtDelta, fmtNum, loadRegionalExplanations, titleCase } from "../data";
 import { severityColor } from "../palette";
 import { EvidenceChip, RecoveryLine, hostOf } from "./ui";
 
@@ -29,13 +30,18 @@ export type InspectTarget =
   | { kind: "sector"; sector: string }
   | { kind: "region"; code: string }
   | { kind: "facility"; assetId: string }
-  | { kind: "incident"; incidentId: string };
+  | { kind: "incident"; incidentId: string }
+  /** The build-to-build change ledger (§7-§10). It lives here rather than in a ninth dossier
+   *  tab because "why did this number move" is the same question the Inspector already answers,
+   *  and the tab bar has no room left that would not cost the map. */
+  | { kind: "build" };
 
 export function targetKey(t: InspectTarget): string {
   return t.kind === "sector" ? `sector:${t.sector}`
     : t.kind === "region" ? `region:${t.code}`
     : t.kind === "facility" ? `facility:${t.assetId}`
     : t.kind === "incident" ? `incident:${t.incidentId}`
+    : t.kind === "build" ? "build"
     : "headline";
 }
 
@@ -83,7 +89,9 @@ export default function Inspector({
         </div>
 
         <div className="inspector-body">
-          {!ex && current.kind !== "incident" && current.kind !== "region" ? (
+          {current.kind === "build" ? (
+            <BuildLedgerView bundle={bundle} onDrill={push} />
+          ) : !ex && current.kind !== "incident" && current.kind !== "region" ? (
             <Unavailable />
           ) : current.kind === "headline" ? (
             <HeadlineView bundle={bundle} onDrill={push} />
@@ -125,6 +133,7 @@ function Breadcrumb({
       case "region": return bundle.regions.find((r) => r.code === t.code)?.name ?? t.code;
       case "facility": return bundle.assets.find((a) => a.asset_id === t.assetId)?.name ?? t.assetId;
       case "incident": return "Event";
+      case "build": return "Since last build";
     }
   };
   return (
@@ -572,5 +581,190 @@ function Block({
       <h3>{title}</h3>
       {children}
     </section>
+  );
+}
+
+
+const NATURE_COPY: Record<ChangeNature, { label: string; blurb: string }> = {
+  world: {
+    label: "The world changed",
+    blurb: "Something happened and was reported: a new event, or an observed restoration.",
+  },
+  data: {
+    label: "The record changed",
+    blurb: "What we assert changed; the world did not. A correction, a new source, a withdrawal.",
+  },
+  methodology: {
+    label: "The measurement changed",
+    blurb: "We changed how the index is computed. Movement here is ours, not the world's.",
+  },
+  decay: {
+    label: "Time passed",
+    blurb: "Modelled impairment ages. This is never evidence that anything was repaired.",
+  },
+};
+
+function BuildLedgerView({
+  bundle, onDrill,
+}: { bundle: Bundle; onDrill: (t: InspectTarget) => void }) {
+  const bc = bundle.buildChanges;
+  if (!bc) {
+    return (
+      <div className="empty" style={{ padding: 24 }}>
+        <div className="eyebrow">No comparison available</div>
+        <p style={{ lineHeight: 1.6, color: "var(--text-dim)" }}>
+          This payload carries no change ledger, so there is nothing to compare this build
+          against. That is not the same as a build in which nothing changed.
+        </p>
+      </div>
+    );
+  }
+
+  if (bc.unavailable_reason) {
+    return (
+      <Block title="First build">
+        <p className="lede">
+          There is no previous build to compare against ({bc.unavailable_reason}). A delta of
+          zero would claim a quiet build that was never actually compared.
+        </p>
+      </Block>
+    );
+  }
+
+  const byNature = (n: ChangeNature) => bc.changes.filter((c) => c.nature === n);
+  const orderedNatures: ChangeNature[] = ["world", "data", "methodology"];
+
+  return (
+    <>
+      <Block title="What moved">
+        <div className="ledger-head">
+          <span className="mono big">{fmtNum(bc.esdi_before, 2)}</span>
+          <span className="arrow">→</span>
+          <span className="mono big">{fmtNum(bc.esdi_after, 2)}</span>
+          <span className={`mono delta ${(bc.esdi_delta ?? 0) > 0 ? "up" : (bc.esdi_delta ?? 0) < 0 ? "down" : ""}`}>
+            {bc.esdi_delta === null ? "—" : fmtDelta(bc.esdi_delta)}
+          </span>
+        </div>
+        <p className="small">
+          {bc.previous_as_of} → {bc.current_as_of}
+          {bc.as_of_direction === "backward" && " (evaluated at an EARLIER date)"}
+          {bc.previous_build && ` · built ${bc.previous_build.slice(0, 10)} → ${(bc.current_build ?? "").slice(0, 10)}`}
+        </p>
+        {bc.decay_only && (
+          <p className="decay-note">{bc.decay_only_note}</p>
+        )}
+        {!bc.decay_only && bc.change_count === 0 && bc.esdi_delta === 0 && (
+          <p className="lede">Nothing changed and the index did not move.</p>
+        )}
+      </Block>
+
+      {bc.change_count > 0 && (
+        <Block title={`Changes (${bc.change_count})`}>
+          <p className="lede">
+            Grouped by what kind of fact each one is. A change to the record is not a change in
+            the world, and the ledger never merges the two.
+          </p>
+          {orderedNatures.map((n) => {
+            const rows = byNature(n);
+            if (!rows.length) return null;
+            return (
+              <div key={n} className={`nature-group ${n}`}>
+                <h4>
+                  {NATURE_COPY[n].label}
+                  <span className="count">{rows.length}</span>
+                </h4>
+                <p className="small">{NATURE_COPY[n].blurb}</p>
+                <div className="contrib-list">
+                  {rows.map((c) => <ChangeRow key={`${c.category}:${c.id}`} c={c} onDrill={onDrill} />)}
+                </div>
+              </div>
+            );
+          })}
+        </Block>
+      )}
+
+      {bc.sector_attribution && bc.sector_attribution.rows.length > 0 && (
+        <Block title="Where the movement sits">
+          <table className="mini">
+            <thead>
+              <tr><th>Sector</th><th>Before</th><th>After</th><th>Δ index pts</th></tr>
+            </thead>
+            <tbody>
+              {bc.sector_attribution.rows.map((r) => (
+                <tr key={r.sector} className={r.delta === 0 ? "dim" : ""}>
+                  <td>
+                    {bundle.taxonomy.sectors[r.sector] ?? titleCase(r.sector)}
+                    {r.rescaled && <span className="flag" title="denominator or weight changed">rescaled</span>}
+                  </td>
+                  <td className="mono">{fmtNum(r.index_points_before, 2)}</td>
+                  <td className="mono">{fmtNum(r.index_points_after, 2)}</td>
+                  <td className="mono">{fmtDelta(r.delta)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <Reconciles
+            sum={bc.sector_attribution.sum_of_sector_deltas}
+            value={bc.sector_attribution.headline_delta}
+          />
+        </Block>
+      )}
+
+      {bc.facility_attribution.length > 0 && (
+        <Block title={`Facility movement (${bc.facility_attribution.length})`} tone="warn">
+          <p className="small">{bc.attribution_note}</p>
+          <div className="contrib-list">
+            {bc.facility_attribution.slice(0, 40).map((r) => (
+              <button
+                key={`${r.sector}:${r.asset_id}`}
+                className="contrib-row plain"
+                onClick={() => onDrill({ kind: "facility", assetId: r.asset_id })}
+              >
+                <span className="contrib-name">
+                  {r.name ?? r.asset_id}
+                  {r.entered && <span className="flag">entered</span>}
+                  {r.left && <span className="flag">left</span>}
+                  {!r.attribution_exact && (
+                    <span className="flag warn" title={r.non_additive_reason ?? undefined}>
+                      not attributable
+                    </span>
+                  )}
+                </span>
+                <span className="contrib-math mono">
+                  {fmtNum(r.sector_points_before, 2)} → {fmtNum(r.sector_points_after, 2)}
+                </span>
+                <span className="contrib-pts mono">{fmtDelta(r.delta)}</span>
+              </button>
+            ))}
+          </div>
+          {bc.facility_attribution.length > 40 && (
+            <p className="small">
+              Showing the 40 largest movements of {bc.facility_attribution.length}.
+            </p>
+          )}
+        </Block>
+      )}
+    </>
+  );
+}
+
+function ChangeRow({
+  c, onDrill,
+}: { c: BuildChange; onDrill: (t: InspectTarget) => void }) {
+  const drillable = c.category.startsWith("incident") || c.category === "source_added";
+  const go = () => {
+    if (drillable) onDrill({ kind: "incident", incidentId: c.id });
+    else if (c.asset_id) onDrill({ kind: "facility", assetId: c.asset_id });
+  };
+  const clickable = drillable || !!c.asset_id;
+  return (
+    <button className="contrib-row plain change-row" onClick={go} disabled={!clickable}>
+      <span className="contrib-name">
+        {c.label}
+        <span className="flag">{c.category.replace(/_/g, " ")}</span>
+      </span>
+      <span className="contrib-math">{c.date ? fmtDate(c.date) : ""}</span>
+      <span className="change-detail">{c.detail}</span>
+    </button>
   );
 }
