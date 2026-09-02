@@ -7,7 +7,7 @@
  *  white-screening the whole dashboard; and a one-version schema skew (N or N-1) is
  *  tolerated. See docs/DEPLOYMENT.md. */
 
-import type { Bundle, SchemaCheck, PipelineRegistry } from "./types";
+import type { Bundle, SchemaCheck, PipelineRegistry, RegionExplanation } from "./types";
 
 const BASE = `${import.meta.env.BASE_URL}data`;
 
@@ -255,4 +255,16 @@ export async function loadPipelineRegistry(): Promise<PipelineRegistry> {
     entities: {}, nodes: {}, generated_note: "",
   });
   return registryCache;
+}
+
+/** Per-region decomposition (iteration 11). Kept out of the first paint: it covers all 80
+ *  regions and is only read when someone asks a region "why". Absent file degrades to an empty
+ *  map, and the Inspector then says the explanation is unavailable for this build rather than
+ *  inventing one. */
+let regionalExplanationCache: Record<string, RegionExplanation> | null = null;
+export async function loadRegionalExplanations(): Promise<Record<string, RegionExplanation>> {
+  if (regionalExplanationCache) return regionalExplanationCache;
+  regionalExplanationCache = await grabOptional<Record<string, RegionExplanation>>(
+    "explanations_regional.json", {});
+  return regionalExplanationCache;
 }

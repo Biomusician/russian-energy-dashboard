@@ -1,17 +1,22 @@
 import type { Bundle } from "../types";
 import { fmtDate, fmtNum } from "../data";
 import { severityColor } from "../palette";
+import { ExplainButton } from "./ui";
+import type { InspectTarget } from "./Inspector";
 
 /** National summary strip. Iteration 1 adds recovery headline metrics and consolidates
  *  the two denominator-less sectors (gas, coal) into one compact cell, so the ribbon
  *  leads with what it can actually measure without hiding what it cannot. */
 export default function Ribbon({
-  bundle, step, currentDate, onOpenMethodology,
+  bundle, step, currentDate, onOpenMethodology, onExplain,
 }: {
   bundle: Bundle;
   step: number;
   currentDate: string;
   onOpenMethodology: () => void;
+  /** Opens the Evidence Inspector on a target. Iteration 11 §2: the headline and every scored
+   *  sector must be openable, not merely documented elsewhere. */
+  onExplain: (t: InspectTarget) => void;
 }) {
   const { national, snapshot, taxonomy } = bundle;
   const esdi = national.esdi[step] ?? 0;
@@ -42,6 +47,7 @@ export default function Ribbon({
           <div style={{ fontSize: 10.5, color: "var(--text-faint)", maxWidth: 180, lineHeight: 1.4 }}>
             Belarus + monitored Russian regions + Crimea. Capacity at disrupted sites — not measured loss.
           </div>
+          <ExplainButton label="the Monitored-Area ESDI" onClick={() => onExplain({ kind: "headline" })} />
         </div>
       </div>
 
@@ -71,11 +77,17 @@ export default function Ribbon({
         {coveredSectors.map((key) => {
           const value = national.sectors[key]?.[step] ?? 0;
           return (
-            <div key={key} className="sector-cell">
+            <button
+              key={key}
+              className="sector-cell as-button"
+              onClick={() => onExplain({ kind: "sector", sector: key })}
+              title={`Explain ${taxonomy.sectors[key] ?? key}`}
+            >
               <div className="eyebrow">{taxonomy.sectors[key] ?? key}</div>
               <div className="num" style={{ fontSize: 19, marginTop: 4, color: severityColor(value) }}>{fmtNum(value, 1)}</div>
               <div className="sector-bar"><i style={{ width: `${Math.min(100, value)}%`, background: severityColor(value) }} /></div>
-            </div>
+              <span className="cell-explain">explain</span>
+            </button>
           );
         })}
         {uncovered.length > 0 && (

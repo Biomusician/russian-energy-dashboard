@@ -15,6 +15,7 @@ import datetime as dt
 import shutil
 
 from pipeline import build_assets, build_context, build_index, build_pipeline_network
+from pipeline import diff_builds
 from pipeline import fetch_osm, fetch_osm_pipelines
 from pipeline.config import (
     ANALYTIC_CONCEPTS, ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, EVIDENCE_KINDS,
@@ -579,6 +580,13 @@ def main():
     # Inspector and would otherwise inflate the always-loaded snapshot for something most
     # sessions never look at.
     write_json(PROCESSED / "explanations_regional.json", regional_explanations)
+
+    # Build-to-build change ledger (§7-§10). Computed BEFORE the mirror runs, because
+    # web/public/data still holds the previous build's payload until it is overwritten — so the
+    # diff needs no separate history to keep in sync, and both sides are artefacts that already
+    # exist and are reproducible.
+    write_json(PROCESSED / "build_changes.json",
+               diff_builds.from_directory(WEB_DATA, snapshot, incidents, assets))
     write_json(PROCESSED / "refinery_inventory.json",
                {"refineries": refineries, "total_mtpa": round(refining_total, 1),
                 "reconciliation": refinery_reconciliation})

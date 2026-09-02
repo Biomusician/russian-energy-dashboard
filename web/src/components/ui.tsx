@@ -230,3 +230,18 @@ export function hostOf(url: string): string {
     return url.slice(0, 40);
   }
 }
+
+/** "Explain this number" affordance (iteration 11 §2). Quiet on purpose: it sits beside many
+ *  figures, and a loud repeated button would compete with the data it annotates. */
+export function ExplainButton({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      className="explain-btn"
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+      title={`Explain ${label}`}
+      aria-label={`Explain ${label}`}
+    >
+      explain
+    </button>
+  );
+}

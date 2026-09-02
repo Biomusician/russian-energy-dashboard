@@ -475,6 +475,10 @@ export interface Snapshot {
   recovery_stats: RecoveryStats;
   coverage_detail: CoverageDetail;
   live_disruptions: LiveDisruption[];
+  /** Machine-generated decomposition of the headline and each sector (iteration 11).
+   *  Optional: an N-1 payload from a lagging CDN edge predates it, and the Inspector says so
+   *  rather than the app breaking. */
+  explanations?: Explanations;
   /** Complete dated recovery-evidence log. Optional: an N-1 payload served by a lagging CDN
    *  edge during a deploy predates it, and the UI degrades to "no evidence" rather than break. */
   recovery_events?: RecoveryEvent[];
@@ -661,4 +665,103 @@ export interface PipelineRegistry {
   entities: Record<string, PipelineEntity>;
   nodes: Record<string, PipelineNode>;
   generated_note: string;
+}
+
+/* ---------------------------------------------------------------------------
+ * Explanations (iteration 11 §2-§6)
+ *
+ * These mirror pipeline/explain.py exactly. Nothing here is derived in the frontend: the
+ * decomposition is computed beside the arithmetic it describes, and the client renders it.
+ * Adding a computed field to this file would be the first step towards a second scoring model.
+ * ------------------------------------------------------------------------- */
+
+export interface SectorContribution {
+  sector: string;
+  included: boolean;
+  /** The sector's own value, 0-100. */
+  sector_value: number;
+  nominal_weight: number;
+  /** Weight after redistributing the weight of sectors with no denominator. */
+  effective_weight: number;
+  /** What this sector adds to the headline, in the headline's own units. */
+  index_points: number;
+  excluded_reason: string | null;
+}
+
+export interface HeadlineExplanation {
+  value: number;
+  as_of: string;
+  covered: string[];
+  uncovered: string[];
+  nominal_weights: Record<string, number>;
+  effective_weights: Record<string, number>;
+  contributions: SectorContribution[];
+  sum_of_contributions: number;
+  reconciles: boolean;
+  renormalisation_note: string;
+  decay: { form: string; half_life_source: string; note: string };
+  sensitivities: {
+    zero_assumption?: number | null;
+    all_sectors?: number | null;
+    excluding_transmission?: number | null;
+    renormalisation_note?: string | null;
+  };
+}
+
+export interface ContributingFacility {
+  asset_id: string;
+  name: string | null;
+  asset_class: string | null;
+  region_code: string | null;
+  driving_incident_id: string | null;
+  disruption_weight: number;
+  capacity_share_pct: number;
+  /** This facility's addition to the sector value, in sector percentage points. */
+  sector_points: number;
+  recovery_status: string | null;
+  evidence_kind: string | null;
+  evidence_family: string | null;
+}
+
+export interface SectorExplanation {
+  sector: string;
+  basis: "capacity_mtpa" | "capacity_mw" | "event_burden" | "uncovered";
+  value: number;
+  contributing: ContributingFacility[];
+  contributing_count: number;
+  sum_of_contributions: number;
+  limitations: string[];
+  denominator: {
+    value: number;
+    unit: string;
+    source: string | null;
+    vintage: string | null;
+    known_bias?: string | null;
+    facility_count?: number | null;
+    completeness_pct?: number | null;
+  } | null;
+  /** Transmission only — it is an event-burden proxy, never a share of grid offline. */
+  proxy_warning?: string;
+  raw_burden?: number;
+  saturation_sweep?: { saturation: number; sector_value: number }[];
+  concentration?: Snapshot["transmission_concentration"];
+  ex_transmission_composite?: number | null;
+}
+
+export interface Explanations {
+  headline: HeadlineExplanation;
+  sectors: Record<string, SectorExplanation>;
+}
+
+export interface RegionExplanation {
+  code: string;
+  name: string | null;
+  value: number;
+  contributions: { sector: string; sector_value: number; effective_weight: number; index_points: number }[];
+  sum_of_contributions: number;
+  reconciles: boolean;
+  /** Which kind of zero this is — absent when the region actually scores. */
+  zero_basis: "no_contributing_facilities" | "impairment_present_but_unscorable" | null;
+  unscored_sectors: string[];
+  zero_note: string | null;
 }

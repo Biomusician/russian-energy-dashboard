@@ -8,6 +8,7 @@ import MapPanel from "./components/MapPanel";
 import Dossier from "./components/Dossier";
 import Timeline from "./components/Timeline";
 import Methodology from "./components/Methodology";
+import Inspector, { type InspectTarget } from "./components/Inspector";
 import ComparisonTray from "./components/ComparisonTray";
 import { useLayoutMode } from "./useLayoutMode";
 import { LayoutChrome } from "./components/LayoutChrome";
@@ -55,6 +56,10 @@ export default function App() {
   const [selected, setSelected] = useState<string | null>(initial.selected ?? null);
   const [selectedAsset, setSelectedAsset] = useState<{ asset: Asset; key: string } | null>(null);
   const [methodOpen, setMethodOpen] = useState(false);
+  // The Inspector navigation stack (iteration 11 §3). A stack rather than a single target so
+  // a reader who drilled headline -> sector -> facility -> event can walk back out the way
+  // they came in instead of restarting the trail.
+  const [inspect, setInspect] = useState<InspectTarget[] | null>(null);
   // Region comparison tray (§17): up to three pinned regions; a fourth pushes out the oldest.
   const [compareRegions, setCompareRegions] = useState<string[]>(initial.compare ?? []);
   const toggleCompare = (code: string) =>
@@ -301,12 +306,13 @@ export default function App() {
     if (!filtersOpen && !dossierOpen) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
+      if (inspect) return; // the Inspector is on top and handles its own dismissal
       if (dossierOpen) setDossierOpen(false);
       else if (filtersOpen) setFiltersOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [filtersOpen, dossierOpen]);
+  }, [filtersOpen, dossierOpen, inspect]);
 
   if (error) {
     return (
@@ -351,6 +357,7 @@ export default function App() {
         step={step}
         currentDate={currentDate}
         onOpenMethodology={() => setMethodOpen(true)}
+        onExplain={(t) => setInspect([t])}
       />
       <Filters
         drawer={filtersIsDrawer}
@@ -395,6 +402,7 @@ export default function App() {
         assetStruck={selectedAsset ? struckAssetIds.has(selectedAsset.asset.asset_id) : undefined}
         assetAlsoHere={selectedAlsoHere}
         activeClasses={filters.classes}
+        onExplain={(t) => setInspect([t])}
         compareRegions={compareRegions}
         onToggleCompare={toggleCompare}
       />
@@ -414,6 +422,14 @@ export default function App() {
         onSelect={selectRegion}
       />
       {methodOpen && <Methodology bundle={bundle} onClose={() => setMethodOpen(false)} />}
+      {inspect && (
+        <Inspector
+          bundle={bundle}
+          target={inspect}
+          onNavigate={setInspect}
+          onClose={() => setInspect(null)}
+        />
+      )}
     </div>
   );
 }

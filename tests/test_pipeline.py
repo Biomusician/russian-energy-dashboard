@@ -3251,3 +3251,260 @@ def test_decay_explanation_refuses_to_claim_repair():
     d = _snap()["explanations"]["headline"]["decay"]
     assert "NOT" in d["note"] and "repaired" in d["note"]
     assert "half_life" in d["form"]
+
+
+# --------------------------------------------------------------------------
+# Build-to-build change ledger (iteration 11 §7-§10)
+#
+# The distinction these protect is the one the whole view exists for: DATA CHANGE != WORLD
+# CHANGE, and TIME DECAY != OBSERVED RECOVERY. A ledger that reported a withdrawn event as
+# "recovery" or a quiet decay day as "improvement" would be worse than no ledger, because it
+# would be a specific false claim rather than an absence.
+# --------------------------------------------------------------------------
+
+def _led_snapshot(esdi, sectors=None, live=None, denominators=None, weights=None,
+                 saturation=None, coverage=None, as_of="2026-09-01"):
+    """A snapshot carrying just enough for the differ, including a decomposition that
+    reconciles — the differ subtracts one build's contributions from the other's."""
+    sectors = sectors or {"refining": 30.0, "transmission": 10.0}
+    weights = weights or {"refining": 0.5, "transmission": 0.5}
+    total_w = sum(weights.values())
+    contributions = [
+        {"sector": s, "included": True, "sector_value": v,
+         "nominal_weight": weights[s], "effective_weight": round(weights[s] / total_w, 4),
+         "index_points": round(weights[s] / total_w * v, 2), "excluded_reason": None}
+        for s, v in sectors.items()
+    ]
+    return {
+        "as_of": as_of, "build_time": f"{as_of}T00:00:00+00:00", "esdi": esdi,
+        "denominators": denominators or {"refining_mtpa": 300.0},
+        "live_disruptions": live or [],
+        "coverage": coverage,
+        "transmission_sensitivity": {"saturation_constant": saturation} if saturation else {},
+        "explanations": {
+            "headline": {"value": esdi, "nominal_weights": weights,
+                         "contributions": contributions},
+            "sectors": {
+                s: {"sector": s, "value": v, "contributing": []} for s, v in sectors.items()
+            },
+        },
+    }
+
+
+def _led_incident(iid, **over):
+    base = {
+        "incident_id": iid, "asset_id": "a1", "asset_name": "Test Refinery",
+        "date": "2026-08-01", "date_precision": "day", "cause": "uav_strike",
+        "attribution": "ukraine", "attribution_confidence": "reported",
+        "confidence": "confirmed", "sources": [{"url": "https://example.org/1"}],
+        "origin": "curated",
+    }
+    base.update(over)
+    return base
+
+
+def test_a_new_event_is_a_world_change_and_a_withdrawn_one_is_not():
+    """The asymmetry is the point. An event entering the dataset says something happened; an
+    event leaving says we stopped asserting it. Reporting a withdrawal as a world change would
+    tell a reader the world improved when only the record did."""
+    from pipeline import diff_builds as D
+    snap = _led_snapshot(17.0)
+    out = D.diff(snap, snap, [_led_incident("i1")], [_led_incident("i1"), _led_incident("i2")], [], [])
+    added = [c for c in out["changes"] if c["category"] == "incident_added"]
+    assert len(added) == 1 and added[0]["nature"] == "world"
+
+    out = D.diff(snap, snap, [_led_incident("i1"), _led_incident("i2")], [_led_incident("i1")], [], [])
+    removed = [c for c in out["changes"] if c["category"] == "incident_removed"]
+    assert len(removed) == 1
+    assert removed[0]["nature"] == "data"
+    assert "no longer asserted" in removed[0]["detail"]
+
+
+def test_a_revision_and_a_new_source_are_separate_data_changes():
+    from pipeline import diff_builds as D
+    snap = _led_snapshot(17.0)
+    before = [_led_incident("i1")]
+    after = [_led_incident("i1", confidence="probable",
+                       sources=[{"url": "https://example.org/1"},
+                                {"url": "https://example.org/2"}])]
+    cats = {c["category"] for c in D.diff(snap, snap, before, after, [], [])["changes"]}
+    assert cats == {"incident_revised", "source_added"}
+
+
+def test_a_reordered_source_list_is_not_reported_as_a_revision():
+    """A ledger that fires on cosmetic churn buries the changes that matter."""
+    from pipeline import diff_builds as D
+    snap = _led_snapshot(17.0)
+    before = [_led_incident("i1", notes="a")]
+    after = [_led_incident("i1", notes="b", origin="curated")]
+    assert D.diff(snap, snap, before, after, [], [])["changes"] == []
+
+
+def test_recovery_status_movement_is_a_world_change():
+    from pipeline import diff_builds as D
+    live = lambda status, kind: [{
+        "asset_id": "a1", "name": "Test Refinery",
+        "recovery": {"recovery_status": status, "scoring_evidence_kind": kind},
+        "latest": "2026-08-01",
+    }]
+    before = _led_snapshot(17.0, live=live("impaired", "modelled"))
+    after = _led_snapshot(16.0, live=live("substantially_restored", "observed"))
+    changes = D.diff(before, after, [], [], [], [])["changes"]
+    assert [c["category"] for c in changes] == ["recovery_status_changed"]
+    assert changes[0]["nature"] == "world"
+
+
+def test_the_same_status_with_better_evidence_is_still_reported():
+    """An estimate becoming an observation does not move the number but does change how much
+    weight a reader should put on it."""
+    from pipeline import diff_builds as D
+    live = lambda kind: [{
+        "asset_id": "a1", "name": "R",
+        "recovery": {"recovery_status": "impaired", "scoring_evidence_kind": kind},
+        "latest": "2026-08-01",
+    }]
+    changes = D.diff(_led_snapshot(17.0, live=live("modelled")),
+                     _led_snapshot(17.0, live=live("observed")), [], [], [], [])["changes"]
+    assert [c["category"] for c in changes] == ["recovery_evidence_added"]
+
+
+def test_asset_and_denominator_and_methodology_changes_are_classified():
+    from pipeline import diff_builds as D
+    before = _led_snapshot(17.0, denominators={"refining_mtpa": 300.0},
+                          weights={"refining": 0.5, "transmission": 0.5}, saturation=6)
+    after = _led_snapshot(17.0, denominators={"refining_mtpa": 310.0},
+                         weights={"refining": 0.6, "transmission": 0.5}, saturation=8)
+    assets_before = [{"asset_id": "a1", "name": "R", "capacity_mtpa": 10.0}]
+    assets_after = [{"asset_id": "a1", "name": "R", "capacity_mtpa": 12.0},
+                    {"asset_id": "a2", "name": "S", "asset_class": "refinery"}]
+    out = D.diff(before, after, [], [], assets_before, assets_after)
+    cats = {c["category"] for c in out["changes"]}
+    assert {"asset_added", "asset_capacity_revised",
+            "denominator_changed", "methodology_changed"} <= cats
+    assert out["by_nature"]["methodology"] >= 3
+    # Every sector touched by a rescaling change must be flagged, or the facility-level figures
+    # below would read as ordinary movement.
+    assert "refining" in out["rescaled_sectors"]
+    assert "transmission" in out["rescaled_sectors"]
+
+
+def test_coverage_movement_is_a_data_change_not_a_world_change():
+    from pipeline import diff_builds as D
+    before = _led_snapshot(17.0, coverage={"enumerated_in_this_dataset": 140,
+                                          "reported_total_strikes": 300})
+    after = _led_snapshot(17.0, coverage={"enumerated_in_this_dataset": 144,
+                                         "reported_total_strikes": 305})
+    changes = D.diff(before, after, [], [], [], [])["changes"]
+    assert [c["category"] for c in changes] == ["coverage_changed"]
+    assert changes[0]["nature"] == "data"
+
+
+def test_a_quiet_day_says_the_index_fell_because_time_passed():
+    """The single most common honest summary, and the one a naive delta cannot produce."""
+    from pipeline import diff_builds as D
+    out = D.diff(_led_snapshot(18.5, sectors={"refining": 33.0, "transmission": 10.0},
+                               as_of="2026-08-31"),
+                 _led_snapshot(17.3, sectors={"refining": 30.6, "transmission": 10.0},
+                               as_of="2026-09-01"),
+                 [_led_incident("i1")], [_led_incident("i1")], [], [])
+    assert out["change_count"] == 0
+    assert out["decay_only"] is True
+    assert "NOT evidence that anything was repaired" in out["decay_only_note"]
+    assert out["esdi_delta"] == -1.2
+
+
+def test_a_day_with_real_news_is_not_labelled_decay():
+    from pipeline import diff_builds as D
+    out = D.diff(_led_snapshot(17.0), _led_snapshot(18.0),
+                 [_led_incident("i1")], [_led_incident("i1"), _led_incident("i2")], [], [])
+    assert out["decay_only"] is False
+    assert out["decay_only_note"] is None
+
+
+def test_sector_deltas_sum_to_the_headline_delta_exactly():
+    """The one layer of the attribution that is arithmetic rather than inference."""
+    from pipeline import diff_builds as D
+    before = _led_snapshot(20.0, sectors={"refining": 30.0, "transmission": 10.0})
+    after = _led_snapshot(17.5, sectors={"refining": 25.0, "transmission": 10.0})
+    sa = D.diff(before, after, [], [], [], [])["sector_attribution"]
+    assert sa["sum_of_sector_deltas"] == sa["headline_delta"] == -2.5
+    assert sa["exact"] is True
+
+
+def test_facility_movement_inside_a_rescaled_sector_is_labelled_non_additive():
+    """A changed denominator re-scales every facility at once. Presenting those deltas as a
+    decomposition would attribute a methodology change to individual facilities."""
+    from pipeline import diff_builds as D
+    def snap(denom, pts):
+        s = _led_snapshot(17.0, denominators={"refining_mtpa": denom})
+        s["explanations"]["sectors"]["refining"]["contributing"] = [
+            {"asset_id": "a1", "name": "R", "sector_points": pts}]
+        return s
+    out = D.diff(snap(300.0, 12.0), snap(330.0, 10.9), [], [], [], [])
+    rows = out["facility_attribution"]
+    assert rows and rows[0]["asset_id"] == "a1"
+    assert rows[0]["attribution_exact"] is False
+    assert "not its own" in rows[0]["non_additive_reason"]
+
+
+def test_a_capped_sector_marks_its_facility_movement_as_possibly_invisible():
+    from pipeline import diff_builds as D
+    def snap(pts):
+        s = _led_snapshot(17.0, sectors={"refining": 100.0, "transmission": 10.0})
+        s["explanations"]["sectors"]["refining"]["contributing"] = [
+            {"asset_id": "a1", "name": "R", "sector_points": pts}]
+        return s
+    rows = D.diff(snap(60.0), snap(72.0), [], [], [], [])["facility_attribution"]
+    assert rows[0]["attribution_exact"] is False
+    assert "cap" in rows[0]["non_additive_reason"]
+
+
+def test_a_first_build_says_so_instead_of_claiming_a_quiet_day():
+    """Zero changes and no previous build are different facts. Reporting the first as the second
+    would tell a reader nothing happened when in truth nothing was compared."""
+    from pipeline import diff_builds as D
+    out = D.empty(_led_snapshot(17.0), "no previous build payload found")
+    assert out["change_count"] == 0
+    assert out["decay_only"] is False
+    assert out["esdi_delta"] is None
+    assert out["unavailable_reason"]
+
+
+def test_every_category_declares_a_valid_nature():
+    from pipeline import diff_builds as D
+    assert set(D.CATEGORIES.values()) <= set(D.NATURES)
+    assert len(D.CATEGORIES) == 11
+
+
+@pytest.mark.skipif(not (PROCESSED / "build_changes.json").exists(),
+                    reason="pipeline has not been run")
+def test_the_real_build_emits_a_well_formed_ledger():
+    led = json.loads((PROCESSED / "build_changes.json").read_text(encoding="utf-8"))
+    from pipeline import diff_builds as D
+    for c in led["changes"]:
+        assert c["category"] in D.CATEGORIES
+        assert c["nature"] in D.NATURES
+    if led["sector_attribution"]:
+        sa = led["sector_attribution"]
+        assert abs(sa["sum_of_sector_deltas"] - sa["headline_delta"]) <= 0.02
+    # Decay-only is a claim about the world. It must never be made when something did change.
+    if led["decay_only"]:
+        assert not [c for c in led["changes"] if c["nature"] != "decay"]
+
+
+def test_a_backwards_as_of_comparison_does_not_call_a_rise_decay():
+    """A current-date build compared against a frozen historical one runs backwards, and decay
+    then makes the index RISE. Saying "the index moved because impairment decays" beside a rise
+    would read as nonsense, so the direction is stated rather than assumed."""
+    from pipeline import diff_builds as D
+    fwd = D.diff(_led_snapshot(18.5, as_of="2026-08-25"),
+                 _led_snapshot(17.3, as_of="2026-09-01"), [], [], [], [])
+    assert fwd["as_of_direction"] == "forward"
+    assert "NOT evidence that anything was repaired" in fwd["decay_only_note"]
+
+    back = D.diff(_led_snapshot(17.3, as_of="2026-09-01"),
+                  _led_snapshot(18.5, as_of="2026-08-25"), [], [], [], [])
+    assert back["as_of_direction"] == "backward"
+    assert back["esdi_delta"] > 0
+    assert "less time had elapsed" in back["decay_only_note"]
+    assert "Nothing worsened" in back["decay_only_note"]

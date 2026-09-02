@@ -5,6 +5,8 @@ import {
   ReconstitutionTab, SourcesTab, WhatChangedTab, type TabProps,
 } from "./tabs";
 import { AssetAttributes } from "./AssetDetail";
+import { ExplainButton } from "./ui";
+import type { InspectTarget } from "./Inspector";
 
 /** The right rail is a tabbed analytical panel. The central map stays the primary
  *  visualization; these tabs give it analytical depth without displacing it. Tab
@@ -32,7 +34,7 @@ export default function Dossier({
     drawer = false, open = false, onCloseDrawer,
 bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSelect,
   selectedAsset, onClearAsset, assetStruck, assetAlsoHere, activeClasses,
-  compareRegions, onToggleCompare,
+  compareRegions, onToggleCompare, onExplain,
 }: {
   /** True when the dossier is presented as an overlay drawer rather than docked. */
   drawer?: boolean;
@@ -58,6 +60,9 @@ bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSele
   /** Regions pinned to the comparison tray (§17), and the toggle for the current one. */
   compareRegions?: string[];
   onToggleCompare?: (code: string) => void;
+  /** Opens the Evidence Inspector (iteration 11 §2). A region's index is a composite like the
+   *  headline, so it must be openable in the same way rather than only the national figure. */
+  onExplain?: (t: InspectTarget) => void;
 }) {
   // Initial tab may be seeded from the URL hash (#tab=Recovery) — used for headless
   // visual QA of individual tabs; harmless in normal use.
@@ -98,7 +103,13 @@ bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSele
           </div>
         </div>
         {region && (
-          <div style={{ display: "flex", gap: 6 }}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            {onExplain && (
+              <ExplainButton
+                label={`${region.name}'s index`}
+                onClick={() => onExplain({ kind: "region", code: region.code })}
+              />
+            )}
             {onToggleCompare && (
               <button
                 className="ghost"
