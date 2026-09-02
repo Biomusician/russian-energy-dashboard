@@ -156,6 +156,7 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
         code: {"esdi": [], "sectors": {s: [] for s in SECTORS}} for code in region_meta
     }
 
+    final_nat_fracs, final_reg_fracs = {}, {}
     for when in timeline:
         nat_sector = collections.defaultdict(float)
         reg_sector = collections.defaultdict(lambda: collections.defaultdict(float))
@@ -193,6 +194,11 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
                 regional[code]["sectors"][s].append(round(min(1.0, rs.get(s, 0.0)) * 100, 2))
             regional[code]["esdi"].append(_composite(rs, sector_weights, covered))
 
+        # Keep the last step's UNROUNDED fractions: the explanation decomposition must reconcile
+        # to the published composite exactly, and rounded percentages cannot do that.
+        final_nat_fracs = dict(nat_sector)
+        final_reg_fracs = {c: dict(v) for c, v in reg_sector.items()}
+
     # Bottom-up gas-processing census for the EXPERIMENTAL sub-index (§18). Only assets that
     # carry an explicit bcm/y figure (structured, never parsed from prose) are counted.
     gpp_census = [
@@ -208,7 +214,29 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
         region_meta, national, regional, timeline, as_of, covered, recovery_by_incident,
         region_context, gpp_census=gpp_census,
     )
-    return national, regional, snapshot
+
+    # --- explanations (iteration 11) --------------------------------------------------------
+    # Built AFTER the snapshot so sector explanations can quote the sensitivities and
+    # denominator bases the snapshot already publishes, and from the same unrounded fractions
+    # the composite used. Regional decomposition is returned separately: it is per-region and
+    # would roughly double snapshot.json for something only opened on demand.
+    from pipeline import explain
+    snapshot["explanations"] = {
+        "headline": explain.headline_explanation(
+            final_nat_fracs, sector_weights, covered, snapshot["esdi"], as_of,
+            {
+                "zero_assumption": snapshot.get("uncovered_zero_assumption_sensitivity"),
+                "all_sectors": snapshot.get("esdi_all_sectors"),
+                "excluding_transmission": snapshot.get("esdi_excluding_transmission"),
+                "renormalisation_note": snapshot.get("esdi_renormalization_note"),
+            }),
+        "sectors": explain.sector_explanations(
+            final_nat_fracs, denominators, snapshot, snapshot["live_disruptions"],
+            facility_info, _share, SATURATION_EVENTS),
+    }
+    regional_explanations = explain.regional_explanations(
+        regional, region_meta, sector_weights, covered, final_reg_fracs)
+    return national, regional, snapshot, regional_explanations
 
 
 def _composite(sector_values, weights, covered):

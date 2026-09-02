@@ -505,7 +505,7 @@ def main():
         and f["properties"].get("region_code")
     )
 
-    national, regional, snapshot = build_index.build(
+    national, regional, snapshot, regional_explanations = build_index.build(
         incidents=in_aoi,
         facilities=wiki_facilities,
         assets=assets,
@@ -575,6 +575,10 @@ def main():
     write_json(PROCESSED / "index_national.json", national)
     write_json(PROCESSED / "index_regional.json", {"dates": national["dates"], "regions": regional})
     write_json(PROCESSED / "snapshot.json", snapshot)
+    # Per-region decomposition lives in its own file: it is opened on demand by the Evidence
+    # Inspector and would otherwise inflate the always-loaded snapshot for something most
+    # sessions never look at.
+    write_json(PROCESSED / "explanations_regional.json", regional_explanations)
     write_json(PROCESSED / "refinery_inventory.json",
                {"refineries": refineries, "total_mtpa": round(refining_total, 1),
                 "reconciliation": refinery_reconciliation})

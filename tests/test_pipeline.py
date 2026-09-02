@@ -514,7 +514,8 @@ def test_emitted_data_carries_no_out_of_scope_fields():
             for v in node:
                 walk(v)
 
-    for name in ("incidents.json", "snapshot.json", "assets.json"):
+    for name in ("incidents.json", "snapshot.json", "assets.json",
+                 "explanations_regional.json"):
         walk(json.loads((PROCESSED / name).read_text(encoding="utf-8")))
     assert not found, f"out-of-scope fields present in emitted data: {found}"
 
@@ -3081,3 +3082,172 @@ def test_topology_only_connections_never_gain_geography():
         n = nodes.get(t["node_id"] or "")
         if n and n["geography_precision"] != "coordinate":
             assert n["lon"] is None and n["lat"] is None
+
+
+# --------------------------------------------------------------------------
+# Explainability (iteration 11 §2-§6, §38)
+#
+# The rule these enforce: the explanation shown to an analyst must be the SAME arithmetic
+# that produced the published number, not a second model that happens to look similar. The
+# way that guarantee fails in practice is silently — someone changes a weight, a
+# renormalisation or a rounding rule in the scorer, the explanation keeps rendering, and it
+# is now a confident description of a number it no longer describes. So the identity is
+# pinned against the real build rather than a fixture.
+# --------------------------------------------------------------------------
+
+def _snap():
+    return json.loads((PROCESSED / "snapshot.json").read_text(encoding="utf-8"))
+
+
+def _regional_explanations():
+    return json.loads(
+        (PROCESSED / "explanations_regional.json").read_text(encoding="utf-8"))
+
+
+needs_build = pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
+                                 reason="pipeline has not been run")
+
+
+@needs_build
+def test_headline_contributions_sum_to_the_published_index():
+    """§38: sum(contributions) == published value. Exactly, not approximately.
+
+    ESDI = round(Σ_covered(w_s·v_s) / Σ_covered(w_s) × 100, 2), and each contribution is that
+    same product term, so the identity is structural rather than fitted. If it drifts, the
+    decomposition has stopped describing the composite.
+    """
+    h = _snap()["explanations"]["headline"]
+    assert h["sum_of_contributions"] == h["value"]
+    assert h["reconciles"] is True
+
+
+@needs_build
+def test_each_contribution_reproduces_from_the_numbers_shown_beside_it():
+    """No contribution may be a residual or a plug. Each has to reproduce from the two figures
+    displayed next to it, or the panel is showing arithmetic the reader cannot check."""
+    for c in _snap()["explanations"]["headline"]["contributions"]:
+        assert abs(c["index_points"] - c["effective_weight"] * c["sector_value"]) <= 0.01, \
+            c["sector"]
+
+
+@needs_build
+def test_effective_weights_renormalise_over_covered_sectors_only():
+    """Uncovered sectors must carry zero effective weight AND a stated reason. A sector shown
+    at 0.00 with no explanation reads as "measured, nothing there" — the exact confusion
+    between UNKNOWN and ZERO this iteration exists to remove."""
+    h = _snap()["explanations"]["headline"]
+    covered = [c for c in h["contributions"] if c["included"]]
+    assert abs(sum(c["effective_weight"] for c in covered) - 1.0) <= 0.001
+    for c in h["contributions"]:
+        if not c["included"]:
+            assert c["effective_weight"] == 0.0
+            assert c["index_points"] == 0.0
+            assert c["excluded_reason"]
+    assert set(h["covered"]).isdisjoint(h["uncovered"])
+
+
+@needs_build
+def test_every_region_is_explainable_and_reconciles():
+    """Emitted for every region, not only those currently scoring. A reader clicking a quiet
+    region must get an answer, and this file is the only place that answer can come from."""
+    ex = _regional_explanations()
+    regional = json.loads((PROCESSED / "index_regional.json").read_text(encoding="utf-8"))
+    assert set(ex) == set(regional["regions"])
+    for code, e in ex.items():
+        assert e["reconciles"], f"{code}: {e['sum_of_contributions']} != {e['value']}"
+
+
+@needs_build
+def test_a_region_reading_zero_says_which_kind_of_zero_it_is():
+    for code, e in _regional_explanations().items():
+        if e["sum_of_contributions"] == 0.0:
+            assert e["zero_basis"] in (
+                "no_contributing_facilities", "impairment_present_but_unscorable"), code
+            assert e["zero_note"], code
+        else:
+            assert e["zero_basis"] is None, code
+
+
+def test_unscorable_impairment_is_not_reported_as_an_undisturbed_region():
+    """The branch real data does not currently exercise, and the one that matters most.
+
+    A region whose only documented impairment sits in gas or coal scores 0.00 because those
+    sectors have no denominator — not because nothing happened there. Reporting that as an
+    ordinary quiet region would be the most misleading thing this file could do.
+    """
+    from pipeline import explain
+    out = explain.regional_explanations(
+        regional={"RU-X": {"esdi": [0.0]}},
+        region_meta={"RU-X": {"name": "Test"}},
+        weights={"refining": 1.0, "gas": 1.0},
+        covered=["refining"],
+        sector_fracs_by_region={"RU-X": {"gas": 0.4}},
+    )["RU-X"]
+    assert out["sum_of_contributions"] == 0.0
+    assert out["zero_basis"] == "impairment_present_but_unscorable"
+    assert out["unscored_sectors"] == ["gas"]
+    assert "cannot score it" in out["zero_note"]
+
+
+@needs_build
+def test_sector_explanations_name_their_denominator_and_their_limits():
+    """Every scored sector must state what it divided by; every sector must state what is wrong
+    with it. A denominator with no unit or source cannot be audited by the reader."""
+    for s, e in _snap()["explanations"]["sectors"].items():
+        assert e["limitations"], f"{s} claims no limitations"
+        if e["basis"] == "uncovered":
+            assert e["denominator"] is None
+        else:
+            assert e["denominator"] and e["denominator"]["value"], s
+            assert e["denominator"]["unit"], s
+
+
+@needs_build
+def test_the_transmission_proxy_is_labelled_a_proxy_where_it_is_explained():
+    """It is an event-burden index against a judgement constant, not a share of grid offline.
+    Explained without that label, a reader will read it as percent-of-grid-down."""
+    t = _snap()["explanations"]["sectors"]["transmission"]
+    assert "PROXY" in t["proxy_warning"]
+    assert t["denominator"]["source"] == "methodology/scoring.json"
+    assert t["saturation_sweep"]
+
+
+@needs_build
+def test_contributing_facilities_reconcile_to_their_sector_value():
+    """A sector's value is the sum of its facilities' capacity shares, capped at 100%. Below
+    the cap the two must agree, or the listed facilities are not the ones that produced it."""
+    for s, e in _snap()["explanations"]["sectors"].items():
+        if e["value"] >= 100.0:
+            continue  # saturated: the uncapped sum legitimately exceeds the published value
+        assert abs(e["sum_of_contributions"] - e["value"]) <= 0.05, s
+
+
+@needs_build
+def test_explanations_expose_no_coordinates():
+    """§5: never display raw sensitive coordinates. The explanation payload is the newest
+    surface through which asset-level geography could leak to the client."""
+    banned = {"lat", "lon", "latitude", "longitude", "coordinates", "geometry"}
+    found = set()
+
+    def walk(node):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if k.lower() in banned:
+                    found.add(k)
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    walk(_snap()["explanations"])
+    walk(_regional_explanations())
+    assert not found, f"coordinates leaked into explanations: {found}"
+
+
+@needs_build
+def test_decay_explanation_refuses_to_claim_repair():
+    """TIME DECAY != OBSERVED RECOVERY. A falling index means modelled impairment aged out,
+    which is not evidence that anything was rebuilt."""
+    d = _snap()["explanations"]["headline"]["decay"]
+    assert "NOT" in d["note"] and "repaired" in d["note"]
+    assert "half_life" in d["form"]
