@@ -15,7 +15,7 @@ import datetime as dt
 import shutil
 
 from pipeline import build_assets, build_context, build_index, build_pipeline_network
-from pipeline import build_manifest, diff_builds
+from pipeline import build_manifest, data_quality, diff_builds
 from pipeline import fetch_osm, fetch_osm_pipelines
 from pipeline.config import (
     ANALYTIC_CONCEPTS, ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, EVIDENCE_KINDS,
@@ -602,6 +602,11 @@ def main():
     # ledger says so instead of emitting a plausible delta.
     write_json(PROCESSED / "build_changes.json",
                diff_builds.build(ROOT, snapshot, incidents, assets))
+
+    # Data quality and source freshness (§5, addendum §14). Derived at build time from the
+    # source registry and the artefacts on disk, never hand-written in a component: a freshness
+    # statement typed into React is true on the day it is typed and silently false afterwards.
+    write_json(PROCESSED / "data_quality.json", data_quality.build(snapshot, args.as_of))
     write_json(PROCESSED / "refinery_inventory.json",
                {"refineries": refineries, "total_mtpa": round(refining_total, 1),
                 "reconciliation": refinery_reconciliation})

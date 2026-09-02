@@ -65,6 +65,7 @@ INPUT_GROUPS = {
     # Third-party snapshots and their vintages. Changing one is a SOURCE_REFRESH even when the
     # score does not move.
     "source_snapshots": [
+        "data/curated/sources.csv",
         "data/curated/crea_snapshots.csv",
         "data/vendor/gem",
         "data/vendor/entsog",

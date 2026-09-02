@@ -8,7 +8,7 @@
  *  tolerated. See docs/DEPLOYMENT.md. */
 
 import type {
-  Bundle, SchemaCheck, PipelineRegistry, RegionExplanation, BuildChanges,
+  Bundle, SchemaCheck, PipelineRegistry, RegionExplanation, BuildChanges, DataQuality,
 } from "./types";
 
 const BASE = `${import.meta.env.BASE_URL}data`;
@@ -278,4 +278,15 @@ export async function loadRegionalExplanations(): Promise<Record<string, RegionE
   regionalExplanationCache = await grabOptional<Record<string, RegionExplanation>>(
     "explanations_regional.json", {});
   return regionalExplanationCache;
+}
+
+/** Source freshness and quality (iteration 11). Opened on demand rather than loaded with the
+ *  bundle: it is a reference view, not something the first paint needs. Absent file degrades to
+ *  null and the panel says the payload predates it, rather than rendering an empty bill of
+ *  health — which would be the most misleading possible failure for this particular view. */
+let dataQualityCache: DataQuality | null = null;
+export async function loadDataQuality(): Promise<DataQuality | null> {
+  if (dataQualityCache) return dataQualityCache;
+  dataQualityCache = await grabOptional<DataQuality | null>("data_quality.json", null);
+  return dataQualityCache;
 }

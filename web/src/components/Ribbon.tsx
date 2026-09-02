@@ -32,9 +32,12 @@ export default function Ribbon({
       <div className="ribbon-brand">
         <h1 className="ribbon-title">Energy Disruption Monitor</h1>
         <div className="ribbon-sub">Belarus, western Russia &amp; Siberia + occupied Crimea · admin-region level</div>
-        <button className="ghost" style={{ marginTop: 8, alignSelf: "flex-start" }} onClick={onOpenMethodology}>
-          Methodology &amp; caveats
-        </button>
+        <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+          <button className="ghost" onClick={onOpenMethodology}>Methodology &amp; caveats</button>
+          <button className="ghost" onClick={() => onExplain({ kind: "quality" })}>
+            Data quality
+          </button>
+        </div>
       </div>
 
       <div className="esdi-block">

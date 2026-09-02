@@ -3859,3 +3859,145 @@ def test_a_baseline_without_a_decomposition_reports_no_facility_movement():
     out = _led_diff(prev, curr)
     assert out["facility_attribution"] == []
     assert out["sector_attribution"] is None
+
+
+# --------------------------------------------------------------------------
+# Data quality and source freshness (iteration 11 §5, addendum §14/§15)
+#
+# The failure mode this guards against is a freshness statement that was true when it was
+# written. Everything in the quality payload is derived at build time, and these tests keep it
+# derived — a hardcoded date reappearing in a component would not fail a render, it would just
+# quietly start lying.
+# --------------------------------------------------------------------------
+
+def test_every_curated_csv_parses_without_column_overflow():
+    """An unquoted comma silently pushes text into a phantom column, and DictReader files it
+    under the key None. Four rows of sources.csv lost their last limitation that way, with no
+    error anywhere — the row still parsed, it was just missing content."""
+    import csv as _csv
+    from pipeline.config import CURATED
+    for path in sorted(CURATED.glob("*.csv")):
+        with open(path, encoding="utf-8", newline="") as fh:
+            reader = _csv.DictReader(fh)
+            for i, row in enumerate(reader, start=2):
+                assert None not in row, (
+                    f"{path.name} line {i}: more fields than headers — an unquoted comma has "
+                    f"overflowed into {row[None]!r}")
+                assert not any(v is None for v in row.values()), (
+                    f"{path.name} line {i}: fewer fields than headers")
+
+
+@needs_build
+def test_the_quality_payload_states_a_state_for_every_sector():
+    from pipeline.config import SECTORS
+    dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
+    states = {s["sector"]: s for s in dq["sector_states"]}
+    assert set(states) == set(SECTORS)
+    for s in SECTORS:
+        assert states[s]["state"] in ("scored", "experimental", "uncovered")
+
+
+@needs_build
+def test_a_sector_scored_against_a_chosen_constant_is_not_called_scored():
+    """§15's first priority. Transmission divides by a judgement, not a measured base, and
+    calling it "scored" alongside a capacity share would flatten exactly the distinction the
+    proxy warning exists to preserve."""
+    dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
+    states = {s["sector"]: s for s in dq["sector_states"]}
+    assert states["transmission"]["state"] == "experimental"
+    assert states["transmission"]["mechanism"] == "event_burden"
+    assert states["refining"]["state"] == "scored"
+    for s in ("gas", "coal"):
+        assert states[s]["state"] == "uncovered"
+        assert states[s]["denominator_value"] is None
+
+
+@needs_build
+def test_every_source_keeps_release_retrieval_and_content_dates_apart():
+    """Addendum §14. A GEM snapshot retrieved today can still describe an older tracker state,
+    and the build date is none of these three."""
+    dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
+    assert dq["sources"], "expected a source registry"
+    for src in dq["sources"]:
+        assert "release_identifier" in src
+        assert "retrieved_at" in src
+        assert "content_vintage" in src
+        assert src["freshness"]["status"] in (
+            "current", "ageing", "stale", "frozen", "undated")
+        # A source must never borrow the build date as its own.
+        if src["retrieved_at"]:
+            assert src["retrieved_at"] != dq["build_time"]
+
+
+@needs_build
+def test_citability_separates_a_real_gap_from_an_inapplicable_one():
+    """A tracker that issues releases but was read from a live backend export is a citation
+    problem. A continuously-edited wiki has no releases to miss. Flattening both into "no
+    release identifier" would bury the entries that actually matter."""
+    dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
+    kinds = {s["citability"] for s in dq["sources"]}
+    assert kinds <= {"citable_release", "snapshot_of_a_live_source",
+                     "internal_versioned_by_repo", "release_expected_but_absent"}
+    flagged = set(dq["sources_without_release_identifier"])
+    for src in dq["sources"]:
+        assert (src["source_id"] in flagged) == (
+            src["citability"] == "release_expected_but_absent"), src["source_id"]
+    # A live wiki must never be reported as a missing release.
+    live = {s["source_id"] for s in dq["sources"]
+            if s["citability"] == "snapshot_of_a_live_source"}
+    assert not (live & flagged)
+
+
+@needs_build
+def test_a_frozen_source_is_not_reported_as_stale():
+    """A deliberately pinned census does not rot. Ageing thresholds apply to retrieval dates,
+    not to a source that describes a fixed moment on purpose."""
+    dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
+    frozen = [s for s in dq["sources"] if s["frozen_at"]]
+    assert frozen, "expected at least one deliberately pinned source"
+    for s in frozen:
+        assert s["freshness"]["status"] == "frozen"
+        assert "does not go stale" in s["freshness"]["note"]
+
+
+@needs_build
+def test_the_cannot_tell_you_list_is_derived_from_this_build():
+    """Every entry must trace to a real figure, so the list shrinks by itself when a gap closes
+    rather than outliving it."""
+    snap = _snap()
+    dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
+    items = dq["cannot_tell_you"]
+    assert items
+    for item in items:
+        assert item["question"] and item["answer"] and item["basis"]
+
+    questions = " ".join(i["question"] for i in items)
+    # The uncovered sectors must be named as unanswerable while they remain uncovered.
+    if snap["sectors_uncovered"]:
+        assert "gas or coal" in questions
+    # The scope boundary is not a data gap and must always be present.
+    assert any(i["basis"] == "scope boundary" for i in items)
+    scope = [i for i in items if i["basis"] == "scope boundary"][0]
+    for phrase in ("no unit positions", "no readiness", "no targeting value"):
+        assert phrase in scope["answer"].replace("readiness or fuel state", "readiness")
+
+
+@needs_build
+def test_the_quality_view_never_promises_what_the_scope_forbids():
+    """The quality view enumerates limits; it must not read as a roadmap for lifting them."""
+    dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
+    blob = json.dumps(dq).lower()
+    for forbidden in ("target prioriti", "strike planning", "chokepoint",
+                      "weakest pipeline", "best disruption"):
+        assert forbidden not in blob, forbidden
+
+
+def test_the_source_registry_covers_every_sector_that_is_scored():
+    """A scored sector with no source behind it in the registry would be a provenance hole."""
+    from pipeline import data_quality
+    rows = data_quality.load_registry()
+    covered = set()
+    for r in rows:
+        covered |= {s.strip() for s in (r.get("sectors") or "").split("|") if s.strip()}
+    for sector in ("refining", "oil_logistics", "electric_generation", "transmission"):
+        assert sector in covered, f"{sector} has no source in data/curated/sources.csv"

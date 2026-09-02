@@ -962,3 +962,82 @@ export interface BuildChanges {
   unavailable_reason?: string;
   attribution_note: string | null;
 }
+
+/* ---------------------------------------------------------------------------
+ * Data quality and source freshness (iteration 11 §5). Mirrors pipeline/data_quality.py.
+ *
+ * Every statement here is derived at build time. Nothing in the component computes a freshness
+ * claim, because a freshness statement written in React is true on the day it is typed and
+ * silently false afterwards.
+ * ------------------------------------------------------------------------- */
+
+/** scored = a measured capacity denominator · experimental = scored against a chosen constant,
+ *  not a measured base · uncovered = no denominator exists, so it is excluded entirely. */
+export type SectorState = "scored" | "experimental" | "uncovered";
+
+export interface SectorQuality {
+  sector: string;
+  state: SectorState;
+  mechanism: Mechanism | null;
+  value: number | null;
+  denominator_value: number | null;
+  denominator_unit: string | null;
+  denominator_source: string | null;
+  denominator_vintage: string | null;
+  known_bias: string | null;
+  limitations: string[];
+  proxy_warning?: string;
+}
+
+export type Freshness = {
+  status: "current" | "ageing" | "stale" | "frozen" | "undated";
+  age_days: number | null;
+  note: string;
+};
+
+/** Whether this source can be cited as a dated publication — three situations a single boolean
+ *  would flatten into one. Only `release_expected_but_absent` is a finding. */
+export type Citability =
+  | "citable_release"
+  | "snapshot_of_a_live_source"
+  | "internal_versioned_by_repo"
+  | "release_expected_but_absent";
+
+export interface SourceRecord {
+  source_id: string;
+  name: string;
+  publisher: string;
+  role: string;
+  applies_to: { sectors: string[]; asset_classes: string[] };
+  url: string | null;
+  licence: string | null;
+  release_identifier: string | null;
+  release_expectation: string;
+  has_release_identifier: boolean;
+  citability: Citability;
+  /** What the data describes — distinct from when it was published or fetched. */
+  content_vintage: string | null;
+  retrieved_at: string | null;
+  retrieval_basis: string;
+  frozen_at: string | null;
+  freshness: Freshness;
+  limitations: string[];
+}
+
+export interface CannotTellYou {
+  question: string;
+  answer: string;
+  basis: string;
+}
+
+export interface DataQuality {
+  as_of: string;
+  build_time: string | null;
+  build_date_is_not_a_source_date: string;
+  sector_states: SectorQuality[];
+  sources: SourceRecord[];
+  sources_by_freshness: Record<string, number>;
+  sources_without_release_identifier: string[];
+  citability_note: string;
+  cannot_tell_you: CannotTellYou[];
+}

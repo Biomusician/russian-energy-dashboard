@@ -18,10 +18,12 @@
 
 import { useEffect, useState } from "react";
 import type {
-  Bundle, BuildChange, BuildChanges, ChangeNature, ContributingFacility, Incident, RegionExplanation,
-  SectorExplanation, ZeroBasis,
+  Bundle, BuildChange, BuildChanges, ChangeNature, ContributingFacility, DataQuality, Incident,
+  RegionExplanation, SectorExplanation, SourceRecord, ZeroBasis,
 } from "../types";
-import { fmtDate, fmtDelta, fmtNum, loadRegionalExplanations, titleCase } from "../data";
+import {
+  fmtDate, fmtDelta, fmtNum, loadDataQuality, loadRegionalExplanations, titleCase,
+} from "../data";
 import { severityColor } from "../palette";
 import { EvidenceChip, RecoveryLine, hostOf } from "./ui";
 
@@ -34,7 +36,9 @@ export type InspectTarget =
   /** The build-to-build change ledger (§7-§10). It lives here rather than in a ninth dossier
    *  tab because "why did this number move" is the same question the Inspector already answers,
    *  and the tab bar has no room left that would not cost the map. */
-  | { kind: "build" };
+  | { kind: "build" }
+  /** Data quality, source freshness, and what the dashboard cannot tell you (§5). */
+  | { kind: "quality" };
 
 export function targetKey(t: InspectTarget): string {
   return t.kind === "sector" ? `sector:${t.sector}`
@@ -42,6 +46,7 @@ export function targetKey(t: InspectTarget): string {
     : t.kind === "facility" ? `facility:${t.assetId}`
     : t.kind === "incident" ? `incident:${t.incidentId}`
     : t.kind === "build" ? "build"
+    : t.kind === "quality" ? "quality"
     : "headline";
 }
 
@@ -89,7 +94,9 @@ export default function Inspector({
         </div>
 
         <div className="inspector-body">
-          {current.kind === "build" ? (
+          {current.kind === "quality" ? (
+            <DataQualityView bundle={bundle} onDrill={push} />
+          ) : current.kind === "build" ? (
             <BuildLedgerView bundle={bundle} onDrill={push} />
           ) : !ex && current.kind !== "incident" && current.kind !== "region" ? (
             <Unavailable />
@@ -140,6 +147,7 @@ function Breadcrumb({
           ?? t.assetId;
       case "incident": return "Event";
       case "build": return "Since last build";
+      case "quality": return "Data quality";
     }
   };
   return (
@@ -911,5 +919,162 @@ function ChangeRow({
       </span>
       <span className="change-detail">{c.detail}</span>
     </button>
+  );
+}
+
+
+const STATE_COPY: Record<string, { label: string; blurb: string }> = {
+  scored: {
+    label: "Scored",
+    blurb: "Measured against a published capacity base.",
+  },
+  experimental: {
+    label: "Experimental",
+    blurb: "Scored against a chosen constant, not a measured capacity base. Read the caveat.",
+  },
+  uncovered: {
+    label: "Not scored",
+    blurb: "No capacity denominator exists, so this sector is excluded and its weight " +
+           "redistributed. Documented strikes here are NOT counted. Excluded is not zero.",
+  },
+};
+
+const CITABILITY_COPY: Record<string, string> = {
+  citable_release: "citable release",
+  snapshot_of_a_live_source: "snapshot of a live source",
+  internal_versioned_by_repo: "internal, versioned in this repository",
+  release_expected_but_absent: "no release identifier recorded",
+};
+
+/** Data quality, source freshness, and the limits of the dataset (§5, addendum §14/§15).
+ *
+ *  Ordered the way the addendum prioritises it: sector state first, then what the dashboard
+ *  cannot tell you, then full per-source provenance. None of it is badged over the map — a
+ *  reader who wants the provenance comes here, and everyone else keeps the map. */
+function DataQualityView({
+  bundle, onDrill,
+}: { bundle: Bundle; onDrill: (t: InspectTarget) => void }) {
+  const [dq, setDq] = useState<DataQuality | null | "loading">("loading");
+  useEffect(() => {
+    let live = true;
+    loadDataQuality().then((d) => { if (live) setDq(d); });
+    return () => { live = false; };
+  }, []);
+
+  if (dq === "loading") return <div className="empty" style={{ padding: 24 }}>Loading…</div>;
+  if (!dq) {
+    return (
+      <Block title="Quality report unavailable" tone="warn">
+        <p className="lede">
+          This payload carries no quality report. That is not a clean bill of health — it means
+          the freshness and limitation data was not emitted by the build that produced it.
+        </p>
+      </Block>
+    );
+  }
+
+  const byRole = new Map<string, SourceRecord[]>();
+  for (const src of dq.sources) {
+    if (!byRole.has(src.role)) byRole.set(src.role, []);
+    byRole.get(src.role)!.push(src);
+  }
+
+  return (
+    <>
+      <Block title="What each sector is measured against">
+        <p className="lede">
+          Three states, and the difference between them decides how the number should be read.
+        </p>
+        {dq.sector_states.map((s) => (
+          <div key={s.sector} className={`sector-state ${s.state}`}>
+            <div className="sector-state-head">
+              <button className="linkish"
+                      onClick={() => onDrill({ kind: "sector", sector: s.sector })}>
+                {bundle.taxonomy.sectors[s.sector] ?? titleCase(s.sector)}
+              </button>
+              <span className="flag">{STATE_COPY[s.state].label}</span>
+              {s.value != null && <span className="mono">{fmtNum(s.value, 2)}</span>}
+            </div>
+            <p className="small">{STATE_COPY[s.state].blurb}</p>
+            {s.denominator_value != null && (
+              <p className="small mono">
+                ÷ {fmtNum(s.denominator_value, 1)} {s.denominator_unit}
+                {s.denominator_vintage ? ` · vintage ${s.denominator_vintage}` : ""}
+              </p>
+            )}
+            {s.known_bias && <p className="small warn-text">Known bias: {s.known_bias}</p>}
+          </div>
+        ))}
+      </Block>
+
+      <Block title="What this dashboard cannot tell you" tone="warn">
+        <p className="lede">
+          Derived from this build, not written by hand — so the list shrinks by itself when a gap
+          closes, instead of outliving it.
+        </p>
+        {dq.cannot_tell_you.map((c) => (
+          <div key={c.question} className="cannot">
+            <h4>{c.question}</h4>
+            <p>{c.answer}</p>
+          </div>
+        ))}
+      </Block>
+
+      <Block title="Three dates that are not the same">
+        <p>{dq.build_date_is_not_a_source_date}</p>
+        <p className="small">{dq.citability_note}</p>
+        {dq.sources_without_release_identifier.length > 0 && (
+          <p className="small warn-text">
+            {dq.sources_without_release_identifier.length} source(s) come from publishers that do
+            issue identifiable releases, but were read without one:{" "}
+            {dq.sources_without_release_identifier.join(", ")}. They cannot be cited as dated
+            publications.
+          </p>
+        )}
+      </Block>
+
+      {[...byRole.entries()].map(([role, sources]) => (
+        <Block key={role} title={`${titleCase(role)} sources (${sources.length})`}>
+          {sources.map((src) => <SourceCard key={src.source_id} src={src} />)}
+        </Block>
+      ))}
+    </>
+  );
+}
+
+function SourceCard({ src }: { src: SourceRecord }) {
+  return (
+    <div className={`source-card ${src.freshness.status}`}>
+      <div className="source-head">
+        <strong>{src.name}</strong>
+        <span className="flag">{src.freshness.status}</span>
+      </div>
+      <p className="small">{src.publisher}{src.licence ? ` · ${src.licence}` : ""}</p>
+      <dl className="kv">
+        <dt>Release</dt>
+        <dd>
+          {src.release_identifier ?? <span className="unknown">none recorded</span>}
+          <span className="flag">{CITABILITY_COPY[src.citability]}</span>
+        </dd>
+        <dt>Retrieved</dt>
+        <dd>
+          {src.retrieved_at ? fmtDate(src.retrieved_at) : <span className="unknown">—</span>}
+          {/* Said out loud because a cache-file timestamp on a fresh clone reads as today for a
+              file that was never actually downloaded. */}
+          <span className="small"> ({src.retrieval_basis})</span>
+        </dd>
+        <dt>Describes</dt>
+        <dd>{src.content_vintage ?? <span className="unknown">not stated</span>}</dd>
+      </dl>
+      <p className="small">{src.freshness.note}</p>
+      {src.limitations.length > 0 && (
+        <ul className="tight">{src.limitations.map((l, i) => <li key={i}>{l}</li>)}</ul>
+      )}
+      {src.url && (
+        <p className="small">
+          <a href={src.url} target="_blank" rel="noreferrer noopener">{hostOf(src.url)}</a>
+        </p>
+      )}
+    </div>
   );
 }

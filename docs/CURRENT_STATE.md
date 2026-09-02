@@ -4,10 +4,10 @@
 > A test (`test_current_state_doc_is_in_sync`) fails if this drifts from the build.
 > Other docs should link here instead of re-quoting these numbers (§2).
 
-- **as_of**: 2026-09-01
-- **Headline ESDI (monitored area)**: 17.27
-- **Uncovered-sector zero-assumption sensitivity**: 14.68
-- **Sector exposures**: refining 31.39, electric_generation 0.07, transmission 19.49, oil_logistics 8.66, gas 0.00, coal 0.00
+- **as_of**: 2026-09-02
+- **Headline ESDI (monitored area)**: 16.98
+- **Uncovered-sector zero-assumption sensitivity**: 14.43
+- **Sector exposures**: refining 30.92, electric_generation 0.07, transmission 19.04, oil_logistics 8.46, gas 0.00, coal 0.00
 
 ## Coverage
 - **Oil-strike benchmark coverage**: 47.2% (144 enumerated oil-sector strikes / 305 reported)
@@ -24,11 +24,11 @@
 - **Canonical linkage (identity, NOT disruption coverage)**: 27/34 refineries struck = 85.6% of denominator MTPA
 
 ## Gas processing (experimental, NOT in headline ESDI)
-- **Within-census exposure**: 25.8% (2 of 12 censused plants, 91.91 bcm/y total)
+- **Within-census exposure**: 25.5% (2 of 12 censused plants, 91.91 bcm/y total)
 
 ## Transmission (event-burden, theatre-concentrated)
-- **Headline value**: 19.49 at saturation 8.0
-- **Sensitivity range across saturations**: 9.74–38.98
+- **Headline value**: 19.04 at saturation 8.0
+- **Sensitivity range across saturations**: 9.52–38.09
 - **Top-theatre share**: 54.5% over 3 region(s)
 
 ## Strategic effects (source-backed, observational)
@@ -36,4 +36,4 @@
 - **Per-incident effects**: 18 across 15 incidents
 
 ## Tests
-- **Python test functions** (`tests/test_pipeline.py`): 251 (pytest reports more cases — some functions are parametrized)
+- **Python test functions** (`tests/test_pipeline.py`): 260 (pytest reports more cases — some functions are parametrized)
