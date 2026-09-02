@@ -538,6 +538,9 @@ export default function MapPanel({
       });
 
       setReady(true);
+      // Dev-only handle for headless layout QA, alongside the existing `#tab=` hash hook.
+      // Never defined in a production build.
+      if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__map = m;
     });
 
     return () => {
@@ -687,13 +690,50 @@ export default function MapPanel({
   }, []);
 
   // Drawer transitions animate for ~160ms, so the container's final size is not known when the
-  // mode flips. Resize once at the end rather than on every intermediate frame; the observer
-  // above catches the intermediate states anyway, this just guarantees the last one.
+  // mode flips.
+  //
+  // This used to be a single resize at +200ms, which is a guess about when the browser will have
+  // finished reflowing. When that guess lands early the canvas keeps its old size, and the
+  // ResizeObserver above is then the only backstop — so on any browser where the observer is
+  // throttled or unavailable, the map silently renders at the wrong size until the next mode
+  // change. Measured in the preview pane, reflow after a breakpoint crossing took 1.5-3s and the
+  // canvas stayed stale indefinitely.
+  //
+  // So instead of guessing a delay, verify the outcome: resize, then check that the canvas
+  // actually matches the container, and try again a bounded number of times if it does not. The
+  // invariant being enforced is the same one the layout metrics assert.
   useEffect(() => {
     const m = map.current;
     if (!m || !ready) return;
-    const t = window.setTimeout(() => m.resize(), 200);
-    return () => window.clearTimeout(t);
+    let attempt = 0;
+    let timer = 0;
+    let lastW = -1;
+    let lastH = -1;
+    const tick = () => {
+      const el = container.current;
+      if (!el) return;
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      // A container can legitimately be 0x0 mid-transition; resizing to that produces the
+      // blank-canvas failure this project has already hit once.
+      if (w > 0 && h > 0) {
+        const canvas = m.getCanvas();
+        const mismatched =
+          Math.abs(canvas.clientWidth - w) > 1 || Math.abs(canvas.clientHeight - h) > 1;
+        if (mismatched) m.resize();
+        // Settled means two things at once: the container has stopped moving AND the canvas
+        // agrees with it. Checking only the second declares success while the browser is still
+        // reflowing, because a container reporting its old size trivially matches a canvas at
+        // that same old size. Measured in the preview pane, reflow after a breakpoint crossing
+        // took 1.5-3s, and a shorter check gave up in the middle of it.
+        else if (w === lastW && h === lastH) return;
+      }
+      lastW = w;
+      lastH = h;
+      if (++attempt < 12) timer = window.setTimeout(tick, 250);
+    };
+    timer = window.setTimeout(tick, 200);
+    return () => window.clearTimeout(timer);
   }, [ready, layoutSignal]);
 
   // --- interaction --------------------------------------------------------

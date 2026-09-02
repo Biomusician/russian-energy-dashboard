@@ -15,11 +15,11 @@ import datetime as dt
 import shutil
 
 from pipeline import build_assets, build_context, build_index, build_pipeline_network
-from pipeline import diff_builds
+from pipeline import build_manifest, diff_builds
 from pipeline import fetch_osm, fetch_osm_pipelines
 from pipeline.config import (
     ANALYTIC_CONCEPTS, ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, EVIDENCE_KINDS,
-    OPTIONAL_CONTEXT_FILES, PROCESSED, SCHEMA_VERSION, SECTOR_OF_CLASS, SECTORS,
+    OPTIONAL_CONTEXT_FILES, PROCESSED, ROOT, SCHEMA_VERSION, SECTOR_OF_CLASS, SECTORS,
     WEB_DATA, WINDOW_START,
 )
 from pipeline.fetch_refineries import build as build_refineries
@@ -571,6 +571,20 @@ def main():
     snapshot["schema_version"] = SCHEMA_VERSION
     snapshot["build_time"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
+    # What this build was made from, and what it produced (addendum §4). The change ledger needs
+    # both: an asset-inventory edit, a vendor snapshot refresh or a scoring-constant change can
+    # each leave the emitted payloads looking almost identical, and without a fingerprint of the
+    # INPUTS the ledger could only report that nothing it happened to diff had moved.
+    snapshot["build_inputs"] = build_manifest.fingerprint(ROOT)
+    # Excludes snapshot.json itself (it carries this value) and every build_time, so rebuilding
+    # identical inputs fingerprints identically instead of reporting a change on every rerun.
+    snapshot["build_outputs_fingerprint"] = build_manifest.output_fingerprint({
+        "assets.json": assets,
+        "incidents.json": incidents,
+        "index_national.json": national,
+        "index_regional.json": {"dates": national["dates"], "regions": regional},
+    })
+
     write_json(PROCESSED / "assets.json", assets)
     write_json(PROCESSED / "incidents.json", incidents)
     write_json(PROCESSED / "index_national.json", national)
@@ -581,12 +595,13 @@ def main():
     # sessions never look at.
     write_json(PROCESSED / "explanations_regional.json", regional_explanations)
 
-    # Build-to-build change ledger (§7-§10). Computed BEFORE the mirror runs, because
-    # web/public/data still holds the previous build's payload until it is overwritten — so the
-    # diff needs no separate history to keep in sync, and both sides are artefacts that already
-    # exist and are reproducible.
+    # Build-to-build change ledger (§7-§10, addendum §2). The baseline is the payload committed
+    # at the previous PRODUCTION commit, read out of git — never the copy sitting in
+    # web/public/data, which is a mutable worktree artefact that can hold a frozen comparison
+    # run, a local experiment or leftovers from another branch. When lineage cannot be proven the
+    # ledger says so instead of emitting a plausible delta.
     write_json(PROCESSED / "build_changes.json",
-               diff_builds.from_directory(WEB_DATA, snapshot, incidents, assets))
+               diff_builds.build(ROOT, snapshot, incidents, assets))
     write_json(PROCESSED / "refinery_inventory.json",
                {"refineries": refineries, "total_mtpa": round(refining_total, 1),
                 "reconciliation": refinery_reconciliation})

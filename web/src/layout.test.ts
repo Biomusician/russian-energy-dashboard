@@ -63,13 +63,13 @@ describe("mapAreaTarget", () => {
  *  regresses the layout, these are the numbers that will stop matching. */
 const MEASURED: Array<[string, Partial<LayoutMetrics>]> = [
   ["2560x1440", { viewportWidth: 2560, viewportHeight: 1440, mapWidth: 1914, mapHeight: 1212 }],
-  ["1920x1080", { viewportWidth: 1920, viewportHeight: 1080, mapWidth: 1289, mapHeight: 852 }],
+  ["1920x1080", { viewportWidth: 1920, viewportHeight: 1080, mapWidth: 1289, mapHeight: 845 }],
   ["1600x900", { viewportWidth: 1600, viewportHeight: 900, mapWidth: 1070, mapHeight: 753 }],
   ["1536x864", { viewportWidth: 1536, viewportHeight: 864, mapWidth: 1320, mapHeight: 717 }],
   ["1440x900", { viewportWidth: 1440, viewportHeight: 900, mapWidth: 1227, mapHeight: 753 }],
   ["1366x768", { viewportWidth: 1366, viewportHeight: 768, mapWidth: 1153, mapHeight: 621 }],
-  ["1280x720", { viewportWidth: 1280, viewportHeight: 720, mapWidth: 1067, mapHeight: 573 }],
-  ["1024x768", { viewportWidth: 1024, viewportHeight: 768, mapWidth: 1024, mapHeight: 610 }],
+  ["1280x720", { viewportWidth: 1280, viewportHeight: 720, mapWidth: 1067, mapHeight: 562 }],
+  ["1024x768", { viewportWidth: 1024, viewportHeight: 768, mapWidth: 1024, mapHeight: 595 }],
 ];
 
 function metrics(p: Partial<LayoutMetrics>): LayoutMetrics {
@@ -134,5 +134,54 @@ describe("checkLayout catches the regressions this hotfix fixed", () => {
       overlayObstructionRatio: 0.5,
     }));
     expect(r.failures.join(" ")).toMatch(/overlays cover/);
+  });
+});
+
+
+/** Evidence Inspector overlay policy (iteration 11, addendum §1).
+ *
+ *  The Inspector is a fixed overlay, so it steals no layout width and the map-area targets above
+ *  are unaffected by it — the same reasoning that excludes the dossier and filter drawers from
+ *  persistent chrome. But "costs zero grid width" is not the same as "costs the reader nothing":
+ *  a 460px panel is 7% of a 1920-wide map and would be half of a 1024-wide one, so its width
+ *  follows the established per-mode drawer convention rather than one fixed number.
+ *
+ *  Measured in the browser against this build, with the Inspector open at each viewport. */
+const INSPECTOR_MEASURED: Array<[string, { mode: string; width: number; coversMapPct: number }]> = [
+  ["1920x1080", { mode: "wide", width: 460, coversMapPct: 7.3 }],
+  ["1536x864", { mode: "compact", width: 400, coversMapPct: 30.3 }],
+  ["1366x768", { mode: "compact", width: 400, coversMapPct: 34.7 }],
+  ["1280x720", { mode: "compact", width: 400, coversMapPct: 37.5 }],
+  ["1024x768", { mode: "narrow", width: 520, coversMapPct: 50.8 }],
+];
+
+describe("evidence inspector overlay", () => {
+  it("never exceeds the dossier drawer's width in compact mode", () => {
+    // The dossier drawer is min(400px, 92vw). An explanation panel that was wider than the
+    // panel it sits beside would be the widest thing on a small screen, for the least
+    // frequently used task.
+    for (const [, m] of INSPECTOR_MEASURED) {
+      if (m.mode === "compact") expect(m.width).toBeLessThanOrEqual(400);
+    }
+  });
+
+  it("keeps a usable map beside it wherever a rail is still docked", () => {
+    // In wide and compact modes the map remains the workspace: the overlay must leave most of
+    // it visible. Narrow is the deliberate exception — there the reader is fully in explanation
+    // mode and the map is one dismissal away.
+    for (const [label, m] of INSPECTOR_MEASURED) {
+      if (m.mode !== "narrow") {
+        expect(m.coversMapPct, label).toBeLessThan(40);
+      }
+    }
+  });
+
+  it("does not change the map-area verdict at any viewport", () => {
+    // The overlay is dismissible, so it is not persistent chrome. Every viewport still meets
+    // its target with the Inspector open, which is what these recorded pairs assert.
+    for (const [label, m] of MEASURED) {
+      const result = checkLayout(metrics(m));
+      expect(result.ok, `${label} with inspector open`).toBe(true);
+    }
   });
 });

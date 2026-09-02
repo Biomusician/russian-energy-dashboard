@@ -680,21 +680,33 @@ export interface PipelineRegistry {
  * Adding a computed field to this file would be the first step towards a second scoring model.
  * ------------------------------------------------------------------------- */
 
+/** How a sector turns a disrupted facility into sector points. Not cosmetic: a capacity share
+ *  and an event-burden count mean different things, and conflating them is what makes a reader
+ *  believe transmission measures percent-of-grid-offline. */
+export type Mechanism = "capacity_share" | "event_burden" | "unscored";
+
 export interface SectorContribution {
   sector: string;
+  mechanism: Mechanism;
   included: boolean;
-  /** The sector's own value, 0-100. */
+  /** The sector's own value, 0-100, as displayed. */
   sector_value: number;
+  raw_sector_value: number;
   nominal_weight: number;
   /** Weight after redistributing the weight of sectors with no denominator. */
   effective_weight: number;
+  raw_effective_weight: number;
   /** What this sector adds to the headline, in the headline's own units. */
   index_points: number;
+  /** The same figure before display rounding. The authoritative identity is built from these. */
+  raw_index_points: number;
   excluded_reason: string | null;
 }
 
 export interface HeadlineExplanation {
   value: number;
+  /** The composite before display rounding. `round(raw_value, 2) === value`, exactly. */
+  raw_value: number;
   as_of: string;
   covered: string[];
   uncovered: string[];
@@ -702,6 +714,17 @@ export interface HeadlineExplanation {
   effective_weights: Record<string, number>;
   contributions: SectorContribution[];
   sum_of_contributions: number;
+  raw_sum_of_contributions: number;
+  /** What the visible two-decimal column adds up to — a different number from the rounded
+   *  total whenever the individual roundings do not cancel. */
+  display_sum_of_contributions: number;
+  display_rounding_residual: number;
+  /** Present only when the residual is non-zero, naming it as rounding. */
+  rounding_note: string | null;
+  /** The authoritative identities. Exact; neither carries a tolerance. */
+  reconciles_raw: boolean;
+  reconciles_published: boolean;
+  /** @deprecated same meaning as reconciles_raw. */
   reconciles: boolean;
   renormalisation_note: string;
   decay: { form: string; half_life_source: string; note: string };
@@ -713,16 +736,42 @@ export interface HeadlineExplanation {
   };
 }
 
+/** The factors that produced one facility's impairment multiplier, from the same function that
+ *  produced the score. A reader must be able to see WHY, not just the final number. */
+export interface ImpairmentTrace {
+  confidence_weight: number;
+  cause_weight: number;
+  damage_severity: number;
+  initial_impairment: number;
+  days_elapsed: number;
+  half_life_days: number;
+  half_life_kind: string;
+  decay_factor: number;
+  reconstitution_cap_applied: boolean;
+  form: string;
+}
+
 export interface ContributingFacility {
   asset_id: string;
   name: string | null;
   asset_class: string | null;
   region_code: string | null;
   driving_incident_id: string | null;
-  disruption_weight: number;
-  capacity_share_pct: number;
+  mechanism: Mechanism;
+  /** How damaged, how well attested, how long ago. */
+  impairment_weight: number;
   /** This facility's addition to the sector value, in sector percentage points. */
   sector_points: number;
+  raw_sector_points: number;
+  /** capacity_share mechanism only. */
+  capacity_share_pct?: number;
+  capacity_basis?: string;
+  capacity_value?: number | null;
+  /** event_burden mechanism only — NOT a capacity share, and deliberately not named like one. */
+  event_burden_units?: number;
+  voltage_kv?: number | null;
+  burden_note?: string;
+  impairment_trace?: ImpairmentTrace;
   recovery_status: string | null;
   evidence_kind: string | null;
   evidence_family: string | null;
@@ -731,10 +780,15 @@ export interface ContributingFacility {
 export interface SectorExplanation {
   sector: string;
   basis: "capacity_mtpa" | "capacity_mw" | "event_burden" | "uncovered";
+  mechanism: Mechanism;
   value: number;
+  raw_value: number;
+  zero_basis: ZeroBasis;
+  zero_note: string | null;
   contributing: ContributingFacility[];
   contributing_count: number;
   sum_of_contributions: number;
+  raw_sum_of_contributions: number;
   limitations: string[];
   denominator: {
     value: number;
@@ -758,15 +812,33 @@ export interface Explanations {
   sectors: Record<string, SectorExplanation>;
 }
 
+/** The four ways a published 0.00 can arise. They are different facts, and collapsing them is
+ *  how UNKNOWN silently becomes ZERO. Null when the figure is not actually zero. */
+export type ZeroBasis =
+  | "NO_RECORDED_IMPAIRMENT"
+  | "IMPAIRMENT_ONLY_IN_UNCOVERED_SECTOR"
+  | "COVERED_SECTOR_SIGNAL_ROUNDS_TO_ZERO"
+  | "NOT_APPLICABLE"
+  | null;
+
 export interface RegionExplanation {
   code: string;
   name: string | null;
   value: number;
-  contributions: { sector: string; sector_value: number; effective_weight: number; index_points: number }[];
+  /** Published before rounding. A region reading 0.00 with a positive raw value has a real
+   *  signal below display resolution, not an absence. */
+  raw_value: number;
+  contributions: {
+    sector: string; mechanism: Mechanism; sector_value: number; raw_sector_value: number;
+    effective_weight: number; index_points: number; raw_index_points: number;
+  }[];
   sum_of_contributions: number;
+  raw_sum_of_contributions: number;
+  display_sum_of_contributions: number;
+  display_rounding_residual: number;
+  reconciles_raw: boolean;
   reconciles: boolean;
-  /** Which kind of zero this is — absent when the region actually scores. */
-  zero_basis: "no_contributing_facilities" | "impairment_present_but_unscorable" | null;
+  zero_basis: ZeroBasis;
   unscored_sectors: string[];
   zero_note: string | null;
 }
@@ -777,14 +849,48 @@ export interface RegionExplanation {
 
 /** world = something happened · data = the record changed, the world did not ·
  *  decay = nothing changed, time passed · methodology = we changed how we measure. */
-export type ChangeNature = "world" | "data" | "decay" | "methodology";
+export type ChangeNature = "world" | "data" | "time_progression" | "methodology";
+
+/** How a row relates to the world's timeline versus the record's. Evidence arriving today about
+ *  a restoration three months ago is not a restoration today. */
+export type RecordClass =
+  | "current_event"
+  | "historical_record_added"
+  | "historical_evidence_added"
+  | "correction"
+  | "withdrawal"
+  | "input_change";
+
+/** Provenance of the comparison. The baseline is an immutable commit, never the worktree. */
+export interface Lineage {
+  source: "git" | "none";
+  production_branch: string;
+  baseline_ref: string | null;
+  previous_commit: string | null;
+  previous_commit_subject: string | null;
+  previous_commit_date: string | null;
+  current_branch: string | null;
+  current_commit: string | null;
+  worktree_dirty: boolean | null;
+  on_production_branch: boolean;
+  previous_is_ancestor: boolean;
+  valid: boolean;
+  mode: "production" | "development" | "backward" | "invalid";
+  reason: string | null;
+  worktree_payload_differs_from_baseline: boolean | null;
+}
 
 export interface BuildChange {
   category: string;
   nature: ChangeNature;
+  record_class: RecordClass;
   id: string;
   asset_id: string | null;
   label: string;
+  /** When the thing happened in the world. */
+  effective_date: string | null;
+  /** The build in which the record first carried it. Different concepts. */
+  first_seen_as_of: string | null;
   date: string | null;
   detail: string;
   sources?: number;
@@ -827,12 +933,22 @@ export interface BuildChanges {
   esdi_before: number | null;
   esdi_after: number | null;
   esdi_delta: number | null;
-  decay_only: boolean;
-  as_of_direction?: "forward" | "backward" | "same_date";
-  decay_only_note: string | null;
+  as_of_direction: "forward" | "backward" | "same_date" | null;
+  /** No input changed; only the evaluation date moved. Direction-neutral on purpose — a
+   *  backwards comparison makes the same mechanism raise the index. */
+  time_progression_only: boolean;
+  time_progression_note: string | null;
+  previous_build_fingerprint: string | null;
+  current_build_fingerprint: string | null;
+  input_groups_changed: string[];
+  input_fingerprints_comparable: boolean;
+  lineage: Lineage | null;
+  attribution_separable: boolean;
+  non_separable_reason: string | null;
   change_count: number;
   by_nature: Record<ChangeNature, number>;
   by_category: Record<string, number>;
+  by_record_class: Record<string, number>;
   changes: BuildChange[];
   sector_attribution: {
     rows: SectorAttributionRow[];

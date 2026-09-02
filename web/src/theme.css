@@ -1448,3 +1448,53 @@ button.linkish:hover { text-decoration: underline; }
 .flag.warn { color: var(--amber); border-color: var(--amber); }
 
 table.mini td .flag { margin-left: 5px; }
+
+/* ---------- inspector: addendum §1, §10, §19 ---------- */
+
+/* Width follows the established drawer conventions rather than one fixed number. A 460px panel
+   is 7% of a 1920-wide map and 45% of a 1024-wide one; the map-area targets are unaffected
+   either way (a dismissible overlay steals no layout width), but a reader on a small screen is
+   better served by matching the dossier drawer they already know. */
+html[data-layout="compact"] .inspector { width: min(400px, 92vw); }
+html[data-layout="narrow"] .inspector { width: min(520px, 100vw); }
+
+.rounding-note {
+  border-left: 2px solid var(--line);
+  padding-left: 8px;
+  margin-top: 8px;
+}
+
+.zero-basis {
+  border-left: 2px solid var(--line);
+  padding: 6px 9px;
+  margin-bottom: 9px;
+  background: rgba(255, 255, 255, 0.025);
+}
+.zero-basis.warn { border-left-color: var(--amber); background: rgba(242, 177, 52, 0.07); }
+.zero-basis p { margin: 5px 0 0; }
+.zero-basis .flag { margin-left: 0; }
+
+dl.kv.trace {
+  border-left: 2px solid var(--line-soft);
+  padding: 6px 0 6px 10px;
+  margin-top: 9px;
+}
+
+/* The lineage badge is deliberately loud during development: a branch or testing mistake should
+   be visible, not inferred from a delta that happens to look plausible. */
+.lineage {
+  margin-top: 10px;
+  padding: 7px 9px;
+  border-radius: 3px;
+  border-left: 2px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+}
+.lineage.ok { border-left-color: var(--green); }
+.lineage.dev { border-left-color: var(--accent); }
+.lineage.bad { border-left-color: var(--red); background: rgba(240, 83, 74, 0.09); }
+.lineage .flag { margin-left: 0; }
+.lineage.ok .flag { color: var(--green); border-color: var(--green); }
+.lineage.dev .flag { color: var(--accent); border-color: var(--accent-dim); }
+.lineage.bad .flag { color: var(--red); border-color: var(--red); }
+.lineage p { margin: 5px 0 0; }
+.lineage .mono { margin-left: 7px; }

@@ -81,24 +81,54 @@ def _weight_at(incident, when, record=None):
     status-coupling bug (attaching a partial-restart record removed the damping) is now
     structurally impossible.
     """
+    return _weight_trace(incident, when, record)["weight"]
+
+
+def _weight_trace(incident, when, record=None):
+    """The same computation as `_weight_at`, with every factor kept.
+
+    The Evidence Inspector has to show a reader WHY a facility contributes what it does, and
+    the only safe way to do that is to return the actual factors this function multiplied —
+    not a second function that reproduces them. `_weight_at` is a one-line wrapper over this,
+    so the trace cannot drift from the score.
+    """
     when_date = when
     occurred = _incident_date(incident)
     if occurred > when_date:
-        return 0.0
+        return {"weight": 0.0, "not_yet_occurred": True}
 
     conf = SCORING["confidence_weights"].get(incident.get("confidence") or "possible", 0.45)
     cause = SCORING["cause_weights"].get(incident.get("cause") or "unknown", 0.7)
+    severity = recovery.damage_severity(incident.get("status"))
     # A: initial damage severity, orthogonal to recovery and always applied.
-    base = conf * cause * recovery.damage_severity(incident.get("status"))
+    base = conf * cause * severity
 
-    half_life, _kind = recovery.effective_half_life(incident.get("asset_class"), record)
+    half_life, kind = recovery.effective_half_life(incident.get("asset_class"), record)
     days = (when_date - occurred).days
-    value = base * (0.5 ** (days / half_life))
+    decay = 0.5 ** (days / half_life)
+    value = base * decay
 
-    if recovery.is_resolved(record, when_date):   # C: credible full reconstitution caps the tail
+    capped = recovery.is_resolved(record, when_date)
+    if capped:   # C: credible full reconstitution caps the tail
         value = min(value, base * recovery.RESIDUAL)
 
-    return value if value >= SCORING["cutoff"]["min_contribution"] else 0.0
+    cutoff = SCORING["cutoff"]["min_contribution"]
+    below_cutoff = value < cutoff
+    return {
+        "weight": 0.0 if below_cutoff else value,
+        "confidence_weight": conf,
+        "cause_weight": cause,
+        "damage_severity": severity,
+        "initial_impairment": base,
+        "half_life_days": half_life,
+        "half_life_kind": kind,
+        "days_elapsed": days,
+        "decay_factor": decay,
+        "reconstitution_cap_applied": capped,
+        "residual_cap": base * recovery.RESIDUAL if capped else None,
+        "below_cutoff": below_cutoff,
+        "cutoff": cutoff,
+    }
 
 
 def _incident_record(incident, recovery_by_incident):
@@ -221,9 +251,20 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
     # the composite used. Regional decomposition is returned separately: it is per-region and
     # would roughly double snapshot.json for something only opened on demand.
     from pipeline import explain
+
+    # The trace for whatever incident is currently driving each facility, computed with the
+    # same function that produced the score.
+    def _trace_for(asset_id, driving_incident_id):
+        for i in incidents_by_facility.get(asset_id, []):
+            if i.get("incident_id") == driving_incident_id:
+                return _weight_trace(i, timeline[-1],
+                                     _incident_record(i, recovery_by_incident))
+        return None
+
     snapshot["explanations"] = {
         "headline": explain.headline_explanation(
-            final_nat_fracs, sector_weights, covered, snapshot["esdi"], as_of,
+            final_nat_fracs, sector_weights, covered, snapshot["esdi"],
+            _composite_raw(final_nat_fracs, sector_weights, covered), as_of,
             {
                 "zero_assumption": snapshot.get("uncovered_zero_assumption_sensitivity"),
                 "all_sectors": snapshot.get("esdi_all_sectors"),
@@ -232,24 +273,36 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
             }),
         "sectors": explain.sector_explanations(
             final_nat_fracs, denominators, snapshot, snapshot["live_disruptions"],
-            facility_info, _share, SATURATION_EVENTS),
+            facility_info, _share, SATURATION_EVENTS, _trace_for),
     }
     regional_explanations = explain.regional_explanations(
-        regional, region_meta, sector_weights, covered, final_reg_fracs)
+        regional, region_meta, sector_weights, covered, final_reg_fracs,
+        lambda fr: _composite_raw(fr, sector_weights, covered))
     return national, regional, snapshot, regional_explanations
 
 
-def _composite(sector_values, weights, covered):
-    """Weighted mean across sectors that have a usable denominator.
+def _composite_raw(sector_values, weights, covered):
+    """The composite BEFORE display rounding.
 
-    Sectors without one are excluded and the weights renormalised, rather than
-    counted as zero -- an absent measurement is not evidence of no disruption.
+    Kept separate because the explanation's authoritative identity is
+    `sum(raw contributions) == raw composite` at machine precision. Reconciling against the
+    published two-decimal figure instead would build a tolerance into the contract and hide
+    real drift inside it.
     """
     total_w = sum(weights[s] for s in covered)
     if not total_w:
         return 0.0
     acc = sum(weights[s] * min(1.0, sector_values.get(s, 0.0)) for s in covered)
-    return round(acc / total_w * 100, 2)
+    return acc / total_w * 100
+
+
+def _composite(sector_values, weights, covered):
+    """Weighted mean across sectors that have a usable denominator, as published.
+
+    Sectors without one are excluded and the weights renormalised, rather than
+    counted as zero -- an absent measurement is not evidence of no disruption.
+    """
+    return round(_composite_raw(sector_values, weights, covered), 2)
 
 
 def _composite_all(sector_values, weights):

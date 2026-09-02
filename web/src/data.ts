@@ -143,6 +143,10 @@ export function addDays(iso: string, delta: number): string {
 
 export function fmtDate(iso: string): string {
   if (!iso) return "—";
+  // Curated source records carry prose dates ("6 July 2026") alongside ISO ones. Splitting one
+  // of those on "-" yields a NaN month and renders "undefined 6 July 2026"; it is already
+  // human-readable, so pass it through untouched.
+  if (!/^\d{4}-\d{2}(-\d{2})?$/.test(iso)) return iso;
   const [y, m, d] = iso.split("-");
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const mon = months[Number(m) - 1] ?? m;

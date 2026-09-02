@@ -18,8 +18,8 @@
 
 import { useEffect, useState } from "react";
 import type {
-  Bundle, BuildChange, ChangeNature, ContributingFacility, Incident, RegionExplanation,
-  SectorExplanation,
+  Bundle, BuildChange, BuildChanges, ChangeNature, ContributingFacility, Incident, RegionExplanation,
+  SectorExplanation, ZeroBasis,
 } from "../types";
 import { fmtDate, fmtDelta, fmtNum, loadRegionalExplanations, titleCase } from "../data";
 import { severityColor } from "../palette";
@@ -131,7 +131,13 @@ function Breadcrumb({
       case "headline": return "ESDI";
       case "sector": return bundle.taxonomy.sectors[t.sector] ?? titleCase(t.sector);
       case "region": return bundle.regions.find((r) => r.code === t.code)?.name ?? t.code;
-      case "facility": return bundle.assets.find((a) => a.asset_id === t.assetId)?.name ?? t.assetId;
+      case "facility":
+        // Not every scored facility is in the asset inventory — curated incidents can name one
+        // no source table lists. Fall back through the live-disruption record before showing a
+        // raw asset id, which reads as a bug.
+        return bundle.assets.find((a) => a.asset_id === t.assetId)?.name
+          ?? (bundle.snapshot.live_disruptions ?? []).find((d) => d.asset_id === t.assetId)?.name
+          ?? t.assetId;
       case "incident": return "Event";
       case "build": return "Since last build";
     }
@@ -202,6 +208,9 @@ function HeadlineView({ bundle, onDrill }: { bundle: Bundle; onDrill: (t: Inspec
           ))}
         </div>
         <Reconciles sum={h.sum_of_contributions} value={h.value} />
+        {h.rounding_note && (
+          <p className="small rounding-note">{h.rounding_note}</p>
+        )}
       </Block>
 
       <Block title="Why the weights are not the published weights">
@@ -268,6 +277,7 @@ function SectorView({
     <>
       <Block title={`${label} — ${fmtNum(e.value, 2)}`}>
         {e.proxy_warning && <div className="proxy-warn">{e.proxy_warning}</div>}
+        <ZeroExplanation basis={e.zero_basis} note={e.zero_note} raw={e.raw_value} />
         {e.denominator ? (
           <>
             <p className="lede">
@@ -345,6 +355,12 @@ function SectorView({
 function FacilityRow({
   c, max, onClick,
 }: { c: ContributingFacility; max: number; onClick: () => void }) {
+  // The left-hand factor differs by mechanism, and labelling an event-burden count as a
+  // percentage share is exactly how a reader comes to believe transmission measures
+  // percent-of-grid-offline.
+  const factor = c.mechanism === "event_burden"
+    ? `${fmtNum(c.event_burden_units, 2)} burden`
+    : `${fmtNum(c.capacity_share_pct, 2)}%`;
   return (
     <button className="contrib-row" onClick={onClick}>
       <span className="contrib-name">
@@ -352,7 +368,7 @@ function FacilityRow({
         {c.evidence_kind && <EvidenceChip kind={c.evidence_kind} />}
       </span>
       <span className="contrib-math mono">
-        {fmtNum(c.capacity_share_pct, 2)}% × {c.disruption_weight.toFixed(3)}
+        {factor} × {c.impairment_weight.toFixed(3)}
       </span>
       <span className="contrib-bar">
         <i style={{ width: `${max > 0 ? (c.sector_points / max) * 100 : 0}%`,
@@ -360,6 +376,50 @@ function FacilityRow({
       </span>
       <span className="contrib-pts mono">{fmtNum(c.sector_points, 2)}</span>
     </button>
+  );
+}
+
+/** The four ways a 0.00 arises, rendered so a reader can tell which one they are looking at.
+ *  A signal that merely rounds away is the one most likely to be misread as absence, so it
+ *  shows its raw value. */
+function ZeroExplanation({
+  basis, note, raw,
+}: { basis: ZeroBasis; note: string | null; raw: number }) {
+  if (!basis) return null;
+  const alarming = basis === "IMPAIRMENT_ONLY_IN_UNCOVERED_SECTOR";
+  return (
+    <div className={`zero-basis ${alarming ? "warn" : ""}`}>
+      <span className="flag">{basis.replace(/_/g, " ").toLowerCase()}</span>
+      <p>{note}</p>
+      {basis === "COVERED_SECTOR_SIGNAL_ROUNDS_TO_ZERO" && (
+        <p className="mono small">raw value {raw.toExponential(2)} — not zero</p>
+      )}
+    </div>
+  );
+}
+
+/** The factors behind one facility's impairment multiplier. Shown on demand rather than in the
+ *  row, because five numbers per facility across twenty-four facilities is a wall, not a trace. */
+function ImpairmentTraceBlock({ c }: { c: ContributingFacility }) {
+  const t = c.impairment_trace;
+  if (!t) return null;
+  return (
+    <dl className="kv trace">
+      <dt>Attestation</dt>
+      <dd className="mono">{t.confidence_weight.toFixed(2)} confidence × {t.cause_weight.toFixed(2)} cause</dd>
+      <dt>Damage severity</dt><dd className="mono">{t.damage_severity.toFixed(2)}</dd>
+      <dt>Initial impairment</dt><dd className="mono">{t.initial_impairment.toFixed(3)}</dd>
+      <dt>Elapsed</dt>
+      <dd className="mono">
+        {t.days_elapsed} d against a {fmtNum(t.half_life_days, 1)} d half-life
+        <span className="flag">{t.half_life_kind}</span>
+      </dd>
+      <dt>Decay factor</dt><dd className="mono">× {t.decay_factor.toFixed(4)}</dd>
+      {t.reconstitution_cap_applied && (
+        <><dt>Cap</dt><dd className="warn-text">capped at the reconstitution residual</dd></>
+      )}
+      <dt>Result</dt><dd className="mono">{c.impairment_weight.toFixed(4)}</dd>
+    </dl>
   );
 }
 
@@ -386,9 +446,7 @@ function RegionView({
     <>
       <Block title={`${region?.name ?? code} — ${fmtNum(ex.value, 2)}`}>
         {ex.zero_basis ? (
-          <p className={ex.zero_basis === "impairment_present_but_unscorable" ? "warn-text" : "lede"}>
-            {ex.zero_note}
-          </p>
+          <ZeroExplanation basis={ex.zero_basis} note={ex.zero_note} raw={ex.raw_value} />
         ) : (
           <>
             <div className="contrib-list">
@@ -467,17 +525,34 @@ function FacilityView({
         </dl>
         {contrib && inSector ? (
           <p className="lede">
-            Contributes <span className="mono">{fmtNum(contrib.sector_points, 2)}</span> percentage
-            points to {bundle.taxonomy.sectors[inSector] ?? titleCase(inSector)}: it is
-            {" "}<span className="mono">{fmtNum(contrib.capacity_share_pct, 2)}%</span> of that
-            sector's capacity base, carrying a disruption weight of
-            {" "}<span className="mono">{contrib.disruption_weight.toFixed(3)}</span>.
+            Contributes <span className="mono">{fmtNum(contrib.sector_points, 2)}</span> points to
+            {" "}{bundle.taxonomy.sectors[inSector] ?? titleCase(inSector)}:{" "}
+            {/* The sentence differs by mechanism because the arithmetic does. Transmission has
+                no capacity base, and describing its burden count as a share of one would be the
+                percent-of-grid-offline misreading in prose. */}
+            {contrib.mechanism === "event_burden" ? (
+              <>
+                it is <span className="mono">{fmtNum(contrib.event_burden_units, 2)}</span> units of
+                event burden against the saturation constant — not a share of any capacity base —
+              </>
+            ) : (
+              <>
+                it is <span className="mono">{fmtNum(contrib.capacity_share_pct, 2)}%</span> of that
+                sector's capacity base,
+              </>
+            )}
+            {" "}carrying an impairment weight of
+            {" "}<span className="mono">{contrib.impairment_weight.toFixed(3)}</span>.
           </p>
         ) : (
           <p className="lede">
             This facility is not currently contributing to the index. It may have recovered, decayed
             out of the scoring window, or sit in a sector with no capacity base.
           </p>
+        )}
+        {contrib && <ImpairmentTraceBlock c={contrib} />}
+        {contrib?.mechanism === "event_burden" && contrib.burden_note && (
+          <p className="small warn-text">{contrib.burden_note}</p>
         )}
         {live?.recovery && <RecoveryLine r={live.recovery} />}
       </Block>
@@ -598,11 +673,54 @@ const NATURE_COPY: Record<ChangeNature, { label: string; blurb: string }> = {
     label: "The measurement changed",
     blurb: "We changed how the index is computed. Movement here is ours, not the world's.",
   },
-  decay: {
+  time_progression: {
     label: "Time passed",
-    blurb: "Modelled impairment ages. This is never evidence that anything was repaired.",
+    blurb: "Modelled impairment ages with the evaluation date. Never evidence of repair.",
   },
 };
+
+const RECORD_CLASS_LABEL: Record<string, string> = {
+  current_event: "happened since the last build",
+  historical_record_added: "older event, added now",
+  historical_evidence_added: "older evidence, arrived now",
+  correction: "correction",
+  withdrawal: "withdrawn",
+  input_change: "build input",
+};
+
+/** Which builds are being compared, and whether that can be proven (addendum §19).
+ *  During development this is deliberately loud: a branch/testing mistake should be visible
+ *  rather than inferred from a delta that looks plausible. */
+function LineageBadge({ bc }: { bc: BuildChanges }) {
+  const l = bc.lineage;
+  if (!l) return null;
+  const tone = l.mode === "production" ? "ok" : l.valid ? "dev" : "bad";
+  const label = l.mode === "production" ? "production ancestor"
+    : l.mode === "development" ? "development comparison"
+    : l.mode === "backward" ? "backwards comparison"
+    : "lineage unproven";
+  return (
+    <div className={`lineage ${tone}`}>
+      <span className="flag">{label}</span>
+      {l.previous_commit && (
+        <span className="mono small">
+          {l.baseline_ref} @ {l.previous_commit.slice(0, 8)}
+          {l.current_branch ? ` · built on ${l.current_branch}` : ""}
+        </span>
+      )}
+      {l.previous_commit_subject && (
+        <p className="small">baseline: {l.previous_commit_subject}</p>
+      )}
+      {l.reason && <p className="small">{l.reason}</p>}
+      {l.worktree_payload_differs_from_baseline && (
+        <p className="small">
+          The payload in this working tree differs from the committed baseline. The commit was
+          used; the local copy was not.
+        </p>
+      )}
+    </div>
+  );
+}
 
 function BuildLedgerView({
   bundle, onDrill,
@@ -622,12 +740,16 @@ function BuildLedgerView({
 
   if (bc.unavailable_reason) {
     return (
-      <Block title="First build">
-        <p className="lede">
-          There is no previous build to compare against ({bc.unavailable_reason}). A delta of
-          zero would claim a quiet build that was never actually compared.
-        </p>
-      </Block>
+      <>
+        <Block title="No provable comparison" tone="warn">
+          <p className="lede">
+            This build has no provable production ancestor, so there is nothing to compare it
+            against: {bc.unavailable_reason}. A delta of zero would claim a quiet build that was
+            never actually compared.
+          </p>
+        </Block>
+        <Block title="Lineage"><LineageBadge bc={bc} /></Block>
+      </>
     );
   }
 
@@ -650,12 +772,22 @@ function BuildLedgerView({
           {bc.as_of_direction === "backward" && " (evaluated at an EARLIER date)"}
           {bc.previous_build && ` · built ${bc.previous_build.slice(0, 10)} → ${(bc.current_build ?? "").slice(0, 10)}`}
         </p>
-        {bc.decay_only && (
-          <p className="decay-note">{bc.decay_only_note}</p>
+        {bc.time_progression_only && (
+          <p className="decay-note">{bc.time_progression_note}</p>
         )}
-        {!bc.decay_only && bc.change_count === 0 && bc.esdi_delta === 0 && (
+        {!bc.time_progression_only && bc.change_count === 0 && bc.esdi_delta === 0 && (
           <p className="lede">Nothing changed and the index did not move.</p>
         )}
+        {!bc.input_fingerprints_comparable && (
+          <p className="small">
+            The baseline build carries no input fingerprint, so "nothing changed" cannot be
+            proven for it — only that nothing turned up in the payloads compared here.
+          </p>
+        )}
+        {!bc.attribution_separable && bc.non_separable_reason && (
+          <p className="decay-note">{bc.non_separable_reason}</p>
+        )}
+        <LineageBadge bc={bc} />
       </Block>
 
       {bc.change_count > 0 && (
@@ -680,6 +812,16 @@ function BuildLedgerView({
               </div>
             );
           })}
+        </Block>
+      )}
+
+      {!bc.sector_attribution && (
+        <Block title="Where the movement sits">
+          <p className="lede">
+            The baseline build published no decomposition, so this movement cannot be attributed
+            to sectors or facilities. Showing its contributors as newly arrived would invent a
+            story about a build that simply could not report them.
+          </p>
         </Block>
       )}
 
@@ -763,7 +905,10 @@ function ChangeRow({
         {c.label}
         <span className="flag">{c.category.replace(/_/g, " ")}</span>
       </span>
-      <span className="contrib-math">{c.date ? fmtDate(c.date) : ""}</span>
+      <span className="contrib-math">
+        {c.effective_date ? fmtDate(c.effective_date) : ""}
+        <span className="flag">{RECORD_CLASS_LABEL[c.record_class] ?? c.record_class}</span>
+      </span>
       <span className="change-detail">{c.detail}</span>
     </button>
   );

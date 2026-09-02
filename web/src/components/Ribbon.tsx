@@ -173,8 +173,8 @@ function BuildDelta({
   }
 
   const substantive = bc.change_count;
-  const label = bc.decay_only
-    ? "decay only"
+  const label = bc.time_progression_only
+    ? "date moved only"
     : substantive === 0
       ? "no changes"
       : `${substantive} change${substantive === 1 ? "" : "s"}`;
