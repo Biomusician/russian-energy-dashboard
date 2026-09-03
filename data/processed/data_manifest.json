@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-09-02T09:43:08+00:00",
+  "build_time": "2026-09-03T09:55:30+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -19,7 +19,7 @@
     },
     {
       "name": "index_regional.json",
-      "bytes": 563891,
+      "bytes": 563896,
       "optional": false
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 200811,
+      "bytes": 200829,
       "optional": false
     },
     {
