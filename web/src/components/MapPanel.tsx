@@ -147,7 +147,7 @@ const ROUTE_QUALITY_LABEL: Record<string, string> = {
 export default function MapPanel({
   bundle, step, filters, selected, onSelect, incidentsByRegion,
   selectedAssetKey, onSelectAsset, haloByRegion, initialCamera, onCamera, flyTarget,
-  layoutSignal,
+  layoutSignal, comparison,
 }: {
   bundle: Bundle;
   step: number;
@@ -167,6 +167,10 @@ export default function MapPanel({
   /** Changes whenever the responsive mode or a dock/undock alters the container.
    *  Used only to trigger a resize — the map is never recreated. */
   layoutSignal?: string;
+  /** Two-date comparison (P6, §12). ONE map with three views, never two WebGL contexts: the
+   *  responsive work was spent buying map area and a second map would hand it straight back.
+   *  `delta` is B − A, matching the convention the pipeline publishes. */
+  comparison?: { stepA: number; stepB: number; mode: "A" | "B" | "delta" } | null;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -918,28 +922,46 @@ export default function MapPanel({
       filters.metric === "esdi_delta_30d" ? 30 : filters.metric === "esdi_delta_90d" ? 90 : 0;
     // Weekly series: resolve to the nearest earlier step, never past the scrubber.
     const refStep = deltaDays ? windowRef(dates, step, deltaDays).comparisonStep : step;
+    // A comparison overrides the scrubber: the map is showing one of the two analytical dates,
+    // or their difference. Every region reads from the SAME precomputed regional series the
+    // headline uses, so the comparison cannot become a second scoring model.
+    const cmpStep = comparison
+      ? (comparison.mode === "A" ? comparison.stepA : comparison.stepB)
+      : step;
     for (const r of bundle.regions) {
       const series = bundle.regional.regions[r.code]?.esdi;
       let value: number;
-      if (deltaDays) value = series ? (series[step] ?? 0) - (series[refStep] ?? 0) : 0;
-      else if (filters.metric === "esdi") value = series?.[step] ?? 0;
-      else value = incidentsByRegion.get(r.code)?.length ?? 0;
+      if (comparison?.mode === "delta") {
+        value = series ? (series[comparison.stepB] ?? 0) - (series[comparison.stepA] ?? 0) : 0;
+      } else if (comparison) {
+        value = filters.metric === "incidents"
+          ? incidentsByRegion.get(r.code)?.length ?? 0
+          : series?.[cmpStep] ?? 0;
+      } else if (deltaDays) {
+        value = series ? (series[step] ?? 0) - (series[refStep] ?? 0) : 0;
+      } else if (filters.metric === "esdi") {
+        value = series?.[step] ?? 0;
+      } else {
+        value = incidentsByRegion.get(r.code)?.length ?? 0;
+      }
       m.setFeatureState({ source: "regions", id: r.code }, { value });
     }
-  }, [ready, step, filters.metric, bundle.regions, bundle.regional, bundle.national.dates, incidentsByRegion]);
+  }, [ready, step, filters.metric, bundle.regions, bundle.regional, bundle.national.dates,
+      incidentsByRegion, comparison]);
 
   // Swap the choropleth ramp when the surface flips between sequential exposure/events and the
   // DIVERGING change view, so "improved" (blue) can never read as "low exposure" (§14-15).
   useEffect(() => {
     const m = map.current;
     if (!m || !ready || !m.getLayer("regions-fill")) return;
-    const isDelta = filters.metric === "esdi_delta_30d" || filters.metric === "esdi_delta_90d";
+    const isDelta = filters.metric === "esdi_delta_30d" || filters.metric === "esdi_delta_90d"
+      || comparison?.mode === "delta";
     const stops = isDelta ? ESDI_DELTA_STOPS : SEVERITY_STOPS;
     m.setPaintProperty("regions-fill", "fill-color", [
       "interpolate", ["linear"], ["coalesce", ["feature-state", "value"], 0],
       ...stops.flatMap(([stop, color]) => [stop, color]),
     ] as unknown as maplibregl.ExpressionSpecification);
-  }, [ready, filters.metric]);
+  }, [ready, filters.metric, comparison]);
 
   // --- selection ----------------------------------------------------------
   useEffect(() => {
@@ -1146,7 +1168,8 @@ export default function MapPanel({
     return [...seen].sort();
   }, [bundle.snapshot.network_coverage, filters.showGasNetwork, filters.showOilNetwork]);
 
-  const isDelta = filters.metric === "esdi_delta_30d" || filters.metric === "esdi_delta_90d";
+  const isDelta = filters.metric === "esdi_delta_30d" || filters.metric === "esdi_delta_90d"
+    || comparison?.mode === "delta";
   const deltaSpanDays = isDelta
     ? windowRef(bundle.national.dates, step, filters.metric === "esdi_delta_30d" ? 30 : 90).actualComparisonDays
     : 0;
@@ -1156,7 +1179,9 @@ export default function MapPanel({
     filters.metric !== "incidents"
     && filters.classes.size < Object.keys(bundle.taxonomy.asset_classes).length;
   const metricLabel =
-    filters.metric === "esdi" ? "Disruption exposure"
+    comparison?.mode === "delta" ? "Change in modelled exposure · B − A"
+    : comparison ? `Disruption exposure · Date ${comparison.mode}`
+    : filters.metric === "esdi" ? "Disruption exposure"
     : filters.metric === "incidents" ? "Recorded events"
     : filters.metric === "esdi_delta_30d" ? "Change in ESDI · 30 days"
     : "Change in ESDI · 90 days";

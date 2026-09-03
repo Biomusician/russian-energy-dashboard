@@ -8,7 +8,7 @@ import type { InspectTarget } from "./Inspector";
  *  the two denominator-less sectors (gas, coal) into one compact cell, so the ribbon
  *  leads with what it can actually measure without hiding what it cannot. */
 export default function Ribbon({
-  bundle, step, currentDate, onOpenMethodology, onExplain,
+  bundle, step, currentDate, onOpenMethodology, onExplain, onCompare, comparing,
 }: {
   bundle: Bundle;
   step: number;
@@ -17,6 +17,9 @@ export default function Ribbon({
   /** Opens the Evidence Inspector on a target. Iteration 11 §2: the headline and every scored
    *  sector must be openable, not merely documented elsewhere. */
   onExplain: (t: InspectTarget) => void;
+  /** Opens the two-date comparison workspace in the dossier rail (P6). */
+  onCompare?: () => void;
+  comparing?: boolean;
 }) {
   const { national, snapshot, taxonomy } = bundle;
   const esdi = national.esdi[step] ?? 0;
@@ -37,6 +40,11 @@ export default function Ribbon({
           <button className="ghost" onClick={() => onExplain({ kind: "quality" })}>
             Data quality
           </button>
+          {onCompare && (
+            <button className="ghost" aria-pressed={!!comparing} onClick={onCompare}>
+              {comparing ? "✓ comparing dates" : "Compare dates"}
+            </button>
+          )}
         </div>
       </div>
 

@@ -1498,3 +1498,97 @@ dl.kv.trace {
 .lineage.bad .flag { color: var(--red); border-color: var(--red); }
 .lineage p { margin: 5px 0 0; }
 .lineage .mono { margin-left: 7px; }
+
+/* ---------- two-date comparison (iteration 11 P6) ---------- */
+
+.comparison { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
+
+/* The one sentence that prevents a reader taking this for an archive of past builds. It is
+   given real weight on purpose — a footnote would be read by nobody who needed it. */
+.semantics-note {
+  margin: 10px var(--pad) 0;
+  padding: 8px 10px;
+  border-left: 2px solid var(--accent);
+  background: rgba(20, 112, 127, 0.12);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.cmp-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 11px var(--pad) 4px;
+}
+.cmp-dates label { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cmp-dates input {
+  background: var(--bg-deep, rgba(0, 0, 0, 0.25));
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 3px;
+  padding: 4px 6px;
+  font: inherit;
+  font-size: 12px;
+  color-scheme: dark;
+  min-width: 0;
+}
+.cmp-dates input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* A weekly series point must never look like a daily observation. */
+.resolved { font-size: 10px; color: var(--amber); line-height: 1.4; }
+.resolved.exact { color: var(--text-faint); }
+
+.cmp-modes {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px var(--pad) 10px;
+  flex-wrap: wrap;
+}
+.seg {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  border-radius: 3px;
+  padding: 3px 9px;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.seg:hover { border-color: var(--accent-dim); }
+.seg.on { border-color: var(--accent); color: var(--accent); background: rgba(20, 112, 127, 0.16); }
+.seg:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.cmp-block {
+  padding: 12px var(--pad) 14px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.cmp-block h3 {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+}
+.cmp-block h4 { font-size: 12px; color: var(--text); margin: 10px 0 4px; }
+.cmp-block p { margin: 0 0 6px; }
+.cmp-block .small { font-size: 11px; color: var(--text-faint); }
+.cmp-block .mono { font-family: var(--mono); }
+.cmp-block .warn-text { color: var(--amber); }
+
+.cmp-headline { display: flex; gap: 18px; align-items: baseline; margin-bottom: 6px; }
+.cmp-headline > div { display: flex; flex-direction: column; gap: 1px; }
+.cmp-headline .big { font-size: 21px; color: var(--text); }
+.cmp-headline .big.up { color: var(--red); }
+.cmp-headline .big.down { color: var(--green); }
+
+/* Never "improved" or "worsened": those are claims about the world, and a decayed index is
+   neither. This states what the model did and stops there. */
+.cmp-read { color: var(--text); }
+
+.cmp-explain { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.cmp-list { margin-top: 10px; }
+.contrib-row.static { cursor: default; }

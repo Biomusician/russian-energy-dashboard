@@ -4136,3 +4136,246 @@ def test_a_release_identifier_carried_inside_the_data_is_found_rather_than_flagg
     crea = [s for s in dq["sources"] if s["source_id"] == "crea"][0]
     assert crea["citability"] == "citable_release"
     assert crea["release_identifier"]
+
+
+# --------------------------------------------------------------------------
+# Historical-state comparison (iteration 11 P6, addendum §6-§8, §11, §18)
+#
+# The governing distinction: this series answers "what does TODAY'S dataset and model estimate
+# for date A", not "what did the dashboard say on date A". No archive of past builds exists.
+# Temporal leakage — a later event influencing an earlier date — is a release blocker, so the
+# fixtures below exercise each direction it could occur.
+# --------------------------------------------------------------------------
+
+import datetime as _dt
+
+
+def _hist_incident(date, **over):
+    base = {"incident_id": f"h-{date}", "date": date, "confidence": "confirmed",
+            "cause": "uav_strike", "status": "destroyed", "asset_class": "refinery"}
+    base.update(over)
+    return base
+
+
+def _weight_on(incident, day, record=None):
+    from pipeline.build_index import _weight_at
+    return _weight_at(incident, _dt.date.fromisoformat(day), record)
+
+
+# --- §7A/§7B: incident timing ---------------------------------------------
+
+def test_an_incident_after_date_a_is_absent_from_date_a():
+    """§7A. The release blocker. A strike in August must contribute nothing to a June figure."""
+    inc = _hist_incident("2026-08-01")
+    assert _weight_on(inc, "2026-06-01") == 0.0
+    assert _weight_on(inc, "2026-07-31") == 0.0
+
+
+def test_an_incident_before_date_a_is_eligible_at_date_a():
+    """§7B."""
+    inc = _hist_incident("2026-06-01")
+    assert _weight_on(inc, "2026-06-01") > 0.0
+    assert _weight_on(inc, "2026-07-01") > 0.0
+
+
+def test_a_month_precision_incident_is_anchored_the_way_the_scorer_anchors_it():
+    """Eight events carry month precision. A stricter parser silently dropped seven of them from
+    the cumulative counts — a quiet under-report with no error anywhere."""
+    from pipeline import history
+    inc = _hist_incident("2026-06")
+    assert _weight_on(inc, "2026-05-31") == 0.0
+    assert _weight_on(inc, "2026-06-01") > 0.0
+    assert history._d("2026-06") == _dt.date(2026, 6, 1)
+    assert history._d("2026-06-15") == _dt.date(2026, 6, 15)
+
+
+# --- §7D: recovery timing --------------------------------------------------
+
+def test_a_restoration_after_date_a_does_not_resolve_the_incident_at_date_a():
+    """§7D. A facility that came back in August was still impaired in June."""
+    from pipeline import recovery
+    rec = {"recovery_status": "fully_reconstituted", "source_confidence": "high",
+           "observed_date": "2026-08-15"}
+    assert recovery.is_resolved(rec, _dt.date(2026, 6, 1)) is False
+    assert recovery.is_resolved(rec, _dt.date(2026, 8, 15)) is True
+
+
+def test_the_controlling_recovery_date_is_the_sourced_restoration_date():
+    """§7C/§8. Established by reading the scorer, not chosen for convenience — and stated in the
+    payload so the UI cannot describe it differently."""
+    from pipeline import history
+    rules = {c["concept"]: c for c in history.SEMANTICS["controlling_dates"]}
+    assert "observed_date" in rules["Recovery resolution"]["field"]
+    assert "not" in rules["Recovery resolution"]["rule"]
+    # And the deliberate exception, stated rather than hidden.
+    assert "before the restoration happened" in rules["Decay rate"]["rule"]
+
+
+def test_recovery_duration_evidence_shapes_the_whole_history_and_says_so():
+    """§7C's hard case. A recovery record's DURATION sets the decay half-life across the entire
+    history of the incident, including dates before the restoration occurred. That is correct for
+    a current-estimate reconstruction and wrong for an as-known one — which is exactly why the
+    payload declares which product this is."""
+    inc = _hist_incident("2026-06-01")
+    fast = {"recovery_status": "substantially_restored", "source_confidence": "medium",
+            "observed_date": "2026-07-01", "observed_days": 30}
+    day30 = "2026-07-01"
+    with_evidence = _weight_on(inc, day30, fast)
+    without = _weight_on(inc, day30, None)
+    # The June-dated weight differs depending on evidence that did not exist in June.
+    assert with_evidence != without
+    from pipeline import history
+    assert "current-estimate reconstruction" in history.SEMANTICS[
+        "controlling_dates"][2]["rule"]
+
+
+# --- §6/§9: which product this is -----------------------------------------
+
+def test_the_series_declares_itself_a_state_reconstruction_not_an_archive():
+    """§6/§9. One sentence prevents a major analytical misunderstanding, so it ships with the
+    data rather than being retyped in a component."""
+    from pipeline import history
+    sem = history.SEMANTICS
+    assert sem["kind"] == "historical_state_comparison"
+    assert "not an archive of what the dashboard knew" in sem["headline"]
+    assert sem["what_this_answers"] and sem["what_this_does_not_answer"]
+
+
+def test_a_later_correction_changes_the_reconstruction_and_that_is_intended():
+    """§7E. A 2026 correction to a 2024 event DOES change this reconstruction of 2024 — correctly,
+    because our best current estimate improved. It must never be presented as 2024 knowledge."""
+    old = _hist_incident("2024-03-01", confidence="possible")
+    corrected = _hist_incident("2024-03-01", confidence="confirmed")
+    day = "2024-04-01"
+    assert _weight_on(corrected, day) > _weight_on(old, day)
+    # And the payload must say plainly that this is a reconstruction, so an improved estimate of
+    # 2024 is never read as something the dashboard displayed in 2024.
+    from pipeline import history
+    assert "No archive of past builds exists" in history.SEMANTICS["what_this_does_not_answer"]
+    assert "correction" in history.__doc__
+
+
+def test_a_withdrawn_event_simply_leaves_the_reconstruction():
+    """§7F. Current reconstructed history differs from any archived build, by design."""
+    corpus = [_hist_incident("2024-03-01"), _hist_incident("2024-05-01")]
+    from pipeline import history
+    dates = ["2024-04-01", "2024-06-01"]
+    before = history._cumulative(dates, [i["date"] for i in corpus])
+    after = history._cumulative(dates, [i["date"] for i in corpus[:1]])
+    assert before == [1, 2]
+    assert after == [1, 1]
+
+
+# --- §11: date resolution --------------------------------------------------
+
+def test_a_requested_date_resolves_to_the_series_point_at_or_before_it():
+    """§11. A weekly point must never be presented as a daily observation."""
+    from pipeline import history
+    dates = ["2026-01-07", "2026-01-14", "2026-01-21"]
+    assert history.resolve_step(dates, "2026-01-14") == (1, "2026-01-14")
+    assert history.resolve_step(dates, "2026-01-17") == (1, "2026-01-14")   # rounds BACK
+    assert history.resolve_step(dates, "2026-01-01") == (0, "2026-01-07")   # clamped
+    assert history.resolve_step(dates, "2027-01-01") == (2, "2026-01-21")   # clamped
+    assert history.SEMANTICS["series_resolution_note"]
+
+
+# --- §18 fixtures over the real series ------------------------------------
+
+needs_history = pytest.mark.skipif(
+    not (PROCESSED / "history_series.json").exists(), reason="pipeline has not been run")
+
+
+def _history():
+    return json.loads((PROCESSED / "history_series.json").read_text(encoding="utf-8"))
+
+
+@needs_history
+def test_the_historical_decomposition_reconciles_at_every_step():
+    """The same identity the headline explanation guarantees, held across all 245 steps — so
+    "Explain A" for a historical date rests on pipeline arithmetic, not React arithmetic."""
+    h = _history()
+    for i, date in enumerate(h["dates"]):
+        raw_sum = sum(h["raw_index_points"][s][i] for s in h["covered"])
+        assert abs(raw_sum - h["raw_esdi"][i]) <= 1e-9, date
+        assert round(h["raw_esdi"][i], 2) == h["esdi"][i], date
+
+
+@needs_history
+def test_no_evidence_leaks_backwards_into_the_series():
+    """§18's core requirement. Cumulative counts must never decrease, and no count may exceed
+    what had actually occurred by that date."""
+    h = _history()
+    incidents = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    from pipeline import history
+    for key in ("incidents_to_date", "recovery_evidence_to_date", "reconstitutions_to_date"):
+        series = h[key]
+        assert all(series[i] <= series[i + 1] for i in range(len(series) - 1)), key
+
+    for i, date in enumerate(h["dates"]):
+        step = history._d(date)
+        actual = sum(1 for inc in incidents if history._d(inc["date"]) <= step)
+        assert h["incidents_to_date"][i] == actual, date
+
+
+@needs_history
+def test_the_series_starts_empty_and_ends_at_the_published_headline():
+    h = _history()
+    snap = _snap()
+    assert h["esdi"][0] == 0.0
+    assert h["incidents_to_date"][0] == 0
+    assert h["esdi"][-1] == snap["esdi"]
+    assert h["dates"][-1] == snap["as_of"]
+
+
+@needs_history
+def test_every_incident_in_the_corpus_is_counted_by_the_final_step():
+    """The month-precision regression: seven events were silently dropped from this count."""
+    h = _history()
+    incidents = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    assert h["incidents_to_date"][-1] == len(incidents)
+
+
+@needs_history
+def test_a_time_decay_only_interval_moves_the_index_with_no_new_evidence():
+    """§18 fixture: decay only. Find a real interval where no counts changed but the index did,
+    and confirm the movement is downward — impairment ageing, not repair."""
+    h = _history()
+    found = []
+    for i in range(1, len(h["dates"])):
+        same = all(h[k][i] == h[k][i - 1] for k in
+                   ("incidents_to_date", "recovery_evidence_to_date"))
+        if same and h["esdi"][i] != h["esdi"][i - 1]:
+            found.append((h["dates"][i], h["esdi"][i] - h["esdi"][i - 1]))
+    assert found, "expected at least one decay-only interval in a 245-step series"
+    assert all(delta < 0 for _d_, delta in found), "decay-only intervals must not raise the index"
+
+
+@needs_history
+def test_a_new_incident_interval_raises_the_index():
+    """§18 fixture: new incident."""
+    h = _history()
+    raised = [i for i in range(1, len(h["dates"]))
+              if h["incidents_to_date"][i] > h["incidents_to_date"][i - 1]
+              and h["esdi"][i] > h["esdi"][i - 1]]
+    assert raised, "expected intervals where new events raised the index"
+
+
+@needs_history
+def test_contributing_facilities_never_exceed_incidents_recorded_by_that_date():
+    """A facility cannot be contributing before anything has struck it."""
+    h = _history()
+    for i, date in enumerate(h["dates"]):
+        assert h["contributing_facilities"][i] <= h["incidents_to_date"][i], date
+
+
+@needs_build
+def test_a_zero_region_and_an_uncovered_only_region_stay_distinguishable():
+    """§18 fixtures: zero region, uncovered-sector-only region. The comparison must not turn
+    either into an ordinary quiet region."""
+    from pipeline import explain
+    ex = json.loads((PROCESSED / "explanations_regional.json").read_text(encoding="utf-8"))
+    bases = {v["zero_basis"] for v in ex.values()}
+    assert explain.ZERO_NO_IMPAIRMENT in bases
+    for v in ex.values():
+        if v["zero_basis"] == explain.ZERO_UNCOVERED_ONLY:
+            assert v["unscored_sectors"]

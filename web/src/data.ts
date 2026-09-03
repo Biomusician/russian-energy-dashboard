@@ -9,6 +9,7 @@
 
 import type {
   Bundle, SchemaCheck, PipelineRegistry, RegionExplanation, BuildChanges, DataQuality,
+  HistorySeries, ResolvedPoint,
 } from "./types";
 
 const BASE = `${import.meta.env.BASE_URL}data`;
@@ -289,4 +290,31 @@ export async function loadDataQuality(): Promise<DataQuality | null> {
   if (dataQualityCache) return dataQualityCache;
   dataQualityCache = await grabOptional<DataQuality | null>("data_quality.json", null);
   return dataQualityCache;
+}
+
+/** The per-step historical series the comparison workspace consumes (P6). Lazy: it is only read
+ *  when someone opens the comparison, and it holds every timestep. Absent file degrades to null
+ *  and the workspace says the payload predates it rather than reconstructing anything. */
+let historyCache: HistorySeries | null = null;
+export async function loadHistorySeries(): Promise<HistorySeries | null> {
+  if (historyCache) return historyCache;
+  historyCache = await grabOptional<HistorySeries | null>("history_series.json", null);
+  return historyCache;
+}
+
+/** Resolve a requested date to the series point at or before it (§11).
+ *
+ *  Mirrors `history.resolve_step` in the pipeline, and is the one piece of date arithmetic the
+ *  frontend does. It computes no scores — it only chooses which precomputed step to read — so
+ *  it cannot drift into being a second scoring model. `exact` drives the UI's disclosure: a
+ *  weekly series point must never be presented as a daily observation. */
+export function resolvePoint(dates: string[], requested: string): ResolvedPoint | null {
+  if (!dates.length) return null;
+  const step = stepFor(dates, requested);
+  return {
+    requested_date: requested,
+    resolved_series_date: dates[step],
+    step,
+    exact: dates[step] === requested,
+  };
 }

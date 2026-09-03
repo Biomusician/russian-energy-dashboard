@@ -9,6 +9,7 @@ import Dossier from "./components/Dossier";
 import Timeline from "./components/Timeline";
 import Methodology from "./components/Methodology";
 import Inspector, { type InspectTarget } from "./components/Inspector";
+import type { CompareState } from "./components/Comparison";
 import ComparisonTray from "./components/ComparisonTray";
 import { useLayoutMode } from "./useLayoutMode";
 import { LayoutChrome } from "./components/LayoutChrome";
@@ -60,6 +61,8 @@ export default function App() {
   // a reader who drilled headline -> sector -> facility -> event can walk back out the way
   // they came in instead of restarting the trail.
   const [inspect, setInspect] = useState<InspectTarget[] | null>(null);
+  // Two-date comparison (P6). Null when closed; the dossier becomes the workspace when set.
+  const [compare, setCompare] = useState<CompareState | null>(null);
   // Region comparison tray (§17): up to three pinned regions; a fourth pushes out the oldest.
   const [compareRegions, setCompareRegions] = useState<string[]>(initial.compare ?? []);
   const toggleCompare = (code: string) =>
@@ -300,6 +303,13 @@ export default function App() {
     prevSelection.current = key;
   }, [selected, selectedAsset, dossierIsDrawer]);
 
+  // Opening the comparison must reveal it. At compact and narrow the dossier is an overlay
+  // drawer, so without this the workspace mounts inside a closed drawer and the button appears
+  // to do nothing at exactly the sizes where the affordance is least discoverable.
+  useEffect(() => {
+    if (compare && dossierIsDrawer) setDossierOpen(true);
+  }, [compare, dossierIsDrawer]);
+
   // Escape closes the topmost drawer. Non-modal drawers must not trap focus, so this is the
   // dismissal path rather than a focus trap.
   useEffect(() => {
@@ -358,6 +368,14 @@ export default function App() {
         currentDate={currentDate}
         onOpenMethodology={() => setMethodOpen(true)}
         onExplain={(t) => setInspect([t])}
+        onCompare={() => setCompare(compare ? null : {
+          // Opens on a year-wide window ending at the live edge, which is the comparison a
+          // reader almost always wants first and costs no extra interaction.
+          a: addDays(currentDate, -365),
+          b: currentDate,
+          mode: "delta",
+        })}
+        comparing={!!compare}
       />
       <Filters
         drawer={filtersIsDrawer}
@@ -385,6 +403,11 @@ export default function App() {
         onCamera={setCamera}
         flyTarget={flyTarget}
         layoutSignal={`${layoutMode}:${mapFocus}:${filtersIsDrawer}:${dossierIsDrawer}`}
+        comparison={compare ? {
+          stepA: stepFor(bundle.national.dates, compare.a),
+          stepB: stepFor(bundle.national.dates, compare.b),
+          mode: compare.mode,
+        } : null}
       />
       <Dossier
         drawer={dossierIsDrawer}
@@ -403,6 +426,9 @@ export default function App() {
         assetAlsoHere={selectedAlsoHere}
         activeClasses={filters.classes}
         onExplain={(t) => setInspect([t])}
+        compare={compare}
+        onCompareChange={setCompare}
+        onCloseCompare={() => setCompare(null)}
         compareRegions={compareRegions}
         onToggleCompare={toggleCompare}
       />

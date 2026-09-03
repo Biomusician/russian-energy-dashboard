@@ -1075,3 +1075,51 @@ export interface DataQuality {
   } | null;
   cannot_tell_you: CannotTellYou[];
 }
+
+/* ---------------------------------------------------------------------------
+ * Historical-state comparison (iteration 11 P6). Mirrors pipeline/history.py.
+ *
+ * This series answers "what does TODAY'S dataset and model estimate for date A", never "what
+ * did the dashboard say on date A". No archive of past builds exists. The distinction ships in
+ * `semantics` so the UI renders the pipeline's own words rather than paraphrasing them.
+ * ------------------------------------------------------------------------- */
+
+export interface HistorySemantics {
+  kind: "historical_state_comparison";
+  headline: string;
+  what_this_answers: string;
+  what_this_does_not_answer: string;
+  controlling_dates: { concept: string; field: string; rule: string }[];
+  delta_convention: string;
+  series_resolution_note: string;
+}
+
+export interface HistorySeries {
+  dates: string[];
+  step_days: number | null;
+  covered: string[];
+  effective_weights: Record<string, number>;
+  esdi: number[];
+  raw_esdi: number[];
+  index_points: Record<string, number[]>;
+  raw_index_points: Record<string, number[]>;
+  sector_values: Record<string, number[]>;
+  contributing_facilities: number[];
+  /** Which facilities were contributing at each step. Identity, not a count:
+   *  "which stopped contributing between A and B" cannot be answered by a number. */
+  contributing_asset_ids: string[][];
+  incidents_to_date: number[];
+  recovery_evidence_to_date: number[];
+  reconstitutions_to_date: number[];
+  semantics: HistorySemantics;
+}
+
+/** A comparison endpoint. Both dates are kept because the series is weekly and a requested day
+ *  is resolved backwards to a series point — presenting the requested date alone would pass a
+ *  weekly point off as a daily observation. */
+export interface ResolvedPoint {
+  requested_date: string;
+  resolved_series_date: string;
+  step: number;
+  exact: boolean;
+}

@@ -506,7 +506,7 @@ def main():
         and f["properties"].get("region_code")
     )
 
-    national, regional, snapshot, regional_explanations = build_index.build(
+    national, regional, snapshot, regional_explanations, history_series = build_index.build(
         incidents=in_aoi,
         facilities=wiki_facilities,
         assets=assets,
@@ -594,6 +594,10 @@ def main():
     # Inspector and would otherwise inflate the always-loaded snapshot for something most
     # sessions never look at.
     write_json(PROCESSED / "explanations_regional.json", regional_explanations)
+
+    # Historical series for the two-date comparison (P6). A separate lazy file: it is only read
+    # when a reader opens the comparison workspace, and it is per-timestep.
+    write_json(PROCESSED / "history_series.json", history_series)
 
     # Build-to-build change ledger (§7-§10, addendum §2). The baseline is the payload committed
     # at the previous PRODUCTION commit, read out of git — never the copy sitting in

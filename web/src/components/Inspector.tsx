@@ -18,11 +18,12 @@
 
 import { useEffect, useState } from "react";
 import type {
-  Bundle, BuildChange, BuildChanges, ChangeNature, ContributingFacility, DataQuality, Incident,
-  RegionExplanation, SectorExplanation, SourceRecord, ZeroBasis,
+  Bundle, BuildChange, BuildChanges, ChangeNature, ContributingFacility, DataQuality,
+  HistorySeries, Incident, RegionExplanation, SectorExplanation, SourceRecord, ZeroBasis,
 } from "../types";
 import {
-  fmtDate, fmtDelta, fmtNum, loadDataQuality, loadRegionalExplanations, titleCase,
+  fmtDate, fmtDelta, fmtNum, loadDataQuality, loadHistorySeries, loadRegionalExplanations,
+  titleCase,
 } from "../data";
 import { severityColor } from "../palette";
 import { EvidenceChip, RecoveryLine, hostOf } from "./ui";
@@ -38,7 +39,10 @@ export type InspectTarget =
    *  and the tab bar has no room left that would not cost the map. */
   | { kind: "build" }
   /** Data quality, source freshness, and what the dashboard cannot tell you (§5). */
-  | { kind: "quality" };
+  | { kind: "quality" }
+  /** The headline decomposition at a historical series step (P6 §15). Read from the pipeline's
+   *  per-step series — never reconstructed here, which is how future evidence leaks backwards. */
+  | { kind: "historical"; step: number };
 
 export function targetKey(t: InspectTarget): string {
   return t.kind === "sector" ? `sector:${t.sector}`
@@ -47,6 +51,7 @@ export function targetKey(t: InspectTarget): string {
     : t.kind === "incident" ? `incident:${t.incidentId}`
     : t.kind === "build" ? "build"
     : t.kind === "quality" ? "quality"
+    : t.kind === "historical" ? `historical:${t.step}`
     : "headline";
 }
 
@@ -94,7 +99,9 @@ export default function Inspector({
         </div>
 
         <div className="inspector-body">
-          {current.kind === "quality" ? (
+          {current.kind === "historical" ? (
+            <HistoricalView bundle={bundle} step={current.step} />
+          ) : current.kind === "quality" ? (
             <DataQualityView bundle={bundle} onDrill={push} />
           ) : current.kind === "build" ? (
             <BuildLedgerView bundle={bundle} onDrill={push} />
@@ -148,6 +155,7 @@ function Breadcrumb({
       case "incident": return "Event";
       case "build": return "Since last build";
       case "quality": return "Data quality";
+      case "historical": return "Historical date";
     }
   };
   return (
@@ -998,7 +1006,9 @@ function DataQualityView({
     <>
       <Block title="What each sector is measured against">
         <p className="lede">
-          Three states, and the difference between them decides how the number should be read.
+          Two independent facts per sector: whether it is inside the headline index, and what
+          kind of measurement it rests on. A sector can be fully scored on a weak basis — and
+          reading only one of the two would misrepresent it.
         </p>
         {dq.sector_states.map((s) => (
           <div key={s.sector} className={`sector-state ${s.index_participation}`}>
@@ -1151,5 +1161,88 @@ function SourceCard({ src }: { src: SourceRecord }) {
         </p>
       )}
     </div>
+  );
+}
+
+
+/** The headline decomposition at one historical series step (P6 §15).
+ *
+ *  Every figure is read from the pipeline's per-step series, which reconciles at machine
+ *  precision at every step. What is deliberately NOT here is the per-facility breakdown: the
+ *  pipeline emits contributing-facility detail only for the latest build, and reconstructing it
+ *  for a past date in the browser is exactly the path by which later evidence leaks backwards
+ *  into an earlier date. So the panel says the detail is unavailable rather than inventing it.
+ */
+function HistoricalView({ bundle, step }: { bundle: Bundle; step: number }) {
+  const [h, setH] = useState<HistorySeries | null | "loading">("loading");
+  useEffect(() => {
+    let live = true;
+    loadHistorySeries().then((x) => { if (live) setH(x); });
+    return () => { live = false; };
+  }, []);
+
+  if (h === "loading") return <div className="empty" style={{ padding: 24 }}>Loading…</div>;
+  if (!h) return <Unavailable />;
+
+  const date = h.dates[step];
+  const esdi = h.esdi[step];
+  const rows = h.covered.map((s) => ({
+    sector: s,
+    value: h.sector_values[s][step],
+    weight: h.effective_weights[s],
+    points: h.index_points[s][step],
+  }));
+  const rawSum = h.covered.reduce((acc, s) => acc + h.raw_index_points[s][step], 0);
+  const max = Math.max(0.0001, ...rows.map((r) => r.points));
+
+  return (
+    <>
+      <Block title={`Monitored-area ESDI on ${fmtDate(date)}`}>
+        <p className="lede">
+          Reconstructed using the CURRENT dataset and methodology at this analytical date. It is
+          not what the dashboard showed on this date.
+        </p>
+        <div className="contrib-list">
+          {rows.map((r) => (
+            <div key={r.sector} className="contrib-row static">
+              <span className="contrib-name">
+                {bundle.taxonomy.sectors[r.sector] ?? titleCase(r.sector)}
+              </span>
+              <span className="contrib-math mono">
+                {fmtNum(r.value, 2)} × {r.weight.toFixed(4)}
+              </span>
+              <span className="contrib-bar">
+                <i style={{ width: `${(r.points / max) * 100}%`,
+                            background: severityColor(r.value) }} />
+              </span>
+              <span className="contrib-pts mono">{fmtNum(r.points, 2)}</span>
+            </div>
+          ))}
+        </div>
+        <Reconciles sum={+rawSum.toFixed(2)} value={esdi} />
+      </Block>
+
+      <Block title="Facility-level detail is not available for a past date" tone="warn">
+        <p>
+          The pipeline emits contributing-facility detail for the latest build only. Rebuilding
+          it here from today's records would let evidence gathered since this date shape what is
+          presented as the picture on it — the one failure that would invalidate every historical
+          view in this product. The sector decomposition above is exact; below it, nothing is
+          claimed.
+        </p>
+      </Block>
+
+      <Block title="Evidence available by this date">
+        <dl className="kv">
+          <dt>Events recorded</dt><dd className="mono">{h.incidents_to_date[step]}</dd>
+          <dt>Facilities contributing</dt>
+          <dd className="mono">{h.contributing_facilities[step]}</dd>
+          <dt>Recovery observations</dt>
+          <dd className="mono">{h.recovery_evidence_to_date[step]}</dd>
+          <dt>Full reconstitutions</dt>
+          <dd className="mono">{h.reconstitutions_to_date[step]}</dd>
+        </dl>
+      </Block>
+    </>
   );
 }

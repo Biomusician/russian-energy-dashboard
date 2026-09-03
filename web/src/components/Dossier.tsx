@@ -7,6 +7,7 @@ import {
 import { AssetAttributes } from "./AssetDetail";
 import { ExplainButton } from "./ui";
 import type { InspectTarget } from "./Inspector";
+import Comparison, { type CompareState } from "./Comparison";
 
 /** The right rail is a tabbed analytical panel. The central map stays the primary
  *  visualization; these tabs give it analytical depth without displacing it. Tab
@@ -34,7 +35,7 @@ export default function Dossier({
     drawer = false, open = false, onCloseDrawer,
 bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSelect,
   selectedAsset, onClearAsset, assetStruck, assetAlsoHere, activeClasses,
-  compareRegions, onToggleCompare, onExplain,
+  compareRegions, onToggleCompare, onExplain, compare, onCompareChange, onCloseCompare,
 }: {
   /** True when the dossier is presented as an overlay drawer rather than docked. */
   drawer?: boolean;
@@ -63,6 +64,12 @@ bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSele
   /** Opens the Evidence Inspector (iteration 11 §2). A region's index is a composite like the
    *  headline, so it must be openable in the same way rather than only the national figure. */
   onExplain?: (t: InspectTarget) => void;
+  /** When set, the rail becomes the comparison workspace (P6 §12). A MODE, not a ninth tab:
+   *  the tab bar has no room left that would not cost the map, and a comparison is a different
+   *  activity rather than another view of the same selection. */
+  compare?: CompareState | null;
+  onCompareChange?: (s: CompareState) => void;
+  onCloseCompare?: () => void;
 }) {
   // Initial tab may be seeded from the URL hash (#tab=Recovery) — used for headless
   // visual QA of individual tabs; harmless in normal use.
@@ -143,6 +150,17 @@ bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSele
         </div>
       )}
 
+      {compare && onCompareChange && onCloseCompare ? (
+        <Comparison
+          bundle={bundle}
+          state={compare}
+          onChange={onCompareChange}
+          onClose={onCloseCompare}
+          selected={selected}
+          onExplain={onExplain ?? (() => {})}
+        />
+      ) : (
+      <>
       <div className="tabbar" role="tablist">
         {TABS.map((t) => {
           const badge = t.badge?.(props);
@@ -162,6 +180,8 @@ bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSele
       </div>
 
       <active.Comp key={active.key} {...props} />
+      </>
+      )}
     </aside>
   );
 }

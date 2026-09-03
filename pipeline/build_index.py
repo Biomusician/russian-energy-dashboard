@@ -187,10 +187,14 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
     }
 
     final_nat_fracs, final_reg_fracs = {}, {}
+    # Every step's unrounded fractions, for the two-date comparison series (P6). Kept from the
+    # same loop that scores, so the comparison can never become a second scoring model.
+    timeline_fracs, contributor_counts = [], []
     for when in timeline:
         nat_sector = collections.defaultdict(float)
         reg_sector = collections.defaultdict(lambda: collections.defaultdict(float))
 
+        contributing_now = []
         for asset_id, incs in incidents_by_facility.items():
             info = facility_info.get(asset_id)
             if not info or not info["sector"]:
@@ -201,6 +205,7 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
             share = _share(info, denominators)
             if share <= 0:
                 continue
+            contributing_now.append(asset_id)
             region_code = info["region_code"]
             # Only regions flagged esdi_included=False are held out of the monitored-area
             # aggregate (they still get their own regional exposure). That set is currently
@@ -226,6 +231,8 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
 
         # Keep the last step's UNROUNDED fractions: the explanation decomposition must reconcile
         # to the published composite exactly, and rounded percentages cannot do that.
+        timeline_fracs.append(dict(nat_sector))
+        contributor_counts.append(sorted(contributing_now))
         final_nat_fracs = dict(nat_sector)
         final_reg_fracs = {c: dict(v) for c, v in reg_sector.items()}
 
@@ -283,7 +290,14 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
     regional_explanations = explain.regional_explanations(
         regional, region_meta, sector_weights, covered, final_reg_fracs,
         lambda fr: _composite_raw(fr, sector_weights, covered))
-    return national, regional, snapshot, regional_explanations
+
+    # The historical series the two-date comparison consumes (P6). Built from the values this
+    # loop already produced — the workspace reads it and computes no scores of its own.
+    from pipeline import history
+    history_series = history.build(
+        national["dates"], timeline_fracs, contributor_counts, sector_weights, covered,
+        national, incidents, snapshot.get("recovery_events") or [])
+    return national, regional, snapshot, regional_explanations, history_series
 
 
 # Which capacity magnitude, if any, this model holds for each sector. A sector absent from this
