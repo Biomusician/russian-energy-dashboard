@@ -1592,3 +1592,68 @@ dl.kv.trace {
 .cmp-explain { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
 .cmp-list { margin-top: 10px; }
 .contrib-row.static { cursor: default; }
+
+/* ---------- recovery lifecycle explorer (iteration 11 P7) ---------- */
+
+.lifecycle { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
+
+.rail-actions { padding: 8px var(--pad) 0; }
+
+.lifecycle-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 1px; }
+.lifecycle-fam {
+  grid-column: 1 / -1;
+  font-size: 10.5px;
+  color: var(--text-faint);
+}
+
+/* Stage nodes. The epistemic grammar reuses the project's existing evidence colours rather than
+   inventing a second legend: solid = observed, dashed = estimated, dotted = modelled. */
+ol.stages { list-style: none; margin: 6px 0 0; padding: 0 0 0 12px; }
+.stage {
+  position: relative;
+  padding: 0 0 12px 14px;
+  border-left: 1px solid var(--line);
+}
+.stage:last-child { border-left-color: transparent; padding-bottom: 2px; }
+.stage-dot {
+  position: absolute;
+  left: -4.5px;
+  top: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bg-panel);
+  border: 1.5px solid var(--text-faint);
+}
+.stage.observed .stage-dot { background: var(--green); border-color: var(--green); }
+.stage.estimated .stage-dot { background: transparent; border-color: var(--amber); border-style: dashed; }
+.stage.modelled .stage-dot { background: transparent; border-color: var(--text-faint); border-style: dotted; }
+.stage.observed { border-left-style: solid; }
+.stage.estimated { border-left-style: dashed; }
+.stage.modelled { border-left-style: dotted; }
+
+.stage-head { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+.stage-head strong { color: var(--text); font-size: 12.5px; }
+.stage p { margin: 3px 0 0; }
+.stage .establishes { color: var(--text-dim); font-style: italic; }
+.flag.ev-observed { color: var(--green); border-color: var(--green); }
+.flag.ev-estimated { color: var(--amber); border-color: var(--amber); }
+.flag.ev-modelled { color: var(--text-faint); }
+
+/* Absent stages are UNKNOWN. They are deliberately styled as neither done nor pending — a
+   progress-bar treatment here would assert a lifecycle the evidence does not support. */
+.stages-unknown {
+  margin-top: 10px;
+  padding: 7px 9px;
+  border-left: 2px dotted var(--text-faint);
+  background: rgba(255, 255, 255, 0.02);
+}
+.stages-unknown > div { display: flex; gap: 5px; flex-wrap: wrap; margin: 4px 0; }
+.flag.unknown-stage { color: var(--text-faint); border-style: dashed; margin-left: 0; }
+
+.traj-scale { display: flex; justify-content: space-between; gap: 8px; margin-top: 3px; }
+
+/* Where a milestone falls relative to an active A/B comparison. */
+.flag.ab.by_a { color: var(--text-faint); }
+.flag.ab.between { color: var(--accent); border-color: var(--accent-dim); }
+.flag.ab.after_b { color: var(--amber); border-color: var(--amber); }

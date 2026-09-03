@@ -8,6 +8,7 @@ import { AssetAttributes } from "./AssetDetail";
 import { ExplainButton } from "./ui";
 import type { InspectTarget } from "./Inspector";
 import Comparison, { type CompareState } from "./Comparison";
+import Lifecycle from "./Lifecycle";
 
 /** The right rail is a tabbed analytical panel. The central map stays the primary
  *  visualization; these tabs give it analytical depth without displacing it. Tab
@@ -36,6 +37,7 @@ export default function Dossier({
 bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSelect,
   selectedAsset, onClearAsset, assetStruck, assetAlsoHere, activeClasses,
   compareRegions, onToggleCompare, onExplain, compare, onCompareChange, onCloseCompare,
+  lifecycleOpen, onCloseLifecycle, lifecycleEpisode, onSelectEpisode, onOpenLifecycle,
 }: {
   /** True when the dossier is presented as an overlay drawer rather than docked. */
   drawer?: boolean;
@@ -70,6 +72,12 @@ bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSele
   compare?: CompareState | null;
   onCompareChange?: (s: CompareState) => void;
   onCloseCompare?: () => void;
+  /** Recovery lifecycle explorer, also a rail MODE rather than a ninth tab (P7 §18). */
+  lifecycleOpen?: boolean;
+  onCloseLifecycle?: () => void;
+  lifecycleEpisode?: string | null;
+  onSelectEpisode?: (id: string | null) => void;
+  onOpenLifecycle?: () => void;
 }) {
   // Initial tab may be seeded from the URL hash (#tab=Recovery) — used for headless
   // visual QA of individual tabs; harmless in normal use.
@@ -85,6 +93,7 @@ bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSele
     if (selected) setTab((t) => (t === "Rankings" ? "Overview" : t));
   }, [selected]);
 
+  const openLifecycle = onOpenLifecycle;
   const props: TabProps = {
     bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents,
     onSelect, onTab: setTab, activeClasses,
@@ -150,7 +159,16 @@ bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSele
         </div>
       )}
 
-      {compare && onCompareChange && onCloseCompare ? (
+      {lifecycleOpen && onCloseLifecycle && onSelectEpisode ? (
+        <Lifecycle
+          bundle={bundle}
+          onClose={onCloseLifecycle}
+          onExplain={onExplain ?? (() => {})}
+          compare={compare ?? null}
+          selectedEpisode={lifecycleEpisode ?? null}
+          onSelectEpisode={onSelectEpisode}
+        />
+      ) : compare && onCompareChange && onCloseCompare ? (
         <Comparison
           bundle={bundle}
           state={compare}
@@ -161,6 +179,11 @@ bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSele
         />
       ) : (
       <>
+      {openLifecycle && (
+        <div className="rail-actions">
+          <button className="ghost" onClick={openLifecycle}>Recovery lifecycle explorer</button>
+        </div>
+      )}
       <div className="tabbar" role="tablist">
         {TABS.map((t) => {
           const badge = t.badge?.(props);

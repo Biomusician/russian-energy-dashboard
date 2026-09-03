@@ -22,8 +22,8 @@ import type {
   HistorySeries, Incident, RegionExplanation, SectorExplanation, SourceRecord, ZeroBasis,
 } from "../types";
 import {
-  fmtDate, fmtDelta, fmtNum, loadDataQuality, loadHistorySeries, loadRegionalExplanations,
-  titleCase,
+  fmtDate, fmtDelta, fmtNum, loadDataQuality, loadHistorySeries, loadLifecycle,
+  loadRegionalExplanations, titleCase,
 } from "../data";
 import { severityColor } from "../palette";
 import { EvidenceChip, RecoveryLine, hostOf } from "./ui";
@@ -56,13 +56,16 @@ export function targetKey(t: InspectTarget): string {
 }
 
 export default function Inspector({
-  bundle, target, onNavigate, onClose,
+  bundle, target, onNavigate, onClose, onOpenLifecycle,
 }: {
   bundle: Bundle;
   /** The navigation stack, oldest first. The last entry is what is shown. */
   target: InspectTarget[];
   onNavigate: (t: InspectTarget[]) => void;
   onClose: () => void;
+  /** Opens the recovery lifecycle explorer on a specific episode (§13). Shown only where an
+   *  episode actually exists, so the link never promises evidence that is not there. */
+  onOpenLifecycle?: (episodeId: string) => void;
 }) {
   const current = target[target.length - 1];
   const ex = bundle.snapshot.explanations;
@@ -114,9 +117,11 @@ export default function Inspector({
           ) : current.kind === "region" ? (
             <RegionView bundle={bundle} code={current.code} onDrill={push} />
           ) : current.kind === "facility" ? (
-            <FacilityView bundle={bundle} assetId={current.assetId} onDrill={push} />
+            <FacilityView bundle={bundle} assetId={current.assetId} onDrill={push}
+                          onOpenLifecycle={onOpenLifecycle} />
           ) : (
-            <IncidentView bundle={bundle} incidentId={current.incidentId} onDrill={push} />
+            <IncidentView bundle={bundle} incidentId={current.incidentId} onDrill={push}
+                          onOpenLifecycle={onOpenLifecycle} />
           )}
         </div>
       </aside>
@@ -511,9 +516,43 @@ function RegionView({
   );
 }
 
+/** Whether a recovery lifecycle episode exists for an incident or asset, and its id.
+ *  Loaded from the cached lifecycle payload; absent payload simply means no link. */
+function useEpisodeFor(incidentId?: string, assetId?: string) {
+  const [id, setId] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    loadLifecycle().then((lc) => {
+      if (!live || !lc) return;
+      const hit = lc.episodes.find(
+        (e) => (incidentId && e.incident_id === incidentId)
+          || (!incidentId && assetId && e.asset_id === assetId));
+      setId(hit ? hit.episode_id : null);
+    });
+    return () => { live = false; };
+  }, [incidentId, assetId]);
+  return id;
+}
+
+function LifecycleLink({
+  episodeId, onOpenLifecycle,
+}: { episodeId: string | null; onOpenLifecycle?: (id: string) => void }) {
+  if (!episodeId || !onOpenLifecycle) return null;
+  return (
+    <button className="ghost" style={{ marginTop: 8 }}
+            onClick={() => onOpenLifecycle(episodeId)}>
+      View recovery lifecycle
+    </button>
+  );
+}
+
 function FacilityView({
-  bundle, assetId, onDrill,
-}: { bundle: Bundle; assetId: string; onDrill: (t: InspectTarget) => void }) {
+  bundle, assetId, onDrill, onOpenLifecycle,
+}: {
+  bundle: Bundle; assetId: string; onDrill: (t: InspectTarget) => void;
+  onOpenLifecycle?: (id: string) => void;
+}) {
+  const episodeId = useEpisodeFor(undefined, assetId);
   const asset = bundle.assets.find((a) => a.asset_id === assetId);
   const live = (bundle.snapshot.live_disruptions ?? []).find((d) => d.asset_id === assetId);
   const incidents = bundle.incidents
@@ -571,6 +610,7 @@ function FacilityView({
           <p className="small warn-text">{contrib.burden_note}</p>
         )}
         {live?.recovery && <RecoveryLine r={live.recovery} />}
+        <LifecycleLink episodeId={episodeId} onOpenLifecycle={onOpenLifecycle} />
       </Block>
 
       <Block title={`Events (${incidents.length})`}>
@@ -596,8 +636,12 @@ function FacilityView({
 }
 
 function IncidentView({
-  bundle, incidentId, onDrill,
-}: { bundle: Bundle; incidentId: string; onDrill: (t: InspectTarget) => void }) {
+  bundle, incidentId, onDrill, onOpenLifecycle,
+}: {
+  bundle: Bundle; incidentId: string; onDrill: (t: InspectTarget) => void;
+  onOpenLifecycle?: (id: string) => void;
+}) {
+  const episodeId = useEpisodeFor(incidentId);
   const inc: Incident | undefined = bundle.incidents.find((i) => i.incident_id === incidentId);
   if (!inc) return <Unavailable />;
 
@@ -642,6 +686,7 @@ function IncidentView({
           </p>
         )}
         {inc.notes && <p>{inc.notes}</p>}
+        <LifecycleLink episodeId={episodeId} onOpenLifecycle={onOpenLifecycle} />
       </Block>
 
       <Block title={`Sources (${inc.sources.length})`}>

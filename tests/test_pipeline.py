@@ -4379,3 +4379,390 @@ def test_a_zero_region_and_an_uncovered_only_region_stay_distinguishable():
     for v in ex.values():
         if v["zero_basis"] == explain.ZERO_UNCOVERED_ONLY:
             assert v["unscored_sectors"]
+
+
+# --------------------------------------------------------------------------
+# Recovery lifecycle (iteration 11 P7, addendum §1-§17, §20)
+#
+# The failures these guard against all have the same shape: presenting one kind of evidence as
+# though it were another. Flow rerouting rendered as a repair, a modelled decay curve rendered as
+# observed recovery progress, a first-seen build date rendered as a publication date, or two
+# points rendered as a distribution.
+# --------------------------------------------------------------------------
+
+def _lc_incident(iid="lc1", date="2026-06-01", asset_class="refinery", **over):
+    base = {"incident_id": iid, "asset_id": "a-" + iid, "asset_name": "Test Facility",
+            "asset_class": asset_class, "region_code": "RU-X", "date": date,
+            "date_precision": "day", "cause": "uav_strike", "confidence": "confirmed",
+            "status": "destroyed"}
+    base.update(over)
+    return base
+
+
+def _lc_event(iid="lc1", family="service_restoration", evidence_date="2026-06-10",
+              status="substantially_restored", kind="observed", days=9, sources=None,
+              asset_class="refinery"):
+    return {"incident_id": iid, "episode_id": iid, "asset_id": "a-" + iid,
+            "asset_name": "Test Facility", "asset_class": asset_class,
+            "sector": "refining", "region_code": "RU-X", "incident_date": "2026-06-01",
+            "evidence_date": evidence_date, "evidence_date_kind": "observed_restoration",
+            "recovery_status": status, "recovery_kind": "unit_restarted",
+            "evidence_family": family, "scoring_evidence_kind": kind, "observed_days": days,
+            "sources": sources if sources is not None else [{"url": "https://example.org/r"}],
+            "what_source_establishes": "A source says something specific."}
+
+
+def _lc_build(incidents, events, records=None):
+    from pipeline import lifecycle
+    import datetime as _d2
+    timeline = [_d2.date(2026, 6, 1) + _d2.timedelta(days=7 * i) for i in range(8)]
+    return lifecycle.build(
+        incidents, records or {}, events, timeline,
+        weight_fn=lambda inc, when, rec: 0.5,
+        trace_fn=lambda inc, rec: {"initial_impairment": 0.75, "half_life_days": 54.0,
+                                   "half_life_kind": "modelled"})
+
+
+# --- §20.1-§20.5: stages are evidence-driven -------------------------------
+
+def test_an_incident_with_no_recovery_evidence_produces_no_episode():
+    """§20.1. An episode is a claim that evidence exists. Emitting one for every incident would
+    make 175 events look like 175 tracked recoveries."""
+    out = _lc_build([_lc_incident()], [])
+    assert out["episode_count"] == 0
+
+
+def test_a_service_restoration_episode_does_not_claim_the_facility_was_rebuilt():
+    """§20.2 and §5. The single most important distinction in this view."""
+    out = _lc_build([_lc_incident()], [_lc_event(family="service_restoration")])
+    e = out["episodes"][0]
+    stages = [m["stage"] for m in e["milestones"]]
+    assert stages == ["disruption", "service_restoration"]
+    assert "physical_reconstitution" not in stages
+    assert "physical_reconstitution" in e["stages_unknown"]
+    meaning = [m["meaning"] for m in e["milestones"] if m["stage"] == "service_restoration"][0]
+    assert "does not establish that the facility was rebuilt" in meaning
+
+
+def test_a_flow_rerouting_episode_never_implies_repair():
+    """§20.3 and §4. Routing gas around a broken segment is not a repair, and the lifecycle must
+    not pad the row out to a template that says it was."""
+    out = _lc_build([_lc_incident(asset_class="pipeline_gas")],
+                    [_lc_event(family="flow_rerouting", asset_class="pipeline_gas")])
+    e = out["episodes"][0]
+    assert [m["stage"] for m in e["milestones"]] == ["disruption", "flow_rerouting"]
+    assert set(e["stages_unknown"]) >= {"service_restoration", "unit_restart",
+                                        "physical_reconstitution"}
+    meaning = [m["meaning"] for m in e["milestones"] if m["stage"] == "flow_rerouting"][0]
+    assert "NOT repaired" in meaning
+
+
+def test_a_partial_restart_is_its_own_milestone_and_not_a_restoration():
+    """§20.4. Resuming some operations is a different claim from being restored."""
+    records = {"lc1": {"partial_operations_resumed_at": "2026-06-05",
+                       "evidence_family": "service_restoration",
+                       "what_source_establishes": "partial"}}
+    out = _lc_build([_lc_incident()], [_lc_event()], records)
+    stages = [m["stage"] for m in out["episodes"][0]["milestones"]]
+    assert "partial_operations_resumed" in stages
+    assert stages.index("partial_operations_resumed") < stages.index("service_restoration")
+
+
+def test_a_full_reconstitution_reaches_the_physical_stage():
+    """§20.5."""
+    out = _lc_build([_lc_incident()],
+                    [_lc_event(family="facility_reconstitution",
+                               status="fully_reconstituted")])
+    e = out["episodes"][0]
+    assert "physical_reconstitution" in [m["stage"] for m in e["milestones"]]
+    assert "physical_reconstitution" not in e["stages_unknown"]
+
+
+def test_milestones_are_ordered_by_when_they_happened():
+    """Sorting by stage alone placed a partial restart after a rerouting that occurred weeks
+    later — a sequence of events shown in an order they did not occur in."""
+    records = {"lc1": {"partial_operations_resumed_at": "2026-06-20"}}
+    out = _lc_build([_lc_incident()], [_lc_event(evidence_date="2026-06-10")], records)
+    dates = [m["date"] for m in out["episodes"][0]["milestones"]]
+    assert dates == sorted(dates)
+
+
+# --- §20.6, §6, §7: epistemic status ---------------------------------------
+
+def test_a_sourced_milestone_is_observed_even_when_its_decay_stays_modelled():
+    """§20.6 and §6. Taking the SCORING evidence kind as the milestone's status labelled real,
+    sourced reports "modelled", which reads as though nobody reported them. They are separate
+    facts and both are shown."""
+    out = _lc_build([_lc_incident()], [_lc_event(kind="modelled")])
+    m = [x for x in out["episodes"][0]["milestones"] if x["stage"] == "service_restoration"][0]
+    assert m["status"] == "observed"
+    assert m["drives_scoring_as"] == "modelled"
+
+
+def test_an_unsourced_milestone_is_not_called_observed():
+    out = _lc_build([_lc_incident()], [_lc_event(sources=[])])
+    m = [x for x in out["episodes"][0]["milestones"] if x["stage"] == "service_restoration"][0]
+    assert m["status"] == "estimated"
+
+
+def test_the_model_trajectory_is_labelled_as_a_model_not_as_recovery_progress():
+    """§20.15 and §7. A continuous line under a row of milestones reads as measured repair
+    progress. Nothing here measures repair progress."""
+    from pipeline import lifecycle
+    out = _lc_build([_lc_incident()], [_lc_event()])
+    assert out["episodes"][0]["trajectory"]
+    label = lifecycle.LAYER_LABELS["model"]
+    assert "Modelled disruption weight" in label
+    assert "not measured repair progress" in label
+    assert "recovery progress" not in lifecycle.LAYER_LABELS["observed"]
+
+
+def test_the_reconstruction_caveat_is_present_and_explicit():
+    """§8. Later evidence shapes an earlier trajectory; the explorer must say so."""
+    from pipeline import lifecycle
+    c = lifecycle.RECONSTRUCTION_CAVEAT
+    assert "current evidence set" in c
+    assert "not an archive of what was known at the time" in c
+
+
+# --- §20.7: no leakage across a comparison date ---------------------------
+
+def test_a_restoration_after_date_a_is_dated_after_date_a():
+    """§20.7. The explorer classifies milestones against comparison dates by their own dates —
+    no second date engine — so a later restoration can never be shown as available at A."""
+    out = _lc_build([_lc_incident()], [_lc_event(evidence_date="2026-07-15")])
+    m = [x for x in out["episodes"][0]["milestones"] if x["stage"] == "service_restoration"][0]
+    assert m["date"] == "2026-07-15"
+    date_a = "2026-06-15"
+    assert m["date"] > date_a
+
+
+# --- §20.8, §20.9, §20.10, §2, §3: provenance -----------------------------
+
+def test_a_source_with_no_publication_date_says_so_rather_than_inventing_one():
+    """§20.8 and §3. Never derived from a retrieval time, a URL fragment or a commit date."""
+    out = _lc_build([_lc_incident()], [_lc_event()])
+    src = out["episodes"][0]["sources"][0]
+    assert src["published"] is None
+    assert src["published_basis"] == "unavailable"
+    assert out["episodes_with_publication_date"] == 0
+
+
+def test_a_sourced_publication_date_is_kept_distinct_from_the_restoration_date():
+    """§20.14. They are different events and must never collapse into one field."""
+    out = _lc_build([_lc_incident()],
+                    [_lc_event(evidence_date="2026-06-10",
+                               sources=[{"url": "https://example.org/a",
+                                         "published": "2026-06-12"}])])
+    e = out["episodes"][0]
+    assert e["sources"][0]["published"] == "2026-06-12"
+    assert e["sources"][0]["published_basis"] == "sourced"
+    restoration = [m["date"] for m in e["milestones"]
+                   if m["stage"] == "service_restoration"][0]
+    assert restoration == "2026-06-10" != e["sources"][0]["published"]
+
+
+def test_first_seen_is_populated_only_when_supplied_by_a_valid_ledger():
+    """§20.9 and §15."""
+    from pipeline import lifecycle
+    import datetime as _d3
+    timeline = [_d3.date(2026, 6, 1)]
+    out = lifecycle.build(
+        [_lc_incident()], {}, [_lc_event()], timeline,
+        weight_fn=lambda inc, when, rec: 0.5, trace_fn=lambda inc, rec: {},
+        first_seen_by_incident={"lc1": {"build_date": "2026-08-01", "commit": "abc1234"}})
+    assert out["episodes"][0]["first_seen"]["build_date"] == "2026-08-01"
+    assert out["episodes_with_first_seen"] == 1
+
+
+def test_no_first_seen_claim_when_the_ledger_lineage_is_invalid():
+    """§20.10. With no provable ancestor the field must be absent, never inferred from the
+    current branch's files."""
+    out = _lc_build([_lc_incident()], [_lc_event()])
+    assert out["episodes"][0]["first_seen"] is None
+    assert out["episodes_with_first_seen"] == 0
+
+
+def test_first_seen_is_never_described_as_when_we_learned_it():
+    """§2. The report may have existed long before this dataset ingested it."""
+    from pipeline import lifecycle
+    concept = [c for c in lifecycle.TEMPORAL_MODEL["concepts"]
+               if c["field"] == "dashboard_first_seen_build"][0]
+    assert concept["label"] == "First present in dashboard"
+    assert "NOT when the report was published" in concept["note"]
+
+
+def test_the_temporal_model_declares_which_of_the_four_dates_exist():
+    """§1. Four analytically different concepts, and the explorer must not pretend to have all
+    four when the corpus supports two."""
+    from pipeline import lifecycle
+    fields = {c["field"]: c for c in lifecycle.TEMPORAL_MODEL["concepts"]}
+    assert set(fields) == {"incident_date", "restoration_effective_date",
+                           "evidence_publication_date", "dashboard_first_seen_build"}
+    assert fields["incident_date"]["available"] is True
+    assert fields["restoration_effective_date"]["available"] is True
+    assert fields["evidence_publication_date"]["available"] is False
+
+
+# --- §20.11-§20.13, §10, §17: sample-size discipline ----------------------
+
+def test_one_observation_is_not_a_distribution():
+    """§20.11."""
+    out = _lc_build([_lc_incident("a")], [_lc_event("a", days=5)])
+    d = out["distributions"]["by_class_family"]["refinery|service_restoration"]
+    assert d["n"] == 1
+    assert d["sufficient"] is False
+    assert "below the 3" in d["reason"]
+    assert "median" not in d
+
+
+def test_two_observations_are_not_a_distribution():
+    """§20.12. Two points have a median, a min and a max — and reporting them invites a reader
+    to treat noise as a norm."""
+    incs = [_lc_incident("a"), _lc_incident("b")]
+    evs = [_lc_event("a", days=5), _lc_event("b", days=40)]
+    out = _lc_build(incs, evs)
+    d = out["distributions"]["by_class_family"]["refinery|service_restoration"]
+    assert d["n"] == 2 and d["sufficient"] is False
+    assert d["values"] == [5, 40]
+    assert "median" not in d
+
+
+def test_three_observations_permit_a_summary_and_still_show_the_points():
+    """§20.13 and §10."""
+    incs = [_lc_incident(x) for x in "abc"]
+    evs = [_lc_event("a", days=4), _lc_event("b", days=9), _lc_event("c", days=20)]
+    d = _lc_build(incs, evs)["distributions"]["by_class_family"]["refinery|service_restoration"]
+    assert d["n"] == 3 and d["sufficient"] is True
+    assert d["median"] == 9 and d["min"] == 4 and d["max"] == 20
+    assert d["values"] == [4, 9, 20]
+    # An IQR from three points is not meaningful either.
+    assert "q1" not in d
+
+
+def test_durations_from_different_evidence_families_are_never_pooled():
+    """§11 and §20. Incident-to-service-restoration and incident-to-reconstitution measure
+    different endpoints; a combined median would be arithmetic without meaning."""
+    incs = [_lc_incident("a"), _lc_incident("b")]
+    evs = [_lc_event("a", family="service_restoration", days=3),
+           _lc_event("b", family="facility_reconstitution", days=98)]
+    groups = _lc_build(incs, evs)["distributions"]["by_class_family"]
+    assert "refinery|service_restoration" in groups
+    assert "refinery|facility_reconstitution" in groups
+    for g in groups.values():
+        assert g["mixed_endpoints"] is False
+        assert g["duration_start"] == "incident_date"
+        assert g["duration_end"]
+
+
+# --- the real build -------------------------------------------------------
+
+needs_lifecycle = pytest.mark.skipif(
+    not (PROCESSED / "recovery_lifecycle.json").exists(), reason="pipeline has not been run")
+
+
+def _lifecycle():
+    return json.loads((PROCESSED / "recovery_lifecycle.json").read_text(encoding="utf-8"))
+
+
+@needs_lifecycle
+def test_every_real_episode_has_a_disruption_and_only_evidenced_stages():
+    from pipeline import lifecycle
+    lc = _lifecycle()
+    assert lc["episode_count"] > 0
+    for e in lc["episodes"]:
+        stages = [m["stage"] for m in e["milestones"]]
+        assert stages[0] == "disruption"
+        assert len(stages) == len(set(stages)), e["episode_id"]
+        for m in e["milestones"]:
+            assert m["stage"] in lifecycle.STAGE_ORDER
+            assert m["status"] in ("observed", "estimated", "modelled")
+        # A stage cannot be both reached and unknown.
+        assert not (set(stages) & set(e["stages_unknown"])), e["episode_id"]
+
+
+@needs_lifecycle
+def test_no_real_statistic_is_published_below_the_sample_floor():
+    """§17: every displayed statistic carries its n, and below the floor there is no statistic."""
+    lc = _lifecycle()
+    floor = lc["distributions"]["min_sample"]
+    for group in (lc["distributions"]["by_class_family"],
+                  lc["distributions"]["by_family"]):
+        for key, v in group.items():
+            assert "n" in v
+            if v["n"] < floor:
+                assert v["sufficient"] is False
+                assert "median" not in v, key
+            else:
+                assert v["sufficient"] is True
+                assert v["median"] is not None
+
+
+@needs_lifecycle
+def test_the_real_corpus_has_no_recovery_publication_dates_and_says_so():
+    """Audited, not assumed: every recovery source here carries a URL and nothing else."""
+    lc = _lifecycle()
+    assert lc["episodes_with_publication_date"] == 0
+    for e in lc["episodes"]:
+        for src in e["sources"]:
+            assert src["published"] is None
+            assert src["published_basis"] == "unavailable"
+
+
+@needs_lifecycle
+def test_real_trajectories_never_rise_after_the_incident():
+    """The modelled weight decays; a rising curve would mean the model was adding impairment
+    with no new event, which nothing in the scoring can do."""
+    for e in _lifecycle()["episodes"]:
+        w = [p["weight"] for p in e["trajectory"]]
+        for i in range(len(w) - 1):
+            assert w[i + 1] <= w[i] + 1e-9, e["episode_id"]
+
+
+def test_a_sourced_repair_estimate_is_evidence_not_an_absence():
+    """Reading only DATED events labelled three episodes "no recovery evidence" when each had a
+    sourced repair horizon — a governor, an industry source via Reuters. The opposite of true."""
+    records = {"lc1": {"evidence_family": "estimate", "estimate_lower_days": 150,
+                       "estimate_central_days": 180, "estimate_upper_days": 210,
+                       "estimate_method": "expert_statement",
+                       "estimate_basis": "Industry source cited by Reuters",
+                       "recovery_status": "impaired",
+                       "sources": [{"url": "https://example.org/e"}]}}
+    e = _lc_build([_lc_incident()], [], records)["episodes"][0]
+    assert e["evidence_family"] == "estimate"
+    m = [x for x in e["milestones"] if x["stage"] == "estimated_restoration"][0]
+    assert m["status"] == "estimated"
+    assert m["estimate_days"]["central"] == 180
+    # An estimate is a projected horizon, not an event with a date.
+    assert m["date"] is None
+    # And it must never become an observed duration statistic.
+    assert e["duration_days"] is None
+    assert e["sources"]
+
+
+def test_an_undated_milestone_sorts_after_the_dated_ones():
+    """An undated estimate floated above the disruption that caused it, inverting the story."""
+    records = {"lc1": {"evidence_family": "estimate", "estimate_central_days": 180,
+                       "recovery_status": "impaired", "sources": []}}
+    stages = [m["stage"] for m in _lc_build([_lc_incident()], [], records)["episodes"][0]["milestones"]]
+    assert stages == ["disruption", "estimated_restoration"]
+
+
+def test_a_restoration_asserted_without_a_date_is_named_as_such():
+    """Neither "restored" nor "no evidence" describes a claim with no date attached."""
+    records = {"lc1": {"recovery_status": "substantially_restored",
+                       "recovery_kind": "throughput_restored", "sources": []}}
+    e = _lc_build([_lc_incident()], [], records)["episodes"][0]
+    assert e["undated_restoration_claim"] is True
+    assert "records no date" in e["undated_restoration_note"]
+    assert [m["stage"] for m in e["milestones"]] == ["disruption"]
+
+
+@needs_lifecycle
+def test_the_real_corpus_reports_no_episode_as_evidence_free():
+    """Every episode exists because a record or event does; none may render as having none."""
+    lc = _lifecycle()
+    for e in lc["episodes"]:
+        has_family = bool(e["evidence_family"])
+        has_claim = bool(e["undated_restoration_claim"])
+        assert has_family or has_claim, e["episode_id"]

@@ -1123,3 +1123,115 @@ export interface ResolvedPoint {
   step: number;
   exact: boolean;
 }
+
+/* ---------------------------------------------------------------------------
+ * Recovery lifecycle (iteration 11 P7). Mirrors pipeline/lifecycle.py.
+ *
+ * The evidence families are load-bearing and stay distinct: service restored is not facility
+ * rebuilt, and flow rerouted is not a repair at all.
+ * ------------------------------------------------------------------------- */
+
+export type EvidenceFamily =
+  | "service_restoration" | "unit_restart" | "facility_reconstitution"
+  | "flow_rerouting" | "estimate";
+
+export interface Milestone {
+  stage: string;
+  date: string | null;
+  date_precision: string | null;
+  /** Whether the MILESTONE was reported — not how the decay behind it is scored. */
+  status: "observed" | "estimated" | "modelled";
+  /** How this evidence drives the decay. A sourced milestone can still leave a modelled
+   *  half-life, and conflating the two labels real reports as guesses. */
+  drives_scoring_as?: string;
+  evidence_family: EvidenceFamily | null;
+  recovery_kind?: string | null;
+  what_source_establishes?: string | null;
+  /** Estimate milestones are deliberately UNDATED: a projected horizon is not an event that
+   *  happened on a day, and dating it would make it look observed. */
+  estimate_days?: { lower: number | null; central: number | null; upper: number | null };
+  estimate_method?: string | null;
+  meaning: string;
+}
+
+export interface LifecycleSource {
+  url: string;
+  published: string | null;
+  published_basis: "sourced" | "unavailable";
+}
+
+export interface LifecycleEpisode {
+  episode_id: string;
+  incident_id: string;
+  asset_id: string;
+  asset_name: string | null;
+  asset_class: string | null;
+  sector: string | null;
+  region_code: string | null;
+  incident_date: string;
+  cause: string | null;
+  confidence: string | null;
+  status: string | null;
+  recovery_status: string | null;
+  evidence_family: EvidenceFamily | null;
+  /** A source says the facility was restored but records no date, so it appears on no timeline
+   *  and drives no scoring change. Neither "restored" nor "no evidence" describes that. */
+  undated_restoration_claim: boolean;
+  undated_restoration_note: string | null;
+  scoring_evidence_kind: string;
+  milestones: Milestone[];
+  /** Stages with no evidence either way. Never rendered as pending or complete. */
+  stages_unknown: string[];
+  duration_days: number | null;
+  duration_start: string | null;
+  duration_end: string | null;
+  initial_impairment: number | null;
+  half_life_days: number | null;
+  half_life_kind: string | null;
+  /** The MODELLED disruption weight the index consumed — not measured repair progress. */
+  trajectory: { date: string; weight: number }[];
+  sources: LifecycleSource[];
+  publication_date_available: boolean;
+  /** Only ever populated from a build ledger with provable lineage, and it means "first present
+   *  in this dashboard" — never "when the report was published" or "when anyone learned it". */
+  first_seen: { build_date: string; commit: string } | null;
+}
+
+export interface DurationSummary {
+  asset_class: string;
+  evidence_family: string;
+  duration_start: string;
+  duration_end: string | null;
+  mixed_endpoints: boolean;
+  n: number;
+  sufficient: boolean;
+  reason?: string;
+  values: number[];
+  median?: number;
+  min?: number;
+  max?: number;
+  q1?: number;
+  q3?: number;
+}
+
+export interface LifecyclePayload {
+  temporal_model: {
+    concepts: { field: string; label: string; available: boolean; note: string }[];
+    warning: string;
+  };
+  reconstruction_caveat: string;
+  layer_labels: { observed: string; model: string };
+  stage_order: string[];
+  stage_meaning: Record<string, string>;
+  episode_count: number;
+  episodes_by_family: Record<string, number>;
+  episodes_with_publication_date: number;
+  episodes_with_first_seen: number;
+  episodes: LifecycleEpisode[];
+  distributions: {
+    min_sample: number;
+    by_class_family: Record<string, DurationSummary>;
+    by_family: Record<string, DurationSummary>;
+    note: string;
+  };
+}

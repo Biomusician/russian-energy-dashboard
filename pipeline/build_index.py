@@ -291,13 +291,23 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
         regional, region_meta, sector_weights, covered, final_reg_fracs,
         lambda fr: _composite_raw(fr, sector_weights, covered))
 
+    # Recovery lifecycle episodes (P7). The trajectory is sampled with the SAME weight function
+    # that scores, so the curve a reader sees is the curve the index used — not a second model
+    # of recovery drawn beside the real one.
+    from pipeline import lifecycle
+    lifecycle_payload = lifecycle.build(
+        incidents, recovery_by_incident, snapshot.get("recovery_events") or [], timeline,
+        lambda inc, when, rec: _weight_at(inc, when, rec),
+        lambda inc, rec: _weight_trace(inc, timeline[-1], rec))
+
     # The historical series the two-date comparison consumes (P6). Built from the values this
     # loop already produced — the workspace reads it and computes no scores of its own.
     from pipeline import history
     history_series = history.build(
         national["dates"], timeline_fracs, contributor_counts, sector_weights, covered,
         national, incidents, snapshot.get("recovery_events") or [])
-    return national, regional, snapshot, regional_explanations, history_series
+    return (national, regional, snapshot, regional_explanations, history_series,
+            lifecycle_payload)
 
 
 # Which capacity magnitude, if any, this model holds for each sector. A sector absent from this

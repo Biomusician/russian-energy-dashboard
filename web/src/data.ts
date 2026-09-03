@@ -9,7 +9,7 @@
 
 import type {
   Bundle, SchemaCheck, PipelineRegistry, RegionExplanation, BuildChanges, DataQuality,
-  HistorySeries, ResolvedPoint,
+  HistorySeries, ResolvedPoint, LifecyclePayload,
 } from "./types";
 
 const BASE = `${import.meta.env.BASE_URL}data`;
@@ -142,7 +142,7 @@ export function addDays(iso: string, delta: number): string {
   return dt.toISOString().slice(0, 10);
 }
 
-export function fmtDate(iso: string): string {
+export function fmtDate(iso: string | null | undefined): string {
   if (!iso) return "—";
   // Curated source records carry prose dates ("6 July 2026") alongside ISO ones. Splitting one
   // of those on "-" yields a NaN month and renders "undefined 6 July 2026"; it is already
@@ -317,4 +317,13 @@ export function resolvePoint(dates: string[], requested: string): ResolvedPoint 
     step,
     exact: dates[step] === requested,
   };
+}
+
+/** Recovery lifecycle episodes (P7). Lazy: each episode carries a per-step modelled trajectory
+ *  and most sessions never open the explorer. */
+let lifecycleCache: LifecyclePayload | null = null;
+export async function loadLifecycle(): Promise<LifecyclePayload | null> {
+  if (lifecycleCache) return lifecycleCache;
+  lifecycleCache = await grabOptional<LifecyclePayload | null>("recovery_lifecycle.json", null);
+  return lifecycleCache;
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-09-03T01:12:44+00:00",
+  "build_time": "2026-09-03T12:41:17+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -14,7 +14,7 @@
     },
     {
       "name": "data_quality.json",
-      "bytes": 26307,
+      "bytes": 26305,
       "optional": false
     },
     {
@@ -24,7 +24,7 @@
     },
     {
       "name": "history_series.json",
-      "bytes": 78351,
+      "bytes": 78352,
       "optional": false
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "name": "index_regional.json",
-      "bytes": 563891,
+      "bytes": 563896,
       "optional": false
     },
     {
@@ -50,6 +50,11 @@
     {
       "name": "pipeline_registry.json",
       "bytes": 331189,
+      "optional": false
+    },
+    {
+      "name": "recovery_lifecycle.json",
+      "bytes": 107586,
       "optional": false
     },
     {
@@ -64,7 +69,7 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 252045,
+      "bytes": 252286,
       "optional": false
     },
     {

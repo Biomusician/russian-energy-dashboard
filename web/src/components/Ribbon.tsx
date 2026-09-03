@@ -9,6 +9,7 @@ import type { InspectTarget } from "./Inspector";
  *  leads with what it can actually measure without hiding what it cannot. */
 export default function Ribbon({
   bundle, step, currentDate, onOpenMethodology, onExplain, onCompare, comparing,
+  onLifecycle, lifecycleOpen,
 }: {
   bundle: Bundle;
   step: number;
@@ -20,6 +21,11 @@ export default function Ribbon({
   /** Opens the two-date comparison workspace in the dossier rail (P6). */
   onCompare?: () => void;
   comparing?: boolean;
+  /** The lifecycle explorer is also reachable from the Recovery tab, but that entry lives
+   *  inside the tabbed rail — which is replaced while the comparison workspace is open. Without
+   *  a ribbon entry there is no way to reach it while comparing. */
+  onLifecycle?: () => void;
+  lifecycleOpen?: boolean;
 }) {
   const { national, snapshot, taxonomy } = bundle;
   const esdi = national.esdi[step] ?? 0;
@@ -43,6 +49,11 @@ export default function Ribbon({
           {onCompare && (
             <button className="ghost" aria-pressed={!!comparing} onClick={onCompare}>
               {comparing ? "✓ comparing dates" : "Compare dates"}
+            </button>
+          )}
+          {onLifecycle && (
+            <button className="ghost" aria-pressed={!!lifecycleOpen} onClick={onLifecycle}>
+              {lifecycleOpen ? "✓ recovery lifecycle" : "Recovery lifecycle"}
             </button>
           )}
         </div>

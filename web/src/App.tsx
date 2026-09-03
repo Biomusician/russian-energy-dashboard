@@ -63,6 +63,10 @@ export default function App() {
   const [inspect, setInspect] = useState<InspectTarget[] | null>(null);
   // Two-date comparison (P6). Null when closed; the dossier becomes the workspace when set.
   const [compare, setCompare] = useState<CompareState | null>(null);
+  // Recovery lifecycle explorer. The selected episode is held here, not in the panel, so
+  // closing and reopening returns the reader to where they were (P7 §18).
+  const [lifecycleOpen, setLifecycleOpen] = useState(false);
+  const [lifecycleEpisode, setLifecycleEpisode] = useState<string | null>(null);
   // Region comparison tray (§17): up to three pinned regions; a fourth pushes out the oldest.
   const [compareRegions, setCompareRegions] = useState<string[]>(initial.compare ?? []);
   const toggleCompare = (code: string) =>
@@ -310,6 +314,10 @@ export default function App() {
     if (compare && dossierIsDrawer) setDossierOpen(true);
   }, [compare, dossierIsDrawer]);
 
+  useEffect(() => {
+    if (lifecycleOpen && dossierIsDrawer) setDossierOpen(true);
+  }, [lifecycleOpen, dossierIsDrawer]);
+
   // Escape closes the topmost drawer. Non-modal drawers must not trap focus, so this is the
   // dismissal path rather than a focus trap.
   useEffect(() => {
@@ -376,6 +384,8 @@ export default function App() {
           mode: "delta",
         })}
         comparing={!!compare}
+        onLifecycle={() => setLifecycleOpen((v) => !v)}
+        lifecycleOpen={lifecycleOpen}
       />
       <Filters
         drawer={filtersIsDrawer}
@@ -429,6 +439,11 @@ export default function App() {
         compare={compare}
         onCompareChange={setCompare}
         onCloseCompare={() => setCompare(null)}
+        lifecycleOpen={lifecycleOpen}
+        onCloseLifecycle={() => setLifecycleOpen(false)}
+        lifecycleEpisode={lifecycleEpisode}
+        onSelectEpisode={setLifecycleEpisode}
+        onOpenLifecycle={() => setLifecycleOpen(true)}
         compareRegions={compareRegions}
         onToggleCompare={toggleCompare}
       />
@@ -454,6 +469,11 @@ export default function App() {
           target={inspect}
           onNavigate={setInspect}
           onClose={() => setInspect(null)}
+          onOpenLifecycle={(id) => {
+            setLifecycleEpisode(id);
+            setLifecycleOpen(true);
+            setInspect(null);
+          }}
         />
       )}
     </div>
