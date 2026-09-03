@@ -9,7 +9,7 @@ import type { InspectTarget } from "./Inspector";
  *  leads with what it can actually measure without hiding what it cannot. */
 export default function Ribbon({
   bundle, step, currentDate, onOpenMethodology, onExplain, onCompare, comparing,
-  onLifecycle, lifecycleOpen,
+  onLifecycle, lifecycleOpen, onBriefing,
 }: {
   bundle: Bundle;
   step: number;
@@ -26,6 +26,8 @@ export default function Ribbon({
    *  a ribbon entry there is no way to reach it while comparing. */
   onLifecycle?: () => void;
   lifecycleOpen?: boolean;
+  /** Enters Briefing Mode: presentation framing on top of map focus (P8). */
+  onBriefing?: () => void;
 }) {
   const { national, snapshot, taxonomy } = bundle;
   const esdi = national.esdi[step] ?? 0;
@@ -50,6 +52,9 @@ export default function Ribbon({
             <button className="ghost" aria-pressed={!!comparing} onClick={onCompare}>
               {comparing ? "✓ comparing dates" : "Compare dates"}
             </button>
+          )}
+          {onBriefing && (
+            <button className="ghost" onClick={onBriefing}>Briefing &amp; export</button>
           )}
           {onLifecycle && (
             <button className="ghost" aria-pressed={!!lifecycleOpen} onClick={onLifecycle}>

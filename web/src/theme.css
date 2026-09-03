@@ -1657,3 +1657,142 @@ ol.stages { list-style: none; margin: 6px 0 0; padding: 0 0 0 12px; }
 .flag.ab.by_a { color: var(--text-faint); }
 .flag.ab.between { color: var(--accent); border-color: var(--accent-dim); }
 .flag.ab.after_b { color: var(--amber); border-color: var(--amber); }
+
+/* ---------- briefing mode and print (iteration 11 P8) ---------- */
+
+/* Briefing implies map focus and adds framing on top of it. Presentation metadata overlays the
+   map rather than taking a grid row, so the map never shrinks to make room for its own caption. */
+.briefing-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  padding: 16px 20px;
+}
+
+.brief-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  background: linear-gradient(rgba(3, 5, 7, 0.82), rgba(3, 5, 7, 0));
+  margin: -16px -20px 0;
+  padding: 14px 20px 26px;
+}
+.brief-head h1 { font-size: 17px; color: var(--text); letter-spacing: 0.01em; }
+.brief-metric { margin: 3px 0 0; font-size: 12px; color: var(--text-dim); }
+.brief-dates { text-align: right; display: flex; flex-direction: column; gap: 2px; }
+.brief-value { font-family: var(--mono); font-size: 26px; line-height: 1; color: var(--text); }
+.brief-asof { font-size: 11px; color: var(--text-dim); line-height: 1.45; }
+.brief-asof .dim { color: var(--text-faint); }
+
+.brief-compare {
+  align-self: flex-start;
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  background: rgba(3, 5, 7, 0.78);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 8px 12px;
+  margin-top: 6px;
+}
+.brief-compare > div { display: flex; flex-direction: column; gap: 1px; }
+.brief-compare strong { font-family: var(--mono); font-size: 17px; color: var(--text); }
+.brief-compare .mono { font-size: 10px; color: var(--text-faint); }
+.brief-resolved { flex-basis: 100%; margin: 2px 0 0; font-size: 10px; color: var(--amber); }
+
+.brief-selection {
+  align-self: flex-start;
+  background: rgba(3, 5, 7, 0.78);
+  border-left: 2px solid var(--accent);
+  padding: 5px 10px;
+  font-size: 12px;
+  color: var(--text);
+  margin-top: 8px;
+}
+
+.brief-foot {
+  background: linear-gradient(rgba(3, 5, 7, 0), rgba(3, 5, 7, 0.88) 34%);
+  margin: 0 -20px -16px;
+  padding: 24px 20px 12px;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.brief-foot p { margin: 0 0 3px; }
+/* The caveat is the one line most likely to be needed and least likely to be read. It gets
+   emphasis rather than footnote treatment. */
+.brief-caveat { color: var(--amber); font-size: 11.5px; }
+.brief-sources { color: var(--text-faint); font-size: 9.5px; }
+
+.brief-controls {
+  position: absolute;
+  bottom: 14px;
+  right: 16px;
+  z-index: 42;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.drawer-btn.primary { border-color: var(--accent); color: var(--accent); }
+.drawer-btn.primary:disabled { opacity: 0.55; cursor: default; }
+
+.brief-panel {
+  position: absolute;
+  bottom: 56px;
+  right: 16px;
+  z-index: 43;
+  width: min(320px, 92vw);
+  max-height: 60vh;
+  overflow-y: auto;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+}
+.brief-panel-body { padding: 10px var(--pad) 14px; display: flex; flex-direction: column; gap: 4px; }
+.brief-panel-body .eyebrow { margin-top: 6px; }
+.brief-opt { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-dim); }
+.brief-opt input { accent-color: var(--accent); }
+.brief-panel .small { font-size: 10.5px; color: var(--text-faint); word-break: break-all; }
+
+/* On a narrow viewport the options panel overlays the map and is dismissed, rather than
+   claiming a permanent column (§27). */
+html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; }
+
+/* ---------- print ---------- */
+/* Print is a deliberate product, not a screenshot of the running UI. */
+@media print {
+  html, body { background: #fff !important; }
+  .ribbon, .filters, .dossier, .timeline, .drawer-toggles, .drawer-scrim,
+  .inspector, .inspector-scrim, .brief-controls, .brief-panel,
+  .maplibregl-ctrl, .camera-controls, [data-export-exclude="true"] {
+    display: none !important;
+  }
+  .shell {
+    display: block !important;
+    height: auto !important;
+  }
+  .mapwrap {
+    position: relative !important;
+    width: 100% !important;
+    height: 16cm !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  /* The framing must survive on paper: dark-on-dark overlays become readable text. */
+  .briefing-frame { position: static; padding: 0; }
+  .brief-head, .brief-foot { background: none !important; margin: 0; padding: 8px 0; color: #111; }
+  .brief-head h1, .brief-value, .brief-selection, .brief-compare strong { color: #111 !important; }
+  .brief-metric, .brief-asof, .brief-foot { color: #333 !important; }
+  .brief-caveat { color: #8a5a00 !important; font-weight: 600; }
+  .brief-compare, .brief-selection {
+    background: none !important;
+    border: 1px solid #999 !important;
+  }
+  .brief-sources { color: #555 !important; }
+}

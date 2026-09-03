@@ -147,7 +147,7 @@ const ROUTE_QUALITY_LABEL: Record<string, string> = {
 export default function MapPanel({
   bundle, step, filters, selected, onSelect, incidentsByRegion,
   selectedAssetKey, onSelectAsset, haloByRegion, initialCamera, onCamera, flyTarget,
-  layoutSignal, comparison,
+  layoutSignal, comparison, onMapReady,
 }: {
   bundle: Bundle;
   step: number;
@@ -171,9 +171,16 @@ export default function MapPanel({
    *  responsive work was spent buying map area and a second map would hand it straight back.
    *  `delta` is B − A, matching the convention the pipeline publishes. */
   comparison?: { stepA: number; stepB: number; mode: "A" | "B" | "delta" } | null;
+  /** Hands the live map to App so the exporter can copy its style and camera. A real prop
+   *  rather than the dev-only window handle, because export ships in production. */
+  onMapReady?: (map: maplibregl.Map | null) => void;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
+  // Held in a ref so the map-construction effect never re-runs when the callback identity
+  // changes — recreating the map on every App render would be catastrophic.
+  const onMapReadyRef = useRef(onMapReady);
+  onMapReadyRef.current = onMapReady;
   const assetClickRef = useRef(false);
   const selectedAssetIdRef = useRef<number | null>(null);
   const [ready, setReady] = useState(false);
@@ -545,9 +552,11 @@ export default function MapPanel({
       // Dev-only handle for headless layout QA, alongside the existing `#tab=` hash hook.
       // Never defined in a production build.
       if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__map = m;
+      onMapReadyRef.current?.(m);
     });
 
     return () => {
+      onMapReadyRef.current?.(null);
       m.remove();
       map.current = null;
     };

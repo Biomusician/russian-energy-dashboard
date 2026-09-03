@@ -10,6 +10,14 @@ import Timeline from "./components/Timeline";
 import Methodology from "./components/Methodology";
 import Inspector, { type InspectTarget } from "./components/Inspector";
 import type { CompareState } from "./components/Comparison";
+import Briefing, { type ExportSize } from "./components/Briefing";
+import {
+  DEFAULT_OPTIONS, briefingFilename, buildBriefingContext, exportPixelSize,
+} from "./briefing";
+import { downloadBlob, exportMapPng } from "./mapExport";
+import { fmtNum, loadHistorySeries, resolvePoint } from "./data";
+import type maplibregl from "maplibre-gl";
+import type { HistorySeries } from "./types";
 import ComparisonTray from "./components/ComparisonTray";
 import { useLayoutMode } from "./useLayoutMode";
 import { LayoutChrome } from "./components/LayoutChrome";
@@ -67,6 +75,43 @@ export default function App() {
   // closing and reopening returns the reader to where they were (P7 §18).
   const [lifecycleOpen, setLifecycleOpen] = useState(false);
   const [lifecycleEpisode, setLifecycleEpisode] = useState<string | null>(null);
+
+  // --- briefing / export (P8) --------------------------------------------------------------
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const [briefing, setBriefing] = useState(false);
+  const [briefOptions, setBriefOptions] = useState(DEFAULT_OPTIONS);
+  const [exportBusy, setExportBusy] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [exportResult, setExportResult] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistorySeries | null>(null);
+  // Panel state to restore when briefing ends (§5). Briefing implies map focus; exiting must
+  // not leave the reader in a stripped-down interface they did not choose.
+  const preBriefing = useRef<{ mapFocus: boolean; dossier: boolean; filters: boolean } | null>(null);
+
+  useEffect(() => {
+    if (briefing) loadHistorySeries().then(setHistory);
+  }, [briefing]);
+
+  const enterBriefing = () => {
+    preBriefing.current = { mapFocus, dossier: dossierOpen, filters: filtersOpen };
+    setMapFocus(true);
+    setDossierOpen(false);
+    setFiltersOpen(false);
+    setBriefing(true);
+  };
+
+  const exitBriefing = () => {
+    setBriefing(false);
+    const prev = preBriefing.current;
+    if (prev) {
+      setMapFocus(prev.mapFocus);
+      setDossierOpen(prev.dossier);
+      setFiltersOpen(prev.filters);
+    }
+    preBriefing.current = null;
+    setExportError(null);
+    setExportResult(null);
+  };
   // Region comparison tray (§17): up to three pinned regions; a fourth pushes out the oldest.
   const [compareRegions, setCompareRegions] = useState<string[]>(initial.compare ?? []);
   const toggleCompare = (code: string) =>
@@ -318,6 +363,66 @@ export default function App() {
     if (lifecycleOpen && dossierIsDrawer) setDossierOpen(true);
   }, [lifecycleOpen, dossierIsDrawer]);
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-briefing", briefing ? "on" : "off");
+  }, [briefing]);
+
+  // Built from the SAME state the map is rendering, so the exported frame can never describe a
+  // different view from the one captured beside it.
+  const briefingContext = useMemo(() => {
+    if (!bundle) return null;
+    const dates = bundle.national.dates;
+    const region = selected ? bundle.snapshot.regions[selected] : null;
+    const label = selectedAsset
+      // §13: a region-centroid marker must say so wherever it is named.
+      ? `${selectedAsset.asset.name ?? selectedAsset.asset.asset_id}`
+        + (selectedAsset.asset.precision === "region"
+          ? " — administrative-region placement, not facility location" : "")
+      : region ? `${region.name} · ${fmtNum(bundle.regional.regions[region.code]?.esdi[step] ?? 0, 2)}`
+      : null;
+    return buildBriefingContext({
+      bundle, step, currentDate,
+      metricId: filters.metric,
+      selectedRegion: selected,
+      selectionLabel: label,
+      pipelinesVisible: filters.showGasNetwork || filters.showOilNetwork,
+      history,
+      compare: compare ? { a: compare.a, b: compare.b, mode: compare.mode } : null,
+      pointA: compare ? resolvePoint(dates, compare.a) : null,
+      pointB: compare ? resolvePoint(dates, compare.b) : null,
+      now: new Date().toISOString().slice(0, 10),
+    });
+  }, [bundle, step, currentDate, filters.metric, filters.showGasNetwork, filters.showOilNetwork,
+      selected, selectedAsset, compare, history]);
+
+  const runExport = async (size: ExportSize) => {
+    const map = mapRef.current;
+    // A click that silently does nothing is worse than an error: the reader is left unsure
+    // whether the file was written.
+    if (!map || !briefingContext) {
+      setExportError("The map is not ready yet. Wait for it to finish loading and try again.");
+      return;
+    }
+    setExportBusy(true);
+    setExportError(null);
+    setExportResult(null);
+    try {
+      const canvas = map.getCanvas();
+      const dims = exportPixelSize(
+        size, canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio);
+      const res = await exportMapPng({ source: map, ...dims });
+      downloadBlob(res.blob, briefingFilename(briefingContext));
+      setExportResult(
+        `Exported ${res.width}×${res.height} in ${Math.round(res.ms)} ms.`);
+    } catch (err) {
+      // Never a blank file: the exporter throws rather than writing an empty image, and the
+      // reason reaches the reader instead of a silent failure.
+      setExportError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setExportBusy(false);
+    }
+  };
+
   // Escape closes the topmost drawer. Non-modal drawers must not trap focus, so this is the
   // dismissal path rather than a focus trap.
   useEffect(() => {
@@ -386,6 +491,7 @@ export default function App() {
         comparing={!!compare}
         onLifecycle={() => setLifecycleOpen((v) => !v)}
         lifecycleOpen={lifecycleOpen}
+        onBriefing={enterBriefing}
       />
       <Filters
         drawer={filtersIsDrawer}
@@ -413,6 +519,7 @@ export default function App() {
         onCamera={setCamera}
         flyTarget={flyTarget}
         layoutSignal={`${layoutMode}:${mapFocus}:${filtersIsDrawer}:${dossierIsDrawer}`}
+        onMapReady={(m) => { mapRef.current = m; }}
         comparison={compare ? {
           stepA: stepFor(bundle.national.dates, compare.a),
           stepB: stepFor(bundle.national.dates, compare.b),
@@ -462,6 +569,18 @@ export default function App() {
         onClear={() => setCompareRegions([])}
         onSelect={selectRegion}
       />
+      {briefing && briefingContext && (
+        <Briefing
+          ctx={briefingContext!}
+          options={briefOptions}
+          onOptions={setBriefOptions}
+          onExit={exitBriefing}
+          onExport={runExport}
+          busy={exportBusy}
+          error={exportError}
+          lastResult={exportResult}
+        />
+      )}
       {methodOpen && <Methodology bundle={bundle} onClose={() => setMethodOpen(false)} />}
       {inspect && (
         <Inspector
