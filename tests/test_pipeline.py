@@ -3888,28 +3888,66 @@ def test_every_curated_csv_parses_without_column_overflow():
 
 
 @needs_build
-def test_the_quality_payload_states_a_state_for_every_sector():
+def test_participation_and_basis_are_independent_axes():
+    """Addendum §1. A single scored/experimental/uncovered ladder conflated two orthogonal
+    facts, and did it in the worst direction: transmission came out "experimental", which reads
+    as excluded from the headline. It is not — it is fully scored in the headline ESDI on an
+    event-burden proxy. Both halves have to be sayable at once."""
     from pipeline.config import SECTORS
     dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
     states = {s["sector"]: s for s in dq["sector_states"]}
     assert set(states) == set(SECTORS)
     for s in SECTORS:
-        assert states[s]["state"] in ("scored", "experimental", "uncovered")
+        assert states[s]["index_participation"] in ("scored", "not_scored")
+        assert states[s]["methodology_basis"] in (
+            "capacity_based", "proxy_capacity_base", "event_burden_proxy",
+            "experimental_census", "uncovered")
+        assert states[s]["basis_explanation"]
 
 
 @needs_build
-def test_a_sector_scored_against_a_chosen_constant_is_not_called_scored():
-    """§15's first priority. Transmission divides by a judgement, not a measured base, and
-    calling it "scored" alongside a capacity share would flatten exactly the distinction the
-    proxy warning exists to preserve."""
+def test_transmission_is_reported_as_scored_despite_resting_on_a_proxy():
+    """The specific misreading this split exists to prevent."""
+    dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
+    t = {s["sector"]: s for s in dq["sector_states"]}["transmission"]
+    assert t["index_participation"] == "scored"
+    assert t["methodology_basis"] == "event_burden_proxy"
+    assert t["mechanism"] == "event_burden"
+
+
+@needs_build
+def test_participation_matches_what_the_composite_actually_covered():
+    """Derived from the build, so a sector that loses its denominator changes side on its own."""
+    snap = _snap()
+    dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
+    covered = set(snap["sectors_covered"])
+    for s in dq["sector_states"]:
+        expected = "scored" if s["sector"] in covered else "not_scored"
+        assert s["index_participation"] == expected, s["sector"]
+
+
+@needs_build
+def test_a_sector_with_an_ungraduated_census_is_not_called_simply_uncovered():
+    """Gas has a real bottom-up census that deliberately has not graduated to scoring. Calling
+    that "uncovered" would lose the distinction between nothing measured and measured-but-not-
+    comparable — and the graduation reasons are the interesting part."""
     dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
     states = {s["sector"]: s for s in dq["sector_states"]}
-    assert states["transmission"]["state"] == "experimental"
-    assert states["transmission"]["mechanism"] == "event_burden"
-    assert states["refining"]["state"] == "scored"
-    for s in ("gas", "coal"):
-        assert states[s]["state"] == "uncovered"
-        assert states[s]["denominator_value"] is None
+    gas = states["gas"]
+    assert gas["index_participation"] == "not_scored"
+    assert gas["methodology_basis"] == "experimental_census"
+    assert gas["experimental_index"]["in_headline_esdi"] is False
+    assert gas["experimental_index"]["graduation_reasons"]
+    assert states["coal"]["methodology_basis"] == "uncovered"
+
+
+@needs_build
+def test_oil_logistics_declares_that_its_denominator_belongs_to_another_sector():
+    dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
+    ol = {s["sector"]: s for s in dq["sector_states"]}["oil_logistics"]
+    assert ol["index_participation"] == "scored"
+    assert ol["methodology_basis"] == "proxy_capacity_base"
+    assert "DIFFERENT sector" in ol["basis_explanation"]
 
 
 @needs_build
@@ -4001,3 +4039,100 @@ def test_the_source_registry_covers_every_sector_that_is_scored():
         covered |= {s.strip() for s in (r.get("sectors") or "").split("|") if s.strip()}
     for sector in ("refining", "oil_logistics", "electric_generation", "transmission"):
         assert sector in covered, f"{sector} has no source in data/curated/sources.csv"
+
+
+# --- capacity-removed applicability (addendum §2) --------------------------
+
+@needs_build
+def test_capacity_unknown_is_measured_against_an_applicable_universe():
+    """UNKNOWN != NOT APPLICABLE. Counting a substation strike as an event with "unknown
+    capacity removed" inflates a known-unknown with events for which this model holds no
+    capacity magnitude at all, and makes the corpus look more incomplete than it is."""
+    audit = _snap()["capacity_measurement_audit"]
+    b = audit["buckets"]
+    assert set(b) == {"measured", "applicable_unknown", "applicable_base_unknown",
+                      "no_modelled_capacity_dimension"}
+    assert sum(b.values()) == audit["total_events"]
+    assert audit["applicable_events"] == (
+        b["measured"] + b["applicable_unknown"] + b["applicable_base_unknown"])
+    # The not-applicable bucket must be a real subset, not everything or nothing.
+    assert 0 < audit["applicable_events"] < audit["total_events"]
+    assert audit["definition"]
+
+
+@needs_build
+def test_transmission_events_are_not_counted_as_unknown_capacity():
+    """A substation carries no capacity magnitude in this model, so "how much was removed" has
+    no unit for it — a different statement from an unanswered question."""
+    audit = _snap()["capacity_measurement_audit"]
+    row = audit["by_asset_class"].get("substation")
+    assert row, "expected substation events in the corpus"
+    assert row["applicable_unknown"] == 0
+    assert row["no_modelled_capacity_dimension"] > 0
+
+
+@needs_build
+def test_the_capacity_statement_quotes_the_applicable_universe():
+    dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
+    audit = _snap()["capacity_measurement_audit"]
+    item = [c for c in dq["cannot_tell_you"]
+            if c["basis"] == "capacity_measurement_audit"][0]
+    assert str(audit["applicable_events"]) in item["answer"]
+    assert "no unit rather than an unknown answer" in item["answer"]
+    # It must never quote the whole corpus as the denominator again.
+    assert f"of {audit['total_events']} events" not in item["answer"]
+
+
+# --- source provenance (addendum §3, §4) -----------------------------------
+
+@needs_build
+def test_a_local_cache_timestamp_never_reads_as_publisher_freshness():
+    """Our filesystem's opinion about a file is not evidence the publisher is current. On a
+    fresh clone the mtime is today for a file that was never downloaded."""
+    from pipeline import data_quality as DQ
+    dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
+    for src in dq["sources"]:
+        assert src["retrieval_basis"] in DQ.RETRIEVAL_LABEL
+        assert src["retrieval_basis_label"] == DQ.RETRIEVAL_LABEL[src["retrieval_basis"]]
+        assert src["retrieval_is_publisher_signal"] == (
+            DQ.RETRIEVAL_IS_PUBLISHER_SIGNAL[src["retrieval_basis"]])
+        if src["retrieval_basis"] in (DQ.RETRIEVAL_CACHE_MTIME, DQ.RETRIEVAL_COMMIT):
+            assert src["retrieval_is_publisher_signal"] is False
+
+
+@needs_build
+def test_our_own_curated_records_date_from_the_repository_not_the_filesystem():
+    """A curated CSV's mtime is when the working copy was last written; the commit date is when
+    the assertion actually entered the record."""
+    from pipeline import data_quality as DQ
+    dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
+    internal = [s for s in dq["sources"] if s["citability"] == "internal_versioned_by_repo"]
+    assert internal, "expected curated sources"
+    for src in internal:
+        assert src["retrieval_basis"] in (DQ.RETRIEVAL_COMMIT, DQ.RETRIEVAL_UNKNOWN)
+
+
+@needs_build
+def test_a_missing_release_id_is_only_a_finding_where_releases_exist_and_matter():
+    """§4. A continuously-edited wiki has no releases to miss, and penalising it would turn a
+    real citation problem into background noise."""
+    dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
+    flagged = {g["source_id"] for g in dq["release_gaps"]}
+    for src in dq["sources"]:
+        if src["source_id"] in flagged:
+            assert src["citability"] == "release_expected_but_absent"
+            assert src["release_gap_matters"] is True
+            assert src["release_gap_note"], src["source_id"]
+        if src["citability"] == "snapshot_of_a_live_source":
+            assert src["source_id"] not in flagged
+    assert set(dq["sources_without_release_identifier"]) == flagged
+
+
+@needs_build
+def test_a_release_identifier_carried_inside_the_data_is_found_rather_than_flagged():
+    """CREA publishes monthly, so its latest reporting month IS an identifiable release.
+    Flagging it was an artefact of not looking inside the file."""
+    dq = json.loads((PROCESSED / "data_quality.json").read_text(encoding="utf-8"))
+    crea = [s for s in dq["sources"] if s["source_id"] == "crea"][0]
+    assert crea["citability"] == "citable_release"
+    assert crea["release_identifier"]

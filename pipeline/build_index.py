@@ -245,6 +245,11 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
         region_context, gpp_census=gpp_census,
     )
 
+    # Where "capacity removed" is a meaningful question at all (addendum §2). Emitted so the
+    # quality view can state a known-unknown against a defensible universe instead of against
+    # every event in the corpus.
+    snapshot["capacity_measurement_audit"] = capacity_measurement_audit(incidents, facility_info)
+
     # --- explanations (iteration 11) --------------------------------------------------------
     # Built AFTER the snapshot so sector explanations can quote the sensitivities and
     # denominator bases the snapshot already publishes, and from the same unrounded fractions
@@ -279,6 +284,65 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
         regional, region_meta, sector_weights, covered, final_reg_fracs,
         lambda fr: _composite_raw(fr, sector_weights, covered))
     return national, regional, snapshot, regional_explanations
+
+
+# Which capacity magnitude, if any, this model holds for each sector. A sector absent from this
+# map has no capacity dimension here at all, so "how much capacity was removed" has no unit to be
+# answered in — a different statement from "we do not know the answer".
+SECTOR_CAPACITY_FIELD = {
+    "refining": "capacity_mtpa",
+    "oil_logistics": "capacity_mtpa",
+    "electric_generation": "capacity_mw",
+    "gas": "capacity_bcm_y",
+}
+
+
+def capacity_measurement_audit(incidents, facility_info):
+    """Split the corpus by whether capacity-removed is answerable, not merely unanswered.
+
+    UNKNOWN is not NOT-APPLICABLE. Counting a substation strike as an event with "unknown
+    capacity removed" inflates a known-unknown with events for which the metric has no unit in
+    this model, and makes the dataset look more incomplete than it is. The honest denominator is
+    the set of events on facilities that carry a modelled capacity magnitude.
+    """
+    buckets = {"measured": 0, "applicable_unknown": 0, "applicable_base_unknown": 0,
+               "no_modelled_capacity_dimension": 0}
+    by_class = {}
+    for inc in incidents:
+        info = facility_info.get(inc.get("asset_id")) or {}
+        sector = info.get("sector")
+        field = SECTOR_CAPACITY_FIELD.get(sector)
+        measured = any(inc.get(k) is not None for k in
+                       ("capacity_affected_mw", "capacity_affected_mtpa",
+                        "capacity_affected_pct"))
+        if measured:
+            bucket = "measured"
+        elif not field:
+            bucket = "no_modelled_capacity_dimension"
+        elif info.get(field) is not None:
+            bucket = "applicable_unknown"
+        else:
+            bucket = "applicable_base_unknown"
+        buckets[bucket] += 1
+        cls = inc.get("asset_class") or "unknown"
+        by_class.setdefault(cls, dict.fromkeys(buckets, 0))
+        by_class[cls][bucket] += 1
+
+    applicable = (buckets["measured"] + buckets["applicable_unknown"]
+                  + buckets["applicable_base_unknown"])
+    return {
+        "total_events": len(incidents),
+        "buckets": buckets,
+        "by_asset_class": by_class,
+        "applicable_events": applicable,
+        "measured_of_applicable": buckets["measured"],
+        "definition": (
+            "Capacity removed is treated as answerable where the struck facility carries a "
+            "capacity magnitude this model holds (MTPA for refining and oil logistics, MW for "
+            "generation, bcm/y for gas processing). Transmission and coal carry no capacity "
+            "magnitude here, so for those the question has no unit rather than an unknown "
+            "answer."),
+    }
 
 
 def _composite_raw(sector_values, weights, covered):

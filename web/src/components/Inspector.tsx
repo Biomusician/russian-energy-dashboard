@@ -923,20 +923,35 @@ function ChangeRow({
 }
 
 
-const STATE_COPY: Record<string, { label: string; blurb: string }> = {
+const PARTICIPATION_COPY: Record<string, { label: string; blurb: string }> = {
   scored: {
-    label: "Scored",
-    blurb: "Measured against a published capacity base.",
+    label: "In the headline index",
+    blurb: "This sector contributes to the published ESDI.",
   },
-  experimental: {
-    label: "Experimental",
-    blurb: "Scored against a chosen constant, not a measured capacity base. Read the caveat.",
+  not_scored: {
+    label: "Not in the index",
+    blurb: "Excluded from the composite and its weight redistributed. Documented strikes here " +
+           "are NOT counted. Excluded is not zero.",
   },
-  uncovered: {
-    label: "Not scored",
-    blurb: "No capacity denominator exists, so this sector is excluded and its weight " +
-           "redistributed. Documented strikes here are NOT counted. Excluded is not zero.",
-  },
+};
+
+const BASIS_LABEL: Record<string, string> = {
+  capacity_based: "capacity base",
+  proxy_capacity_base: "borrowed capacity base",
+  event_burden_proxy: "event-burden proxy",
+  experimental_census: "experimental census",
+  uncovered: "no basis",
+};
+
+/** Tone for the BASIS chip only. Participation is a separate axis and gets its own chip, because
+ *  a sector can be fully scored on a weak basis (transmission) or unscored despite having a
+ *  census (gas) — and one combined badge would misrepresent both. */
+const BASIS_TONE: Record<string, string> = {
+  capacity_based: "ok",
+  proxy_capacity_base: "warn",
+  event_burden_proxy: "warn",
+  experimental_census: "info",
+  uncovered: "muted",
 };
 
 const CITABILITY_COPY: Record<string, string> = {
@@ -986,16 +1001,23 @@ function DataQualityView({
           Three states, and the difference between them decides how the number should be read.
         </p>
         {dq.sector_states.map((s) => (
-          <div key={s.sector} className={`sector-state ${s.state}`}>
+          <div key={s.sector} className={`sector-state ${s.index_participation}`}>
             <div className="sector-state-head">
               <button className="linkish"
                       onClick={() => onDrill({ kind: "sector", sector: s.sector })}>
                 {bundle.taxonomy.sectors[s.sector] ?? titleCase(s.sector)}
               </button>
-              <span className="flag">{STATE_COPY[s.state].label}</span>
+              {/* Two chips, never one. Participation and basis are independent facts and the
+                  combination is the whole point: transmission is IN the headline AND rests on a
+                  proxy. Collapsing them would say one or the other, and both would mislead. */}
+              <span className="flag part">{PARTICIPATION_COPY[s.index_participation].label}</span>
+              <span className={`flag basis ${BASIS_TONE[s.methodology_basis]}`}>
+                {BASIS_LABEL[s.methodology_basis]}
+              </span>
               {s.value != null && <span className="mono">{fmtNum(s.value, 2)}</span>}
             </div>
-            <p className="small">{STATE_COPY[s.state].blurb}</p>
+            <p className="small">{PARTICIPATION_COPY[s.index_participation].blurb}</p>
+            <p className="small">{s.basis_explanation}</p>
             {s.denominator_value != null && (
               <p className="small mono">
                 ÷ {fmtNum(s.denominator_value, 1)} {s.denominator_unit}
@@ -1003,6 +1025,19 @@ function DataQualityView({
               </p>
             )}
             {s.known_bias && <p className="small warn-text">Known bias: {s.known_bias}</p>}
+            {s.experimental_index && (
+              <div className="graduation">
+                <p className="small">
+                  A census of {s.experimental_index.census_plants} plants exists but has not
+                  graduated to scoring
+                  {s.experimental_index.in_headline_esdi === false
+                    && " and is not in the headline ESDI"}:
+                </p>
+                <ul className="tight">
+                  {s.experimental_index.graduation_reasons.map((r, i) => <li key={i}>{r}</li>)}
+                </ul>
+              </div>
+            )}
           </div>
         ))}
       </Block>
@@ -1020,16 +1055,50 @@ function DataQualityView({
         ))}
       </Block>
 
+      {dq.capacity_measurement_audit && (
+        <Block title="Where 'how much capacity was removed' even has a unit">
+          <p className="small">{dq.capacity_measurement_audit.definition}</p>
+          <table className="mini">
+            <tbody>
+              <tr>
+                <td>Events where the question is answerable</td>
+                <td className="mono">{dq.capacity_measurement_audit.applicable_events}</td>
+              </tr>
+              <tr>
+                <td>…of those, with a measured figure</td>
+                <td className="mono">{dq.capacity_measurement_audit.measured_of_applicable}</td>
+              </tr>
+              <tr className="dim">
+                <td>Events with no modelled capacity magnitude</td>
+                <td className="mono">
+                  {dq.capacity_measurement_audit.buckets.no_modelled_capacity_dimension ?? 0}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="small">
+            The last row is not a gap in the record. For those events this model holds no capacity
+            magnitude to remove, so the question has no unit — which is a different fact from an
+            unknown answer.
+          </p>
+        </Block>
+      )}
+
       <Block title="Three dates that are not the same">
         <p>{dq.build_date_is_not_a_source_date}</p>
         <p className="small">{dq.citability_note}</p>
-        {dq.sources_without_release_identifier.length > 0 && (
-          <p className="small warn-text">
-            {dq.sources_without_release_identifier.length} source(s) come from publishers that do
-            issue identifiable releases, but were read without one:{" "}
-            {dq.sources_without_release_identifier.join(", ")}. They cannot be cited as dated
-            publications.
-          </p>
+        {dq.release_gaps.length > 0 && (
+          <div className="release-gaps">
+            <p className="small warn-text">
+              {dq.release_gaps.length} source(s) come from publishers that issue releases bearing
+              on the data in use, but were read without one:
+            </p>
+            <ul className="tight">
+              {dq.release_gaps.map((g) => (
+                <li key={g.source_id}><strong>{g.name}</strong> — {g.note}</li>
+              ))}
+            </ul>
+          </div>
         )}
       </Block>
 
@@ -1059,14 +1128,20 @@ function SourceCard({ src }: { src: SourceRecord }) {
         <dt>Retrieved</dt>
         <dd>
           {src.retrieved_at ? fmtDate(src.retrieved_at) : <span className="unknown">—</span>}
-          {/* Said out loud because a cache-file timestamp on a fresh clone reads as today for a
-              file that was never actually downloaded. */}
-          <span className="small"> ({src.retrieval_basis})</span>
+          {/* Spelled out, because a cache-file timestamp on a fresh clone reads as today for a
+              file that was never actually downloaded — and would otherwise look like evidence
+              that the PUBLISHER is current, which it is not. */}
+          <span className={`small ${src.retrieval_is_publisher_signal ? "" : "ours"}`}>
+            {" "}({src.retrieval_basis_label})
+          </span>
         </dd>
         <dt>Describes</dt>
         <dd>{src.content_vintage ?? <span className="unknown">not stated</span>}</dd>
       </dl>
       <p className="small">{src.freshness.note}</p>
+      {src.release_gap_matters && src.release_gap_note && (
+        <p className="small warn-text">{src.release_gap_note}</p>
+      )}
       {src.limitations.length > 0 && (
         <ul className="tight">{src.limitations.map((l, i) => <li key={i}>{l}</li>)}</ul>
       )}

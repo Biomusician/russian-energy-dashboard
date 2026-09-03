@@ -971,13 +971,30 @@ export interface BuildChanges {
  * silently false afterwards.
  * ------------------------------------------------------------------------- */
 
-/** scored = a measured capacity denominator · experimental = scored against a chosen constant,
- *  not a measured base · uncovered = no denominator exists, so it is excluded entirely. */
-export type SectorState = "scored" | "experimental" | "uncovered";
+/** Whether the sector is inside the headline composite. INDEPENDENT of how it is measured —
+ *  transmission is fully scored in the headline on an event-burden proxy, and a single ladder
+ *  that called it "experimental" would read as excluded. */
+export type IndexParticipation = "scored" | "not_scored";
+
+/** What kind of measurement the sector rests on. Orthogonal to participation. */
+export type MethodologyBasis =
+  | "capacity_based"
+  | "proxy_capacity_base"
+  | "event_burden_proxy"
+  | "experimental_census"
+  | "uncovered";
 
 export interface SectorQuality {
   sector: string;
-  state: SectorState;
+  index_participation: IndexParticipation;
+  methodology_basis: MethodologyBasis;
+  basis_explanation: string;
+  experimental_index: {
+    in_headline_esdi: boolean | null;
+    graduation_decision: string | null;
+    graduation_reasons: string[];
+    census_plants: number | null;
+  } | null;
   mechanism: Mechanism | null;
   value: number | null;
   denominator_value: number | null;
@@ -1018,7 +1035,15 @@ export interface SourceRecord {
   /** What the data describes — distinct from when it was published or fetched. */
   content_vintage: string | null;
   retrieved_at: string | null;
-  retrieval_basis: string;
+  /** Closed vocabulary: a cache mtime is OUR filesystem's opinion and must never read as
+   *  publisher freshness. On a fresh clone it says today for a file never downloaded. */
+  retrieval_basis: "manifest_stated" | "http_source_metadata" | "local_cache_mtime"
+    | "repo_commit_timestamp" | "unknown";
+  retrieval_basis_label: string;
+  retrieval_is_publisher_signal: boolean;
+  /** A missing release id is a finding only where the publisher issues relevant releases. */
+  release_gap_matters: boolean;
+  release_gap_note: string | null;
   frozen_at: string | null;
   freshness: Freshness;
   limitations: string[];
@@ -1038,6 +1063,15 @@ export interface DataQuality {
   sources: SourceRecord[];
   sources_by_freshness: Record<string, number>;
   sources_without_release_identifier: string[];
+  release_gaps: { source_id: string; name: string; note: string | null }[];
   citability_note: string;
+  capacity_measurement_audit: {
+    total_events: number;
+    applicable_events: number;
+    measured_of_applicable: number;
+    buckets: Record<string, number>;
+    by_asset_class: Record<string, Record<string, number>>;
+    definition: string;
+  } | null;
   cannot_tell_you: CannotTellYou[];
 }
