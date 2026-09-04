@@ -3203,6 +3203,44 @@ def test_a_region_whose_signal_merely_rounds_away_is_not_called_empty():
         assert "rounds to 0.00" in e["zero_note"]
 
 
+def test_a_region_whose_only_live_impairment_is_unscorable_says_so_in_the_REAL_payload():
+    """The end-to-end half of the zero taxonomy, which a fabricated fixture cannot prove.
+
+    The unit test below feeds `regional_explanations` a hand-made fraction map containing an
+    uncovered sector. The real scorer could never produce that input: `_share` returns 0 for a
+    sector with no denominator, and the accumulation loop drops the facility before its sector is
+    ever recorded — so for two iterations EVERY region looked identically undisturbed and the
+    ZERO_UNCOVERED_ONLY branch was unreachable. Astrakhan Oblast, carrying a live gas-processing
+    disruption, published "Nothing is recorded as impaired".
+
+    This asserts against the emitted payload instead: any region whose live disruptions are all
+    in uncovered sectors must be classified as unscorable, never as undisturbed.
+    """
+    snap = json.loads((ROOT / "data" / "processed" / "snapshot.json").read_text(encoding="utf-8"))
+    expl = json.loads((ROOT / "data" / "processed" / "explanations_regional.json")
+                      .read_text(encoding="utf-8"))
+    rows = expl.get("regions", expl)
+    covered = set(snap.get("sectors_covered") or [])
+
+    by_region = {}
+    for d in snap.get("live_disruptions") or []:
+        if d.get("region_code"):
+            by_region.setdefault(d["region_code"], set()).add(d.get("sector"))
+
+    unscorable_only = {c: secs for c, secs in by_region.items() if secs and not (secs & covered)}
+    assert unscorable_only, (
+        "no region currently has live impairment confined to an uncovered sector, so this guard "
+        "would pass vacuously — check whether the fixture still exercises the branch")
+
+    for code, secs in unscorable_only.items():
+        row = rows[code]
+        assert row["zero_basis"] == "IMPAIRMENT_ONLY_IN_UNCOVERED_SECTOR", (
+            f"{code} has live impairment only in {sorted(secs)} but reports "
+            f"{row['zero_basis']!r}")
+        assert row["unscored_sectors"], f"{code} names no unscored sector"
+        assert "NOT because nothing happened" in (row["zero_note"] or "")
+
+
 def test_unscorable_impairment_is_not_reported_as_an_undisturbed_region():
     """The branch real data does not currently exercise, and the one that matters most.
 

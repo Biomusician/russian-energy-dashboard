@@ -15,6 +15,7 @@ import {
   DEFAULT_OPTIONS, briefingFilename, buildBriefingContext, exportPixelSize,
 } from "./briefing";
 import { downloadBlob, exportMapPng } from "./mapExport";
+import { drawBriefingFrame } from "./briefingFrame";
 import { fmtNum, loadHistorySeries, loadLifecycle, resolvePoint } from "./data";
 import type maplibregl from "maplibre-gl";
 import type { HistorySeries, LifecyclePayload } from "./types";
@@ -421,7 +422,13 @@ export default function App() {
       const canvas = map.getCanvas();
       const dims = exportPixelSize(
         size, canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio);
-      const res = await exportMapPng({ source: map, ...dims });
+      const res = await exportMapPng({
+        source: map, ...dims,
+        // The framing is drawn INTO the image. On screen it is DOM sitting over the map; in a
+        // file it has to be pixels, or the reader gets a coloured map of Russia with nothing
+        // saying it measures exposure rather than damage.
+        compose: (mapCanvas) => drawBriefingFrame(mapCanvas, briefingContext, briefOptions),
+      });
       downloadBlob(res.blob, briefingFilename(briefingContext));
       setExportResult(
         `Exported ${res.width}×${res.height} in ${Math.round(res.ms)} ms.`);

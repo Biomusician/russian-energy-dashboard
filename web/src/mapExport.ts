@@ -31,6 +31,12 @@ export interface ExportRequest {
   /** Device pixel ratio to render at. Rendering at the requested size directly avoids the
    *  blurry result of capturing small and upscaling afterwards (§12). */
   pixelRatio?: number;
+  /** Draws the briefing frame onto the captured map and returns the canvas to encode.
+   *
+   *  Passed in rather than imported so this module stays a pure capture path, and so the caller
+   *  decides what an image must say. Without it the file is a bare choropleth — which is exactly
+   *  what shipped before, and exactly what must not. */
+  compose?: (mapCanvas: HTMLCanvasElement) => HTMLCanvasElement;
 }
 
 export interface ExportResult {
@@ -157,11 +163,15 @@ export async function exportMapPng(req: ExportRequest): Promise<ExportResult> {
         + "context layer was still loading — wait for the map to settle and try again.");
     }
 
+    // Compose AFTER the blank check: the frame would otherwise paint text over an empty map
+    // and make a failed capture look like a deliberate graphic.
+    const final = req.compose ? req.compose(canvas) : canvas;
+
     const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob((b) => resolve(b), "image/png"));
+      final.toBlob((b) => resolve(b), "image/png"));
     if (!blob) throw new ExportError("the browser could not encode the image.");
 
-    return { blob, width: canvas.width, height: canvas.height, ms: performance.now() - t0 };
+    return { blob, width: final.width, height: final.height, ms: performance.now() - t0 };
   } finally {
     // Runs on success, on failure, and on a throw from anywhere above. A leaked WebGL context
     // is exactly the persistent cost this architecture exists to avoid.

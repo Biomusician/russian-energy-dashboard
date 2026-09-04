@@ -190,9 +190,15 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
     # Every step's unrounded fractions, for the two-date comparison series (P6). Kept from the
     # same loop that scores, so the comparison can never become a second scoring model.
     timeline_fracs, contributor_counts = [], []
+    final_reg_unscored = {}
     for when in timeline:
         nat_sector = collections.defaultdict(float)
         reg_sector = collections.defaultdict(lambda: collections.defaultdict(float))
+        # Live impairment in sectors with NO capacity denominator, kept entirely apart from the
+        # scoring accumulators above. It must never reach the composite — but a region whose only
+        # disruption sits here is NOT a region where nothing is wrong, and the regional
+        # explanation cannot tell those apart unless somebody records the difference.
+        reg_unscored = collections.defaultdict(lambda: collections.defaultdict(float))
 
         contributing_now = []
         for asset_id, incs in incidents_by_facility.items():
@@ -202,6 +208,10 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
             weight, _driver = _facility_weight(incs, when, recovery_by_incident)
             if weight <= 0:
                 continue
+            if info["sector"] not in covered and info["region_code"]:
+                # Recorded, not scored: `_share` returns 0 for an uncovered sector, so this
+                # facility is about to be dropped from every scoring path below.
+                reg_unscored[info["region_code"]][info["sector"]] += weight
             share = _share(info, denominators)
             if share <= 0:
                 continue
@@ -235,6 +245,7 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
         contributor_counts.append(sorted(contributing_now))
         final_nat_fracs = dict(nat_sector)
         final_reg_fracs = {c: dict(v) for c, v in reg_sector.items()}
+        final_reg_unscored = {c: dict(v) for c, v in reg_unscored.items()}
 
     # Bottom-up gas-processing census for the EXPERIMENTAL sub-index (§18). Only assets that
     # carry an explicit bcm/y figure (structured, never parsed from prose) are counted.
@@ -289,7 +300,8 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
     }
     regional_explanations = explain.regional_explanations(
         regional, region_meta, sector_weights, covered, final_reg_fracs,
-        lambda fr: _composite_raw(fr, sector_weights, covered))
+        lambda fr: _composite_raw(fr, sector_weights, covered),
+        unscored_by_region=final_reg_unscored)
 
     # Recovery lifecycle episodes (P7). The trajectory is sampled with the SAME weight function
     # that scores, so the curve a reader sees is the curve the index used — not a second model

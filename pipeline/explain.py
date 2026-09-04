@@ -328,7 +328,7 @@ def sector_explanations(sector_fracs, denominators, snapshot, live, facility_inf
 
 
 def regional_explanations(regional, region_meta, weights, covered, sector_fracs_by_region,
-                          raw_composite_fn=None):
+                          raw_composite_fn=None, unscored_by_region=None):
     """Per-region decomposition, same identities as the headline.
 
     An entry is emitted for EVERY region, not only the ones currently scoring above zero. The
@@ -362,7 +362,13 @@ def regional_explanations(regional, region_meta, weights, covered, sector_fracs_
         raw_published = raw_composite_fn(fr) if raw_composite_fn else raw_total
 
         # Impairment the composite saw nothing of, because the sector has no denominator.
-        unscored = [s for s in uncovered if fr.get(s, 0.0) > 0]
+        #
+        # This CANNOT be read off `fr`: a facility in an uncovered sector contributes a share of
+        # zero, so the scoring loop drops it before it ever reaches the per-region fractions, and
+        # every region looked identically undisturbed. It comes instead from a map the scorer
+        # fills in on the way past, which is the only place the difference is still visible.
+        ur = (unscored_by_region or {}).get(code) or {}
+        unscored = [s for s in uncovered if ur.get(s, 0.0) > 0 or fr.get(s, 0.0) > 0]
         zero_basis = _classify_zero(raw_total, unscored, bool(total_w))
 
         out[code] = {
