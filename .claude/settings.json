@@ -1,0 +1,30 @@
+{
+  "autoCompactEnabled": true,
+  "autoCompactWindow": 600000,
+  "hooks": {
+    "PreCompact": [
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR:-.}/.venv/Scripts/python.exe\" \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/precompact_instructions.py\"",
+            "timeout": 15,
+            "statusMessage": "Applying this project's compaction rules"
+          }
+        ]
+      },
+      {
+        "matcher": "manual",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR:-.}/.venv/Scripts/python.exe\" \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/precompact_instructions.py\"",
+            "timeout": 15,
+            "statusMessage": "Applying this project's compaction rules"
+          }
+        ]
+      }
+    ]
+  }
+}
