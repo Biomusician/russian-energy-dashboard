@@ -31,7 +31,12 @@ export function Sparkline({
   const area = `${pad.toFixed(1)},${(pad + h).toFixed(1)} ${line} ${(pad + w).toFixed(1)},${(pad + h).toFixed(1)}`;
   const mi = markIndex != null ? Math.max(0, Math.min(values.length - 1, markIndex)) : null;
   return (
-    <svg width={width} height={height} role="img" aria-label={ariaLabel} style={{ display: "block", overflow: "visible" }}>
+    // A viewBox plus max-width lets the fixed drawing coordinates scale down inside a narrow
+    // rail. Without it the 300px lifecycle sparkline was silently clipped by the dossier's
+    // overflow-x:hidden between roughly 1560 and 1726px — common unmaximised laptop widths.
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}
+         preserveAspectRatio="xMidYMid meet" role="img" aria-label={ariaLabel}
+         style={{ display: "block", overflow: "visible", maxWidth: "100%" }}>
       <polyline points={area} fill={color} fillOpacity={0.12} stroke="none" />
       <polyline points={line} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
       {mi != null && <circle cx={px(mi)} cy={py(values[mi])} r={2.6} fill={color} />}

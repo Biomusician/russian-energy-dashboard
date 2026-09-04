@@ -105,7 +105,7 @@ bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSele
     <aside
       id="dossier-panel"
       className={`panel dossier${drawer && open ? " drawer-open" : ""}`}
-      aria-hidden={drawer && !open}>
+      aria-hidden={drawer && !open} inert={drawer && !open ? true : undefined}>
       {drawer && (
         <div className="drawer-close">
           <button className="ghost" onClick={onCloseDrawer} aria-label="Close dossier">close ✕</button>

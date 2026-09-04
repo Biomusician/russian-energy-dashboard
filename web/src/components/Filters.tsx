@@ -88,7 +88,7 @@ export default function Filters({
     <aside
       id="filters-panel"
       className={`panel filters${drawer && open ? " drawer-open" : ""}`}
-      aria-hidden={drawer && !open}>
+      aria-hidden={drawer && !open} inert={drawer && !open ? true : undefined}>
       {drawer && (
         <div className="drawer-close">
           <button className="ghost" onClick={onCloseDrawer} aria-label="Close layers panel">close ✕</button>

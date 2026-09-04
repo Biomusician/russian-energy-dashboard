@@ -16,7 +16,8 @@
  *  explanation panel that permanently narrowed it would trade a real problem for a worse one.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import type {
   Bundle, BuildChange, BuildChanges, ChangeNature, ContributingFacility, DataQuality,
   HistorySeries, Incident, RegionExplanation, SectorExplanation, SourceRecord, ZeroBasis,
@@ -70,6 +71,43 @@ export default function Inspector({
   const current = target[target.length - 1];
   const ex = bundle.snapshot.explanations;
 
+  // A dialog that does not take focus is a dialog only to a sighted mouse user: the scrim stops
+  // clicks reaching the page behind, but Tab walked straight through it into controls the reader
+  // cannot see. Focus moves in on open, is kept inside while open, and returns to whatever
+  // opened the panel on close.
+  const panelRef = useRef<HTMLElement | null>(null);
+  const openerRef = useRef<Element | null>(null);
+
+  useEffect(() => {
+    openerRef.current = document.activeElement;
+    panelRef.current?.focus();
+    return () => {
+      const el = openerRef.current;
+      if (el instanceof HTMLElement && document.contains(el)) el.focus();
+    };
+  }, []);
+
+  const onPanelKeyDown = (e: ReactKeyboardEvent) => {
+    if (e.key !== "Tab") return;
+    const root = panelRef.current;
+    if (!root) return;
+    const items = [...root.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),'
+      + ' textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+      .filter((el) => el.offsetParent !== null || el === document.activeElement);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    const active = document.activeElement;
+    if (e.shiftKey && (active === first || active === root)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
@@ -87,7 +125,8 @@ export default function Inspector({
   return (
     <>
       <button className="inspector-scrim" aria-label="Close inspector" onClick={onClose} />
-      <aside className="inspector" role="dialog" aria-label="Evidence inspector">
+      <aside className="inspector" role="dialog" aria-modal="true" ref={panelRef} tabIndex={-1}
+             aria-label="Evidence inspector" onKeyDown={onPanelKeyDown}>
         <div className="section-head inspector-head">
           <div style={{ minWidth: 0 }}>
             <div className="eyebrow">Evidence inspector</div>

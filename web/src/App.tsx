@@ -441,19 +441,23 @@ export default function App() {
     }
   };
 
-  // Escape closes the topmost drawer. Non-modal drawers must not trap focus, so this is the
-  // dismissal path rather than a focus trap.
+  // Escape closes the topmost dismissible thing. Non-modal drawers must not trap focus, so this
+  // is the dismissal path rather than a focus trap.
+  //
+  // Briefing Mode is included because it covers the whole shell: without a key that leaves it,
+  // a keyboard-only reader who entered it had no way back out except finding one button.
   useEffect(() => {
-    if (!filtersOpen && !dossierOpen) return;
+    if (!filtersOpen && !dossierOpen && !briefing) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (inspect) return; // the Inspector is on top and handles its own dismissal
-      if (dossierOpen) setDossierOpen(false);
+      if (briefing) exitBriefing();
+      else if (dossierOpen) setDossierOpen(false);
       else if (filtersOpen) setFiltersOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [filtersOpen, dossierOpen, inspect]);
+  }, [filtersOpen, dossierOpen, inspect, briefing]);
 
   if (error) {
     return (
@@ -482,7 +486,13 @@ export default function App() {
       <LayoutChrome
         mode={layoutMode}
         mapFocus={mapFocus}
-        onToggleMapFocus={() => setMapFocus((v) => !v)}
+        onToggleMapFocus={() => {
+          // Briefing Mode sits on top of map focus. Dropping the floor out from under it left
+          // the briefing frame over a restored three-column grid, and the later "Exit briefing"
+          // then fought the reader by restoring the focus state they had just turned off.
+          if (briefing) exitBriefing();
+          else setMapFocus((v) => !v);
+        }}
         filtersIsDrawer={filtersIsDrawer}
         dossierIsDrawer={dossierIsDrawer}
         filtersOpen={filtersOpen}

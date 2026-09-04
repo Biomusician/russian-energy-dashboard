@@ -1707,6 +1707,14 @@ ol.stages { list-style: none; margin: 6px 0 0; padding: 0 0 0 12px; }
 
 /* A recovery episode names a facility, a family and an outcome. Given its own block rather than
    folded into the selection label, because the family/outcome distinction is the point. */
+/* The Inspector's close/back/drill-down controls are `.ghost`/`.linkish`; without this they
+   relied on the UA default ring while every other control had a styled one. */
+.ghost:focus-visible, .linkish:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
 .brief-episode {
   align-self: flex-start;
   display: flex;
@@ -1786,7 +1794,7 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
 @media print {
   html, body { background: #fff !important; }
   .ribbon, .filters, .dossier, .timeline, .drawer-toggles, .drawer-scrim,
-  .inspector, .inspector-scrim, .brief-controls, .brief-panel,
+  .inspector, .inspector-scrim, .brief-controls, .brief-panel, .compare-tray,
   .maplibregl-ctrl, .camera-controls, [data-export-exclude="true"] {
     display: none !important;
   }
