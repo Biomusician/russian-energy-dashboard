@@ -4875,3 +4875,140 @@ def test_a_known_undercount_states_its_magnitude_not_merely_its_existence():
         assert i.get("series_events_extracted"), f"{i.get('incident_id')} states no extracted count"
         assert i["unenumerated_series_total"] >= i["series_events_extracted"], (
             "a series cannot have fewer reported strikes than dated ones")
+
+
+# --------------------------------------------------------------------------------------------
+# Cross-feature semantic lint (P10 §22).
+#
+# Each of these terms has caused a real, shipped defect in this project. The lint works on
+# SENTENCES and requires a claim and its subject to co-occur, rather than matching a bare
+# substring — the "wheNEVER" false positive is the standing warning that a lint which cries wolf
+# on correct text is one somebody eventually switches off.
+# --------------------------------------------------------------------------------------------
+
+def _sentences_of(path):
+    import re
+    text = path.read_text(encoding="utf-8").lower()
+    for frag in re.split(r"[.\n;!?]", text):
+        yield " ".join(frag.split())
+
+
+def _lint_files():
+    files = list((ROOT / "pipeline").glob("*.py"))
+    files += list((ROOT / "web" / "src").rglob("*.ts")) + list((ROOT / "web" / "src").rglob("*.tsx"))
+    files += [ROOT / "README.md", ROOT / "CLAUDE.md"]
+    files += [ROOT / "docs" / f for f in (
+        "METHODOLOGY.md", "HANDOFF.md", "SCHEMA.md", "SOURCES.md", "CURRENT_STATE.md")]
+    return [f for f in files if f.exists()]
+
+
+def _hits(subject_terms, claim_terms, exempt_terms):
+    """Sentences pairing a subject with a forbidden claim, minus the ones that deny it."""
+    out = []
+    for path in _lint_files():
+        for frag in _sentences_of(path):
+            if not any(s in frag for s in subject_terms):
+                continue
+            if not any(c in frag for c in claim_terms):
+                continue
+            if any(e in frag for e in exempt_terms):
+                continue
+            out.append((path, frag))
+    return out
+
+
+# A denial is the whole point of most of these sentences, so the exemption list is long and
+# shared: this project's prose is mostly ABOUT what the numbers do not mean.
+_DENIAL = ("not ", "never", "cannot", "can't", "no ", "isn't", "is not", "rather than",
+           "instead of", "must ", "would ", "does not", "doesn't", "beware", "misread",
+           "mistake", "wrongly", "false", "forbid", "refus", "avoid", "//", "#")
+
+
+def test_no_text_claims_transmission_measures_grid_capacity():
+    hits = _hits(("transmission", "grid"),
+                 ("percent of capacity offline", "share of the grid offline",
+                  "measured capacity loss", "capacity actually lost"),
+                 _DENIAL)
+    assert not hits, "transmission described as measured capacity loss:\n" + "\n".join(
+        f"  {p}: {f[:130]}" for p, f in hits)
+
+
+def test_no_text_equates_recovery_with_physical_repair():
+    hits = _hits(("recovery", "restored", "restoration"),
+                 ("means the facility was repaired", "proves repair", "confirms repair",
+                  "equals physical reconstitution"),
+                 _DENIAL)
+    assert not hits, "recovery equated with repair:\n" + "\n".join(
+        f"  {p}: {f[:130]}" for p, f in hits)
+
+
+def test_no_text_calls_a_reconstructed_date_an_archive_of_what_was_known():
+    hits = _hits(("date a", "historical", "reconstruct", "comparison"),
+                 ("what the dashboard knew", "what was known at the time",
+                  "archival snapshot", "archive of what was known"),
+                 _DENIAL)
+    assert not hits, "reconstruction described as an archive:\n" + "\n".join(
+        f"  {p}: {f[:130]}" for p, f in hits)
+
+
+def test_no_text_treats_the_build_date_as_a_source_date():
+    hits = _hits(("build date", "build time", "generated"),
+                 ("how current the data", "how fresh the sources", "when the source was published"),
+                 _DENIAL)
+    assert not hits, "build date conflated with source date:\n" + "\n".join(
+        f"  {p}: {f[:130]}" for p, f in hits)
+
+
+def test_no_text_calls_an_experimental_sub_index_part_of_the_headline():
+    hits = _hits(("experimental",),
+                 ("contributes to the composite", "enters the headline",
+                  "included in the index"),
+                 _DENIAL)
+    assert not hits, "experimental measure described as scored:\n" + "\n".join(
+        f"  {p}: {f[:130]}" for p, f in hits)
+
+
+def test_no_text_equates_first_seen_in_this_dashboard_with_publication():
+    hits = _hits(("first seen", "first_seen", "dashboard_first_seen"),
+                 ("when it was published", "when we learned", "when the report appeared",
+                  "publication date"),
+                 _DENIAL)
+    assert not hits, "'first seen in dashboard' equated with publication:\n" + "\n".join(
+        f"  {p}: {f[:130]}" for p, f in hits)
+
+
+def test_no_text_treats_an_unknown_as_a_zero():
+    hits = _hits(("unknown", "no denominator", "uncovered"),
+                 ("counted as zero", "treated as zero", "scored as zero"),
+                 _DENIAL)
+    assert not hits, "unknown treated as zero:\n" + "\n".join(
+        f"  {p}: {f[:130]}" for p, f in hits)
+
+
+def _would_flag(frag, subjects, claims, exempt=_DENIAL):
+    """The matcher, applied to one sentence. Used to prove the lints are not vacuous."""
+    frag = " ".join(frag.lower().split())
+    return (any(s in frag for s in subjects) and any(c in frag for c in claims)
+            and not any(e in frag for e in exempt))
+
+
+def test_the_semantic_lint_actually_fires_on_the_sentences_it_forbids():
+    """Every lint above passes. This proves that is because the prose is clean, not because the
+    matcher never matches — and that a DENIAL of the same claim is still allowed through, which
+    is most of what this project's prose consists of."""
+    assert _would_flag("transmission is the measured capacity loss of the grid",
+                       ("transmission",), ("measured capacity loss",))
+    assert not _would_flag("transmission is NOT measured capacity loss",
+                           ("transmission",), ("measured capacity loss",))
+
+    assert _would_flag("first seen in the dashboard is the publication date",
+                       ("first seen",), ("publication date",))
+    assert not _would_flag("first seen in the dashboard is never the publication date",
+                           ("first seen",), ("publication date",))
+
+    assert _would_flag("a restored facility means the facility was repaired",
+                       ("restored",), ("means the facility was repaired",))
+    assert _would_flag("uncovered sectors are counted as zero",
+                       ("uncovered",), ("counted as zero",))
+    assert _would_flag("date a is an archival snapshot",
+                       ("date a",), ("archival snapshot",))
