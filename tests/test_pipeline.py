@@ -583,6 +583,9 @@ def test_crimea_resolution_and_other_occupied_excluded():
 # A styling word makes "Crimea is never the Russian X" legitimate (it's about the map, not the
 # composite). Anything else pairing Crimea/occupied with a non-contribution claim about the
 # composite/index is the dangerous stale assertion this project has shipped twice.
+import re as _re_for_crimea_lint  # noqa: E402  (module-level, used by _has_negation)
+re = _re_for_crimea_lint
+
 _CRIMEA_LINT_STYLING = (
     "choropleth", "painted", "rendered", "labelled", "labeled", "styl", "colour", "color",
     "mistaken for a russian", "russian region", "russian choropleth", "ordinary russian",
@@ -596,6 +599,16 @@ _CRIMEA_LINT_COMPOSITE = (
     "composite", "national esdi", "national index", "monitored-area", "monitored area index",
     "the index", "the headline",
 )
+
+
+def _has_negation(frag: str) -> bool:
+    """Negation tokens must start on a word boundary.
+
+    Plain substring matching flagged a comment that says the OPPOSITE of the banned claim,
+    because "whenever" contains "never". A lint that cries wolf on correct text gets disabled,
+    which is how the real bug would ship again.
+    """
+    return any(re.search("(?<![a-z0-9])" + re.escape(n), frag) for n in _CRIMEA_LINT_NEGATION)
 
 
 def _scan_files_for_crimea_lint():
@@ -616,7 +629,7 @@ def _scan_files_for_crimea_lint():
             frag = " ".join(frag.split())
             if ("crimea" not in frag and "occupied" not in frag):
                 continue
-            if not any(n in frag for n in _CRIMEA_LINT_NEGATION):
+            if not _has_negation(frag):
                 continue
             if not any(c in frag for c in _CRIMEA_LINT_COMPOSITE):
                 continue
@@ -631,9 +644,13 @@ def test_no_source_text_claims_crimea_is_out_of_the_composite():
     # Self-check: the detector must fire on the exact phrasing this project shipped.
     bad = "crimea (and any esdi-excluded region) contributes to its own regional exposure but never to the national composite"
     frag = " ".join(bad.split())
-    assert (any(n in frag for n in _CRIMEA_LINT_NEGATION)
+    assert (_has_negation(frag)
             and any(c in frag for c in _CRIMEA_LINT_COMPOSITE)
             and not any(s in frag for s in _CRIMEA_LINT_STYLING)), "lint detector is broken"
+    # ...and must not fire on text that says the opposite. "whenever" contains "never".
+    assert not _has_negation(
+        "crimea is in the monitored area and contributes to the index, so the note applies "
+        "whenever the figure is shown"), "lint detector fires on correct text"
     hits = list(_scan_files_for_crimea_lint())
     assert not hits, "stale 'Crimea out of the composite' text found:\n" + "\n".join(
         f"  {p}: {f[:140]}" for p, f in hits)
