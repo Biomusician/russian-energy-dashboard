@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-09-04T09:44:30+00:00",
+  "build_time": "2026-09-04T15:17:21+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -8,8 +8,28 @@
       "optional": false
     },
     {
+      "name": "build_changes.json",
+      "bytes": 2281,
+      "optional": false
+    },
+    {
+      "name": "data_quality.json",
+      "bytes": 26330,
+      "optional": false
+    },
+    {
+      "name": "explanations_regional.json",
+      "bytes": 91321,
+      "optional": false
+    },
+    {
+      "name": "history_series.json",
+      "bytes": 78349,
+      "optional": false
+    },
+    {
       "name": "incidents.json",
-      "bytes": 173098,
+      "bytes": 173275,
       "optional": false
     },
     {
@@ -29,7 +49,12 @@
     },
     {
       "name": "pipeline_registry.json",
-      "bytes": 333151,
+      "bytes": 331189,
+      "optional": false
+    },
+    {
+      "name": "recovery_lifecycle.json",
+      "bytes": 107585,
       "optional": false
     },
     {
@@ -44,7 +69,7 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 200824,
+      "bytes": 252087,
       "optional": false
     },
     {
@@ -64,7 +89,7 @@
     },
     {
       "name": "context_gas_network.geojson",
-      "bytes": 1594569,
+      "bytes": 1592410,
       "optional": true
     },
     {
@@ -74,7 +99,7 @@
     },
     {
       "name": "context_oil_network.geojson",
-      "bytes": 355427,
+      "bytes": 320060,
       "optional": true
     },
     {
