@@ -79,7 +79,7 @@ purpose and both are correct:
 | Build | Command | as_of | ESDI |
 |---|---|---|---|
 | production / release | `python -m pipeline.run` | build day | moves with time decay |
-| frozen regression | `python -m pipeline.run --as-of 2026-08-28` | 2026-08-28 | **18.49**, stable across iterations |
+| frozen regression | `python -m pipeline.run --as-of 2026-08-28` | 2026-08-28 | **18.50**, stable across iterations |
 
 The frozen build is for apples-to-apples methodology comparison ONLY and must never be committed
 as the release payload — it would freeze the live dashboard at a stale date.
