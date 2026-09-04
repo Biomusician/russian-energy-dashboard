@@ -8,11 +8,11 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  CRIMEA_NOTE, DEFAULT_OPTIONS, HISTORICAL_CAVEAT, METRIC_CAVEAT, PIPELINE_CAVEAT,
-  TRANSMISSION_CAVEAT, briefingFilename, briefingSummaryLine, buildBriefingContext, caveatsFor,
-  exportPixelSize,
+  CRIMEA_NOTE, DEFAULT_OPTIONS, EPISODE_FAMILY_CAVEAT, HISTORICAL_CAVEAT, METRIC_CAVEAT,
+  PIPELINE_CAVEAT, TRANSMISSION_CAVEAT, briefingFilename, briefingSummaryLine,
+  buildBriefingContext, caveatsFor, episodeSummary, exportPixelSize,
 } from "./briefing";
-import type { Bundle, HistorySeries } from "./types";
+import type { Bundle, HistorySeries, LifecycleEpisode } from "./types";
 
 function bundle(over: Record<string, unknown> = {}): Bundle {
   return {
@@ -52,6 +52,7 @@ function ctx(over: Record<string, unknown> = {}) {
     compare: null,
     pointA: null,
     pointB: null,
+    episode: null,
     now: "2026-09-03",
     ...over,
   } as Parameters<typeof buildBriefingContext>[0]);
@@ -286,5 +287,88 @@ describe("export dimensions", () => {
   it("never distorts geography by changing only one axis", () => {
     const a = exportPixelSize("1920x1080", 1067, 562, 1);
     expect(a.width / a.height).toBeCloseTo(16 / 9, 5);
+  });
+});
+
+
+describe("recovery episode exports", () => {
+  function ep(over: Partial<LifecycleEpisode> = {}): LifecycleEpisode {
+    return {
+      episode_id: "ep-1",
+      asset_id: "ru-ref-ryazan",
+      asset_name: "Ryazan refinery",
+      asset_class: "Refinery",
+      incident_date: "2026-08-02",
+      evidence_family: "service_restoration",
+      undated_restoration_claim: false,
+      duration_days: 14,
+      duration_start: "2026-08-02",
+      duration_end: "2026-08-16",
+      ...over,
+    } as unknown as LifecycleEpisode;
+  }
+
+  it("names the facility, the family and the observed span", () => {
+    // The gap this closes: entering Briefing Mode from the recovery explorer produced a graphic
+    // that said nothing about the episode on screen.
+    const e = episodeSummary(ep());
+    expect(e.facility).toBe("Ryazan refinery");
+    expect(e.familyLabel).toBe("service restoration");
+    expect(e.outcome).toContain("14 days");
+    expect(e.outcome).toContain("2 Aug 2026");
+  });
+
+  it("never states a restoration date for an estimated horizon", () => {
+    // A projected horizon rendered as a date is how a model becomes an observation in a slide.
+    const e = episodeSummary(ep({ evidence_family: "estimate", duration_days: 45 }));
+    expect(e.outcome).toBe("projected repair horizon, no observed restoration");
+    expect(e.durationDays).toBeNull();
+  });
+
+  it("distinguishes an undated restoration claim from both restored and no evidence", () => {
+    const e = episodeSummary(ep({
+      undated_restoration_claim: true, duration_days: null, duration_end: null,
+    }));
+    expect(e.outcome).toContain("no date recorded");
+    expect(e.outcome).toContain("drives no scoring change");
+  });
+
+  it("says so plainly when there is no recovery evidence", () => {
+    const e = episodeSummary(ep({
+      evidence_family: null, duration_days: null, duration_end: null,
+    }));
+    expect(e.familyLabel).toBe("no recovery evidence");
+    expect(e.outcome).toBe("no recovery evidence");
+  });
+
+  it("adds the family caveat and the reconstruction caveat even at the live date", () => {
+    // A trajectory is rebuilt from the current evidence set whatever date the map is on.
+    const c = ctx({ episode: ep() });
+    expect(c.caveat).toContain(EPISODE_FAMILY_CAVEAT);
+    expect(c.caveat).toContain(HISTORICAL_CAVEAT);
+    expect(c.analyticalDate).toBeNull();
+  });
+
+  it("names the episode in the filename", () => {
+    expect(briefingFilename(ctx({ episode: ep() })))
+      .toBe("energy-disruption-monitor_2026-08-02_recovery_ryazan-refinery.png");
+  });
+
+  it("lets an active comparison keep the filename, since that is what the map shows", () => {
+    const c = ctx({
+      episode: ep(),
+      compare: { a: "2025-08-30", b: "2026-09-03", mode: "delta" },
+      pointA: { requested_date: "2025-08-30", resolved_series_date: "2025-08-30", step: 0, exact: true },
+      pointB: { requested_date: "2026-09-03", resolved_series_date: "2026-09-03", step: 1, exact: true },
+      history,
+    });
+    expect(briefingFilename(c)).toBe("energy-disruption-monitor_2025-08-30_to_2026-09-03.png");
+    // ...but the episode is still described in the frame.
+    expect(c.episode!.facility).toBe("Ryazan refinery");
+  });
+
+  it("carries no coordinates", () => {
+    const blob = JSON.stringify(ctx({ episode: ep() }));
+    expect(blob).not.toMatch(/"lat"|"lon"|coordinates/);
   });
 });

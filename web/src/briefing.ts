@@ -10,8 +10,8 @@
  *  this module is the one place either is decided, and it is unit-tested.
  */
 
-import type { Bundle, HistorySeries, ResolvedPoint } from "./types";
-import { fmtDate, fmtNum } from "./data";
+import type { Bundle, HistorySeries, LifecycleEpisode, ResolvedPoint } from "./types";
+import { FAMILY_LABEL, fmtDate, fmtNum } from "./data";
 
 export interface BriefingOptions {
   title: boolean;
@@ -47,6 +47,7 @@ export interface BriefingContext {
   crimeaNote: string | null;
   sourceFooter: string;
   comparison: ComparisonSummary | null;
+  episode: EpisodeSummary | null;
   buildDelta: BuildDeltaSummary | null;
   selection: string | null;
   provenance: Record<string, string | null>;
@@ -62,6 +63,25 @@ export interface ComparisonSummary {
   delta: string;
   resolvedNote: string | null;
   mode: string;
+}
+
+/** A recovery episode as an exported image must state it.
+ *
+ *  The failure this prevents: a briefing slide that says a facility "recovered" without saying
+ *  which claim was made about it. "Service restored" and "facility reconstituted" are different
+ *  assertions, an estimate is not an observation, and a restoration report with no date is
+ *  neither "restored" nor "no evidence". Each of those distinctions travels in the image.
+ */
+export interface EpisodeSummary {
+  facility: string;
+  assetClass: string | null;
+  disruptionDate: string;
+  family: string;
+  familyLabel: string;
+  /** What is actually claimed, in words: an observed span, a projected horizon, an undated
+   *  report, or no evidence at all. */
+  outcome: string;
+  durationDays: number | null;
 }
 
 export interface BuildDeltaSummary {
@@ -102,6 +122,11 @@ export const HISTORICAL_CAVEAT =
   + "those dates.";
 
 /** §8: concise, and never dropped for a tidier graphic. */
+/** §19: a recovery view names an evidence family, and the families are not interchangeable. */
+export const EPISODE_FAMILY_CAVEAT =
+  "Recovery families are distinct claims: service restored is not the same as a facility "
+  + "rebuilt, and an estimated horizon is not an observation.";
+
 export const CRIMEA_NOTE =
   "Crimea is internationally recognised as part of Ukraine and is shown separately; its "
   + "inclusion in the Monitored-Area index is an analytical choice.";
@@ -126,6 +151,10 @@ export function briefingFilename(ctx: BriefingContext, ext = "png"): string {
     return `${base}_${sanitize(ctx.comparison.aResolved)}_to_`
       + `${sanitize(ctx.comparison.bResolved)}.${ext}`;
   }
+  if (ctx.episode) {
+    return `${base}_${sanitize(ctx.episode.disruptionDate)}_recovery_`
+      + `${sanitize(ctx.episode.facility)}.${ext}`;
+  }
   const date = ctx.analyticalDate ?? ctx.asOf;
   const metric = ctx.metricId === "esdi_delta_30d" ? "30d-change"
     : ctx.metricId === "esdi_delta_90d" ? "90d-change"
@@ -139,12 +168,44 @@ export function caveatsFor(opts: {
   transmissionVisible: boolean;
   pipelinesVisible: boolean;
   historical: boolean;
+  episode?: boolean;
 }): string[] {
   const out = [METRIC_CAVEAT[opts.metricId] ?? METRIC_CAVEAT.esdi];
   if (opts.transmissionVisible) out.push(TRANSMISSION_CAVEAT);
   if (opts.pipelinesVisible) out.push(PIPELINE_CAVEAT);
   if (opts.historical) out.push(HISTORICAL_CAVEAT);
+  if (opts.episode) out.push(EPISODE_FAMILY_CAVEAT);
   return out;
+}
+
+/** Reduce an episode to the few facts an exported image must carry.
+ *
+ *  Deliberately does NOT state a restoration date for the estimate family: a projected horizon
+ *  rendered as a date is exactly how a model becomes an observation in somebody's slide deck.
+ */
+export function episodeSummary(e: LifecycleEpisode): EpisodeSummary {
+  const family = e.evidence_family ?? "none";
+  let outcome: string;
+  if (family === "estimate") {
+    outcome = "projected repair horizon, no observed restoration";
+  } else if (e.undated_restoration_claim) {
+    outcome = "restoration reported, no date recorded — on no timeline, drives no scoring change";
+  } else if (e.duration_days != null && e.duration_end) {
+    outcome = `${e.duration_days} days, ${fmtDate(e.duration_start)} to ${fmtDate(e.duration_end)}`;
+  } else if (family === "none") {
+    outcome = "no recovery evidence";
+  } else {
+    outcome = "recovery evidence present, span not measurable";
+  }
+  return {
+    facility: e.asset_name ?? e.asset_id,
+    assetClass: e.asset_class,
+    disruptionDate: e.incident_date,
+    family,
+    familyLabel: FAMILY_LABEL[family] ?? family,
+    outcome,
+    durationDays: family === "estimate" ? null : e.duration_days,
+  };
 }
 
 export function buildBriefingContext(args: {
@@ -159,6 +220,8 @@ export function buildBriefingContext(args: {
   compare: { a: string; b: string; mode: string } | null;
   pointA: ResolvedPoint | null;
   pointB: ResolvedPoint | null;
+  /** The recovery episode the reader has open, if any (§19). */
+  episode: LifecycleEpisode | null;
   /** Wall-clock at export time. Passed in rather than read here so the function stays pure. */
   now: string;
 }): BriefingContext {
@@ -208,12 +271,17 @@ export function buildBriefingContext(args: {
     }
     : null;
 
+  const episode = args.episode ? episodeSummary(args.episode) : null;
+
   const transmissionVisible = (bundle.snapshot.sectors_covered ?? []).includes("transmission");
   const caveats = caveatsFor({
     metricId,
     transmissionVisible: transmissionVisible && metricId === "esdi",
     pipelinesVisible: args.pipelinesVisible,
-    historical: !!comparison || !isLive,
+    // A recovery trajectory is reconstructed from the current evidence set whatever date the map
+    // is on, so it earns the reconstruction caveat even at the live date.
+    historical: !!comparison || !isLive || !!episode,
+    episode: !!episode,
   });
 
   // Crimea is in the monitored area and contributes to the index, so the note applies whenever
@@ -233,6 +301,7 @@ export function buildBriefingContext(args: {
     crimeaNote: crimeaInScope ? CRIMEA_NOTE : null,
     sourceFooter: SOURCE_FOOTER,
     comparison,
+    episode,
     buildDelta,
     selection: args.selectionLabel,
     provenance: {

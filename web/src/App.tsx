@@ -15,9 +15,9 @@ import {
   DEFAULT_OPTIONS, briefingFilename, buildBriefingContext, exportPixelSize,
 } from "./briefing";
 import { downloadBlob, exportMapPng } from "./mapExport";
-import { fmtNum, loadHistorySeries, resolvePoint } from "./data";
+import { fmtNum, loadHistorySeries, loadLifecycle, resolvePoint } from "./data";
 import type maplibregl from "maplibre-gl";
-import type { HistorySeries } from "./types";
+import type { HistorySeries, LifecyclePayload } from "./types";
 import ComparisonTray from "./components/ComparisonTray";
 import { useLayoutMode } from "./useLayoutMode";
 import { LayoutChrome } from "./components/LayoutChrome";
@@ -88,9 +88,17 @@ export default function App() {
   // not leave the reader in a stripped-down interface they did not choose.
   const preBriefing = useRef<{ mapFocus: boolean; dossier: boolean; filters: boolean } | null>(null);
 
+  const [lifecycleData, setLifecycleData] = useState<LifecyclePayload | null>(null);
+
   useEffect(() => {
     if (briefing) loadHistorySeries().then(setHistory);
   }, [briefing]);
+
+  // The exported frame must be able to name the episode the reader has open, so the payload is
+  // fetched whenever an episode is selected — not only while the explorer panel is mounted.
+  useEffect(() => {
+    if (lifecycleEpisode && !lifecycleData) loadLifecycle().then(setLifecycleData);
+  }, [lifecycleEpisode, lifecycleData]);
 
   const enterBriefing = () => {
     preBriefing.current = { mapFocus, dossier: dossierOpen, filters: filtersOpen };
@@ -390,10 +398,13 @@ export default function App() {
       compare: compare ? { a: compare.a, b: compare.b, mode: compare.mode } : null,
       pointA: compare ? resolvePoint(dates, compare.a) : null,
       pointB: compare ? resolvePoint(dates, compare.b) : null,
+      episode: lifecycleEpisode
+        ? lifecycleData?.episodes.find((e) => e.episode_id === lifecycleEpisode) ?? null
+        : null,
       now: new Date().toISOString().slice(0, 10),
     });
   }, [bundle, step, currentDate, filters.metric, filters.showGasNetwork, filters.showOilNetwork,
-      selected, selectedAsset, compare, history]);
+      selected, selectedAsset, compare, history, lifecycleEpisode, lifecycleData]);
 
   const runExport = async (size: ExportSize) => {
     const map = mapRef.current;

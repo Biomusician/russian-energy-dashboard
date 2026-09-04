@@ -163,6 +163,21 @@ export function fmtNum(n: number | null | undefined, digits = 1): string {
  *  spells the same class "LNG terminal"). */
 const ACRONYMS: Record<string, string> = { lng: "LNG", gpp: "GPP", chp: "CHP", npp: "NPP", hv: "HV" };
 
+/** Evidence families, spelled the same way everywhere.
+ *
+ *  Shared rather than duplicated because the distinction is load-bearing: "service restored" and
+ *  "facility reconstituted" are different claims about different things, and an exported image
+ *  that blurs them is the misreading P7 exists to prevent.
+ */
+export const FAMILY_LABEL: Record<string, string> = {
+  service_restoration: "service restoration",
+  unit_restart: "unit restart",
+  facility_reconstitution: "facility reconstitution",
+  flow_rerouting: "flow rerouting",
+  estimate: "estimate",
+  none: "no recovery evidence",
+};
+
 export function titleCase(key: string): string {
   return key
     .replace(/_/g, " ")

@@ -19,7 +19,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Bundle, LifecyclePayload, LifecycleEpisode, Milestone } from "../types";
-import { fmtDate, fmtNum, loadLifecycle, titleCase } from "../data";
+import { FAMILY_LABEL, fmtDate, fmtNum, loadLifecycle, titleCase } from "../data";
 import { Sparkline, hostOf } from "./ui";
 import type { InspectTarget } from "./Inspector";
 import type { CompareState } from "./Comparison";
@@ -32,15 +32,6 @@ const STAGE_LABEL: Record<string, string> = {
   unit_restart: "Unit restarted",
   physical_reconstitution: "Physically reconstituted",
   estimated_restoration: "Estimated restoration",
-};
-
-const FAMILY_LABEL: Record<string, string> = {
-  service_restoration: "service restoration",
-  unit_restart: "unit restart",
-  facility_reconstitution: "facility reconstitution",
-  flow_rerouting: "flow rerouting",
-  estimate: "estimate",
-  none: "no recovery evidence",
 };
 
 /** Where a milestone sits relative to an active two-date comparison (§14). Computed from dates

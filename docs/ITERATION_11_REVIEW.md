@@ -118,13 +118,51 @@ text with the caveat still emphasised.
 The **Map Brief** (one page, map-centric) ships. The multi-page **Analyst Report** does not — it
 was explicitly optional and would have expanded scope without improving the core deliverable.
 
+### Per-view verification (§26)
+
+Each view listed in §26 was driven in the browser and its exported framing read back.
+
+| View | Framing carried | Result |
+|---|---|---|
+| Headline ESDI | value 16.69, as-of, exposure + transmission caveats, scope, Crimea, sources | pass |
+| 30-day delta | change caveat only — the exposure caveat correctly absent | pass |
+| Selected region | `Krasnodar Krai · 3.07`, no coordinates | pass |
+| Infrastructure-heavy | no pipeline-geometry caveat (points, not networks) | pass |
+| Gas/oil context | pipeline-geometry caveat added; exported 1920×1080, 383 KB | pass |
+| Date A/B Δ | both dates, both values, +12.35, resolution note, reconstruction caveat | pass |
+| Recovery episode | **failed — see below**, then fixed and re-verified | fixed |
+
+**The defect this pass found.** Entering Briefing Mode from the recovery lifecycle explorer
+produced a graphic that said nothing whatever about the episode on screen — with a comparison
+also open it exported the comparison framing and the comparison filename, and with the comparison
+closed it exported the plain headline. A reader would have received a briefing image titled after
+something they were not looking at.
+
+The briefing context now carries the selected episode, and states the four things that make a
+recovery claim readable: the facility, the disruption date, the **evidence family**, and what was
+actually claimed. Family semantics are preserved verbatim from P7 — an estimate never gets a
+restoration date (`projected repair horizon, no observed restoration`), and an undated
+restoration report is neither "restored" nor "no evidence" (`restoration reported, no date
+recorded — on no timeline, drives no scoring change`). A recovery view also earns the
+reconstruction caveat at any date, because a trajectory is rebuilt from the current evidence set
+whatever the map is showing, plus a family caveat saying the families are distinct claims.
+
+Verified after the fix:
+`energy-disruption-monitor_2026-08-11_recovery_orsk-refinery-orsknefteorgsintez.png`,
+1920×1080, 382 KB, `leftover: 0`.
+
+`FAMILY_LABEL` moved to `data.ts` so the explorer and the exporter spell the families
+identically rather than drifting apart in two files.
+
 ### Performance
 
-- Export at 1920×1080: **1227 ms** end to end, including creating the temporary map, loading the
-  style, rendering and encoding.
-- The same export at 2400×1350 (before the pixel-size fix) took 13776 ms — but both figures are
-  inflated by the harness, which only advances animation frames when a screenshot forces a paint.
-  Real-browser latency will be materially lower and is **not** claimed here.
+- Export at 1920×1080: **521 ms** end to end with a warm style — creating the temporary map,
+  loading the style, rendering and encoding. Output 382 KB.
+- Earlier runs of the same export measured 1227 ms and 11113 ms. The spread is the harness, not
+  the code: this pane only advances animation frames when a screenshot forces a paint, so an
+  export's wall-clock depends on how often something happens to force one. The 521 ms figure is
+  the closest to real and still an upper bound. Real-browser latency is **not** claimed here.
+- The 2400×1350 run before the pixel-size fix took 13776 ms, for the same reason.
 - Persistent interactive cost: **zero by construction**. Nothing about the main map changed.
 
 ### Limitations

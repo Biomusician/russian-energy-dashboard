@@ -69,6 +69,18 @@ export default function Briefing({
           </div>
         )}
 
+        {ctx.episode && (
+          <div className="brief-episode">
+            <span className="eyebrow">Recovery episode</span>
+            <strong>{ctx.episode.facility}</strong>
+            <span className="dim">
+              {ctx.episode.assetClass ? `${ctx.episode.assetClass} · ` : ""}
+              disrupted {fmtDate(ctx.episode.disruptionDate)}
+            </span>
+            <span>{ctx.episode.familyLabel} — {ctx.episode.outcome}</span>
+          </div>
+        )}
+
         {options.selectionLabel && ctx.selection && (
           <div className="brief-selection">{ctx.selection}</div>
         )}

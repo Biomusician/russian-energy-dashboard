@@ -1705,6 +1705,23 @@ ol.stages { list-style: none; margin: 6px 0 0; padding: 0 0 0 12px; }
 .brief-compare .mono { font-size: 10px; color: var(--text-faint); }
 .brief-resolved { flex-basis: 100%; margin: 2px 0 0; font-size: 10px; color: var(--amber); }
 
+/* A recovery episode names a facility, a family and an outcome. Given its own block rather than
+   folded into the selection label, because the family/outcome distinction is the point. */
+.brief-episode {
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: rgba(3, 5, 7, 0.78);
+  border-left: 2px solid var(--amber);
+  padding: 6px 10px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text);
+}
+.brief-episode strong { font-size: 13px; }
+.brief-episode .dim { font-size: 10.5px; color: var(--text-faint); }
+
 .brief-selection {
   align-self: flex-start;
   background: rgba(3, 5, 7, 0.78);
@@ -1787,12 +1804,14 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
   /* The framing must survive on paper: dark-on-dark overlays become readable text. */
   .briefing-frame { position: static; padding: 0; }
   .brief-head, .brief-foot { background: none !important; margin: 0; padding: 8px 0; color: #111; }
-  .brief-head h1, .brief-value, .brief-selection, .brief-compare strong { color: #111 !important; }
+  .brief-head h1, .brief-value, .brief-selection, .brief-episode strong,
+  .brief-compare strong { color: #111 !important; }
   .brief-metric, .brief-asof, .brief-foot { color: #333 !important; }
   .brief-caveat { color: #8a5a00 !important; font-weight: 600; }
-  .brief-compare, .brief-selection {
+  .brief-compare, .brief-selection, .brief-episode {
     background: none !important;
     border: 1px solid #999 !important;
+    color: #111 !important;
   }
   .brief-sources { color: #555 !important; }
 }
