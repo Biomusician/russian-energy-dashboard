@@ -4821,3 +4821,57 @@ def test_the_real_corpus_reports_no_episode_as_evidence_free():
         has_family = bool(e["evidence_family"])
         has_claim = bool(e["undated_restoration_claim"])
         assert has_family or has_claim, e["episode_id"]
+
+
+def test_no_source_claims_a_publisher_retrieval_signal_from_a_timestamp_we_wrote():
+    """A date this repository generated must never be presented as coming from the publisher.
+
+    ENTSOG shipped for one iteration as the only source in the build with
+    `retrieval_is_publisher_signal: true` — on the strength of `date.today()` written by our own
+    importer into our own manifest. Same class of error as reading a file mtime and calling it a
+    release date, just laundered through a JSON file we authored.
+    """
+    dq = json.loads((ROOT / "data" / "processed" / "data_quality.json").read_text(encoding="utf-8"))
+    for s in dq["sources"]:
+        if s["retrieval_is_publisher_signal"]:
+            assert s["retrieval_basis"] == "http_source_metadata", (
+                f"{s['source_id']} claims a publisher retrieval signal from "
+                f"{s['retrieval_basis']!r}, which this repository generates itself")
+
+
+def test_a_month_precision_date_uses_the_same_rule_in_the_ledger_as_in_the_scorer():
+    """One date rule, everywhere.
+
+    `_is_new_in_world` compared ISO strings, which looks equivalent to comparing dates and is
+    not: "2023-05" sorts before "2023-05-01" as text, while every other module in this pipeline
+    anchors a month to day 01 and treats them as the same day. The same two-rules-for-one-concept
+    bug already dropped seven month-precision events from a cumulative count.
+    """
+    from pipeline import diff_builds
+    # Month precision, previous build's as_of on the first of that month: the same day.
+    assert diff_builds._is_new_in_world("2023-05", "2023-05-01") is True
+    assert diff_builds._is_new_in_world("2023-05", "2023-06-01") is False
+    assert diff_builds._is_new_in_world("2023-06", "2023-05-01") is True
+    # Day precision keeps behaving exactly as before.
+    assert diff_builds._is_new_in_world("2026-09-03", "2026-09-03") is True
+    assert diff_builds._is_new_in_world("2026-09-02", "2026-09-03") is False
+    # Unparseable input is never announced as a world event.
+    assert diff_builds._is_new_in_world("not-a-date", "2026-09-03") is False
+
+
+def test_a_known_undercount_states_its_magnitude_not_merely_its_existence():
+    """"At least 16 times" with three datable strikes is an undercount of thirteen.
+
+    The count was extracted and written onto the facility, then read by nobody: only a boolean
+    reached the incident, so the UI could say "series undercounted" without saying by how much.
+    Both the methodology doc and the fetcher's own docstring claimed the number was available.
+    """
+    incidents = json.loads((ROOT / "data" / "processed" / "incidents.json")
+                           .read_text(encoding="utf-8"))
+    flagged = [i for i in incidents if i.get("part_of_unenumerated_series")]
+    assert flagged, "no unenumerated series in the corpus — this guard would pass vacuously"
+    for i in flagged:
+        assert i.get("unenumerated_series_total"), f"{i.get('incident_id')} states no total"
+        assert i.get("series_events_extracted"), f"{i.get('incident_id')} states no extracted count"
+        assert i["unenumerated_series_total"] >= i["series_events_extracted"], (
+            "a series cannot have fewer reported strikes than dated ones")

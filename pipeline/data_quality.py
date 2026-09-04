@@ -37,24 +37,34 @@ from pipeline.util import read_csv
 # matters: a local cache file's modification time is OUR filesystem's opinion, and must never be
 # rendered in a way that reads as the publisher's freshness. On a fresh clone it says today for a
 # file that was never downloaded.
-RETRIEVAL_MANIFEST = "manifest_stated"
+RETRIEVAL_MANIFEST = "fetch_manifest"
 RETRIEVAL_HTTP = "http_source_metadata"
 RETRIEVAL_CACHE_MTIME = "local_cache_mtime"
 RETRIEVAL_COMMIT = "repo_commit_timestamp"
 RETRIEVAL_UNKNOWN = "unknown"
 
 RETRIEVAL_LABEL = {
-    RETRIEVAL_MANIFEST: "stated by the source manifest",
+    RETRIEVAL_MANIFEST: "recorded by our fetcher - our clock, not the publisher's",
     RETRIEVAL_HTTP: "from HTTP response metadata",
     RETRIEVAL_CACHE_MTIME: "local cache file timestamp - our filesystem, not the publisher",
     RETRIEVAL_COMMIT: "when the record last changed in this repository",
     RETRIEVAL_UNKNOWN: "not recorded",
 }
 
-# Whether a retrieval date says anything at all about the PUBLISHER. Only a manifest or HTTP
-# date does; the other two describe this repository.
+# Whether a retrieval date says anything at all about the PUBLISHER.
+#
+# Only an HTTP response date does. Every manifest in this repository is written by our OWN
+# fetchers from our OWN wall clock - `import_entsog.py` literally stores `date.today()` - so a
+# manifest date is a record of when we fetched, not a signal from the source. It read as
+# publisher-stated for one iteration, which made ENTSOG the single source in the build claiming
+# a trustworthy publisher date on the strength of a timestamp we wrote ourselves. That is the
+# exact confusion this enum exists to prevent, arrived at through a self-authored file instead
+# of a raw mtime.
+#
+# RETRIEVAL_HTTP is currently never produced: nothing here reads response metadata. It stays
+# defined because the distinction is real, and an empty true-branch is honest.
 RETRIEVAL_IS_PUBLISHER_SIGNAL = {
-    RETRIEVAL_MANIFEST: True,
+    RETRIEVAL_MANIFEST: False,
     RETRIEVAL_HTTP: True,
     RETRIEVAL_CACHE_MTIME: False,
     RETRIEVAL_COMMIT: False,

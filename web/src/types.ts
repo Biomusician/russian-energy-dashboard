@@ -33,6 +33,10 @@ export interface Incident {
   notes?: string | null;
   conflicting_reports?: boolean;
   part_of_unenumerated_series?: boolean;
+  /** What the source claims the true count is ("at least 16 times"), and how many of those
+   *  carried an extractable date. The gap between them is a stated undercount. */
+  unenumerated_series_total?: number;
+  series_events_extracted?: number;
   capacity_affected_mw?: number | null;
   capacity_affected_mtpa?: number | null;
   capacity_affected_pct?: number | null;
@@ -1037,7 +1041,7 @@ export interface SourceRecord {
   retrieved_at: string | null;
   /** Closed vocabulary: a cache mtime is OUR filesystem's opinion and must never read as
    *  publisher freshness. On a fresh clone it says today for a file never downloaded. */
-  retrieval_basis: "manifest_stated" | "http_source_metadata" | "local_cache_mtime"
+  retrieval_basis: "fetch_manifest" | "http_source_metadata" | "local_cache_mtime"
     | "repo_commit_timestamp" | "unknown";
   retrieval_basis_label: string;
   retrieval_is_publisher_signal: boolean;

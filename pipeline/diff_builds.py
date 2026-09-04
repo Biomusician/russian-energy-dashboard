@@ -45,6 +45,7 @@ ledger sets `attribution_separable = false` and says the movement is not separab
 manufacturing an exact split it has no basis for.
 """
 
+import datetime as dt
 import json
 
 from pipeline import build_manifest
@@ -116,6 +117,11 @@ INCIDENT_TRACKED = (
 )
 
 
+def _as_day(raw):
+    """Month precision anchors to day 01, exactly as the scorer does."""
+    return dt.date.fromisoformat(raw if len(raw) == 10 else raw + "-01")
+
+
 def _is_new_in_world(effective_date, previous_as_of):
     """Did this happen since we last looked?
 
@@ -126,7 +132,14 @@ def _is_new_in_world(effective_date, previous_as_of):
     """
     if not effective_date or not previous_as_of:
         return False
-    return effective_date >= previous_as_of
+    # ONE date rule, the same one the scorer uses. String comparison looked equivalent and is
+    # not: a month-precision "2023-05" sorts BEFORE "2023-05-01" as text, while every other
+    # module anchors it TO "2023-05-01" and calls them equal. The same "two rules for one
+    # concept" bug already cost this project seven silently dropped events elsewhere.
+    try:
+        return _as_day(effective_date) >= _as_day(previous_as_of)
+    except ValueError:
+        return False
 
 
 def _incident_changes(prev, curr, previous_as_of):

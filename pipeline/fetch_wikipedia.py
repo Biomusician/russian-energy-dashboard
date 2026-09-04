@@ -200,6 +200,13 @@ def build():
             if unenumerated is not None:
                 for inc in row_incidents:
                     inc["part_of_unenumerated_series"] = True
+                    # The MAGNITUDE, not just the fact. "At least 16 times" with three
+                    # extractable dates is a known undercount of thirteen; a bare "series
+                    # undercounted" tag tells a reader something is missing without telling
+                    # them how much, which is the difference between a stated limitation and
+                    # a shrug. The number was computed here and then read by nobody.
+                    inc["unenumerated_series_total"] = unenumerated
+                    inc["series_events_extracted"] = len(row_incidents)
                 facilities[-1]["unenumerated_events"] = unenumerated
             incidents.extend(row_incidents)
 

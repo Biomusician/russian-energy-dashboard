@@ -194,7 +194,18 @@ export function EventRow({
         <span className={`tag ${incident.confidence}`}>{incident.confidence}</span>
         {incident.date_precision === "month" && <span className="tag">month precision</span>}
         {incident.conflicting_reports && <span className="tag conflict">sources conflict</span>}
-        {incident.part_of_unenumerated_series && <span className="tag">series undercounted</span>}
+        {incident.part_of_unenumerated_series && (
+          <span className="tag" title={
+            incident.unenumerated_series_total
+              ? `The source reports at least ${incident.unenumerated_series_total} strikes on `
+                + `this facility but dates only ${incident.series_events_extracted}. The rest `
+                + `cannot become events here, so this is a known undercount.`
+              : "The source reports more strikes than it dates. Known undercount."}>
+            {incident.unenumerated_series_total
+              ? `${incident.series_events_extracted} of ≥${incident.unenumerated_series_total} dated`
+              : "series undercounted"}
+          </span>
+        )}
         {showRegion && regionName && <span className="tag">{regionName}</span>}
       </div>
       {incident.attribution === "reported_ukrainian_strike" && (
