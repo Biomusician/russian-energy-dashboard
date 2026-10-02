@@ -110,9 +110,13 @@ export default function Filters({
       </div>
 
       <div className="ctl-group">
+        {/* The eyebrow above is a div, so it labels this control visually and not at all for a
+            screen reader. aria-label rather than a <label for>: the visible text is a section
+            heading for the group, not a field label, and duplicating it would read twice. */}
         <div className="eyebrow" style={{ marginBottom: 6 }}>Choropleth</div>
         <select
           className="ghost"
+          aria-label="Choropleth metric"
           value={filters.metric}
           onChange={(e) => setFilters((f) => ({ ...f, metric: e.target.value as FilterState["metric"] }))}
         >
@@ -135,6 +139,7 @@ export default function Filters({
         <div className="eyebrow" style={{ marginBottom: 6 }}>Recent-activity halos</div>
         <select
           className="ghost"
+          aria-label="Recent-activity halo window"
           value={filters.activityWindow}
           onChange={(e) => setFilters((f) => ({ ...f, activityWindow: e.target.value as FilterState["activityWindow"] }))}
         >

@@ -1201,7 +1201,9 @@ export default function MapPanel({
     : "Change in ESDI · 90 days";
 
   return (
-    <div className="mapwrap">
+    // <main>, not a div: the map IS the workspace, and without a main landmark a screen-reader
+    // user had no way to skip the rails and reach it.
+    <main className="mapwrap" aria-label="Disruption map">
       <div ref={container} className="map" />
 
       {/* Context geography labels — HTML overlays, so the map needs no glyph endpoint. */}
@@ -1390,7 +1392,7 @@ export default function MapPanel({
           alsoHere={assetHover.alsoHere}
         />
       )}
-    </div>
+    </main>
   );
 }
 
