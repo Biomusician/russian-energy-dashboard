@@ -29,11 +29,11 @@
 ## Transmission (event-burden, theatre-concentrated)
 - **Headline value**: 9.69 at saturation 8.0
 - **Sensitivity range across saturations**: 4.85–19.38
-- **Top-theatre share**: 55.0% over 2 region(s)
+- **Top-theatre share**: 54.9% over 2 region(s)
 
 ## Strategic effects (source-backed, observational)
 - **National/macro datapoints**: 8
 - **Per-incident effects**: 18 across 15 incidents
 
 ## Tests
-- **Python test functions** (`tests/test_pipeline.py`): 334 (pytest reports more cases — some functions are parametrized)
+- **Python test functions** (`tests/test_pipeline.py`): 341 (pytest reports more cases — some functions are parametrized)

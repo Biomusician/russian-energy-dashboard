@@ -823,11 +823,14 @@ export interface Explanations {
   sectors: Record<string, SectorExplanation>;
 }
 
-/** The four ways a published 0.00 can arise. They are different facts, and collapsing them is
- *  how UNKNOWN silently becomes ZERO. Null when the figure is not actually zero. */
+/** The ways a published 0.00 can arise. They are different facts, and collapsing them is how
+ *  UNKNOWN silently becomes ZERO. Null when the figure is not actually zero. */
 export type ZeroBasis =
   | "NO_RECORDED_IMPAIRMENT"
   | "IMPAIRMENT_ONLY_IN_UNCOVERED_SECTOR"
+  /** Impairment in a sector the index DOES score, at a facility with no capacity figure: there
+   *  is no numerator, so it contributes nothing. An inventory gap, not an absence of damage. */
+  | "COVERED_IMPAIRMENT_WITH_NO_CAPACITY_FIGURE"
   | "COVERED_SECTOR_SIGNAL_ROUNDS_TO_ZERO"
   | "NOT_APPLICABLE"
   | null;
@@ -851,6 +854,8 @@ export interface RegionExplanation {
   reconciles: boolean;
   zero_basis: ZeroBasis;
   unscored_sectors: string[];
+  /** Covered sectors impaired here that the index could not size. Optional: absent in N-1. */
+  unsized_sectors?: string[];
   zero_note: string | null;
 }
 

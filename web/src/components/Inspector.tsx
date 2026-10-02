@@ -440,14 +440,17 @@ function FacilityRow({
   );
 }
 
-/** The four ways a 0.00 arises, rendered so a reader can tell which one they are looking at.
+/** The ways a 0.00 arises, rendered so a reader can tell which one they are looking at.
  *  A signal that merely rounds away is the one most likely to be misread as absence, so it
  *  shows its raw value. */
 function ZeroExplanation({
   basis, note, raw,
 }: { basis: ZeroBasis; note: string | null; raw: number }) {
   if (!basis) return null;
-  const alarming = basis === "IMPAIRMENT_ONLY_IN_UNCOVERED_SECTOR";
+  // Both of these are zeros that mean "we cannot measure this", not "nothing happened" — the
+  // reading a reader is most likely to get wrong, so both are flagged.
+  const alarming = basis === "IMPAIRMENT_ONLY_IN_UNCOVERED_SECTOR"
+    || basis === "COVERED_IMPAIRMENT_WITH_NO_CAPACITY_FIGURE";
   return (
     <div className={`zero-basis ${alarming ? "warn" : ""}`}>
       <span className="flag">{basis.replace(/_/g, " ").toLowerCase()}</span>
@@ -534,6 +537,12 @@ function RegionView({
         {ex.unscored_sectors.length > 0 && (
           <p className="small warn-text">
             Also impaired here but unscorable: {ex.unscored_sectors.join(", ")}.
+          </p>
+        )}
+        {(ex.unsized_sectors ?? []).length > 0 && (
+          <p className="small warn-text">
+            Impaired here in {ex.unsized_sectors!.join(", ")} at facilities carrying no capacity
+            figure, so the index has nothing to size them against.
           </p>
         )}
       </Block>

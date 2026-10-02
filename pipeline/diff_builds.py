@@ -102,6 +102,23 @@ def _r(x, n=2):
     return round(x + 0.0, n)
 
 
+# Rounding can leave a hundredth between the sector rows and the headline. Anything larger means
+# the rows are not the whole story and the reader should be told rather than shown a clean sum.
+EXACT_TOLERANCE_HUNDREDTHS = 2
+
+
+def within_rounding(a, b):
+    """True when two already-2-dp figures differ by no more than the rounding tolerance.
+
+    Compared in integer hundredths on purpose. `abs(a - b) <= 0.02` is wrong on binary floats:
+    abs(-4.26 - -4.28) is 0.020000000000000462, so a residual of exactly the tolerance fails. That
+    expression set the published `exact` flag AND was mirrored in the test, so one build in about
+    sixty would both publish a FALSE "not exact" to the reader and go red in CI — and a red test
+    blocks the daily refresh commit, which is how production froze for eleven days in September.
+    """
+    return abs(round(a * 100) - round(b * 100)) <= EXACT_TOLERANCE_HUNDREDTHS
+
+
 def _by_id(rows, key):
     return {r[key]: r for r in rows if r.get(key)}
 
@@ -428,9 +445,7 @@ def _sector_attribution(prev_snap, curr_snap, rescaled_sectors):
         "rows": rows,
         "sum_of_sector_deltas": total,
         "headline_delta": headline,
-        # Rounding can leave a hundredth between the two; anything larger means the sector rows
-        # are not the whole story and the reader should be told rather than shown a clean sum.
-        "exact": abs(total - headline) <= 0.02,
+        "exact": within_rounding(total, headline),
     }
 
 

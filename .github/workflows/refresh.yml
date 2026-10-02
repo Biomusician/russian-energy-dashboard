@@ -27,6 +27,12 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          # data_quality dates the curated CSVs from `git log -1`, which a shallow clone cannot
+          # answer. At the default depth of 1 every curated source reported the tip commit's date
+          # — the 2026-09-20 payload published "retrieved 2026-09-19, 1 day old" for files last
+          # genuinely edited on 2026-08-29. A provenance date that is wrong is worse than absent.
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:

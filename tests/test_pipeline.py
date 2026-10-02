@@ -5,6 +5,7 @@ cross, and the cheapest way to keep a future change from drifting over it is to 
 the build when it does.
 """
 
+import collections
 import csv
 import datetime as dt
 import json
@@ -704,11 +705,22 @@ def test_crimea_now_contributes_to_the_monitored_area_index():
     and its events must actually move the national aggregate (its regional exposure > 0
     where it has qualifying events), while carrying no coordinates."""
     snap = json.loads((PROCESSED / "snapshot.json").read_text(encoding="utf-8"))
+    from pipeline import explain
     crimea = snap["regions"]["UA-CR"]
     assert crimea["esdi_included"] is True
     assert crimea["analytic_scope"] == "occupied"
-    # Crimea has qualifying transmission + oil-logistics events, so its own exposure is > 0.
-    assert crimea["esdi"] > 0, "Crimea has qualifying events and should carry exposure"
+    # Inclusion is the structural fact; the exposure NUMBER decays. Asserting the published value
+    # is > 0 made this test a clock: once transmission decays far enough the rounded figure
+    # reaches 0.00 on a perfectly correct build, the assertion goes red, and a red test discards
+    # the daily refresh commit. So assert that Crimea's exposure is COUNTED while it has live
+    # qualifying disruptions — and that a zero, when it arrives, is reported as a rounding zero
+    # or an uncovered-sector zero, never as "nothing wrong here".
+    if crimea["live_disruption_count"]:
+        expl = _regional_explanations().get("UA-CR") or {}
+        assert crimea["esdi"] > 0 or expl.get("zero_basis") in (
+            explain.ZERO_ROUNDS_TO_ZERO, explain.ZERO_UNCOVERED_ONLY, explain.ZERO_UNSIZED), (
+            "Crimea carries live disruptions but its exposure is neither positive nor explained")
+        assert expl.get("zero_basis") != explain.ZERO_NO_IMPAIRMENT
     incidents = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
     crimea_incidents = [i for i in incidents if i.get("region_code") == "UA-CR"]
     assert crimea_incidents, "expected at least one tracked Crimea event"
@@ -1204,8 +1216,13 @@ def test_regional_intensity_unknown_denominator_is_missing_not_zero():
         # if the region has refining disruption it should be flagged missing
         if r["incident_count"] > 0 and "refining" in ri["missing_sectors"]:
             offenders.append(r["code"])
-    # At least one refinery region should be flagged (the corpus is refinery-heavy).
-    assert offenders, "expected some region to flag refining as a missing regional denominator"
+    # The invariant above is unconditional and is the point of the test. This is only a guard
+    # against the whole thing passing vacuously, and it rests on the corpus containing a
+    # refinery-region incident — a fact about the data, not about the code. `incident_count` is
+    # cumulative rather than live, so it does not decay, but a corpus edit could still empty it,
+    # and that must not be a build-blocking failure.
+    if not offenders:
+        pytest.skip("no region currently reports refining as a missing regional denominator")
 
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
@@ -1441,7 +1458,17 @@ def test_dataset_sanity_floor_for_daily_refresh():
     assert len(inc) >= 50, f"incident corpus collapsed to {len(inc)} — likely a broken parse"
     assert snap["incident_total"] >= 50
     assert isinstance(snap["esdi"], (int, float)) and snap["esdi"] == snap["esdi"], "ESDI is NaN"
-    assert snap["esdi"] > 0, "ESDI collapsed to 0 — no scored disruption"
+    # A CURRENT ESDI of 0.0 is a legitimate reading, not a failure. Exposure decays with a
+    # half-life, so a long enough quiet period drives every live weight under the cutoff and the
+    # true answer is zero — and the one finding this dashboard most needs to be able to publish is
+    # "nothing is currently disrupted". The old `assert snap["esdi"] > 0` would have refused to
+    # publish it, by failing the suite, which discards the refresh commit. Confirmed by rebuilding
+    # at 2027-07-15 against the current corpus: a quiet world reaches a true 0.00.
+    #
+    # The parse-collapse signal that decay cannot imitate is the WHOLE SERIES going flat. Decay
+    # only ever empties the tail; a broken parse empties 2022 as well.
+    nat = json.loads((PROCESSED / "index_national.json").read_text(encoding="utf-8"))
+    assert any(v > 0 for v in nat["esdi"]), "the entire ESDI history is zero — the parse collapsed"
     assert snap["sectors"], "no sector exposures emitted"
     assert snap["regions"], "no regions emitted"
     assert snap["coverage"] and snap["coverage"]["coverage_ratio"] > 0
@@ -1479,6 +1506,34 @@ def test_real_data_change_survives_normalisation():
     a = json.dumps({"build_time": "2026-08-28T05:20:00+00:00", "as_of": "2026-08-28", "esdi": 15.6})
     b = json.dumps({"build_time": "2026-08-29T05:20:00+00:00", "as_of": "2026-08-29", "esdi": 15.4})
     assert ci.normalise(a) != ci.normalise(b)
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_the_rerun_guard_works_on_the_REAL_emitted_files_not_a_three_key_fixture():
+    """The guard's two tests above feed it a hand-made object with build_time at the top level.
+    The real files do not look like that, and the guard was stripping only the top level — so the
+    ledger's `current_build` and (since P2) the snapshot's nested `publication_freshness.
+    build_time` both survived, every same-day rerun compared unequal, and the guard it exists to
+    be never fired. Drive it over the actual payload instead."""
+    ci = _load_ci_data_changed()
+    for name in ("snapshot.json", "build_changes.json"):
+        raw = (PROCESSED / name).read_text(encoding="utf-8")
+        obj = json.loads(raw)
+        # Re-stamp every per-run identity the way a rerun an hour later would.
+        def restamp(o):
+            if isinstance(o, dict):
+                return {k: ("2099-01-01T00:00:00+00:00" if k in ("build_time", "current_build")
+                            else "0" * 40 if k == "current_commit" else restamp(v))
+                        for k, v in o.items()}
+            if isinstance(o, list):
+                return [restamp(v) for v in o]
+            return o
+        assert ci.normalise(raw) == ci.normalise(json.dumps(restamp(obj))), (
+            f"{name}: a rerun with no data change still reads as substantive")
+    # ...and a real movement in the same file must still be seen.
+    snap = json.loads((PROCESSED / "snapshot.json").read_text(encoding="utf-8"))
+    moved = dict(snap, esdi=snap["esdi"] + 0.01)
+    assert ci.normalise(json.dumps(snap)) != ci.normalise(json.dumps(moved))
 
 
 # --------------------------------------------------------------------------
@@ -2270,9 +2325,17 @@ def test_transmission_concentration_disclosed():
     'transmission N' is not misread as a national-grid figure."""
     snap = _snapshot()
     tc = snap.get("transmission_concentration")
-    assert tc and tc["top"], "transmission concentration must be disclosed"
-    assert sum(t["pct"] for t in tc["top"]) > 0
+    assert tc is not None, "transmission concentration must be disclosed"
     assert 0 <= tc["occupied_share_pct"] <= 100
+    # The disclosure block is required; its CONTENTS depend on there being a live transmission
+    # facility, which ordinary decay removes. An unconditional `tc["top"]` would fail on a
+    # correct quiet build and discard the refresh commit.
+    if any(d.get("sector") == "transmission" for d in snap.get("live_disruptions") or []):
+        assert tc["top"], "live transmission disruptions exist but none is disclosed"
+        assert sum(t["pct"] for t in tc["top"]) > 0
+        assert all(0 <= t["pct"] <= 100 for t in tc["top"])
+    else:
+        assert tc["top"] == [], "no live transmission disruption, so nothing to concentrate"
 
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
@@ -2301,7 +2364,13 @@ def test_transmission_sensitivity_exposes_theatre_concentration():
     t = snap["transmission_sensitivity"]
     assert t["distinct_affected_regions"] == len(t["per_region_saturated"])
     if t["raw_burden"] > 0:
+        # A share of a whole cannot exceed the whole. It did: the numerator was read from the
+        # 3-dp-rounded per-region table while the denominator stayed exact, so once the sector had
+        # decayed far enough the rounding dominated and the build published 101.3%.
         assert t["top_region_share_pct"] is not None and 0 < t["top_region_share_pct"] <= 100
+        # ...and it must still be the largest theatre's share, not merely a number under 100.
+        shares = [100 * r["burden"] / t["raw_burden"] for r in t["per_region_saturated"]]
+        assert t["top_region_share_pct"] == pytest.approx(min(100.0, max(shares)), abs=0.2)
         # per-region burdens sum to the raw burden.
         assert sum(r["burden"] for r in t["per_region_saturated"]) == pytest.approx(t["raw_burden"], abs=0.02)
 
@@ -2352,6 +2421,28 @@ def test_transmission_alternative_models_are_deterministic_and_bounded():
                 f"E={E}, transmission={v_tx}")
     # The models must carry the explicit disclaimer that none is a percent of grid offline.
     assert "grid offline" in am["note"].lower()
+
+
+def test_the_rounding_tolerance_holds_at_its_own_boundary():
+    """A time bomb with about a 1-in-60 chance of firing on any given daily build.
+
+    `abs(a - b) <= 0.02` over two 2-dp figures is false at exactly 0.02, because the subtraction
+    is done in binary: abs(-4.26 - -4.28) is 0.020000000000000462. The same expression set the
+    published `exact` flag and was mirrored in the ledger test, so a build on the boundary would
+    both tell the reader the sector rows did not add up and fail CI — and a failing test discards
+    the refresh commit. Replaying the real weekly series through the old form hit it 4 times in
+    248 steps. Pure, so it cannot drift back into being true-at-today's-values-only."""
+    from pipeline import diff_builds as D
+    # The reproduced case, and its mirror image.
+    assert D.within_rounding(-4.26, -4.28)
+    assert D.within_rounding(-4.28, -4.26)
+    assert abs(-4.26 - -4.28) > 0.02, "the float form this replaces really does fail here"
+    # Exact boundary in both directions, at magnitudes where binary representation bites.
+    for a, b in [(0.0, 0.02), (0.02, 0.0), (10.38, 10.40), (-0.01, 0.01), (1e4 + 0.01, 1e4 - 0.01)]:
+        assert D.within_rounding(a, b), (a, b)
+    # And one hundredth beyond it is not tolerated, or the flag would mean nothing.
+    for a, b in [(0.0, 0.03), (10.38, 10.41), (-0.02, 0.01)]:
+        assert not D.within_rounding(a, b), (a, b)
 
 
 def test_removing_a_sector_from_a_weighted_mean_can_move_it_either_way():
@@ -3233,10 +3324,14 @@ def test_every_region_is_explainable_and_reconciles():
 
 @needs_build
 def test_a_region_reading_zero_says_which_kind_of_zero_it_is():
-    """Addendum §10. Four distinct facts, and UNKNOWN must never silently become ZERO."""
+    """Addendum §10. Distinct facts, and UNKNOWN must never silently become ZERO.
+
+    The allowed set is read from the module rather than retyped, so adding a category cannot be
+    done without also giving it a note — and so this test does not have to be edited (and quietly
+    re-approved) every time the taxonomy grows."""
     from pipeline import explain
-    allowed = {explain.ZERO_NO_IMPAIRMENT, explain.ZERO_UNCOVERED_ONLY,
-               explain.ZERO_ROUNDS_TO_ZERO, explain.ZERO_NOT_APPLICABLE}
+    allowed = set(explain.ZERO_NOTES)
+    assert explain.ZERO_UNSIZED in allowed, "the unsized category must carry a note"
     for code, e in _regional_explanations().items():
         if e["sum_of_contributions"] == 0.0:
             assert e["zero_basis"] in allowed, f"{code}: {e['zero_basis']}"
@@ -3245,6 +3340,9 @@ def test_a_region_reading_zero_says_which_kind_of_zero_it_is():
             # published so it cannot be read as one.
             if e["zero_basis"] == explain.ZERO_ROUNDS_TO_ZERO:
                 assert e["raw_value"] > 0, code
+            # ...and a zero we cannot size must name what it could not size.
+            if e["zero_basis"] == explain.ZERO_UNSIZED:
+                assert e["unsized_sectors"], code
         else:
             assert e["zero_basis"] is None, code
 
@@ -3285,9 +3383,18 @@ def test_a_region_whose_only_live_impairment_is_unscorable_says_so_in_the_REAL_p
             by_region.setdefault(d["region_code"], set()).add(d.get("sector"))
 
     unscorable_only = {c: secs for c, secs in by_region.items() if secs and not (secs & covered)}
-    assert unscorable_only, (
-        "no region currently has live impairment confined to an uncovered sector, so this guard "
-        "would pass vacuously — check whether the fixture still exercises the branch")
+    if not unscorable_only:
+        # Deliberately a skip, not a failure. Whether any region's live impairment is currently
+        # confined to an uncovered sector is a fact about the world on a given day, and it decays:
+        # the region that carries this today (Astrakhan, on a gas-processing disruption) loses it
+        # the moment that weight falls under the cutoff. Failing here would turn ordinary time
+        # decay into a red suite, and a red suite discards the daily refresh commit — the exact
+        # mechanism that froze production for eleven days in September. The branch itself is
+        # covered unconditionally by the synthetic test below, which drives the real
+        # `unscored_by_region` parameter rather than a fabricated fraction map.
+        pytest.skip("no region currently has live impairment confined to an uncovered sector; "
+                    "the branch is covered synthetically by "
+                    "test_the_unscorable_zero_is_reachable_through_the_parameter_real_data_uses")
 
     for code, secs in unscorable_only.items():
         row = rows[code]
@@ -3313,11 +3420,99 @@ def test_unscorable_impairment_is_not_reported_as_an_undisturbed_region():
         covered=["refining"],
         sector_fracs_by_region={"RU-X": {"gas": 0.4}},
     )["RU-X"]
-    from pipeline import explain
     assert out["sum_of_contributions"] == 0.0
     assert out["zero_basis"] == explain.ZERO_UNCOVERED_ONLY
     assert out["unscored_sectors"] == ["gas"]
     assert "cannot score it" in out["zero_note"]
+
+
+def test_the_unscorable_zero_is_reachable_through_the_parameter_real_data_uses():
+    """The same branch, reached the way the REAL pipeline reaches it.
+
+    The test above passes `{"gas": 0.4}` as a per-region fraction. The scorer can never produce
+    that: `_share` returns 0 for a sector with no denominator, so the accumulation loop drops the
+    facility before its sector is ever recorded. Real data arrives through `unscored_by_region`
+    instead — a separate map the scorer fills in on the way past — and for two iterations nothing
+    exercised it, which is how every region came to publish "Nothing is recorded as impaired".
+
+    This is unconditional and pipeline-free, so it keeps covering the branch on the day no real
+    region happens to qualify.
+    """
+    from pipeline import explain
+    args = dict(
+        regional={"RU-X": {"esdi": [0.0]}},
+        region_meta={"RU-X": {"name": "Test"}},
+        weights={"refining": 1.0, "gas": 1.0},
+        covered=["refining"],
+        sector_fracs_by_region={"RU-X": {}},     # exactly what the scorer emits for this region
+    )
+    plain = explain.regional_explanations(**args)["RU-X"]
+    # Without the map, the region is indistinguishable from an undisturbed one. That is the bug.
+    assert plain["zero_basis"] == explain.ZERO_NO_IMPAIRMENT
+
+    wired = explain.regional_explanations(
+        **args, unscored_by_region={"RU-X": {"gas": 0.22}})["RU-X"]
+    assert wired["zero_basis"] == explain.ZERO_UNCOVERED_ONLY
+    assert wired["unscored_sectors"] == ["gas"]
+    assert "NOT because nothing happened" in (wired["zero_note"] or "")
+
+
+def test_covered_sector_impairment_we_cannot_size_is_not_reported_as_nothing_happening():
+    """Found by building the dataset at a future date, not by the suite.
+
+    A facility can sit in a sector the index scores and still contribute exactly 0.00, because it
+    carries no capacity figure and `_share` has no numerator to work with. Crimea at a simulated
+    2027-01-31 kept two live electric-generation disruptions of exactly that kind, and the payload
+    told the reader "Nothing is recorded as impaired" — about a region with live recorded
+    impairment. Five regions were affected at that date. An unsized facility is an unknown
+    magnitude, and an unknown is not a zero."""
+    from pipeline import explain
+    args = dict(
+        regional={"RU-X": {"esdi": [0.0]}},
+        region_meta={"RU-X": {"name": "Test"}},
+        weights={"electric_generation": 1.0, "gas": 1.0},
+        covered=["electric_generation"],
+        sector_fracs_by_region={"RU-X": {}},     # an unsized facility contributes no fraction
+    )
+    assert explain.regional_explanations(**args)["RU-X"]["zero_basis"] == explain.ZERO_NO_IMPAIRMENT
+    out = explain.regional_explanations(
+        **args, unsized_by_region={"RU-X": {"electric_generation": 2}})["RU-X"]
+    assert out["zero_basis"] == explain.ZERO_UNSIZED
+    assert out["unsized_sectors"] == ["electric_generation"]
+    assert "NOT because nothing happened" in (out["zero_note"] or "")
+    # A region with BOTH kinds is not described as "only in an uncovered sector".
+    both = explain.regional_explanations(
+        **args, unscored_by_region={"RU-X": {"gas": 0.3}},
+        unsized_by_region={"RU-X": {"electric_generation": 1}})["RU-X"]
+    assert both["zero_basis"] == explain.ZERO_UNSIZED
+
+
+@needs_build
+def test_no_region_with_live_covered_impairment_claims_nothing_is_recorded():
+    """The end-to-end half, over the real payload: a region cannot hold a live disruption in a
+    scored sector and simultaneously publish "Nothing is recorded as impaired"."""
+    from pipeline import explain
+    snap = _snapshot()
+    rows = _regional_explanations()
+    covered = set(snap.get("sectors_covered") or [])
+    live_covered = collections.Counter(
+        d["region_code"] for d in snap.get("live_disruptions") or []
+        if d.get("region_code") and d.get("sector") in covered)
+    for code in live_covered:
+        row = rows.get(code) or {}
+        assert row.get("zero_basis") != explain.ZERO_NO_IMPAIRMENT, (
+            f"{code} has {live_covered[code]} live covered-sector disruption(s) but reports "
+            f"that nothing is recorded as impaired")
+
+
+def test_the_scorer_actually_passes_the_unscored_map_to_the_explainer():
+    """The wiring, not the function. The explainer can be perfect and the branch still dead if
+    the build never fills the map — which is precisely what happened."""
+    import inspect
+    from pipeline import build_index
+    src = inspect.getsource(build_index)
+    assert "unscored_by_region=" in src, "build_index must pass unscored_by_region to explain"
+    assert "reg_unscored" in src, "build_index must accumulate unscored-sector weight per region"
 
 
 @needs_build
@@ -3823,7 +4018,12 @@ def test_the_real_build_emits_a_well_formed_ledger():
         assert c["record_class"] in D.RECORD_CLASSES
     if led["sector_attribution"]:
         sa = led["sector_attribution"]
-        assert abs(sa["sum_of_sector_deltas"] - sa["headline_delta"]) <= 0.02
+        # Through the shipped comparison, not a float expression retyped here. The retyped one
+        # disagreed with the emitter at the tolerance boundary, which is a test that fails on a
+        # correct build — and a failing test blocks the daily refresh commit.
+        assert D.within_rounding(sa["sum_of_sector_deltas"], sa["headline_delta"])
+        assert sa["exact"] is D.within_rounding(
+            sa["sum_of_sector_deltas"], sa["headline_delta"])
     # A claim about the world. It must never be made when something did change.
     if led["time_progression_only"]:
         assert led["change_count"] == 0
@@ -3945,7 +4145,11 @@ def test_a_contribution_carries_the_factors_that_produced_it():
     """A reader must be able to see WHY a facility contributes what it does: how well attested,
     how damaged, how long ago — not just an opaque final number."""
     contributing = _snap()["explanations"]["sectors"]["refining"]["contributing"]
-    assert contributing, "expected live refining contributors in the real build"
+    if not contributing:
+        # Whether any refining facility is still live is a fact about the world that decays, and
+        # a red suite discards the daily refresh. The per-contributor invariants below are the
+        # test; their having something to run on is not.
+        pytest.skip("no live refining contributors in the current build")
     for c in contributing:
         t = c.get("impairment_trace")
         assert t, c["asset_id"]
@@ -4260,6 +4464,22 @@ def test_a_local_cache_timestamp_never_reads_as_publisher_freshness():
             DQ.RETRIEVAL_IS_PUBLISHER_SIGNAL[src["retrieval_basis"]])
         if src["retrieval_basis"] in (DQ.RETRIEVAL_CACHE_MTIME, DQ.RETRIEVAL_COMMIT):
             assert src["retrieval_is_publisher_signal"] is False
+
+
+def test_a_source_read_after_the_cutoff_is_described_as_such_not_as_negative_days_before():
+    """A local evening build sets as_of to today's local date while the fetch lands on tomorrow's
+    UTC date, so the age is -1. The note then read "-1 days before this build's as-of date",
+    which is both ungrammatical and false — it was after. Pure, so it needs no build."""
+    import datetime as _d
+    from pipeline import data_quality as DQ
+    f = DQ._freshness(_d.date(2026, 10, 2), None, _d.date(2026, 10, 1))
+    assert f["age_days"] == -1
+    assert f["status"] == "current"
+    assert "1 day AFTER" in f["note"] and "days before" not in f["note"]
+    assert "Not stale" in f["note"]
+    # The ordinary case is untouched.
+    g = DQ._freshness(_d.date(2026, 9, 28), None, _d.date(2026, 10, 1))
+    assert g["age_days"] == 3 and "3 days before" in g["note"]
 
 
 @needs_build

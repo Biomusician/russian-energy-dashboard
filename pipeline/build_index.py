@@ -298,10 +298,21 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
             final_nat_fracs, denominators, snapshot, snapshot["live_disruptions"],
             facility_info, _share, SATURATION_EVENTS, _trace_for),
     }
+    # Live impairment in a COVERED sector that still contributes nothing, because the facility
+    # carries no capacity figure and `_share` therefore returns 0. Without this the region is
+    # indistinguishable from an undisturbed one — see _classify_zero for the case that exposed it.
+    reg_unsized = collections.defaultdict(lambda: collections.defaultdict(int))
+    for _d in snapshot["live_disruptions"]:
+        _code = _d.get("region_code")
+        _info = facility_info.get(_d["asset_id"], {})
+        if _code and _info.get("sector") in covered and _share(_info, denominators) <= 0:
+            reg_unsized[_code][_info["sector"]] += 1
+
     regional_explanations = explain.regional_explanations(
         regional, region_meta, sector_weights, covered, final_reg_fracs,
         lambda fr: _composite_raw(fr, sector_weights, covered),
-        unscored_by_region=final_reg_unscored)
+        unscored_by_region=final_reg_unscored,
+        unsized_by_region={k: dict(v) for k, v in reg_unsized.items()})
 
     # Recovery lifecycle episodes (P7). The trajectory is sampled with the SAME weight function
     # that scores, so the curve a reader sees is the curve the index used — not a second model
@@ -763,7 +774,13 @@ def _transmission_sensitivity(live, facility_info, esdi_excluded):
           "saturated_value": round(min(1.0, b / SATURATION_EVENTS) * 100, 2)}
          for r, b in by_region.items()),
         key=lambda d: -d["burden"])
-    top_share = round(100 * per_region[0]["burden"] / raw_burden, 1) if raw_burden and per_region else None
+    # The numerator must be the UNROUNDED burden. Taking it from per_region, where it has already
+    # been rounded to 3 dp, divides a rounded-up value by an exact one: as the sector decays the
+    # burdens shrink until the rounding dominates and the published share exceeds 100% (0.0059
+    # presents as 0.006 and prints 101.7% of itself). A share of a whole cannot exceed the whole,
+    # so a reader seeing 101.3% learns only that the figure is not to be trusted.
+    top_raw = max(by_region.values(), default=0.0)
+    top_share = round(min(100.0, 100 * top_raw / raw_burden), 1) if raw_burden and by_region else None
 
     # (3) Alternative formulations (§23), computed on the same frozen data so a reader (and the
     # red-team) can compare them against the current Model A rather than take it on faith.

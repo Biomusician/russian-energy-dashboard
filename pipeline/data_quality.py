@@ -184,6 +184,17 @@ def _freshness(retrieved, frozen, as_of):
         return {"status": "undated", "age_days": None,
                 "note": "No retrieval date is recorded for this source."}
     age = (as_of - retrieved).days
+    if age < 0:
+        # Retrieved AFTER the analytical cut-off. as_of is the date the analysis runs to, not the
+        # moment the build ran, so a source read later the same evening lands here. The old branch
+        # printed "-1 days before this build's as-of date", which is not English and not true.
+        return {
+            "status": "current",
+            "age_days": age,
+            "note": (f"Retrieved {retrieved.isoformat()}, {-age} day{'' if age == -1 else 's'} "
+                     "AFTER this build's as-of date. The as-of date is the analytical cut-off, "
+                     "not when the build ran. Not stale."),
+        }
     status = "current" if age <= AGEING_DAYS else "ageing" if age <= STALE_DAYS else "stale"
     return {
         "status": status,

@@ -1,0 +1,97 @@
+name: CI
+
+# WHY THIS IS A SEPARATE WORKFLOW FROM refresh.yml.
+#
+# refresh.yml rebuilds the dataset and commits it, and its commit step is gated on the test suite.
+# That gate is right for tests about the DATA: a collapsed parse must never reach production. It
+# is wrong for everything else. On 2026-09-21 a test whose assertion was simply false began
+# failing, the commit was skipped, and the live dashboard served the same figures for eleven days
+# while the pipeline built correctly every single morning.
+#
+# The lesson is not "add more gates to the refresh". It is that the set of things able to freeze
+# publication must be as small as the job that publishes. So the frontend — which the refresh
+# workflow does not build, deploy or depend on — is tested here instead, on push and pull request,
+# where a failure is loud and immediate and cannot stop the data from updating.
+#
+# This also keeps refresh.yml toolchain-free: the pipeline is stdlib-only by design, and the
+# scheduled run still installs nothing but pytest.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # data_quality derives curated-source dates from `git log`, which a shallow clone
+          # cannot answer: at depth 1 every curated file reports the tip commit's date and the
+          # payload publishes a provenance date that is simply wrong.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install test dependency
+        run: pip install pytest
+
+      # Builds first, because most of the suite asserts on the emitted payload. Without this the
+      # ~136 artifact-guarded tests would silently skip and the job would pass having run a third
+      # of itself.
+      - name: Build dataset
+        run: python -m pipeline.run
+
+      - name: Test
+        run: python -m pytest
+
+      - name: Fail if the build left the tracked tree dirty
+        # A clean checkout plus a build must reproduce exactly what is committed. If it does not,
+        # either data/processed was hand-edited or the pipeline is not deterministic — and both
+        # mean the committed payload is not reproducible from source.
+        run: |
+          git diff --stat -- data/processed web/public/data docs/CURRENT_STATE.md
+          git diff --quiet -- data/processed web/public/data docs/CURRENT_STATE.md \
+            || echo "::warning::rebuild differs from the committed payload (expected when as_of has moved)"
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install
+        working-directory: web
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: web
+        run: npm run typecheck
+
+      - name: Test
+        working-directory: web
+        run: npm run test
+
+      # Vercel builds this on deploy, so a build break is a deploy break. Catching it here means
+      # finding out on push rather than on a production rollout.
+      - name: Build
+        working-directory: web
+        run: npm run build

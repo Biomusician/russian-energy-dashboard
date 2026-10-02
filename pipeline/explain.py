@@ -41,10 +41,11 @@ MECHANISM = {
     "coal": "unscored",
 }
 
-# The four ways a published 0.00 can arise. They are different facts and the UI must be able to
-# say which one applies; collapsing them is how UNKNOWN silently becomes ZERO.
+# The ways a published 0.00 can arise. They are different facts and the UI must be able to say
+# which one applies; collapsing them is how UNKNOWN silently becomes ZERO.
 ZERO_NO_IMPAIRMENT = "NO_RECORDED_IMPAIRMENT"
 ZERO_UNCOVERED_ONLY = "IMPAIRMENT_ONLY_IN_UNCOVERED_SECTOR"
+ZERO_UNSIZED = "COVERED_IMPAIRMENT_WITH_NO_CAPACITY_FIGURE"
 ZERO_ROUNDS_TO_ZERO = "COVERED_SECTOR_SIGNAL_ROUNDS_TO_ZERO"
 ZERO_NOT_APPLICABLE = "NOT_APPLICABLE"
 
@@ -56,6 +57,10 @@ ZERO_NOTES = {
         "Documented impairment here falls only in sectors with no capacity denominator, which "
         "are excluded from the composite. This reads 0.00 because the index cannot score it, "
         "NOT because nothing happened.",
+    ZERO_UNSIZED:
+        "Impairment is recorded here in a sector the index DOES score, but the affected "
+        "facilities carry no capacity figure, so there is nothing to measure them against and "
+        "they contribute 0.00. That is a gap in the inventory, NOT because nothing happened.",
     ZERO_ROUNDS_TO_ZERO:
         "There is a real but very small contribution here that rounds to 0.00 at two decimal "
         "places. The raw value is published alongside so it is not mistaken for absence.",
@@ -68,7 +73,7 @@ def _r(x, n=2):
     return round(x + 0.0, n)
 
 
-def _classify_zero(raw_total, unscored_sectors, has_covered_denominator):
+def _classify_zero(raw_total, unscored_sectors, has_covered_denominator, unsized_sectors=()):
     """Which kind of zero a 0.00 is. Returns None when the figure is not actually zero."""
     if _r(raw_total) != 0.0:
         return None
@@ -78,6 +83,16 @@ def _classify_zero(raw_total, unscored_sectors, has_covered_denominator):
     # is the difference between "nothing here" and "something here, below the resolution shown".
     if raw_total > 0:
         return ZERO_ROUNDS_TO_ZERO
+    # Checked BEFORE the uncovered case, because a region with covered-sector impairment is not
+    # one whose impairment is "only in an uncovered sector".
+    #
+    # This branch exists because of a case found by building the dataset at a future date:
+    # Crimea kept two live electric-generation disruptions whose facilities are not in the asset
+    # inventory, so `_share` returned 0 for both, the region's raw total was exactly 0.0, and the
+    # payload told a reader "Nothing is recorded as impaired" about a region with live recorded
+    # impairment. An unsized facility is an UNKNOWN magnitude, and an unknown is not a zero.
+    if unsized_sectors:
+        return ZERO_UNSIZED
     if unscored_sectors:
         return ZERO_UNCOVERED_ONLY
     return ZERO_NO_IMPAIRMENT
@@ -328,7 +343,8 @@ def sector_explanations(sector_fracs, denominators, snapshot, live, facility_inf
 
 
 def regional_explanations(regional, region_meta, weights, covered, sector_fracs_by_region,
-                          raw_composite_fn=None, unscored_by_region=None):
+                          raw_composite_fn=None, unscored_by_region=None,
+                          unsized_by_region=None):
     """Per-region decomposition, same identities as the headline.
 
     An entry is emitted for EVERY region, not only the ones currently scoring above zero. The
@@ -369,7 +385,12 @@ def regional_explanations(regional, region_meta, weights, covered, sector_fracs_
         # fills in on the way past, which is the only place the difference is still visible.
         ur = (unscored_by_region or {}).get(code) or {}
         unscored = [s for s in uncovered if ur.get(s, 0.0) > 0 or fr.get(s, 0.0) > 0]
-        zero_basis = _classify_zero(raw_total, unscored, bool(total_w))
+        # Impairment in a COVERED sector that the index still cannot size, because the facility
+        # carries no capacity figure. Same shape of gap as `unscored`, different cause, and the
+        # distinction matters: one sector has no denominator, this facility has no numerator.
+        us = (unsized_by_region or {}).get(code) or {}
+        unsized = [s for s in covered if us.get(s, 0) > 0]
+        zero_basis = _classify_zero(raw_total, unscored, bool(total_w), unsized)
 
         out[code] = {
             "code": code,
@@ -385,6 +406,7 @@ def regional_explanations(regional, region_meta, weights, covered, sector_fracs_
             "reconciles": abs(raw_total - raw_published) <= 1e-9,
             "zero_basis": zero_basis,
             "unscored_sectors": unscored,
+            "unsized_sectors": unsized,
             "zero_note": ZERO_NOTES.get(zero_basis) if zero_basis else None,
         }
     return out
