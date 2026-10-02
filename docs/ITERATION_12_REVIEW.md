@@ -1,7 +1,5 @@
 # Iteration 12 — the refresh stopped and nothing said so
 
-<!-- status: in-progress -->
-
 Working notes for the iteration. The numbers in this document are the ones observed at the time
 each finding was made; for current figures see [CURRENT_STATE.md](CURRENT_STATE.md).
 
@@ -254,21 +252,64 @@ string sort picks `ITERATION_9` over `ITERATION_11`.
 
 ---
 
-## 9. Open at the time of writing
+## 9. The one I caused
 
-Carried into the backlog rather than closed here:
+`ci.yml`, added in §7, ran a full `pipeline.run` in its Python job. `data/raw` is gitignored, so
+every push was a cold full fetch of Wikipedia and Overpass. Five pushes in one hour became five
+fetch cycles against free public endpoints, and CI run #2 failed inside the fetch rather than in
+anything it was testing.
 
-- Saved workspaces and the command palette (deferred from iteration 11, still deferred).
-- Multi-page Analyst Report; clipboard image copy (`copyBlobToClipboard` still has no callers).
-- `test_processed_output_is_deterministic` rebuilds **in place**, rewriting tracked files and
-  neutralising `test_current_state_doc_is_in_sync` in any full run.
-- The coordinate/forbidden-field scope gate runs against a fixed list of 8–9 files;
-  `recovery_lifecycle`, `history_series`, `data_quality`, `build_changes`, `data_manifest`,
-  `pipeline_network_quality` and `pipeline_registry` are outside it. Nothing violates it today.
-- Artifact-guarded tests skip when their file is missing, so a dropped artifact reads as a pass.
-- No end-to-end browser test; vitest runs in the `node` environment with no DOM, so there are no
-  component tests.
-- `_DENIAL` in the semantic lint still uses raw substring exemptions ("never", "no ", "not "), the
-  same class of bug as the "whenever" false positive but failing in the permissive direction.
-- The zero taxonomy is shown only in the Evidence Inspector; the hover card, the rankings and the
-  PNG selection label still print a bare "0.00".
+It no longer builds. `data/processed` is committed, so the suite asserts on the bytes that ship —
+which is the better test anyway: a job that builds its own payload and then checks it is grading
+its own homework. The two tests that genuinely need a build or a live request are opt-in behind
+`RUN_BUILD_TESTS`, which `refresh.yml` sets because it has already fetched and holds a warm cache.
+
+Recorded here rather than quietly fixed, because it is the same shape as every other finding in
+this document: a guard added in good faith that did something other than what it was for.
+
+Side effect worth having: the default suite went from 100 s to 7 s.
+
+---
+
+## 10. Deferred, with reasons
+
+Not done in this iteration. None is blocked; each is a scope decision.
+
+**Features, deferred from iteration 11 and again here.** Saved workspaces; the command palette;
+the multi-page Analyst Report; clipboard image copy (`copyBlobToClipboard` still has no callers).
+Each adds interaction and persisted state without closing an analytical gap, and this iteration
+was already large.
+
+**Still open in the test architecture.**
+
+- Artifact-guarded tests still skip when their file is missing. `REQUIRED_WEB_FILES` is the
+  backstop and now covers the iteration-10/11 payloads, but the skip-is-a-pass shape remains.
+- No end-to-end browser test. vitest runs in the `node` environment with no DOM, so there are no
+  component tests at all; `App.tsx`'s validation, the replaceState effect and the Dossier tab
+  effect are untestable as written.
+- Several tests still assert on a hand-built input rather than on what the pipeline produces —
+  `centroid.test.ts` copies `CLASS_PRIO` from `MapPanel` and tests the copy; `whatChanged.test.ts`
+  composes its own lambda and would pass if the panel regressed to the behaviour it documents.
+- `briefing.test.ts` hand-casts its bundle and uses `UA-43` for Crimea, which is not the real
+  code (`UA-CR`).
+
+**Still open in the data.**
+
+- `dashboard_first_seen_build` is structurally inert: `lifecycle.build` accepts
+  `first_seen_by_incident` and nothing ever passes it, so all 26 episodes carry `first_seen:
+  null` and the UI branch that would show it never renders. The payload already DISCLOSES this
+  honestly (`available: false`, with a note saying it is not a publication date), so it is a
+  missing feature rather than a false claim. Populating it needs persisted per-incident
+  first-seen state with an explicit "present before tracking began" marker for the existing
+  corpus — anything else would invent a date.
+- `http_source_metadata` is a declared retrieval basis that nothing produces.
+- Incident `first_seen` / `last_verified` are dead temporal fields.
+- GIE storage, GEM coal, GEM geometry precedence, the WRI per-unit-date denominator defect, and
+  the GEM quarterly release, all carried forward from iteration 10.
+
+**Standing.**
+
+- `_DENIAL` in the semantic lint still uses raw substring exemptions. The frozen-payload lint was
+  given word-boundary negation handling in §8; the Crimea lint's denial list was not revisited.
+- The zero taxonomy now reaches the hover card, the rankings and the exported label (§4), but the
+  PNG's own region label is the only export surface that carries it.
