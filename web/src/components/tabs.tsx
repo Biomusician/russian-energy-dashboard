@@ -5,7 +5,9 @@
 import { useMemo, useState } from "react";
 import type { Bundle, CoverageDetail, Incident, LiveDisruption, RegionSnapshot } from "../types";
 import { addDays, displayName, fmtDate, fmtDelta, fmtNum, inWindow, plural, titleCase, windowRef } from "../data";
-import { classColor, evidence, severityColor } from "../palette";
+import {
+  ZERO_SHORT, classColor, evidence, severityColor, zeroIsUnmeasured,
+} from "../palette";
 import { Bar, EventRow, EvidenceChip, RecoveryLine, Sparkline, Tile } from "./ui";
 
 export interface TabProps {
@@ -561,6 +563,14 @@ export function RankingsTab(p: TabProps) {
             </div>
             <div className="rank-sub">
               {x.r.district} · {x.r.incident_count} events
+              {/* A ranked region sitting at 0.00 is in the list because it HAS recorded
+                  disruption — so the zero needs a reason beside it, or the row reads as a
+                  region that was looked at and found fine. */}
+              {x.value === 0 && x.r.zero_basis && (
+                <span style={{
+                  color: zeroIsUnmeasured(x.r.zero_basis) ? "var(--amber)" : "var(--text-faint)",
+                }}> · 0.00: {ZERO_SHORT[x.r.zero_basis] ?? "see the Evidence Inspector"}</span>
+              )}
               {metricKey === "intensity" && (x.r.regional_intensity?.missing_sectors.length ?? 0) > 0 && (
                 <span style={{ color: "var(--amber)" }}> · no regional base: {x.r.regional_intensity!.missing_sectors.map((s) => titleCase(s)).join(", ")}</span>
               )}

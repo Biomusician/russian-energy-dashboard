@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, loadBundle, stepFor } from "./data";
-import type { Asset, Bundle, Incident } from "./types";
+import type { Asset, Bundle, Incident, RegionSnapshot } from "./types";
 import { decodeDeepLink, encodeDeepLink, has, type CameraState } from "./urlState";
 import Ribbon from "./components/Ribbon";
 import StalenessNotice from "./components/StalenessNotice";
@@ -17,6 +17,7 @@ import {
 } from "./briefing";
 import { downloadBlob, exportMapPng } from "./mapExport";
 import { localISODate } from "./freshness";
+import { ZERO_SHORT } from "./palette";
 import { drawBriefingFrame } from "./briefingFrame";
 import { fmtNum, loadHistorySeries, loadLifecycle, resolvePoint } from "./data";
 import type maplibregl from "maplibre-gl";
@@ -57,6 +58,19 @@ export interface FilterState {
 }
 
 const ALL_CONFIDENCES = ["confirmed", "probable", "possible", "unverified"];
+
+/** A region's label for the briefing frame and the exported image.
+ *
+ *  It read "Krasnodar Krai · 0.00" for a region with live recorded impairment that the index
+ *  cannot size — indistinguishable, in an image that will outlive this page, from a region that
+ *  was looked at and found undisturbed. The zero taxonomy travels on the region record, so the
+ *  label can say which zero it is. */
+function regionLabel(region: RegionSnapshot, value: number): string {
+  const base = `${region.name} · ${fmtNum(value, 2)}`;
+  if (value !== 0) return base;
+  const why = region.zero_basis ? ZERO_SHORT[region.zero_basis] : null;
+  return why ? `${base} — ${why}` : base;
+}
 
 export default function App() {
   // Deep-link the sender was looking at (§20-22), read once. Absent keys fall back to defaults.
@@ -399,7 +413,7 @@ export default function App() {
       ? `${selectedAsset.asset.name ?? selectedAsset.asset.asset_id}`
         + (selectedAsset.asset.precision === "region"
           ? " — administrative-region placement, not facility location" : "")
-      : region ? `${region.name} · ${fmtNum(bundle.regional.regions[region.code]?.esdi[step] ?? 0, 2)}`
+      : region ? regionLabel(region, bundle.regional.regions[region.code]?.esdi[step] ?? 0)
       : null;
     return buildBriefingContext({
       bundle, step, currentDate,

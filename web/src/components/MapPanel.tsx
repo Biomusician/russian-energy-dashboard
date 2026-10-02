@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import type { FilterState, FlyTarget } from "../App";
 import type { Asset, Bundle, Incident, PipelineRegistry } from "../types";
-import { CLASS_COLOR, ESDI_DELTA_STOPS, SEVERITY_STOPS } from "../palette";
+import {
+  CLASS_COLOR, ESDI_DELTA_STOPS, SEVERITY_STOPS, ZERO_SHORT, zeroIsUnmeasured,
+} from "../palette";
 import { displayName, fmtDelta, fmtNum, loadContextLayer, loadPipelineRegistry, titleCase, windowRef } from "../data";
 import { iconImageId, prewarmIcons } from "../icons";
 import { AssetHoverCard } from "./AssetDetail";
@@ -109,6 +111,8 @@ interface HoverInfo {
   value: number;
   incidents: number;
   special: boolean;
+  /** Which kind of zero, when the value is 0.00. Null when the payload does not carry it. */
+  zeroBasis: string | null;
 }
 
 interface ScreenLabel { name: string; x: number; y: number; size: number; kind: "country" | "sea" | "river" }
@@ -775,6 +779,7 @@ export default function MapPanel({
         district: meta?.district ?? "",
         value: state?.value ?? 0,
         incidents: incidentsByRegion.get(code)?.length ?? 0,
+        zeroBasis: bundle.snapshot.regions[code]?.zero_basis ?? null,
         special: Boolean((f.properties as { special?: boolean } | undefined)?.special),
       });
     };
@@ -1344,6 +1349,17 @@ export default function MapPanel({
               {isDelta && hover.incidents === 0 && (
                 <div style={{ fontSize: 10, color: "var(--amber)", marginTop: 5, lineHeight: 1.4 }}>
                   No recorded events here — nothing to change, not a measured zero.
+                </div>
+              )}
+              {/* ...and on the exposure surface a 0.00 has four possible meanings. The taxonomy
+                  used to be visible only in the Evidence Inspector, so a reader hovering a region
+                  that is impaired-but-unmeasurable saw the same "0.00" as one that is quiet. */}
+              {!isDelta && filters.metric === "esdi" && hover.value === 0 && hover.zeroBasis && (
+                <div style={{
+                  fontSize: 10, marginTop: 5, lineHeight: 1.4,
+                  color: zeroIsUnmeasured(hover.zeroBasis) ? "var(--amber)" : "var(--text-faint)",
+                }}>
+                  0.00 — {ZERO_SHORT[hover.zeroBasis] ?? "see the Evidence Inspector"}.
                 </div>
               )}
             </>

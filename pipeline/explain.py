@@ -51,8 +51,11 @@ ZERO_NOT_APPLICABLE = "NOT_APPLICABLE"
 
 ZERO_NOTES = {
     ZERO_NO_IMPAIRMENT:
-        "No facility here is contributing to the index on this date. Nothing is recorded as "
-        "impaired — which is not the same as a positive finding that nothing is wrong.",
+        "No facility here is contributing to the index on this date. That is not a positive "
+        "finding that nothing is wrong, and it is not the same as nothing ever having happened: "
+        "an event decays below the scoring cutoff without being repaired, so a region with "
+        "recorded history can read 0.00 while its damage stands. Absence of a report is also "
+        "not absence of damage.",
     ZERO_UNCOVERED_ONLY:
         "Documented impairment here falls only in sectors with no capacity denominator, which "
         "are excluded from the composite. This reads 0.00 because the index cannot score it, "

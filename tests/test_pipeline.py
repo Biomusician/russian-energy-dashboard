@@ -5603,3 +5603,36 @@ def test_the_newest_review_is_found_numerically_not_alphabetically():
         ("ITERATION_1_REVIEW.md", "ITERATION_9_REVIEW.md", "ITERATION_11_REVIEW.md",
          "ITERATION_12_BACKLOG.md", "HANDOFF.md", "METHODOLOGY.md")])
     assert _newest_review(fake) == 11      # not 9, and the BACKLOG file is not a review
+
+
+def test_the_frontend_has_words_for_every_kind_of_zero_the_pipeline_emits():
+    """Cross-language parity, checked rather than remembered.
+
+    The zero taxonomy is defined in pipeline/explain.py and rendered in web/src. Adding a category
+    on one side and not the other puts a region back to printing a bare "0.00" with nothing to say
+    which kind it is — which is the defect the taxonomy exists to prevent. The TypeScript union in
+    types.ts and the phrase map in palette.ts must both know every category."""
+    from pipeline import explain
+    palette = (ROOT / "web" / "src" / "palette.ts").read_text(encoding="utf-8")
+    types = (ROOT / "web" / "src" / "types.ts").read_text(encoding="utf-8")
+    missing_phrase = [k for k in explain.ZERO_NOTES if f"{k}:" not in palette]
+    missing_type = [k for k in explain.ZERO_NOTES if f'"{k}"' not in types]
+    assert not missing_phrase, f"web/src/palette.ts has no phrase for: {missing_phrase}"
+    assert not missing_type, f"web/src/types.ts ZeroBasis is missing: {missing_type}"
+
+
+@needs_build
+def test_the_region_record_carries_its_own_kind_of_zero():
+    """Carried on the region, not only in the lazily-fetched explanations file, so the hover card,
+    the rankings rows and the exported label can all say which zero they are showing."""
+    from pipeline import explain
+    snap = _snapshot()
+    rows = _regional_explanations()
+    for code, r in snap["regions"].items():
+        assert "zero_basis" in r, code
+        assert r["zero_basis"] == rows[code]["zero_basis"], code
+        if r["zero_basis"] is None:
+            assert r["esdi"] > 0 or rows[code]["raw_value"] > 0, code
+        else:
+            assert r["zero_basis"] in explain.ZERO_NOTES, (code, r["zero_basis"])
+            assert r["zero_note"], code

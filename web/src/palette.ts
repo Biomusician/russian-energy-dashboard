@@ -116,3 +116,27 @@ export const EVIDENCE: Record<string, { color: string; label: string; glyph: str
 export function evidence(kind: string | null | undefined) {
   return (kind && EVIDENCE[kind]) || EVIDENCE.unknown;
 }
+
+
+/** One short phrase per kind of zero, for surfaces with room for a phrase and not a paragraph:
+ *  the map hover card, a rankings row, an exported selection label. The full note travels in the
+ *  payload and is shown by the Evidence Inspector. What matters here is only that three
+ *  different facts stop rendering as the same "0.00". */
+export const ZERO_SHORT: Record<string, string> = {
+  // Deliberately not "nothing recorded": a region with recorded history whose events have
+  // decayed below the scoring cutoff lands here, and "Chuvash · 1 events · nothing recorded"
+  // is a sentence contradicting itself two words earlier.
+  NO_RECORDED_IMPAIRMENT: "no impairment contributing on this date",
+  IMPAIRMENT_ONLY_IN_UNCOVERED_SECTOR: "impaired only in a sector the index cannot score",
+  COVERED_IMPAIRMENT_WITH_NO_CAPACITY_FIGURE: "impaired, but no capacity figure to measure it against",
+  COVERED_SECTOR_SIGNAL_ROUNDS_TO_ZERO: "a real contribution too small to show at two decimals",
+  NOT_APPLICABLE: "not defined here: no sector has a usable denominator",
+};
+
+/** True when a zero means "we could not measure this" rather than "we looked and found nothing".
+ *  Those deserve different emphasis; conflating them is the error the taxonomy exists to stop. */
+export function zeroIsUnmeasured(basis: string | null | undefined): boolean {
+  return basis === "IMPAIRMENT_ONLY_IN_UNCOVERED_SECTOR"
+    || basis === "COVERED_IMPAIRMENT_WITH_NO_CAPACITY_FIGURE"
+    || basis === "NOT_APPLICABLE";
+}

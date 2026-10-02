@@ -125,6 +125,11 @@ export interface RegionSnapshot {
   population_millions: number | null;
   regional_intensity?: RegionalIntensity;
   effects: RegionEffects;
+  /** Which KIND of zero a 0.00 is, carried on the region record so every surface that prints
+   *  one can say which — not only the Evidence Inspector, which reads the lazily-fetched
+   *  explanations file. Optional: absent in an N-1 payload. */
+  zero_basis?: ZeroBasis;
+  zero_note?: string | null;
 }
 
 export interface RegionalIntensity {

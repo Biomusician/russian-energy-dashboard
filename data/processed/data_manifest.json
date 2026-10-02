@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-10-02T06:37:47+00:00",
+  "build_time": "2026-10-02T06:46:33+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -9,7 +9,7 @@
     },
     {
       "name": "build_changes.json",
-      "bytes": 3404,
+      "bytes": 3402,
       "optional": false
     },
     {
@@ -19,7 +19,7 @@
     },
     {
       "name": "explanations_regional.json",
-      "bytes": 94132,
+      "bytes": 104716,
       "optional": false
     },
     {
@@ -69,7 +69,7 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 250000,
+      "bytes": 275808,
       "optional": false
     },
     {

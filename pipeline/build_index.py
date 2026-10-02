@@ -314,6 +314,19 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
         unscored_by_region=final_reg_unscored,
         unsized_by_region={k: dict(v) for k, v in reg_unsized.items()})
 
+    # Which kind of zero, carried on the region record itself.
+    #
+    # It already lived in explanations_regional.json, which is lazily fetched and read only by
+    # the Evidence Inspector — so every other surface that prints a region's 0.00 (the map hover
+    # card, the rankings rows, the exported selection label) had no way to say whether it meant
+    # "nothing recorded", "too small to show" or "we cannot measure this". Three different facts
+    # rendered identically. Two short strings per region is a cheap price for being able to tell
+    # them apart everywhere.
+    for _code, _ex in regional_explanations.items():
+        if _code in snapshot["regions"]:
+            snapshot["regions"][_code]["zero_basis"] = _ex.get("zero_basis")
+            snapshot["regions"][_code]["zero_note"] = _ex.get("zero_note")
+
     # Recovery lifecycle episodes (P7). The trajectory is sampled with the SAME weight function
     # that scores, so the curve a reader sees is the curve the index used — not a second model
     # of recovery drawn beside the real one.
