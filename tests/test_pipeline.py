@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from pipeline import wikitext as W
-from pipeline.build_index import _composite, _weight_at
+from pipeline.build_index import SCORING, _composite, _weight_at
 from pipeline.config import PROCESSED, RU_REGIONS, aoi_regions
 from pipeline.dates import parse_dates, unenumerated_count
 from pipeline.fetch_refineries import BBL_PER_DAY_TO_MTPA
@@ -2323,12 +2323,69 @@ def test_transmission_alternative_models_are_deterministic_and_bounded():
     for k in ("A_current_global_saturation", "B_per_region_saturation_breadth_aware",
               "C_intensity_max_region_pct", "D_distinct_facility_burden"):
         assert 0.0 <= am[k] <= 100.0
-    # Model E: removing transmission changes the headline (a positive-contribution sector).
-    if am.get("E_esdi_if_transmission_removed") is not None:
-        assert am["E_esdi_if_transmission_removed"] <= snap["esdi"] + 1e-6
-    assert snap.get("esdi_excluding_transmission") == pytest.approx(am.get("E_esdi_if_transmission_removed"), abs=0.05)
+    # Model E: the headline recomputed with transmission EXCLUDED and the covered-sector weights
+    # renormalised over what remains. Assert that DEFINITION, and let the direction of the move
+    # be derived rather than assumed.
+    #
+    # WHY NOT `E <= esdi`. That is what this test asserted until 2026-10-01, and it is
+    # mathematically false. The ESDI is a weighted MEAN, not a sum, so dropping a sector whose
+    # value sits BELOW the mean of the others RAISES the mean. The identity is
+    #     esdi - E == w_tx * (v_tx - E) / (w_tx + W_others)
+    # so sign(esdi - E) == sign(v_tx - E): removing transmission lowers the headline only while
+    # transmission is the above-average sector. It stopped being so on 2026-09-21 through ordinary
+    # time decay, this assertion went red, and because .github/workflows/refresh.yml gates its
+    # commit on the suite, a false test silently froze production for eleven days. Assert what is
+    # true at every value, never what happens to be true at today's.
+    E = am.get("E_esdi_if_transmission_removed")
+    assert snap.get("esdi_excluding_transmission") == pytest.approx(E, abs=0.05)
+    if E is not None:
+        covered = snap["sectors_covered"]
+        others = [s for s in covered if s != "transmission"]
+        # Recompute through the shipped composite, from the published sector values.
+        fracs = {s: v / 100.0 for s, v in snap["sectors"].items()}
+        assert E == pytest.approx(_composite(fracs, SCORING["sector_weights"], others), abs=0.05)
+        assert 0.0 <= E <= 100.0
+        v_tx = snap["sectors"]["transmission"]
+        if abs(v_tx - E) > 0.05:          # too close to call at two published decimals
+            assert (snap["esdi"] > E) == (v_tx > E), (
+                f"removing transmission moved the headline the wrong way: esdi={snap['esdi']}, "
+                f"E={E}, transmission={v_tx}")
     # The models must carry the explicit disclaimer that none is a percent of grid offline.
     assert "grid offline" in am["note"].lower()
+
+
+def test_removing_a_sector_from_a_weighted_mean_can_move_it_either_way():
+    """The arithmetic that froze the daily refresh for eleven days, pinned as a unit test.
+
+    The headline is a weighted MEAN over the covered sectors. A sibling test used to assert that
+    excluding transmission could only lower it; both directions are reachable, and which one you
+    get depends solely on whether the excluded sector sits above or below the mean of the rest.
+    So no unconditional inequality between the headline and the ex-transmission counterfactual is
+    ever assertable -- and this runs without the pipeline, so it cannot drift back into being
+    true-today-only."""
+    w = {"a": 0.35, "b": 0.20, "t": 0.10}
+    # Transmission ABOVE the mean of the others: removing it LOWERS the headline.
+    hi = {"a": 0.10, "b": 0.10, "t": 0.90}
+    assert _composite(hi, w, ["a", "b"]) < _composite(hi, w, ["a", "b", "t"])
+    # Transmission BELOW the mean of the others: removing it RAISES the headline.
+    lo = {"a": 0.90, "b": 0.90, "t": 0.10}
+    assert _composite(lo, w, ["a", "b"]) > _composite(lo, w, ["a", "b", "t"])
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_transmission_red_team_verdict_quotes_live_arithmetic_not_frozen_numbers():
+    """The verdict is rendered verbatim in the Methodology panel, so the figures it argues from
+    must be the current ones. They were hardcoded at iteration 7 and had both decayed and changed
+    sign by 2026-10-01. Substitution happens at build time; an unsubstituted placeholder would
+    reach a reader as literal braces, so fail on that too."""
+    snap = _snapshot()
+    v = snap["transmission_sensitivity"]["red_team_verdict"]
+    assert "{" not in v and "}" not in v, "unsubstituted placeholder in the shipped verdict"
+    E = snap.get("esdi_excluding_transmission")
+    if E is not None:
+        assert f"{E - snap['esdi']:+.2f}" in v, "verdict does not quote the live ex-transmission move"
+    share = snap["transmission_concentration"]["occupied_share_pct"]
+    assert f"{share:.0f}%" in v, "verdict does not quote the live occupied share"
 
 
 def test_transmission_sector_is_labelled_a_burden_not_bare_transmission():

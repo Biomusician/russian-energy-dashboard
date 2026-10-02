@@ -4,14 +4,14 @@
 > A test (`test_current_state_doc_is_in_sync`) fails if this drifts from the build.
 > Other docs should link here instead of re-quoting these numbers (§2).
 
-- **as_of**: 2026-09-04
-- **Headline ESDI (monitored area)**: 16.41
-- **Uncovered-sector zero-assumption sensitivity**: 13.95
-- **Sector exposures**: refining 30.00, electric_generation 0.06, transmission 18.19, oil_logistics 8.08, gas 0.00, coal 0.00
+- **as_of**: 2026-10-01
+- **Headline ESDI (monitored area)**: 10.38
+- **Uncovered-sector zero-assumption sensitivity**: 8.82
+- **Sector exposures**: refining 19.93, electric_generation 0.05, transmission 9.69, oil_logistics 4.33, gas 0.00, coal 0.00
 
 ## Coverage
-- **Oil-strike benchmark coverage**: 47.2% (144 enumerated oil-sector strikes / 305 reported)
-- **Total events across all sectors**: 175
+- **Oil-strike benchmark coverage**: 47.5% (145 enumerated oil-sector strikes / 305 reported)
+- **Total events across all sectors**: 176
 
 ## Recovery
 - **Observed-restoration episodes (monitored area)**: n = 9
@@ -24,16 +24,16 @@
 - **Canonical linkage (identity, NOT disruption coverage)**: 27/34 refineries struck = 85.6% of denominator MTPA
 
 ## Gas processing (experimental, NOT in headline ESDI)
-- **Within-census exposure**: 24.9% (2 of 12 censused plants, 91.91 bcm/y total)
+- **Within-census exposure**: 18.2% (2 of 12 censused plants, 91.91 bcm/y total)
 
 ## Transmission (event-burden, theatre-concentrated)
-- **Headline value**: 18.19 at saturation 8.0
-- **Sensitivity range across saturations**: 9.09–36.37
-- **Top-theatre share**: 54.5% over 3 region(s)
+- **Headline value**: 9.69 at saturation 8.0
+- **Sensitivity range across saturations**: 4.85–19.38
+- **Top-theatre share**: 55.0% over 2 region(s)
 
 ## Strategic effects (source-backed, observational)
 - **National/macro datapoints**: 8
 - **Per-incident effects**: 18 across 15 incidents
 
 ## Tests
-- **Python test functions** (`tests/test_pipeline.py`): 329 (pytest reports more cases — some functions are parametrized)
+- **Python test functions** (`tests/test_pipeline.py`): 331 (pytest reports more cases — some functions are parametrized)

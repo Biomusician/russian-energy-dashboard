@@ -817,12 +817,13 @@ def _transmission_sensitivity(live, facility_info, esdi_excluded):
             "actually have (it never needs a reconstitution duration). Alternatives were measured "
             "and rejected as a headline: B's breadth-awareness is dormant at current magnitudes; D "
             "(distinct-facility count) is the single most misleading number; C (breadth+intensity) "
-            "is kept only as a supporting display; E (remove entirely) buys just +0.39 of purity "
-            "while discarding real sourced signal and is the option most exposed to the appearance "
-            "of tuning occupied Crimea (~45% of the burden) away. The honest fix is LABELLING not "
-            "surgery: it is a disruption BURDEN of a handful of theatres, never a percent of grid "
-            "offline, and the ex-transmission counterfactual (esdi_excluding_transmission) is "
-            "published so the +0.39 it adds is one click away. Its two real wounds — an arbitrary "
+            "is kept only as a supporting display; E (remove entirely) moves the headline by only "
+            "{EX_TX_MOVE} while discarding real sourced signal and is the option most exposed to "
+            "the appearance of tuning occupied Crimea ({OCCUPIED_SHARE} of the burden) away. The "
+            "honest fix is LABELLING not surgery: it is a disruption BURDEN of a handful of "
+            "theatres, never a percent of grid offline, and the ex-transmission counterfactual "
+            "(esdi_excluding_transmission) is published so the {EX_TX_MOVE} it would move the "
+            "headline is one click away. Its two real wounds — an arbitrary "
             "saturation constant (~4x swing) and single-theatre concentration — are disclosed via "
             "the sweep, the concentration split and these alternatives."
         ),
@@ -895,6 +896,17 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
     _covered_no_tx = [s for s in covered if s != "transmission"]
     esdi_excluding_transmission = _composite(_nat_final, _sw, _covered_no_tx) if _covered_no_tx else None
     transmission_sensitivity["alternative_models"]["E_esdi_if_transmission_removed"] = esdi_excluding_transmission
+    # The iteration-7 red-team verdict used to hand-quote the figures it argued from (+0.39 of
+    # movement, ~45% occupied share). Both decay: by 2026-10-01 the move had become +0.09 and had
+    # changed SIGN, so a shipped, UI-rendered verdict was arguing from a number that no longer
+    # existed. The judgement is frozen history; its arithmetic is substituted at build time.
+    _esdi_now = national["esdi"][-1]
+    _move = ("+0.00" if esdi_excluding_transmission is None
+             else f"{esdi_excluding_transmission - _esdi_now:+.2f}")
+    transmission_sensitivity["red_team_verdict"] = (
+        transmission_sensitivity["red_team_verdict"]
+        .replace("{EX_TX_MOVE}", _move)
+        .replace("{OCCUPIED_SHARE}", f"{transmission_concentration['occupied_share_pct']:.0f}%"))
     for _x in live:                       # internal full-precision weight — not part of the payload
         _x.pop("_w_exact", None)
 
