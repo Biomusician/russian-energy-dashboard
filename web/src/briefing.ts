@@ -44,6 +44,9 @@ export interface BriefingContext {
   analyticalDate: string | null;
   exportedAt: string;
   caveat: string;
+  /** What the picture is filtered to, when it is filtered. An exported frame that silently shows
+   *  a subset is a claim about the whole. */
+  filterNote: string | null;
   /** P2: set only when this build is old enough that a reader must be told. An exported image
    *  outlives the page it came from, so the warning has to travel with the pixels — and it is
    *  never droppable by an Include toggle, for the same reason the caveat is not. */
@@ -213,6 +216,29 @@ export function episodeSummary(e: LifecycleEpisode): EpisodeSummary {
   };
 }
 
+/** One line naming every filter that is narrowing the picture, or null when none is.
+ *
+ *  Without it an exported frame of "kinetic strikes, confirmed only" was indistinguishable from
+ *  one of everything — same title, same caveat, a smaller number and no explanation for it. */
+function filterNote(
+  counts: { classes: [number, number]; causes: [number, number]; confidences: [number, number] }
+    | undefined,
+  activityWindow?: string,
+): string | null {
+  const parts: string[] = [];
+  const add = (label: string, c: [number, number] | undefined) => {
+    if (c && c[0] < c[1]) parts.push(`${c[0]} of ${c[1]} ${label}`);
+  };
+  add("asset classes", counts?.classes);
+  add("causes", counts?.causes);
+  add("confidence levels", counts?.confidences);
+  if (activityWindow && activityWindow !== "cumulative") {
+    parts.push(`activity halo limited to ${activityWindow}`);
+  }
+  if (!parts.length) return null;
+  return `FILTERED VIEW — showing ${parts.join("; ")}. This is a subset, not the whole corpus.`;
+}
+
 export function buildBriefingContext(args: {
   bundle: Bundle;
   step: number;
@@ -227,8 +253,18 @@ export function buildBriefingContext(args: {
   pointB: ResolvedPoint | null;
   /** The recovery episode the reader has open, if any (§19). */
   episode: LifecycleEpisode | null;
+  /** Non-cumulative activity windows also narrow what the map shows. */
+  activityWindow?: string;
   /** Wall-clock at export time. Passed in rather than read here so the function stays pure. */
   now: string;
+  /** Events the map is actually drawing: filtered, and up to `currentDate`. */
+  visibleIncidentCount?: number;
+  /** [selected, available] per filter, so the frame can say when it is showing a subset. */
+  filterCounts?: {
+    classes: [number, number];
+    causes: [number, number];
+    confidences: [number, number];
+  };
 }): BriefingContext {
   const { bundle, step, currentDate, metricId, compare, pointA, pointB, history } = args;
   const asOf = bundle.snapshot.as_of;
@@ -238,7 +274,10 @@ export function buildBriefingContext(args: {
   if (metricId === "esdi") {
     metricValue = fmtNum(bundle.national.esdi[step] ?? 0, 2);
   } else if (metricId === "incidents") {
-    metricValue = String(bundle.snapshot.incident_total ?? "");
+    // The count the MAP is showing: filtered, and up to the displayed date. `incident_total` is
+    // the as-of total for the whole corpus, so a frame scrubbed to 2024 — or filtered to one
+    // cause — carried today's unfiltered number as though it described the picture beside it.
+    metricValue = String(args.visibleIncidentCount ?? bundle.snapshot.incident_total ?? "");
   }
 
   let comparison: ComparisonSummary | null = null;
@@ -302,6 +341,7 @@ export function buildBriefingContext(args: {
     analyticalDate: isLive ? null : currentDate,
     exportedAt: args.now,
     caveat: caveats.join(" "),
+    filterNote: filterNote(args.filterCounts, args.activityWindow),
     // `args.now` is the export date, which is exactly the clock to measure build age by.
     stalenessNote: assessFreshnessOn(
       asOf, bundle.snapshot.publication_freshness, args.now).banner,

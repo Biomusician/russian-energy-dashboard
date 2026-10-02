@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, loadBundle, stepFor } from "./data";
 import type { Asset, Bundle, Incident } from "./types";
-import { decodeDeepLink, encodeDeepLink, type CameraState } from "./urlState";
+import { decodeDeepLink, encodeDeepLink, has, type CameraState } from "./urlState";
 import Ribbon from "./components/Ribbon";
 import StalenessNotice from "./components/StalenessNotice";
 import Filters from "./components/Filters";
@@ -159,8 +159,12 @@ export default function App() {
         setStep(initial.date ? stepFor(b.national.dates, initial.date) : b.national.dates.length - 1);
         // A deep-linked region that no longer exists (renamed, rescoped, or simply mistyped) is
         // dropped rather than left selected — a dossier for a phantom region is worse than none.
-        if (initial.selected && !b.snapshot.regions[initial.selected]) setSelected(null);
-        setCompareRegions((prev) => prev.filter((c) => b.snapshot.regions[c]));
+        // `has`, not `regions[code]`: a plain-object lookup reaches Object.prototype, so
+        // `?r=constructor` found a "region", kept it, and rendered a dossier headed "Object".
+        // `?cmp=constructor` went further — the comparison tray read `snap.sectors` off that
+        // phantom and threw, and with no error boundary the whole app unmounted to a white page.
+        if (initial.selected && !has(b.snapshot.regions, initial.selected)) setSelected(null);
+        setCompareRegions((prev) => prev.filter((c) => has(b.snapshot.regions, c)));
 
         const allClasses = Object.keys(b.taxonomy.asset_classes);
         const allCauses = Object.keys(b.taxonomy.causes);
@@ -168,8 +172,14 @@ export default function App() {
         // universe so a stale link can never inject a key the taxonomy no longer has. If nothing
         // survives the intersection the link is meaningless, so fall back to "all" rather than
         // showing an empty map the reader cannot explain.
+        // Three distinct cases, and collapsing the first two is how a shared link came to show
+        // MORE than its sender could see: `undefined` is "not pinned" (so: all), `[]` is "pinned
+        // to nothing" (so: nothing), and a non-empty list that survives nothing is a stale link
+        // whose keys the taxonomy has dropped (so: all, because an unexplainable empty map is
+        // worse than an unfiltered one).
         const pick = (linked: string[] | undefined, all: string[]) => {
           if (!linked) return new Set(all);
+          if (linked.length === 0) return new Set<string>();
           const kept = linked.filter((k) => all.includes(k));
           return new Set(kept.length ? kept : all);
         };
@@ -409,9 +419,18 @@ export default function App() {
       // ribbon beside it — two clocks on one page, visible as "11 days" in the header and
       // "12 days" in the briefing footer.
       now: localISODate(new Date()),
+      // What the map is actually drawing, so a frame scrubbed to 2024 or filtered to one cause
+      // stops carrying today's unfiltered corpus total as its headline number.
+      visibleIncidentCount: visibleIncidents.length,
+      activityWindow: filters.activityWindow,
+      filterCounts: {
+        classes: [filters.classes.size, Object.keys(bundle.taxonomy.asset_classes).length],
+        causes: [filters.causes.size, Object.keys(bundle.taxonomy.causes).length],
+        confidences: [filters.confidences.size, ALL_CONFIDENCES.length],
+      },
     });
-  }, [bundle, step, currentDate, filters.metric, filters.showGasNetwork, filters.showOilNetwork,
-      selected, selectedAsset, compare, history, lifecycleEpisode, lifecycleData]);
+  }, [bundle, step, currentDate, filters, selected, selectedAsset, compare, history,
+      lifecycleEpisode, lifecycleData, visibleIncidents]);
 
   const runExport = async (size: ExportSize) => {
     const map = mapRef.current;

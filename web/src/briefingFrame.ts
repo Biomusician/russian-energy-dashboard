@@ -19,6 +19,7 @@
 
 import type { BriefingContext, BriefingOptions } from "./briefing";
 import { fmtDate } from "./data";
+import { SEVERITY_STOPS } from "./palette";
 
 const SANS = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace';
@@ -127,6 +128,22 @@ export function drawBriefingFrame(
       c.fillText(`as of ${fmtDate(ctx0.asOf)}`, W - pad, ry);
     }
     c.textAlign = "left";
+    headerBottom = hBand;
+  } else {
+    // "Title off" means the reader wants a clean picture, not an undatable one. Without this,
+    // switching it off removed the metric, the value AND every date from the image, leaving a
+    // coloured map of Russia that could be from any day of the war.
+    const smallFont = `${Math.round(13 * s)}px ${SANS}`;
+    const text = ctx0.analyticalDate
+      ? `${ctx0.metricLabel} — analytical date ${fmtDate(ctx0.analyticalDate)} `
+        + `(data as of ${fmtDate(ctx0.asOf)})`
+      : `${ctx0.metricLabel} — as of ${fmtDate(ctx0.asOf)}`;
+    c.font = smallFont;
+    const hBand = Math.round(30 * s);
+    band(c, 0, 0, Math.min(W, c.measureText(text).width + pad * 2), hBand);
+    c.textBaseline = "alphabetic";
+    c.fillStyle = DIM;
+    c.fillText(text, pad, Math.round(20 * s));
     headerBottom = hBand;
   }
 
@@ -237,6 +254,16 @@ export function drawBriefingFrame(
     }
   }
 
+  // A filtered frame must say so: the number beside the title describes the subset, and nothing
+  // else in the image would tell a reader that. Not droppable by a toggle, for the same reason
+  // the caveat is not.
+  if (ctx0.filterNote) {
+    c.font = caveatFont;
+    for (const ln of wrap(c, ctx0.filterNote, maxText)) {
+      footLines.push({ text: ln, font: caveatFont, color: AMBER, lineHeight: Math.round(21 * s) });
+    }
+  }
+
   c.font = caveatFont;
   for (const ln of wrap(c, ctx0.caveat, maxText)) {
     footLines.push({ text: ln, font: caveatFont, color: AMBER, lineHeight: Math.round(21 * s) });
@@ -278,5 +305,47 @@ export function drawBriefingFrame(
     fy += l.lineHeight;
   }
 
+  // The colour ramp. The Include checkbox for this existed from P8 and was never read by
+  // anything, so the exported image had no key at all and its colours meant nothing to a reader
+  // who had not seen the live map. Drawn above the footer, right-aligned, out of the caption.
+  if (options.legend) drawLegend(c, W, footTop, s, ctx0);
+
   return out;
+}
+
+
+/** Colour key for the choropleth, drawn from the same stops the map uses.
+ *
+ *  Kept deliberately small: it answers "which end is bad" and nothing more. A full numeric axis
+ *  would invite reading values off the picture, and the map's own numbers live in the dossier. */
+function drawLegend(
+  c: CanvasRenderingContext2D, W: number, footTop: number, s: number, ctx0: BriefingContext,
+) {
+  const w = Math.round(260 * s);
+  const h = Math.round(14 * s);
+  const pad = Math.round(28 * s);
+  const x = W - pad - w;
+  const y = footTop - Math.round(58 * s);
+
+  band(c, x - Math.round(10 * s), y - Math.round(22 * s),
+       w + Math.round(20 * s), h + Math.round(50 * s));
+
+  c.font = `600 ${Math.round(10.5 * s)}px ${SANS}`;
+  c.fillStyle = FAINT;
+  c.textAlign = "left";
+  c.fillText(ctx0.metricLabel.toUpperCase(), x, y - Math.round(8 * s));
+
+  const n = SEVERITY_STOPS.length;
+  const cell = w / n;
+  for (let i = 0; i < n; i++) {
+    c.fillStyle = SEVERITY_STOPS[i][1];
+    c.fillRect(x + i * cell, y, Math.ceil(cell), h);
+  }
+
+  c.font = `${Math.round(10.5 * s)}px ${SANS}`;
+  c.fillStyle = DIM;
+  c.fillText("low", x, y + h + Math.round(14 * s));
+  c.textAlign = "right";
+  c.fillText("high", x + w, y + h + Math.round(14 * s));
+  c.textAlign = "left";
 }

@@ -90,6 +90,7 @@ export default function Briefing({
               Briefing Mode hides the ribbon, so without this a reader who entered briefing on a
               frozen build would have removed the only remaining date context. */}
           {ctx.stalenessNote && <p className="brief-caveat">{ctx.stalenessNote}</p>}
+          {ctx.filterNote && <p className="brief-caveat">{ctx.filterNote}</p>}
           <p className="brief-caveat">{ctx.caveat}</p>
           {options.scopeNote && <p>{ctx.scopeNote}</p>}
           {options.scopeNote && ctx.crimeaNote && <p>{ctx.crimeaNote}</p>}

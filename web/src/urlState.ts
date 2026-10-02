@@ -44,6 +44,21 @@ const CODE_METRIC: Record<string, Metric> = { ev: "incidents", d30: "esdi_delta_
 const ACT_CODE: Record<ActivityWindow, string> = { cumulative: "cum", "30d": "30", "90d": "90" };
 const CODE_ACT: Record<string, ActivityWindow> = { "30": "30d", "90": "90d", cum: "cumulative" };
 
+/** Explicit "the reader turned everything off". No taxonomy key is "-", and no old link contains
+ *  one, so adding it costs nothing in compatibility.
+ *
+ *  Without it, an empty filter set encoded as `cls=` and decoded back to "no filter pinned",
+ *  i.e. ALL. The sender saw an empty map; the recipient saw everything on it. A link that shows
+ *  MORE than the person sharing it could see is the worst kind this feature can produce. */
+const NONE = "-";
+
+/** `o[k]` where `o` is a plain object literal reaches Object.prototype, so `m=constructor`
+ *  yields a FUNCTION and `r=constructor` passes an existence check for a region that does not
+ *  exist. Every lookup keyed by a value from the query string goes through this. */
+export function has(o: object, k: string): boolean {
+  return Object.prototype.hasOwnProperty.call(o, k);
+}
+
 /** Build the query string (without a leading "?") for the given view. `allClasses` etc. are the
  *  full key universes, so a set equal to "all" is omitted rather than spelled out. */
 export function encodeDeepLink(
@@ -74,8 +89,11 @@ export function encodeDeepLink(
   if (v.date && v.date !== v.latestDate) p.set("d", v.date);
   if (v.selected) p.set("r", v.selected);
 
-  const subset = (set: Set<string>, all: string[]) =>
-    set.size < all.length ? all.filter((k) => set.has(k)).join(",") : null;
+  const subset = (set: Set<string>, all: string[]) => {
+    if (set.size >= all.length) return null;          // equals the default: omit it
+    if (set.size === 0) return NONE;                  // explicitly nothing, not "unspecified"
+    return all.filter((k) => set.has(k)).join(",");
+  };
   const cls = subset(v.classes, v.allClasses);
   const cau = subset(v.causes, v.allCauses);
   const con = subset(v.confidences, v.allConfidences);
@@ -106,9 +124,9 @@ export function decodeDeepLink(search: string): DeepLink {
   const out: DeepLink = {};
 
   const m = p.get("m");
-  if (m && CODE_METRIC[m]) out.metric = CODE_METRIC[m];
+  if (m && has(CODE_METRIC, m)) out.metric = CODE_METRIC[m];
   const a = p.get("a");
-  if (a && CODE_ACT[a]) out.activityWindow = CODE_ACT[a];
+  if (a && has(CODE_ACT, a)) out.activityWindow = CODE_ACT[a];
   const d = p.get("d");
   if (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) out.date = d;
   const r = p.get("r");
@@ -116,7 +134,10 @@ export function decodeDeepLink(search: string): DeepLink {
 
   const list = (key: string) => {
     const raw = p.get(key);
-    return raw ? raw.split(",").filter(Boolean) : undefined;
+    if (raw == null) return undefined;                 // not pinned at all -> caller's default
+    if (raw === NONE) return [];                       // pinned to nothing, which is not "all"
+    const parts = raw.split(",").filter(Boolean);
+    return parts.length ? parts : undefined;           // legacy "cls=" meant unspecified
   };
   const cls = list("cls"); if (cls) out.classes = cls;
   const cau = list("cau"); if (cau) out.causes = cau;

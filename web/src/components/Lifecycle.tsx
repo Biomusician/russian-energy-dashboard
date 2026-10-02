@@ -19,7 +19,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Bundle, LifecyclePayload, LifecycleEpisode, Milestone } from "../types";
-import { FAMILY_LABEL, fmtDate, fmtNum, loadLifecycle, titleCase } from "../data";
+import { FAMILY_LABEL, fmtDate, fmtNum, loadLifecycle, resolvePoint, titleCase } from "../data";
 import { Sparkline, hostOf } from "./ui";
 import type { InspectTarget } from "./Inspector";
 import type { CompareState } from "./Comparison";
@@ -34,12 +34,29 @@ const STAGE_LABEL: Record<string, string> = {
   estimated_restoration: "Estimated restoration",
 };
 
-/** Where a milestone sits relative to an active two-date comparison (§14). Computed from dates
- *  against the same resolved series points the comparison uses — no second date engine. */
-function abPosition(date: string | null, a: string | null, b: string | null) {
-  if (!date || !a || !b) return null;
-  if (date <= a) return "by_a";
-  if (date <= b) return "between";
+/** The two dates the comparison ACTUALLY shows.
+ *
+ *  `compare.a` and `compare.b` are what the reader typed. The map and the A/B values are read
+ *  from the nearest earlier weekly series point, which can be up to six days earlier. Comparing
+ *  milestones against the typed dates — which is what this file did, while its comment claimed
+ *  "no second date engine" — labelled a milestone in that gap "by A" even though the A figure
+ *  beside it excluded the milestone. Two date engines, disagreeing quietly. */
+export type ResolvedAB = { a: string; b: string } | null;
+
+export function resolveAB(dates: string[], compare: CompareState | null): ResolvedAB {
+  if (!compare) return null;
+  const a = resolvePoint(dates, compare.a);
+  const b = resolvePoint(dates, compare.b);
+  if (!a || !b) return null;
+  return { a: a.resolved_series_date, b: b.resolved_series_date };
+}
+
+/** Where a milestone sits relative to an active two-date comparison (§14), against the resolved
+ *  series points the comparison actually displays. */
+export function abPosition(date: string | null, ab: ResolvedAB) {
+  if (!date || !ab) return null;
+  if (date <= ab.a) return "by_a";
+  if (date <= ab.b) return "between";
   return "after_b";
 }
 
@@ -71,6 +88,11 @@ export default function Lifecycle({
     if (!data || data === "loading") return null;
     return data.episodes.find((e) => e.episode_id === selectedEpisode) ?? null;
   }, [data, selectedEpisode]);
+
+  // Resolved once, here, from the same series the comparison reads. Everything below compares
+  // against these and never against what the reader typed.
+  const ab = useMemo(
+    () => resolveAB(bundle.national.dates, compare), [bundle.national.dates, compare]);
 
   if (data === "loading") {
     return <div className="empty" style={{ padding: 24 }}>Loading recovery evidence…</div>;
@@ -109,18 +131,18 @@ export default function Lifecycle({
 
       {episode
         ? <EpisodeDetail e={episode} data={data} bundle={bundle} onExplain={onExplain}
-                         compare={compare} />
-        : <EpisodeList data={data} onSelect={onSelectEpisode} compare={compare} />}
+                         ab={ab} />
+        : <EpisodeList data={data} onSelect={onSelectEpisode} ab={ab} />}
     </div>
   );
 }
 
 function EpisodeList({
-  data, onSelect, compare,
+  data, onSelect, ab,
 }: {
   data: LifecyclePayload;
   onSelect: (id: string) => void;
-  compare: CompareState | null;
+  ab: ResolvedAB;
 }) {
   return (
     <>
@@ -133,7 +155,7 @@ function EpisodeList({
         <div className="contrib-list">
           {data.episodes.map((e) => {
             const last = e.milestones[e.milestones.length - 1];
-            const pos = compare ? abPosition(last?.date ?? null, compare.a, compare.b) : null;
+            const pos = abPosition(last?.date ?? null, ab);
             return (
               <button key={e.episode_id} className="contrib-row plain lifecycle-row"
                       onClick={() => onSelect(e.episode_id)}>
@@ -164,13 +186,13 @@ function EpisodeList({
 }
 
 function EpisodeDetail({
-  e, data, bundle, onExplain, compare,
+  e, data, bundle, onExplain, ab,
 }: {
   e: LifecycleEpisode;
   data: LifecyclePayload;
   bundle: Bundle;
   onExplain: (t: InspectTarget) => void;
-  compare: CompareState | null;
+  ab: ResolvedAB;
 }) {
   const weights = e.trajectory.map((p) => p.weight);
   return (
@@ -187,7 +209,7 @@ function EpisodeDetail({
         <p className="small">{data.layer_labels.observed}</p>
         <ol className="stages">
           {e.milestones.map((m) => (
-            <StageNode key={m.stage + m.date} m={m} compare={compare} />
+            <StageNode key={m.stage + m.date} m={m} ab={ab} />
           ))}
         </ol>
         {e.undated_restoration_claim && (
@@ -304,8 +326,8 @@ function EpisodeDetail({
   );
 }
 
-function StageNode({ m, compare }: { m: Milestone; compare: CompareState | null }) {
-  const pos = compare ? abPosition(m.date, compare.a, compare.b) : null;
+function StageNode({ m, ab }: { m: Milestone; ab: ResolvedAB }) {
+  const pos = abPosition(m.date, ab);
   return (
     <li className={`stage ${m.status}`}>
       <div className="stage-head">

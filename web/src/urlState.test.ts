@@ -156,12 +156,70 @@ describe("decodeDeepLink — hostile and malformed input", () => {
   });
 
   it("never encodes a coordinate for a selected asset (scope)", () => {
-    // The link vocabulary has no asset-position key at all; only region code + camera exist.
-    const keys = [...new URLSearchParams(
-      "m=d30&a=90&r=RU-ROS&d=2026-06-01&cls=refinery&ly=lines&cam=42,49,4&cmp=RU-KDA",
-    ).keys()];
-    expect(keys).not.toContain("asset");
-    expect(keys).not.toContain("lat");
-    expect(keys).not.toContain("lon");
+    // Driven through the real ENCODER. The previous version built the keys from a query string
+    // typed into the test itself, so it asserted that a hand-written string lacked "lat" — it
+    // could never have failed, and adding a coordinate key to the encoder would not have tripped
+    // it. The scope guarantee has to be read off what the encoder actually emits.
+    const q = encodeDeepLink(baseView({
+      metric: "esdi_delta_30d", activityWindow: "90d", selected: "RU-ROS", date: "2026-06-01",
+      classes: new Set(["refinery"]), showLines: true, compare: ["RU-KDA"],
+      camera: { lng: 42.1234, lat: 49.5678, zoom: 4.25 },
+    }));
+    const keys = [...new URLSearchParams(q).keys()];
+    // The vocabulary is closed: a new key has to be added here deliberately, and anything
+    // position-bearing has to be argued for rather than slipped in.
+    expect(new Set(keys)).toEqual(new Set(["m", "a", "r", "d", "cls", "ly", "cam", "cmp"]));
+    for (const banned of ["asset", "lat", "lon", "lng", "coord", "coordinates", "point", "bbox"]) {
+      expect(keys).not.toContain(banned);
+    }
+    // `cam` is the ONLY key carrying numbers, and it is a viewport, not a position of anything.
+    for (const [k, v] of new URLSearchParams(q)) {
+      if (k !== "cam") expect(v).not.toMatch(/^-?\d+(\.\d+)?(,-?\d+(\.\d+)?)+$/);
+    }
+  });
+});
+
+describe("a link cannot show the recipient more than the sender saw", () => {
+  it("round-trips an explicitly empty filter instead of silently meaning 'all'", () => {
+    // THE DEFECT. The "none" button set an empty Set; the encoder wrote `cls=`; the decoder read
+    // that as "no filter pinned" and the app fell back to ALL. The sender saw an empty map and
+    // the recipient saw every marker on it.
+    for (const key of ["classes", "causes", "confidences"] as const) {
+      const q = encodeDeepLink(baseView({ [key]: new Set<string>() }));
+      expect(decodeDeepLink(q)[key]).toEqual([]);
+    }
+  });
+
+  it("still treats a legacy empty value as unspecified", () => {
+    // Old links in the wild contain `cls=`. They meant "unspecified" then and must mean it now.
+    expect(decodeDeepLink("cls=").classes).toBeUndefined();
+    expect(decodeDeepLink("cau=&con=").causes).toBeUndefined();
+  });
+
+  it("keeps a full selection out of the url entirely", () => {
+    expect(encodeDeepLink(baseView())).toBe("");
+  });
+});
+
+describe("values that are keys on Object.prototype", () => {
+  // Not an exotic attack: `m=constructor` is a plausible typo away from a real link, and the
+  // consequence was a mislabelled legend over a surface computed from different data, or a
+  // phantom region that crashed the comparison tray to a white page.
+  const PROTO = ["constructor", "__proto__", "hasOwnProperty", "toString", "valueOf"];
+
+  it("does not accept a prototype key as a metric or an activity window", () => {
+    for (const k of PROTO) {
+      expect(decodeDeepLink(`m=${k}`).metric).toBeUndefined();
+      expect(decodeDeepLink(`a=${k}`).activityWindow).toBeUndefined();
+    }
+  });
+
+  it("passes a prototype-named region through as a plain string for the app to reject", () => {
+    // The decoder has no region list, so it cannot validate; what matters is that it hands back
+    // something the app checks with a real own-property test rather than `regions[code]`.
+    for (const k of PROTO) {
+      expect(typeof decodeDeepLink(`r=${k}`).selected).toBe("string");
+      expect(decodeDeepLink(`cmp=${k}`).compare).toEqual([k]);
+    }
   });
 });

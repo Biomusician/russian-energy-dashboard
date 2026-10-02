@@ -65,6 +65,7 @@ const CTX: BriefingContext = {
   caveat: "Modelled disruption exposure — capacity AT disrupted sites, not measured capacity "
     + "loss. Transmission disruption burden is an event-burden proxy, not percent of grid offline.",
   stalenessNote: null,
+  filterNote: null,
   scopeNote: "Monitored area: Belarus, western Russia and the Siberian Federal District, plus "
     + "occupied Crimea. Aggregated to administrative region.",
   crimeaNote: "Crimea is internationally recognised as part of Ukraine and is shown separately; "
@@ -226,6 +227,65 @@ describe("comparison and episode framing reach the image", () => {
       buildDelta: { previousAsOf: "2026-09-02", currentAsOf: "2026-09-03", delta: "−0.17" },
     }).drawn;
     expect(d).toContain("Since last build");
+  });
+});
+
+describe("an image says when it is showing only part of the picture", () => {
+  const FILTERED = {
+    ...CTX,
+    filterNote: "FILTERED VIEW — showing 1 of 12 asset classes; 2 of 7 causes. This is a subset, "
+      + "not the whole corpus.",
+  };
+
+  it("paints the filter note into the picture", () => {
+    expect(draw(FILTERED).drawn).toContain("FILTERED VIEW");
+    expect(draw(FILTERED).drawn).toContain("1 of 12 asset classes");
+  });
+
+  it("keeps it even when every Include toggle is off", () => {
+    const none: BriefingOptions = {
+      title: false, selectionLabel: false, scopeNote: false, legend: false,
+      sourceFooter: false, comparisonSummary: false,
+    };
+    expect(draw(FILTERED, none).drawn).toContain("FILTERED VIEW");
+  });
+
+  it("says nothing when the view is unfiltered", () => {
+    expect(draw().drawn).not.toContain("FILTERED VIEW");
+  });
+});
+
+describe("turning the title off does not make the image undatable", () => {
+  it("still carries the metric and the as-of date", () => {
+    // Switching the title off used to remove the metric, the value AND every date, leaving a
+    // coloured map of Russia that could be from any day of the war.
+    const d = draw(CTX, { ...DEFAULT_OPTIONS, title: false }).drawn;
+    expect(d).toContain("Energy System Disruption Exposure Index");
+    expect(d).toContain("3 Sep 2026");
+  });
+
+  it("still distinguishes an analytical date from the data as-of date", () => {
+    const d = draw({ ...CTX, analyticalDate: "2026-08-27" },
+                   { ...DEFAULT_OPTIONS, title: false }).drawn;
+    expect(d).toContain("analytical date");
+    expect(d).toContain("data as of");
+  });
+});
+
+describe("the legend checkbox actually draws a legend", () => {
+  it("draws a colour key and labels its ends when switched on", () => {
+    // The Include toggle for this shipped in P8 and was never read by anything: `options.legend`
+    // appeared in no expression in the compositor, so the exported image had no key at all.
+    const on = draw(CTX, { ...DEFAULT_OPTIONS, legend: true });
+    expect(on.drawn).toContain("low");
+    expect(on.drawn).toContain("high");
+    expect(on.drawn).toContain("ENERGY SYSTEM DISRUPTION EXPOSURE INDEX");
+  });
+
+  it("draws nothing when switched off", () => {
+    const off = draw(CTX, { ...DEFAULT_OPTIONS, legend: false }).drawn;
+    expect(off).not.toContain("low");
+    expect(off).not.toContain("high");
   });
 });
 
