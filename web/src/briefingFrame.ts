@@ -227,6 +227,16 @@ export function drawBriefingFrame(
   const caveatFont = `600 ${Math.round(15 * s)}px ${SANS}`;
   const noteFont = `${Math.round(13 * s)}px ${SANS}`;
 
+  // P2: the staleness warning leads the footer when there is one. An image outlives the page, so
+  // "these figures are weeks old" is the first thing a detached reader needs — and like the
+  // caveat it is not droppable by an Include toggle.
+  if (ctx0.stalenessNote) {
+    c.font = caveatFont;
+    for (const ln of wrap(c, ctx0.stalenessNote, maxText)) {
+      footLines.push({ text: ln, font: caveatFont, color: AMBER, lineHeight: Math.round(21 * s) });
+    }
+  }
+
   c.font = caveatFont;
   for (const ln of wrap(c, ctx0.caveat, maxText)) {
     footLines.push({ text: ln, font: caveatFont, color: AMBER, lineHeight: Math.round(21 * s) });

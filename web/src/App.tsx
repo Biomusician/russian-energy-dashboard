@@ -3,6 +3,7 @@ import { addDays, loadBundle, stepFor } from "./data";
 import type { Asset, Bundle, Incident } from "./types";
 import { decodeDeepLink, encodeDeepLink, type CameraState } from "./urlState";
 import Ribbon from "./components/Ribbon";
+import StalenessNotice from "./components/StalenessNotice";
 import Filters from "./components/Filters";
 import MapPanel from "./components/MapPanel";
 import Dossier from "./components/Dossier";
@@ -15,6 +16,7 @@ import {
   DEFAULT_OPTIONS, briefingFilename, buildBriefingContext, exportPixelSize,
 } from "./briefing";
 import { downloadBlob, exportMapPng } from "./mapExport";
+import { localISODate } from "./freshness";
 import { drawBriefingFrame } from "./briefingFrame";
 import { fmtNum, loadHistorySeries, loadLifecycle, resolvePoint } from "./data";
 import type maplibregl from "maplibre-gl";
@@ -402,7 +404,11 @@ export default function App() {
       episode: lifecycleEpisode
         ? lifecycleData?.episodes.find((e) => e.episode_id === lifecycleEpisode) ?? null
         : null,
-      now: new Date().toISOString().slice(0, 10),
+      // The reader's own calendar date, not the UTC one. toISOString() gave UTC, so after local
+      // midnight-minus-offset the exported frame measured build age a day differently from the
+      // ribbon beside it — two clocks on one page, visible as "11 days" in the header and
+      // "12 days" in the briefing footer.
+      now: localISODate(new Date()),
     });
   }, [bundle, step, currentDate, filters.metric, filters.showGasNetwork, filters.showOilNetwork,
       selected, selectedAsset, compare, history, lifecycleEpisode, lifecycleData]);
@@ -483,6 +489,9 @@ export default function App() {
 
   return (
     <div className="shell">
+      {/* P2: first element in the grid, so a reader cannot have taken in the headline before
+          learning the headline is weeks old. */}
+      <StalenessNotice snapshot={bundle.snapshot} />
       <LayoutChrome
         mode={layoutMode}
         mapFocus={mapFocus}

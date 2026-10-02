@@ -15,22 +15,26 @@ import {
 import type { Bundle, HistorySeries, LifecycleEpisode } from "./types";
 
 function bundle(over: Record<string, unknown> = {}): Bundle {
+  // `snapshot` is pulled out of the spread on purpose. A trailing `...over` used to re-add
+  // over.snapshot AFTER the merged one, so `bundle({ snapshot: { x: 1 } })` silently produced a
+  // bundle with no as_of, no sectors and no regions — a fixture that quietly tests nothing.
+  const { snapshot: snapshotOver, ...rest } = over;
   return {
-    snapshot: {
-      as_of: "2026-09-03",
-      schema_version: 2,
-      incident_total: 175,
-      sectors_covered: ["refining", "electric_generation", "transmission", "oil_logistics"],
-      regions: { "RU-KDA": { code: "RU-KDA", name: "Krasnodar Krai" } },
-      ...(over.snapshot as object ?? {}),
-    },
     national: { dates: ["2026-08-27", "2026-09-03"], esdi: [17.5, 16.98] },
     regional: { regions: { "RU-KDA": { esdi: [3.1, 2.9] } } },
     regions: [{ code: "RU-KDA", name: "Krasnodar Krai" }, { code: "UA-43", name: "Crimea" }],
     incidents: [],
     assets: [],
     buildChanges: null,
-    ...over,
+    ...rest,
+    snapshot: {
+      as_of: "2026-09-03",
+      schema_version: 2,
+      incident_total: 175,
+      sectors_covered: ["refining", "electric_generation", "transmission", "oil_logistics"],
+      regions: { "RU-KDA": { code: "RU-KDA", name: "Krasnodar Krai" } },
+      ...(snapshotOver as object ?? {}),
+    },
   } as unknown as Bundle;
 }
 
@@ -370,5 +374,40 @@ describe("recovery episode exports", () => {
   it("carries no coordinates", () => {
     const blob = JSON.stringify(ctx({ episode: ep() }));
     expect(blob).not.toMatch(/"lat"|"lon"|coordinates/);
+  });
+});
+
+describe("the exported context knows how old the build is (P2)", () => {
+  const CADENCE = {
+    ageing_after_days: 2, stale_after_days: 3, badly_stale_after_days: 7,
+    expected_cadence_days: 1,
+  };
+
+  it("warns when the export is taken from a build that stopped refreshing", () => {
+    // The real failure: production served 2026-09-20 for eleven days and every PNG taken from it
+    // looked exactly like one taken the morning of the build.
+    const c = ctx({
+      bundle: bundle({ snapshot: { publication_freshness: CADENCE } }),
+      now: "2026-09-14",
+    });
+    expect(c.stalenessNote).toContain("NOT CURRENT");
+    expect(c.stalenessNote).toContain("11 days");
+  });
+
+  it("stays silent on a current build, so a healthy export is not cluttered", () => {
+    const c = ctx({ bundle: bundle({ snapshot: { publication_freshness: CADENCE } }) });
+    expect(c.stalenessNote).toBeNull();
+  });
+
+  it("measures age against the export clock, not the build clock", () => {
+    const b = bundle({ snapshot: { publication_freshness: CADENCE } });
+    expect(ctx({ bundle: b, now: "2026-09-05" }).stalenessNote).toContain("2 days ago");
+    expect(ctx({ bundle: b, now: "2026-09-08" }).stalenessNote).toContain("NOT CURRENT");
+  });
+
+  it("offers no verdict when the payload publishes no cadence", () => {
+    // An N-1 payload has no thresholds. Inventing one in the frontend would be the component
+    // hardcoding a number the payload is supposed to own.
+    expect(ctx({ now: "2026-09-30" }).stalenessNote).toBeNull();
   });
 });

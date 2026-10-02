@@ -26,6 +26,7 @@ import {
   fmtDate, fmtDelta, fmtNum, loadDataQuality, loadHistorySeries, loadLifecycle,
   loadRegionalExplanations, titleCase,
 } from "../data";
+import { assessFreshness } from "../freshness";
 import { severityColor } from "../palette";
 import { EvidenceChip, RecoveryLine, hostOf } from "./ui";
 
@@ -1086,8 +1087,54 @@ function DataQualityView({
     byRole.get(src.role)!.push(src);
   }
 
+  // P2: how old the PAGE is, kept first and kept separate from how old its SOURCES are. A fresh
+  // build of stale sources and a stale build of fresh sources are different failures, and the
+  // second one — eleven days of it — went unnoticed because nothing on the page measured it.
+  const fresh = assessFreshness(
+    bundle.snapshot.as_of, bundle.snapshot.publication_freshness, new Date());
+  const cadence = bundle.snapshot.publication_freshness;
+
   return (
     <>
+      <Block title="How old this page is" tone={fresh.severe ? "warn" : undefined}>
+        <p className="lede">
+          A different question from how old the sources are. This is the age of the build itself:
+          whether the dashboard is still being rebuilt at all.
+        </p>
+        <table className="mini">
+          <tbody>
+            <tr>
+              <td>Data as of</td>
+              <td className="mono">{fmtDate(bundle.snapshot.as_of)}</td>
+            </tr>
+            <tr>
+              <td>Age on your device's clock</td>
+              <td className="mono">
+                {fresh.days == null
+                  ? "not establishable"
+                  : `${fresh.days} ${fresh.days === 1 ? "day" : "days"}`}
+              </td>
+            </tr>
+            {cadence?.expected_cadence_days != null && (
+              <tr className="dim">
+                <td>Expected rebuild interval</td>
+                <td className="mono">
+                  {cadence.expected_cadence_days}{" "}
+                  {cadence.expected_cadence_days === 1 ? "day" : "days"}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+        {fresh.banner
+          ? <p className={fresh.severe ? "warn-text" : "small"}>{fresh.banner}</p>
+          : <p className="small">
+              Inside the published rebuild cadence, so the figures above are current to the date
+              shown.
+            </p>}
+        {cadence?.note && <p className="small">{cadence.note}</p>}
+      </Block>
+
       <Block title="What each sector is measured against">
         <p className="lede">
           Two independent facts per sector: whether it is inside the headline index, and what

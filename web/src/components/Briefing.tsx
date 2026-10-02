@@ -86,6 +86,10 @@ export default function Briefing({
         )}
 
         <footer className="brief-foot">
+          {/* P2: leads the footer, and like the caveat is never droppable by an Include toggle.
+              Briefing Mode hides the ribbon, so without this a reader who entered briefing on a
+              frozen build would have removed the only remaining date context. */}
+          {ctx.stalenessNote && <p className="brief-caveat">{ctx.stalenessNote}</p>}
           <p className="brief-caveat">{ctx.caveat}</p>
           {options.scopeNote && <p>{ctx.scopeNote}</p>}
           {options.scopeNote && ctx.crimeaNote && <p>{ctx.crimeaNote}</p>}

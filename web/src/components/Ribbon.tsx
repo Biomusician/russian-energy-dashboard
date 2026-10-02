@@ -1,5 +1,6 @@
 import type { Bundle } from "../types";
 import { fmtDate, fmtDelta, fmtNum } from "../data";
+import { assessFreshness } from "../freshness";
 import { severityColor } from "../palette";
 import { ExplainButton } from "./ui";
 import type { InspectTarget } from "./Inspector";
@@ -37,6 +38,7 @@ export default function Ribbon({
 
   const coveredSectors = snapshot.sectors_covered;
   const uncovered = snapshot.sectors_uncovered;
+  const fresh = assessFreshness(snapshot.as_of, snapshot.publication_freshness, new Date());
 
   return (
     <header className="ribbon">
@@ -68,8 +70,17 @@ export default function Ribbon({
         <div className="esdi-value" style={{ color: severityColor(esdi) }}>{fmtNum(esdi, 1)}</div>
         <div className="esdi-meta">
           <div className="eyebrow">Monitored-Area ESDI</div>
+          {/* P2: "live" used to mean nothing more than "the scrubber is at the last timeline
+              step", which is equally true of a payload that stopped rebuilding eleven days ago.
+              The word is now earned: it appears only when the build's own age is inside the
+              cadence the payload publishes. */}
           <div style={{ fontSize: 11, color: "var(--text-dim)" }}>
-            {fmtDate(currentDate)} {isLatest && <span style={{ color: "var(--accent)" }}>· live</span>}
+            {fmtDate(currentDate)}
+            {isLatest && (
+              <span style={{ color: fresh.level === "fresh" ? "var(--accent)" : "var(--amber)" }}>
+                {" "}· {fresh.shortLabel}
+              </span>
+            )}
           </div>
           <div style={{ fontSize: 10.5, color: "var(--text-faint)", maxWidth: 180, lineHeight: 1.4 }}>
             Belarus + monitored Russian regions + Crimea. Capacity at disrupted sites — not measured loss.

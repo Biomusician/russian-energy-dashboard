@@ -64,6 +64,7 @@ const CTX: BriefingContext = {
   exportedAt: "2026-09-03",
   caveat: "Modelled disruption exposure — capacity AT disrupted sites, not measured capacity "
     + "loss. Transmission disruption burden is an event-burden proxy, not percent of grid offline.",
+  stalenessNote: null,
   scopeNote: "Monitored area: Belarus, western Russia and the Siberian Federal District, plus "
     + "occupied Crimea. Aggregated to administrative region.",
   crimeaNote: "Crimea is internationally recognised as part of Ukraine and is shown separately; "
@@ -148,6 +149,42 @@ describe("optional annotation actually changes the image", () => {
       sourceFooter: false, comparisonSummary: false,
     };
     expect(draw(CTX, none).drawn).toContain("not measured capacity loss");
+  });
+});
+
+describe("a stale build warns inside the exported image (P2)", () => {
+  const STALE = {
+    ...CTX,
+    stalenessNote: "NOT CURRENT — this dashboard has not rebuilt in 11 days, which indicates its "
+      + "refresh has failed rather than merely slipped.",
+  };
+
+  it("paints the warning into the picture", () => {
+    // An image outlives the page it was taken from. A frozen choropleth with a confident number
+    // and no date context is the worst artifact this project can emit.
+    const d = draw(STALE).drawn;
+    expect(d).toContain("NOT CURRENT");
+    expect(d).toContain("has not rebuilt in 11 days");
+  });
+
+  it("keeps it even when every Include toggle is off", () => {
+    const none: BriefingOptions = {
+      title: false, selectionLabel: false, scopeNote: false, legend: false,
+      sourceFooter: false, comparisonSummary: false,
+    };
+    expect(draw(STALE, none).drawn).toContain("NOT CURRENT");
+  });
+
+  it("puts it above the caveat, so it is read first", () => {
+    const { texts } = draw(STALE);
+    const warn = texts.findIndex((t) => t.text.includes("NOT CURRENT"));
+    const caveat = texts.findIndex((t) => t.text.includes("not measured capacity loss"));
+    expect(warn).toBeGreaterThanOrEqual(0);
+    expect(warn).toBeLessThan(caveat);
+  });
+
+  it("says nothing at all when the build is current", () => {
+    expect(draw().drawn).not.toContain("NOT CURRENT");
   });
 });
 

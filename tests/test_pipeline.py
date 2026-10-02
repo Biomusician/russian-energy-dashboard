@@ -4195,6 +4195,56 @@ def test_the_capacity_statement_quotes_the_applicable_universe():
     assert f"of {audit['total_events']} events" not in item["answer"]
 
 
+# --- publication freshness: how old the PAGE is (P2) -----------------------
+
+@needs_build
+def test_the_payload_publishes_its_own_cadence_so_a_frozen_build_can_be_detected():
+    """P2. The eleven-day outage of 2026-09-21 was invisible: the dashboard served a frozen
+    payload and the header still read "live", because "live" meant only that the scrubber was at
+    the last timeline step. The payload now carries the cadence and the thresholds the reader's
+    browser needs to work out that the page itself has stopped moving."""
+    from pipeline.config import PUBLICATION_CADENCE
+    snap = _snapshot()
+    pf = snap.get("publication_freshness")
+    assert pf, "publication_freshness must be published"
+    assert pf["as_of"] == snap["as_of"]
+    assert pf["build_time"] == snap["build_time"]
+    for k, v in PUBLICATION_CADENCE.items():
+        assert pf[k] == v, f"{k} must come from config, not a literal in the emitter"
+    # Thresholds must be ordered, or a build could be "stale" without first being "ageing".
+    assert 0 < pf["expected_cadence_days"] <= pf["ageing_after_days"]
+    assert pf["ageing_after_days"] < pf["stale_after_days"] < pf["badly_stale_after_days"]
+    # The cadence claim must name a file that actually schedules the build.
+    wf = ROOT / ".github" / "workflows" / "refresh.yml"
+    assert "refresh.yml" in pf["cadence_source"]
+    assert wf.exists() and "schedule:" in wf.read_text(encoding="utf-8")
+
+
+@needs_build
+def test_publication_freshness_ships_no_precomputed_age():
+    """THE DESIGN DECISION, pinned. An age computed at build time freezes with the build: a
+    dashboard that stopped rebuilding would report "0 days old" forever, which is the exact lie
+    this block exists to prevent. The reader's own clock is the only one that can tell them, so
+    the payload ships reference dates and thresholds and nothing derived from "now"."""
+    pf = _snapshot()["publication_freshness"]
+    assert set(pf) == {
+        "as_of", "build_time", "expected_cadence_days", "cadence_source",
+        "ageing_after_days", "stale_after_days", "badly_stale_after_days", "note",
+    }, "unexpected field: a day count computed here would be frozen and therefore false"
+
+
+@needs_build
+def test_build_age_and_source_age_stay_two_different_measures():
+    """A fresh build of stale sources and a stale build of fresh sources are different failures.
+    The thresholds must not be shared, or one indicator would silently stand in for both."""
+    from pipeline import data_quality as DQ
+    from pipeline.config import PUBLICATION_CADENCE
+    assert PUBLICATION_CADENCE["stale_after_days"] != DQ.STALE_DAYS
+    assert PUBLICATION_CADENCE["ageing_after_days"] != DQ.AGEING_DAYS
+    pf = _snapshot()["publication_freshness"]
+    assert "not the age of its sources" in pf["note"]
+
+
 # --- source provenance (addendum §3, §4) -----------------------------------
 
 @needs_build

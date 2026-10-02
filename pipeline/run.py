@@ -19,8 +19,8 @@ from pipeline import build_manifest, data_quality, diff_builds
 from pipeline import fetch_osm, fetch_osm_pipelines
 from pipeline.config import (
     ANALYTIC_CONCEPTS, ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, EVIDENCE_KINDS,
-    OPTIONAL_CONTEXT_FILES, PROCESSED, ROOT, SCHEMA_VERSION, SECTOR_OF_CLASS, SECTORS,
-    WEB_DATA, WINDOW_START,
+    OPTIONAL_CONTEXT_FILES, PROCESSED, PUBLICATION_CADENCE, ROOT, SCHEMA_VERSION,
+    SECTOR_OF_CLASS, SECTORS, WEB_DATA, WINDOW_START,
 )
 from pipeline.fetch_refineries import build as build_refineries
 from pipeline.fetch_wikipedia import build as build_wikipedia
@@ -571,6 +571,21 @@ def main():
     snapshot["parser_warnings"] = wiki_warnings
     snapshot["schema_version"] = SCHEMA_VERSION
     snapshot["build_time"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+
+    # Publication freshness: how old the PAGE is. Deliberately ships the reference dates and the
+    # thresholds and NOT a precomputed age, because an age computed here freezes at build time and
+    # would read "0 days old" forever on a dashboard that had stopped rebuilding — which is
+    # precisely the lie this block exists to prevent. The reader's own clock is the only clock that
+    # can tell them the page is stale, so the arithmetic happens in the browser.
+    snapshot["publication_freshness"] = {
+        "as_of": snapshot["as_of"],
+        "build_time": snapshot["build_time"],
+        **PUBLICATION_CADENCE,
+        "note": (
+            "Measures the age of this build, not the age of its sources — see data_quality.json "
+            "for per-source freshness. The two are independent: a fresh build of stale sources "
+            "and a stale build of fresh sources are different failures."),
+    }
 
     # What this build was made from, and what it produced (addendum §4). The change ledger needs
     # both: an asset-inventory edit, a vendor snapshot refresh or a scoring-constant change can

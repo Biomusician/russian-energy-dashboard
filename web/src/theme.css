@@ -76,9 +76,12 @@ body { -webkit-font-smoothing: antialiased; }
      to the map. min values are the narrowest at which each rail is still usable. */
   --rail-filters: clamp(212px, 14vw, 264px);
   --rail-dossier: clamp(300px, 19vw, 380px);
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* Four rows: the staleness row is `auto` and collapses to nothing when the build is current,
+     so a fresh dashboard is laid out exactly as before. */
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   grid-template-columns: var(--rail-filters) minmax(0, 1fr) var(--rail-dossier);
   grid-template-areas:
+    "staleness staleness staleness"
     "ribbon ribbon ribbon"
     "filters map dossier"
     "timeline timeline timeline";
@@ -90,6 +93,7 @@ body { -webkit-font-smoothing: antialiased; }
 }
 
 .ribbon   { grid-area: ribbon; }
+.staleness { grid-area: staleness; }
 .filters  { grid-area: filters; }
 .mapwrap  { grid-area: map; position: relative; min-width: 0; min-height: 0; }
 .dossier  { grid-area: dossier; }
@@ -105,6 +109,7 @@ body { -webkit-font-smoothing: antialiased; }
 html[data-layout="compact"] .shell {
   grid-template-columns: var(--rail-filters) minmax(0, 1fr);
   grid-template-areas:
+    "staleness staleness"
     "ribbon ribbon"
     "filters map"
     "timeline timeline";
@@ -114,6 +119,7 @@ html[data-layout="compact"] .shell {
 html[data-layout="narrow"] .shell {
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
+    "staleness"
     "ribbon"
     "map"
     "timeline";
@@ -181,7 +187,10 @@ html[data-mapfocus="on"] .shell {
 /* --- drawer affordances ---------------------------------------------------------------- */
 .drawer-toggles {
   position: absolute;
-  top: 10px;
+  /* Offset by the staleness strip when there is one, so the floating chips never cover a
+     "NOT CURRENT" warning. StalenessNotice measures and publishes --staleness-h; it is 0 on a
+     healthy build, which restores the original position exactly. */
+  top: calc(10px + var(--staleness-h, 0px));
   left: 10px;
   z-index: 30;
   display: flex;
@@ -268,6 +277,35 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
   top: 0;
   background: var(--bg-panel);
   z-index: 2;
+}
+
+/* ---------- staleness notice (P2) ----------
+   The eleven-day outage of 2026-09-21 was invisible because the page asserted "live" from the
+   scrubber position alone. This strip is the counterweight, and it is deliberately given the same
+   visual weight as the headline index -- the same rule the coverage ratio already follows. It is
+   NOT hidden by map focus, briefing mode or print: a reader who has stripped the chrome, or is
+   holding a printout, needs this more than one looking at the full dashboard, not less. */
+.staleness {
+  padding: 7px 14px;
+  font-size: 12px;
+  line-height: 1.45;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-panel-2);
+  color: var(--text-dim);
+}
+
+.staleness.severe {
+  /* Amber rather than red: the data is not wrong, it is old, and the distinction matters. */
+  background: color-mix(in srgb, var(--amber) 18%, var(--bg-panel-2));
+  border-bottom: 2px solid var(--amber);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.staleness .staleness-age {
+  font-family: var(--mono);
+  color: var(--amber);
 }
 
 /* ---------- ribbon ---------- */
@@ -1809,6 +1847,17 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
     break-inside: avoid;
     page-break-inside: avoid;
   }
+  /* A printout outlives the page, so a staleness warning matters MORE on paper, not less. */
+  .staleness {
+    display: block !important;
+    background: none !important;
+    border: 1px solid #8a5a00 !important;
+    color: #8a5a00 !important;
+    font-weight: 600;
+    padding: 6px 8px !important;
+    margin-bottom: 8px;
+  }
+  .staleness .staleness-age { color: #8a5a00 !important; }
   /* The framing must survive on paper: dark-on-dark overlays become readable text. */
   .briefing-frame { position: static; padding: 0; }
   .brief-head, .brief-foot { background: none !important; margin: 0; padding: 8px 0; color: #111; }

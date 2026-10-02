@@ -34,6 +34,33 @@ OPTIONAL_CONTEXT_FILES = {
 WINDOW_START = "2022-01-01"
 
 # ---------------------------------------------------------------------------
+# Publication cadence — how old the PAGE is, not how old its sources are
+# ---------------------------------------------------------------------------
+# WHY THIS EXISTS. On 2026-09-21 a false test assertion began failing. refresh.yml gates its
+# commit on the suite, so eleven consecutive good builds were discarded and the deployed
+# dashboard served 2026-09-20 data for eleven days — with the header still reading "live" and
+# nothing anywhere on the page saying otherwise. A monitoring instrument that cannot tell a
+# reader it has stopped monitoring is worse than one that is merely out of date.
+#
+# This is deliberately NOT a scoring parameter and does not belong in methodology/scoring.json:
+# it describes the publication pipeline, not the index. It is kept here, and emitted into the
+# payload, so neither Python nor a React component hardcodes a threshold.
+#
+# Distinct from data_quality's AGEING_DAYS/STALE_DAYS, which measure how old a SOURCE is
+# relative to the build. These two staleness concepts must never be merged: a fresh build of
+# stale sources and a stale build of fresh sources are different failures.
+PUBLICATION_CADENCE = {
+    # The schedule actually in force. as_of is the local build date, so against UTC "today" a
+    # perfectly healthy build reads 0 or 1 day old; 1 is normal, not a missed run.
+    "expected_cadence_days": 1,
+    "cadence_source": ".github/workflows/refresh.yml (schedule: cron '20 5 * * *')",
+    # Thresholds on (reader's today - as_of), in days.
+    "ageing_after_days": 2,        # plausibly one missed run: state the age, do not alarm
+    "stale_after_days": 3,         # several missed runs: warn at headline weight
+    "badly_stale_after_days": 7,   # a sustained outage, which is what actually happened
+}
+
+# ---------------------------------------------------------------------------
 # Area of interest
 # ---------------------------------------------------------------------------
 # The AOI is now explicitly locked as: Belarus, the six western Russian federal

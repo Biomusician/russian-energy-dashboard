@@ -1,6 +1,9 @@
 /** Shapes emitted by the Python pipeline. Kept in one file so a schema change in
  *  data/processed/ surfaces here as a type error rather than as undefined at runtime. */
 
+import type { PublicationCadence } from "./freshness";
+export type { PublicationCadence };
+
 export type Confidence = "confirmed" | "probable" | "possible" | "unverified";
 export type Status = "active" | "degraded" | "repaired" | "unknown";
 
@@ -423,6 +426,10 @@ export interface SchemaCheck {
 export interface Snapshot {
   as_of: string;
   build_time: string;
+  /** P2: how old this BUILD is allowed to get before the reader is told. Reference dates and
+   *  thresholds only — the age itself is computed in the browser, because an age computed at
+   *  build time would freeze with the build. Optional: an N-1 payload will not carry it. */
+  publication_freshness?: PublicationCadence;
   esdi: number;
   /** §27: sensitivity under the explicitly-FALSE assumption that uncovered gas+coal are zero —
    *  NOT a second valid ESDI. Prefer this clearly-named field. */

@@ -12,6 +12,7 @@
 
 import type { Bundle, HistorySeries, LifecycleEpisode, ResolvedPoint } from "./types";
 import { FAMILY_LABEL, fmtDate, fmtNum } from "./data";
+import { assessFreshnessOn } from "./freshness";
 
 export interface BriefingOptions {
   title: boolean;
@@ -43,6 +44,10 @@ export interface BriefingContext {
   analyticalDate: string | null;
   exportedAt: string;
   caveat: string;
+  /** P2: set only when this build is old enough that a reader must be told. An exported image
+   *  outlives the page it came from, so the warning has to travel with the pixels — and it is
+   *  never droppable by an Include toggle, for the same reason the caveat is not. */
+  stalenessNote: string | null;
   scopeNote: string;
   crimeaNote: string | null;
   sourceFooter: string;
@@ -297,6 +302,9 @@ export function buildBriefingContext(args: {
     analyticalDate: isLive ? null : currentDate,
     exportedAt: args.now,
     caveat: caveats.join(" "),
+    // `args.now` is the export date, which is exactly the clock to measure build age by.
+    stalenessNote: assessFreshnessOn(
+      asOf, bundle.snapshot.publication_freshness, args.now).banner,
     scopeNote: SCOPE_NOTE,
     crimeaNote: crimeaInScope ? CRIMEA_NOTE : null,
     sourceFooter: SOURCE_FOOTER,
