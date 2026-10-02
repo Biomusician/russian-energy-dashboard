@@ -44,19 +44,29 @@ incident record and displayed — it just is not what drives the score.
 ### Per event
 
 ```
-weight(event, t) = confidence × cause × 0.5 ^ (days_elapsed / half_life)
+weight(event, t) = confidence × cause × damage_severity × 0.5 ^ (days_elapsed / half_life)
 ```
 
 | Factor | Values | Rationale |
 |---|---|---|
 | `confidence` | confirmed 1.0 · probable 0.75 · possible 0.45 · unverified 0.2 | Evidence strength for whether the event occurred. Weak evidence is down-weighted, not discarded. |
 | `cause` | strike/sabotage 1.0 · cyber 0.8 · technical 0.8 · sanctions 0.6 · maintenance 0.15 · unknown 0.7 | Scheduled maintenance is planned downtime, not degradation. Sanctions bite gradually rather than removing capacity outright. |
+| `damage_severity` | destroyed/damaged/shutdown/active/unknown 1.0 · degraded 0.7 | How badly the facility was reported hit, read from the incident's own damage observation. |
 | `half_life` | evidence-driven (§5) | Set by observed → estimated → modelled recovery evidence. |
 
 Events below a 0.01 contribution are dropped so the time series does not carry a long
-meaningless tail. When a facility carries no recovery record, an explicit `status` on
-the event itself (repaired 0.1 · degraded 0.7 · active/unknown 1.0) still applies as a
-fallback multiplier.
+meaningless tail.
+
+`damage_severity` is **always** applied, and deliberately orthogonal to recovery:
+recovery evidence changes the DECAY and the floor of the tail, never this initial
+multiplier. That orthogonality is what makes adding a recovery record monotonic — it
+can only speed the decay or cap the tail, and can never remove damage that was
+observed.
+
+> The `status_multipliers` block in `methodology/scoring.json` (repaired 0.1 ·
+> degraded 0.7) is **DEPRECATED** and is not read by the scorer. It applied only when
+> the recovery kind was `modelled`; iteration 7 replaced it with `damage_severity`. It
+> is retained so an N-1 config reader does not break. Do not reintroduce it.
 
 ### Per facility
 
@@ -285,10 +295,28 @@ from "we have no data". Hence the explicit null.
    (they were transferred there from Siberia in 2018), so they are currently out of
    scope; Natural Earth's metadata still miscalls them Siberian.
 
-2. **Occupied Ukrainian territory is excluded** — Crimea, Sevastopol, and the four
-   oblasts claimed in 2022. They are internationally recognised as Ukraine and are not
-   Russian federal subjects. Natural Earth files Crimea and Sevastopol under Russia;
-   the pipeline overrides that. There is a test.
+2. **Occupied Ukrainian territory is excluded, with one documented exception.** All of
+   it is internationally recognised as Ukraine, and none of it is a Russian federal
+   subject. Natural Earth files Crimea and Sevastopol under Russia; the pipeline
+   overrides that, and there is a test.
+
+   The **four oblasts claimed in 2022 are fully excluded.**
+
+   **Crimea is the exception.** Since iteration 4 it is carried as a separately
+   identified *occupied unit* — `analytic_scope: "occupied"`, `esdi_included: true`
+   (`SPECIAL_UNITS` in `pipeline/config.py`, where Crimea and Sevastopol are merged
+   into `UA-CR`) — and it **contributes to the headline Monitored-Area index** through
+   the sectors where it has qualifying events and a compatible denominator. It keeps
+   distinct styling and sovereignty wording throughout, and is never labelled a Russian
+   region. Index inclusion is an analytic choice about where disruption is being
+   measured; it is not a statement about sovereignty. Every other limit still applies
+   to it unchanged — no incident coordinates, administrative-region precision only. See
+   §5a and `CLAUDE.md`.
+
+   This paragraph previously said Crimea was excluded, which contradicted both the code
+   and §5a of this same document. The error is recorded here rather than silently
+   deleted, because a future reader finding the two accounts needs to know which one
+   was wrong.
 
 3. **Natural Earth's `region` field is unusable** and is not used. It predates the 2010
    creation of the North Caucasian Federal District and files the entire Southern FD
@@ -363,15 +391,36 @@ it DISPLAYS**. The map can depict much more of Eurasia than the degradation mode
   counts.** `build_index` never reads the context files; regression tests enforce it.
 
 **Continental pipeline network.** A separate ingestion path (`build_pipeline_network.py`)
-collects major **named `usage=transmission` oil/gas trunks ≥ 50 km** across Eurasia from
-**OpenStreetMap/Overpass (ODbL)**, tiled and de-duplicated against the analytic OSM lines by
-way id (one corridor, one line). **Global Energy Monitor's GGIT/GOIT are the authoritative
-trackers and the cited cross-reference**, but their bulk data is form-gated with no
-CI-fetchable URL, so OSM is the automatable feed. Route geometry is traced (`route_quality =
-"osm_mapped"`, drawn solid); a dashed treatment for `route_quality="approximate"` is reserved
-for a future GEM snapshot. Facet counts keep analytic pipeline lines and context routes as
-**separate dimensions** (`line_class` vs `context_route_class`) so context can never imply
-disruption.
+collects major oil/gas trunks across Eurasia from **OpenStreetMap/Overpass (ODbL)**.
+
+Routes are reconstructed from OSM **route RELATIONS, not from ways** (iteration 9). A trunk
+line is a chain of ways split wherever any tag changes, so judging each piece against a length
+threshold destroyed most of the network — see [PIPELINE_GAP_AUDIT.md](PIPELINE_GAP_AUDIT.md).
+The order is: assemble the route, *then* threshold, *then* simplify. Segments join only on
+exactly-shared endpoints; the single distance rule (≤ 100 m) applies solely between components
+of the same relation, where OSM has already asserted they are one pipeline, and every such join
+is counted in provenance.
+
+Overlap with the analytic layer is **MARKED, never deleted** (`analytic_overlap`), and the
+frontend suppresses the double-draw. The context toggle is independent of the analytic layer,
+so withholding data to make the map tidier would make the context layer wrong on its own terms.
+
+Route/geometry quality is **derived from source vertex density, never asserted**: OSM ships
+5,000-vertex corridors and 3-point placeholders under identical tags, so `route_quality`
+reports what the source actually contains. **Topology known ≠ geometry known** — sourced
+connection facts live in `data/curated/pipeline_topology.csv` and are never turned into a drawn
+line; tests enforce both halves.
+
+**Global Energy Monitor's GGIT/GOIT are the authoritative trackers and the cited
+cross-reference.** Their provisional `map-data` branch was ingested in iteration 10; see
+[SOURCES.md](SOURCES.md) §7 for what that does and does not establish. Facet counts keep
+analytic pipeline lines and context routes as **separate dimensions** (`line_class` vs
+`context_route_class`) so context can never imply disruption.
+
+> This paragraph described the pre-iteration-9 way-based builder — named
+> `usage=transmission` ways ≥ 50 km, de-duplicated by way id — until iteration 12. That
+> design is explicitly forbidden by `CLAUDE.md`, and the audit of why is in
+> PIPELINE_GAP_AUDIT.md.
 
 **Country geography & rivers.** The country layer is geographic, not a hand-picked list:
 every Natural Earth 50m admin-0 country intersecting the Eurasian context frame is drawn,

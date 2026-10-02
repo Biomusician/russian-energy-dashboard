@@ -1,5 +1,7 @@
 # Energy Disruption Monitor — project instructions
 
+<!-- current-iteration: 12 -->
+
 Project-level rules. These override `~/.claude/CLAUDE.md` where they conflict.
 
 ## What this is
@@ -16,9 +18,12 @@ The area of interest is locked in `AOI_FEDERAL_DISTRICTS` (`pipeline/config.py`)
 Far Eastern FD is defined but not enabled; adding it there turns it on with no refactor.
 Do not reintroduce the ambiguous "SFD" abbreviation — a test forbids it.
 
-Read [docs/METHODOLOGY.md](docs/METHODOLOGY.md) and, for the current state,
-[docs/ITERATION_5_REVIEW.md](docs/ITERATION_5_REVIEW.md), before changing anything that
-produces a number.
+Read [docs/METHODOLOGY.md](docs/METHODOLOGY.md) before changing anything that produces a
+number. For the current figures read [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md), which
+the build regenerates; for where the project actually is, read
+[docs/HANDOFF.md](docs/HANDOFF.md) and the highest-numbered `docs/ITERATION_N_REVIEW.md`.
+Never re-quote a live number into prose — this line used to point at the iteration-5 review
+as "the current state" seven iterations after it stopped being so.
 
 ## SCOPE BOUNDARY — never relaxed
 
@@ -98,7 +103,7 @@ Do not re-litigate without a good reason:
 - **Stdlib-only ETL.** No pandas, geopandas, shapely, requests. Point-in-polygon,
   Douglas–Peucker and wikitext parsing are each a few dozen readable lines. The
   scheduled GitHub Action needs no toolchain and cannot break on a wheel.
-- **No database.** ~1,600 assets and ~130 events. Static JSON is the backend.
+- **No database.** Low thousands of assets, low hundreds of events (see CURRENT_STATE). Static JSON is the backend.
 - **No basemap.** The choropleth is the map. Zero external network requests at runtime,
   no API key, no tile bill. This also rules out MapLibre symbol layers, which need an
   external glyph endpoint — region names go in the hover card and dossier.

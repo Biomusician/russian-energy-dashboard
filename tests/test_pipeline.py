@@ -674,6 +674,13 @@ def test_docs_do_not_claim_the_release_payload_is_frozen():
     exempt = ("comparison-only", "comparison only", "regression-only", "regression only",
               "never be committed", "must never", "previously said", "was the iteration-8 mistake",
               "not a real-date build", "fails the suite", "stale")
+    # ...plus anything that says the OPPOSITE of the banned claim. The exemption list above is a
+    # list of PHRASES, so a sentence asserting the payload is a current-date build "not the frozen
+    # reference" was flagged for containing both subject and object, with nothing to notice that
+    # it denies what it is accused of saying. Word-boundary matched, because the sibling lint was
+    # once tripped by "never" inside "whenever".
+    denial = ("not the frozen", "not a frozen", "not pinned", "never pinned", "rather than the "
+              "frozen", "current-date build, not", "is not frozen")
     files = [ROOT / "docs" / f for f in ("HANDOFF.md", "SOURCES.md", "METHODOLOGY.md",
                                          "SCHEMA.md", "CURRENT_STATE.md")]
     files += [ROOT / "README.md", ROOT / "CLAUDE.md"]
@@ -693,9 +700,50 @@ def test_docs_do_not_claim_the_release_payload_is_frozen():
                 continue
             if any(e in frag for e in exempt):
                 continue
+            if any(re.search("(?<![a-z0-9])" + re.escape(d), frag) for d in denial):
+                continue
             hits.append((path.name, frag))
     assert not hits, ("a doc claims the release payload is the frozen build:\n"
                       + "\n".join(f"  {p}: {f[:140]}" for p, f in hits))
+
+
+def test_the_frozen_payload_lint_still_fires_on_the_sentence_it_forbids():
+    """A lint that has been taught to forgive must be shown still to accuse.
+
+    Each round of exemptions makes a lint quieter, and a lint quiet enough is just a dead test —
+    which is how the stale HANDOFF bullet survived two iterations in the first place. Synthetic,
+    so it cannot be satisfied by whatever the docs happen to say today."""
+    import re as _re
+    claim_subject = ("committed data", "committed payload", "release payload", "the payload",
+                     "committed build")
+    claim_frozen = ("pinned to the frozen", "is the frozen", "frozen reference",
+                    "--as-of 2026-08-28")
+    exempt = ("comparison-only", "comparison only", "regression-only", "regression only",
+              "never be committed", "must never", "previously said", "was the iteration-8 mistake",
+              "not a real-date build", "fails the suite", "stale")
+    denial = ("not the frozen", "not a frozen", "not pinned", "never pinned", "rather than the "
+              "frozen", "current-date build, not", "is not frozen")
+
+    def flagged(sentence):
+        f = " ".join(sentence.lower().split())
+        if not any(x in f for x in claim_subject):
+            return False
+        if not any(x in f for x in claim_frozen):
+            return False
+        if any(x in f for x in exempt):
+            return False
+        return not any(_re.search("(?<![a-z0-9])" + _re.escape(d), f) for d in denial)
+
+    # MUST accuse: the actual sentence that shipped and sat uncorrected for two iterations.
+    assert flagged("The committed payload is the frozen 2026-08-28 reference build")
+    assert flagged("The release payload is pinned to the frozen reference")
+    # MUST NOT accuse: the same subject and object, denied.
+    assert not flagged("The committed payload was confirmed to be a current-date build, "
+                       "not the frozen reference")
+    assert not flagged("The committed payload is not pinned to the frozen reference")
+    assert not flagged("The release payload is a current-date build, not the frozen one")
+    # MUST NOT accuse: a word merely containing a denial token.
+    assert flagged("Whenever asked, say the committed payload is the frozen reference")
 
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
@@ -5339,3 +5387,99 @@ def test_the_semantic_lint_actually_fires_on_the_sentences_it_forbids():
                        ("uncovered",), ("counted as zero",))
     assert _would_flag("date a is an archival snapshot",
                        ("date a",), ("archival snapshot",))
+
+
+# --- documentation pointers cannot silently lag the code (iteration 12) ----
+
+_REVIEW_FILE = re.compile(r"ITERATION_(\d+)_REVIEW\.md")
+_ITER_MARKER = re.compile(r"^<!-- current-iteration: (\d+) -->$", re.M)
+_END_STATE = re.compile(r"^## Iteration (\d+) end state\b", re.M)
+_IN_PROGRESS = re.compile(r"^<!-- status: in-progress -->$", re.M)
+
+
+def _newest_review(docs):
+    """Highest iteration number among the review files. NUMERIC max, deliberately: a string sort
+    picks ITERATION_9 over ITERATION_11. `fullmatch` on the name excludes ITERATION_12_BACKLOG."""
+    ns = [int(m.group(1)) for p in docs.iterdir()
+          if (m := _REVIEW_FILE.fullmatch(p.name))]
+    return max(ns) if ns else None
+
+
+def check_iteration_pointer(newest, markers, headings, newest_in_progress=False):
+    """Pure, so it can be driven by fixtures rather than only by the repo.
+
+    Returns None when the pointers are current, or a human-readable reason when they are not.
+    Fails closed: a missing or duplicated marker is a failure, not a pass."""
+    if len(markers) != 1:
+        return f"expected exactly one <!-- current-iteration --> marker, found {len(markers)}"
+    declared = markers[0]
+    if declared == newest:
+        pass
+    elif newest_in_progress and declared == newest - 1:
+        # The review file is opened as working notes on day one of an iteration, so the pointer is
+        # legitimately one behind until it ships. Only an explicit in-progress marker buys that.
+        return None
+    else:
+        return f"declares iteration {declared}, newest review is {newest}"
+    if headings is not None and newest not in headings:
+        return f"no '## Iteration {newest} end state' section"
+    return None
+
+
+def test_the_handoff_cannot_lag_the_newest_iteration_review():
+    """docs/HANDOFF.md said "Latest iteration: ITERATION_9_REVIEW.md" while reviews 10 and 11 both
+    existed, and had no section for either — the commit that wrote the iteration-11 documentation
+    touched this file on exactly one line and did not notice. README.md and CLAUDE.md both pointed
+    at the iteration-5 review as "the current state".
+
+    Only integers parsed from explicit markers are compared; no prose is read. That matters: the
+    nearest existing lint matched the token "never" inside "whenever". A full-line HTML comment and
+    a line-anchored heading have nothing to misread."""
+    docs = ROOT / "docs"
+    newest = _newest_review(docs)
+    assert newest, "no ITERATION_N_REVIEW.md files found"
+    review = docs / f"ITERATION_{newest}_REVIEW.md"
+    in_progress = bool(_IN_PROGRESS.search(review.read_text(encoding="utf-8")))
+
+    handoff = (docs / "HANDOFF.md").read_text(encoding="utf-8")
+    problem = check_iteration_pointer(
+        newest,
+        [int(m) for m in _ITER_MARKER.findall(handoff)],
+        {int(m) for m in _END_STATE.findall(handoff)},
+        in_progress)
+    assert problem is None, f"docs/HANDOFF.md {problem}"
+
+    for name in ("README.md", "CLAUDE.md"):
+        text = (ROOT / name).read_text(encoding="utf-8")
+        problem = check_iteration_pointer(
+            newest, [int(m) for m in _ITER_MARKER.findall(text)], None, in_progress)
+        assert problem is None, f"{name} {problem}"
+
+
+def test_the_pointer_guard_fires_on_the_states_it_is_meant_to_catch():
+    """The guard checked against fixtures, including the three ways it could pass vacuously."""
+    # The real state of the repo before iteration 12: declared 9, newest 11, sections {9, 8, 7}.
+    assert "declares iteration 9" in check_iteration_pointer(11, [9], {9, 8, 7})
+    # A marker that matches but no section to go with it.
+    assert "end state" in check_iteration_pointer(11, [11], {9, 8, 7})
+    # Fail closed on a missing or duplicated marker, rather than treating absence as agreement.
+    assert check_iteration_pointer(11, [], {11}) is not None
+    assert check_iteration_pointer(11, [11, 11], {11}) is not None
+    # Current: passes.
+    assert check_iteration_pointer(11, [11], {11, 10, 9}) is None
+    # Prose is never parsed, so a sentence mentioning other iterations cannot trip it.
+    assert check_iteration_pointer(11, [11], {11}) is None
+    # One behind is allowed ONLY while the newest review declares itself in progress.
+    assert check_iteration_pointer(12, [11], {11}, newest_in_progress=True) is None
+    assert check_iteration_pointer(12, [11], {11}, newest_in_progress=False) is not None
+
+
+def test_the_newest_review_is_found_numerically_not_alphabetically():
+    """ITERATION_9 sorts after ITERATION_11 as a string. The guard would then have declared the
+    repo current while pointing three iterations back."""
+    import types
+    fake = types.SimpleNamespace(iterdir=lambda: [
+        types.SimpleNamespace(name=n) for n in
+        ("ITERATION_1_REVIEW.md", "ITERATION_9_REVIEW.md", "ITERATION_11_REVIEW.md",
+         "ITERATION_12_BACKLOG.md", "HANDOFF.md", "METHODOLOGY.md")])
+    assert _newest_review(fake) == 11      # not 9, and the BACKLOG file is not a review
