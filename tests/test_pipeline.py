@@ -9,6 +9,7 @@ import collections
 import csv
 import datetime as dt
 import json
+import os
 import re
 from pathlib import Path
 
@@ -1105,6 +1106,9 @@ def test_unknown_is_not_silently_zero():
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
                     reason="pipeline has not been run")
+@pytest.mark.skipif(os.environ.get("RUN_BUILD_TESTS") != "1",
+                    reason="runs the full pipeline, which fetches on a cold cache; "
+                           "set RUN_BUILD_TESTS=1 (refresh.yml does)")
 def test_processed_output_is_deterministic():
     """A rebuild with a fixed as-of must reproduce the index byte-for-byte.
 
@@ -2864,6 +2868,8 @@ def test_repair_costs_are_never_bare_numbers():
 # Iteration 6: candidate discovery is human-gated and CANNOT feed the scored dataset (§29-30)
 # --------------------------------------------------------------------------
 
+@pytest.mark.skipif(os.environ.get("RUN_BUILD_TESTS") != "1",
+                    reason="makes a live request; set RUN_BUILD_TESTS=1")
 def test_candidate_discovery_fails_safely_and_never_raises():
     """The discovery step must return [] on any failure (e.g. no network here) and never raise,
     so it can never break anything."""
@@ -3436,6 +3442,15 @@ def _regional_explanations():
     return json.loads(
         (PROCESSED / "explanations_regional.json").read_text(encoding="utf-8"))
 
+
+# Tests that go to the network, or that run the whole pipeline (which goes to the network on a
+# cold cache). Opt-in, because CI runs on every push and a full build fetches Wikipedia and
+# Overpass from scratch each time: five pushes in an hour is five full fetch cycles against free
+# public endpoints, and the first casualty was a CI run that failed in the fetch rather than in
+# anything it was testing. refresh.yml sets this — it builds anyway and has a warm data/raw cache.
+needs_network = pytest.mark.skipif(
+    os.environ.get("RUN_BUILD_TESTS") != "1",
+    reason="network/full-build test; set RUN_BUILD_TESTS=1 (refresh.yml does)")
 
 needs_build = pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
                                  reason="pipeline has not been run")

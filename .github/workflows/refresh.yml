@@ -58,6 +58,11 @@ jobs:
         run: pip install pytest
 
       - name: Test
+        # RUN_BUILD_TESTS enables the determinism and live-request tests, which ci.yml
+        # skips. This job has already fetched and holds a warm data/raw cache, so running
+        # them here costs nothing extra and keeps them exercised daily.
+        env:
+          RUN_BUILD_TESTS: "1"
         run: python -m pytest
 
       - name: Commit if data changed

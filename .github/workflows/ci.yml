@@ -48,23 +48,26 @@ jobs:
       - name: Install test dependency
         run: pip install pytest
 
-      # Builds first, because most of the suite asserts on the emitted payload. Without this the
-      # ~136 artifact-guarded tests would silently skip and the job would pass having run a third
-      # of itself.
-      - name: Build dataset
-        run: python -m pipeline.run
-
-      - name: Test
+      # Deliberately NO `pipeline.run` here.
+      #
+      # data/processed is committed, so the suite asserts on the bytes that actually ship — which
+      # is better than asserting on a payload the job just built for itself. And the first version
+      # of this workflow DID build: five pushes in one hour became five cold full fetches of
+      # Wikipedia and Overpass, and run #2 failed inside the fetch rather than in anything it was
+      # testing. Hammering free public endpoints on every push is not a reasonable way to find out
+      # whether a test passes.
+      #
+      # The few tests that genuinely need a build or a live request are opt-in behind
+      # RUN_BUILD_TESTS and run in refresh.yml, which builds anyway and keeps a data/raw cache.
+      - name: Test against the committed payload
         run: python -m pytest
 
-      - name: Fail if the build left the tracked tree dirty
-        # A clean checkout plus a build must reproduce exactly what is committed. If it does not,
-        # either data/processed was hand-edited or the pipeline is not deterministic — and both
-        # mean the committed payload is not reproducible from source.
+      - name: The payload must be present, or the suite skipped most of itself
+        # ~136 tests are guarded on their artifact existing. Without this, a checkout missing the
+        # committed payload would skip them and report green.
         run: |
-          git diff --stat -- data/processed web/public/data docs/CURRENT_STATE.md
-          git diff --quiet -- data/processed web/public/data docs/CURRENT_STATE.md \
-            || echo "::warning::rebuild differs from the committed payload (expected when as_of has moved)"
+          test -f data/processed/snapshot.json
+          test -f web/public/data/snapshot.json
 
   frontend:
     runs-on: ubuntu-latest
