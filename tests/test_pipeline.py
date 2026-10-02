@@ -1111,18 +1111,46 @@ def test_processed_output_is_deterministic():
     The database is a build artifact; a non-deterministic build would make every daily
     refresh a spurious diff and defeat the git-tracked data model.
     """
+    import shutil
     import subprocess
     import sys
+    import tempfile
 
     snap = _snapshot()
     as_of = snap["as_of"]
-    before = (PROCESSED / "index_national.json").read_text(encoding="utf-8")
-    subprocess.run(
-        [sys.executable, "-m", "pipeline.run", "--as-of", as_of],
-        cwd=ROOT, check=True, capture_output=True,
-    )
-    after = (PROCESSED / "index_national.json").read_text(encoding="utf-8")
-    assert before == after, "index build is not deterministic for a fixed as-of"
+
+    # Compare several payloads, not one. index_national.json carries the national series and
+    # nothing else, so a non-deterministic region, incident ordering, registry or ledger would
+    # have passed this unnoticed.
+    watched = ["index_national.json", "index_regional.json", "incidents.json", "assets.json",
+               "snapshot.json"]
+    before = {n: (PROCESSED / n).read_text(encoding="utf-8")
+              for n in watched if (PROCESSED / n).exists()}
+
+    # Rebuild into a COPY. This test used to run `pipeline.run` against the repo, rewriting
+    # data/processed, web/public/data and docs/CURRENT_STATE.md on every full-suite run: it left
+    # 33 modified tracked files behind, every later payload test asserted on the fresh rebuild
+    # rather than on the committed bytes, and it neutralised test_current_state_doc_is_in_sync by
+    # regenerating the doc before that test could read it.
+    with tempfile.TemporaryDirectory() as tmp:
+        work = Path(tmp) / "repo"
+        shutil.copytree(ROOT, work, symlinks=True, ignore=shutil.ignore_patterns(
+            ".git", ".venv", "node_modules", "dist", "tools", "__pycache__", ".pytest_cache"))
+        subprocess.run(
+            [sys.executable, "-m", "pipeline.run", "--as-of", as_of],
+            cwd=work, check=True, capture_output=True,
+        )
+        out = work / "data" / "processed"
+        for name, text in before.items():
+            rebuilt = (out / name).read_text(encoding="utf-8")
+            if name == "snapshot.json":
+                # The snapshot carries this run's wall clock by design; everything else in it
+                # must match. Compared through the same stripper the refresh guard uses.
+                ci = _load_ci_data_changed()
+                assert ci.normalise(text) == ci.normalise(rebuilt), \
+                    "snapshot is not deterministic for a fixed as-of"
+                continue
+            assert text == rebuilt, f"{name} is not deterministic for a fixed as-of"
 
 
 # --------------------------------------------------------------------------
@@ -1135,11 +1163,21 @@ def test_processed_output_is_deterministic():
 
 WEB_DATA = ROOT / "web" / "public" / "data"
 
+# Every artifact a shipped surface reads. The five from iterations 10 and 11 were absent, and
+# their own tests are artifact-guarded — so if the pipeline stopped emitting one, those tests
+# would SKIP and this list would not notice. A dropped artifact would have read as a pass.
 REQUIRED_WEB_FILES = [
     "snapshot.json", "index_national.json", "index_regional.json", "incidents.json",
     "regions.json", "assets.json", "taxonomy.json", "regions.geojson",
     "assets_lines.geojson", "context_land.geojson", "context_borders.geojson",
     "ocean.geojson",
+    # iteration 10-11 surfaces: pipeline registry, Data Quality, ledger, A/B, lifecycle.
+    "pipeline_registry.json", "pipeline_network_quality.json", "data_quality.json",
+    "build_changes.json", "history_series.json", "recovery_lifecycle.json",
+    "explanations_regional.json",
+    # data_manifest.json is deliberately NOT here: it never lists itself, and
+    # test_data_manifest_is_present_and_consistent requires every name in this list to appear in
+    # it. Its own presence and mirroring are asserted directly in that test.
 ]
 
 
@@ -1147,6 +1185,17 @@ REQUIRED_WEB_FILES = [
 def test_web_data_files_present():
     missing = [f for f in REQUIRED_WEB_FILES if not (WEB_DATA / f).exists()]
     assert not missing, f"frontend depends on these missing files: {missing}"
+
+
+@pytest.mark.skipif(not WEB_DATA.exists(), reason="web data not mirrored")
+def test_every_artifact_guarded_test_has_its_artifact_required_somewhere():
+    """About 136 tests skip when their artifact is missing, which turns a dropped payload into a
+    green run. The required-files list is the backstop, so the payloads those tests guard on must
+    actually be in it."""
+    guarded = ["history_series.json", "recovery_lifecycle.json", "build_changes.json",
+               "data_quality.json", "explanations_regional.json"]
+    assert set(guarded) <= set(REQUIRED_WEB_FILES), (
+        "an artifact that tests skip on is not in REQUIRED_WEB_FILES, so losing it is silent")
 
 
 @pytest.mark.skipif(not (WEB_DATA / "snapshot.json").exists(), reason="web data not mirrored")
@@ -1429,7 +1478,20 @@ def test_population_is_structural_context_on_regions():
 # --------------------------------------------------------------------------
 
 # The exact set of files the frontend fetches (mirrored to web/public/data at build).
-SERVED_DATA_JSON = (
+# A hand-maintained list of eight files, when the build emits twenty-plus. The scope gate is
+# the guard this project least wants to be partial, and five payloads added in iterations 10 and
+# 11 — recovery_lifecycle, history_series, data_quality, build_changes, pipeline_registry — were
+# simply outside it. Nothing violated the gate today; nothing was checking either.
+#
+# Now derived: every emitted .json is in scope, and the handful with a documented reason to carry
+# coordinates is named as an EXCEPTION rather than the whole set being named as an inclusion.
+def served_data_json():
+    """Every JSON payload the build emits, so a new one is covered the day it appears."""
+    return sorted(p.name for p in PROCESSED.glob("*.json"))
+
+
+# Kept so a reader can still see the original core at a glance; the gate itself uses the glob.
+SERVED_DATA_JSON_CORE = (
     "incidents.json", "snapshot.json", "assets.json",
     "index_national.json", "index_regional.json",
     "refinery_inventory.json", "regions.json", "taxonomy.json",
@@ -1438,7 +1500,16 @@ SERVED_DATA_JSON = (
 # basemap geometry (*.geojson). Every event/analysis file must stay coordinate-free, so
 # a strike is never resolvable below the admin-region level the UI presents.
 COORD_KEYS = {"lat", "lon", "lng", "latitude", "longitude", "coordinates", "geometry"}
-COORD_ALLOWED_FILES = {"assets.json"}  # + every *.geojson, handled below
+# `assets.json` holds public-infrastructure points. `pipeline_registry.json` was caught the
+# moment the gate was widened past its hand-written list, and is a genuine exception rather than
+# a violation — but it is granted a NARROWER licence than assets.json, enforced by
+# test_the_pipeline_registry_exception_is_narrower_than_the_asset_one below:
+#   * its `geometry` key is a METADATA object (km lengths, gap counts), not a coordinate array;
+#   * its node `lat`/`lon` are hub-identity fields, currently null throughout
+#     (`geography_precision: "none"` — "no defensible public coordinate held");
+#   * nothing in it is linked to an incident.
+# Exempting it without that test would convert a caught question into a silent allowance.
+COORD_ALLOWED_FILES = {"assets.json", "pipeline_registry.json"}  # + every *.geojson, below
 
 
 def _walk_keys(node):
@@ -1456,11 +1527,13 @@ def _walk_keys(node):
 def test_no_out_of_scope_fields_anywhere_in_served_payload():
     """The out-of-scope gate must cover EVERYTHING that ships, not a sample. This is the
     regression guard the daily refresh Action relies on before publishing."""
+    names = served_data_json()
+    # The gate is worthless if the glob silently matches nothing, and a `continue` on a missing
+    # file is how a partial run passes.
+    assert set(names) >= set(SERVED_DATA_JSON_CORE), f"core payloads missing: {names}"
     offenders = {}
-    for name in SERVED_DATA_JSON:
+    for name in names:
         fp = PROCESSED / name
-        if not fp.exists():
-            continue
         bad = {k for k in _walk_keys(json.loads(fp.read_text(encoding="utf-8")))
                if k.lower() in FORBIDDEN_FIELDS}
         if bad:
@@ -1474,18 +1547,65 @@ def test_event_and_analysis_files_carry_no_coordinates():
     """Coordinates may exist only in public-infrastructure points (assets.json) and the
     basemap *.geojson. No event or analysis file may leak asset-level geographic
     precision — that would exceed the admin-region level the dashboard presents."""
+    names = served_data_json()
+    assert set(names) >= set(SERVED_DATA_JSON_CORE), f"core payloads missing: {names}"
     offenders = {}
-    for name in SERVED_DATA_JSON:
+    for name in names:
         if name in COORD_ALLOWED_FILES:
             continue
         fp = PROCESSED / name
-        if not fp.exists():
-            continue
         bad = {k for k in _walk_keys(json.loads(fp.read_text(encoding="utf-8")))
                if k.lower() in COORD_KEYS}
         if bad:
             offenders[name] = sorted(bad)
     assert not offenders, f"coordinate keys leaked into event/analysis data: {offenders}"
+
+
+@pytest.mark.skipif(not (PROCESSED / "pipeline_registry.json").exists(),
+                    reason="pipeline not run")
+def test_the_pipeline_registry_exception_is_narrower_than_the_asset_one():
+    """The registry is exempt from the coordinate gate; this is what the exemption costs it.
+
+    An exemption granted to silence a failing gate is how a scope boundary erodes. Each clause
+    here is the specific reason the file was judged not to be a violation, turned into an
+    assertion."""
+    reg = json.loads((PROCESSED / "pipeline_registry.json").read_text(encoding="utf-8"))
+
+    # 1. `geometry` is measurement metadata, never a coordinate array.
+    for eid, ent in reg["entities"].items():
+        g = ent.get("geometry")
+        if g is None:
+            continue
+        assert isinstance(g, dict), f"{eid}: geometry must be a metadata object"
+        assert not any(k in g for k in ("coordinates", "lat", "lon", "type")), \
+            f"{eid}: geometry holds a shape, not a measurement"
+
+    # 2. Node coordinates stay at hub identity level and must declare their precision. Building
+    #    level is never acceptable, and a populated coordinate must not claim "none".
+    for nid, node in reg["nodes"].items():
+        prec = node.get("geography_precision")
+        assert prec in ("none", "settlement", "region"), f"{nid}: precision {prec!r}"
+        has_coord = node.get("lat") is not None or node.get("lon") is not None
+        assert not (has_coord and prec == "none"), f"{nid}: coordinate with precision 'none'"
+
+    # 3. Nothing in the registry is linked to an incident. Infrastructure identity is in scope;
+    #    infrastructure identity joined to where something was hit is not.
+    blob = json.dumps(reg, ensure_ascii=False).lower()
+    for banned in ("incident_id", "strike", "distance_km", "range_km"):
+        assert banned not in blob, f"pipeline registry carries {banned!r}"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_the_scope_gate_covers_every_emitted_payload_not_a_curated_list():
+    """The gate used to iterate a hand-written tuple of eight names while the build emitted more
+    than twenty. Five payloads added in iterations 10 and 11 were outside it. This asserts the
+    coverage itself, so adding a payload cannot quietly add an unguarded one."""
+    emitted = {p.name for p in PROCESSED.glob("*.json")}
+    assert emitted - set(served_data_json()) == set(), "an emitted payload is outside the gate"
+    for late in ("recovery_lifecycle.json", "history_series.json", "data_quality.json",
+                 "build_changes.json", "pipeline_registry.json"):
+        if (PROCESSED / late).exists():
+            assert late in served_data_json(), f"{late} is not covered by the scope gate"
 
 
 # --------------------------------------------------------------------------
