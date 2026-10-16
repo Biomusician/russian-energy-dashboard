@@ -5,7 +5,9 @@ name: Refresh dataset
 on:
   schedule:
     # 05:20 UTC daily. Deliberately off the hour: scheduled runs cluster on the hour
-    # across GitHub and get queued.
+    # across GitHub and get queued. In practice this one still lands between 09:50 and
+    # 13:11 UTC — up to eight hours of queue drift — which is why the freshness thresholds
+    # in pipeline/config.py are measured in days and not in hours.
     - cron: "20 5 * * *"
   workflow_dispatch:
     inputs:
@@ -20,6 +22,10 @@ concurrency:
 
 permissions:
   contents: write
+  # Needed only by the health step below, which opens one issue when the scheduled run has
+  # failed twice running and closes it on recovery. Between 2026-09-21 and 2026-10-01 this
+  # workflow failed eleven times in a row and nothing anywhere said so.
+  issues: write
 
 jobs:
   refresh:
@@ -66,6 +72,7 @@ jobs:
         run: python -m pytest
 
       - name: Commit if data changed
+        id: commit
         run: |
           git config user.name  "dataset-refresh[bot]"
           git config user.email "dataset-refresh[bot]@users.noreply.github.com"
@@ -75,10 +82,60 @@ jobs:
           # index) still counts as a change.
           if ! python scripts/ci_data_changed.py; then
             echo "No substantive dataset change — skipping commit."
+            echo "committed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          git add data/processed web/public/data
+
+          # STAGE FROM THE CONTRACT, NOT FROM A LIST TYPED HERE.
+          #
+          # This step used to read `git add data/processed web/public/data`. The build also
+          # regenerates docs/CURRENT_STATE.md, and a test validates it on every run — but the
+          # test reads the file the build has just written, so it passed every time while the
+          # staged tree never contained the doc. It shipped stale in twenty-nine consecutive
+          # commits, from 2026-09-05 to 2026-10-15: on the day this was fixed the committed doc
+          # claimed as_of 2026-10-02 / ESDI 10.20 / 176 events beside a snapshot saying
+          # 2026-10-15 / 13.26 / 184.
+          #
+          # pipeline/artifacts.py is now the single declaration of what a build produces, and
+          # the manifest, the tests and this step all read it. Declaring a new artifact there is
+          # what makes it staged; there is no second list to remember.
+          python scripts/staging_paths.py | xargs git add --
+
+          # Then verify what is actually in the index. A guard that reads the worktree the build
+          # wrote is testing the layer before the one that ships.
+          python scripts/verify_staged.py
+
           ESDI=$(python -c "import json;print(json.load(open('data/processed/snapshot.json',encoding='utf-8'))['esdi'])")
           N=$(python -c "import json;print(json.load(open('data/processed/snapshot.json',encoding='utf-8'))['incident_total'])")
-          git commit -m "data: daily refresh $(date -u +%Y-%m-%d) — ESDI ${ESDI}, ${N} events"
+          AS_OF=$(python -c "import json;print(json.load(open('data/processed/snapshot.json',encoding='utf-8'))['as_of'])")
+          git commit -m "data: daily refresh ${AS_OF} — ESDI ${ESDI}, ${N} events"
           git push
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+          echo "esdi=${ESDI}" >> "$GITHUB_OUTPUT"
+          echo "events=${N}" >> "$GITHUB_OUTPUT"
+          echo "as_of=${AS_OF}" >> "$GITHUB_OUTPUT"
+
+      # One glance at the run tells a maintainer what was published, without opening a log.
+      - name: Summary
+        if: always()
+        run: python scripts/refresh_summary.py >> "$GITHUB_STEP_SUMMARY"
+
+  # A failing scheduled refresh used to be invisible: GitHub emails the repository owner on the
+  # first failure of a scheduled workflow and then stops, so the eleven-day outage in September
+  # produced one notification on day one and silence afterwards. This job turns a persistent
+  # failure into one open issue, and closes it on recovery. It deliberately does NOT fire on a
+  # single failure — a transient upstream 503 is not worth an issue.
+  health:
+    needs: refresh
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Open or close the refresh-failure issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REFRESH_RESULT: ${{ needs.refresh.result }}
+        run: bash .github/scripts/refresh_health.sh

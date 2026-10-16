@@ -15,15 +15,35 @@ name: CI
 #
 # This also keeps refresh.yml toolchain-free: the pipeline is stdlib-only by design, and the
 # scheduled run still installs nothing but pytest.
+#
+# WHY THERE IS A workflow_run TRIGGER.
+#
+# All of the above was true and this workflow still never ran on a single dataset commit.
+# Between 2026-10-02 and 2026-10-15 the refresh bot pushed fourteen times and CI fired zero
+# times, because GitHub does not trigger `push` workflows for pushes authenticated with the
+# default GITHUB_TOKEN — a loop guard, and a reasonable one. The consequence here was that the
+# one job built to test the COMMITTED tree was structurally unreachable on the only commits
+# nobody reviews. It would have caught the stale docs/CURRENT_STATE.md on 2026-09-05 and every
+# day after.
+#
+# `workflow_run` is not subject to that suppression: it fires when another workflow completes,
+# whoever pushed. So the committed tree is now checked after every refresh, on the commit the
+# refresh actually made. A failure here is loud and cannot stop the data from updating, which
+# is the whole point of this file being separate.
 
 on:
   push:
     branches: ["**"]
   pull_request:
+  workflow_run:
+    workflows: ["Refresh dataset"]
+    types: [completed]
   workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  # workflow_run events carry the triggering workflow's ref, so keying on github.ref alone
+  # would let a refresh-triggered run cancel a human push to the same branch.
+  group: ci-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -40,6 +60,10 @@ jobs:
           # cannot answer: at depth 1 every curated file reports the tip commit's date and the
           # payload publishes a provenance date that is simply wrong.
           fetch-depth: 0
+          # On a workflow_run event the default checkout is the ref the EVENT points at, which
+          # for a refresh is the commit that triggered the refresh — the parent, not the commit
+          # the refresh made. Checking the parent would pass while the new commit was broken.
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref }}
 
       - uses: actions/setup-python@v5
         with:
@@ -74,6 +98,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref }}
 
       - uses: actions/setup-node@v4
         with:

@@ -19,12 +19,13 @@ from pipeline import build_manifest, data_quality, diff_builds
 from pipeline import fetch_osm, fetch_osm_pipelines
 from pipeline.config import (
     ANALYTIC_CONCEPTS, ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, EVIDENCE_KINDS,
-    OPTIONAL_CONTEXT_FILES, PROCESSED, PUBLICATION_CADENCE, ROOT, SCHEMA_VERSION,
+    PROCESSED, PUBLICATION_CADENCE, ROOT, SCHEMA_VERSION,
     SECTOR_OF_CLASS, SECTORS, WEB_DATA, WINDOW_START,
 )
 from pipeline.fetch_refineries import build as build_refineries
 from pipeline.fetch_wikipedia import build as build_wikipedia
 from pipeline.recovery import load_recovery_records
+from pipeline import artifacts
 from pipeline.util import fetch_json, log, read_csv, read_json, write_json
 
 COVERAGE_PAGE = "2025%E2%80%932026_Russian_fuel_crisis"
@@ -649,14 +650,15 @@ def main():
     # Data manifest (iteration 5): one stamp of the schema version and the files this
     # build emitted, so a client can distinguish app/data skew from a genuine outage and
     # tests can assert the contract. Written last, before the mirror copies it across.
+    # The file list comes from pipeline.artifacts, which is also what the refresh stages and
+    # what the tests assert on. Three independent lists is how docs/CURRENT_STATE.md stayed
+    # stale in twenty-nine consecutive commits while a test validated it every time.
     manifest = {
         "schema_version": SCHEMA_VERSION,
         "build_time": snapshot["build_time"],
         "files": [
-            {"name": p.name, "bytes": p.stat().st_size,
-             "optional": p.name in OPTIONAL_CONTEXT_FILES}
-            for p in sorted(PROCESSED.glob("*.json")) + sorted(PROCESSED.glob("*.geojson"))
-            if p.name != "data_manifest.json"
+            {"name": name, "bytes": (PROCESSED / name).stat().st_size, "optional": optional}
+            for name, optional in artifacts.web_payloads()
         ],
     }
     write_json(PROCESSED / "data_manifest.json", manifest, indent=2)
