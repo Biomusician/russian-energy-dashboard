@@ -8,4 +8,16 @@ dependencies = []
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-addopts = "-q"
+# --strict-markers so a misspelled mark is an error. An unregistered `@pytest.mark.repo_hygene`
+# deselects nothing and warns about it in a line nobody reads, which would put a prose lint
+# silently back into the publication gate.
+addopts = "-q --strict-markers"
+markers = [
+  # Asserts about THIS REPOSITORY -- its prose, its docs, its frontend source -- rather than
+  # about the data being published. refresh.yml deselects these, because its commit step is
+  # gated on the suite and a documentation edit must not be able to stop the dataset updating.
+  # ci.yml runs them, where a failure is loud and immediate and cannot freeze publication.
+  # Measured, not theorised: creating docs/ITERATION_13_REVIEW.md turned the suite red, and
+  # would have frozen the daily refresh.
+  "repo_hygiene: asserts about the repository, not the payload; never gates publication",
+]

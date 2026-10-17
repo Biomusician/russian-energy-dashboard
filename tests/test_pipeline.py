@@ -147,6 +147,7 @@ def test_far_eastern_regions_resolve_as_out_of_aoi():
         assert resolve(name)[0] == "out_of_aoi", name
 
 
+@pytest.mark.repo_hygiene
 def test_no_sfd_abbreviation_in_code_or_config():
     """The ambiguous 'SFD' abbreviation must not appear as a scope label in code, config
     or user-facing methodology. Iteration review docs may discuss its removal by name."""
@@ -644,6 +645,7 @@ def _scan_files_for_crimea_lint():
             yield (path, frag)
 
 
+@pytest.mark.repo_hygiene
 def test_no_source_text_claims_crimea_is_out_of_the_composite():
     """Lint (§1): fail the build if a comment/doc asserts Crimea/occupied never enters the
     monitored-area composite — false, since esdi_included=True. Twice-shipped bug; now guarded."""
@@ -662,6 +664,7 @@ def test_no_source_text_claims_crimea_is_out_of_the_composite():
         f"  {p}: {f[:140]}" for p, f in hits)
 
 
+@pytest.mark.repo_hygiene
 def test_docs_do_not_claim_the_release_payload_is_frozen():
     """Lint: fail the build if a doc asserts the committed payload is the frozen reference.
 
@@ -5443,6 +5446,7 @@ _DENIAL = ("not ", "never", "cannot", "can't", "no ", "isn't", "is not", "rather
            "mistake", "wrongly", "false", "forbid", "refus", "avoid", "//", "#")
 
 
+@pytest.mark.repo_hygiene
 def test_no_text_claims_transmission_measures_grid_capacity():
     hits = _hits(("transmission", "grid"),
                  ("percent of capacity offline", "share of the grid offline",
@@ -5452,6 +5456,7 @@ def test_no_text_claims_transmission_measures_grid_capacity():
         f"  {p}: {f[:130]}" for p, f in hits)
 
 
+@pytest.mark.repo_hygiene
 def test_no_text_equates_recovery_with_physical_repair():
     hits = _hits(("recovery", "restored", "restoration"),
                  ("means the facility was repaired", "proves repair", "confirms repair",
@@ -5461,6 +5466,7 @@ def test_no_text_equates_recovery_with_physical_repair():
         f"  {p}: {f[:130]}" for p, f in hits)
 
 
+@pytest.mark.repo_hygiene
 def test_no_text_calls_a_reconstructed_date_an_archive_of_what_was_known():
     hits = _hits(("date a", "historical", "reconstruct", "comparison"),
                  ("what the dashboard knew", "what was known at the time",
@@ -5470,6 +5476,7 @@ def test_no_text_calls_a_reconstructed_date_an_archive_of_what_was_known():
         f"  {p}: {f[:130]}" for p, f in hits)
 
 
+@pytest.mark.repo_hygiene
 def test_no_text_treats_the_build_date_as_a_source_date():
     hits = _hits(("build date", "build time", "generated"),
                  ("how current the data", "how fresh the sources", "when the source was published"),
@@ -5478,6 +5485,7 @@ def test_no_text_treats_the_build_date_as_a_source_date():
         f"  {p}: {f[:130]}" for p, f in hits)
 
 
+@pytest.mark.repo_hygiene
 def test_no_text_calls_an_experimental_sub_index_part_of_the_headline():
     hits = _hits(("experimental",),
                  ("contributes to the composite", "enters the headline",
@@ -5487,6 +5495,7 @@ def test_no_text_calls_an_experimental_sub_index_part_of_the_headline():
         f"  {p}: {f[:130]}" for p, f in hits)
 
 
+@pytest.mark.repo_hygiene
 def test_no_text_equates_first_seen_in_this_dashboard_with_publication():
     hits = _hits(("first seen", "first_seen", "dashboard_first_seen"),
                  ("when it was published", "when we learned", "when the report appeared",
@@ -5496,6 +5505,7 @@ def test_no_text_equates_first_seen_in_this_dashboard_with_publication():
         f"  {p}: {f[:130]}" for p, f in hits)
 
 
+@pytest.mark.repo_hygiene
 def test_no_text_treats_an_unknown_as_a_zero():
     hits = _hits(("unknown", "no denominator", "uncovered"),
                  ("counted as zero", "treated as zero", "scored as zero"),
@@ -5570,6 +5580,7 @@ def check_iteration_pointer(newest, markers, headings, newest_in_progress=False)
     return None
 
 
+@pytest.mark.repo_hygiene
 def test_the_handoff_cannot_lag_the_newest_iteration_review():
     """docs/HANDOFF.md said "Latest iteration: ITERATION_9_REVIEW.md" while reviews 10 and 11 both
     existed, and had no section for either — the commit that wrote the iteration-11 documentation
@@ -5618,6 +5629,7 @@ def test_the_pointer_guard_fires_on_the_states_it_is_meant_to_catch():
     assert check_iteration_pointer(12, [11], {11}, newest_in_progress=False) is not None
 
 
+@pytest.mark.repo_hygiene
 def test_the_newest_review_is_found_numerically_not_alphabetically():
     """ITERATION_9 sorts after ITERATION_11 as a string. The guard would then have declared the
     repo current while pointing three iterations back."""
@@ -5629,6 +5641,7 @@ def test_the_newest_review_is_found_numerically_not_alphabetically():
     assert _newest_review(fake) == 11      # not 9, and the BACKLOG file is not a review
 
 
+@pytest.mark.repo_hygiene
 def test_the_frontend_has_words_for_every_kind_of_zero_the_pipeline_emits():
     """Cross-language parity, checked rather than remembered.
 
@@ -6093,3 +6106,118 @@ def test_the_retrieval_basis_is_never_a_publisher_signal_when_it_is_ours():
             assert source.get("retrieval_is_publisher_signal") is not True, (
                 f"{source['source_id']} derives its date from our own repository or cache and "
                 f"must not claim it as a publisher signal")
+
+
+# --------------------------------------------------------------------------
+# Iteration 13: what is allowed to freeze publication
+# --------------------------------------------------------------------------
+# refresh.yml gates its commit on this suite. That gate is right for tests about the DATA: a
+# collapsed parse must never reach production. It is wrong for everything else, and ci.yml has
+# said so since iteration 12 -- "the set of things able to freeze publication must be as small
+# as the job that publishes" -- while applying it only to the frontend. Every prose lint stayed
+# inside the gate.
+#
+# The cost was measured, not theorised. Creating docs/ITERATION_13_REVIEW.md turned this suite
+# red, because test_the_handoff_cannot_lag_the_newest_iteration_review compares the newest
+# review against three markers. Writing the iteration review would have frozen the daily data
+# publication. That is the September outage's exact shape -- a correct test, failing for a
+# reason that has nothing to do with the data, stopping the data -- waiting on a routine
+# documentation action.
+#
+# So the suite is partitioned. Tests that read the repository's own prose or frontend source
+# are marked `repo_hygiene`; refresh.yml runs `-m "not repo_hygiene"` and ci.yml runs
+# everything. The marker is a promise, and the test below is what keeps it from rotting.
+
+# Helpers whose entire job is reading this repository's prose. A test that calls one of them is
+# asserting about the repository, not about the data being published.
+PROSE_LINT_HELPERS = frozenset({
+    "_hits", "_lint_files", "_scan_files_for_crimea_lint", "_newest_review", "_sentences_of",
+})
+
+
+def _test_functions_and_their_marks():
+    """Every top-level test in this file, with its decorator text and its referenced names."""
+    import ast
+    source = Path(__file__).read_text(encoding="utf-8")
+    lines = source.splitlines(keepends=True)
+    out = []
+    for node in ast.parse(source).body:
+        if not (isinstance(node, ast.FunctionDef) and node.name.startswith("test_")):
+            continue
+        decorators = "".join("".join(lines[d.lineno - 1:d.end_lineno])
+                             for d in node.decorator_list)
+        names = {n.id for n in ast.walk(node) if isinstance(n, ast.Name)}
+        names |= {n.attr for n in ast.walk(node) if isinstance(n, ast.Attribute)}
+        out.append((node.name, decorators, names))
+    return out
+
+
+def test_no_prose_lint_can_freeze_the_daily_publication():
+    """A test that lints this repository's prose must not be able to stop the data updating.
+
+    This is the finished form of the argument written in ci.yml. Unmarked prose lints are how
+    writing a document became capable of freezing publication; marking them is the fix, and this
+    assertion is what stops the next one being added unmarked.
+    """
+    offenders = [name for name, decorators, names in _test_functions_and_their_marks()
+                 if (names & PROSE_LINT_HELPERS) and "repo_hygiene" not in decorators]
+    assert not offenders, (
+        f"these tests lint repository prose but are not marked `repo_hygiene`, so a prose edit "
+        f"can freeze the daily data publication: {offenders}. Add "
+        f"@pytest.mark.repo_hygiene, which refresh.yml deselects and ci.yml still runs.")
+
+
+def test_the_partition_is_actually_applied_by_the_refresh_workflow():
+    """Marking the tests achieves nothing if the workflow does not deselect them."""
+    wf = (ROOT / ".github" / "workflows" / "refresh.yml").read_text(encoding="utf-8")
+    code = "\n".join(ln for ln in wf.splitlines() if not ln.lstrip().startswith("#"))
+    assert 'not repo_hygiene' in code, (
+        "refresh.yml must run `pytest -m \"not repo_hygiene\"`, or the prose lints are still "
+        "able to stop the dataset from publishing")
+    ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    ci_code = "\n".join(ln for ln in ci.splitlines() if not ln.lstrip().startswith("#"))
+    assert "repo_hygiene" not in ci_code, (
+        "ci.yml must run the WHOLE suite — it is where a prose failure is supposed to be loud")
+
+
+def test_the_marker_is_registered_so_a_typo_is_not_silently_ignored():
+    """An unregistered mark is a no-op pytest merely warns about.
+
+    `@pytest.mark.repo_hygene` would deselect nothing and announce nothing louder than a
+    warning, which would quietly put a prose lint back into the publication gate.
+    """
+    cfg = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    assert "repo_hygiene" in cfg, "register the marker in pyproject.toml [tool.pytest.ini_options]"
+    assert "--strict-markers" in cfg, (
+        "pytest must run with --strict-markers, so a misspelled mark is an error rather than a "
+        "silently ignored no-op")
+
+
+@pytest.mark.repo_hygiene
+def test_every_marked_test_really_does_read_the_repository():
+    """The partition must not become a way to quietly exempt a data test from the gate.
+
+    The marker's meaning is "this asserts about the repository, not about the payload". A test
+    carrying it that touches no repository prose is either mismarked or is a data test someone
+    moved out of the gate, and both are worth noticing.
+    """
+    import ast
+    source = Path(__file__).read_text(encoding="utf-8")
+    lines = source.splitlines(keepends=True)
+    suspicious = []
+    for node in ast.parse(source).body:
+        if not (isinstance(node, ast.FunctionDef) and node.name.startswith("test_")):
+            continue
+        decorators = "".join("".join(lines[d.lineno - 1:d.end_lineno])
+                             for d in node.decorator_list)
+        if "repo_hygiene" not in decorators:
+            continue
+        body = "".join(lines[node.lineno - 1:node.end_lineno])
+        names = {n.id for n in ast.walk(node) if isinstance(n, ast.Name)}
+        reads_repo = bool(names & PROSE_LINT_HELPERS) or any(
+            tok in body for tok in (".md", ".ts", ".tsx", "web/src", 'web" / "src', "docs"))
+        if not reads_repo:
+            suspicious.append(node.name)
+    assert not suspicious, (
+        f"these tests are marked repo_hygiene but do not appear to read the repository, so they "
+        f"have been removed from the publication gate without reason: {suspicious}")

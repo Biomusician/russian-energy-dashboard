@@ -77,7 +77,14 @@ jobs:
         # them here costs nothing extra and keeps them exercised daily.
         env:
           RUN_BUILD_TESTS: "1"
-        run: python -m pytest
+        # `-m "not repo_hygiene"` deselects the tests that assert about this repository's prose
+        # rather than about the data. This step gates the commit, so everything it runs must be
+        # a reason to withhold a payload. A stale doc pointer is not: creating
+        # docs/ITERATION_13_REVIEW.md turned the full suite red, which under the old command
+        # would have frozen the daily publication over a documentation edit -- the September
+        # outage's exact shape. ci.yml runs the whole suite, where that failure is loud and
+        # cannot stop the data.
+        run: python -m pytest -m "not repo_hygiene"
 
       - name: Commit if data changed
         id: commit
