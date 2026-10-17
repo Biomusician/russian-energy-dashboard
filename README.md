@@ -1,6 +1,6 @@
 # Energy Disruption Monitor — Western Russia, Siberia & Belarus
 
-<!-- current-iteration: 12 -->
+<!-- current-iteration: 13 -->
 
 An open-source-only dashboard tracking publicly reported degradation of energy
 infrastructure across **Belarus, western Russia and the Siberian Federal District**,
