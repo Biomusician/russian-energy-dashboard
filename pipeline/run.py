@@ -584,6 +584,13 @@ def main():
     snapshot["recovery_horizon_sensitivity"] = horizon_sensitivity.build(
         build_index, index_kwargs, snapshot)
 
+    # The magnitude of a known omission, which the payload named but never sized: facilities
+    # inside the refining denominator whose live impairment the numerator cannot measure.
+    _unsized = build_index.impairment_in_the_denominator_but_not_the_numerator(
+        snapshot, refineries, refining_total)
+    if _unsized:
+        snapshot["impairment_not_sized"] = _unsized
+
     snapshot["publication_freshness"] = {
         "as_of": snapshot["as_of"],
         "build_time": snapshot["build_time"],

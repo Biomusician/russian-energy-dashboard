@@ -363,6 +363,80 @@ SECTOR_CAPACITY_FIELD = {
 }
 
 
+def impairment_in_the_denominator_but_not_the_numerator(snapshot, refineries, refining_total):
+    """Live impairment at facilities the DENOMINATOR counts but the numerator cannot size.
+
+    THE ASYMMETRY THIS DISCLOSES. Moscow and Volgograd are both members of the refining
+    denominator, at 12.15 and 12.41 MTPA out of 273.8. Both are live. Both contribute exactly
+    ZERO to the refining numerator, because the capacity figure the scoring path uses comes from
+    the source strike table's own capacity column and their rows have an empty cell -- `_share`
+    returns 0.0 when the capacity is None. So the plant is inside the base being divided by and
+    outside the thing being divided -- which is an unknown quantity being scored as if it were
+    zero, the one thing this index must never do, inside the one calculation this project
+    exists to keep honest.
+
+    The magnitude was never stated anywhere. `capacity_measurement_audit` counts the EVENTS in
+    this condition and the regional zero taxonomy names the regions, but nothing said what it is
+    worth -- about 3.4 refining points and 1.4 on the headline, roughly an eighth of the index.
+
+    WHY THIS DISCLOSES RATHER THAN FIXES. Sizing them needs a capacity figure, and the only one
+    available is the curated registry that already sets the denominator. Using it would put the
+    numerator and denominator on the same basis for these two plants while nineteen of the other
+    twenty-three stay on the source table's basis -- the two disagree by +5.7% in total and by
+    2.3x for TANECO alone. Which basis the index uses is a methodology decision, not a bug fix,
+    so it is written up in docs/REFINERY_CAPACITY_BASIS.md and NOT deployed. What ships today is
+    the number, stated.
+    """
+    by_canon = {r["canonical_id"]: r for r in refineries}
+    sized = {c["asset_id"] for c in
+             ((snapshot.get("explanations") or {}).get("sectors") or {})
+             .get("refining", {}).get("contributing", [])
+             if c.get("capacity_value") is not None}
+    rows = []
+    for d in snapshot.get("live_disruptions") or []:
+        if d.get("sector") != "refining" or d["asset_id"] in sized:
+            continue
+        canon = refinery_registry.resolve(d["asset_id"])
+        entry = by_canon.get(canon) if canon else None
+        if not entry or entry.get("denominator_status") == "exclude":
+            continue                     # not in the denominator either, so no asymmetry
+        cap = entry.get("capacity_mtpa")
+        if not cap or not refining_total:
+            continue
+        weight = d.get("disruption_weight") or 0.0
+        rows.append({
+            "asset_id": d["asset_id"],
+            "name": d.get("name"),
+            "region_code": d.get("region_code"),
+            "impairment_weight": weight,
+            "denominator_capacity_mtpa": cap,
+            "denominator_share_pct": round(100 * cap / refining_total, 4),
+            "sector_points_not_counted": round(100 * (cap / refining_total) * weight, 4),
+        })
+    if not rows:
+        return None
+    rows.sort(key=lambda r: -r["sector_points_not_counted"])
+    points = sum(r["sector_points_not_counted"] for r in rows)
+    weights = SCORING["sector_weights"]
+    covered = snapshot.get("sectors_covered") or list(weights)
+    share = weights.get("refining", 0.0) / (sum(weights[x] for x in covered) or 1.0)
+    return {
+        "sector": "refining",
+        "facilities": rows,
+        "sector_points_not_counted": round(points, 2),
+        "approx_headline_points_not_counted": round(points * share, 2),
+        "headline_if_counted": round(snapshot["esdi"] + points * share, 2),
+        "note": (
+            "These facilities are in the refining DENOMINATOR and are live, but the capacity "
+            "figure the numerator uses comes from the source strike table and their rows carry "
+            "no capacity cell. They therefore contribute exactly zero: counted in the base, "
+            "absent from the measure. Disclosed rather than fixed, because sizing them would "
+            "put the numerator and denominator on one basis for these plants while most others "
+            "stay on the source table's -- the two bases differ by about 6% overall. See "
+            "docs/REFINERY_CAPACITY_BASIS.md. The published index is NOT adjusted."),
+    }
+
+
 def capacity_measurement_audit(incidents, facility_info):
     """Split the corpus by whether capacity-removed is answerable, not merely unanswered.
 
