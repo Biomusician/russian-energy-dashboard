@@ -7,5 +7,14 @@
 *.cmd text eol=crlf
 
 # Emitted data is machine-written, single-line JSON. Never merge it by hand -- rebuild.
-data/processed/** -diff merge=ours linguist-generated
-web/public/data/** -diff merge=ours linguist-generated
+#
+# `merge=ours` was NOT doing that. `ours` is not a built-in merge driver and no `merge.ours.*`
+# driver is configured here, so git silently fell back to the ordinary text three-way driver and
+# wrote `<<<<<<< HEAD` conflict markers INTO snapshot.json. `-diff` then hid them, because
+# `git diff` prints only "Binary files differ" for these paths -- so a human resolving the merge
+# would see nothing wrong and commit a payload with conflict markers in it.
+#
+# `-merge` is the real thing: git refuses to auto-merge, flags the conflict and leaves our
+# version in the worktree. The instruction above is now enforced rather than asserted.
+data/processed/** -diff -merge linguist-generated
+web/public/data/** -diff -merge linguist-generated

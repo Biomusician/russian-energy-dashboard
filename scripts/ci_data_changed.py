@@ -15,6 +15,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parent.parent
 EMITTED_DIRS = ("data/processed", "web/public/data")
 
 # Per-run identity, at ANY depth. Stripping only the top level defeated the whole guard: the
@@ -64,9 +65,50 @@ def substantive_change() -> bool:
             if normalise(fp.read_text(encoding="utf-8")) != normalise(head):
                 print(f"substantive: {rel} changed")
                 return True
+    # A file the build STOPPED producing is a change too. This loop walks what is on disk, so a
+    # payload pruned by `_mirror_to_web` used to be invisible here: if nothing else had moved,
+    # the refresh reported "no substantive change" and the deletion was never published.
+    for d in EMITTED_DIRS:
+        for rel in _head_files(d):
+            if not (ROOT / rel).exists():
+                print(f"substantive: {rel} was removed")
+                return True
     print("no substantive change (only build_time differs, if anything)")
     return False
 
 
+def _head_files(directory):
+    """Paths git has committed under `directory`, so a removal can be noticed."""
+    r = subprocess.run(["git", "ls-tree", "-r", "--name-only", "HEAD", "--", directory],
+                       cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+    if r.returncode != 0:
+        return []
+    return [ln.strip() for ln in r.stdout.splitlines() if ln.strip()]
+
+
+# WHY THIS SCRIPT HAS THREE EXIT CODES AND NOT TWO.
+#
+# It used to be `sys.exit(0 if substantive_change() else 1)`, and refresh.yml read it as
+#
+#     if ! python scripts/ci_data_changed.py; then  echo "no change"; exit 0;  fi
+#
+# so "no change" and "this script crashed" were the same exit code. An unreadable file, a
+# missing directory, a `git show` failure — any of them exited non-zero, the workflow printed
+# "No substantive dataset change", exited 0, and the run went GREEN while publishing nothing.
+# No red X, no email, no log anyone reads. The quietest possible way to stop updating.
+#
+#   0  there is a substantive change — commit it
+#   1  there is genuinely no change — skip the commit, this is fine
+#   2  something went wrong — the caller must FAIL, not skip
+EXIT_CHANGED, EXIT_NO_CHANGE, EXIT_ERROR = 0, 1, 2
+
 if __name__ == "__main__":
-    sys.exit(0 if substantive_change() else 1)
+    try:
+        sys.exit(EXIT_CHANGED if substantive_change() else EXIT_NO_CHANGE)
+    except SystemExit:
+        raise
+    except Exception as exc:                                  # noqa: BLE001 — deliberate
+        print(f"ERROR deciding whether the dataset changed: {exc!r}", file=sys.stderr)
+        print("Refusing to report 'no change' for a question that could not be answered.",
+              file=sys.stderr)
+        sys.exit(EXIT_ERROR)

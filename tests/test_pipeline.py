@@ -823,6 +823,17 @@ def _snapshot():
     return json.loads((PROCESSED / "snapshot.json").read_text(encoding="utf-8"))
 
 
+def _snapshot_or_skip():
+    if not (PROCESSED / "snapshot.json").exists():
+        pytest.skip("pipeline not run")
+    return _snapshot()
+
+
+def _incidents():
+    f = PROCESSED / "incidents.json"
+    return json.loads(f.read_text(encoding="utf-8")) if f.exists() else []
+
+
 @pytest.mark.skipif(not (PROCESSED / "regions.json").exists(),
                     reason="pipeline has not been run")
 def test_siberian_regions_present_far_eastern_absent_in_emitted_data():
@@ -5838,3 +5849,247 @@ def test_the_suite_does_not_keep_its_own_copy_of_the_artifact_list():
         "instead of restating it")
     assert MANIFEST not in REQUIRED_WEB_FILES, \
         "the manifest never lists itself; its presence is asserted directly"
+
+
+# --------------------------------------------------------------------------
+# Iteration 13: three defects that 367 passing tests did not see
+# --------------------------------------------------------------------------
+
+def test_a_citation_cannot_predate_the_event_it_documents():
+    """The cheapest possible detector for citation misalignment, and it was never run.
+
+    The source page writes `DATE,<ref>` -- the comma comes BEFORE the citation -- so splitting
+    a date cell on commas handed every date the PREVIOUS date's sources. The first date in a
+    multi-date cell got nothing, and the last got two. Thirty of 125 parsed incidents carried no
+    provenance at all; fifty-seven citations were dated before the strike they supposedly
+    reported, including a January 2024 article cited for a May 2024 strike.
+
+    None of that was a cosmetic defect. `_confidence` is a pure function of how many distinct
+    hosts are cited, and confidence multiplies exposure by 0.45 to 1.0, so the misalignment
+    systematically starved the earliest strike at each facility and over-credited the latest --
+    and the latest is usually the incident driving that facility's live exposure. Correcting it
+    moved the published headline from 13.26 to 11.26.
+
+    A news report cannot predate the strike it describes. A nonzero count is still expected and
+    is NOT a parser fault: the page reuses one named ref across several dates and across
+    sub-facilities sharing a row, so a genuinely earlier article legitimately appears beside a
+    later event. The ceiling is set well below the broken state and well above the real one, so
+    this fails on a regression of the alignment rather than on ordinary source reuse.
+    """
+    rows = [r for r in _incidents() if (r.get("sources") or [])]
+    if not rows:
+        pytest.skip("pipeline not run")
+
+    def cited_on(c):
+        raw = (c.get("date") or "").strip()
+        for fmt in ("%Y-%m-%d", "%d %B %Y", "%B %d, %Y", "%d %b %Y", "%Y-%m"):
+            try:
+                return dt.datetime.strptime(raw, fmt).date()
+            except ValueError:
+                pass
+        return None
+
+    early = []
+    for r in rows:
+        try:
+            event = dt.date.fromisoformat(r["date"])
+        except (ValueError, TypeError):
+            continue   # month-precision dates are compared by their own test
+        for c in r["sources"]:
+            on = cited_on(c)
+            if on and on < event:
+                early.append((r["incident_id"], r["date"], c.get("date")))
+
+    CEILING = 20          # measured 57 before the fix, 11 after
+    assert len(early) <= CEILING, (
+        f"{len(early)} citations are dated before the event they document (ceiling {CEILING}). "
+        f"This is what a citation/date misalignment looks like. Examples: {early[:5]}")
+
+
+def test_every_scored_incident_has_provenance():
+    """An incident with no public source must not move the index.
+
+    Thirty incidents carried `sources: []` and scored anyway. `build_index` never reads
+    `sources`, so the only gate was `test_every_curated_incident_is_sourced`, which filters to
+    `origin == "curated"` and therefore exempted every one of the 125 strike-table rows -- the
+    exact population where the citation extraction was broken.
+
+    Provenance does NOT have to mean a row-level citation. The strike table's own page is a
+    public source and parent-page provenance is the intended model for it, which is why
+    `source_page` is carried on every parsed incident. What must never happen is an incident
+    with neither a row citation nor a stated parent page: that is an event this project asserts
+    on no public evidence at all.
+    """
+    rows = _incidents()
+    if not rows:
+        pytest.skip("pipeline not run")
+    unprovenanced = [r["incident_id"] for r in rows
+                     if not (r.get("sources") or []) and not r.get("source_page")]
+    assert not unprovenanced, (
+        f"these incidents score with no citation and no parent source page: {unprovenanced}")
+
+    # And separately: how many lean on the parent page alone. Not an error -- a measurement,
+    # asserted so that a silent collapse of citation extraction cannot pass as normal.
+    inherited = [r["incident_id"] for r in rows if not (r.get("sources") or [])]
+    assert len(inherited) <= 8, (
+        f"{len(inherited)} incidents have no row-level citation and rest on parent-page "
+        f"provenance alone. Thirty did when the date/citation alignment was broken, so a jump "
+        f"here means extraction has regressed, not that the sources vanished: {inherited[:10]}")
+
+
+def test_no_two_scored_identities_are_the_same_physical_facility():
+    """One plant, one facility. Predicted in iteration 5, fired on 2026-10-10, caught by nothing.
+
+    The curated inventory calls it `refinery-novoshakhtinsk`; the strike table calls it
+    `novoshakhtinsk-refinery`. `refinery_registry.resolve()` maps both to canonical
+    `novoshakhtinsk` -- and the same build called that function to produce `canonical_linkage`
+    while scoring the two ids as two separate plants: 2.62 + 1.43 = 4.05 refining points for a
+    plant the denominator carries once, worth about 0.59 on the headline.
+
+    The iteration-5 red team predicted this exactly and recorded it as "a known latent
+    fragility" that did not fire because no linked refinery appeared in the strike table. One
+    appeared, and the suite stayed green for five days. The naming conventions guarantee
+    recurrence -- curated ids are `refinery-<place>`, parsed ids are `<place>-refinery` -- so
+    this is the invariant that iteration-5 note asked for.
+    """
+    snap = _snapshot_or_skip()
+    from pipeline import refinery_registry
+    scored = [d["asset_id"] for d in (snap.get("live_disruptions") or []) if d.get("asset_id")]
+    canon = collections.defaultdict(list)
+    for asset_id in scored:
+        resolved = refinery_registry.resolve(asset_id)
+        if resolved:
+            canon[resolved].append(asset_id)
+    doubled = {k: v for k, v in canon.items() if len(v) > 1}
+    assert not doubled, (
+        f"these canonical facilities are scored under more than one identity, so their "
+        f"capacity is counted more than once: {doubled}")
+
+
+def test_a_merged_facility_says_which_identities_it_folded():
+    """A folded facility must disclose the fold.
+
+    An `event_count` of 6 on a plant the strike table lists once is otherwise unexplainable,
+    and a silent merge is exactly the kind of quiet decision this project is built not to make.
+    """
+    snap = _snapshot_or_skip()
+    for d in snap.get("live_disruptions") or []:
+        merged = d.get("merged_asset_ids")
+        if merged is None:
+            continue
+        assert isinstance(merged, list) and len(merged) > 1, \
+            f"{d['asset_id']} declares a merge of {merged}"
+        assert d["asset_id"] in merged, \
+            f"{d['asset_id']} is not among the identities it claims to have merged: {merged}"
+
+
+def test_the_citation_realignment_attributes_the_source_convention_correctly():
+    """A pipeline-free unit test of the alignment itself, on the convention as the source writes it.
+
+    Worth having separately from the payload assertion above: this one states what correct
+    means, in four lines, against a cell built by hand. The payload test can only notice that
+    something is off; this one says which date should own which citation, and keeps saying it
+    when the upstream page changes.
+    """
+    from pipeline import fetch_wikipedia as FW
+
+    cell = ('5 April 2026,<ref name="a">{{cite web|url=https://a.example/1}}</ref> '
+            '20 May 2026,<ref name="b">{{cite web|url=https://b.example/2}}</ref> '
+            '24 June 2026<ref name="c">{{cite web|url=https://c.example/3}}</ref>')
+    protected, spans = W.protect(cell)
+    got = {}
+    for inc in FW._incidents_for("x", "X", "refinery", "RU-SAM", protected, spans, {}):
+        got[inc["date"]] = sorted(c["url"] for c in inc["sources"])
+
+    assert got == {
+        "2026-04-05": ["https://a.example/1"],
+        "2026-05-20": ["https://b.example/2"],
+        "2026-06-24": ["https://c.example/3"],
+    }, (f"each date must keep the citation written immediately after it; got {got}. "
+        f"The broken version gave 5 April nothing, 20 May the April ref and 24 June two.")
+
+
+def test_a_named_reference_cited_twice_counts_once():
+    """The source reuses one named ref for adjacent dates and for sub-facilities on one row.
+
+    Four incidents published an inflated source count that way -- `nsrc=2` for one article.
+    `_confidence` counts distinct hosts so the weighting was never wrong, but the number shown
+    beside an incident in the Evidence Inspector was.
+    """
+    from pipeline import fetch_wikipedia as FW
+    cell = ('1 July 2026,<ref name="x">{{cite web|url=https://x.example/1}}</ref>'
+            '<ref name="x"/>')
+    protected, spans = W.protect(cell)
+    incs = FW._incidents_for("x", "X", "refinery", "RU-SAM", protected, spans,
+                             {"x": '{{cite web|url=https://x.example/1}}'})
+    assert len(incs) == 1
+    assert [c["url"] for c in incs[0]["sources"]] == ["https://x.example/1"]
+
+
+def test_a_citation_inside_a_footnote_is_still_provenance():
+    """`6 April 2026,{{efn|...<ref name="MT CPC">...}}` -- the citation lives inside an
+    explanatory footnote template, and a non-recursive ref scan reported the date as uncited.
+
+    That is how the CPC marine terminal strike came to carry no provenance while the source page
+    cites it in a footnote.
+    """
+    from pipeline import fetch_wikipedia as FW
+    cell = '6 April 2026,{{efn|Disputed.<ref name="m">{{cite web|url=https://m.example/9}}</ref>}}'
+    protected, spans = W.protect(cell)
+    incs = FW._incidents_for("x", "X", "oil_terminal", "RU-KDA", protected, spans, {})
+    assert len(incs) == 1, f"expected one incident, got {[i['date'] for i in incs]}"
+    assert [c["url"] for c in incs[0]["sources"]] == ["https://m.example/9"], \
+        "a ref nested in a footnote template is still that date's citation"
+
+
+def test_a_tracked_evidence_file_dates_from_its_commit_not_its_mtime():
+    """`actions/checkout` writes every tracked file with mtime = now.
+
+    So on the runner -- which is every build that publishes -- three sources reported
+    `retrieved: <today>, status: current`: crea, whose evidence CSV was last edited 2026-08-27,
+    and gem_ggit/gem_goit, whose manifest was last edited 2026-08-30. Forty-nine and forty-six
+    days of age published as zero, with the word "current" beside them. It never showed in
+    development because a working checkout's mtimes are close to its commit dates.
+
+    The preference used to be keyed on the registry's `release_expectation` column being
+    `internal`; those three are git-tracked but registered as `versioned`. It is now keyed on
+    whether git tracks the path, which is not a heuristic: tracked content cannot change without
+    a commit, so the commit date IS when that evidence last changed.
+    """
+    from pipeline import data_quality as dq
+
+    # The evidence path lives in the registry, not in the emitted record, so the registry is
+    # what this reads. `sources.csv` is the authority for which artefact stands as evidence for
+    # each source.
+    registry = {r["source_id"]: r.get("evidence_path") for r in dq.load_registry()}
+    emitted = {r["source_id"]: r for r in dq.build_sources("2026-10-15")}
+
+    # PROVE THE TEST RAN. A mutation campaign caught an earlier version of this going vacuous:
+    # in a copy of the repository with no .git directory `_is_tracked` answers False for
+    # everything, the loop below finds nothing to assert on, and the test passes while the
+    # defect is present. A guard whose subject can silently disappear is not a guard, so the
+    # examination is asserted before the thing being examined.
+    tracked = [sid for sid, path in registry.items()
+               if path and dq._is_tracked(ROOT / path) and sid in emitted]
+    assert len(tracked) >= 4, (
+        f"only {len(tracked)} sources have git-tracked evidence, so this test examined almost "
+        f"nothing. Either the registry changed or git could not be consulted, and both mean "
+        f"this assertion is not doing its job — which is how it passed a deliberate mutation.")
+
+    for sid in tracked:
+        assert emitted[sid].get("retrieval_basis") != "local_cache_mtime", (
+            f"{sid} dates {registry[sid]} from its file mtime, but git tracks it. "
+            f"`actions/checkout` writes every tracked file with mtime = now, so on the runner "
+            f"— which is every build that publishes — this reports today's date for evidence "
+            f"that has not changed in weeks. crea and the two GEM trackers did exactly that, "
+            f"publishing 49 and 46 days of age as zero with the word 'current' beside them.")
+
+
+def test_the_retrieval_basis_is_never_a_publisher_signal_when_it_is_ours():
+    """A date we derived from our own filesystem must never be presented as the publisher's."""
+    from pipeline import data_quality as dq
+    for source in dq.build_sources("2026-10-15"):
+        if source.get("retrieval_basis") in ("local_cache_mtime", "repo_commit_timestamp"):
+            assert source.get("retrieval_is_publisher_signal") is not True, (
+                f"{source['source_id']} derives its date from our own repository or cache and "
+                f"must not claim it as a publisher signal")

@@ -126,13 +126,69 @@ def restore(text, spans):
 
 
 def refs_in(text, spans):
-    """Return the source of every <ref> placeholder appearing in a cell."""
+    """Return the source of every <ref> appearing in a cell, including nested ones.
+
+    WHY IT RECURSES. `protect()` lifts out refs first and brace templates second, so a citation
+    written inside an explanatory footnote -- `6 April 2026,{{efn|...<ref name="MT CPC">...}}` --
+    ends up as a ref placeholder INSIDE a template placeholder. A non-recursive scan sees only
+    the template and reports the date as uncited, which is how the CPC marine terminal strike
+    came to carry no provenance while the source page cites it in a footnote.
+
+    Order is preserved and each ref is yielded once, because citation order within a cell is
+    the only thing distinguishing a definition from a later reuse of the same name.
+    """
     out = []
-    for m in _PLACEHOLDER_RE.finditer(text):
-        span = spans[int(m.group(1))]
-        if span.lower().startswith("<ref"):
-            out.append(span)
+    seen = set()
+
+    def walk(fragment):
+        for m in _PLACEHOLDER_RE.finditer(fragment):
+            idx = int(m.group(1))
+            span = spans[idx]
+            if span.lower().startswith("<ref"):
+                if idx not in seen:
+                    seen.add(idx)
+                    out.append(span)
+            elif _PLACEHOLDER_RE.search(span):
+                # A brace template that itself holds protected refs: {{efn|…<ref/>…}}.
+                walk(span)
+
+    walk(text)
     return out
+
+
+def leading_refs(text, spans):
+    """Split `text` into (its leading citation placeholders, the rest).
+
+    Needed because the source puts a date's citation AFTER the comma that follows the date:
+    `5 April 2026,<ref/> 20 May 2026,<ref/>`. Splitting the cell on commas therefore puts each
+    date's refs at the START of the NEXT fragment, and they have to be handed back.
+
+    A citation here is a `<ref>` OR a footnote template that contains one. The CPC marine
+    terminal strike is cited as `6 April 2026,{{efn|…<ref name="MT CPC">…}}` -- same convention,
+    wrapped in an explanatory footnote -- and treating only bare refs as citations left that
+    date uncited while handing its footnote to the following date.
+    """
+    i = 0
+    n = len(text)
+    refs = []
+    while i < n:
+        if text[i].isspace():
+            i += 1
+            continue
+        m = _PLACEHOLDER_RE.match(text, i)
+        if not m:
+            break
+        span = spans[int(m.group(1))]
+        is_ref = span.lower().startswith("<ref")
+        # A template is a citation token only if it actually holds a protected ref; a
+        # {{dts}} date template must stay exactly where the source put it.
+        holds_ref = (not is_ref) and bool(_PLACEHOLDER_RE.search(span)) and any(
+            spans[int(x)].lower().startswith("<ref") for x in _PLACEHOLDER_RE.findall(span))
+        if not (is_ref or holds_ref):
+            break
+        refs.append(m.group(0))
+        i = m.end()
+    return refs, text[i:]
 
 
 def find_tables(wikitext):

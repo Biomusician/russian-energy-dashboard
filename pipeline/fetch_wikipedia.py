@@ -36,6 +36,8 @@ PAGE_URL = "https://en.wikipedia.org/wiki/Deep_strike_campaign"
 _NAMED_REF = re.compile(r'<ref\s+name\s*=\s*["\']?([^"\'>/]+)["\']?\s*>(.*?)</ref>', re.S | re.I)
 _REF_NAME_ONLY = re.compile(r'<ref\s+name\s*=\s*["\']?([^"\'>/]+)["\']?\s*/?>', re.I)
 _URL = re.compile(r"\|\s*url\s*=\s*(\S+?)\s*(?:\||\}\}|$)", re.I | re.S)
+# A ref whose whole body is a bracketed external link, with no cite template.
+_BARE_LINK = re.compile(r"\[\s*(https?://\S+)")
 _TITLE = re.compile(r"\|\s*title\s*=\s*([^|}]+)", re.I | re.S)
 _WORK = re.compile(r"\|\s*(?:work|website|publisher|newspaper)\s*=\s*([^|}]+)", re.I | re.S)
 _DATE = re.compile(r"\|\s*date\s*=\s*([^|}]+)", re.I | re.S)
@@ -55,7 +57,15 @@ def build_named_refs(wt):
 
 
 def parse_citation(ref_src, named_refs):
-    """Pull (url, title, publisher, date) out of one <ref>."""
+    """Pull (url, title, publisher, date) out of one <ref>, or None if it cannot be read.
+
+    A ref is not always a cite template. Some rows cite with a bare external link --
+    `<ref name=inkorr20260920>[https://inkorr.com/...]</ref>` -- which carries no `|url=` and
+    was therefore discarded, silently, with no entry in parser_warnings. Two of the Moscow
+    refinery row's citations vanished that way. The project's rule is that malformed source
+    material gets flagged, never guessed at and never dropped quietly, so the bare form is now
+    read and anything still unreadable is reported by the caller.
+    """
     body = ref_src
     if "</ref>" not in ref_src.lower():
         m = _REF_NAME_ONLY.search(ref_src)
@@ -64,10 +74,15 @@ def parse_citation(ref_src, named_refs):
     if not body:
         return None
     url = _URL.search(body)
-    if not url:
-        return None
+    if url:
+        found = url.group(1).strip()
+    else:
+        bare = _BARE_LINK.search(body)
+        if not bare:
+            return None
+        found = bare.group(1).strip()
     return {
-        "url": url.group(1).strip(),
+        "url": found,
         "title": _clean_field(_TITLE.search(body)),
         "publisher": _clean_field(_WORK.search(body)),
         "date": _clean_field(_DATE.search(body)),
@@ -80,13 +95,49 @@ def _clean_field(match):
     return W.clean_cell(match.group(1))[:300] or None
 
 
+# Facilities that move or store crude rather than refine it. `nps` is the Russian
+# нефтеперекачивающая станция -- an oil PUMPING station -- and `lpds` its linear
+# production-and-dispatching station. Matched on word boundaries: `nps` as a bare substring
+# would also hit an unrelated name.
+_NOT_A_REFINERY = re.compile(r"\b(nps|lpds|pumping|pipeline|terminal|depot|port)\b", re.I)
+
+
 def classify(table_index, facility_name):
-    """Which asset class a table row describes."""
+    """Which asset class a table row describes.
+
+    WHY THE FIRST TABLE IS NO LONGER TRUSTED BLINDLY. This returned "refinery" for every row of
+    table 0 without looking at the name, because table 0 is headed "Oil refineries". The
+    upstream table files `NPS Samara, Prosvet` there -- Transneft's Samara LPDS, a trunk-line
+    pumping, storage and blending station with no crude distillation at all. Wikipedia never
+    calls it a refinery; it is simply in the wrong table.
+
+    The consequence was not arithmetic. That facility has no capacity cell, so it scored exactly
+    zero either way, and the project's own `refinery_registry.resolve()` already returned None
+    for it and listed it under `incidents_unresolved_to_registry`. The consequence was that the
+    dashboard presented a pumping station as a disrupted refinery, in the refining sector's live
+    list, under a 0.35-weight heading -- the classifier and the registry disagreeing with
+    nothing reconciling them.
+
+    A row whose own name says it moves or stores crude is classed by that name regardless of
+    which table it sits in. Anything else in table 0 is still a refinery: the table heading is
+    evidence, it is just not conclusive against the facility's own name.
+    """
+    name = (facility_name or "").lower()
+    # A name that says "refinery" settles it, even beside a logistics word. Some rows name two
+    # facilities at once -- "Tuapse refinery / Tuapse oil terminal" is a single asset_id covering
+    # a refinery AND a terminal -- and re-sectoring those on a keyword would move twelve
+    # incidents and 12 MTPA out of refining on the strength of a regex rather than of evidence.
+    # Conflated rows are a separate open problem, recorded in docs/ITERATION_13_REVIEW.md.
+    if not re.search(r"\brefin", name):
+        if re.search(r"\b(nps|lpds|pumping)\b", name) or "pipeline" in name:
+            return "pipeline_oil"
+        if table_index != 0 or _NOT_A_REFINERY.search(name):
+            return "oil_terminal"
     if table_index == 0:
         return "refinery"
-    name = facility_name.lower()
-    if "pumping" in name or "lpds" in name or "pipeline" in name:
-        return "pipeline_oil"
+    return "oil_terminal"
+    if table_index == 0:
+        return "refinery"
     return "oil_terminal"
 
 
@@ -193,10 +244,15 @@ def build():
             )
 
             unenumerated = unenumerated_count(W.clean_cell(date_src))
+            unreadable = []
             row_incidents = _incidents_for(
                 asset_id, name, asset_class, region_code,
-                date_src, spans, named_refs,
+                date_src, spans, named_refs, unreadable,
             )
+            for _aid, snippet in unreadable:
+                warnings.append(
+                    f"{name}: a citation in the date cell could not be read and was dropped "
+                    f"(no |url= and no bracketed link): {snippet!r}")
             if unenumerated is not None:
                 for inc in row_incidents:
                     inc["part_of_unenumerated_series"] = True
@@ -216,7 +272,8 @@ def build():
     return facilities, incidents, warnings
 
 
-def _incidents_for(asset_id, name, asset_class, region, date_src, spans, named_refs):
+def _incidents_for(asset_id, name, asset_class, region, date_src, spans, named_refs,
+                   unreadable=None):
     """One incident per EPISODE, with citations attributed by proximity.
 
     An episode is one disruption event: a single date, or a contiguous day-range
@@ -224,19 +281,56 @@ def _incidents_for(asset_id, name, asset_class, region, date_src, spans, named_r
     separate episodes. This is the iteration-3 fix for multi-day strikes previously
     exploding into several independent incident rows.
 
-    The date cell is prose of the form "date<ref>, date<ref>, date<ref>". Splitting on
-    top-level commas keeps each date with the citation that follows it; episode grouping
-    within a fragment then merges a hyphen-range into one incident.
+    CITATION ALIGNMENT. The cell is NOT "date<ref>, date<ref>". The convention on the source
+    page puts the comma BEFORE the citation:
+
+        5 April 2026,<ref name="Moscow Times database"/> 20 May 2026,<ref .../> 24 June 2026,...
+
+    so splitting on top-level commas puts each date's refs at the START of the next fragment.
+    This function's docstring used to claim the split "keeps each date with the citation that
+    follows it", and the code did the opposite of what the source means: the first date in a
+    multi-date cell got no citation at all, every middle date got its PREDECESSOR's, and the
+    last date got both its own and the previous one's.
+
+    That was not only a provenance display defect. `_confidence` is a pure function of how many
+    distinct hosts are cited, and confidence multiplies an incident's exposure by between 0.45
+    and 1.0 in methodology/scoring.json — a 2.2x lever. The misalignment systematically starved
+    the earliest date in each cell and over-credited the latest, and the latest incident at a
+    facility is usually the one driving its live exposure. It also produced the duplicate-URL
+    rows, because a named ref's definition and a later reuse of the same name landed in one
+    fragment.
+
+    Worse, it made the payload sensitive to harmless upstream edits. Appending one date and one
+    comma to the Omsk cell moved a Kyiv Post citation off the 2026-07-06 strike and onto the
+    2026-10-08 one, downgrading the first from `probable` to `possible` and upgrading the second
+    to `confirmed`, in a single daily refresh.
+
+    `_realign_fragments` hands each fragment's leading refs back to the date they belong to.
+    Episode grouping within a fragment then merges a hyphen-range into one incident.
     """
     out = []
+    unreadable = unreadable if unreadable is not None else []
     seen_episode_first = set()
-    for fragment in _split_fragments(date_src):
+    for fragment in _realign_fragments(_split_fragments(date_src), spans):
         restored = W.restore(fragment, spans)
-        citations = [
-            c
-            for c in (parse_citation(r, named_refs) for r in W.refs_in(fragment, spans))
-            if c
-        ]
+        citations = []
+        seen_urls = set()
+        for raw in W.refs_in(fragment, spans):
+            cite = parse_citation(raw, named_refs)
+            if cite is None:
+                # Report it rather than lose it. A citation the parser cannot read is a fact
+                # about the source, and the project's rule is to flag malformed source material
+                # instead of quietly dropping it.
+                unreadable.append((asset_id, W.clean_cell(raw)[:160]))
+                continue
+            # One article cited twice is one source. The source page reuses a named ref for
+            # adjacent dates and for sub-facilities on a shared row, which inflated the source
+            # count shown beside an incident; `_confidence` already counts distinct hosts, so
+            # only the displayed count was ever wrong.
+            if cite["url"] in seen_urls:
+                continue
+            seen_urls.add(cite["url"])
+            citations.append(cite)
         # group -> ordered list of (iso, precision)
         episodes = {}
         for iso, precision, grp in parse_dates_grouped(W.clean_cell(restored, keep_templates=("dts",))):
@@ -272,8 +366,33 @@ def _incidents_for(asset_id, name, asset_class, region, date_src, spans, named_r
     return out
 
 
+def _realign_fragments(fragments, spans):
+    """Move each fragment's leading citations back onto the date they document.
+
+    The source writes `DATE,<ref>` -- comma first -- so a comma split leaves fragment i holding
+    the refs for the date in fragment i-1. Walking the list once and handing the leading refs
+    back restores the source's own meaning, and leaves a single-date cell (no comma, nothing
+    leading) untouched.
+
+    The final fragment is often nothing but the last date's refs, which is why an empty result
+    is dropped rather than carried as a date-less incident.
+    """
+    out = list(fragments)
+    for i in range(1, len(out)):
+        refs, rest = W.leading_refs(out[i], spans)
+        if not refs:
+            continue
+        out[i - 1] = out[i - 1] + "".join(refs)
+        out[i] = rest
+    return [f for f in out if f.strip()]
+
+
 def _split_fragments(text):
-    """Split a date cell on commas that are not inside a placeholder or bracket."""
+    """Split a date cell on commas that are not inside a placeholder or bracket.
+
+    See `_realign_fragments`: the fragments this returns are off by one against the source's
+    citation convention and must be realigned before use.
+    """
     parts = []
     buf = []
     depth = 0

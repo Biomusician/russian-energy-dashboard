@@ -5,9 +5,9 @@
 > Other docs should link here instead of re-quoting these numbers (§2).
 
 - **as_of**: 2026-10-15
-- **Headline ESDI (monitored area)**: 13.26
-- **Uncovered-sector zero-assumption sensitivity**: 11.28
-- **Sector exposures**: refining 27.91, electric_generation 0.04, transmission 7.02, oil_logistics 3.99, gas 0.00, coal 0.00
+- **Headline ESDI (monitored area)**: 10.67
+- **Uncovered-sector zero-assumption sensitivity**: 9.07
+- **Sector exposures**: refining 21.97, electric_generation 0.04, transmission 7.02, oil_logistics 3.36, gas 0.00, coal 0.00
 
 ## Coverage
 - **Oil-strike benchmark coverage**: 50.2% (153 enumerated oil-sector strikes / 305 reported)
@@ -36,4 +36,4 @@
 - **Per-incident effects**: 18 across 15 incidents
 
 ## Tests
-- **Python test functions** (`tests/test_pipeline.py`): 356 (pytest reports more cases — some functions are parametrized)
+- **Python test functions** (`tests/test_pipeline.py`): 365 (pytest reports more cases — some functions are parametrized)

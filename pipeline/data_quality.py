@@ -133,7 +133,7 @@ def _commit_date(path):
     return _parse_date(r.stdout.decode("utf-8", "replace").strip())
 
 
-def _evidence_dates(path, prefer_commit=False):
+def _evidence_dates(path):
     """(retrieved_at, how we know, discovered release) for one source's evidence artefact.
 
     A manifest that states its own retrieval date is believed first. For our own curated files
@@ -163,12 +163,43 @@ def _evidence_dates(path, prefer_commit=False):
                     release = value["release"]
             if stated:
                 return _parse_date(stated), RETRIEVAL_MANIFEST, release
-    if prefer_commit:
-        committed = _commit_date(path)
-        if committed:
-            return committed, RETRIEVAL_COMMIT, release
+    # WHY THIS ASKS GIT RATHER THAN READING A COLUMN.
+    #
+    # This used to prefer the commit date only when the registry row said
+    # `release_expectation == "internal"`. Three sources are git-tracked but registered as
+    # `versioned` — crea, gem_ggit, gem_goit — so they fell through to the mtime branch, and
+    # `actions/checkout` writes every tracked file with mtime = now. The published payload
+    # therefore said `crea: retrieved 2026-10-15, current` for a CSV last genuinely edited on
+    # 2026-08-27, and the same for the GEM manifest last edited on 2026-08-30. Forty-nine days
+    # of age reported as zero, with the status word "current" beside it.
+    #
+    # It never showed in development because on a working checkout the file's mtime happens to
+    # be close to the day it was committed. It is wrong only on a fresh clone — which is every
+    # single build that publishes.
+    #
+    # For a tracked file the commit date is not a heuristic: the content cannot have changed
+    # without a commit, so the commit IS when this evidence last changed. mtime is meaningful
+    # only for files git does not track, i.e. the download cache under data/raw.
+    committed = _commit_date(path) if _is_tracked(path) else None
+    if committed:
+        return committed, RETRIEVAL_COMMIT, release
     mtime = dt.datetime.fromtimestamp(path.stat().st_mtime, dt.timezone.utc).date()
     return mtime, RETRIEVAL_CACHE_MTIME, release
+
+
+def _is_tracked(path):
+    """Does git track this path? Decides whether the commit date or the mtime is evidence.
+
+    A tracked file's content cannot change without a commit, so its commit date is exactly when
+    the evidence last changed. An untracked file under data/raw was downloaded, and its mtime is
+    the only record of when.
+    """
+    try:
+        done = subprocess.run(["git", "ls-files", "--error-unmatch", "--", str(path)],
+                              cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+    except (OSError, ValueError):
+        return False
+    return done.returncode == 0
 
 
 def _freshness(retrieved, frozen, as_of):
@@ -232,7 +263,7 @@ def build_sources(as_of):
     for row in load_registry():
         evidence = ROOT / row["evidence_path"] if row.get("evidence_path") else None
         internal = row.get("release_expectation") == "internal"
-        retrieved, basis, discovered_release = _evidence_dates(evidence, prefer_commit=internal)
+        retrieved, basis, discovered_release = _evidence_dates(evidence)
         frozen = _parse_date(row.get("frozen_at"))
         release_id = (row.get("release_identifier") or discovered_release
                       or _derived_release(row, evidence))

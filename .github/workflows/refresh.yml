@@ -52,6 +52,14 @@ jobs:
           path: data/raw
           key: sources-${{ github.run_id }}
           restore-keys: sources-
+          # WHY save-always. The cache is saved in a post-job step, which by default is skipped
+          # when the job fails. During the eleven-day September outage every run failed, so no
+          # cache was written, every entry aged out of GitHub's 7-day eviction, and the first
+          # recovering run had to cold-fetch everything: 562 seconds against a 92-second steady
+          # state. A cold fetch is also the only state with no stale-cache fallback, so if
+          # Overpass rate-limits the recovery run, the recovery fails and the next day is cold
+          # too. A failure streak must not be able to make its own recovery harder.
+          save-always: true
 
       - name: Clear cache if forced
         if: inputs.force_refresh
@@ -80,7 +88,18 @@ jobs:
           # build_time — a same-day rerun with no real data change must not produce an
           # empty "daily refresh" commit. Legitimate daily drift (as_of, recency-weighted
           # index) still counts as a change.
-          if ! python scripts/ci_data_changed.py; then
+          # Three outcomes, not two. 0 = change, 1 = no change, 2 = the question could not be
+          # answered. Reading any non-zero as "no change" meant a crash in this script produced
+          # a GREEN run that published nothing — the quietest possible way to stop updating.
+          set +e
+          python scripts/ci_data_changed.py
+          decided=$?
+          set -e
+          if [ "$decided" -eq 2 ]; then
+            echo "::error::Could not determine whether the dataset changed. Refusing to skip silently."
+            exit 1
+          fi
+          if [ "$decided" -ne 0 ]; then
             echo "No substantive dataset change — skipping commit."
             echo "committed=false" >> "$GITHUB_OUTPUT"
             exit 0
@@ -109,7 +128,18 @@ jobs:
           N=$(python -c "import json;print(json.load(open('data/processed/snapshot.json',encoding='utf-8'))['incident_total'])")
           AS_OF=$(python -c "import json;print(json.load(open('data/processed/snapshot.json',encoding='utf-8'))['as_of'])")
           git commit -m "data: daily refresh ${AS_OF} — ESDI ${ESDI}, ${N} events"
-          git push
+          # A human pushing inside this job's window rejects the bot's push, and the day's data
+          # is then simply lost: there was no retry and no rebase. The payload is generated, so
+          # rebasing onto the human commit and pushing again is always the right move.
+          for attempt in 1 2 3; do
+            if git push; then break; fi
+            echo "push rejected (attempt ${attempt}); rebasing onto origin/main and retrying"
+            git pull --rebase --strategy-option=ours origin main
+            if [ "$attempt" -eq 3 ]; then
+              echo "::error::Could not push the refresh after three attempts."
+              exit 1
+            fi
+          done
           echo "committed=true" >> "$GITHUB_OUTPUT"
           echo "esdi=${ESDI}" >> "$GITHUB_OUTPUT"
           echo "events=${N}" >> "$GITHUB_OUTPUT"

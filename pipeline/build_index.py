@@ -22,7 +22,7 @@ the rest of the sector.
 import collections
 import datetime as dt
 
-from pipeline import recovery
+from pipeline import recovery, refinery_registry
 from pipeline.config import METHODOLOGY_DIR, SECTOR_OF_CLASS, SECTORS, WINDOW_START
 from pipeline.util import read_json
 
@@ -173,9 +173,15 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
     # the other occupied Ukrainian oblasts are simply not tracked at all rather than excluded.
     esdi_excluded = {code for code, m in region_meta.items() if not m.get("esdi_included", True)}
 
+    # One physical facility, one key. See facility_identity: two ids for Novoshakhtinsk were
+    # scoring as two plants while the same build's reconciliation called them one.
+    identity, merged_identities = facility_identity(
+        {inc["asset_id"] for inc in incidents} | set(facility_info),
+        inventoried={a["asset_id"] for a in assets})
+    facility_info = merge_facility_info(facility_info, identity)
     incidents_by_facility = collections.defaultdict(list)
     for inc in incidents:
-        incidents_by_facility[inc["asset_id"]].append(inc)
+        incidents_by_facility[identity[inc["asset_id"]]].append(inc)
 
     sector_weights = SCORING["sector_weights"]
     covered = [s for s in SECTORS if denominators["national"].get(s, 0) > 0]
@@ -441,6 +447,91 @@ def _composite_all(sector_values, weights):
         return 0.0
     acc = sum(weights[s] * min(1.0, sector_values.get(s, 0.0)) for s in SECTORS)
     return round(acc / total_w * 100, 2)
+
+
+def facility_identity(asset_ids, inventoried=()):
+    """asset_id -> ONE key per physical facility, collapsing ids the registry calls the same.
+
+    WHY. The methodology counts a facility's STRONGEST live contribution and no more: a plant
+    struck five times is one disrupted plant, not five. `_facility_weight` implements that
+    faithfully — per asset_id. The scoring loop keyed facilities on the raw asset_id string,
+    and a single plant can arrive under two of those.
+
+    Novoshakhtinsk did. The curated inventory calls it `refinery-novoshakhtinsk`; the Wikipedia
+    strike table calls it `novoshakhtinsk-refinery`, and `refinery_registry.resolve()` maps BOTH
+    to canonical `novoshakhtinsk` — the same function this build already calls, in the same run,
+    to produce `canonical_linkage`. So the build asserted they were one facility in its
+    reconciliation report and scored them as two in its index: 2.62 + 1.43 = 4.05 refining
+    points, 7.9% of a national base that carries the plant once at 3.1%.
+
+    This was predicted as iteration-5 red-team finding #6 and recorded as "a known latent
+    fragility" that did not fire because no linked refinery appeared in the strike table. One
+    appeared on 2026-10-10 and it began firing, worth roughly 0.6 ESDI points, with the suite
+    green throughout. The naming conventions make recurrence near-certain: curated ids are
+    `refinery-<place>` and parsed ids are `<place>-refinery`, so `refinery-orsk` and
+    `refinery-mari-el` are one upstream edit away from the same split.
+
+    Only the refinery registry is consulted, because it is the one canonical identity table the
+    project actually sources (`data/curated/refineries_canonical.csv`). Nothing is merged on
+    name similarity: an id the registry does not recognise keys to itself.
+    """
+    collapsed = {}
+    for asset_id in sorted(asset_ids):
+        canon = refinery_registry.resolve(asset_id)
+        collapsed.setdefault(canon or asset_id, []).append(asset_id)
+
+    # The key must be a REAL asset_id, not an internal canonical token: it is emitted as
+    # `asset_id` in live_disruptions and in the sector explanations, and the frontend resolves
+    # it. Among the ids for one plant, prefer the one the asset inventory knows -- that is the
+    # identity carrying the link to the inventoried facility and the curated capacity -- and
+    # otherwise take the first in sorted order, so the choice is deterministic across builds.
+    out, merged = {}, {}
+    for members in collapsed.values():
+        known = [a for a in members if a in inventoried] if inventoried else []
+        key = (known or members)[0]
+        for asset_id in members:
+            out[asset_id] = key
+        if len(members) > 1:
+            merged[key] = list(members)
+    return out, merged
+
+
+def merge_facility_info(facility_info, identity):
+    """Collapse the per-asset_id facility records onto one record per physical facility.
+
+    Capacity is a property of the facility, so the merged record takes the first non-null value
+    per field with the SOURCE-TABLE record preferred. That keeps the numerator basis exactly as
+    it was — this change removes a double count, it does not revalue anything. (Whether the
+    numerator should be drawn from the strike table at all is a separate and open question: see
+    docs/REFINERY_CAPACITY_BASIS.md, where the two bases disagree for twenty of twenty-four
+    scored plants.)
+    """
+    FIELDS = ("name", "asset_class", "sector", "region_code", "capacity_mtpa", "capacity_mw",
+              "capacity_bcm_y", "voltage_kv", "linked_asset_id", "_from_source_table")
+    by_key = {}
+    members = {}
+    for asset_id, info in facility_info.items():
+        key = identity.get(asset_id, asset_id)
+        members.setdefault(key, []).append(asset_id)
+        if key not in by_key:
+            by_key[key] = dict(info)
+            continue
+        prev = by_key[key]
+        incoming_is_source = info.get("_from_source_table")
+        a, b = (info, prev) if incoming_is_source and not prev.get("_from_source_table") else (prev, info)
+        by_key[key] = {f: (a.get(f) if a.get(f) is not None else b.get(f)) for f in FIELDS}
+    for key, ids in members.items():
+        if len(ids) > 1:
+            by_key[key]["merged_asset_ids"] = sorted(ids)
+    # Alias the merged record under every member asset_id as well. The scoring loop keys on the
+    # canonical key, but a dozen downstream surfaces — live_disruptions, the explanations, the
+    # recovery views — look a facility up by the asset_id on an incident. Aliasing means each of
+    # them reads the facility's merged truth rather than one half of a split identity, without a
+    # dozen call sites having to learn about canonicalisation.
+    for asset_id, key in identity.items():
+        if key in by_key:
+            by_key[asset_id] = by_key[key]
+    return by_key
 
 
 def _facility_registry(facilities, incidents, assets):
@@ -885,6 +976,10 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
                 "_w_exact": w,
                 "event_count": len(incs),
                 "latest": max(i["date"] for i in incs),
+                # Disclosed, not silent. When two source identities turn out to be one plant
+                # the reader is told which ids were folded, because an event_count of 6 on a
+                # facility the strike table lists once is otherwise unexplainable.
+                "merged_asset_ids": info.get("merged_asset_ids"),
                 "driving_incident_id": driver.get("incident_id") if driver else None,
                 "recovery": _incident_recovery_state(driver, driver_rec, today),
             }
