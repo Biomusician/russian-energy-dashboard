@@ -25,7 +25,7 @@ from pipeline.config import (
 from pipeline.fetch_refineries import build as build_refineries
 from pipeline.fetch_wikipedia import build as build_wikipedia
 from pipeline.recovery import load_recovery_records
-from pipeline import artifacts
+from pipeline import artifacts, horizon_sensitivity
 from pipeline.util import fetch_json, log, read_csv, read_json, write_json
 
 COVERAGE_PAGE = "2025%E2%80%932026_Russian_fuel_crisis"
@@ -508,7 +508,7 @@ def main():
     )
 
     (national, regional, snapshot, regional_explanations, history_series,
- lifecycle_payload) = build_index.build(
+ lifecycle_payload) = build_index.build(**(index_kwargs := dict(
         incidents=in_aoi,
         facilities=wiki_facilities,
         assets=assets,
@@ -518,7 +518,7 @@ def main():
         recovery_by_incident=recovery_by_incident,
         transmission_lines_by_region=dict(tx_lines_by_region),
         region_context=region_context,
-    )
+    )))
 
     # Canonical refinery linkage completeness (§9) — identity/linkage, NOT disruption coverage.
     from pipeline import refinery_registry as _RR
@@ -578,6 +578,12 @@ def main():
     # would read "0 days old" forever on a dashboard that had stopped rebuilding — which is
     # precisely the lie this block exists to prevent. The reader's own clock is the only clock that
     # can tell them the page is stale, so the arithmetic happens in the browser.
+    # Almost the whole headline decays on an assumed reconstitution horizon that nothing
+    # observed supports, and until iteration 13 that assumption shipped no sensitivity while
+    # the transmission constant — worth under one index point — shipped a six-point sweep.
+    snapshot["recovery_horizon_sensitivity"] = horizon_sensitivity.build(
+        build_index, index_kwargs, snapshot)
+
     snapshot["publication_freshness"] = {
         "as_of": snapshot["as_of"],
         "build_time": snapshot["build_time"],

@@ -449,6 +449,22 @@ export interface Snapshot {
     occupied_share_pct: number;
     note: string;
   };
+  /** Iteration 13. The assumption the headline actually rests on.
+   *
+   *  Roughly 96% of live facilities decay on a MODELLED reconstitution horizon, because
+   *  observed and estimated recovery evidence covers a handful. The transmission saturation
+   *  constant is worth under one index point and ships a six-point sweep plus four alternative
+   *  models; this parameter is worth most of the number and shipped nothing at all. */
+  recovery_horizon_sensitivity?: {
+    parameter: string;
+    declared_refinery_horizon_days: number;
+    declared_esdi: number;
+    sweep: { scale: number; refinery_horizon_days: number; esdi: number }[];
+    esdi_range: [number, number];
+    evidence_kind_counts?: Record<string, number>;
+    note: string;
+    why_this_matters_more_than_the_transmission_sweep?: string;
+  };
   /** Transmission audit alternatives (iteration 6, §21-23) — a sensitivity, not a tuning knob. */
   transmission_sensitivity?: {
     saturation_constant: number;

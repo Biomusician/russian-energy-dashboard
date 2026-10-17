@@ -6221,3 +6221,88 @@ def test_every_marked_test_really_does_read_the_repository():
     assert not suspicious, (
         f"these tests are marked repo_hygiene but do not appear to read the repository, so they "
         f"have been removed from the publication gate without reason: {suspicious}")
+
+
+# --------------------------------------------------------------------------
+# Iteration 13: the assumption the headline actually rests on
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_the_modelled_recovery_horizon_publishes_its_own_sensitivity():
+    """The parameter worth most of the headline must ship a sensitivity, like the one worth least.
+
+    Decomposed by the evidence kind driving each facility's decay, the index is ~96% modelled.
+    The transmission saturation constant -- worth under one index point -- ships a six-point
+    sweep, a concentration split, four alternative models and a red-team verdict. The modelled
+    reconstitution horizon shipped nothing at all: not in the snapshot, not in data_quality.json,
+    not in the frontend. METHODOLOGY.md calls these horizons "the single largest lever" and
+    nothing quantified the lever.
+    """
+    snap = _snapshot()
+    block = snap.get("recovery_horizon_sensitivity")
+    assert block, "the headline's dominant assumption publishes no sensitivity"
+    assert block["parameter"] == "recovery.sector_fallback_horizon_days"
+
+    sweep = block["sweep"]
+    assert len(sweep) >= 4, "a two-point sweep is not a sensitivity"
+
+    # The declared scale must reproduce the published headline EXACTLY. If it does not, the
+    # sweep is measuring something other than the model that produced the number beside it --
+    # which is how a sensitivity becomes a second scoring model.
+    declared = [r for r in sweep if r["scale"] == 1.0]
+    assert len(declared) == 1, "the sweep must include the declared horizons"
+    assert declared[0]["esdi"] == pytest.approx(snap["esdi"], abs=0.01), (
+        f"the sweep's declared point is {declared[0]['esdi']} but the headline is "
+        f"{snap['esdi']} — the sweep is not running the model that produced the headline")
+
+    # A longer assumed horizon means slower modelled decay, so exposure cannot fall.
+    by_scale = sorted(sweep, key=lambda r: r["scale"])
+    values = [r["esdi"] for r in by_scale]
+    assert values == sorted(values), (
+        f"a longer reconstitution horizon decays impairment more slowly, so the index must be "
+        f"monotonically non-decreasing in the horizon; got {values}")
+
+    lo, hi = block["esdi_range"]
+    assert lo == min(values) and hi == max(values)
+    assert lo < snap["esdi"] < hi, "the declared value must sit inside its own sensitivity range"
+
+
+@pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
+def test_the_sensitivity_is_not_presented_as_an_alternative_measurement():
+    """A sweep is "how does the method behave", never "what the index might really be".
+
+    The distinction is the whole project: an estimate must never be presented as an
+    observation, and five plausible-looking index values with no label would be exactly that.
+    """
+    block = _snapshot().get("recovery_horizon_sensitivity") or {}
+    note = (block.get("note") or "").lower()
+    assert "assumption" in note, "the note must say the horizon is an assumption"
+    assert "sensitivity" in note and "tuning knob" in note, (
+        "the note must mark this as a published sensitivity rather than a parameter being tuned")
+    assert "recovery evidence" in note, (
+        "the note should say what would actually narrow the range, which is evidence and not a "
+        "better guess")
+
+
+def test_the_sweep_leaves_the_declared_horizons_untouched():
+    """A sensitivity that mutated the model it measures would be the worst version of this.
+
+    `recovery.FALLBACK` is read once at import, so the sweep scales it in place to reach the
+    scoring path. Anything scored after the sweep must see the declared values again.
+    """
+    from pipeline import horizon_sensitivity, recovery
+    before = dict(recovery.FALLBACK)
+
+    class Boom(Exception):
+        pass
+
+    class Exploding:
+        @staticmethod
+        def build(**_kwargs):
+            raise Boom
+
+    with pytest.raises(Boom):
+        horizon_sensitivity.sweep(Exploding, {})
+    assert dict(recovery.FALLBACK) == before, (
+        "the sweep left the modelled horizons scaled after failing partway through, so every "
+        "later facility in that build would have been scored against a sensitivity scenario")

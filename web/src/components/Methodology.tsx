@@ -201,6 +201,32 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
               as the Kerch power bridge plus Crimea substations, not the wider Russian grid.
             </p>
           )}
+          {s.recovery_horizon_sensitivity && (() => {
+            const h = s.recovery_horizon_sensitivity!;
+            const [lo, hi] = h.esdi_range;
+            const kinds = h.evidence_kind_counts ?? {};
+            const total = Object.values(kinds).reduce((a, b) => a + b, 0);
+            const modelled = kinds.modelled ?? 0;
+            return (
+              <p style={{ color: "var(--text-faint)", fontSize: 11 }}>
+                <b>The assumption the headline rests on.</b> Impairment decays on a{" "}
+                <i>modelled</i> reconstitution horizon — {h.declared_refinery_horizon_days} days
+                for a refinery — and no source says a struck refinery is substantially restored
+                after that long.{" "}
+                {total > 0 && (
+                  <>
+                    {modelled} of {total} live facilities decay on that assumption rather than on
+                    recovery evidence.{" "}
+                  </>
+                )}
+                Halving and doubling the horizons moves the headline between <b>{lo}</b> and{" "}
+                <b>{hi}</b>, against a declared {h.declared_esdi}:{" "}
+                {h.sweep.map((r) => `${r.refinery_horizon_days}d→${r.esdi}`).join(", ")}. A
+                sensitivity, not a tuning knob — the declared horizons are unchanged, and what
+                narrows this range is recovery evidence, not a better guess.
+              </p>
+            );
+          })()}
           {s.transmission_sensitivity && (() => {
             const t = s.transmission_sensitivity!;
             return (
