@@ -28,3 +28,7 @@ data/review/
 
 # iteration-7 research scratch (compaction insurance, not committed)
 docs/_it7_research.md
+
+# Playwright run output (traces, failure screenshots, HTML report). Goldens live in e2e/ and ARE committed.
+web/e2e-results/
+web/e2e-report/

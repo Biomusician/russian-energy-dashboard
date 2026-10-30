@@ -326,6 +326,14 @@ export default function MapPanel({
     });
     map.current = m;
     if (import.meta.env.DEV) (window as unknown as { __map?: maplibregl.Map }).__map = m;
+    // A readiness signal for the real-browser test tier. Without it a test can only guess when
+    // WebGL has finished drawing, and a guess is either slow or flaky. MapLibre's own `idle`
+    // event (all sources loaded, no transition running) is the honest answer, so the container
+    // carries it as an attribute. Invisible to readers; costs one attribute write per settle.
+    const box = m.getContainer();
+    box.dataset.mapState = "loading";
+    m.on("movestart", () => { box.dataset.mapState = "moving"; });
+    m.on("idle", () => { box.dataset.mapState = "idle"; });
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
     m.addControl(
       new maplibregl.AttributionControl({

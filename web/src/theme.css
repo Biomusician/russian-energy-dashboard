@@ -176,9 +176,14 @@ html[data-mapfocus="on"] .filters.drawer-open { transform: translateX(0); }
 /* --- map-focus: user-invoked, independent of the responsive mode ------------------------ */
 /* A separate axis on purpose. Responsive mode is imposed by the viewport; map focus is chosen
    by a person and must restore exactly the panel state they had. */
+/* The areas MUST list the same four rows as the base grid. Iteration 12 added the staleness row
+   to the base and not here; with three areas against four row tracks the map fell into the
+   `auto` track at height 0, so Map Focus and Briefing Mode showed no map and a "current
+   viewport" export came out 300px tall. Only a real browser saw it (iteration 14 e2e). */
 html[data-mapfocus="on"] .shell {
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
+    "staleness"
     "ribbon"
     "map"
     "timeline";

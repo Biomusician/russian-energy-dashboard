@@ -185,3 +185,25 @@ describe("evidence inspector overlay", () => {
     }
   });
 });
+
+describe("every shell grid variant declares one area row per row track", () => {
+  // Iteration 12 added a fourth row track (staleness) to the base grid and updated every layout
+  // variant except map focus. Three areas against four tracks put the map in an `auto` track at
+  // height 0: Map Focus and Briefing Mode showed no map, and no test noticed, because nothing
+  // here could lay the page out. This check needs no browser.
+  it("matches grid-template-areas rows to grid-template-rows", async () => {
+    const { readFileSync } = await import("node:fs");
+    const css = readFileSync(new URL("./theme.css", import.meta.url), "utf-8")
+      .replace(/\/\*[\s\S]*?\*\//g, "");
+    const tracks = /\.shell\s*\{[^}]*grid-template-rows:\s*([^;]+);/.exec(css);
+    expect(tracks).not.toBeNull();
+    const rowCount = tracks![1].trim().split(/\s+(?![^(]*\))/).length;
+    const rules = [...css.matchAll(/([^{}]*\.shell)\s*\{([^}]*)\}/g)];
+    const withAreas = rules.filter(([, , body]) => body.includes("grid-template-areas"));
+    expect(withAreas.length).toBeGreaterThanOrEqual(4);
+    for (const [, selector, body] of withAreas) {
+      const areas = /grid-template-areas:([^;]+);/.exec(body)![1].match(/"[^"]*"/g) ?? [];
+      expect(areas.length, selector.trim()).toBe(rowCount);
+    }
+  });
+});
