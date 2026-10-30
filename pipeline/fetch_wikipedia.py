@@ -23,6 +23,7 @@ reporting of Ukrainian responsibility, not independent confirmation.
 
 import re
 
+from pipeline import ids
 from pipeline import wikitext as W
 from pipeline.dates import parse_dates, parse_dates_grouped, unenumerated_count
 from pipeline.regionmatch import resolve
@@ -225,7 +226,7 @@ def build():
             region_code = region if tracked else None
 
             asset_class = classify(ti, name)
-            asset_id = _slug(name)
+            asset_id = ids.slug(name)
 
             facilities.append(
                 {
@@ -269,6 +270,10 @@ def build():
     log(f"wikipedia: {len(facilities)} facilities, {len(incidents)} incidents")
     for w in warnings:
         log(f"  WARN {w}")
+    # Two different names on one id would merge two facilities' incidents into one scoring key.
+    # Flag it rather than guess which was meant (iteration 14; see pipeline/ids.py).
+    for aid, names in ids.collisions((f["asset_id"], f["name"]) for f in facilities).items():
+        warnings.append(f"asset id {aid!r} is produced by {len(names)} different names: {names}")
     return facilities, incidents, warnings
 
 
@@ -427,11 +432,6 @@ def _confidence(citations):
 def _host(url):
     m = re.match(r"https?://([^/]+)", url or "")
     return m.group(1).lower().removeprefix("www.") if m else None
-
-
-def _slug(name):
-    s = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
-    return s[:60] or "unnamed"
 
 
 if __name__ == "__main__":

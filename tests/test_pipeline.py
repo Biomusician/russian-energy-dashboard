@@ -6385,3 +6385,48 @@ def test_the_sweep_leaves_the_declared_horizons_untouched():
     assert dict(recovery.FALLBACK) == before, (
         "the sweep left the modelled horizons scaled after failing partway through, so every "
         "later facility in that build would have been scored against a sensitivity scenario")
+
+
+# --------------------------------------------------------------------------
+# Iteration 14: identity is not truncation (pipeline/ids.py)
+# --------------------------------------------------------------------------
+
+def test_two_long_names_sharing_a_prefix_get_distinct_ids():
+    from pipeline import ids
+    a = "Novoshakhtinsk Oil Products Plant and associated loading terminal number one north"
+    b = "Novoshakhtinsk Oil Products Plant and associated loading terminal number two south"
+    assert ids.full_slug(a)[:60] == ids.full_slug(b)[:60]      # the old rule merged these
+    assert ids.slug(a) != ids.slug(b)
+    assert len(ids.slug(a)) <= ids.MAX_SLUG
+    assert ids.slug(a) == ids.slug(a)                            # and it is stable
+
+
+def test_short_ids_are_unchanged_and_the_published_long_id_is_grandfathered():
+    from pipeline import ids
+    assert ids.slug("Tuapse refinery") == "tuapse-refinery"
+    assert ids.slug("") == "unnamed"
+    ust = ("Ust-Luga Multimodal Complex\n* Ust-Luga Oil JSC terminal\n* Nevskaya OPC terminal\n"
+           "* Novatek terminal")
+    # Incident ids and recovery records are keyed on the id it was published under.
+    assert ids.slug(ust) == "ust-luga-multimodal-complex-ust-luga-oil-jsc-terminal-nevska"
+
+
+def test_id_collisions_are_detected_but_repeated_names_are_not():
+    from pipeline import ids
+    assert ids.collisions([("x", "A plant"), ("x", "A  plant"), ("y", "B")]) == {}
+    assert ids.collisions([("x", "A plant"), ("x", "A-plant")]) == {"x": ["A plant", "A-plant"]}
+
+
+def test_global_keys_are_system_qualified():
+    from pipeline import ids
+    assert ids.global_key("us", "tuapse-refinery") != ids.global_key("ru", "tuapse-refinery")
+    with pytest.raises(ValueError):
+        ids.global_key("u:s", "x")
+
+
+@pytest.mark.skipif(not (PROCESSED / "incidents.json").exists(), reason="pipeline not run")
+def test_no_published_asset_id_is_claimed_by_two_names():
+    incidents = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    from pipeline import ids
+    assert ids.collisions((i["asset_id"], i["asset_name"]) for i in incidents
+                          if i.get("origin") == "wikipedia_strike_table") == {}
