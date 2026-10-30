@@ -961,6 +961,26 @@ def test_median_restoration_present_only_with_enough_distinct_episodes():
         assert rs["median_meaningful"] is True
 
 
+def test_median_is_suppressed_below_the_episode_gate_on_synthetic_input():
+    """The real build has cleared the gate since iteration 9, so the suppression branch above
+    never runs against it. Drive it directly: four observed episodes, one short of the gate."""
+    from pipeline import build_index as B
+    incidents = [{"incident_id": f"i{n}", "asset_class": "refinery", "episode_id": f"e{n}"}
+                 for n in range(B.MIN_MEDIAN_EPISODES - 1)]
+    recs = {i["incident_id"]: {"recovery_status": "fully_reconstituted", "observed_days": 10 + n,
+                               "source_confidence": "high"}
+            for n, i in enumerate(incidents)}
+    rs = B._recovery_stats([], incidents, recs, {})
+    assert rs["observed_restoration_episodes"] == B.MIN_MEDIAN_EPISODES - 1
+    assert rs["median_observed_restoration_days"] is None
+    assert rs["median_meaningful"] is False
+    # One more episode crosses the gate — proves the inputs above were genuinely observed.
+    incidents.append({"incident_id": "ix", "asset_class": "refinery", "episode_id": "ex"})
+    recs["ix"] = {"recovery_status": "fully_reconstituted", "observed_days": 30,
+                  "source_confidence": "high"}
+    assert B._recovery_stats([], incidents, recs, {})["median_meaningful"] is True
+
+
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(),
                     reason="pipeline has not been run")
 def test_partial_restart_not_counted_as_full_reconstitution():
@@ -1010,12 +1030,23 @@ def test_flow_rerouted_recovery_kind_is_never_full_reconstitution():
     facility reconstitution (the Unecha lesson). The granular kind must not contradict the
     scoring bucket."""
     snap = _snapshot()
+    # Iteration 14: this used to loop over live_disruptions only, where no flow-rerouted record
+    # has appeared since Unecha left the live set, so its assertions never ran. The records live
+    # in recovery_events; check both, and require that something was actually checked.
+    checked = 0
     for d in snap["live_disruptions"]:
         rec = d["recovery"]
         kind = rec.get("recovery_kind")
         if kind and "flow_rerouted" in kind:
+            checked += 1
             assert rec["recovery_status"] == "partial_restart", d["asset_id"]
             assert rec["resolved"] is False, d["asset_id"]
+    for ev in snap.get("recovery_events") or []:
+        if "flow_rerouted" in (ev.get("recovery_kind") or ""):
+            checked += 1
+            assert ev["recovery_status"] == "partial_restart", ev
+            assert ev.get("counts_toward_observed_episodes") is not True, ev
+    assert checked, "no flow-rerouted recovery record reached the payload; the test checks nothing"
 
 
 def test_recovery_kind_column_matches_status_in_source():
@@ -1039,25 +1070,8 @@ def test_no_incident_uses_the_deprecated_repaired_damage_status():
     with open(ROOT / "data" / "curated" / "incidents.csv", encoding="utf-8", newline="") as f:
         bad = [r["incident_id"] for r in csv.DictReader(f) if (r.get("status") or "") == "repaired"]
     assert not bad, f"incident.status='repaired' is deprecated; use a recovery record: {bad}"
-
-
-def test_incident_status_does_not_contradict_its_recovery_record():
-    """Red-team (iter 6): the scoring status_multiplier reads incident.status, which must not
-    contradict the authoritative recovery record. An incident may be status='repaired' only if
-    its recovery record actually closes it (fully_reconstituted). Unecha was the offender:
-    status='repaired' against a record saying the pumping station was destroyed and only flow
-    was rerouted."""
-    import csv
-    rec = {}
-    with open(ROOT / "data" / "curated" / "recovery.csv", encoding="utf-8", newline="") as f:
-        for r in csv.DictReader(f):
-            rec[r["incident_id"]] = r["recovery_status"]
-    with open(ROOT / "data" / "curated" / "incidents.csv", encoding="utf-8", newline="") as f:
-        for r in csv.DictReader(f):
-            iid = r["incident_id"]
-            if r.get("status") == "repaired" and iid in rec:
-                assert rec[iid] == "fully_reconstituted", (
-                    f"{iid}: incident.status='repaired' contradicts recovery_status='{rec[iid]}'")
+    # This also retires the iteration-6 check that a 'repaired' incident's recovery record closes
+    # it: with no 'repaired' status allowed, that check could never execute (iteration 14).
 
 
 @pytest.mark.skipif(not (PROCESSED / "incidents.json").exists(),
@@ -2274,16 +2288,33 @@ def test_every_simplifier_shares_one_correct_metric():
     # Degenerate segment (a ring's shared first/last point) falls back to point distance.
     assert geo.segment_distance((3, 4), (0, 0), (0, 0)) == pytest.approx(5.0)
 
-    src_files = ["build_assets.py", "build_context.py", "build_pipeline_network.py", "geo.py"]
-    for name in src_files:
-        text = (ROOT / "pipeline" / name).read_text(encoding="utf-8")
-        for line in text.splitlines():
-            stripped = line.strip()
-            if stripped.startswith("#") or stripped.startswith("*"):
-                continue          # comments may name it when explaining the history
-            if "_perpendicular_distance(" in line and "def _perpendicular_distance" not in line:
-                assert "geo._perpendicular_distance" not in line, (
-                    f"{name} calls the infinite-line metric; use geo.segment_distance")
+    # Iteration 14: the previous text scan only flagged the qualified `geo._perpendicular_distance`
+    # and only in four files, so a bare call after `from pipeline.geo import ...` passed — proven
+    # by mutation. An AST scan sees every call however it is spelled, and comments for free.
+    for path in sorted((ROOT / "pipeline").glob("*.py")):
+        calls = _calls_named(path.read_text(encoding="utf-8"), "_perpendicular_distance")
+        assert not calls, f"{path.name}:{calls} calls the infinite-line metric; use geo.segment_distance"
+
+
+def _calls_named(source, name):
+    """Line numbers of every call to `name`, bare or as an attribute."""
+    import ast
+    out = []
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Call):
+            f = node.func
+            if (isinstance(f, ast.Name) and f.id == name) or (
+                    isinstance(f, ast.Attribute) and f.attr == name):
+                out.append(node.lineno)
+    return out
+
+
+def test_the_metric_scan_sees_bare_and_qualified_calls():
+    assert _calls_named("from pipeline.geo import _perpendicular_distance as p\n"
+                        "d = _perpendicular_distance(a, b, c)\n", "_perpendicular_distance") == [2]
+    assert _calls_named("d = geo._perpendicular_distance(a, b, c)", "_perpendicular_distance") == [1]
+    assert _calls_named("# _perpendicular_distance(a, b, c)\nx = '_perpendicular_distance('",
+                        "_perpendicular_distance") == []
 
 
 def test_simplify_line_preserves_an_out_and_back_excursion():
@@ -2871,9 +2902,22 @@ def test_repair_costs_are_never_bare_numbers():
     """§27: a repair-cost effect must carry currency + year, never an un-anchored figure."""
     snap = _snapshot()
     se = snap.get("strategic_effects") or {"national": [], "by_incident": {}}
-    for e in list(se["national"]) + [x for lst in se["by_incident"].values() for x in lst]:
-        if e["effect_type"] == "repair_cost" and e["value_numeric"] is not None:
-            assert e.get("currency") and e.get("cost_year"), f"repair cost needs currency+year: {e}"
+    effects = list(se["national"]) + [x for lst in se["by_incident"].values() for x in lst]
+    assert not _bare_repair_costs(effects)
+
+
+def _bare_repair_costs(effects):
+    return [e for e in effects
+            if e["effect_type"] == "repair_cost" and e["value_numeric"] is not None
+            and not (e.get("currency") and e.get("cost_year"))]
+
+
+def test_the_bare_repair_cost_check_fires():
+    """No repair_cost effect has ever been curated, so the payload check above has never seen
+    one (iteration 14). Prove it would catch a bare figure, and pass an anchored one."""
+    bare = {"effect_type": "repair_cost", "value_numeric": 5, "currency": None, "cost_year": None}
+    ok = {"effect_type": "repair_cost", "value_numeric": 5, "currency": "RUB", "cost_year": 2024}
+    assert _bare_repair_costs([bare, ok]) == [bare]
 
 
 # --------------------------------------------------------------------------
@@ -4207,6 +4251,11 @@ def test_a_capped_sector_marks_its_facility_movement_as_possibly_invisible():
 def test_the_real_build_emits_a_well_formed_ledger():
     led = json.loads((PROCESSED / "build_changes.json").read_text(encoding="utf-8"))
     from pipeline import diff_builds as D
+    # On most days no input changed and `changes` is empty, so the loop below checks nothing.
+    # An empty ledger must then SAY it is a date-only build (iteration 14).
+    if not led["changes"]:
+        assert led["time_progression_only"] is True
+        assert led["change_count"] == 0
     for c in led["changes"]:
         assert c["category"] in D.CATEGORIES
         assert c["nature"] in D.NATURES
@@ -4301,6 +4350,20 @@ def test_display_rounding_residual_is_named_rather_than_hidden():
         assert "display rounding" in h["rounding_note"]
     else:
         assert h["rounding_note"] is None
+
+
+def test_a_nonzero_rounding_residual_is_named():
+    """Three equal sectors of 1/3 point each display as 0.33 + 0.33 + 0.33 = 0.99 against a
+    published 1.00. The real build rarely lands here, so drive it (iteration 14)."""
+    from pipeline import explain
+    from pipeline.config import SECTORS
+    covered = list(SECTORS)[:3]
+    weights = {s: (1.0 if s in covered else 0.0) for s in SECTORS}
+    fracs = {s: 0.01 for s in covered}
+    h = explain.headline_explanation(fracs, weights, covered, 1.0, 1.0, "2026-01-01", {})
+    assert h["display_rounding_residual"] != 0.0
+    assert "display rounding" in h["rounding_note"]
+    assert h["reconciles_raw"] is True
 
 
 @needs_build
@@ -5353,6 +5416,10 @@ def test_no_source_claims_a_publisher_retrieval_signal_from_a_timestamp_we_wrote
     importer into our own manifest. Same class of error as reading a file mtime and calling it a
     release date, just laundered through a JSON file we authored.
     """
+    from pipeline import data_quality as DQ
+    # The payload loop below never fires — no source has HTTP metadata yet — so the table is what
+    # actually decides. Only a header the publisher sent may count as their signal (iteration 14).
+    assert {k for k, v in DQ.RETRIEVAL_IS_PUBLISHER_SIGNAL.items() if v} == {DQ.RETRIEVAL_HTTP}
     dq = json.loads((ROOT / "data" / "processed" / "data_quality.json").read_text(encoding="utf-8"))
     for s in dq["sources"]:
         if s["retrieval_is_publisher_signal"]:
@@ -5409,10 +5476,22 @@ def test_a_known_undercount_states_its_magnitude_not_merely_its_existence():
 # --------------------------------------------------------------------------------------------
 
 def _sentences_of(path):
+    return _sentences(path.read_text(encoding="utf-8"))
+
+
+def _sentences(text):
+    # Collapse line-wrapping BEFORE splitting: a wrapped sentence is one sentence. Splitting on
+    # newlines meant a claim wrapped across a line break was never seen, and the seven prose
+    # lints built on this had never matched a single sentence (iteration 14).
     import re
-    text = path.read_text(encoding="utf-8").lower()
-    for frag in re.split(r"[.\n;!?]", text):
-        yield " ".join(frag.split())
+    text = " ".join(text.lower().split())
+    for frag in re.split(r"[.;!?]", text):
+        yield frag.strip()
+
+
+def test_sentence_splitting_keeps_a_wrapped_sentence_whole():
+    frags = list(_sentences("The index measures\ncapacity loss today. Next."))
+    assert "the index measures capacity loss today" in frags
 
 
 def _lint_files():
