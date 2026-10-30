@@ -1877,3 +1877,120 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
   }
   .brief-sources { color: #555 !important; }
 }
+
+/* ===== Global home and country views (iteration 14) ======================================== */
+/* The theatre is a fixed-height app shell; these pages are documents that scroll. They are their
+   own scroll container because html/body keep overflow:hidden for the shell. */
+.global-page {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.global-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-panel);
+}
+.global-head .head-actions { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+.global-main { padding: 14px 16px 32px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.global-main .small, .country-page .small { font-size: 11.5px; }
+.dim { color: var(--text-dim); }
+.warn-text { color: var(--amber); }
+.global-main a, .country-page a { color: var(--accent); }
+
+.sys-switch { display: inline-flex; flex-direction: column; gap: 3px; }
+.sys-switch select {
+  background: var(--bg-inset); color: var(--text); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 5px 8px; font: inherit; max-width: 100%;
+}
+.ribbon .sys-switch { margin-top: 8px; }
+
+.comparability {
+  margin: 0; padding: 9px 12px; border-left: 3px solid var(--amber);
+  background: var(--bg-panel-2); font-size: 12px; line-height: 1.5; max-width: 980px;
+}
+.country-page > .comparability { margin: 10px 16px 0; }
+
+.simple-map { width: 100%; height: 100%; min-height: 260px; background: #05070a; }
+.simple-map.placeholder { display: grid; place-items: center; color: var(--text-faint); }
+.global-map-wrap { height: min(52vh, 520px); min-height: 260px; display: flex; flex-direction: column; }
+.global-map-wrap .simple-map { flex: 1; }
+.map-legend-mini { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 6px 2px; font-size: 11px; color: var(--text-dim); align-items: center; }
+.map-legend-mini i { display: inline-block; width: 11px; height: 11px; margin-right: 4px; vertical-align: -1px; border: 1px solid var(--line); }
+
+.sys-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.sys-card { padding: 12px; display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--line); }
+.sys-card h2 { margin: 0; font-size: 15px; }
+.sys-headline .num { font-size: 22px; }
+.global-note { padding: 12px; border: 1px solid var(--line); max-width: 980px; }
+.global-note p { margin: 6px 0; line-height: 1.5; }
+
+.badge { display: inline-block; font-size: 10.5px; padding: 2px 7px; border-radius: 10px; border: 1px solid var(--line); color: var(--text-dim); width: fit-content; }
+.readiness-index_ready, .state-scored { color: var(--accent); border-color: var(--accent-dim); }
+.readiness-context_only, .state-context_only { color: var(--amber); border-color: #6b5320; }
+.state-not_applicable, .state-not_yet_researched { color: var(--text-faint); }
+.state-insufficient_evidence, .readiness-insufficient_evidence { color: var(--red); border-color: #6b2a26; }
+
+.country-ribbon {
+  display: grid; grid-template-columns: minmax(0, 2fr) auto minmax(0, 2fr); gap: 18px;
+  padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--bg-panel); align-items: start;
+}
+.no-index-value { font-size: 26px; font-weight: 600; color: var(--text-faint); letter-spacing: 0.02em; }
+.country-body {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 420px); gap: 12px;
+  padding: 12px 16px 24px; min-height: 0; flex: 1;
+}
+.country-map { display: flex; flex-direction: column; min-height: 0; }
+.country-map .simple-map { flex: 1; min-height: 420px; }
+.country-side { padding: 12px; border: 1px solid var(--line); overflow: auto; max-height: 78vh; }
+.country-side h2 { font-size: 14px; margin: 8px 0; }
+.country-side .tabs { display: flex; flex-wrap: wrap; gap: 5px; }
+.event-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.event-item { border-top: 1px solid var(--line-soft); padding-top: 8px; }
+.event-item p { margin: 4px 0; line-height: 1.45; }
+.event-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.event-title { font-weight: 600; margin-top: 2px; }
+.event-item .sources a { margin-right: 10px; }
+.rec { font-weight: 600; }
+.rec-evidence_found { color: var(--green); }
+.rec-researched_no_public_evidence { color: var(--amber); }
+.rec-not_yet_researched { color: var(--text-faint); }
+.sector-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.sector-table td, .sector-table th { text-align: left; vertical-align: top; padding: 6px 6px 6px 0; border-top: 1px solid var(--line-soft); }
+.sector-table th { color: var(--text-faint); font-weight: 500; font-size: 11px; }
+
+@media (max-width: 900px) {
+  .country-ribbon { grid-template-columns: minmax(0, 1fr); }
+  .country-body { grid-template-columns: minmax(0, 1fr); }
+  .country-map .simple-map { min-height: 340px; }
+  .country-side { max-height: none; }
+}
+
+/* Print / PDF: the document, not the controls. A WebGL map does not reliably print, so the
+   printed page carries the text the map stands for; the PNG export is the image route. */
+@media print {
+  html, body, #root { height: auto; overflow: visible; background: #fff; color: #000; }
+  .global-page { height: auto; overflow: visible; }
+  .global-head, .country-ribbon, .country-side, .comparability, .sys-card, .global-note {
+    background: #fff !important; color: #000 !important; border-color: #999 !important;
+  }
+  button, .sys-switch, .maplibregl-ctrl, .tabs { display: none !important; }
+  .country-body { grid-template-columns: 1fr; }
+  .country-side { max-height: none; overflow: visible; }
+  .dim, .small { color: #333 !important; }
+  a { color: #000 !important; }
+}
+
+.stale-note { margin: 10px 16px 0; padding: 8px 12px; border-left: 3px solid var(--red); background: var(--bg-panel-2); font-size: 12px; }
+.gate-met { color: var(--green); border-color: #1f5a40; }
+.gate-partial { color: var(--amber); border-color: #6b5320; }
+.gate-unmet { color: var(--red); border-color: #6b2a26; }
+.rec-full_restart, .rec-service_restored, .rec-partial_restart, .rec-partial_restoration { color: var(--green); }
+.rec-estimate, .rec-supply_unaffected_statement, .rec-no_supply_lost { color: var(--amber); }

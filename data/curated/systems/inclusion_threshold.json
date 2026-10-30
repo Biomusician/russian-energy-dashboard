@@ -1,0 +1,28 @@
+{
+  "version": "2026-10-30.1",
+  "applies_to": "country systems only. Never applied to the Russia theatre corpus, which predates it and does not pass it (GLOBAL_METHODOLOGY.md §5.2).",
+  "rule": "A publicly reported disruption to energy infrastructure that meets at least one clause below, supported by at least one source with a URL.",
+  "clauses": {
+    "1": "Refinery, gas-processing plant or LNG terminal shut down, or throughput materially cut, with the effect reported.",
+    "2": "Export or import terminal operations suspended.",
+    "3": "Trunk pipeline shut down, or force majeure declared on it.",
+    "4": "A power plant of about 500 MW or more forced offline with a reported effect, or a generation shortfall that forced rotating outages.",
+    "5": "A grid event affecting about 100,000 customers or more, or a grid-operator emergency declaration.",
+    "6": "A coal-mine event that materially cut supply.",
+    "7": "Production shut in at a reported, material volume."
+  },
+  "exclusions": [
+    "planned maintenance and turnarounds",
+    "minor unit trips with no reported effect",
+    "price events",
+    "policy decisions and sanctions with no physical effect (for example OPEC+ quota changes)",
+    "inferences from proximity to an event (a wildfire near a facility is not a disruption of it)"
+  ],
+  "known_weaknesses": [
+    "Absolute thresholds (500 MW, 100,000 customers) mean very different things in systems that differ in size by thirty times; a province-wide outage in a small province can fall below them.",
+    "There is no duration floor.",
+    "'With reported effect' measures how much a country discloses as well as what happened.",
+    "One storm can produce several records; episodes are not yet grouped.",
+    "See GLOBAL_METHODOLOGY.md §5.1 for the full red-team."
+  ]
+}

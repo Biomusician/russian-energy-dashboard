@@ -1,6 +1,6 @@
 # Energy Disruption Monitor — project instructions
 
-<!-- current-iteration: 13 -->
+<!-- current-iteration: 14 -->
 
 Project-level rules. These override `~/.claude/CLAUDE.md` where they conflict.
 
@@ -13,6 +13,30 @@ occupied unit (internationally Ukrainian) that, since iteration 4, **contributes
 headline Monitored-Area index** while keeping distinct styling and status. It is a
 **research and monitoring instrument whose main product is calibrated honesty about what
 is and is not known**, with a good map attached.
+
+**Since iteration 14 the dashboard monitors six systems.** The theatre above is one, unchanged
+and still the only one with an index. The other five are **country systems** — Canada, China,
+India, Saudi Arabia, United States, the five largest total-energy producers outside Russia
+(`docs/GLOBAL_COUNTRY_SELECTION.md`). They show reviewed, publicly reported major disruptions at
+first-level-region precision, sector evidence states and sourced context, and **no score**: the
+ESDI's weights, decay and transmission measure do not transfer (`docs/GLOBAL_METHODOLOGY.md`).
+Architecture: `docs/GLOBAL_ARCHITECTURE.md`; adding a country: `docs/COUNTRY_ONBOARDING.md`.
+Rules that follow from it, all tested:
+
+- **The theatre never moves.** `data/processed/` is its root; countries live under
+  `systems/<id>/`. One registry (`pipeline/systems.py`), one manifest; no country constants in
+  React.
+- **No country score, no zero.** `index` and `headline` are `null` with a reason. A sector state
+  claiming a value (SCORED / EXPERIMENTAL) fails the build until code computes one, and that
+  needs the owner decisions in `GLOBAL_METHODOLOGY.md` §8.
+- **No ranking, no comparison of counts or scores across systems.** Systems are listed
+  alphabetically; the manifest carries no rankable figure; counts appear only inside a country,
+  beside its reporting environment.
+- **The candidate queue (`data/candidates/`) never reaches a payload.** Only
+  `scripts/import_candidates.py` moves reviewed records into `data/curated/systems/<id>/`.
+- **Every scope rule applies to every country.** Same safety gates, recursing into the subtrees.
+  Disputed territory follows the Crimea style: Natural Earth's line of actual control, rulings
+  stated as sovereignty-neutral analytic choices. Taiwan is not part of the China system.
 
 The area of interest is locked in `AOI_FEDERAL_DISTRICTS` (`pipeline/config.py`). The
 Far Eastern FD is defined but not enabled; adding it there turns it on with no refactor.

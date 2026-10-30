@@ -1,6 +1,6 @@
-# Energy Disruption Monitor — Western Russia, Siberia & Belarus
+# Energy Disruption Monitor — Russia/Belarus theatre and five major producers
 
-<!-- current-iteration: 13 -->
+<!-- current-iteration: 14 -->
 
 An open-source-only dashboard tracking publicly reported degradation of energy
 infrastructure across **Belarus, western Russia and the Siberian Federal District**,
@@ -15,6 +15,15 @@ as Ukraine, under Russian occupation, distinct styling and status. Since iterati
 **contributes to the headline Monitored-Area index** (through the sectors where it has
 qualifying events and a compatible denominator) while never being labelled a Russian region.
 Surrounding countries and the Black Sea are drawn as display-only context.
+
+**Since iteration 14** the same instrument also covers the five largest total-energy producers
+outside Russia: **Canada, China, India, Saudi Arabia and the United States**. Each is a separate
+*country system* with reviewed, publicly reported major disruptions at first-level-region
+precision, an explicit evidence state for every sector, and sourced energy-system context, and
+**no index**: the theatre's weights and recovery model were built for a strike campaign and do
+not transfer ([docs/GLOBAL_METHODOLOGY.md](docs/GLOBAL_METHODOLOGY.md)). Systems are never ranked
+or compared on counts or scores. A bare URL opens the overview; every older link that carried view state still opens the
+theatre (a bare link carried none, and now opens the overview, one click from it). See [docs/GLOBAL_ARCHITECTURE.md](docs/GLOBAL_ARCHITECTURE.md).
 
 > **Status:** iterations 1–12 shipped. For every live figure — as-of date, headline index,
 > sector exposures, coverage ratio, event and recovery counts — see

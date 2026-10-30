@@ -85,6 +85,25 @@ REQUIRED_WEB_PAYLOADS = (
     "explanations_regional.json",
 )
 
+# Iteration 14: the country systems and the global home. Each lives in its own subdirectory of
+# data/processed (mirrored the same way), so the Russia theatre's flat namespace above is
+# untouched. Declared here, like everything else, so the staging check and the tests see them.
+SYSTEM_PAYLOADS = ("system.json", "events.json", "regions.geojson")
+GLOBAL_PAYLOADS = ("global/manifest.json", "global/world.geojson")
+
+
+def system_payload_paths():
+    """Paths relative to data/processed of every country-system payload."""
+    from pipeline import systems
+    return tuple(f"{systems.root(sid)}/{name}"
+                 for sid in systems.COUNTRY_SYSTEMS for name in SYSTEM_PAYLOADS)
+
+
+def subtree_payloads():
+    """Every payload outside the theatre's flat namespace, relative to data/processed."""
+    return GLOBAL_PAYLOADS + system_payload_paths()
+
+
 # The manifest never lists itself, so it cannot be validated by the same loop as the others;
 # its presence and mirroring are asserted directly. It is still required, and still staged.
 MANIFEST = "data_manifest.json"
@@ -129,7 +148,7 @@ def web_payloads(processed=PROCESSED):
 def required_paths():
     """Repo-relative POSIX paths of every artifact whose absence is a release failure."""
     out = []
-    for name in REQUIRED_WEB_PAYLOADS + (MANIFEST,):
+    for name in REQUIRED_WEB_PAYLOADS + (MANIFEST,) + subtree_payloads():
         out.append(f"{PROCESSED.relative_to(ROOT).as_posix()}/{name}")
         out.append(f"{WEB_DATA.relative_to(ROOT).as_posix()}/{name}")
     out += [d["path"] for d in GENERATED_DOCS if d["required"]]

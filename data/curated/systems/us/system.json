@@ -1,0 +1,91 @@
+{
+  "system_id": "us",
+  "reporting_environment": "mandatory_regulatory",
+  "reporting_note": "Grid operators file DOE OE-417 reports and pipeline operators file PHMSA reports, but neither covers refineries, and much of the US record still comes from press and company statements.",
+  "geography": {
+    "unit_label": "state",
+    "units_expected": 51,
+    "note": "50 states and the District of Columbia. US territories (Puerto Rico and others) are outside this system's geography this iteration; their events are held in the candidate queue, not dropped. The map opens on the lower 48; Alaska and Hawaii are drawn and selectable when zoomed out.",
+    "rulings": [],
+    "view_bounds": [
+      -127.0,
+      23.0,
+      -65.0,
+      50.5
+    ]
+  },
+  "sectors": [
+    {
+      "sector": "refining",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "EXPERIMENTAL",
+      "reason": "Denominator ready (EIA Refinery Capacity Report: 124 sites, exact national total). No systematic refinery-outage register and no approved recovery model. Not scored. The recovery and decay model behind the Monitored-Area ESDI was calibrated on repeated strikes with almost no restart reporting, and no model for this country's events has been approved (GLOBAL_METHODOLOGY.md §2 and §8.3)."
+    },
+    {
+      "sector": "electric_generation",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "EXPERIMENTAL",
+      "reason": "Denominator ready (EIA-860M, with retirement dates back to 2002). Fossil unit outages are not public. Not scored. The recovery and decay model behind the Monitored-Area ESDI was calibrated on repeated strikes with almost no restart reporting, and no model for this country's events has been approved (GLOBAL_METHODOLOGY.md §2 and §8.3)."
+    },
+    {
+      "sector": "transmission",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "The ESDI's transmission measure counts struck substations against a saturation constant of 8; at about 229 OE-417 events a year it would read close to 100% on an ordinary day. A customer-interruption measure is a different concept and is not built."
+    },
+    {
+      "sector": "oil_logistics",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "No complete terminal and pipeline-operations denominator."
+    },
+    {
+      "sector": "gas",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "EXPERIMENTAL",
+      "reason": "Gas splits into production, processing, pipelines, storage and LNG export, with different denominators. LNG export is the most ready; none is scored."
+    },
+    {
+      "sector": "coal",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "EXPERIMENTAL",
+      "reason": "Mine production is published by mine; capacity only by state."
+    }
+  ],
+  "sources": [
+    {
+      "name": "EIA Refinery Capacity Report; EIA-860M; Monthly Energy Review",
+      "role": "adopted",
+      "licence": "US public domain"
+    },
+    {
+      "name": "EAGLE-I county outage history",
+      "role": "adopted (aggregates only)",
+      "licence": "CC BY 4.0"
+    },
+    {
+      "name": "DOE OE-417, PHMSA incident data, NERC",
+      "role": "derived facts only",
+      "licence": "varies; PHMSA latitude/longitude never read"
+    },
+    {
+      "name": "WRI Global Power Plant Database",
+      "role": "rejected",
+      "licence": "stale for the US"
+    },
+    {
+      "name": "Facility-level substation and line geodata",
+      "role": "rejected",
+      "licence": "outside the project's scope boundary"
+    }
+  ],
+  "research_gaps": [
+    "Recent years (2025-2026) are thin: the incident lane's search budget ran out and several accepted events rest on a tertiary source.",
+    "Unverified leads held in the queue: PBF Martinez fire (Feb 2025), Chevron El Segundo fire (Oct 2025), MISO Louisiana load shed (May 2025), La Porte NGL pipeline fire (Sep 2024)."
+  ],
+  "audit_docs": [
+    "docs/countries/US_SOURCE_AUDIT.md",
+    "docs/countries/US_INDEX_READINESS.md"
+  ],
+  "provenance": "Authored 2026-10-30 (iteration 14) from the source-audit, readiness and incident lanes' reports. Edit by hand; this file is the curated source."
+}

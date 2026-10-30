@@ -1516,8 +1516,12 @@ def test_population_is_structural_context_on_regions():
 # Now derived: every emitted .json is in scope, and the handful with a documented reason to carry
 # coordinates is named as an EXCEPTION rather than the whole set being named as an inclusion.
 def served_data_json():
-    """Every JSON payload the build emits, so a new one is covered the day it appears."""
-    return sorted(p.name for p in PROCESSED.glob("*.json"))
+    """Every JSON payload the build emits, so a new one is covered the day it appears.
+
+    Recursive since iteration 14: the country systems live in subdirectories, and a gate that
+    globbed only the top level would have waved every one of them through.
+    """
+    return sorted(p.relative_to(PROCESSED).as_posix() for p in PROCESSED.rglob("*.json"))
 
 
 # Kept so a reader can still see the original core at a glance; the gate itself uses the glob.
@@ -6430,3 +6434,394 @@ def test_no_published_asset_id_is_claimed_by_two_names():
     from pipeline import ids
     assert ids.collisions((i["asset_id"], i["asset_name"]) for i in incidents
                           if i.get("origin") == "wikipedia_strike_table") == {}
+
+
+def test_a_rectangular_region_survives_simplification():
+    """Wyoming is four corners. It must simplify to itself, not disappear (iteration 14)."""
+    from pipeline import geo
+    wy = {"type": "Polygon", "coordinates": [[[-111.05, 41.0], [-104.05, 41.0], [-104.05, 45.0],
+                                               [-111.05, 45.0], [-111.05, 41.0]]]}
+    out = geo.simplify_geometry(wy, 0.01)
+    assert out is not None and len(out["coordinates"][0]) == 5
+    # Islands too small to see are still dropped when the region has a real body.
+    body = [[0, 0], [10, 0], [10, 1], [9, 5], [10, 10], [0, 10], [0, 0]]
+    speck = [[20, 20], [20.001, 20], [20.001, 20.001], [20, 20]]
+    multi = {"type": "MultiPolygon", "coordinates": [[body], [speck]]}
+    assert geo.simplify_geometry(multi, 0.01)["type"] == "Polygon"
+
+
+# --------------------------------------------------------------------------
+# Iteration 14: country systems and the global home
+# --------------------------------------------------------------------------
+
+def _sys_payload(sid, name):
+    from pipeline import systems
+    return json.loads((PROCESSED / systems.root(sid) / name).read_text(encoding="utf-8"))
+
+
+def _manifest():
+    return json.loads((PROCESSED / "global" / "manifest.json").read_text(encoding="utf-8"))
+
+
+def _import_gate():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("imp", ROOT / "scripts" / "import_candidates.py")
+    imp = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(imp)
+    return imp
+
+
+needs_systems = pytest.mark.skipif(not (PROCESSED / "global" / "manifest.json").exists(),
+                                   reason="systems not built")
+
+
+@needs_systems
+def test_the_manifest_lists_every_registered_system_in_registry_order():
+    from pipeline import systems
+    m = _manifest()
+    assert [s["id"] for s in m["systems"]] == [s["id"] for s in systems.SYSTEMS]
+    # Alphabetical by display name, never by any figure (GLOBAL_METHODOLOGY §6.4 rule 4).
+    names = [s["name"] for s in m["systems"]]
+    assert names == sorted(names)
+    # Exactly five countries, plus the original theatre.
+    assert len(systems.COUNTRY_SYSTEMS) == 5
+    assert {s["id"] for s in m["systems"]} == {"ru", "us", "cn", "sa", "ca", "in"}
+
+
+@needs_systems
+def test_the_manifest_carries_no_figure_a_reader_could_rank_countries_by():
+    forbidden = {"rank", "ranking", "score", "recorded_events", "event_count", "events",
+                 "severity", "esdi"}
+    for s in _manifest()["systems"]:
+        assert not (set(_walk_keys(s)) & forbidden), s["id"]
+        # Only the theatre has a headline; every country's is null, never zero.
+        if s["id"] == "ru":
+            assert s["headline"]["value"] is not None and s["index"]["id"] == "esdi"
+        else:
+            assert s["headline"] is None and s["index"] is None, s["id"]
+
+
+@needs_systems
+def test_no_country_system_publishes_a_score():
+    from pipeline import systems
+    for sid in systems.COUNTRY_SYSTEMS:
+        p = _sys_payload(sid, "system.json")
+        assert p["index"] is None and p["headline"] is None, sid
+        assert p["no_index_reason"], sid
+        assert p["evidence_readiness"] in systems.READINESS
+        assert p["evidence_readiness"] != "INDEX_READY", sid
+        assert "esdi" not in set(_walk_keys(p)), sid
+        for s in p["sectors"]:
+            # Nothing outside the theatre is computed, so nothing may claim a value.
+            assert s["state"] not in ("SCORED", "EXPERIMENTAL"), (sid, s)
+            assert "value" not in s, (sid, s)
+
+
+@needs_systems
+def test_every_country_states_every_sector_with_a_reason():
+    from pipeline import systems
+    from pipeline.config import SECTORS
+    for sid in systems.COUNTRY_SYSTEMS:
+        p = _sys_payload(sid, "system.json")
+        assert {s["sector"] for s in p["sectors"]} == set(SECTORS), sid
+        for s in p["sectors"]:
+            assert s["state"] in systems.SECTOR_STATES and s["reason"], (sid, s)
+
+
+@needs_systems
+def test_every_country_carries_its_reporting_environment_and_no_comparability():
+    from pipeline import systems
+    for sid in systems.COUNTRY_SYSTEMS:
+        p = _sys_payload(sid, "system.json")
+        assert p["reporting_environment"] in systems.REPORTING_ENVIRONMENTS
+        assert p["comparability"] == "none"
+        assert "not shown to be safer" in p["comparability_statement"]
+
+
+@needs_systems
+def test_country_events_are_region_scoped_whitelisted_and_sourced():
+    from pipeline import build_systems as B, systems
+    for sid in systems.COUNTRY_SYSTEMS:
+        events = _sys_payload(sid, "events.json")["events"]
+        codes = {f["properties"]["code"] for f in _sys_payload(sid, "regions.geojson")["features"]}
+        assert events, f"{sid}: no events"
+        for e in events:
+            assert set(e) == set(B.EVENT_FIELDS), (sid, e["event_id"])
+            assert not (set(_walk_keys(e)) & COORD_KEYS), e["event_id"]
+            if e["geography_precision"] == "admin1":
+                assert e["region_code"] in codes, e["event_id"]
+            else:
+                assert e["region_code"] is None, e["event_id"]
+            assert e["sources"] and all(s["url"].startswith("http") for s in e["sources"])
+            assert e["review"]["process"], e["event_id"]
+            assert e["criterion_met"] in range(1, 8), e["event_id"]
+
+
+@needs_systems
+def test_country_event_text_passes_the_scope_scan():
+    """The import gate scans candidates; this re-scans what actually shipped."""
+    imp = _import_gate()
+    from pipeline import systems
+    for sid in systems.COUNTRY_SYSTEMS:
+        for e in _sys_payload(sid, "events.json")["events"]:
+            text = " ".join(str(e.get(k) or "") for k in imp.TEXT_FIELDS)
+            text += json.dumps(e["recovery"], ensure_ascii=False)
+            assert not imp.SCOPE_SCAN.search(text), (sid, e["event_id"])
+
+
+@needs_systems
+def test_region_counts_are_the_placed_events_and_disputed_units_carry_none():
+    from pipeline import systems
+    for sid in systems.COUNTRY_SYSTEMS:
+        events = _sys_payload(sid, "events.json")["events"]
+        for f in _sys_payload(sid, "regions.geojson")["features"]:
+            p = f["properties"]
+            placed = sum(1 for e in events if e["region_code"] == p["code"])
+            if p["status"] == "disputed_unassigned":
+                assert p["recorded_events"] is None and placed == 0, p["code"]
+            else:
+                assert p["recorded_events"] == placed, (sid, p["code"])
+
+
+@needs_systems
+def test_every_first_level_unit_is_present():
+    """Wyoming and Colorado used to vanish on simplification (iteration 14)."""
+    counts = {"us": 51, "ca": 13, "cn": 34, "in": 36, "sa": 13}
+    for sid, n in counts.items():
+        codes = [f["properties"]["code"] for f in _sys_payload(sid, "regions.geojson")["features"]]
+        assert len(codes) == len(set(codes)) == n, sid
+    us = {f["properties"]["code"] for f in _sys_payload("us", "regions.geojson")["features"]}
+    assert {"US-WY", "US-CO", "US-DC", "US-AK", "US-HI"} <= us
+    india = {f["properties"]["code"] for f in _sys_payload("in", "regions.geojson")["features"]}
+    assert {"IN-CG", "IN-UK", "IN-OD", "IN-TS"} <= india       # ISO 3166-2 as revised 2023
+    assert not ({"IN-CT", "IN-UT", "IN-OR", "IN-TG"} & india)
+
+
+@needs_systems
+def test_china_excludes_taiwan_and_includes_the_sars():
+    cn = {f["properties"]["code"] for f in _sys_payload("cn", "regions.geojson")["features"]}
+    assert {"CN-HK", "CN-MO"} <= cn
+    assert not any(c.startswith("TW") or c == "CN-TW" for c in cn)
+    w = json.loads((PROCESSED / "global" / "world.geojson").read_text(encoding="utf-8"))
+    tw = [f for f in w["features"] if f["properties"]["a3"] == "TWN"]
+    assert tw and all(f["properties"]["system_id"] is None for f in tw)
+
+
+@needs_systems
+def test_the_world_map_never_paints_crimea_as_russia():
+    """Natural Earth's admin-0 Russia polygon contains Crimea. The world layer is built from
+    admin-1 instead, with Crimea and Sevastopol as their own occupied, Ukrainian features."""
+    from pipeline import geo
+    w = json.loads((PROCESSED / "global" / "world.geojson").read_text(encoding="utf-8"))
+    holders = [f["properties"] for f in w["features"]
+               if geo.point_in_geometry(34.1, 45.0, f["geometry"])]
+    assert holders, "nothing drawn at Crimea"
+    for p in holders:
+        assert p["a3"] == "UKR" and p["status"] == "occupied", p
+        assert "Russia" not in (p["name"] or ""), p
+
+
+@needs_systems
+def test_bounds_stay_on_one_side_of_the_antimeridian():
+    w, s, e, n = _sys_payload("us", "system.json")["geography"]["bounds"]
+    assert e - w < 180, "the US view would open zoomed out to the whole planet"
+
+
+def test_the_build_never_reads_the_candidate_queue():
+    """Candidates are research output. Only the reviewed curated events may reach a payload."""
+    import ast
+    for mod in ("build_systems.py", "run.py"):
+        tree = ast.parse((ROOT / "pipeline" / mod).read_text(encoding="utf-8"))
+        docstrings = {id(n.body[0].value) for n in ast.walk(tree)
+                      if isinstance(n, (ast.Module, ast.FunctionDef, ast.ClassDef))
+                      and n.body and isinstance(n.body[0], ast.Expr)
+                      and isinstance(n.body[0].value, ast.Constant)}
+        for n in ast.walk(tree):
+            if isinstance(n, ast.Constant) and isinstance(n.value, str) and id(n) not in docstrings:
+                assert "candidates" not in n.value, f"{mod} references the candidate queue"
+
+
+def test_the_country_vocabulary_extends_but_never_alters_the_theatre_taxonomy():
+    from pipeline import build_systems as B
+    from pipeline.config import ASSET_CLASSES, DISRUPTION_CAUSES
+    assert not (set(B.TAXONOMY_EXTENSIONS["asset_classes"]) & set(ASSET_CLASSES))
+    assert not (set(B.TAXONOMY_EXTENSIONS["causes"]) & set(DISRUPTION_CAUSES))
+    assert "natural_hazard" not in DISRUPTION_CAUSES   # an owner decision, not made here
+
+
+def test_the_build_refuses_a_country_claiming_a_score_it_does_not_have():
+    from pipeline import build_systems as B
+    from pipeline.config import SECTORS
+    doc = {"sectors": [{"sector": s, "state": "CONTEXT_ONLY", "reason": "r",
+                        "assessed_readiness": "INCOMPLETE"} for s in SECTORS],
+           "reporting_environment": "media_only"}
+    B.validate("xx", doc, [], set())
+    doc["sectors"][0]["state"] = "SCORED"
+    with pytest.raises(ValueError, match="needs a computed value"):
+        B.validate("xx", doc, [], set())
+    doc["sectors"][0]["state"] = "CONTEXT_ONLY"
+    doc["sectors"].pop()
+    with pytest.raises(ValueError, match="sector states must cover"):
+        B.validate("xx", doc, [], set())
+
+
+def test_the_import_gate_holds_what_it_should():
+    imp = _import_gate()
+    ok = {"US-TX"}
+    good = {"candidate_id": "us-2024-01-01-x", "suggested_disposition": "accept",
+            "admin1_code": "US-TX", "geography_precision": "admin1", "summary": "A plant shut.",
+            "sources": [{"url": "https://e.x/a", "opened": True}]}
+    assert imp.review("us", good, ok) is None
+    assert "disposition" in imp.review("us", {**good, "suggested_disposition": "reject"}, ok)
+    unopened = {**good, "sources": [{"url": "https://e.x", "opened": False}]}
+    assert "opened" in imp.review("us", unopened, ok)
+    assert "outside" in imp.review("us", {**good, "admin1_code": "US-PR"}, ok | {"US-PR"})
+    assert "scope scan" in imp.review("us", {**good, "summary": "at 45.1234 N, 34.5 E"}, ok)
+    assert "scope scan" in imp.review("us", {**good, "summary": "the weakest link"}, ok)
+    assert "not a unit" in imp.review("us", {**good, "admin1_code": "US-ZZ"}, ok)
+
+
+@pytest.mark.skipif(not (ROOT / "data" / "raw" / "ne_10m_admin_1.geojson").exists(),
+                    reason="Natural Earth cache not present")
+def test_a_historical_as_of_build_reconstructs_country_systems_instead_of_failing(tmp_path, monkeypatch):
+    """The frozen 2026-08-28 regression build used to die on Saudi events from September 2026.
+    An as-of build must show the record as of that date; only an event after TODAY is an error."""
+    from pipeline import build_systems as B
+    monkeypatch.setattr(B, "PROCESSED", tmp_path)
+    a1, a0 = B.load_admin1(), B.load_admin0()
+    full = B.build_system("sa", a1, a0, "2026-10-30")
+    early = B.build_system("sa", a1, a0, "2026-08-28")
+    assert early["event_summary"]["recorded_events"] < full["event_summary"]["recorded_events"]
+    assert early["event_summary"]["excluded_after_as_of"] > 0
+    ev = json.loads((tmp_path / "systems" / "sa" / "events.json").read_text(encoding="utf-8"))
+    assert all(e["date"] <= "2026-08-28" for e in ev["events"])
+    regions = json.loads((tmp_path / "systems" / "sa" / "regions.geojson").read_text(encoding="utf-8"))
+    placed = sum(f["properties"]["recorded_events"] or 0 for f in regions["features"])
+    assert placed == sum(1 for e in ev["events"] if e["region_code"])
+
+
+# --- iteration-14 red-team findings, each held by a test ---------------------------------------
+
+@needs_systems
+def test_recovery_evidence_always_says_what_kind_it_is():
+    """An estimate, a 'nothing was lost' case and a supply statement used to render as
+    'recovery evidence found'. Evidence must carry its kind; no evidence must carry none."""
+    from pipeline import build_systems as B, systems
+    for sid in systems.COUNTRY_SYSTEMS:
+        for e in _sys_payload(sid, "events.json")["events"]:
+            r = e["recovery"]
+            if r["research_status"] == "EVIDENCE_FOUND":
+                assert r["kind"] in B.RECOVERY_KINDS, e["event_id"]
+            else:
+                assert r["kind"] is None, e["event_id"]
+
+
+@needs_systems
+def test_source_access_is_never_claimed_where_it_was_not_recorded():
+    from pipeline import systems
+    for sid in systems.COUNTRY_SYSTEMS:
+        for e in _sys_payload(sid, "events.json")["events"]:
+            read = any(s.get("opened") is True for s in e["sources"])
+            assert e["review"]["source_access"] == (
+                "at least one source read" if read else "not recorded by the research lane"), e["event_id"]
+
+
+@needs_systems
+def test_shipped_events_carry_no_publisher_headlines_or_lane_notes():
+    from pipeline import systems
+    for sid in systems.COUNTRY_SYSTEMS:
+        for e in _sys_payload(sid, "events.json")["events"]:
+            assert "lane_note" not in e["review"], e["event_id"]
+            assert all("title" not in s for s in e["sources"]), e["event_id"]
+
+
+@needs_systems
+def test_the_manifest_selection_carries_no_country_figures():
+    sel = _manifest()["selection"]
+    assert "values" not in sel and sel["rule"] and sel["caveat"]
+
+
+@needs_systems
+def test_the_home_map_marks_only_the_theatre_area_and_draws_siachen_as_disputed():
+    """The Far Eastern district is Russia but not monitored; Siachen is nobody's."""
+    from pipeline import geo
+    w = json.loads((PROCESSED / "global" / "world.geojson").read_text(encoding="utf-8"))
+
+    def at(lon, lat):
+        return [f["properties"] for f in w["features"] if geo.point_in_geometry(lon, lat, f["geometry"])]
+    assert all(p["system_id"] is None for p in at(158.6, 53.0))        # Kamchatka
+    assert any(p["system_id"] == "ru" for p in at(37.6, 55.75))        # Moscow
+    for p in at(33.52, 44.6):                                           # Sevastopol
+        assert p["a3"] == "UKR" and p["status"] == "occupied", p
+    kas = [f["properties"] for f in w["features"] if f["properties"]["a3"] == "KAS"]
+    assert kas and all(p["status"] == "disputed" and p["system_id"] is None for p in kas)
+
+
+@needs_systems
+def test_the_onboarding_gate_is_published_and_honest():
+    from pipeline import systems
+    for sid in systems.COUNTRY_SYSTEMS:
+        gate = _sys_payload(sid, "system.json")["onboarding_gate"]
+        assert [g["item"] for g in gate] == list(range(1, 9)), sid
+        assert all(g["status"] in ("met", "partial", "unmet") and g["note"] for g in gate)
+        # Freshness and episodes are genuinely partial this iteration; saying otherwise is the
+        # overclaim the gate exists to prevent.
+        assert {g["item"]: g["status"] for g in gate}[7] != "met"
+
+
+@needs_systems
+def test_no_saudi_per_refinery_capacity_ships():
+    """Nothing is scored for Saudi Arabia, so a facility-by-facility capacity list has no purpose
+    during an attack campaign on the same facilities (iteration-14 safety red team)."""
+    text = json.dumps(_sys_payload("sa", "system.json"), ensure_ascii=False)
+    for name in ("Ras Tanura 550", "SASREF 305", "SATORP 465", "SAMREF 402"):
+        assert name not in text
+
+
+@needs_systems
+def test_shipped_country_text_has_no_dependency_or_sub_region_placement():
+    from pipeline import systems
+    banned = ("in-feed", "draws 1,200", "Washington County", "Fort Ransom", "Yellowhead County",
+              "Panshan County", "Qinyuan County", "33 kV lines", "EHV lines tripped", "'s largest")
+    for sid in systems.COUNTRY_SYSTEMS:
+        for e in _sys_payload(sid, "events.json")["events"]:
+            text = " ".join(str(e.get(k) or "") for k in ("facility_name", "summary", "effect"))
+            text += json.dumps(e["recovery"], ensure_ascii=False)
+            hit = [b for b in banned if b in text]
+            assert not hit, (e["event_id"], hit)
+
+
+def test_the_scope_scan_catches_the_red_team_strings_and_not_ordinary_ones():
+    imp = _import_gate()
+    caught = ["45.1234, 34.5678", "lat 45.12 lon 34.56", "https://maps.google.com/?q=45.1,34.2",
+              "12 km north of the town", "kilometres from the border", "within about 20 km of",
+              "at milepost 120", "air-defence systems shot down", "Shahed-136 drones",
+              "Patriot batteries", "Industroyer2 used IEC-104", "CVE-2023-1234 in the SCADA HMI",
+              "phishing then a backdoor", "the sole feed into the city", "only line supplying the port",
+              "no alternative supply route", "N-1 contingency", "most critical node", "a bottleneck",
+              "choke point", "single point-of-failure", "a weak point", "a major in-feed",
+              "Delhi draws 1,200-1,500 MW via the substation"]
+    passed = ["Brent price range of $80", "over 400 miles of transmission lines were affected",
+              "gusts up to 170 km/h", "Hurricane Ian made landfall near Port Charlotte"]
+    assert [s for s in caught if not imp.SCOPE_SCAN.search(s)] == []
+    assert [s for s in passed if imp.SCOPE_SCAN.search(s)] == []
+
+
+def test_review_edits_fail_loudly_when_they_stop_matching():
+    imp = _import_gate()
+    edits = [{"event_id": "x-1", "field": "summary", "replace": ["gone text", "y"], "reason": "r"}]
+    with pytest.raises(SystemExit, match="no longer matches"):
+        imp.apply_edits({"candidate_id": "x-1", "summary": "other"}, edits)
+    out = imp.apply_edits({"candidate_id": "x-1", "summary": "has gone text", "recovery": {}},
+                          edits + [{"event_id": "x-1", "field": "recovery.kind", "set": "estimate"}])
+    assert out["summary"] == "has y" and out["recovery"]["kind"] == "estimate"
+
+
+@pytest.mark.repo_hygiene
+def test_the_candidate_queue_is_not_committed():
+    import subprocess
+    tracked = subprocess.run(["git", "ls-files", "data/candidates"], cwd=ROOT, capture_output=True,
+                             text=True, encoding="utf-8").stdout.split()
+    assert [t for t in tracked if t.endswith(".json")] == [], tracked
+    readme = (ROOT / "data" / "candidates" / "README.md").read_text(encoding="utf-8")
+    assert "deliberately not committed" in readme

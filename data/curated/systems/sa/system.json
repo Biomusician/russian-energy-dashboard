@@ -1,0 +1,86 @@
+{
+  "system_id": "sa",
+  "reporting_environment": "corporate_disclosure",
+  "reporting_note": "Aramco discloses disruption at the level of financial materiality; the energy ministry issues statements after attacks. There is no event register, so the coverage of this record cannot be computed.",
+  "geography": {
+    "unit_label": "region",
+    "units_expected": 13,
+    "note": "13 regions (ISO SA-01 to SA-14; there is no SA-13). Official electricity statistics are reported by four operating areas, not these regions.",
+    "rulings": [
+      {
+        "code": "SA-04",
+        "status": "note",
+        "note": "Includes the Saudi share of the former Saudi-Kuwaiti Neutral Zone."
+      }
+    ]
+  },
+  "sectors": [
+    {
+      "sector": "refining",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "EXPERIMENTAL",
+      "reason": "Denominator ready: Aramco's annual report lists all nine in-Kingdom refineries (gross basis). Four are joint ventures, so numerator and denominator must come from the same gross rows. Not scored. The recovery and decay model behind the Monitored-Area ESDI was calibrated on repeated strikes with almost no restart reporting, and no model for this country's events has been approved (GLOBAL_METHODOLOGY.md §2 and §8.3)."
+    },
+    {
+      "sector": "electric_generation",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "National grid-connected capacity is published quarterly, but no plant list."
+    },
+    {
+      "sector": "transmission",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "National aggregates only; the event-burden measure does not fit."
+    },
+    {
+      "sector": "oil_logistics",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "The ESDI's refining-base proxy breaks for a crude exporter: one export terminal would exceed 100% of it."
+    },
+    {
+      "sector": "gas",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "Processing capacities are EIA estimates; there is no domestic LNG."
+    },
+    {
+      "sector": "coal",
+      "state": "NOT_APPLICABLE",
+      "assessed_readiness": "NOT_APPLICABLE",
+      "reason": "Not applicable: Saudi Arabia has no coal production or coal power (EIA reports zero). The sector does not exist here, which is different from unknown."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Aramco Annual Report",
+      "role": "adopted (facts only)",
+      "licence": "all rights reserved; not redistributed"
+    },
+    {
+      "name": "JODI Oil",
+      "role": "adopted (context)",
+      "licence": "terms not published"
+    },
+    {
+      "name": "GASTAT, SEC, EIA, OPEC",
+      "role": "derived facts only",
+      "licence": "varies"
+    },
+    {
+      "name": "WRI Global Power Plant Database; OSM",
+      "role": "rejected",
+      "licence": "stale to 2016; no refinery or pipeline tagging"
+    }
+  ],
+  "research_gaps": [
+    "Not yet researched: non-conflict incidents in 2022-2025 (industrial fires, heat-related power outages).",
+    "The record is dominated by two conflict episodes (March 2022, and 2026). That reflects how Saudi incidents are reported, not the absence of other disruption."
+  ],
+  "audit_docs": [
+    "docs/countries/SA_SOURCE_AUDIT.md",
+    "docs/countries/SA_INDEX_READINESS.md"
+  ],
+  "provenance": "Authored 2026-10-30 (iteration 14) from the source-audit, readiness and incident lanes' reports. Edit by hand; this file is the curated source."
+}

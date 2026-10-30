@@ -1,0 +1,91 @@
+{
+  "country": "CN",
+  "as_of_note": "Compiled 2026-10-30 by the China source-audit lane. CONTEXT ONLY, never a scoring input. NBS 2025 figures are preliminary (Communique note 1) and whole-economy scope; NBS monthly releases cover only industrial enterprises above designated size and differ in level (2025 electricity: 9,715.9 vs 10,575.25 billion kWh) - never mix the two scopes. Mainland China only (31 provincial-level units); excludes Hong Kong, Macau and Taiwan. See docs/countries/CN_SOURCE_AUDIT.md.",
+  "metrics": [
+    {
+      "metric": "total_energy_production",
+      "value": 5.13,
+      "unit": "billion tonnes of standard coal equivalent",
+      "year": 2025,
+      "source": "NBS Statistical Communique 2025 (preliminary)",
+      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html"
+    },
+    {
+      "metric": "crude_oil_production",
+      "value": 216.087,
+      "unit": "million tonnes",
+      "year": 2025,
+      "source": "NBS Statistical Communique 2025, Table 4 (21608.7 x 10,000 t)",
+      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html"
+    },
+    {
+      "metric": "natural_gas_production",
+      "value": 262.06,
+      "unit": "billion cubic metres",
+      "year": 2025,
+      "source": "NBS Statistical Communique 2025, Table 4 (2620.6 x 100 million m3)",
+      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html"
+    },
+    {
+      "metric": "coal_production",
+      "value": 4.85,
+      "unit": "billion tonnes (raw coal)",
+      "year": 2025,
+      "source": "NBS Statistical Communique 2025, Table 4 (48.5 x 100 million t)",
+      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html"
+    },
+    {
+      "metric": "electricity_generation",
+      "value": 10575.25,
+      "unit": "TWh",
+      "year": 2025,
+      "source": "NBS Statistical Communique 2025, Table 4 (105752.5 x 100 million kWh)",
+      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html"
+    },
+    {
+      "metric": "generating_capacity",
+      "value": 3891.34,
+      "unit": "GW, installed at year end",
+      "year": 2025,
+      "source": "NBS Statistical Communique 2025 (thermal 1539.04, hydro 448.02, nuclear 62.48, wind 640.01, solar 1201.73 GW; solar AC/DC basis not stated)",
+      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html"
+    },
+    {
+      "metric": "refining_capacity",
+      "value": 19,
+      "unit": "million barrels per day",
+      "year": 2024,
+      "basis": "EIA-stated national total refinery capacity, citing Reuters; nameplate/operable basis and inclusion of independent refiners NOT stated. Secondary figure. No open single-basis plant registry reconciles to it.",
+      "source": "EIA Country Analysis Brief: China (May 2025)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/china/pdf/China-2025.pdf"
+    },
+    {
+      "metric": "crude_oil_processing",
+      "value": 737.59,
+      "unit": "million tonnes (throughput, not capacity)",
+      "year": 2025,
+      "basis": "Industrial enterprises above designated size (annual main business revenue >= 20 million yuan)",
+      "source": "NBS, Energy Production in December 2025",
+      "url": "https://www.stats.gov.cn/english/PressRelease/202601/t20260120_1962355.html"
+    },
+    {
+      "metric": "lng_imports",
+      "value": 3.5,
+      "unit": "trillion cubic feet",
+      "year": 2023,
+      "basis": "EIA brief. A 2025 customs figure was seen only in search snippets of paywalled or blocked pages and is omitted as unverified; GACC was unreachable.",
+      "source": "EIA Country Analysis Brief: China (May 2025)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/china/pdf/China-2025.pdf"
+    }
+  ],
+  "significance": [
+    "EIA describes China as the world's top coal producer and consumer (2023 production 4.8 billion short tons).",
+    "China's total primary energy output was 5.13 billion tonnes of standard coal equivalent in 2025 (NBS, preliminary).",
+    "China's installed generating capacity reached 3,891.34 GW at end-2025, including 1,201.73 GW of solar and 640.01 GW of wind (NBS).",
+    "EIA reports China was the top global natural gas importer in 2023, with LNG 61% of imports."
+  ],
+  "significance_sources": [
+    "https://www.eia.gov/international/content/analysis/countries_long/china/pdf/China-2025.pdf",
+    "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html"
+  ]
+}

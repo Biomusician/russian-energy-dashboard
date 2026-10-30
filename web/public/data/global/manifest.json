@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "build_time": "2026-10-30T22:40:19+00:00",
+  "selection": {
+    "rule": "The five largest total primary energy producers in the world, excluding Russia.",
+    "source": "U.S. EIA International Energy Statistics, total primary energy production, 2024",
+    "source_url": "https://www.eia.gov/international/data/world",
+    "unit": "quadrillion Btu",
+    "caveat": "Canada and India differ by about 1% and swap order in the Energy Institute Statistical Review for the same year. The set of five is stable across both sources; the order within it is not, and the dashboard does not display one."
+  },
+  "comparability_statement": "Each country is measured on its own terms. Event counts reflect what is publicly reported under that country's reporting rules, not how often disruption happens. A country with fewer recorded events is not shown to be safer, more resilient or less disrupted. Figures are not comparable across countries and are never ranked.",
+  "reporting_environments": {
+    "mandatory_regulatory": "Operators must report qualifying outages to a regulator, and many of those reports are public.",
+    "mixed_regulatory": "Some outage reporting is mandatory and public; much is not, and press and company statements fill the gap.",
+    "corporate_disclosure": "Disruption is disclosed mainly through company and ministry statements, usually only when material to investors or the state.",
+    "media_only": "Operators and authorities do not publish event-level outage reports. Events come from media and company statements, so most smaller disruptions will not appear.",
+    "conflict_restricted": "Disruption is reported under wartime restrictions by the authorities concerned, so independent, attacker-side and open-source reporting carry most of the record."
+  },
+  "order": "alphabetical by name; never by any figure",
+  "systems": [
+    {
+      "id": "ca",
+      "name": "Canada",
+      "kind": "country",
+      "root": "systems/ca",
+      "evidence_readiness": "CONTEXT_ONLY",
+      "index": null,
+      "headline": null,
+      "reporting_environment": "mixed_regulatory",
+      "as_of": "2026-10-30",
+      "bounds": [
+        -141.01,
+        41.67,
+        -52.63,
+        83.12
+      ],
+      "files": [
+        "system.json",
+        "events.json",
+        "regions.geojson"
+      ]
+    },
+    {
+      "id": "cn",
+      "name": "China",
+      "kind": "country",
+      "root": "systems/cn",
+      "evidence_readiness": "CONTEXT_ONLY",
+      "index": null,
+      "headline": null,
+      "reporting_environment": "media_only",
+      "as_of": "2026-10-30",
+      "bounds": [
+        73.6,
+        15.78,
+        134.77,
+        53.57
+      ],
+      "files": [
+        "system.json",
+        "events.json",
+        "regions.geojson"
+      ]
+    },
+    {
+      "id": "in",
+      "name": "India",
+      "kind": "country",
+      "root": "systems/in",
+      "evidence_readiness": "CONTEXT_ONLY",
+      "index": null,
+      "headline": null,
+      "reporting_environment": "mixed_regulatory",
+      "as_of": "2026-10-30",
+      "bounds": [
+        68.14,
+        6.75,
+        97.36,
+        35.5
+      ],
+      "files": [
+        "system.json",
+        "events.json",
+        "regions.geojson"
+      ]
+    },
+    {
+      "id": "ru",
+      "name": "Russia, Belarus & Crimea",
+      "kind": "theatre",
+      "root": "",
+      "evidence_readiness": "INDEX_READY",
+      "index": {
+        "id": "esdi",
+        "name": "Monitored-Area ESDI"
+      },
+      "headline": {
+        "value": 8.33,
+        "as_of": "2026-10-30",
+        "label": "Monitored-Area ESDI",
+        "meaning": "Capacity at disrupted sites, not measured loss."
+      },
+      "reporting_environment": "conflict_restricted",
+      "as_of": "2026-10-30",
+      "files": [
+        "snapshot.json"
+      ]
+    },
+    {
+      "id": "sa",
+      "name": "Saudi Arabia",
+      "kind": "country",
+      "root": "systems/sa",
+      "evidence_readiness": "CONTEXT_ONLY",
+      "index": null,
+      "headline": null,
+      "reporting_environment": "corporate_disclosure",
+      "as_of": "2026-10-30",
+      "bounds": [
+        34.57,
+        16.37,
+        55.64,
+        32.12
+      ],
+      "files": [
+        "system.json",
+        "events.json",
+        "regions.geojson"
+      ]
+    },
+    {
+      "id": "us",
+      "name": "United States",
+      "kind": "country",
+      "root": "systems/us",
+      "evidence_readiness": "CONTEXT_ONLY",
+      "index": null,
+      "headline": null,
+      "reporting_environment": "mandatory_regulatory",
+      "as_of": "2026-10-30",
+      "bounds": [
+        -187.52,
+        18.91,
+        -66.98,
+        71.41
+      ],
+      "files": [
+        "system.json",
+        "events.json",
+        "regions.geojson"
+      ]
+    }
+  ]
+}

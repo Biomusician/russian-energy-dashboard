@@ -345,3 +345,72 @@ The analyst candidate queue. Columns: `candidate_id, proposed_date, region_code,
 asset_class, cause, confidence_or_status, research_status (accepted|rejected|hold),
 decision_reason, source_urls`. **Not read by the scoring pipeline** — only analyst-approved
 rows are copied into `incidents.csv`.
+
+## Iteration 14: country systems and the global manifest
+
+Everything below lives beside the theatre's files, never in place of them. Generated paths are
+declared in `pipeline/artifacts.py`.
+
+### Input: `data/curated/systems/<id>/system.json` (hand-curated)
+
+| Field | Meaning |
+|---|---|
+| `reporting_environment` | one of `mandatory_regulatory`, `mixed_regulatory`, `corporate_disclosure`, `media_only`, `conflict_restricted` |
+| `reporting_note` | country-specific sentence on how disruption gets reported |
+| `geography` | `unit_label`, `units_expected` (the build fails on a mismatch), `note`, `rulings[]` (`code`, `status`: `contains_disputed_area` / `disputed_unassigned` / `note`, `note`) |
+| `sectors[]` | one per sector: `sector`, `state` (GLOBAL_METHODOLOGY §7.1), `assessed_readiness` (the lane's verdict on what the evidence could reach), `reason` |
+| `sources[]`, `research_gaps[]`, `audit_docs[]` | provenance |
+
+### Input: `data/curated/systems/<id>/events.json` (written by `scripts/import_candidates.py`)
+
+`{"system_id", "events": [...]}`; each event has exactly the fields in
+`build_systems.EVENT_FIELDS`: `event_id`, `date`, `date_precision`, `date_end`, `region_code`
+(null unless `geography_precision` is `admin1`), `region_name`, `geography_precision`
+(`admin1` | `country`), `regions_affected` (listed, never counted), `facility_name`,
+`facility_name_local`, `operator`, `asset_class`, `cause`, `summary`, `effect`,
+`inclusion_basis` (`reported_effect` | `occurrence`), `criterion_met` (threshold clause 1-7),
+`threshold_basis`, `capacity_affected` (`value`, `unit`, `source_says`), `sources[]` (`url`,
+`publisher`, `date`, `language`, `source_role`, `opened`: true / false / null = not recorded;
+no headline titles), `recovery` (`research_status`: `EVIDENCE_FOUND` |
+`RESEARCHED_NO_PUBLIC_EVIDENCE` | `NOT_YET_RESEARCHED`; `kind`, required with evidence and null
+otherwise: `full_restart`, `partial_restart`, `service_restored`, `partial_restoration`,
+`estimate`, `supply_unaffected_statement`, `no_supply_lost`; `date`, `evidence`, `url`),
+`review` (`reviewed`, `threshold_version`, `process`, `source_access`). **No coordinates, ever.**
+
+### Input: `data/curated/systems/inclusion_threshold.json`
+
+The versioned major-disruption standard: `version`, `rule`, `clauses` (1-7), `exclusions`,
+`known_weaknesses`. Applies to country systems only, never to the theatre corpus.
+
+### Output: `systems/<id>/system.json`
+
+The curated definition plus: `evidence_readiness` (derived from sector states: `INDEX_READY`,
+`EXPERIMENTAL`, `CONTEXT_ONLY`, `INSUFFICIENT_EVIDENCE`), `index: null`, `headline: null`,
+`no_index_reason`, `comparability: "none"`, `comparability_statement`, `geography.bounds`
+(antimeridian-safe) and `geography.view_bounds` (where the map opens; curated for the US),
+`event_summary` (counts, `excluded_after_as_of`, recovery status and kind splits, date range),
+the threshold, the taxonomy labels actually used, `profile` (sourced context metrics),
+`record_reviewed` and `review_freshness_days` (the curated record's own date, distinct from the
+build date), and `onboarding_gate` (the eight items of GLOBAL_METHODOLOGY §7.2, each `met`,
+`partial` or `unmet` with a note).
+
+The key is `evidence_readiness`, not `readiness`: `readiness` is on the scope boundary's
+forbidden-field list (force readiness), and the safety gate is not exempted for a synonym.
+
+### Output: `systems/<id>/events.json`, `systems/<id>/regions.geojson`
+
+Events as above, sorted by date. Regions: one feature per first-level unit with `code` (ISO
+3166-2, Indian codes as revised in 2023, `CN-HK`/`CN-MO` for the SARs), `name`, `status`, `note`,
+`recorded_events` (count of admin-1 events; `null` for a disputed, unassigned unit).
+
+### Output: `global/manifest.json`, `global/world.geojson`
+
+Manifest: `schema_version`, `build_time`, `selection` (rule, source, source_url, caveat; no
+country figures), `order` (a statement that the order is alphabetical, never by a figure),
+`comparability_statement`, `reporting_environments`, and `systems[]` in registry
+(alphabetical) order, each with `id`, `name`, `kind`, `root`, `evidence_readiness`, `index`,
+`headline` (theatre only: `value`, `as_of`, `label`, `meaning`), `reporting_environment`,
+`as_of`, `bounds`, `files`. It carries no count, score or rank for any country.
+
+World: admin-0 features `a3`, `name`, `system_id` (null if unmonitored), `status`. Russia is
+drawn from admin-1; Crimea and Sevastopol are `a3: "UKR"`, `status: "occupied"`.

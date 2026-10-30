@@ -1,0 +1,96 @@
+{
+  "system_id": "cn",
+  "reporting_environment": "media_only",
+  "reporting_note": "Event-level outage reports are not published by operators or regulators. Accident reporting centres on casualties and accountability, not output, and much of it is in Chinese only.",
+  "geography": {
+    "unit_label": "province-level unit",
+    "units_expected": 34,
+    "note": "31 provinces, autonomous regions and municipalities, plus Hong Kong and Macau as special administrative regions, and the Paracel Islands as drawn by Natural Earth. Boundaries show the line of actual control (Natural Earth's default edition), which is an analytic choice, not a statement about sovereignty. Taiwan is not part of this system.",
+    "rulings": [
+      {
+        "code": "CN-XJ",
+        "status": "contains_disputed_area",
+        "note": "Contains Aksai Chin, administered by China and claimed by India."
+      },
+      {
+        "code": "CN-XZ",
+        "status": "contains_disputed_area",
+        "note": "Borders Arunachal Pradesh, which China claims and India administers; that territory is drawn with India."
+      },
+      {
+        "code": "CN-X01~",
+        "status": "disputed_unassigned",
+        "note": "Paracel Islands: administered by China, claimed by Vietnam and Taiwan. Drawn; never assigned an event."
+      }
+    ]
+  },
+  "sectors": [
+    {
+      "sector": "refining",
+      "state": "INSUFFICIENT_EVIDENCE",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "No complete single-basis refinery registry exists in open data; the independent and large private refiners are covered only by commercial databases."
+    },
+    {
+      "sector": "electric_generation",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "Becomes EXPERIMENTAL only once GEM's unit-level power tracker is acquired; capacity grew 16% in 2025, so a frozen denominator would be a first-order error. Not scored. The recovery and decay model behind the Monitored-Area ESDI was calibrated on repeated strikes with almost no restart reporting, and no model for this country's events has been approved (GLOBAL_METHODOLOGY.md §2 and §8.3)."
+    },
+    {
+      "sector": "transmission",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "No open inventory, and the saturation measure does not transfer."
+    },
+    {
+      "sector": "oil_logistics",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "No terminal registry."
+    },
+    {
+      "sector": "gas",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "Production is a flow, not a capacity; processing and storage have no registry; LNG import terminal fields are unverified."
+    },
+    {
+      "sector": "coal",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "EXPERIMENTAL",
+      "reason": "GEM coal trackers are unit-level but mines have no province field, and administrative safety suspensions are a concept the taxonomy lacks."
+    }
+  ],
+  "sources": [
+    {
+      "name": "NBS Statistical Communiqué and monthly energy releases",
+      "role": "adopted (context)",
+      "licence": "facts only"
+    },
+    {
+      "name": "NEA power releases",
+      "role": "adopted (context)",
+      "licence": "facts only"
+    },
+    {
+      "name": "GEM coal plant, coal mine and integrated power trackers",
+      "role": "denominator candidates (not yet acquired)",
+      "licence": "CC BY 4.0"
+    },
+    {
+      "name": "WRI Global Power Plant Database",
+      "role": "rejected",
+      "licence": "covers about 36% of 2025 capacity"
+    }
+  ],
+  "research_gaps": [
+    "Not yet researched: East China industrial power curbs (Aug 2022), winter gas shortages, Typhoon Saola 2023 customer counts, power-plant outages, and restoration dates for the Sichuan and Chongqing curbs.",
+    "Several typhoon outages have no sourced customer count and are held as insufficient evidence rather than inferred."
+  ],
+  "audit_docs": [
+    "docs/countries/CN_SOURCE_AUDIT.md",
+    "docs/countries/CN_INDEX_READINESS.md"
+  ],
+  "provenance": "Authored 2026-10-30 (iteration 14) from the source-audit, readiness and incident lanes' reports. Edit by hand; this file is the curated source."
+}

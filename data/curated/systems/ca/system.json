@@ -1,0 +1,80 @@
+{
+  "system_id": "ca",
+  "reporting_environment": "mixed_regulatory",
+  "reporting_note": "The Canada Energy Regulator publishes pipeline incidents; refinery, generation and distribution outages are reported by operators and press, and provincial outage feeds are live-only.",
+  "geography": {
+    "unit_label": "province or territory",
+    "units_expected": 13,
+    "note": "10 provinces and 3 territories.",
+    "rulings": []
+  },
+  "sectors": [
+    {
+      "sector": "refining",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "EXPERIMENTAL",
+      "reason": "CER publishes about 1.93 million b/d across 17 refineries (2024). Upgraders must be excluded or the total is overstated by about 80%. Not scored. The recovery and decay model behind the Monitored-Area ESDI was calibrated on repeated strikes with almost no restart reporting, and no model for this country's events has been approved (GLOBAL_METHODOLOGY.md §2 and §8.3)."
+    },
+    {
+      "sector": "electric_generation",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "EXPERIMENTAL",
+      "reason": "Statistics Canada publishes installed capacity by province and year, but there is no current open plant list. Not scored. The recovery and decay model behind the Monitored-Area ESDI was calibrated on repeated strikes with almost no restart reporting, and no model for this country's events has been approved (GLOBAL_METHODOLOGY.md §2 and §8.3)."
+    },
+    {
+      "sector": "transmission",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "No national register, and the event-burden measure does not fit weather outages. Event tracking only."
+    },
+    {
+      "sector": "oil_logistics",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "EXPERIMENTAL",
+      "reason": "Pipeline capacity is published; there is no open terminal capacity census."
+    },
+    {
+      "sector": "gas",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "Processing incomplete; pipelines experimental; LNG export (one terminal) is context only."
+    },
+    {
+      "sector": "coal",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "Coal power is published within generation by province and year."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Statistics Canada tables (web API)",
+      "role": "adopted",
+      "licence": "Statistics Canada Open Licence"
+    },
+    {
+      "name": "Canada Energy Regulator open data",
+      "role": "adopted",
+      "licence": "Open Government Licence - Canada 2.0; incident latitude/longitude never read"
+    },
+    {
+      "name": "NRCan facility layers; AESO, IESO, Hydro-Québec",
+      "role": "derived facts only",
+      "licence": "stale or non-commercial"
+    },
+    {
+      "name": "CER pipeline map data",
+      "role": "rejected",
+      "licence": "reproduction prohibited"
+    }
+  ],
+  "research_gaps": [
+    "Not yet researched: 2023 BC gas shut-ins, in-window Alberta refinery and upgrader fires, coal-mine events, nuclear forced outages, New Brunswick during Fiona.",
+    "The 100,000-customer clause rejects province-wide outages in small provinces (Fiona on PEI: about 95% of the island); a share-of-customers test is an open methodology question."
+  ],
+  "audit_docs": [
+    "docs/countries/CA_SOURCE_AUDIT.md",
+    "docs/countries/CA_INDEX_READINESS.md"
+  ],
+  "provenance": "Authored 2026-10-30 (iteration 14) from the source-audit, readiness and incident lanes' reports. Edit by hand; this file is the curated source."
+}

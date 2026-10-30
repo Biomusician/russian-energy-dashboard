@@ -14,16 +14,26 @@ export type PixelStats = { width: number; height: number; distinct: number; spre
 
 export class App {
   readonly errors: string[] = [];
+  private allowed: RegExp[] = [];
 
   constructor(readonly page: Page) {
     page.on("console", (msg: ConsoleMessage) => {
-      if (msg.type() === "error") this.errors.push(`console: ${msg.text()}`);
+      if (msg.type() === "error" && !this.allowed.some((r) => r.test(msg.text()))) {
+        this.errors.push(`console: ${msg.text()}`);
+      }
     });
     page.on("pageerror", (err) => this.errors.push(`pageerror: ${err.message}`));
   }
 
-  /** Open the app at `query` and wait until the map has genuinely finished drawing. */
-  async open(query = "") {
+  /** A test that deliberately breaks something (a failed fetch) declares the exact console line
+   *  it expects. Everything else still fails the test. */
+  allowConsoleError(pattern: RegExp) {
+    this.allowed.push(pattern);
+  }
+
+  /** Open the app at `query` and wait until the map has genuinely finished drawing.
+   *  The default is the Russia theatre: since iteration 14 a bare URL is the global home. */
+  async open(query = "?sys=ru") {
     await this.page.goto(`/${query}`);
     await this.mapIdle();
   }

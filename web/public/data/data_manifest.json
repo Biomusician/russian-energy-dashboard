@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-10-30T11:26:56+00:00",
+  "build_time": "2026-10-30T22:40:19+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -9,12 +9,12 @@
     },
     {
       "name": "build_changes.json",
-      "bytes": 8655,
+      "bytes": 3753,
       "optional": false
     },
     {
       "name": "data_quality.json",
-      "bytes": 26321,
+      "bytes": 26322,
       "optional": false
     },
     {
@@ -99,7 +99,7 @@
     },
     {
       "name": "context_oil_network.geojson",
-      "bytes": 358086,
+      "bytes": 358087,
       "optional": true
     },
     {

@@ -1,3 +1,4 @@
+import SystemSwitcher from "../global/SystemSwitcher";
 import type { Bundle } from "../types";
 import { fmtDate, fmtDelta, fmtNum } from "../data";
 import { assessFreshness } from "../freshness";
@@ -31,7 +32,9 @@ export default function Ribbon({
   onBriefing?: () => void;
 }) {
   const { national, snapshot, taxonomy } = bundle;
-  const esdi = national.esdi[step] ?? 0;
+  // null, never 0, when the series has no value at this step: 0 would claim "measured, nothing
+  // wrong" for a date the index was never computed on (iteration 14 found the `?? 0`).
+  const esdi = national.esdi[step] ?? null;
   const isLatest = step === national.dates.length - 1;
   const coverage = snapshot.coverage;
   const rs = snapshot.recovery_stats;
@@ -45,6 +48,7 @@ export default function Ribbon({
       <div className="ribbon-brand">
         <h1 className="ribbon-title">Energy Disruption Monitor</h1>
         <div className="ribbon-sub">Belarus, western Russia &amp; Siberia + occupied Crimea · admin-region level</div>
+        <SystemSwitcher current="ru" />
         <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
           <button className="ghost" onClick={onOpenMethodology}>Methodology &amp; caveats</button>
           <button className="ghost" onClick={() => onExplain({ kind: "quality" })}>
@@ -67,7 +71,10 @@ export default function Ribbon({
       </div>
 
       <div className="esdi-block">
-        <div className="esdi-value" style={{ color: severityColor(esdi) }}>{fmtNum(esdi, 1)}</div>
+        <div className="esdi-value" style={{ color: esdi == null ? "var(--text-faint)" : severityColor(esdi) }}
+             title={esdi == null ? "No index value exists for this date." : undefined}>
+          {fmtNum(esdi, 1)}
+        </div>
         <div className="esdi-meta">
           <div className="eyebrow">Monitored-Area ESDI</div>
           {/* P2: "live" used to mean nothing more than "the scrubber is at the last timeline
@@ -116,7 +123,8 @@ export default function Ribbon({
 
       <div className="sector-strip">
         {coveredSectors.map((key) => {
-          const value = national.sectors[key]?.[step] ?? 0;
+          const value = national.sectors[key]?.[step] ?? null;
+          const color = value == null ? "var(--text-faint)" : severityColor(value);
           return (
             <button
               key={key}
@@ -125,8 +133,8 @@ export default function Ribbon({
               title={`Explain ${taxonomy.sectors[key] ?? key}`}
             >
               <div className="eyebrow">{taxonomy.sectors[key] ?? key}</div>
-              <div className="num" style={{ fontSize: 19, marginTop: 4, color: severityColor(value) }}>{fmtNum(value, 1)}</div>
-              <div className="sector-bar"><i style={{ width: `${Math.min(100, value)}%`, background: severityColor(value) }} /></div>
+              <div className="num" style={{ fontSize: 19, marginTop: 4, color }}>{fmtNum(value, 1)}</div>
+              <div className="sector-bar"><i style={{ width: `${Math.min(100, value ?? 0)}%`, background: color }} /></div>
               <span className="cell-explain">explain</span>
             </button>
           );

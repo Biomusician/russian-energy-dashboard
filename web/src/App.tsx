@@ -320,7 +320,10 @@ export default function App() {
       camera,
       compare: compareRegions,
     });
-    window.history.replaceState(null, "", q ? `${window.location.pathname}?${q}` : window.location.pathname);
+    // `sys=ru` leads every theatre URL (iteration 14). A bare URL now opens the global home, so
+    // without it the theatre's own default view would reload as a different page. Links made
+    // before iteration 14 carry no `sys` and still open here: see global/router.ts.
+    window.history.replaceState(null, "", `${window.location.pathname}?sys=ru${q ? `&${q}` : ""}`);
   }, [bundle, filters, selected, step, camera, compareRegions]);
 
   // --- responsive layout (hotfix) ---------------------------------------------------------

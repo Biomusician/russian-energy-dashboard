@@ -105,13 +105,14 @@ export function canvasHasContent(canvas: HTMLCanvasElement): boolean {
   const h = canvas.height;
   if (!w || !h) return false;
   const samples: string[] = [];
-  const pts: [number, number][] = [
-    [Math.floor(w * 0.5), Math.floor(h * 0.5)],
-    [Math.floor(w * 0.25), Math.floor(h * 0.4)],
-    [Math.floor(w * 0.75), Math.floor(h * 0.6)],
-    [Math.floor(w * 0.5), Math.floor(h * 0.2)],
-    [Math.floor(w * 0.5), Math.floor(h * 0.8)],
-  ];
+  // A 9x9 grid, not five points. Five points sufficed for the dense theatre map, but a country
+  // whose frame is mostly large regions of one fill (Canada's north, with no recorded events)
+  // put all five on the same colour and a correctly drawn map was refused as blank (iteration
+  // 14). A genuinely blank capture is still one colour at all 81 points.
+  const pts: [number, number][] = [];
+  for (let i = 1; i <= 9; i++) {
+    for (let j = 1; j <= 9; j++) pts.push([Math.floor((w * i) / 10), Math.floor((h * j) / 10)]);
+  }
   const px = new Uint8Array(4);
   for (const [x, y] of pts) {
     (gl as WebGLRenderingContext).readPixels(

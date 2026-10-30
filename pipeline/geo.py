@@ -256,9 +256,18 @@ def simplify_geometry(geom, tolerance, min_ring_points=6):
     Rings that collapse below `min_ring_points` after simplification are dropped
     entirely -- they are slivers and islands too small to see at dashboard zoom.
     A polygon whose outer ring is dropped is dropped with it.
+
+    But a REGION is never dropped. Wyoming and Colorado are near-rectangles that simplify to
+    five points (four corners, closed) and used to vanish from the map entirely (iteration 14).
+    If every polygon would go, the one with the most simplified outer-ring points is kept, so
+    long as it is still a valid ring.
     """
     out_polys = []
+    fallback = None
     for poly in _polygons(geom):
+        outer = simplify_ring(poly[0], tolerance)
+        if len(outer) >= 4 and (fallback is None or len(outer) > len(fallback[0])):
+            fallback = [outer]
         rings = []
         for i, ring in enumerate(poly):
             s = simplify_ring(ring, tolerance)
@@ -270,7 +279,9 @@ def simplify_geometry(geom, tolerance, min_ring_points=6):
         if rings:
             out_polys.append(rings)
     if not out_polys:
-        return None
+        if fallback is None:
+            return None
+        out_polys = [fallback]
     if len(out_polys) == 1:
         return {"type": "Polygon", "coordinates": out_polys[0]}
     return {"type": "MultiPolygon", "coordinates": out_polys}

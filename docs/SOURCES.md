@@ -308,3 +308,29 @@ TurkStream and Blue Stream landfalls do not appear.
 
 `rivers.geojson` from Natural Earth 50m `rivers_lake_centerlines`, emphasis by `scalerank`.
 Geographic context only — never scored. Attribution is carried in the map footer.
+
+## 9. Country systems (iteration 14)
+
+Each country's sources are audited in `docs/countries/<CC>_SOURCE_AUDIT.md`, with a licence
+verdict per source: **adopt**, **derived facts only** (facts restated with citation, nothing
+redistributed), **discovery only**, or **reject**. The curated `system.json` lists the summary;
+every event carries its own cited URLs.
+
+What reaches the repository and the site:
+
+| Source | Used for | Licence / attribution |
+|---|---|---|
+| Natural Earth 1:10m admin-1, 1:50m admin-0 | country-system regions, world map | public domain; default edition (line of actual control) |
+| Events: public reporting (wires, newspapers, regulators, operators, ministries) | event summaries in our own words, with links | facts and links only; no text or data redistributed |
+| EIA (US public domain), Statistics Canada (Open Licence), CER (OGL-Canada 2.0) | context metrics in `profile.json` | attribution required for the Canadian sources; given in each metric's `source` |
+| NBS, NEA, Aramco, PPAC, CEA, SEC, GASTAT and others | context metrics, restated facts | derived facts only; each metric cites its document |
+
+**Ruled out for redistribution:** GADM (no redistribution without permission), geoBoundaries
+India (draws the claimed boundary) and China (includes Taiwan), CER pipeline map data
+(reproduction prohibited), Aramco reports as files (all rights reserved), commercial refinery
+databases.
+
+**Fields never read**, whatever the source publishes: incident latitude/longitude (PHMSA, CER),
+facility-level substation and line geometry, pipeline route maps, plant coal-stock days,
+reservoir levels, pipeline utilisation, inter-regional transfer capacity, anything describing
+vulnerability, defences or attack method.

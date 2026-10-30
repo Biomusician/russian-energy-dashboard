@@ -676,6 +676,12 @@ def main():
     }
     write_json(PROCESSED / "data_manifest.json", manifest, indent=2)
 
+    # Iteration 14: the country systems and the global manifest. Built after the theatre because
+    # the manifest carries the theatre's headline and build date; built before the mirror so
+    # one copy step publishes everything.
+    from pipeline import build_systems
+    build_systems.build(snapshot)
+
     _mirror_to_web()
 
     # Single source of truth for headline numbers (§2) — regenerated every build so no doc
@@ -711,6 +717,15 @@ def _mirror_to_web():
     for path in PROCESSED.glob("*.geojson"):
         shutil.copy2(path, WEB_DATA / path.name)
         copied += 1
+    # Country systems and the global home live in subdirectories. Each is mirrored as a whole
+    # tree and pruned the same way, so a payload the build stops producing cannot linger.
+    for sub in ("global", "systems"):
+        src, dst = PROCESSED / sub, WEB_DATA / sub
+        if dst.exists():
+            shutil.rmtree(dst)
+        if src.exists():
+            shutil.copytree(src, dst)
+            copied += sum(1 for p in src.rglob("*") if p.is_file())
     log(f"web: mirrored {copied} files to {WEB_DATA}")
 
 

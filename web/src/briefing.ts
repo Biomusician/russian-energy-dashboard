@@ -272,7 +272,7 @@ export function buildBriefingContext(args: {
 
   let metricValue: string | null = null;
   if (metricId === "esdi") {
-    metricValue = fmtNum(bundle.national.esdi[step] ?? 0, 2);
+    metricValue = fmtNum(bundle.national.esdi[step] ?? null, 2);   // "—", never 0.00, if absent
   } else if (metricId === "incidents") {
     // The count the MAP is showing: filtered, and up to the displayed date. `incident_total` is
     // the as-of total for the whole corpus, so a frame scrubbed to 2024 — or filtered to one

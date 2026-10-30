@@ -459,3 +459,29 @@ The emitted payload carries `schema_version` and a `data_manifest.json` (files +
 optional flags). The frontend renders schema N and N-1, degrades on skew, and lazy-loads the
 optional context layers — a missing or late optional file yields an empty layer, never a
 white screen.
+
+## 10. Country systems (iteration 14)
+
+Full analysis: [GLOBAL_METHODOLOGY.md](GLOBAL_METHODOLOGY.md). The decisions in force:
+
+- **The Monitored-Area ESDI stays theatre-only.** Its sector weights are an unvalidated judgement
+  set at the MVP; its decay horizons were calibrated on repeated strikes with almost no restart
+  reporting; its transmission measure saturates at eight struck substations, which any country
+  with routine grid reporting would pin at 100. None of that transfers to hurricanes, wildfires
+  and refinery fires. Re-using it silently would produce numbers that look comparable and are
+  not. This section changes nothing about how the ESDI itself is computed.
+- **Country systems publish no score.** `index` and `headline` are `null` with a stated reason.
+  Every sector carries one of six states (SCORED, EXPERIMENTAL, CONTEXT_ONLY,
+  INSUFFICIENT_EVIDENCE, NOT_APPLICABLE, NOT_YET_RESEARCHED) and a reason; this iteration none
+  exceeds CONTEXT_ONLY, because no recovery model for a country has been approved. The lanes'
+  assessments of what each sector *could* reach are published beside the state.
+- **Events meet a declared threshold** (`data/curated/systems/inclusion_threshold.json`, seven
+  clauses) and carry the clause they met. The threshold is not applied to the theatre corpus,
+  which predates it and mostly would not pass it.
+- **No cross-country comparison of counts or scores.** Context, freshness, readiness, evidence
+  coverage and reporting environment may be compared; counts and scores may not. Systems are
+  listed alphabetically, and every count appears beside the reporting environment that produced
+  it.
+- **Owner decisions outstanding** are listed in GLOBAL_METHODOLOGY.md §8: the recovery model for
+  non-conflict events, new causes (natural hazard, labour, supply shortfall) and an upstream
+  sector, threshold parameters, grid consequence measures, and disputed-territory aggregate rules.

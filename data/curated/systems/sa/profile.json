@@ -1,0 +1,106 @@
+{
+  "country": "SA",
+  "as_of_note": "Compiled 2026-10-30 by the Saudi Arabia source-audit lane. CONTEXT ONLY: never a scoring input. Every value was read from the cited document in this session; mixed vintages (2022-2025) are stated per row and must not be combined into one 'current' picture. Bases differ by source (country totals from EIA; company totals from Aramco; grid-connected capacity from SEC) and are labelled on each row. OPEC, Energy Institute and Saudi government sites were not machine-readable on this date, so no figure is taken from them. See docs/countries/SA_SOURCE_AUDIT.md.",
+  "metrics": [
+    {
+      "metric": "total_energy_production",
+      "value": 29.7,
+      "unit": "quadrillion Btu (primary energy production)",
+      "year": 2022,
+      "basis": "country total; 85% petroleum liquids, 15% natural gas, 0% coal",
+      "source": "U.S. EIA, Country Analysis Brief: Saudi Arabia, Table 1 (last updated 2024-10-04)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/saudi_arabia/"
+    },
+    {
+      "metric": "crude_oil_production",
+      "value": 9.5,
+      "unit": "million barrels per day",
+      "year": 2023,
+      "basis": "country total, crude oil only (EIA International Energy Statistics)",
+      "source": "U.S. EIA, Country Analysis Brief: Saudi Arabia (last updated 2024-10-04)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/saudi_arabia/"
+    },
+    {
+      "metric": "aramco_total_liquids_production",
+      "value": 10678,
+      "unit": "thousand barrels per day",
+      "year": 2025,
+      "basis": "Aramco company total; crude oil + NGL + condensate, so NOT comparable with crude_oil_production",
+      "source": "Saudi Aramco, Fourth quarter and full-year 2025 results press release",
+      "url": "https://www.aramco.com/-/media/publications/corporate-reports/reports-and-presentations/2025/fy/saudi-aramco-fy-2025-results-press-release-english.pdf"
+    },
+    {
+      "metric": "natural_gas_production",
+      "value": 4.3,
+      "unit": "trillion cubic feet (dry natural gas)",
+      "year": 2023,
+      "basis": "country total, dry gas; EIA states 4.3 Tcf in both 2022 and 2023",
+      "source": "U.S. EIA, Country Analysis Brief: Saudi Arabia (last updated 2024-10-04)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/saudi_arabia/"
+    },
+    {
+      "metric": "electricity_generation",
+      "value": 453,
+      "unit": "TWh",
+      "year": 2023,
+      "basis": "country total, EIA estimate (62% natural gas, 38% oil, <1% renewables)",
+      "source": "U.S. EIA, Country Analysis Brief: Saudi Arabia (last updated 2024-10-04)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/saudi_arabia/"
+    },
+    {
+      "metric": "generating_capacity",
+      "value": 93858,
+      "unit": "MW",
+      "year": 2025,
+      "basis": "Kingdom grid-connected capacity at end of Q3 2025 (SEC 55,962; IPP & IWPP 22,572; Others 15,324). Excludes most captive generation: Aramco reports 6.3 GW captive in 2025, of which 0.5 GW was supplied to the grid",
+      "source": "Saudi Electricity Company, Earnings Release Q3 2025 (November 2025)",
+      "url": "https://www.se.com.sa/-/media/sec/Investors/Earning-Reports/SEC_ER_2025-Q3_Final.ashx"
+    },
+    {
+      "metric": "refining_capacity",
+      "value": 3352,
+      "unit": "thousand barrels per day",
+      "year": 2025,
+      "basis": "GROSS (100% physical) capacity of the nine in-Kingdom refineries in which Aramco holds an interest, as at 2025-12-31: the sum of the per-refinery figures in Aramco's 2025 Annual Report. Per-facility figures are deliberately not reproduced here. Completeness against non-Aramco refineries not yet researched",
+      "source": "Saudi Aramco, Annual Report 2025, Results and performance section (Downstream, refinery footprint)",
+      "url": "https://www.aramco.com/-/media/publications/corporate-reports/reports-and-presentations/2025/fy/sections/ara-2025-results-english.pdf"
+    },
+    {
+      "metric": "refining_capacity_aramco_net_share_in_kingdom",
+      "value": 2638,
+      "unit": "thousand barrels per day",
+      "year": 2025,
+      "basis": "NET (Aramco equity share) of the same nine refineries, computed from the published gross capacities and Aramco's published effective ownership. A financial basis: do NOT use as an exposure denominator",
+      "source": "Saudi Aramco, Annual Report 2025, Results and performance section (Downstream)",
+      "url": "https://www.aramco.com/-/media/publications/corporate-reports/reports-and-presentations/2025/fy/sections/ara-2025-results-english.pdf"
+    },
+    {
+      "metric": "crude_exports",
+      "value": 6.3,
+      "unit": "million barrels per day",
+      "year": 2025,
+      "basis": "Aramco (the Company) total crude oil exports, company basis",
+      "source": "Saudi Aramco, Annual Report 2025, Results and performance section (Supply and trading)",
+      "url": "https://www.aramco.com/-/media/publications/corporate-reports/reports-and-presentations/2025/fy/sections/ara-2025-results-english.pdf"
+    },
+    {
+      "metric": "crude_exports_country",
+      "value": 7.0,
+      "unit": "million barrels per day",
+      "year": 2023,
+      "basis": "country total per EIA (down from 7.4 million b/d in 2022); different basis and year from the Aramco company figure",
+      "source": "U.S. EIA, Country Analysis Brief: Saudi Arabia (last updated 2024-10-04)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/saudi_arabia/"
+    }
+  ],
+  "significance": [
+    "Crude oil and other petroleum liquids made up 85% of Saudi Arabia's primary energy production in 2022 and natural gas 15%, with no coal production (EIA).",
+    "Saudi Arabia meets all of its natural gas consumption with domestic production (EIA, 2024).",
+    "In 2023 an estimated 62% of Saudi electricity was generated from natural gas and 38% from oil, with renewables under 1% (EIA).",
+    "Aramco reports five wholly-owned and four affiliated refineries in the Kingdom, which together accounted for 63% of its 4.2 million b/d net refining capacity at the end of 2025 (Aramco Annual Report 2025)."
+  ],
+  "significance_sources": [
+    "https://www.eia.gov/international/content/analysis/countries_long/saudi_arabia/",
+    "https://www.aramco.com/-/media/publications/corporate-reports/reports-and-presentations/2025/fy/sections/ara-2025-results-english.pdf"
+  ]
+}

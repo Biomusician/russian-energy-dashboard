@@ -1,0 +1,96 @@
+{
+  "system_id": "in",
+  "reporting_environment": "mixed_regulatory",
+  "reporting_note": "The National Power Portal publishes unit-level generation outages daily and the grid operator classifies grid disturbances, but most official tables may be reused only with permission, and refinery, terminal and distribution outages come from press and companies.",
+  "geography": {
+    "unit_label": "state or union territory",
+    "units_expected": 36,
+    "note": "28 states and 8 union territories, with the ISO codes as revised in November 2023. Boundaries show the line of actual control (Natural Earth's default edition), which is an analytic choice, not a statement about sovereignty.",
+    "rulings": [
+      {
+        "code": "IN-JK",
+        "status": "contains_disputed_area",
+        "note": "Drawn as the area India administers. Pakistan administers and claims other parts of the former princely state."
+      },
+      {
+        "code": "IN-LA",
+        "status": "contains_disputed_area",
+        "note": "Drawn as the area India administers. Aksai Chin, claimed by India, is administered by China and drawn with China."
+      },
+      {
+        "code": "IN-AR",
+        "status": "contains_disputed_area",
+        "note": "Administered by India and claimed by China."
+      }
+    ]
+  },
+  "sectors": [
+    {
+      "sector": "refining",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "EXPERIMENTAL",
+      "reason": "One official table puts public, joint-venture and private refineries on one basis, but three official national totals disagree (248.9, 258.1 and 267.1 MMTPA) over whether one new refinery is operating. Not scored. The recovery and decay model behind the Monitored-Area ESDI was calibrated on repeated strikes with almost no restart reporting, and no model for this country's events has been approved (GLOBAL_METHODOLOGY.md §2 and §8.3)."
+    },
+    {
+      "sector": "electric_generation",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "EXPERIMENTAL",
+      "reason": "National capacity is ready. State tables show entitlements, not where plants are, and long-outage units are removed from installed capacity, so a long disruption shrinks the official denominator. Not scored. The recovery and decay model behind the Monitored-Area ESDI was calibrated on repeated strikes with almost no restart reporting, and no model for this country's events has been approved (GLOBAL_METHODOLOGY.md §2 and §8.3)."
+    },
+    {
+      "sector": "transmission",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "Grid-disturbance categories exist but the grid operator's site could not be reached; routine minor disturbances would pin the ESDI's measure at 100."
+    },
+    {
+      "sector": "oil_logistics",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "No terminal capacity census."
+    },
+    {
+      "sector": "gas",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "EXPERIMENTAL",
+      "reason": "LNG import terminals are the most ready (8 terminals); 72% of production is offshore and belongs to no state."
+    },
+    {
+      "sector": "coal",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "EXPERIMENTAL",
+      "reason": "Mine supply and coal power are both experimental denominators."
+    }
+  ],
+  "sources": [
+    {
+      "name": "U.S. EIA country data",
+      "role": "adopted (context)",
+      "licence": "US public domain"
+    },
+    {
+      "name": "GEM pipeline and coal plant trackers",
+      "role": "adopted (denominator candidates)",
+      "licence": "CC BY 4.0 (to confirm on the release file)"
+    },
+    {
+      "name": "PPAC, CEA, National Power Portal, Ministry of Coal",
+      "role": "derived facts only",
+      "licence": "reuse by permission"
+    },
+    {
+      "name": "WRI Global Power Plant Database",
+      "role": "rejected",
+      "licence": "57% of current capacity, 2019 vintage"
+    }
+  ],
+  "research_gaps": [
+    "Not yet researched: Cyclone Remal in Mizoram, Cyclone Montha in Andhra Pradesh, the 2025 Himalayan hydro shutdowns, gas pipelines, coal-mine accidents.",
+    "No event was found for 2025; that is a gap in the search, not evidence of a quiet year."
+  ],
+  "audit_docs": [
+    "docs/countries/IN_SOURCE_AUDIT.md",
+    "docs/countries/IN_INDEX_READINESS.md"
+  ],
+  "provenance": "Authored 2026-10-30 (iteration 14) from the source-audit, readiness and incident lanes' reports. Edit by hand; this file is the curated source."
+}

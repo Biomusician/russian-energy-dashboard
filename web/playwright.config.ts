@@ -27,7 +27,7 @@ export default defineConfig({
   // these in node, where there is no browser.
   testMatch: /.*\.e2e\.ts$/,
   outputDir: "./e2e-results",
-  snapshotPathTemplate: "{testDir}/__screenshots__/{testFilePath}/{arg}{ext}",
+  snapshotPathTemplate: "{testDir}/__screenshots__/{testFilePath}/{arg}-{platform}{ext}",
   timeout: 90_000,
   expect: { timeout: 20_000 },
   // One worker. Software WebGL is CPU-bound, and two maps rendering at once on one machine

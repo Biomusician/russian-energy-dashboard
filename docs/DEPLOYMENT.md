@@ -198,3 +198,17 @@ the "one day stale beats bad data" rule.
 Infrastructure-source cadence is honest: OSM/Natural Earth/GEM change monthly at most; only
 the curated events and the daily rebuild timestamp move day to day. The GitHub Action still
 skips a commit when only `build_time` changed (`scripts/ci_data_changed.py`).
+
+## Iteration 14 note — country systems and the browser test tier
+
+- The build now also emits `data/processed/global/` and `data/processed/systems/<id>/`, mirrored
+  to `web/public/data/` as whole trees. They are declared in `pipeline/artifacts.py`, so the
+  daily refresh stages them with no workflow change. They are rebuilt every day from committed
+  curated files and the cached Natural Earth downloads; no new network source is fetched.
+- `ci.yml` has an `e2e` job: it installs Playwright's Chromium on the runner, builds the site,
+  serves it with `vite preview` and runs `web/e2e/` in real Chromium. Locally:
+  `cd web && ..\scripts\npm.cmd run e2e`. Against production, in PowerShell:
+  `$env:E2E_BASE_URL="https://russian-energy-dashboard.vercel.app"; ..\scripts\npm.cmd run e2e:only`.
+- URLs: a bare URL now opens the global home. Every pre-14 theatre link that carried view state
+  still opens the theatre; a bare pre-14 link carried none and now opens the home page. The
+  theatre writes `?sys=ru` into its own URL from now on.
