@@ -9,7 +9,8 @@
       "year": 2024,
       "year_basis": "calendar",
       "source": "EIA International Energy Statistics via API v2 (Primary energy, Production: 22.349 quad Btu; 563.2 Mtoe)",
-      "url": "https://api.eia.gov/v2/international/data/?frequency=annual&data[0]=value&facets[countryRegionId][]=IND&start=2024&end=2024"
+      "url": "https://api.eia.gov/v2/international/data/?frequency=annual&data[0]=value&facets[countryRegionId][]=IND&start=2024&end=2024",
+      "basis": "country total, calendar year; primary energy production, EIA international estimate"
     },
     {
       "metric": "crude_oil_production",
@@ -18,7 +19,8 @@
       "year": 2026,
       "year_basis": "fiscal FY 2025-26 (provisional)",
       "source": "PPAC Ready Reckoner FY 2025-26, petroleum at-a-glance table (PPAC production table: crude 25.98 + condensate 1.97 = 27.95 MMT)",
-      "url": "https://ppac.gov.in/download.php?file=rep_studies/1784899305_The_PPAC_Ready_Reckoner_FY_2025%E2%80%9326_Final.pdf"
+      "url": "https://ppac.gov.in/download.php?file=rep_studies/1784899305_The_PPAC_Ready_Reckoner_FY_2025%E2%80%9326_Final.pdf",
+      "basis": "country total, fiscal year; crude oil plus condensate, provisional"
     },
     {
       "metric": "natural_gas_production",
@@ -27,7 +29,8 @@
       "year": 2026,
       "year_basis": "fiscal FY 2025-26 (provisional)",
       "source": "PPAC Ready Reckoner FY 2025-26, natural gas at-a-glance (34,776 MMSCM gross); 72% of gross is offshore",
-      "url": "https://ppac.gov.in/download.php?file=rep_studies/1784899305_The_PPAC_Ready_Reckoner_FY_2025%E2%80%9326_Final.pdf"
+      "url": "https://ppac.gov.in/download.php?file=rep_studies/1784899305_The_PPAC_Ready_Reckoner_FY_2025%E2%80%9326_Final.pdf",
+      "basis": "country total, fiscal year; gross natural gas production, provisional"
     },
     {
       "metric": "coal_production",
@@ -36,7 +39,8 @@
       "year": 2025,
       "year_basis": "fiscal FY 2024-25 (latest full-year all-India total found)",
       "source": "Ministry of Coal Annual Report 2025-26, ch. 2, company-wise production (CIL 781.06, SCCL 69.01, captive & others 197.46)",
-      "url": "https://www.coal.nic.in/sites/default/files/2026-02/chap2AnnualReport2026en.pdf"
+      "url": "https://www.coal.nic.in/sites/default/files/2026-02/chap2AnnualReport2026en.pdf",
+      "basis": "country total, fiscal year; raw coal, all producers"
     },
     {
       "metric": "electricity_generation",
@@ -45,7 +49,8 @@
       "year": 2026,
       "year_basis": "fiscal FY 2025-26 (provisional)",
       "source": "CEA Executive Summary, March 2026, table 1.1 (FY 2024-25: 1,828.88 BU; +1.04%). Read from PDF text extraction; column assignment confirmed by arithmetic only",
-      "url": "https://cea.nic.in/api/dashboardReports/download-pdf/en/9c52056c-194c-4ce7-b650-f13e0bf07ab7"
+      "url": "https://cea.nic.in/api/dashboardReports/download-pdf/en/9c52056c-194c-4ce7-b650-f13e0bf07ab7",
+      "basis": "country total, fiscal year; generation including renewables, provisional"
     },
     {
       "metric": "generating_capacity",
@@ -54,7 +59,8 @@
       "year": 2026,
       "year_basis": "as on 30.09.2026",
       "source": "CEA Installed Capacity report, September 2026 (558,896.39 MW; fossil 44.89%, non-fossil 55.11%)",
-      "url": "https://cea.nic.in/api/dashboardReports/download-pdf/en/0600473e-c202-4f75-af01-720171677505"
+      "url": "https://cea.nic.in/api/dashboardReports/download-pdf/en/0600473e-c202-4f75-af01-720171677505",
+      "basis": "country total, installed utility capacity at the stated date"
     },
     {
       "metric": "coal_share_of_generating_capacity",
@@ -63,7 +69,8 @@
       "year": 2026,
       "year_basis": "as on 30.09.2026",
       "source": "CEA Installed Capacity report, September 2026",
-      "url": "https://cea.nic.in/api/dashboardReports/download-pdf/en/0600473e-c202-4f75-af01-720171677505"
+      "url": "https://cea.nic.in/api/dashboardReports/download-pdf/en/0600473e-c202-4f75-af01-720171677505",
+      "basis": "coal's share of the installed capacity total above, same report and date"
     },
     {
       "metric": "refining_capacity",
@@ -82,7 +89,8 @@
       "year": 2026,
       "year_basis": "fiscal FY 2025-26 (provisional)",
       "source": "PPAC Ready Reckoner FY 2025-26, Table 4.1 (average utilisation 106% of nameplate; imported crude 90.5% of crude processed, Table 4.3)",
-      "url": "https://ppac.gov.in/download.php?file=rep_studies/1784899305_The_PPAC_Ready_Reckoner_FY_2025%E2%80%9326_Final.pdf"
+      "url": "https://ppac.gov.in/download.php?file=rep_studies/1784899305_The_PPAC_Ready_Reckoner_FY_2025%E2%80%9326_Final.pdf",
+      "basis": "country total, fiscal year; crude processed by refineries (throughput, not capacity), provisional"
     },
     {
       "metric": "lng_imports",
@@ -91,7 +99,8 @@
       "year": 2026,
       "year_basis": "fiscal FY 2025-26 (provisional)",
       "source": "PPAC LNG import workbook, sheet 'Month wise 2025-26' (updated 10.06.2026)",
-      "url": "https://ppac.gov.in/uploads/page-images/1781164918_NG-H_LNG_Import.xlsx"
+      "url": "https://ppac.gov.in/uploads/page-images/1781164918_NG-H_LNG_Import.xlsx",
+      "basis": "country total, fiscal year; LNG imports, provisional"
     },
     {
       "metric": "lng_regasification_capacity",
@@ -100,7 +109,8 @@
       "year": 2026,
       "year_basis": "as on 01.04.2026",
       "source": "PPAC Ready Reckoner FY 2025-26, Table 3.9 (the chapter text states 52.7 MMTPA; unresolved)",
-      "url": "https://ppac.gov.in/download.php?file=rep_studies/1784899305_The_PPAC_Ready_Reckoner_FY_2025%E2%80%9326_Final.pdf"
+      "url": "https://ppac.gov.in/download.php?file=rep_studies/1784899305_The_PPAC_Ready_Reckoner_FY_2025%E2%80%9326_Final.pdf",
+      "basis": "country total, nameplate regasification capacity of operational terminals at the stated date; the source's chapter text gives a different figure"
     },
     {
       "metric": "crude_imports",
@@ -109,7 +119,8 @@
       "year": 2026,
       "year_basis": "fiscal FY 2025-26 (provisional)",
       "source": "PPAC Ready Reckoner FY 2025-26, Table 8.24 (PPAC import/export table updated 21-10-2026 shows 246.601 MMT)",
-      "url": "https://ppac.gov.in/download.php?file=rep_studies/1784899305_The_PPAC_Ready_Reckoner_FY_2025%E2%80%9326_Final.pdf"
+      "url": "https://ppac.gov.in/download.php?file=rep_studies/1784899305_The_PPAC_Ready_Reckoner_FY_2025%E2%80%9326_Final.pdf",
+      "basis": "country total, fiscal year; crude oil imports, provisional"
     },
     {
       "metric": "transmission_circuit_km_220kv_and_above",
@@ -118,7 +129,8 @@
       "year": 2026,
       "year_basis": "up to 31.03.2026",
       "source": "CEA Executive Summary, March 2026, transmission lines table",
-      "url": "https://cea.nic.in/api/dashboardReports/download-pdf/en/9c52056c-194c-4ce7-b650-f13e0bf07ab7"
+      "url": "https://cea.nic.in/api/dashboardReports/download-pdf/en/9c52056c-194c-4ce7-b650-f13e0bf07ab7",
+      "basis": "country total, circuit kilometres at 220 kV and above, all ownership, at the stated date"
     },
     {
       "metric": "gas_pipeline_length_operational",
@@ -127,7 +139,8 @@
       "year": 2026,
       "year_basis": "as on 30.06.2026",
       "source": "PPAC pipeline-structure workbook, source PNGRB",
-      "url": "https://ppac.gov.in/uploads/page-images/1790853647_9_Pipeline-Structure-Web.xlsx"
+      "url": "https://ppac.gov.in/uploads/page-images/1790853647_9_Pipeline-Structure-Web.xlsx",
+      "basis": "country total, operational common-carrier natural-gas pipeline length at the stated date"
     }
   ],
   "significance": [

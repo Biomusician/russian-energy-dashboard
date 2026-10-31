@@ -50,22 +50,34 @@
     {
       "name": "Statistics Canada tables (web API)",
       "role": "adopted",
-      "licence": "Statistics Canada Open Licence"
+      "licence": "Statistics Canada Open Licence",
+      "checked": "2026-10-30",
+      "cadence": "monthly and annual tables",
+      "stale_after_days": 120
     },
     {
       "name": "Canada Energy Regulator open data",
       "role": "adopted",
-      "licence": "Open Government Licence - Canada 2.0; incident latitude/longitude never read"
+      "licence": "Open Government Licence - Canada 2.0; incident latitude/longitude never read",
+      "checked": "2026-10-30",
+      "cadence": "monthly to quarterly open-data refreshes",
+      "stale_after_days": 180
     },
     {
       "name": "NRCan facility layers; AESO, IESO, Hydro-Québec",
       "role": "derived facts only",
-      "licence": "stale or non-commercial"
+      "licence": "stale or non-commercial",
+      "checked": "2026-10-30",
+      "cadence": "varies by publisher; read when an event is researched",
+      "stale_after_days": 180
     },
     {
       "name": "CER pipeline map data",
       "role": "rejected",
-      "licence": "reproduction prohibited"
+      "licence": "reproduction prohibited",
+      "checked": "2026-10-30",
+      "cadence": null,
+      "stale_after_days": null
     }
   ],
   "research_gaps": [

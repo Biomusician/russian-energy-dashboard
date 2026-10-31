@@ -1,0 +1,23 @@
+{
+  "note": "Hand-curated (iteration 15). Two records share an episode only when the record itself names the same hazard, or one source statement reports them together. Being close in time or place is not enough. Records not listed here are each their own episode.",
+  "episodes": [
+    {
+      "episode_id": "in-2023-06-cyclone-biparjoy",
+      "name": "Cyclone Biparjoy, June 2023",
+      "basis": "named_hazard",
+      "event_ids": [
+        "in-2023-06-12-biparjoy-gujarat-port-suspensions",
+        "in-2023-06-15-biparjoy-gujarat-power-outage"
+      ]
+    },
+    {
+      "episode_id": "in-2023-10-sikkim-glof",
+      "name": "South Lhonak glacial lake outburst flood, October 2023",
+      "basis": "named_hazard",
+      "event_ids": [
+        "in-2023-10-04-sikkim-glof-teesta-iii",
+        "in-2023-10-04-sikkim-glof-teesta-v"
+      ]
+    }
+  ]
+}

@@ -79,6 +79,8 @@ export interface CountrySystem {
   };
   event_summary: {
     recorded_events: number;
+    episodes: number;
+    multi_record_episodes: number;
     excluded_after_as_of: number;
     recovery_kinds: Record<string, number>;
     placed_in_a_region: number;
@@ -96,12 +98,38 @@ export interface CountrySystem {
     significance?: string[];
     significance_sources?: string[];
   };
-  sources: { name: string; role: string; licence: string }[];
+  sources: { name: string; role: string; licence: string; checked: string | null;
+             cadence: string | null; stale_after_days: number | null }[];
+  research_log: { note: string; passes: ResearchPass[] };
+  episode_bases: Record<string, string>;
   research_gaps: string[];
   audit_docs: string[];
   record_reviewed: string | null;
   review_freshness_days: number;
   onboarding_gate: { item: number; label: string; status: "met" | "partial" | "unmet"; note: string }[];
+}
+
+export interface ResearchPass {
+  date: string;
+  by: string;
+  window: [string, string];
+  scope: string;
+  status: "complete" | "partial";
+  status_reason?: string;
+  outcome: Record<string, number>;
+}
+
+/** One hazard or one source statement. A record no episode names is an episode of one. */
+export interface Episode {
+  episode_id: string;
+  name: string | null;
+  basis: string;
+  event_ids: string[];
+  records: number;
+  first_date: string;
+  last_date: string;
+  region_codes: string[];
+  has_country_level_record: boolean;
 }
 
 export interface CountryEvent {
@@ -129,11 +157,13 @@ export interface CountryEvent {
   recovery: { research_status: string; kind: string | null; date: string | null;
               evidence: string | null; url: string | null };
   review: { reviewed: string; process: string; threshold_version: string; source_access: string };
+  episode_id: string;
 }
 
 export interface CountryBundle {
   system: CountrySystem;
   events: CountryEvent[];
+  episodes: Episode[];
   regions: GeoJSON.FeatureCollection;
 }
 
@@ -166,13 +196,13 @@ async function getJson<T>(path: string, signal: AbortSignal): Promise<T> {
 export async function loadCountry(entry: ManifestSystem, signal: AbortSignal): Promise<CountryBundle> {
   const [system, events, regions] = await Promise.all([
     getJson<CountrySystem>(`${entry.root}/system.json`, signal),
-    getJson<{ events: CountryEvent[] }>(`${entry.root}/events.json`, signal),
+    getJson<{ events: CountryEvent[]; episodes?: Episode[] }>(`${entry.root}/events.json`, signal),
     getJson<GeoJSON.FeatureCollection>(`${entry.root}/regions.geojson`, signal),
   ]);
   if (system.system_id !== entry.id) {
     throw new Error(`${entry.root}/system.json describes ${system.system_id}, not ${entry.id}`);
   }
-  return { system, events: events.events, regions };
+  return { system, events: events.events, episodes: events.episodes ?? [], regions };
 }
 
 export async function loadWorld(signal: AbortSignal): Promise<GeoJSON.FeatureCollection> {

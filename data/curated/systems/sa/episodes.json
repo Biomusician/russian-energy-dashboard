@@ -1,0 +1,17 @@
+{
+  "note": "Hand-curated (iteration 15). Two records share an episode only when the record itself names the same hazard, or one source statement reports them together. Being close in time or place is not enough. Records not listed here are each their own episode.",
+  "episodes": [
+    {
+      "episode_id": "sa-2026-04-ministry-statement",
+      "name": "Attacks reported together by the energy ministry, April 2026",
+      "basis": "single_statement",
+      "event_ids": [
+        "sa-2026-04-khurais-production-cut",
+        "sa-2026-04-manifa-production-cut",
+        "sa-2026-04-east-west-pipeline-throughput-cut",
+        "sa-2026-04-juaymah-processing-fires",
+        "sa-2026-04-08-satorp-jubail-shutdown"
+      ]
+    }
+  ]
+}

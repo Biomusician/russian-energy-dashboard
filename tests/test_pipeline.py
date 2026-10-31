@@ -6764,9 +6764,10 @@ def test_the_onboarding_gate_is_published_and_honest():
         gate = _sys_payload(sid, "system.json")["onboarding_gate"]
         assert [g["item"] for g in gate] == list(range(1, 9)), sid
         assert all(g["status"] in ("met", "partial", "unmet") and g["note"] for g in gate)
-        # Freshness and episodes are genuinely partial this iteration; saying otherwise is the
-        # overclaim the gate exists to prevent.
-        assert {g["item"]: g["status"] for g in gate}[7] != "met"
+        # Episodes exist since iteration 15, so item 5 is met. Item 7 follows the research log
+        # (test_the_published_research_log_is_counts_only_and_says_where_it_stopped): it may not
+        # read "met" while the newest search pass stopped short.
+        assert {g["item"]: g["status"] for g in gate}[5] == "met"
 
 
 @needs_systems
@@ -6884,3 +6885,100 @@ def test_the_snapshot_names_the_revisions_it_was_built_from():
         assert isinstance(r["revid"], int) and r["url"].endswith(f"oldid={r['revid']}"), r
         # The committed payload is a current-date build, so nothing in it is pinned.
         assert r["pinned_to"] is None, r
+
+
+# --------------------------------------------------------------------------
+# Iteration 15: episodes, per-source freshness and the research log
+# --------------------------------------------------------------------------
+
+@needs_systems
+def test_every_country_record_belongs_to_exactly_one_episode():
+    from pipeline import systems
+    for sid in systems.COUNTRY_SYSTEMS:
+        payload = _sys_payload(sid, "events.json")
+        events, episodes = payload["events"], payload["episodes"]
+        members = [m for ep in episodes for m in ep["event_ids"]]
+        assert sorted(members) == sorted(e["event_id"] for e in events), sid
+        by_id = {ep["episode_id"]: ep for ep in episodes}
+        for e in events:
+            assert e["episode_id"] in by_id and e["event_id"] in by_id[e["episode_id"]]["event_ids"]
+        for ep in episodes:
+            assert ep["records"] == len(ep["event_ids"]) >= 1
+            # A named episode is a curated one; a single record is never dressed up with a name.
+            assert (ep["name"] is None) == (ep["basis"] == "single_record"), ep
+        summary = _sys_payload(sid, "system.json")["event_summary"]
+        assert summary["episodes"] == len(episodes) <= summary["recorded_events"]
+        assert summary["multi_record_episodes"] == sum(1 for ep in episodes if ep["records"] > 1)
+
+
+@needs_systems
+def test_one_hurricane_is_one_episode_not_four():
+    helene = [ep for ep in _sys_payload("us", "events.json")["episodes"]
+              if ep["episode_id"] == "us-2024-09-hurricane-helene"]
+    assert len(helene) == 1 and helene[0]["records"] == 4
+    assert helene[0]["region_codes"] == ["US-FL", "US-GA", "US-NC", "US-SC"]
+
+
+def test_the_episode_file_cannot_merge_drop_or_double_count():
+    from pipeline import build_systems as B
+    ids = {"a", "b", "c"}
+    ok = [{"episode_id": "ep", "name": "Storm", "basis": "named_hazard", "event_ids": ["a", "b"]}]
+    assert B.validate_episodes("x", ok, ids) == {"a": "ep", "b": "ep"}
+    bad = {
+        "no event": [{**ok[0], "event_ids": ["a", "zz"]}],
+        "is in two episodes": ok + [{"episode_id": "ep2", "name": "n", "basis": "named_hazard",
+                                     "event_ids": ["b", "c"]}],
+        "at least two records": [{**ok[0], "event_ids": ["a"]}],
+        "is not unique": [{**ok[0], "episode_id": "c"}],
+        "unknown basis": [{**ok[0], "basis": "nearby"}],
+    }
+    for message, declared in bad.items():
+        with pytest.raises(ValueError, match=message):
+            B.validate_episodes("x", declared, ids)
+
+
+def test_a_historical_build_keeps_only_the_episode_records_that_existed():
+    from pipeline import build_systems as B
+    declared = [{"episode_id": "ep", "name": "Storm", "basis": "named_hazard", "event_ids": ["a", "b"]}]
+    events = [{"event_id": "a", "episode_id": "ep", "date": "2024-01-01", "date_end": None,
+               "region_code": "X-1"}]
+    eps = B.episodes_of(declared, events)
+    assert eps == [{"episode_id": "ep", "name": "Storm", "basis": "named_hazard", "event_ids": ["a"],
+                    "records": 1, "first_date": "2024-01-01", "last_date": "2024-01-01",
+                    "region_codes": ["X-1"], "has_country_level_record": False}]
+
+
+def test_every_used_source_states_when_it_was_checked_and_how_long_that_holds():
+    from pipeline import build_systems as B
+    doc = {"sources": [{"name": "A", "role": "adopted", "checked": "2026-10-30",
+                        "cadence": "monthly", "stale_after_days": 120},
+                       {"name": "B", "role": "rejected", "checked": "2026-10-30"}]}
+    log = {"passes": [{"date": "2026-10-30", "window": ["2022-01-01", "2026-10-30"],
+                       "status": "partial", "status_reason": "budget", "outcome": {"accepted": 1}}]}
+    B.validate_sources("x", doc, log)
+    with pytest.raises(ValueError, match="no cadence"):
+        B.validate_sources("x", {"sources": [{**doc["sources"][0], "cadence": None}]}, log)
+    with pytest.raises(ValueError, match="no last-checked"):
+        B.validate_sources("x", {"sources": [{**doc["sources"][1], "checked": None}]}, log)
+    with pytest.raises(ValueError, match="must say why"):
+        B.validate_sources("x", doc, {"passes": [{**log["passes"][0], "status_reason": None}]})
+    # The research log publishes counts, never the queue's per-record narratives.
+    with pytest.raises(ValueError, match="non-count"):
+        B.validate_sources("x", doc, {"passes": [{**log["passes"][0],
+                                                  "outcome": {"rejected_notes": "attacked, no effect"}}]})
+
+
+@needs_systems
+def test_the_published_research_log_is_counts_only_and_says_where_it_stopped():
+    from pipeline import systems
+    for sid in systems.COUNTRY_SYSTEMS:
+        p = _sys_payload(sid, "system.json")
+        passes = p["research_log"]["passes"]
+        assert passes, sid
+        for rp in passes:
+            assert all(isinstance(v, int) for v in rp["outcome"].values()), (sid, rp)
+        latest = max(passes, key=lambda x: x["date"])
+        gate7 = {g["item"]: g for g in p["onboarding_gate"]}[7]
+        assert gate7["status"] == ("met" if latest["status"] == "complete" else "partial"), sid
+        for s in p["sources"]:
+            assert s["checked"], (sid, s)

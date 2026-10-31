@@ -36,7 +36,8 @@ export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, 
   // The count never travels without the reporting environment that produced it (§6.4).
   const env = labelFor(ENVIRONMENT_LABEL, sys.reporting_environment).toLowerCase();
   c.fillText(
-    `No index. ${sys.event_summary.recorded_events} qualifying events recorded (reporting: ${env}); ` +
+    `No index. ${sys.event_summary.recorded_events} qualifying events in ${sys.event_summary.episodes} episodes ` +
+    `(reporting: ${env}); ` +
     `${sys.event_summary.country_level} national or multi-region events not drawn. Record reviewed ${sys.record_reviewed}.`,
     pad, Math.round(74 * s));
 

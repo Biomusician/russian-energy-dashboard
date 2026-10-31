@@ -4,7 +4,8 @@ For every system in `systems.COUNTRY_SYSTEMS` this reads the curated sources und
 `data/curated/systems/<id>/` and emits `data/processed/systems/<id>/`:
 
   system.json      what the system is, what its evidence supports, and why it has no score
-  events.json      reviewed, publicly reported major disruptions, admin-1 precision at most
+  events.json      reviewed, publicly reported major disruptions, admin-1 precision at most,
+                   and the episodes they group into (one hazard or one statement = one episode)
   regions.geojson  the first-level units the events are aggregated to
 
 and, once for all systems, `data/processed/global/manifest.json` and `global/world.geojson`.
@@ -65,7 +66,7 @@ EVENT_FIELDS = (
     "event_id", "date", "date_precision", "date_end", "region_code", "region_name",
     "geography_precision", "regions_affected", "facility_name", "facility_name_local", "operator",
     "asset_class", "cause", "summary", "effect", "inclusion_basis", "criterion_met",
-    "threshold_basis", "capacity_affected", "sources", "recovery", "review",
+    "threshold_basis", "capacity_affected", "sources", "recovery", "review", "episode_id",
 )
 # No `title`: headlines are the publishers' words, not ours, and the page shows the publisher.
 SOURCE_FIELDS = ("url", "publisher", "date", "language", "source_role", "opened")
@@ -80,6 +81,48 @@ RECOVERY_KINDS = ("full_restart", "partial_restart", "service_restored", "partia
 # What a lane may say a sector COULD reach. Published beside, never as, the sector state.
 ASSESSMENTS = ("READY", "EXPERIMENTAL", "INCOMPLETE", "UNSUITABLE", "INSUFFICIENT_EVIDENCE",
                "NOT_APPLICABLE", "NOT_YET_RESEARCHED")
+
+RESEARCH_STATUSES = ("complete", "partial")
+
+
+def _in_use(source):
+    return not source["role"].startswith("rejected")
+
+
+def validate_sources(system_id, doc, research_log):
+    """Every source a country relies on says when it was last checked and how often it changes,
+    and every research pass says what it covered and whether it finished (iteration 15)."""
+    problems = []
+    for s in doc["sources"]:
+        if not s.get("checked"):
+            problems.append(f"source {s['name']!r} has no last-checked date")
+        if _in_use(s) and not (s.get("cadence") and s.get("stale_after_days")):
+            problems.append(f"source {s['name']!r} is used but states no cadence or stale limit")
+    for p in research_log["passes"]:
+        if p.get("status") not in RESEARCH_STATUSES:
+            problems.append(f"research pass {p.get('date')}: status must be one of {RESEARCH_STATUSES}")
+        if p.get("status") == "partial" and not p.get("status_reason"):
+            problems.append(f"research pass {p.get('date')}: a partial pass must say why")
+        if not (p.get("window") and len(p["window"]) == 2 and p["window"][0] <= p["window"][1]):
+            problems.append(f"research pass {p.get('date')}: window must be [start, end]")
+        # Counts only. A narrative field here would publish what the queue keeps private.
+        extra = set(p.get("outcome", {})) - {"records", "accepted", "insufficient_evidence",
+                                              "rejected", "duplicate", "out_of_scope", "held"}
+        if extra:
+            problems.append(f"research pass {p.get('date')}: outcome carries non-count fields {sorted(extra)}")
+    if problems:
+        raise ValueError(f"system {system_id} sources: " + "; ".join(problems))
+
+
+# Why two records may share an episode (iteration 15; GLOBAL_METHODOLOGY §5.3 fix 4). One
+# hurricane yields an outage record per state plus shut-ins and port closures; counting records
+# would make hazard-prone regions look several times more disrupted than they were.
+EPISODE_BASES = {
+    "named_hazard": "The records name the same storm, flood, heat wave or other hazard.",
+    "single_statement": "One source statement reported these records together.",
+    "continuing_shortfall": "A later record reports the same supply shortfall continuing.",
+}
+
 
 # Exact UI wording (GLOBAL_METHODOLOGY §6.4), carried in the payload so every surface says the
 # same thing and a test can hold it.
@@ -216,7 +259,63 @@ def validate(system_id, doc, events, unit_codes):
         raise ValueError(f"system {system_id}: " + "; ".join(problems))
 
 
-def onboarding_gate(doc, events, profile):
+def validate_episodes(system_id, declared, event_ids):
+    """Refuse an episode file that would silently merge, drop or double-count records."""
+    problems, seen_eps, owner = [], set(), {}
+    for ep in declared:
+        eid = ep["episode_id"]
+        if eid in seen_eps or eid in event_ids:
+            # An undeclared record is its own episode under its own id, so an episode id equal
+            # to an event id would merge two different things under one key.
+            problems.append(f"episode id {eid!r} is not unique")
+        seen_eps.add(eid)
+        if ep.get("basis") not in EPISODE_BASES:
+            problems.append(f"{eid}: unknown basis {ep.get('basis')!r}")
+        if not ep.get("name"):
+            problems.append(f"{eid}: an episode needs a name")
+        if len(ep["event_ids"]) < 2:
+            problems.append(f"{eid}: a declared episode groups at least two records")
+        for m in ep["event_ids"]:
+            if m not in event_ids:
+                problems.append(f"{eid}: no event {m!r}")
+            elif m in owner:
+                problems.append(f"{m} is in two episodes ({owner[m]}, {eid})")
+            owner[m] = eid
+    if problems:
+        raise ValueError(f"system {system_id} episodes: " + "; ".join(problems))
+    return owner
+
+
+def episodes_of(declared, events):
+    """One entry per episode among `events`, in date order. A record no episode declares is an
+    episode of one, under its own id: every record has an episode, and the count of episodes is
+    never smaller than the evidence allows."""
+    by_id = {ep["episode_id"]: ep for ep in declared}
+    groups = {}
+    for e in events:
+        groups.setdefault(e["episode_id"], []).append(e)
+    out = []
+    for eid, members in groups.items():
+        ep = by_id.get(eid)
+        regions = sorted({e["region_code"] for e in members if e["region_code"]})
+        out.append({
+            "episode_id": eid,
+            "name": ep["name"] if ep else None,
+            "basis": ep["basis"] if ep else "single_record",
+            "event_ids": [e["event_id"] for e in members],
+            "records": len(members),
+            "first_date": min(e["date"] for e in members),
+            "last_date": max((e.get("date_end") or e["date"]) for e in members),
+            "region_codes": regions,
+            # A record with no region code is country-level; the episode says so rather than
+            # implying its regions are the whole footprint.
+            "has_country_level_record": any(not e["region_code"] for e in members),
+        })
+    out.sort(key=lambda x: (x["first_date"], x["episode_id"]))
+    return out
+
+
+def onboarding_gate(doc, events, profile, research_log=None):
     """The eight-point gate of GLOBAL_METHODOLOGY §7.2, evaluated rather than asserted.
 
     The five countries are shown before every item is met, so the payload says which are not:
@@ -224,6 +323,10 @@ def onboarding_gate(doc, events, profile):
     avoid. Items the code cannot check are stated with the reason they are partial.
     """
     metrics = profile.get("metrics", [])
+    passes = (research_log or {}).get("passes", [])
+    # Complete only if the newest pass finished. An older finished pass does not cover a later,
+    # interrupted one.
+    research_complete = bool(passes) and max(passes, key=lambda p: p["date"])["status"] == "complete"
     no_basis = [m["metric"] for m in metrics if not m.get("basis")]
     rulings_needed = any(r["status"] != "note" for r in doc["geography"].get("rulings", []))
 
@@ -235,22 +338,28 @@ def onboarding_gate(doc, events, profile):
              "Geography and rulings stated; no aggregate exists, so whether disputed areas count "
              "in one is not yet a live question." if rulings_needed else "Geography stated; no "
              "disputed units."),
-        item(2, "Source registry with licence, cadence and reporting environment", "partial",
-             "Licences and reporting environment recorded; no refresh cadence, because the event "
-             "record is curated by hand rather than fetched."),
+        item(2, "Source registry with licence, cadence and reporting environment", "met",
+             "Every source in use states its licence and publication cadence; the reporting "
+             "environment is set. The event record itself is curated by hand, and its research "
+             "passes are logged with the window each covered."),
         item(3, "Every sector has an explicit state", "met", "Enforced by the build."),
         item(4, "Context statistics carry source, vintage and basis",
              "met" if not no_basis else "partial",
              "All context metrics state a basis." if not no_basis else
              f"{len(no_basis)} of {len(metrics)} context metrics state no basis."),
         item(5, "Threshold declared; every event carries its basis, criterion and episode",
-             "partial", "Threshold, inclusion basis and criterion on every event; events are not "
-                        "yet grouped into episodes, so one storm can appear as several records."),
+             "met", "Threshold, inclusion basis, criterion and episode on every event. Episodes "
+                    "are curated by hand under a stated rule, and counts are given in both "
+                    "records and episodes."),
         item(6, "Safety tests extended to the country", "met",
              "The served-data gates recurse into every country payload."),
-        item(7, "Freshness: last refresh per source, with a stale notice", "partial",
-             "The record's review date is published and the page warns once it is older than "
-             "the declared limit; there is no per-source refresh date."),
+        item(7, "Freshness: last refresh per source, with a stale notice",
+             "met" if research_complete else "partial",
+             "Every source states when it was last checked and how long it stays fresh, and the "
+             "page marks any source past that limit. " + (
+                 "The event search covered the whole window." if research_complete else
+                 "The event search itself has not covered the whole window: at least one research "
+                 "pass ended with its budget spent, so recent years are under-searched.")),
         item(8, "Comparability fields and structural rules", "met",
              "comparability 'none', reporting environment on every count, fixed alphabetical "
              "order, no shared scale."),
@@ -274,6 +383,10 @@ def build_system(system_id, admin1, admin0, as_of):
     doc = read_json(src / "system.json")
     profile = read_json(src / "profile.json")
     raw_events = read_json(src / "events.json")["events"]
+    declared = read_json(src / "episodes.json")["episodes"] if (src / "episodes.json").exists() else []
+    research_log = read_json(src / "research_log.json")
+    validate_sources(system_id, doc, research_log)
+    episode_of = validate_episodes(system_id, declared, {r["event_id"] for r in raw_events})
     reg = systems.system(system_id)
 
     us = units(system_id, admin1, admin0)
@@ -284,6 +397,8 @@ def build_system(system_id, admin1, admin0, as_of):
                          f"first-level units, Natural Earth gave {len(us)}")
     events = sorted((_event(r, unit_names) for r in raw_events),
                     key=lambda e: (e["date"], e["event_id"]))
+    for e in events:
+        e["episode_id"] = episode_of.get(e["event_id"], e["event_id"])
     validate(system_id, doc, events, unit_codes)
     # An event dated after TODAY is a curation error and fails the build. An event dated after
     # the build's --as-of is not: a historical rebuild (the frozen 2026-08-28 regression) must
@@ -295,6 +410,9 @@ def build_system(system_id, admin1, admin0, as_of):
         raise ValueError(f"system {system_id}: events dated in the future: {future}")
     later = sum(1 for e in events if e["date"] > as_of)
     events = [e for e in events if e["date"] <= as_of]
+    # Computed after the as-of filter, so a historical build's episodes hold only the records
+    # that existed by then.
+    episodes = episodes_of(declared, events)
 
     counts = {}
     for e in events:
@@ -357,6 +475,8 @@ def build_system(system_id, admin1, admin0, as_of):
                       "view_bounds": doc["geography"].get("view_bounds") or _bounds(kept)},
         "event_summary": {
             "recorded_events": len(events),
+            "episodes": len(episodes),
+            "multi_record_episodes": sum(1 for x in episodes if x["records"] > 1),
             "placed_in_a_region": sum(1 for e in events if e["geography_precision"] == "admin1"),
             "country_level": sum(1 for e in events if e["geography_precision"] != "admin1"),
             "recovery_research": recovery_counts,
@@ -367,6 +487,8 @@ def build_system(system_id, admin1, admin0, as_of):
             "note": "Counts what was reported and found, not what occurred.",
         },
         "inclusion_threshold": read_json(SYSTEMS_CURATED / "inclusion_threshold.json"),
+        "episode_bases": {**EPISODE_BASES,
+                          "single_record": "No other record is tied to this one by name or source."},
         "taxonomy": {"asset_classes": {k: labels[k] for k in used_classes},
                      "causes": {k: cause_labels[k] for k in used_causes}},
         "profile": profile,
@@ -376,13 +498,15 @@ def build_system(system_id, admin1, admin0, as_of):
         # implies the corpus was re-checked today (iteration-14 red team).
         "record_reviewed": reviewed,
         "review_freshness_days": doc.get("review_freshness_days", 120),
-        "onboarding_gate": onboarding_gate(doc, events, profile),
+        "research_log": research_log,
+        "onboarding_gate": onboarding_gate(doc, events, profile, research_log),
         "audit_docs": doc["audit_docs"],
     }
     out = PROCESSED / systems.root(system_id)
     out.mkdir(parents=True, exist_ok=True)
     write_json(out / "system.json", payload)
-    write_json(out / "events.json", {"system_id": system_id, "as_of": as_of, "events": events})
+    write_json(out / "events.json", {"system_id": system_id, "as_of": as_of, "events": events,
+                                     "episodes": episodes})
     write_json(out / "regions.geojson", {"type": "FeatureCollection", "features": features})
     log(f"system {system_id}: {len(events)} events, {len(features)} units, "
         f"readiness {payload['evidence_readiness']}")

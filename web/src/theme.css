@@ -1958,6 +1958,11 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
 .event-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .event-title { font-weight: 600; margin-top: 2px; }
 .event-item .sources a { margin-right: 10px; }
+/* An episode groups records of one hazard; its border marks the group without another card. */
+.episode-group { border-top: 1px solid var(--line-soft); padding-top: 8px; }
+.episode-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px; }
+.episode-group > .event-list { border-left: 2px solid var(--line); padding-left: 10px; }
+.stale-flag { color: var(--amber); }
 .rec { font-weight: 600; }
 .rec-evidence_found { color: var(--green); }
 .rec-researched_no_public_evidence { color: var(--amber); }

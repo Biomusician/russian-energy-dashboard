@@ -1,0 +1,24 @@
+{
+  "note": "What was searched, when, and how far it got. Counts only: the candidate queue's per-record narratives are kept off the public record (data/candidates/README.md). A window searched with the budget exhausted is PARTIAL, not researched-and-quiet.",
+  "passes": [
+    {
+      "date": "2026-10-30",
+      "by": "iteration-14 incident and recovery lane",
+      "window": [
+        "2022-01-01",
+        "2026-10-30"
+      ],
+      "scope": "all sectors; operator and regulator releases, national and local-language media",
+      "status": "partial",
+      "status_reason": "the shared web-search budget ran out before 2025-2026 were covered",
+      "outcome": {
+        "records": 55,
+        "accepted": 34,
+        "insufficient_evidence": 11,
+        "rejected": 7,
+        "duplicate": 2,
+        "out_of_scope": 1
+      }
+    }
+  ]
+}

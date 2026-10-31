@@ -9,7 +9,8 @@
       "year": 2025,
       "source": "U.S. EIA, Monthly Energy Review (release 2026-10-29), Table 1.2, Total Primary Energy Production (TEPRBUS)",
       "url": "https://www.eia.gov/totalenergy/data/browser/csv.php?tbl=T01.02",
-      "note": "Fossil fuels 89.73, nuclear 8.20, renewables 9.24 quad Btu. 2024: 103.64."
+      "note": "Fossil fuels 89.73, nuclear 8.20, renewables 9.24 quad Btu. 2024: 103.64.",
+      "basis": "country total, calendar year; primary energy production (fossil, nuclear, renewables), EIA Monthly Energy Review"
     },
     {
       "metric": "crude_oil_production",
@@ -18,7 +19,8 @@
       "year": 2025,
       "source": "U.S. EIA, Monthly Energy Review (release 2026-10-29), Table 3.1, Crude Oil Production, Total (PAPRPUS, 13,661.934 thousand b/d)",
       "url": "https://www.eia.gov/totalenergy/data/browser/csv.php?tbl=T03.01",
-      "note": "Crude oil including lease condensate; excludes natural gas plant liquids (7.52 million b/d in 2025, same table)."
+      "note": "Crude oil including lease condensate; excludes natural gas plant liquids (7.52 million b/d in 2025, same table).",
+      "basis": "country total, calendar-year average; crude oil including lease condensate, excluding natural gas liquids"
     },
     {
       "metric": "natural_gas_production",
@@ -27,7 +29,8 @@
       "year": 2025,
       "source": "U.S. EIA, Monthly Energy Review (release 2026-10-29), Table 4.1, Natural Gas Production (Dry) (NGPRPUS)",
       "url": "https://www.eia.gov/totalenergy/data/browser/csv.php?tbl=T04.01",
-      "note": "Marketed (wet) production 43,229.11 Bcf in the same table."
+      "note": "Marketed (wet) production 43,229.11 Bcf in the same table.",
+      "basis": "country total, calendar year; dry natural gas (marketed wet production is larger)"
     },
     {
       "metric": "coal_production",
@@ -36,7 +39,8 @@
       "year": 2025,
       "source": "U.S. EIA, Monthly Energy Review (release 2026-10-29), Table 6.1, Coal Production (CLPRPUS, 528,423.418 thousand short tons)",
       "url": "https://www.eia.gov/totalenergy/data/browser/csv.php?tbl=T06.01",
-      "note": "Annual Coal Report 2024 (final): 512.5 MMst from 524 producing mines; productive capacity 832.8 MMst, published by state only."
+      "note": "Annual Coal Report 2024 (final): 512.5 MMst from 524 producing mines; productive capacity 832.8 MMst, published by state only.",
+      "basis": "country total, calendar year; all coal ranks, preliminary MER figure"
     },
     {
       "metric": "electricity_generation",
@@ -45,7 +49,8 @@
       "year": 2025,
       "source": "U.S. EIA, Monthly Energy Review (release 2026-10-29), Table 7.1, Electricity Net Generation, Total (ELETPUS, billion kWh)",
       "url": "https://www.eia.gov/totalenergy/data/browser/csv.php?tbl=T07.01",
-      "note": "Natural gas 1,807 TWh, nuclear 785 TWh, coal 737 TWh, wind 464 TWh, solar 296 TWh (Table 7.2a)."
+      "note": "Natural gas 1,807 TWh, nuclear 785 TWh, coal 737 TWh, wind 464 TWh, solar 296 TWh (Table 7.2a).",
+      "basis": "country total, calendar year; net generation, all sectors"
     },
     {
       "metric": "generating_capacity",
@@ -75,7 +80,8 @@
       "year": 2025,
       "source": "U.S. EIA, Liquefied U.S. Natural Gas Exports (annual series N9133US2)",
       "url": "https://www.eia.gov/dnav/ng/hist/n9133us2A.htm",
-      "note": "EIA Today in Energy (2026-07-14) reports 15.1 Bcf/d in 2025, up 26%. 2024: 4,367,170 MMcf."
+      "note": "EIA Today in Energy (2026-07-14) reports 15.1 Bcf/d in 2025, up 26%. 2024: 4,367,170 MMcf.",
+      "basis": "country total, calendar year; volume of LNG exported, natural-gas equivalent"
     }
   ],
   "significance": [

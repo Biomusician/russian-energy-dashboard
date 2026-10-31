@@ -1,0 +1,47 @@
+{
+  "note": "Hand-curated (iteration 15). Two records share an episode only when the record itself names the same hazard, or one source statement reports them together. Being close in time or place is not enough. Records not listed here are each their own episode.",
+  "episodes": [
+    {
+      "episode_id": "us-2022-12-winter-storm-elliott",
+      "name": "Winter Storm Elliott, December 2022",
+      "basis": "named_hazard",
+      "event_ids": [
+        "us-2022-12-winter-storm-elliott-gas-production",
+        "us-2022-12-23-winter-storm-elliott-maine-outages",
+        "us-2022-12-23-tva-rolling-blackouts-elliott",
+        "us-2022-12-23-pjm-forced-outages-elliott",
+        "us-2022-12-24-duke-energy-rolling-blackouts-elliott"
+      ]
+    },
+    {
+      "episode_id": "us-2024-09-hurricane-francine",
+      "name": "Hurricane Francine, September 2024",
+      "basis": "named_hazard",
+      "event_ids": [
+        "us-2024-09-11-hurricane-francine-louisiana-outages",
+        "us-2024-09-11-hurricane-francine-gulf-shut-ins",
+        "us-2024-09-11-hurricane-francine-loop-closure"
+      ]
+    },
+    {
+      "episode_id": "us-2024-09-hurricane-helene",
+      "name": "Hurricane Helene, September 2024",
+      "basis": "named_hazard",
+      "event_ids": [
+        "us-2024-09-26-hurricane-helene-florida-outages",
+        "us-2024-09-27-hurricane-helene-georgia-outages",
+        "us-2024-09-27-hurricane-helene-south-carolina-outages",
+        "us-2024-09-27-hurricane-helene-north-carolina-outages"
+      ]
+    },
+    {
+      "episode_id": "us-2026-01-winter-storm-fern",
+      "name": "Winter storm of 23-27 January 2026 (Fern)",
+      "basis": "named_hazard",
+      "event_ids": [
+        "us-2026-01-24-winter-storm-fern-tennessee-outages",
+        "us-2026-01-24-winter-storm-fern-mississippi-outages"
+      ]
+    }
+  ]
+}

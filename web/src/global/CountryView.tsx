@@ -4,7 +4,8 @@ import SimpleMap from "./SimpleMap";
 import SystemSwitcher from "./SystemSwitcher";
 import {
   ENVIRONMENT_LABEL, READINESS_LABEL, RECOVERY_KIND_LABEL, RECOVERY_LABEL, SECTOR_STATE_LABEL,
-  labelFor, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type ManifestSystem,
+  labelFor, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type Episode,
+  type ManifestSystem,
 } from "./manifest";
 import { navigate } from "./router";
 import { composeCountryFrame, countryFilename } from "./countryExport";
@@ -173,7 +174,8 @@ export default function CountryView({ id }: { id: string }) {
         <div>
           <div className="eyebrow">Recorded</div>
           <div className="small">
-            <strong>{sys.event_summary.recorded_events}</strong> qualifying events recorded ·
+            <strong>{sys.event_summary.recorded_events}</strong> qualifying events recorded
+            {" "}in <strong>{sys.event_summary.episodes}</strong> episodes ·
             reporting environment: {labelFor(ENVIRONMENT_LABEL, sys.reporting_environment)}.
             {" "}{sys.event_summary.note}
           </div>
@@ -298,14 +300,39 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
       </div>
     );
   }
-  const placed = events.filter((e) => e.geography_precision === "admin1");
-  const countryLevel = events.filter((e) => e.geography_precision !== "admin1");
+  const grouped = new Set(bundle.episodes.filter((ep) => ep.records > 1).flatMap((ep) => ep.event_ids));
+  const placed = events.filter((e) => e.geography_precision === "admin1" && !grouped.has(e.event_id));
+  const countryLevel = events.filter((e) => e.geography_precision !== "admin1" && !grouped.has(e.event_id));
+  // Newest first, episodes and single records interleaved by date.
+  const rows: ({ kind: "event"; e: CountryEvent; date: string } | { kind: "episode"; ep: Episode; date: string })[] = [
+    ...placed.map((e) => ({ kind: "event" as const, e, date: e.date })),
+    ...bundle.episodes.filter((ep) => ep.records > 1).map((ep) => ({ kind: "episode" as const, ep, date: ep.first_date })),
+  ].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  const eventById = new Map(events.map((e) => [e.event_id, e]));
   return (
     <div className="events-panel">
       <h2>All reported events</h2>
+      <p className="small dim">{events.length} records in {bundle.episodes.length} episodes. An episode
+        is one hazard or one source statement: a storm that cut power in four states is one episode
+        of four records.</p>
       <ol className="event-list">
-        {[...placed].reverse().map((e) => <EventItem key={e.event_id} e={e} bundle={bundle} />)}
+        {rows.map((row) => row.kind === "event"
+          ? <EventItem key={row.e.event_id} e={row.e} bundle={bundle} />
+          : (
+            <li key={row.ep.episode_id} className="episode-group">
+              <div className="episode-head">
+                <span className="eyebrow">Episode · {row.ep.records} records</span>
+                <strong>{row.ep.name}</strong>
+                <span className="small dim">{labelFor(bundle.system.episode_bases, row.ep.basis)}</span>
+              </div>
+              <ol className="event-list">
+                {row.ep.event_ids.map((id) => eventById.get(id)).filter((e): e is CountryEvent => !!e)
+                  .map((e) => <EventItem key={e.event_id} e={e} bundle={bundle} inEpisode />)}
+              </ol>
+            </li>
+          ))}
       </ol>
+
       {countryLevel.length > 0 && (
         <>
           <h3 className="eyebrow">Not placed in one {unit}</h3>
@@ -326,9 +353,11 @@ function recoveryText(e: CountryEvent): string {
   return labelFor(RECOVERY_LABEL, r.research_status);
 }
 
-function EventItem({ e, bundle }: { e: CountryEvent; bundle: CountryBundle }) {
+/** `inEpisode`: drawn inside its episode's group, which already names the episode. */
+function EventItem({ e, bundle, inEpisode = false }: { e: CountryEvent; bundle: CountryBundle; inEpisode?: boolean }) {
   const tax = bundle.system.taxonomy;
   const recClass = e.recovery.kind ?? e.recovery.research_status;
+  const ep = bundle.episodes.find((x) => x.episode_id === e.episode_id);
   return (
     <li className="event-item">
       <div className="event-head">
@@ -340,6 +369,9 @@ function EventItem({ e, bundle }: { e: CountryEvent; bundle: CountryBundle }) {
       {e.effect && <p className="small"><span className="dim">Reported effect: </span>{e.effect}</p>}
       {e.regions_affected.length > 0 && (
         <p className="small dim">Regions affected: {e.regions_affected.join(", ")}</p>
+      )}
+      {ep && ep.records > 1 && !inEpisode && (
+        <p className="small dim episode-note">Part of an episode: {ep.name} ({ep.records} records)</p>
       )}
       <p className="small">
         <span className={`rec rec-${recClass.toLowerCase()}`}>{recoveryText(e)}</span>
@@ -417,15 +449,45 @@ function SourcesPanel({ bundle }: { bundle: CountryBundle }) {
   const rec = s.event_summary.recovery_research;
   const kinds = Object.entries(s.event_summary.recovery_kinds).filter(([, n]) => n > 0);
   const unrecorded = bundle.events.filter((e) => e.review.source_access === "not recorded by the research lane").length;
+  const today = new Date().toISOString().slice(0, 10);
   return (
     <div>
       <h2>Sources &amp; data quality</h2>
       <p className="small">{s.reporting_note}</p>
-      <table className="sector-table">
-        <thead><tr><th>Source</th><th>Use</th><th>Licence</th></tr></thead>
+      <table className="sector-table source-table">
+        <thead><tr><th>Source</th><th>Use</th><th>Licence</th><th>Last checked</th></tr></thead>
         <tbody>
-          {s.sources.map((x) => (
-            <tr key={x.name}><td>{x.name}</td><td className="small">{x.role}</td><td className="small dim">{x.licence}</td></tr>
+          {s.sources.map((x) => {
+            const age = x.checked ? daysBetween(x.checked, today) : null;
+            const late = age != null && x.stale_after_days != null && age > x.stale_after_days;
+            return (
+              <tr key={x.name}>
+                <td>{x.name}</td>
+                <td className="small">{x.role}</td>
+                <td className="small dim">{x.licence}</td>
+                <td className="small">
+                  {x.checked ? fmtDate(x.checked) : "never"}
+                  {x.cadence && <div className="dim">Publishes: {x.cadence}</div>}
+                  {late && <div className="stale-flag">Past its {x.stale_after_days}-day limit: re-check before relying on it</div>}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <h3 className="eyebrow">How far the event search got</h3>
+      <p className="small dim">{s.research_log.note}</p>
+      <table className="sector-table research-log">
+        <thead><tr><th>Pass</th><th>Window searched</th><th>Status</th><th>Outcome</th></tr></thead>
+        <tbody>
+          {s.research_log.passes.map((p) => (
+            <tr key={`${p.date}-${p.by}`}>
+              <td className="small">{fmtDate(p.date)}<div className="dim">{p.by}</div></td>
+              <td className="small">{fmtDate(p.window[0])} – {fmtDate(p.window[1])}<div className="dim">{p.scope}</div></td>
+              <td className="small"><span className={`badge gate-${p.status === "complete" ? "met" : "partial"}`}>{p.status}</span>
+                {p.status_reason && <div className="dim">{p.status_reason}</div>}</td>
+              <td className="small">{Object.entries(p.outcome).map(([k, n]) => `${k.replace(/_/g, " ")} ${n}`).join(" · ")}</td>
+            </tr>
           ))}
         </tbody>
       </table>
@@ -441,7 +503,7 @@ function SourcesPanel({ bundle }: { bundle: CountryBundle }) {
       )}
       <h3 className="eyebrow">Known gaps</h3>
       <ul className="small">{s.research_gaps.map((g, i) => <li key={i}>{g}</li>)}</ul>
-      <p className="small dim">Events were gathered by a single open-source research pass and reviewed
+      <p className="small dim">Events were gathered by the open-source research passes above and reviewed
         against the inclusion threshold, source rules and a scope scan. Claims were not
         independently re-verified beyond the cited sources.
         {unrecorded > 0 && ` For ${unrecorded} of ${bundle.events.length} events the research lane did not record whether it read the cited sources.`}</p>

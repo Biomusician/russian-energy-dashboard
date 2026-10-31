@@ -56,27 +56,42 @@
     {
       "name": "EIA Refinery Capacity Report; EIA-860M; Monthly Energy Review",
       "role": "adopted",
-      "licence": "US public domain"
+      "licence": "US public domain",
+      "checked": "2026-10-30",
+      "cadence": "annual (refinery census) and monthly (EIA-860M, Monthly Energy Review)",
+      "stale_after_days": 400
     },
     {
       "name": "EAGLE-I county outage history",
       "role": "adopted (aggregates only)",
-      "licence": "CC BY 4.0"
+      "licence": "CC BY 4.0",
+      "checked": "2026-10-30",
+      "cadence": "periodic history releases of 15-minute county outage snapshots",
+      "stale_after_days": 400
     },
     {
       "name": "DOE OE-417, PHMSA incident data, NERC",
       "role": "derived facts only",
-      "licence": "varies; PHMSA latitude/longitude never read"
+      "licence": "varies; PHMSA latitude/longitude never read",
+      "checked": "2026-10-30",
+      "cadence": "event-driven reports; read when an event is researched",
+      "stale_after_days": 180
     },
     {
       "name": "WRI Global Power Plant Database",
       "role": "rejected",
-      "licence": "stale for the US"
+      "licence": "stale for the US",
+      "checked": "2026-10-30",
+      "cadence": null,
+      "stale_after_days": null
     },
     {
       "name": "Facility-level substation and line geodata",
       "role": "rejected",
-      "licence": "outside the project's scope boundary"
+      "licence": "outside the project's scope boundary",
+      "checked": "2026-10-30",
+      "cadence": null,
+      "stale_after_days": null
     }
   ],
   "research_gaps": [

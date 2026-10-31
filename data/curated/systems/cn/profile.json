@@ -8,7 +8,8 @@
       "unit": "billion tonnes of standard coal equivalent",
       "year": 2025,
       "source": "NBS Statistical Communique 2025 (preliminary)",
-      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html"
+      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html",
+      "basis": "country total, calendar year; primary energy production in standard coal equivalent (NBS whole-economy scope), preliminary"
     },
     {
       "metric": "crude_oil_production",
@@ -16,7 +17,8 @@
       "unit": "million tonnes",
       "year": 2025,
       "source": "NBS Statistical Communique 2025, Table 4 (21608.7 x 10,000 t)",
-      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html"
+      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html",
+      "basis": "country total, calendar year; crude oil, NBS communiqué"
     },
     {
       "metric": "natural_gas_production",
@@ -24,7 +26,8 @@
       "unit": "billion cubic metres",
       "year": 2025,
       "source": "NBS Statistical Communique 2025, Table 4 (2620.6 x 100 million m3)",
-      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html"
+      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html",
+      "basis": "country total, calendar year; natural gas, NBS communiqué"
     },
     {
       "metric": "coal_production",
@@ -32,7 +35,8 @@
       "unit": "billion tonnes (raw coal)",
       "year": 2025,
       "source": "NBS Statistical Communique 2025, Table 4 (48.5 x 100 million t)",
-      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html"
+      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html",
+      "basis": "country total, calendar year; raw coal, NBS communiqué"
     },
     {
       "metric": "electricity_generation",
@@ -40,7 +44,8 @@
       "unit": "TWh",
       "year": 2025,
       "source": "NBS Statistical Communique 2025, Table 4 (105752.5 x 100 million kWh)",
-      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html"
+      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html",
+      "basis": "country total, calendar year; electricity generation, NBS communiqué (whole-economy scope, larger than the monthly above-scale series)"
     },
     {
       "metric": "generating_capacity",
@@ -48,7 +53,8 @@
       "unit": "GW, installed at year end",
       "year": 2025,
       "source": "NBS Statistical Communique 2025 (thermal 1539.04, hydro 448.02, nuclear 62.48, wind 640.01, solar 1201.73 GW; solar AC/DC basis not stated)",
-      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html"
+      "url": "https://www.stats.gov.cn/english/PressRelease/202602/t20260228_1962661.html",
+      "basis": "country total, installed capacity at year end, NBS communiqué; solar AC/DC basis not stated"
     },
     {
       "metric": "refining_capacity",

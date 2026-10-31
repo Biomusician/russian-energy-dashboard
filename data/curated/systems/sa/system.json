@@ -56,22 +56,34 @@
     {
       "name": "Aramco Annual Report",
       "role": "adopted (facts only)",
-      "licence": "all rights reserved; not redistributed"
+      "licence": "all rights reserved; not redistributed",
+      "checked": "2026-10-30",
+      "cadence": "annual (published about March for the prior year)",
+      "stale_after_days": 400
     },
     {
       "name": "JODI Oil",
       "role": "adopted (context)",
-      "licence": "terms not published"
+      "licence": "terms not published",
+      "checked": "2026-10-30",
+      "cadence": "monthly",
+      "stale_after_days": 120
     },
     {
       "name": "GASTAT, SEC, EIA, OPEC",
       "role": "derived facts only",
-      "licence": "varies"
+      "licence": "varies",
+      "checked": "2026-10-30",
+      "cadence": "varies by publisher; read when an event is researched",
+      "stale_after_days": 180
     },
     {
       "name": "WRI Global Power Plant Database; OSM",
       "role": "rejected",
-      "licence": "stale to 2016; no refinery or pipeline tagging"
+      "licence": "stale to 2016; no refinery or pipeline tagging",
+      "checked": "2026-10-30",
+      "cadence": null,
+      "stale_after_days": null
     }
   ],
   "research_gaps": [

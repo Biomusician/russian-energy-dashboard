@@ -1,0 +1,14 @@
+{
+  "note": "Hand-curated (iteration 15). Two records share an episode only when the record itself names the same hazard, or one source statement reports them together. Being close in time or place is not enough. Records not listed here are each their own episode.",
+  "episodes": [
+    {
+      "episode_id": "ca-2022-05-derecho",
+      "name": "Derecho of 21 May 2022",
+      "basis": "named_hazard",
+      "event_ids": [
+        "ca-2022-05-21-derecho-ontario",
+        "ca-2022-05-21-derecho-quebec"
+      ]
+    }
+  ]
+}

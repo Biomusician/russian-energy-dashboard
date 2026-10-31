@@ -9,7 +9,8 @@
       "year": 2024,
       "source": "Statistics Canada, Table 25-10-0029-01, Primary energy / Production (vector v54272546)",
       "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510002901",
-      "note": "Primary energy as StatCan defines it: crude oil, natural gas, gas-plant NGLs, coal, primary electricity (hydro and nuclear), steam, renewable fuels. Uranium is not counted as a fuel. 24,664 PJ."
+      "note": "Primary energy as StatCan defines it: crude oil, natural gas, gas-plant NGLs, coal, primary electricity (hydro and nuclear), steam, renewable fuels. Uranium is not counted as a fuel. 24,664 PJ.",
+      "basis": "country total, calendar year; primary energy production as Statistics Canada defines it"
     },
     {
       "metric": "crude_oil_production",
@@ -18,7 +19,8 @@
       "year": 2025,
       "source": "Statistics Canada, Table 25-10-0063-01, Crude oil production, Canada, barrels (vector v107757045)",
       "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510006301",
-      "note": "Derived: 1,748,642,834 bbl summed over the 12 months of 2025, divided by 365. Excludes condensate and pentanes plus (reported separately as equivalent products)."
+      "note": "Derived: 1,748,642,834 bbl summed over the 12 months of 2025, divided by 365. Excludes condensate and pentanes plus (reported separately as equivalent products).",
+      "basis": "country total, calendar-year average derived from monthly sums; crude oil including bitumen and synthetic crude, excluding condensate and pentanes plus"
     },
     {
       "metric": "crude_oil_production_oil_sands_share",
@@ -27,7 +29,8 @@
       "year": 2025,
       "source": "Statistics Canada, Table 25-10-0063-01 (vectors v107757053, v107757061, v107757045)",
       "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510006301",
-      "note": "Derived: (non-upgraded crude bitumen 799,213,544 + synthetic crude oil 477,946,221) / crude oil production 1,748,642,834 bbl. Table identity checked: crude production = net field production + synthetic; net field = heavy + light/medium + non-upgraded bitumen."
+      "note": "Derived: (non-upgraded crude bitumen 799,213,544 + synthetic crude oil 477,946,221) / crude oil production 1,748,642,834 bbl. Table identity checked: crude production = net field production + synthetic; net field = heavy + light/medium + non-upgraded bitumen.",
+      "basis": "share of the crude oil production total above, same table and year"
     },
     {
       "metric": "in_situ_bitumen_production",
@@ -36,7 +39,8 @@
       "year": 2025,
       "source": "Statistics Canada, Table 25-10-0063-01, In-situ crude bitumen production (vector v107757055)",
       "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510006301",
-      "note": "Derived: 706,785,097 bbl / 365. Raw bitumen before upgrading."
+      "note": "Derived: 706,785,097 bbl / 365. Raw bitumen before upgrading.",
+      "basis": "country total, calendar-year average; raw in-situ bitumen before upgrading"
     },
     {
       "metric": "mined_bitumen_production",
@@ -45,7 +49,8 @@
       "year": 2025,
       "source": "Statistics Canada, Table 25-10-0063-01, Mined crude bitumen production (vector v107757057)",
       "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510006301",
-      "note": "Derived: 645,037,049 bbl / 365. Raw bitumen before upgrading."
+      "note": "Derived: 645,037,049 bbl / 365. Raw bitumen before upgrading.",
+      "basis": "country total, calendar-year average; raw mined bitumen before upgrading"
     },
     {
       "metric": "synthetic_crude_production",
@@ -54,7 +59,8 @@
       "year": 2025,
       "source": "Statistics Canada, Table 25-10-0063-01, Synthetic crude oil production (vector v107757061)",
       "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510006301",
-      "note": "Derived: 477,946,221 bbl / 365. Upgrader output; upgraders are not refineries."
+      "note": "Derived: 477,946,221 bbl / 365. Upgrader output; upgraders are not refineries.",
+      "basis": "country total, calendar-year average; upgrader output"
     },
     {
       "metric": "crude_oil_production_alberta_share",
@@ -63,7 +69,8 @@
       "year": 2025,
       "source": "Statistics Canada, Table 25-10-0063-01 (vectors v107757711, v107757045)",
       "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510006301",
-      "note": "Derived: Alberta 1,481,703,382 / Canada 1,748,642,834 bbl."
+      "note": "Derived: Alberta 1,481,703,382 / Canada 1,748,642,834 bbl.",
+      "basis": "Alberta's share of the crude oil production total above, same table and year"
     },
     {
       "metric": "natural_gas_production",
@@ -72,7 +79,8 @@
       "year": 2025,
       "source": "Statistics Canada, Table 25-10-0086-01, Marketable production, Canada, cubic metres x 1,000 (vector v1864626177)",
       "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510008601",
-      "note": "Sum of 12 months of 2025: 201,353,990.2 thousand m3. About 19.5 Bcf/d at 35.3147 ft3/m3 (conversion done in this audit)."
+      "note": "Sum of 12 months of 2025: 201,353,990.2 thousand m3. About 19.5 Bcf/d at 35.3147 ft3/m3 (conversion done in this audit).",
+      "basis": "country total, calendar year; marketable natural gas"
     },
     {
       "metric": "coal_production",
@@ -81,7 +89,8 @@
       "year": 2025,
       "source": "Statistics Canada, Table 25-10-0046-01, Total all coal types, production, Canada, tonnes x 1,000 (vector v43973931)",
       "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510004601",
-      "note": "Sum of 12 months of 2025: 42,447 thousand tonnes. Metallurgical/thermal split partly suppressed for confidentiality."
+      "note": "Sum of 12 months of 2025: 42,447 thousand tonnes. Metallurgical/thermal split partly suppressed for confidentiality.",
+      "basis": "country total, calendar year; all coal types"
     },
     {
       "metric": "electricity_generation",
@@ -90,7 +99,8 @@
       "year": 2025,
       "source": "Statistics Canada, Table 25-10-0015-01, Total all types, all producers, Canada (vector v44174609)",
       "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510001501",
-      "note": "Sum of 12 months of 2025: 625,212,374 MWh."
+      "note": "Sum of 12 months of 2025: 625,212,374 MWh.",
+      "basis": "country total, calendar year; all generation types and producers"
     },
     {
       "metric": "electricity_generation_hydro_share",
@@ -99,7 +109,8 @@
       "year": 2025,
       "source": "Statistics Canada, Table 25-10-0015-01, Hydraulic turbine (vector v44174610) / total (v44174609)",
       "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510001501",
-      "note": "Derived: 343,371,989 / 625,212,374 MWh."
+      "note": "Derived: 343,371,989 / 625,212,374 MWh.",
+      "basis": "hydraulic turbine share of the generation total above, same table and year"
     },
     {
       "metric": "generating_capacity",
@@ -108,7 +119,8 @@
       "year": 2025,
       "source": "Statistics Canada, Table 25-10-0022-01, Total installed capacity, all producers, Canada (vector v53517872)",
       "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510002201",
-      "note": "155,906,393 kW. Hydraulic turbine 83,037,480 kW (vector v53517874). Annual census by province and type, 2006-2025."
+      "note": "155,906,393 kW. Hydraulic turbine 83,037,480 kW (vector v53517874). Annual census by province and type, 2006-2025.",
+      "basis": "country total, installed capacity, annual census, all producers"
     },
     {
       "metric": "refining_capacity",
@@ -117,7 +129,8 @@
       "year": 2024,
       "source": "Canada Energy Regulator, Provincial and Territorial Energy Profiles - Canada",
       "url": "https://www.cer-rec.gc.ca/en/data-analysis/energy-markets/provincial-territorial-energy-profiles/provincial-territorial-energy-profiles-canada.html",
-      "note": "CER: about 1.93 MMb/d across 17 refineries as of 2024. Refinery basis; CER lists upgraders separately (Alberta profile). Page modified 2026-03-26 but the figure is as of 2024."
+      "note": "CER: about 1.93 MMb/d across 17 refineries as of 2024. Refinery basis; CER lists upgraders separately (Alberta profile). Page modified 2026-03-26 but the figure is as of 2024.",
+      "basis": "country total, approximate refinery capacity as stated by the Canada Energy Regulator; nameplate/operable basis not stated"
     },
     {
       "metric": "upgrading_capacity_alberta",
@@ -126,7 +139,8 @@
       "year": 2023,
       "source": "Canada Energy Regulator, Provincial and Territorial Energy Profiles - Alberta",
       "url": "https://www.cer-rec.gc.ca/en/data-analysis/energy-markets/provincial-territorial-energy-profiles/provincial-territorial-energy-profiles-alberta.html",
-      "note": "Four Alberta upgraders; the same page gives about 1.2 MMb/d of synthetic crude produced in 2023. Excludes the Lloydminster upgrader in Saskatchewan (81.5 Mb/d heavy oil, CER Saskatchewan profile)."
+      "note": "Four Alberta upgraders; the same page gives about 1.2 MMb/d of synthetic crude produced in 2023. Excludes the Lloydminster upgrader in Saskatchewan (81.5 Mb/d heavy oil, CER Saskatchewan profile).",
+      "basis": "Alberta total, approximate bitumen upgrading capacity as stated by the Canada Energy Regulator"
     },
     {
       "metric": "refinery_crude_input",
@@ -135,7 +149,8 @@
       "year": 2025,
       "source": "Statistics Canada, Table 25-10-0063-01, Input to Canadian refineries (vector v107757077)",
       "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510006301",
-      "note": "Derived: 646,809,910 bbl / 365."
+      "note": "Derived: 646,809,910 bbl / 365.",
+      "basis": "country total, calendar-year average; crude input to refineries (throughput, not capacity)"
     },
     {
       "metric": "crude_exports",
@@ -144,7 +159,8 @@
       "year": 2025,
       "source": "Statistics Canada, Table 25-10-0063-01, Exports (vector v107757089)",
       "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510006301",
-      "note": "Derived: 1,571,972,384 bbl / 365. To the United States 1,400,891,806 bbl (89.1%); to other countries 171,080,579 bbl (0.47 million b/d)."
+      "note": "Derived: 1,571,972,384 bbl / 365. To the United States 1,400,891,806 bbl (89.1%); to other countries 171,080,579 bbl (0.47 million b/d).",
+      "basis": "country total, calendar-year average; crude oil exports, all destinations"
     },
     {
       "metric": "lng_exports",
@@ -153,7 +169,8 @@
       "year": 2025,
       "source": "Canada Energy Regulator, Liquefied Natural Gas - Exports, monthly by terminal (Open Government Licence - Canada)",
       "url": "https://www.cer-rec.gc.ca/open/imports-exports/liquefied-natural-gas-exports-monthly.csv",
-      "note": "Sum of 2025 'Total' export rows, 10^3 m3. Kitimat 3.053 billion m3; first Kitimat row is June 2025. Jan-Aug 2026: 9.542 billion m3."
+      "note": "Sum of 2025 'Total' export rows, 10^3 m3. Kitimat 3.053 billion m3; first Kitimat row is June 2025. Jan-Aug 2026: 9.542 billion m3.",
+      "basis": "country total, calendar year; LNG exports, natural-gas-equivalent volume, all terminals"
     }
   ],
   "significance": [

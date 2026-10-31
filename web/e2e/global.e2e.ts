@@ -156,6 +156,51 @@ test.describe("country systems", () => {
   });
 });
 
+test.describe("episodes and source freshness (iteration 15)", () => {
+  test("one hurricane is one episode: grouped, counted once, every record still listed", async ({ app, page }) => {
+    await app.open("?sys=us");
+    const payload = await countryPayload(page, "us", "events.json");
+    const sys = await countryPayload(page, "us", "system.json");
+    const ribbon = page.getByRole("region", { name: "Headline" });
+    await expect(ribbon).toContainText(`in ${sys.event_summary.episodes} episodes`);
+    const multi = payload.episodes.filter((ep: { records: number }) => ep.records > 1);
+    await expect(page.locator(".episode-group")).toHaveCount(multi.length);
+    const helene = page.locator(".episode-group").filter({ hasText: "Hurricane Helene" });
+    await expect(helene.locator(".event-item")).toHaveCount(4);
+    await expect(helene).toContainText("4 records");
+    // Grouping never hides a record.
+    await expect(page.locator(".event-item")).toHaveCount(payload.events.length);
+  });
+
+  test("a region view keeps records separate and says which episode each belongs to", async ({ app, page }) => {
+    await app.open("?sys=us&r=US-NC");
+    await expect(page.locator(".event-item").filter({ hasText: "North Carolina" }).first())
+      .toContainText("Part of an episode: Hurricane Helene");
+  });
+
+  test("every source shows when it was checked, and the search log says where it stopped", async ({ app, page }) => {
+    await app.open("?sys=cn");
+    await app.button("Sources & data quality").click();
+    const sys = await countryPayload(page, "cn", "system.json");
+    await expect(page.locator(".source-table tbody tr")).toHaveCount(sys.sources.length);
+    await expect(page.locator(".source-table")).toContainText("Publishes:");
+    await expect(page.locator(".research-log tbody tr")).toHaveCount(sys.research_log.passes.length);
+    await expect(page.locator(".research-log")).toContainText("partial");
+  });
+
+  test("a source past its limit is flagged on the reader's clock, not the build's", async ({ app, page }) => {
+    await page.route("**/data/systems/ca/system.json", async (route) => {
+      const res = await route.fetch();
+      const body = await res.json();
+      body.sources[0].checked = "2020-01-01";
+      await route.fulfill({ response: res, json: body });
+    });
+    await app.open("?sys=ca");
+    await app.button("Sources & data quality").click();
+    await expect(page.locator(".source-table .stale-flag")).toHaveCount(1);
+  });
+});
+
 test.describe("theatre links", () => {
   test("the theatre's own URL now names it, so its default view survives a reload", async ({ app, page }) => {
     await app.open("?m=ev");

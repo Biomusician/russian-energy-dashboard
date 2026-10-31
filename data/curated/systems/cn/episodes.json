@@ -1,0 +1,32 @@
+{
+  "note": "Hand-curated (iteration 15). Two records share an episode only when the record itself names the same hazard, or one source statement reports them together. Being close in time or place is not enough. Records not listed here are each their own episode.",
+  "episodes": [
+    {
+      "episode_id": "cn-2022-08-sichuan-basin-heat-drought",
+      "name": "Yangtze-basin heat and drought shortfall, August 2022",
+      "basis": "named_hazard",
+      "event_ids": [
+        "cn-2022-08-15-sichuan-industrial-power-halt",
+        "cn-2022-08-17-chongqing-industrial-power-curbs"
+      ]
+    },
+    {
+      "episode_id": "cn-2022-yunnan-hydropower-shortage",
+      "name": "Yunnan hydropower shortage, 2022-23",
+      "basis": "continuing_shortfall",
+      "event_ids": [
+        "cn-2022-09-10-yunnan-aluminium-power-cuts",
+        "cn-2023-02-20-yunnan-aluminium-power-cuts-deepened"
+      ]
+    },
+    {
+      "episode_id": "cn-2024-09-typhoon-yagi",
+      "name": "Typhoon Yagi, September 2024",
+      "basis": "named_hazard",
+      "event_ids": [
+        "cn-2024-09-06-typhoon-yagi-hainan-outage",
+        "cn-2024-09-06-typhoon-yagi-guangdong-outage"
+      ]
+    }
+  ]
+}

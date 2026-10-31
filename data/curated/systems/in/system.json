@@ -66,22 +66,34 @@
     {
       "name": "U.S. EIA country data",
       "role": "adopted (context)",
-      "licence": "US public domain"
+      "licence": "US public domain",
+      "checked": "2026-10-30",
+      "cadence": "annual country analysis",
+      "stale_after_days": 400
     },
     {
       "name": "GEM pipeline and coal plant trackers",
       "role": "adopted (denominator candidates)",
-      "licence": "CC BY 4.0 (to confirm on the release file)"
+      "licence": "CC BY 4.0 (to confirm on the release file)",
+      "checked": "2026-10-30",
+      "cadence": "tracker releases about twice a year",
+      "stale_after_days": 400
     },
     {
       "name": "PPAC, CEA, National Power Portal, Ministry of Coal",
       "role": "derived facts only",
-      "licence": "reuse by permission"
+      "licence": "reuse by permission",
+      "checked": "2026-10-30",
+      "cadence": "monthly (PPAC, CEA); daily (National Power Portal)",
+      "stale_after_days": 120
     },
     {
       "name": "WRI Global Power Plant Database",
       "role": "rejected",
-      "licence": "57% of current capacity, 2019 vintage"
+      "licence": "57% of current capacity, 2019 vintage",
+      "checked": "2026-10-30",
+      "cadence": null,
+      "stale_after_days": null
     }
   ],
   "research_gaps": [
