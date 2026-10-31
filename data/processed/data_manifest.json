@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-10-31T01:16:06+00:00",
+  "build_time": "2026-10-31T10:57:44+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -9,17 +9,17 @@
     },
     {
       "name": "build_changes.json",
-      "bytes": 3780,
+      "bytes": 8707,
       "optional": false
     },
     {
       "name": "data_quality.json",
-      "bytes": 26550,
+      "bytes": 26322,
       "optional": false
     },
     {
       "name": "explanations_regional.json",
-      "bytes": 104745,
+      "bytes": 104743,
       "optional": false
     },
     {
@@ -34,12 +34,12 @@
     },
     {
       "name": "index_national.json",
-      "bytes": 12433,
+      "bytes": 12432,
       "optional": false
     },
     {
       "name": "index_regional.json",
-      "bytes": 582219,
+      "bytes": 582218,
       "optional": false
     },
     {
@@ -54,7 +54,7 @@
     },
     {
       "name": "recovery_lifecycle.json",
-      "bytes": 115166,
+      "bytes": 115164,
       "optional": false
     },
     {
@@ -69,7 +69,7 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 282501,
+      "bytes": 282492,
       "optional": false
     },
     {
@@ -99,7 +99,7 @@
     },
     {
       "name": "context_oil_network.geojson",
-      "bytes": 358087,
+      "bytes": 358086,
       "optional": true
     },
     {

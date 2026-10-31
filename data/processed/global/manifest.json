@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_time": "2026-10-31T01:16:06+00:00",
+  "build_time": "2026-10-31T10:57:44+00:00",
   "selection": {
     "rule": "The five largest total primary energy producers in the world, excluding Russia.",
     "source": "U.S. EIA International Energy Statistics, total primary energy production, 2024",
@@ -27,7 +27,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "mixed_regulatory",
-      "as_of": "2026-10-30",
+      "as_of": "2026-10-31",
       "bounds": [
         -141.01,
         41.67,
@@ -49,7 +49,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "media_only",
-      "as_of": "2026-10-30",
+      "as_of": "2026-10-31",
       "bounds": [
         73.6,
         15.78,
@@ -71,7 +71,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "mixed_regulatory",
-      "as_of": "2026-10-30",
+      "as_of": "2026-10-31",
       "bounds": [
         68.14,
         6.75,
@@ -95,13 +95,13 @@
         "name": "Monitored-Area ESDI"
       },
       "headline": {
-        "value": 8.33,
-        "as_of": "2026-10-30",
+        "value": 8.2,
+        "as_of": "2026-10-31",
         "label": "Monitored-Area ESDI",
         "meaning": "Capacity at disrupted sites, not measured loss."
       },
       "reporting_environment": "conflict_restricted",
-      "as_of": "2026-10-30",
+      "as_of": "2026-10-31",
       "files": [
         "snapshot.json"
       ]
@@ -115,7 +115,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "corporate_disclosure",
-      "as_of": "2026-10-30",
+      "as_of": "2026-10-31",
       "bounds": [
         34.57,
         16.37,
@@ -137,7 +137,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "mandatory_regulatory",
-      "as_of": "2026-10-30",
+      "as_of": "2026-10-31",
       "bounds": [
         -187.52,
         18.91,
