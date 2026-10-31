@@ -93,6 +93,24 @@ test.describe("country systems", () => {
     });
   }
 
+  for (const id of COUNTRIES) {
+    test(`${id}: a deep link to its busiest region lists exactly that region's records`, async ({ app, page }) => {
+      await app.open(`?sys=${id}`);
+      const events = (await countryPayload(page, id, "events.json")).events as
+        { region_code: string | null; region_name: string; geography_precision: string; regions_affected: string[] }[];
+      const counts = new Map<string, { n: number; name: string }>();
+      for (const e of events) {
+        if (e.region_code) counts.set(e.region_code, { n: (counts.get(e.region_code)?.n ?? 0) + 1, name: e.region_name });
+      }
+      const [code, { n, name }] = [...counts.entries()].sort((a, b) => b[1].n - a[1].n)[0];
+      // Multi-region records naming this region are listed beside it, never counted in it.
+      const shared = events.filter((e) => e.geography_precision !== "admin1" && e.regions_affected.includes(code)).length;
+      await app.open(`?sys=${id}&r=${code}`);
+      await expect(page.getByRole("heading", { name, level: 2 })).toBeVisible();
+      await expect(page.locator(".event-item")).toHaveCount(n + shared);
+    });
+  }
+
   test("a region deep link lists only that region's events", async ({ app, page }) => {
     await app.open("?sys=us");
     const events = (await countryPayload(page, "us", "events.json")).events;
