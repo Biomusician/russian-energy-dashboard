@@ -786,6 +786,49 @@
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
       }
+    },
+    {
+      "event_id": "cn-2025-09-24-typhoon-ragasa-guangdong-outage",
+      "date": "2025-09-24",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "CN-GD",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": null,
+      "facility_name_local": null,
+      "operator": null,
+      "asset_class": "system_wide",
+      "cause": "natural_hazard",
+      "summary": "Typhoon Ragasa (桦加沙) made landfall in Guangdong on 24 September 2025; winds brought down power lines and trees across the province.",
+      "effect": "Nearly half a million households lost power; more than a third were still without electricity on the morning of 25 September.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 5,
+      "threshold_basis": "Grid outages affecting far more than 100,000 customers.",
+      "capacity_affected": null,
+      "sources": [
+        {
+          "url": "https://www.nationalheraldindia.com/international/weakened-ragasa-lashes-southern-china-death-toll-rises-in-taiwan-and-philippines",
+          "publisher": "National Herald (with agency inputs)",
+          "date": "2025-09-25",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2025-09-25",
+        "evidence": "More than a third of the affected households were still without power on the morning of 25 September. Completion was not researched.",
+        "url": "https://www.nationalheraldindia.com/international/weakened-ragasa-lashes-southern-china-death-toll-rises-in-taiwan-and-philippines"
+      },
+      "review": {
+        "reviewed": "2026-10-30",
+        "threshold_version": "2026-10-30.1",
+        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "source_access": "at least one source read"
+      }
     }
   ]
 }

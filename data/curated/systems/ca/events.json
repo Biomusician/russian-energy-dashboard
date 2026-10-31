@@ -1385,6 +1385,131 @@
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
       }
+    },
+    {
+      "event_id": "ca-2026-03-17-windstorm-quebec",
+      "date": "2026-03-17",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "CA-QC",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": null,
+      "facility_name_local": null,
+      "operator": null,
+      "asset_class": "system_wide",
+      "cause": "natural_hazard",
+      "summary": "A windstorm on 17 March 2026 with gusts up to about 100 km/h downed branches, poles and lines across southern Quebec.",
+      "effect": "More than 310,000 Hydro-Québec customers lost power at the peak.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 5,
+      "threshold_basis": "Grid outages affecting more than 100,000 customers.",
+      "capacity_affected": null,
+      "sources": [
+        {
+          "url": "https://globalnews.ca/news/11734546/strong-winds-leave-thousands-in-the-dark-in-central-canada-maritimes",
+          "publisher": "Global News (The Canadian Press)",
+          "date": "2026-03-17",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "NOT_YET_RESEARCHED"
+      },
+      "review": {
+        "reviewed": "2026-10-30",
+        "threshold_version": "2026-10-30.1",
+        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "source_access": "at least one source read"
+      }
+    },
+    {
+      "event_id": "ca-2026-07-02-thunderstorms-ontario",
+      "date": "2026-07-02",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "CA-ON",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": null,
+      "facility_name_local": null,
+      "operator": null,
+      "asset_class": "system_wide",
+      "cause": "natural_hazard",
+      "summary": "Severe thunderstorms with strong winds crossed Ontario on 2 July 2026 during a heat wave, uprooting trees and bringing down power lines.",
+      "effect": "More than 214,000 customers in Ontario lost power at the peak, according to Environment Canada.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 5,
+      "threshold_basis": "Grid outages affecting more than 100,000 customers.",
+      "capacity_affected": null,
+      "sources": [
+        {
+          "url": "https://www.cp24.com/news/canada/2026/07/03/55000-hydro-clients-in-quebec-ontario-without-power-after-severe-storms/",
+          "publisher": "CP24 (The Canadian Press)",
+          "date": "2026-07-03",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2026-07-03",
+        "evidence": "Hydro One was working to restore about 25,000 customers on 3 July. Completion was not researched.",
+        "url": "https://www.cp24.com/news/canada/2026/07/03/55000-hydro-clients-in-quebec-ontario-without-power-after-severe-storms/"
+      },
+      "review": {
+        "reviewed": "2026-10-30",
+        "threshold_version": "2026-10-30.1",
+        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "source_access": "at least one source read"
+      }
+    },
+    {
+      "event_id": "ca-2026-07-02-thunderstorms-quebec",
+      "date": "2026-07-02",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "CA-QC",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": null,
+      "facility_name_local": null,
+      "operator": null,
+      "asset_class": "system_wide",
+      "cause": "natural_hazard",
+      "summary": "The same 2 July 2026 thunderstorms brought down trees and power lines across southern Quebec.",
+      "effect": "Nearly 140,000 Hydro-Québec customers lost power at the peak, according to Environment Canada.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 5,
+      "threshold_basis": "Grid outages affecting more than 100,000 customers.",
+      "capacity_affected": null,
+      "sources": [
+        {
+          "url": "https://www.cp24.com/news/canada/2026/07/03/55000-hydro-clients-in-quebec-ontario-without-power-after-severe-storms/",
+          "publisher": "CP24 (The Canadian Press)",
+          "date": "2026-07-03",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "estimate",
+        "date": "2026-07-03",
+        "evidence": "On 3 July about 30,000 Quebec customers were still out and Hydro-Québec expected most areas to be restored by 11 p.m. that day: an expectation, not an observed restoration.",
+        "url": "https://www.cp24.com/news/canada/2026/07/03/55000-hydro-clients-in-quebec-ontario-without-power-after-severe-storms/"
+      },
+      "review": {
+        "reviewed": "2026-10-30",
+        "threshold_version": "2026-10-30.1",
+        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "source_access": "at least one source read"
+      }
     }
   ]
 }

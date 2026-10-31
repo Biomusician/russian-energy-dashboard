@@ -913,6 +913,49 @@
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
       }
+    },
+    {
+      "event_id": "in-2025-10-28-cyclone-montha-andhra-outage",
+      "date": "2025-10-28",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "IN-AP",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": null,
+      "facility_name_local": null,
+      "operator": null,
+      "asset_class": "system_wide",
+      "cause": "natural_hazard",
+      "summary": "Severe cyclonic storm Montha crossed the Andhra Pradesh coast on 28 October 2025, damaging distribution poles and lines across the coastal districts.",
+      "effect": "The eastern distribution company (APEPDCL) reported about 1.3 million service connections affected.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 5,
+      "threshold_basis": "Grid outages affecting far more than 100,000 customers.",
+      "capacity_affected": null,
+      "sources": [
+        {
+          "url": "https://www.deccanchronicle.com/southern-states/andhra-pradesh/apepdcl-suffers-1047-crore-loss-7973-staff-work-on-war-footing-1913500",
+          "publisher": "Deccan Chronicle",
+          "date": "2025-10-30",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "estimate",
+        "date": "2025-10-29",
+        "evidence": "APEPDCL's managing director said on 29 October that all household connections would be restored that night and agricultural connections by the next day: an expectation, not an observed restoration.",
+        "url": "https://www.deccanchronicle.com/southern-states/andhra-pradesh/apepdcl-suffers-1047-crore-loss-7973-staff-work-on-war-footing-1913500"
+      },
+      "review": {
+        "reviewed": "2026-10-30",
+        "threshold_version": "2026-10-30.1",
+        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "source_access": "at least one source read"
+      }
     }
   ]
 }

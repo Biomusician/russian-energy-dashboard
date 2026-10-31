@@ -97,8 +97,8 @@
     }
   ],
   "research_gaps": [
-    "Not yet researched: East China industrial power curbs (Aug 2022), winter gas shortages, Typhoon Saola 2023 customer counts, power-plant outages, and restoration dates for the Sichuan and Chongqing curbs.",
-    "Several typhoon outages have no sourced customer count and are held as insufficient evidence rather than inferred."
+    "Not yet researched: East China industrial power curbs (Aug 2022), winter gas shortages, power-plant outages, and restoration dates for the Sichuan and Chongqing curbs.",
+    "Several typhoon outages have no readable sourced customer count and are held as insufficient evidence rather than inferred: Saola (2023), Kajiki (2025, Hainan) and Noul (2026, Guangdong)."
   ],
   "audit_docs": [
     "docs/countries/CN_SOURCE_AUDIT.md",

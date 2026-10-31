@@ -19,6 +19,21 @@
         "duplicate": 2,
         "out_of_scope": 1
       }
+    },
+    {
+      "date": "2026-10-30",
+      "by": "iteration-15 targeted research pass",
+      "window": [
+        "2022-01-01",
+        "2026-10-30"
+      ],
+      "scope": "the four leads iteration 14 left unverified, plus 2025-2026 refinery incidents and hurricanes; every source used was opened and read",
+      "status": "partial",
+      "status_reason": "a targeted pass over named gaps and major 2025-2026 events, not a month-by-month sweep of every source",
+      "outcome": {
+        "accepted": 6,
+        "insufficient_evidence": 2
+      }
     }
   ]
 }

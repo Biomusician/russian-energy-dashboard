@@ -81,8 +81,8 @@
     }
   ],
   "research_gaps": [
-    "Not yet researched: 2023 BC gas shut-ins, in-window Alberta refinery and upgrader fires, coal-mine events, nuclear forced outages, New Brunswick during Fiona.",
-    "The 100,000-customer clause rejects province-wide outages in small provinces (Fiona on PEI: about 95% of the island); a share-of-customers test is an open methodology question."
+    "Not yet researched: 2023 BC gas shut-ins (Donnie Creek wildfire: no shut-in volume found), Alberta refinery and upgrader fires, coal-mine events, nuclear forced outages.",
+    "The 100,000-customer clause rejects province-wide outages in small provinces (Fiona: about 95,000 NB Power customers at the peak, and about 95% of PEI); a share-of-customers test is an open methodology question."
   ],
   "audit_docs": [
     "docs/countries/CA_SOURCE_AUDIT.md",

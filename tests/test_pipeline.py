@@ -6982,3 +6982,29 @@ def test_the_published_research_log_is_counts_only_and_says_where_it_stopped():
         assert gate7["status"] == ("met" if latest["status"] == "complete" else "partial"), sid
         for s in p["sources"]:
             assert s["checked"], (sid, s)
+
+
+def test_a_later_research_pass_keeps_its_own_review_date_and_process():
+    """Iteration-15 records were read source by source; stamping them with the iteration-14
+    lane's 'single-pass' process text would misdescribe how they were checked."""
+    imp = _import_gate()
+    base = {"candidate_id": "us-x", "geography_precision": "admin1", "admin1_code": "US-TX",
+            "date": "2026-01-01", "asset_class": "refinery", "cause": "technical", "summary": "s",
+            "sources": [{"url": "https://example.org", "opened": True}]}
+    old = imp.to_event("us", base)["review"]
+    assert old["reviewed"] == imp.REVIEW_DATE and old["process"] == imp.DEFAULT_PROCESS
+    new = imp.to_event("us", {**base, "reviewed": "2026-10-30", "review_process": "read in a browser"})["review"]
+    assert new["reviewed"] == "2026-10-30" and new["process"] == "read in a browser"
+
+
+@needs_systems
+def test_records_from_the_source_reading_pass_all_say_a_source_was_read():
+    from pipeline import systems
+    seen = 0
+    for sid in systems.COUNTRY_SYSTEMS:
+        for e in _sys_payload(sid, "events.json")["events"]:
+            if e["review"]["process"].startswith("Iteration-15"):
+                seen += 1
+                assert all(s["opened"] is True for s in e["sources"]), e["event_id"]
+                assert e["review"]["source_access"] == "at least one source read", e["event_id"]
+    assert seen > 0

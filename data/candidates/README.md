@@ -28,3 +28,18 @@ this directory.
 
 The difference between "lane accept" and "shipped" is the import gate: for the US, three Puerto
 Rico events are held because US territories are outside the US system's geography this iteration.
+
+## Iteration-15 research pass (2026-10-30)
+
+A targeted pass over the gaps iteration 14 named and the major 2025-2026 events. Every source
+used was opened and read; leads the earlier lane left as insufficient evidence were replaced in
+place (same id) when the research resolved them. Counts per system, also published in
+`data/curated/systems/<id>/research_log.json`:
+
+| System | Accepted | Insufficient evidence | Rejected |
+|---|---:|---:|---:|
+| ca | 3 | 1 | 1 |
+| cn | 1 | 3 | 0 |
+| in | 1 | 2 | 0 |
+| sa | 1 | 1 | 0 |
+| us | 6 | 2 | 0 |

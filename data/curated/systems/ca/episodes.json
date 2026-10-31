@@ -9,6 +9,15 @@
         "ca-2022-05-21-derecho-ontario",
         "ca-2022-05-21-derecho-quebec"
       ]
+    },
+    {
+      "episode_id": "ca-2026-07-thunderstorms",
+      "name": "Thunderstorms of 2 July 2026",
+      "basis": "single_statement",
+      "event_ids": [
+        "ca-2026-07-02-thunderstorms-ontario",
+        "ca-2026-07-02-thunderstorms-quebec"
+      ]
     }
   ]
 }

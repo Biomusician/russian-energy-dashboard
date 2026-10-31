@@ -75,6 +75,9 @@ SCOPE_SCAN = re.compile(
 TEXT_FIELDS = ("summary", "effect", "threshold_basis", "facility_name", "facility_name_local",
                "operator", "attribution_reported")
 EDITS = ROOT / "data" / "curated" / "systems" / "review_edits.json"
+DEFAULT_PROCESS = ("Single-pass open-source research lane; centrally reviewed against the "
+                   "inclusion threshold, source rules and scope scan. Claims were not "
+                   "independently re-verified beyond the cited sources.")
 
 
 def _texts(r):
@@ -163,11 +166,11 @@ def to_event(system_id, r):
                                             "source_role", "opened")} for s in r["sources"]],
         "recovery": r.get("recovery") or {"research_status": "NOT_YET_RESEARCHED"},
         "review": {
-            "reviewed": REVIEW_DATE,
+            # A record from a later research pass carries its own date and process (iteration
+            # 15); the iteration-14 lanes' records predate the fields and keep the defaults.
+            "reviewed": r.get("reviewed") or REVIEW_DATE,
             "threshold_version": "2026-10-30.1",
-            "process": "Single-pass open-source research lane; centrally reviewed against the "
-                       "inclusion threshold, source rules and scope scan. Claims were not "
-                       "independently re-verified beyond the cited sources.",
+            "process": r.get("review_process") or DEFAULT_PROCESS,
             "source_access": ("at least one source read" if any(s.get("opened") is True for s in r["sources"])
                               else "not recorded by the research lane"),
         },

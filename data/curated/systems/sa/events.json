@@ -677,6 +677,53 @@
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
       }
+    },
+    {
+      "event_id": "sa-2026-07-27-jazan-refinery-shutdown",
+      "date": "2026-07-27",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "SA-09",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": "Jazan refinery",
+      "facility_name_local": null,
+      "operator": "Saudi Aramco",
+      "asset_class": "refinery",
+      "cause": "kinetic_strike",
+      "summary": "Industry monitor IIR reported that Aramco shut the Jazan refinery on 27 July 2026 after an attack claimed by Yemen's Houthis. After a fire at a refinery facility on 9 August, which the energy ministry said was extinguished, IIR reported the restart postponed to 30 August.",
+      "effect": "Refinery shut from 27 July 2026; planned restart moved from 15 August to 30 August.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 1,
+      "threshold_basis": "Refinery shut down, with the effect reported by an industry monitor.",
+      "capacity_affected": {
+        "value": 400000,
+        "unit": "b/d",
+        "source_says": "400,000-barrel-per-day Jazan refinery"
+      },
+      "sources": [
+        {
+          "url": "https://hydrocarbonprocessing.com/news/2026/08/update-saudi-aramco-delays-jazan-oil-refinery-restart-to-august-30/",
+          "publisher": "Hydrocarbon Processing",
+          "date": "2026-08-11",
+          "language": "en",
+          "source_role": "industry",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "RESEARCHED_NO_PUBLIC_EVIDENCE",
+        "kind": null,
+        "date": null,
+        "evidence": "No report confirming a restart was found in searches on 30 October 2026; the last report read gave a target of 30 August 2026.",
+        "url": null
+      },
+      "review": {
+        "reviewed": "2026-10-30",
+        "threshold_version": "2026-10-30.1",
+        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "source_access": "at least one source read"
+      }
     }
   ]
 }

@@ -42,6 +42,15 @@
         "us-2026-01-24-winter-storm-fern-tennessee-outages",
         "us-2026-01-24-winter-storm-fern-mississippi-outages"
       ]
+    },
+    {
+      "episode_id": "us-2026-10-hurricane-isaias",
+      "name": "Hurricane Isaias, October 2026",
+      "basis": "named_hazard",
+      "event_ids": [
+        "us-2026-10-09-hurricane-isaias-outages",
+        "us-2026-10-09-hurricane-isaias-gulf-shut-ins"
+      ]
     }
   ]
 }

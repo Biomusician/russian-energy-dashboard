@@ -1579,6 +1579,332 @@
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
       }
+    },
+    {
+      "event_id": "us-2025-02-01-pbf-martinez-refinery-fire",
+      "date": "2025-02-01",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "US-CA",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": "Martinez refinery",
+      "facility_name_local": null,
+      "operator": "PBF Energy",
+      "asset_class": "refinery",
+      "cause": "technical",
+      "summary": "A fire broke out on 1 February 2025 at PBF Energy's Martinez refinery and was not fully extinguished until 4 February. Units not damaged by the fire began restarting in April 2025; the fire-damaged units stayed shut until a rebuild finished in 2026.",
+      "effect": "The refinery ran at about 85,000-105,000 b/d of its 157,000 b/d capacity from early in the second quarter of 2025 until full operations resumed in May 2026.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 1,
+      "threshold_basis": "Refinery shut, then throughput materially cut for more than a year.",
+      "capacity_affected": {
+        "value": 157000,
+        "unit": "b/d",
+        "source_says": "157,000 barrel-per-day refinery"
+      },
+      "sources": [
+        {
+          "url": "https://www.hydrocarbonprocessing.com/news/2025/04/pbf-restarts-some-units-at-martinez-refinery-after-february-fire-fire-damaged-units-remain-shut/",
+          "publisher": "Hydrocarbon Processing",
+          "date": "2025-04-04",
+          "language": "en",
+          "source_role": "industry",
+          "opened": true
+        },
+        {
+          "url": "https://hydrocarbonprocessing.com/news/2026/01/pbf-energy-provided-an-update-on-efforts-to-rebuild-its-martinez-refinery/",
+          "publisher": "Hydrocarbon Processing",
+          "date": "2026-01-05",
+          "language": "en",
+          "source_role": "industry",
+          "opened": true
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001534504/000153450426000029/a991pressreleaseq2-26.htm",
+          "publisher": "PBF Energy (SEC filing)",
+          "date": "2026-07-30",
+          "language": "en",
+          "source_role": "operator",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "full_restart",
+        "date": null,
+        "evidence": "PBF's second-quarter 2026 results release states the Martinez refinery returned to full operations in May 2026, after restart targets of year-end 2025 and early March 2026 slipped.",
+        "url": "https://www.sec.gov/Archives/edgar/data/0001534504/000153450426000029/a991pressreleaseq2-26.htm"
+      },
+      "review": {
+        "reviewed": "2026-10-30",
+        "threshold_version": "2026-10-30.1",
+        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "source_access": "at least one source read"
+      }
+    },
+    {
+      "event_id": "us-2025-10-02-chevron-el-segundo-fire",
+      "date": "2025-10-02",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "US-CA",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": "El Segundo refinery",
+      "facility_name_local": null,
+      "operator": "Chevron",
+      "asset_class": "refinery",
+      "cause": "unknown",
+      "summary": "An explosion and fire in a jet-fuel production unit at Chevron's El Segundo refinery on the night of 2 October 2025 forced several process units offline. Chevron said the fire was extinguished on 4 October and confined to one of the refinery's eight process units; the cause was under investigation.",
+      "effect": "Several process units shut; Chevron said the refinery kept producing fuels at diminished rates.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 1,
+      "threshold_basis": "Refinery throughput materially cut, with the effect reported by the operator.",
+      "capacity_affected": null,
+      "sources": [
+        {
+          "url": "https://en.wikipedia.org/wiki/October_2025_El_Segundo_fire",
+          "publisher": "Wikipedia",
+          "date": null,
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://hydrocarbonprocessing.com/news/2025/10/chevron-working-to-restart-units-at-el-segundo-refinery-us-after-fire/",
+          "publisher": "Hydrocarbon Processing",
+          "date": "2025-10-08",
+          "language": "en",
+          "source_role": "industry",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2025-10-08",
+        "evidence": "On 8 October 2025 Chevron said it was restarting some of the shut units and the refinery was operating at diminished rates. Later reports of the damaged unit's restart were paywalled and were not read, so no completion is recorded.",
+        "url": "https://hydrocarbonprocessing.com/news/2025/10/chevron-working-to-restart-units-at-el-segundo-refinery-us-after-fire/"
+      },
+      "review": {
+        "reviewed": "2026-10-30",
+        "threshold_version": "2026-10-30.1",
+        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "source_access": "at least one source read"
+      }
+    },
+    {
+      "event_id": "us-2025-05-25-miso-louisiana-load-shed",
+      "date": "2025-05-25",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "US-LA",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": null,
+      "facility_name_local": null,
+      "operator": null,
+      "asset_class": "system_wide",
+      "cause": "technical",
+      "summary": "The regional grid operator MISO ordered emergency load shedding in southeast Louisiana on the afternoon of 25 May 2025. Entergy and Cleco carried out rotating outages, including in the New Orleans area.",
+      "effect": "More than 100,000 customers lost power in a grid-operator-ordered emergency load shed.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 5,
+      "threshold_basis": "Grid-operator emergency action affecting more than 100,000 customers.",
+      "capacity_affected": null,
+      "sources": [
+        {
+          "url": "https://www.wafb.com/2025/05/26/officials-demand-answers-businesses-tally-losses-after-100k-lose-power-across-southeast-louisiana/",
+          "publisher": "WAFB / Fox 8",
+          "date": "2025-05-26",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://hoodline.com/2025/05/over-100-000-regain-power-in-new-orleans-after-rolling-blackouts-stabilize-grid/",
+          "publisher": "Hoodline",
+          "date": "2025-05-26",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "service_restored",
+        "date": null,
+        "evidence": "Hoodline (26 May 2025) reported the rotating outages resolved and power restored to the more than 100,000 affected customers once the grid stabilised.",
+        "url": "https://hoodline.com/2025/05/over-100-000-regain-power-in-new-orleans-after-rolling-blackouts-stabilize-grid/"
+      },
+      "review": {
+        "reviewed": "2026-10-30",
+        "threshold_version": "2026-10-30.1",
+        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "source_access": "at least one source read"
+      }
+    },
+    {
+      "event_id": "us-2026-03-23-valero-port-arthur-refinery-explosion",
+      "date": "2026-03-23",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "US-TX",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": "Port Arthur refinery",
+      "facility_name_local": null,
+      "operator": "Valero Energy",
+      "asset_class": "refinery",
+      "cause": "technical",
+      "summary": "An explosion and fire at a diesel hydrotreater at Valero's Port Arthur refinery on 23 March 2026, triggered by a release of process fluid, led Valero to shut the whole refinery the next day to extinguish the fire. No injuries were reported.",
+      "effect": "Refinery fully shut, then restarted in stages through April 2026; the fire-damaged diesel hydrotreater and an adjacent unit were still offline at the end of April.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 1,
+      "threshold_basis": "Whole refinery shut after an explosion and fire.",
+      "capacity_affected": {
+        "value": 380000,
+        "unit": "b/d",
+        "source_says": "380,000-bpd Port Arthur refinery"
+      },
+      "sources": [
+        {
+          "url": "https://hydrocarbonprocessing.com/news/2026/03/valero-prepares-restart-of-port-arthur-texas-us-oil-refinery-after-blast/",
+          "publisher": "Hydrocarbon Processing",
+          "date": "2026-03-25",
+          "language": "en",
+          "source_role": "industry",
+          "opened": true
+        },
+        {
+          "url": "https://www.ogj.com/refining-processing/refining/operations/news/55374647/valeros-port-arthur-refinery-faces-uncertain-timeline-for-diesel-hydrotreater-rebuild",
+          "publisher": "Oil & Gas Journal",
+          "date": "2026-04-30",
+          "language": "en",
+          "source_role": "industry",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restart",
+        "date": "2026-04-30",
+        "evidence": "On its first-quarter 2026 call (reported 30 April) Valero said most units had restarted and throughput was expected to be fairly normalised by 1 May; the damaged diesel hydrotreater had no rebuild timeline. Partial restart only.",
+        "url": "https://www.ogj.com/refining-processing/refining/operations/news/55374647/valeros-port-arthur-refinery-faces-uncertain-timeline-for-diesel-hydrotreater-rebuild"
+      },
+      "review": {
+        "reviewed": "2026-10-30",
+        "threshold_version": "2026-10-30.1",
+        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "source_access": "at least one source read"
+      }
+    },
+    {
+      "event_id": "us-2026-10-09-hurricane-isaias-outages",
+      "date": "2026-10-09",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": null,
+      "geography_precision": "country",
+      "regions_affected": [
+        "US-FL",
+        "US-AL",
+        "US-GA"
+      ],
+      "facility_name": null,
+      "facility_name_local": null,
+      "operator": null,
+      "asset_class": "system_wide",
+      "cause": "natural_hazard",
+      "summary": "Hurricane Isaias made landfall near Destin, Florida, on the evening of 9 October 2026 as a Category 2 storm and weakened as it moved inland through Alabama.",
+      "effect": "About 900,000 customers lost power across Florida, Alabama and Georgia at the peak; about 140,000 were still without power on 12 October.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 5,
+      "threshold_basis": "Grid outages affecting far more than 100,000 customers across three states.",
+      "capacity_affected": null,
+      "sources": [
+        {
+          "url": "https://www.aljazeera.com/news/2026/10/10/hurricane-isaias-leaves-two-dead-and-800000-without-power-in-us-southeast",
+          "publisher": "Al Jazeera",
+          "date": "2026-10-10",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://www.indexbox.io/blog/us-gulf-oil-and-gas-output-recovers-after-hurricane-isaias/",
+          "publisher": "IndexBox (citing ICIS)",
+          "date": "2026-10-14",
+          "language": "en",
+          "source_role": "industry",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2026-10-12",
+        "evidence": "About 125,000 customers in Florida and 15,000 in Alabama were still without power on the afternoon of 12 October, down from about 900,000. Completion was not researched.",
+        "url": "https://www.indexbox.io/blog/us-gulf-oil-and-gas-output-recovers-after-hurricane-isaias/"
+      },
+      "review": {
+        "reviewed": "2026-10-30",
+        "threshold_version": "2026-10-30.1",
+        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "source_access": "at least one source read"
+      }
+    },
+    {
+      "event_id": "us-2026-10-09-hurricane-isaias-gulf-shut-ins",
+      "date": "2026-10-09",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": null,
+      "geography_precision": "country",
+      "regions_affected": [],
+      "facility_name": null,
+      "facility_name_local": null,
+      "operator": null,
+      "asset_class": "upstream_production",
+      "cause": "natural_hazard",
+      "summary": "Ahead of Hurricane Isaias, offshore operators shut in most US Gulf oil and gas production. The federal offshore regulator reported nearly 63% of current Gulf oil output shut in.",
+      "effect": "Most Gulf oil and gas production shut in; less than 30% of oil and 25% of gas output was still shut in on 12 October.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 7,
+      "threshold_basis": "Production shut in at a reported, material volume.",
+      "capacity_affected": null,
+      "sources": [
+        {
+          "url": "https://nbcmontana.com/news/nation-world/hurricane-isaias-shuts-in-nearly-63-of-gulf-oil-output-raising-pump-price-concerns-category-3-hurricane-strong-wind-speeds-aaa-gas-prices-florida-news",
+          "publisher": "NBC Montana (Sinclair)",
+          "date": "2026-10-09",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://www.indexbox.io/blog/us-gulf-oil-and-gas-output-recovers-after-hurricane-isaias/",
+          "publisher": "IndexBox (citing ICIS)",
+          "date": "2026-10-14",
+          "language": "en",
+          "source_role": "industry",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2026-10-12",
+        "evidence": "Less than 30% of Gulf oil output and 25% of gas output remained shut in on 12 October as operators brought platforms back. Completion was not researched.",
+        "url": "https://www.indexbox.io/blog/us-gulf-oil-and-gas-output-recovers-after-hurricane-isaias/"
+      },
+      "review": {
+        "reviewed": "2026-10-30",
+        "threshold_version": "2026-10-30.1",
+        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "source_access": "at least one source read"
+      }
     }
   ]
 }

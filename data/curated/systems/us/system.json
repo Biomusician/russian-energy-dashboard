@@ -95,8 +95,9 @@
     }
   ],
   "research_gaps": [
-    "Recent years (2025-2026) are thin: the incident lane's search budget ran out and several accepted events rest on a tertiary source.",
-    "Unverified leads held in the queue: PBF Martinez fire (Feb 2025), Chevron El Segundo fire (Oct 2025), MISO Louisiana load shed (May 2025), La Porte NGL pipeline fire (Sep 2024)."
+    "Coverage is targeted, not systematic: no month-by-month sweep of OE-417 or EAGLE-I has been done, so smaller qualifying grid events are under-recorded.",
+    "Unverified leads: the La Porte NGL pipeline fire (Sep 2024) and Winter Storm Fern gas freeze-offs (Jan 2026) were not read from a source and are not recorded.",
+    "US territories are outside this system's geography: three accepted Puerto Rico events are held pending an owner decision."
   ],
   "audit_docs": [
     "docs/countries/US_SOURCE_AUDIT.md",
