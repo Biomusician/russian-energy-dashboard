@@ -47,7 +47,12 @@ Write `data/curated/systems/<id>/system.json` by hand (copy an existing one):
   is drawn but never receives events.
 - `sectors`: one entry per sector in `config.SECTORS`, each with `state`, `assessed_readiness`
   and a `reason`. The build refuses SCORED/EXPERIMENTAL until something is computed.
-- `sources`, `research_gaps`, `audit_docs`.
+- `sources` (each with `checked`, `cadence` and `stale_after_days` unless rejected),
+  `research_gaps`, `audit_docs`.
+
+Also write `episodes.json` (any records that share one hazard or one source statement; the
+rule is in GLOBAL_METHODOLOGY §5.3 fix 4 as implemented in iteration 15) and
+`research_log.json` (one entry per research pass: window, status, and outcome COUNTS only).
 
 Copy the lane's profile to `profile.json`.
 
@@ -57,7 +62,9 @@ Copy the lane's profile to `profile.json`.
 .venv\Scripts\python.exe scripts\import_candidates.py <id>
 ```
 
-It applies `data/curated/systems/review_edits.json`, imports only lane-accepted, sourced,
+A later research pass sets `reviewed`, `review_process` and `research_pass` on its records;
+the gate carries the first two into the published `review` block. It applies
+`data/curated/systems/review_edits.json`, imports only lane-accepted, sourced,
 in-geography, scope-clean records, writes `events.json`, and prints every lane-accepted record
 it held back and why. **Read that list.** A scope-scan hit is held for a person; the fix is a
 recorded edit with a reason, never a silent rewrite. Read the shipped summaries too: the scan

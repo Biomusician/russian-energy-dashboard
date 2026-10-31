@@ -1,6 +1,6 @@
 # Energy Disruption Monitor — Russia/Belarus theatre and five major producers
 
-<!-- current-iteration: 14 -->
+<!-- current-iteration: 15 -->
 
 An open-source-only dashboard tracking publicly reported degradation of energy
 infrastructure across **Belarus, western Russia and the Siberian Federal District**,

@@ -572,6 +572,13 @@ reporting artefact into a large drop in the published index. The two corpora hav
    count** (the ≤ 34 above) as a cross-walk, so a reader can see how a Russia count would look
    under the new standard. This is information, not a comparison.
 
+> **Status, iteration 15.** Fix 4 (episodes) is implemented for the country systems: hand-curated
+> under a stated rule, every record carries an `episode_id`, and pages give counts in records and
+> episodes. Fixes 1 (`inclusion_basis`, `criterion_met`) and 5 (reporting environment) were
+> implemented in iteration 14, and `natural_hazard` exists as a declared country-only extension
+> (fix 6's weights are undecided). Fixes 2, 3, 6 and 7 remain open; 3 and 6 are owner decisions
+> (§8).
+
 > **RECOMMENDATION (5).** Adopt the threshold **with fixes 1–7 before the first new-country
 > event is stored**. The cause vocabulary and duration floors are owner decisions, and
 > `inclusion_basis` is required for everything else to be honest. **Do not apply the threshold

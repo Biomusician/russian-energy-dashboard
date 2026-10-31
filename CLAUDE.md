@@ -1,6 +1,6 @@
 # Energy Disruption Monitor — project instructions
 
-<!-- current-iteration: 14 -->
+<!-- current-iteration: 15 -->
 
 Project-level rules. These override `~/.claude/CLAUDE.md` where they conflict.
 

@@ -346,6 +346,13 @@ asset_class, cause, confidence_or_status, research_status (accepted|rejected|hol
 decision_reason, source_urls`. **Not read by the scoring pipeline** — only analyst-approved
 rows are copied into `incidents.csv`.
 
+## Iteration 15: `snapshot.source_revisions`
+
+The theatre snapshot lists the Wikipedia revision each live article input was read at:
+`page`, `revid`, `timestamp` (null for a current build; the revision's own time for a pinned
+one), `pinned_to` (the `--as-of` date for a historical build, else null) and `url` (an `oldid`
+link that opens exactly that revision). See `pipeline/wikirev.py`.
+
 ## Iteration 14: country systems and the global manifest
 
 Everything below lives beside the theatre's files, never in place of them. Generated paths are
@@ -359,7 +366,23 @@ declared in `pipeline/artifacts.py`.
 | `reporting_note` | country-specific sentence on how disruption gets reported |
 | `geography` | `unit_label`, `units_expected` (the build fails on a mismatch), `note`, `rulings[]` (`code`, `status`: `contains_disputed_area` / `disputed_unassigned` / `note`, `note`) |
 | `sectors[]` | one per sector: `sector`, `state` (GLOBAL_METHODOLOGY §7.1), `assessed_readiness` (the lane's verdict on what the evidence could reach), `reason` |
-| `sources[]`, `research_gaps[]`, `audit_docs[]` | provenance |
+| `sources[]` | `name`, `role`, `licence`, and since iteration 15 `checked` (last checked), `cadence` and `stale_after_days` (both null for a rejected source) |
+| `research_gaps[]`, `audit_docs[]` | provenance |
+
+### Input: `data/curated/systems/<id>/episodes.json` (hand-curated, iteration 15)
+
+`{"note", "episodes": [{"episode_id", "name", "basis", "event_ids"}]}`. `basis` is one of
+`build_systems.EPISODE_BASES`: `named_hazard`, `single_statement`, `continuing_shortfall`. A
+declared episode groups at least two records; a record in no declared episode is its own
+episode under its own id. The build refuses an unknown record, a record in two episodes, an
+episode id equal to an event id, or an unknown basis.
+
+### Input: `data/curated/systems/<id>/research_log.json` (hand-curated, iteration 15)
+
+`{"note", "passes": [{"date", "by", "window": [start, end], "scope", "status": "complete" |
+"partial", "status_reason", "outcome"}]}`. `outcome` holds integer counts only (`records`,
+`accepted`, `insufficient_evidence`, `rejected`, `duplicate`, `out_of_scope`, `held`); the build
+refuses any other key, so a queue narrative cannot reach the payload this way.
 
 ### Input: `data/curated/systems/<id>/events.json` (written by `scripts/import_candidates.py`)
 
@@ -375,7 +398,9 @@ no headline titles), `recovery` (`research_status`: `EVIDENCE_FOUND` |
 `RESEARCHED_NO_PUBLIC_EVIDENCE` | `NOT_YET_RESEARCHED`; `kind`, required with evidence and null
 otherwise: `full_restart`, `partial_restart`, `service_restored`, `partial_restoration`,
 `estimate`, `supply_unaffected_statement`, `no_supply_lost`; `date`, `evidence`, `url`),
-`review` (`reviewed`, `threshold_version`, `process`, `source_access`). **No coordinates, ever.**
+`review` (`reviewed`, `threshold_version`, `process`, `source_access`; a record from a later
+research pass carries its own `reviewed` and `process`), `episode_id` (added by the build).
+**No coordinates, ever.**
 
 ### Input: `data/curated/systems/inclusion_threshold.json`
 
@@ -392,14 +417,17 @@ The curated definition plus: `evidence_readiness` (derived from sector states: `
 the threshold, the taxonomy labels actually used, `profile` (sourced context metrics),
 `record_reviewed` and `review_freshness_days` (the curated record's own date, distinct from the
 build date), and `onboarding_gate` (the eight items of GLOBAL_METHODOLOGY §7.2, each `met`,
-`partial` or `unmet` with a note).
+`partial` or `unmet` with a note). Since iteration 15 also `event_summary.episodes` and
+`multi_record_episodes`, `episode_bases` (labels), and `research_log` (as curated).
 
 The key is `evidence_readiness`, not `readiness`: `readiness` is on the scope boundary's
 forbidden-field list (force readiness), and the safety gate is not exempted for a synonym.
 
 ### Output: `systems/<id>/events.json`, `systems/<id>/regions.geojson`
 
-Events as above, sorted by date. Regions: one feature per first-level unit with `code` (ISO
+Events as above, sorted by date, plus `episodes[]`: `episode_id`, `name` (null for a single
+record), `basis` (`single_record` for one), `event_ids`, `records`, `first_date`, `last_date`,
+`region_codes`, `has_country_level_record`. Computed after the as-of filter. Regions: one feature per first-level unit with `code` (ISO
 3166-2, Indian codes as revised in 2023, `CN-HK`/`CN-MO` for the SARs), `name`, `status`, `note`,
 `recorded_events` (count of admin-1 events; `null` for a disputed, unassigned unit).
 
