@@ -129,7 +129,10 @@ Segundo.
 
 ## 7. Release
 
-See HANDOFF and the final report for the production run.
+Pushed `bc0324c..b8ee471` to `main` on 2026-10-30. Vercel deployed it; the full browser suite
+ran against https://russian-energy-dashboard.vercel.app and passed **69 of 69**. CI on `b8ee471`:
+e2e, frontend and python all succeeded. Merged local branches from iterations 5-11 and the
+responsive hotfix were deleted (every commit is in `main`).
 
 ---
 
