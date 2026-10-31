@@ -23,11 +23,11 @@ reporting of Ukrainian responsibility, not independent confirmation.
 
 import re
 
-from pipeline import ids
+from pipeline import ids, wikirev
 from pipeline import wikitext as W
 from pipeline.dates import parse_dates, parse_dates_grouped, unenumerated_count
 from pipeline.regionmatch import resolve
-from pipeline.util import fetch_json, log
+from pipeline.util import log
 
 API = "https://en.wikipedia.org/w/api.php"
 PAGE = "Deep_strike_campaign"
@@ -44,12 +44,9 @@ _WORK = re.compile(r"\|\s*(?:work|website|publisher|newspaper)\s*=\s*([^|}]+)", 
 _DATE = re.compile(r"\|\s*date\s*=\s*([^|}]+)", re.I | re.S)
 
 
-def load_wikitext(max_age_hours=12):
-    url = (
-        f"{API}?action=parse&page={PAGE}&prop=wikitext&format=json&formatversion=2"
-    )
-    payload = fetch_json(url, "wiki_deep_strike.json", max_age_hours=max_age_hours)
-    return payload["parse"]["wikitext"]
+def load_wikitext(as_of=None, max_age_hours=12):
+    """(wikitext, revision): the article as it stood at the end of `as_of` when that is past."""
+    return wikirev.load(PAGE, "wiki_deep_strike.json", as_of=as_of, max_age_hours=max_age_hours)
 
 
 def build_named_refs(wt):
@@ -156,8 +153,8 @@ def _capacity(text):
     return float(m.group(1)) if m else None
 
 
-def build():
-    wt = load_wikitext()
+def build(as_of=None):
+    wt, revision = load_wikitext(as_of)
     named_refs = build_named_refs(wt)
 
     start = wt.find(SECTION_HEADING)
@@ -274,7 +271,7 @@ def build():
     # Flag it rather than guess which was meant (iteration 14; see pipeline/ids.py).
     for aid, names in ids.collisions((f["asset_id"], f["name"]) for f in facilities).items():
         warnings.append(f"asset id {aid!r} is produced by {len(names)} different names: {names}")
-    return facilities, incidents, warnings
+    return facilities, incidents, warnings, revision
 
 
 def _incidents_for(asset_id, name, asset_class, region, date_src, spans, named_refs,

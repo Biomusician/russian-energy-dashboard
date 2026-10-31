@@ -20,8 +20,9 @@ range.
 
 import re
 
+from pipeline import wikirev
 from pipeline import wikitext as W
-from pipeline.util import fetch_json, log
+from pipeline.util import log
 
 API = "https://en.wikipedia.org/w/api.php"
 PAGE = "List_of_oil_refineries"
@@ -64,9 +65,9 @@ _CVT_BBL = re.compile(r"\{\{\s*cvt\s*\|\s*([\d,\.]+)\s*\|\s*oilbbl/d", re.I)
 _CVT_TPA = re.compile(r"\{\{\s*cvt\s*\|\s*([\d,\.]+)\s*\|\s*(?:MTPA|Mt/a|t/a)", re.I)
 
 
-def load_wikitext(max_age_hours=24 * 7):
-    url = f"{API}?action=parse&page={PAGE}&prop=wikitext&format=json&formatversion=2"
-    return fetch_json(url, "wiki_refineries.json", max_age_hours=max_age_hours)["parse"]["wikitext"]
+def load_wikitext(as_of=None, max_age_hours=24 * 7):
+    """(wikitext, revision), pinned to `as_of` when that is in the past (pipeline/wikirev.py)."""
+    return wikirev.load(PAGE, "wiki_refineries.json", as_of=as_of, max_age_hours=max_age_hours)
 
 
 def _section(wt, heading):
@@ -79,8 +80,8 @@ def _section(wt, heading):
     return wt[start : end if end > 0 else len(wt)]
 
 
-def build():
-    wt = load_wikitext()
+def build(as_of=None):
+    wt, revision = load_wikitext(as_of)
     out = []
     for heading in SECTIONS:
         sec = _section(wt, heading)
@@ -205,7 +206,7 @@ def build():
         f"reference (gap to full {REFERENCE_NAMEPLATE_MTPA:.0f} = {condensate_mtpa:.0f} condensate "
         f"+ {basis_understatement:.0f} basis, 0 missing refineries)"
     )
-    return refineries, total, reconciliation
+    return refineries, total, reconciliation, revision
 
 
 def _dedup_key(name):

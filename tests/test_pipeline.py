@@ -6825,3 +6825,62 @@ def test_the_candidate_queue_is_not_committed():
     assert [t for t in tracked if t.endswith(".json")] == [], tracked
     readme = (ROOT / "data" / "candidates" / "README.md").read_text(encoding="utf-8")
     assert "deliberately not committed" in readme
+
+
+# --------------------------------------------------------------------------
+# Iteration 15: historical builds read the Wikipedia revision of their date
+# --------------------------------------------------------------------------
+
+def test_a_past_as_of_reads_the_revision_in_force_on_that_date(monkeypatch):
+    """`--as-of 2026-08-28` used to read TODAY's article and filter it by date, so the frozen
+    regression drifted 18.50 -> 16.8 with no code change. A past date now pins the revision."""
+    from pipeline import wikirev
+    seen = {}
+
+    def fake_fetch_json(url, cache_name, max_age_hours):
+        seen.update(url=url, cache=cache_name, age=max_age_hours)
+        return {"query": {"pages": [{"revisions": [{
+            "revid": 123, "timestamp": "2026-08-27T10:00:00Z",
+            "slots": {"main": {"content": "old text"}}}]}]}}
+    monkeypatch.setattr(wikirev, "fetch_json", fake_fetch_json)
+    text, rev = wikirev.load("Deep_strike_campaign", "wiki_deep_strike.json", as_of="2000-01-01")
+    assert text == "old text"
+    assert "rvstart=2000-01-01T23%3A59%3A59Z" in seen["url"] and "rvdir=older" in seen["url"]
+    # A revision never changes: its cache is per date and never expires, and it is NOT the
+    # current-build cache file, which a later current build would overwrite.
+    assert seen["cache"] == "wikirev/wiki_deep_strike@2000-01-01.json"
+    assert seen["age"] >= wikirev.FOREVER_HOURS
+    assert rev == {"page": "Deep strike campaign", "revid": 123, "timestamp": "2026-08-27T10:00:00Z",
+                   "pinned_to": "2000-01-01", "url": "https://en.wikipedia.org/w/index.php?oldid=123"}
+
+
+def test_a_current_build_reads_the_latest_revision_and_records_it(monkeypatch):
+    from pipeline import wikirev
+    seen = {}
+
+    def fake_fetch_json(url, cache_name, max_age_hours):
+        seen.update(url=url, cache=cache_name)
+        return {"parse": {"wikitext": "now", "revid": 456}}
+    monkeypatch.setattr(wikirev, "fetch_json", fake_fetch_json)
+    today = dt.date.today().isoformat()
+    text, rev = wikirev.load("Deep_strike_campaign", "wiki_deep_strike.json", as_of=today)
+    assert text == "now" and rev["revid"] == 456 and rev["pinned_to"] is None
+    assert seen["cache"] == "wiki_deep_strike.json" and "revid" in seen["url"]
+    assert not wikirev.is_historical(today) and wikirev.is_historical("2026-08-28", today="2026-10-30")
+
+
+def test_a_date_before_the_article_existed_fails_loudly():
+    from pipeline import wikirev
+    with pytest.raises(RuntimeError, match="no revision"):
+        wikirev.parse_as_of({"query": {"pages": [{"missing": True}]}})
+
+
+@needs_build
+def test_the_snapshot_names_the_revisions_it_was_built_from():
+    snap = json.loads((PROCESSED / "snapshot.json").read_text(encoding="utf-8"))
+    revs = snap["source_revisions"]
+    assert {r["page"] for r in revs} >= {"Deep strike campaign", "List of oil refineries"}
+    for r in revs:
+        assert isinstance(r["revid"], int) and r["url"].endswith(f"oldid={r['revid']}"), r
+        # The committed payload is a current-date build, so nothing in it is pinned.
+        assert r["pinned_to"] is None, r

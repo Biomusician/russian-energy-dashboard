@@ -25,8 +25,8 @@ from pipeline.config import (
 from pipeline.fetch_refineries import build as build_refineries
 from pipeline.fetch_wikipedia import build as build_wikipedia
 from pipeline.recovery import load_recovery_records
-from pipeline import artifacts, horizon_sensitivity
-from pipeline.util import fetch_json, log, read_csv, read_json, write_json
+from pipeline import artifacts, horizon_sensitivity, wikirev
+from pipeline.util import log, read_csv, read_json, write_json
 
 COVERAGE_PAGE = "2025%E2%80%932026_Russian_fuel_crisis"
 COVERAGE_URL = "https://en.wikipedia.org/wiki/2025%E2%80%932026_Russian_fuel_crisis"
@@ -306,7 +306,7 @@ def _facet_counts(assets, lines, incidents, snapshot, context_routes=None):
     }
 
 
-def load_coverage_benchmark():
+def load_coverage_benchmark(as_of=None):
     """Reported strike totals by war year, used to state our own coverage honestly.
 
     The source article tabulates how many strikes on Russian oil facilities have been
@@ -315,12 +315,9 @@ def load_coverage_benchmark():
     """
     from pipeline import wikitext as W
 
-    url = (
-        "https://en.wikipedia.org/w/api.php?action=parse&page="
-        f"{COVERAGE_PAGE}&prop=wikitext&format=json&formatversion=2"
-    )
     try:
-        wt = fetch_json(url, "wiki_fuel_crisis.json", max_age_hours=24)["parse"]["wikitext"]
+        wt, revision = wikirev.load(COVERAGE_PAGE, "wiki_fuel_crisis.json", as_of=as_of,
+                                    max_age_hours=24)
     except Exception as exc:  # noqa: BLE001 - benchmark is optional context
         log(f"  WARN coverage benchmark unavailable: {exc}")
         return None
@@ -348,6 +345,7 @@ def load_coverage_benchmark():
                 "reported_total_strikes": cumulative,
                 "by_period": periods,
                 "source_url": COVERAGE_URL,
+                "source_revision": revision,
                 "note": (
                     "Reported strikes on Russian oil facilities, as tabulated by the "
                     "source article. Used only to state this dataset's coverage; not "
@@ -471,10 +469,10 @@ def main():
         way_elements=osm_ways.get("pipeline_gas", []) + osm_ways.get("pipeline_oil", []),
         analytic_osm_ids=analytic_osm_ids,
     )
-    wiki_facilities, wiki_incidents, wiki_warnings = build_wikipedia()
-    refineries, refining_total, refinery_reconciliation = build_refineries()
+    wiki_facilities, wiki_incidents, wiki_warnings, strike_rev = build_wikipedia(args.as_of)
+    refineries, refining_total, refinery_reconciliation, refinery_rev = build_refineries(args.as_of)
     curated = load_curated_incidents()
-    coverage = load_coverage_benchmark()
+    coverage = load_coverage_benchmark(args.as_of)
     recovery_by_incident = load_recovery_records()
     region_context = load_region_context()
     crea = load_crea_snapshots()
@@ -590,6 +588,13 @@ def main():
         snapshot, refineries, refining_total)
     if _unsized:
         snapshot["impairment_not_sized"] = _unsized
+
+    # Which revision of each live Wikipedia input this build read (iteration 15). A current
+    # build records the latest revision so it can be re-fetched by oldid; a historical --as-of
+    # build reads the revision in force on that date, so it no longer drifts as the articles
+    # are edited (pipeline/wikirev.py).
+    snapshot["source_revisions"] = [r for r in (
+        strike_rev, refinery_rev, (coverage or {}).get("source_revision")) if r]
 
     snapshot["publication_freshness"] = {
         "as_of": snapshot["as_of"],
