@@ -1,4 +1,4 @@
-"""Review a country's candidate queue into its curated events (iteration 14).
+"""Review a country's candidate queue into its curated events (iteration 14, dual review 16).
 
     .venv\\Scripts\\python.exe scripts\\import_candidates.py us [cn sa ca in]
 
@@ -20,9 +20,19 @@ REVIEW RULES. A candidate is imported only if all hold:
      record for a person to read. Reviewer edits in data/curated/systems/review_edits.json
      are applied first, so a record is scanned as it will ship.
   5. Its id is a well-formed slug and unique in the system.
+  6. (Iteration 16.) It was reviewed TWICE: `primary_review.completed` by the researcher who
+     found it, and `independent_review.completed` by a second reviewer who opened at least one
+     source and gave a disposition of `confirmed` or `corrected`. `held` and `removed` stop it.
+     Records published before this rule are grandfathered by id in
+     data/curated/systems/review_grandfathered.json, a frozen list that can only shrink.
 
-WHAT REVIEW HERE DOES NOT MEAN. It does not mean each claim was independently re-verified.
-Every imported event says so in its `review` block, and the dashboard repeats it.
+PUBLICATION POLICY. A record covered by an ACTIVE campaign in
+data/curated/systems/conflict_campaigns.json is imported with its recovery block replaced by the
+withheld marker; the evidence stays here, in the local queue, and never reaches the repository.
+When the campaign is recorded as ended and the release rule is met, a re-import publishes it.
+
+WHAT REVIEW HERE DOES NOT MEAN. Even dual review is not omniscience: the reviewer checks the
+record against its sources, not the world. Every imported event says how it was reviewed.
 """
 
 import json
@@ -78,6 +88,11 @@ EDITS = ROOT / "data" / "curated" / "systems" / "review_edits.json"
 DEFAULT_PROCESS = ("Single-pass open-source research lane; centrally reviewed against the "
                    "inclusion threshold, source rules and scope scan. Claims were not "
                    "independently re-verified beyond the cited sources.")
+DUAL_PROCESS = ("Found by a research lane; then a second, independent reviewer opened the sources "
+                "and checked identity, date, region, class, threshold, provenance, wording and "
+                "episode before publication.")
+GRANDFATHERED = ROOT / "data" / "curated" / "systems" / "review_grandfathered.json"
+PASSING_DISPOSITIONS = ("confirmed", "corrected")
 
 
 def _texts(r):
@@ -86,7 +101,7 @@ def _texts(r):
     yield json.dumps(r.get("capacity_affected") or {}, ensure_ascii=False)
 
 
-def review(system_id, r, unit_codes):
+def review(system_id, r, unit_codes, grandfathered=frozenset()):
     """None if the record passes, else the reason it is held."""
     if r.get("suggested_disposition") != "accept":
         return f"disposition {r.get('suggested_disposition')!r}"
@@ -109,6 +124,17 @@ def review(system_id, r, unit_codes):
     cid = r.get("candidate_id") or ""
     if ids.full_slug(cid) != cid:
         return f"id {cid!r} is not a slug"
+    # Checked last, so a record that fails on substance says so rather than "unreviewed".
+    if r.get("candidate_id") not in grandfathered:
+        primary, indep = r.get("primary_review") or {}, r.get("independent_review") or {}
+        if not primary.get("completed"):
+            return "no primary review"
+        if not indep.get("completed"):
+            return "no independent review: one researcher may discover, but publication needs a second look"
+        if indep.get("disposition") not in PASSING_DISPOSITIONS:
+            return f"independent review disposition {indep.get('disposition')!r}"
+        if (indep.get("sources_opened") or 0) < 1:
+            return "the independent reviewer opened no source"
     return None
 
 
@@ -136,9 +162,35 @@ def apply_edits(r, edits):
     return r
 
 
-def to_event(system_id, r):
-    precise = r["geography_precision"] == "admin1"
+def _review_block(r, grandfathered):
+    indep = r.get("independent_review") or {}
+    legacy = r["candidate_id"] in grandfathered and not indep.get("completed")
     return {
+        # A record from a later research pass carries its own date and process (iteration 15);
+        # the iteration-14 lanes' records predate the fields and keep the defaults.
+        "reviewed_at": (r.get("reviewed") or REVIEW_DATE) if legacy else indep["completed"],
+        "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review" if legacy else "dual_reviewed",
+        "primary_review_complete": True,
+        "independent_review_complete": not legacy,
+        "reviewer_count": 1 if legacy else 2,
+        "disposition": None if legacy else indep["disposition"],
+        "source_count": len(r["sources"]),
+        "sources_opened_by_reviewer": None if legacy else indep.get("sources_opened"),
+        "process": (r.get("review_process") or DEFAULT_PROCESS) if legacy else DUAL_PROCESS,
+        "source_access": ("at least one source read" if any(s.get("opened") is True for s in r["sources"])
+                          else "not recorded by the research lane"),
+    }
+
+
+def _withheld_recovery():
+    return {"research_status": build_systems.WITHHELD, "kind": None, "date": None,
+            "evidence": None, "url": None}
+
+
+def to_event(system_id, r, grandfathered=frozenset(), campaigns=None):
+    precise = r["geography_precision"] == "admin1"
+    ev = {
         "event_id": r["candidate_id"],
         "date": r["date"],
         "date_precision": r.get("date_precision") or "day",
@@ -165,16 +217,13 @@ def to_event(system_id, r):
         "sources": [{k: s.get(k) for k in ("url", "publisher", "date", "language",
                                             "source_role", "opened")} for s in r["sources"]],
         "recovery": r.get("recovery") or {"research_status": "NOT_YET_RESEARCHED"},
-        "review": {
-            # A record from a later research pass carries its own date and process (iteration
-            # 15); the iteration-14 lanes' records predate the fields and keep the defaults.
-            "reviewed": r.get("reviewed") or REVIEW_DATE,
-            "threshold_version": "2026-10-30.1",
-            "process": r.get("review_process") or DEFAULT_PROCESS,
-            "source_access": ("at least one source read" if any(s.get("opened") is True for s in r["sources"])
-                              else "not recorded by the research lane"),
-        },
+        "review": _review_block(r, grandfathered),
+        "hazard_name": r.get("hazard_name"),
     }
+    # An active campaign's records ship with the withheld marker; the evidence stays in the queue.
+    if campaigns and build_systems.campaign_of(ev, system_id, campaigns):
+        ev["recovery"] = _withheld_recovery()
+    return ev
 
 
 def run(system_id):
@@ -187,11 +236,13 @@ def run(system_id):
     if stray:
         raise SystemExit(f"review edits name records not in the {system_id} queue: {stray}")
     queue = [apply_edits(r, edits) for r in queue]
+    grandfathered = frozenset(json.loads(GRANDFATHERED.read_text(encoding="utf-8"))["event_ids"])
+    campaigns = build_systems.load_campaigns()
     accepted, held = [], []
     for r in queue:
-        why = review(system_id, r, unit_codes)
+        why = review(system_id, r, unit_codes, grandfathered)
         if why is None:
-            accepted.append(to_event(system_id, r))
+            accepted.append(to_event(system_id, r, grandfathered, campaigns))
         elif r.get("suggested_disposition") == "accept":
             held.append((r["candidate_id"], why))
     out = ROOT / "data" / "curated" / "systems" / system_id / "events.json"

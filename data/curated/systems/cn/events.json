@@ -58,11 +58,19 @@
         "url": "https://www.qcintel.com/article/sinopec-s-shanghai-refinery-partially-resumes-after-june-fire-report-7831.html"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "cn-2022-08-15-sichuan-industrial-power-halt",
@@ -125,11 +133,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 4,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "Yangtze-basin heat wave and drought (2022)"
     },
     {
       "event_id": "cn-2022-08-17-chongqing-industrial-power-curbs",
@@ -176,11 +192,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "Yangtze-basin heat wave and drought (2022)"
     },
     {
       "event_id": "cn-2022-09-10-yunnan-aluminium-power-cuts",
@@ -231,11 +255,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "cn-2023-01-15-panjin-haoye-refinery-explosion",
@@ -286,11 +318,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "cn-2023-02-22-alxa-xinjing-open-pit-collapse",
@@ -357,11 +397,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 4,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "cn-2023-02-20-yunnan-aluminium-power-cuts-deepened",
@@ -412,11 +460,19 @@
         "url": "https://www.alcircle.com/news/yunnan-to-improve-power-supply-to-aluminium-smelters-in-the-province-chinese-experts-95216"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "cn-2023-07-28-typhoon-doksuri-quanzhou-outage",
@@ -455,11 +511,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "Typhoon Doksuri (2023)"
     },
     {
       "event_id": "cn-2024-09-06-typhoon-yagi-hainan-outage",
@@ -510,11 +574,19 @@
         "url": "https://www.thepaper.cn/newsDetail_forward_28901729"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "Typhoon Yagi (2024)"
     },
     {
       "event_id": "cn-2024-09-06-typhoon-yagi-guangdong-outage",
@@ -553,11 +625,19 @@
         "url": "https://thestar.com.my/news/world/2024/09/13/china039s-typhoon-hit-regions-see-return-of-normal-life-work"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "Typhoon Yagi (2024)"
     },
     {
       "event_id": "cn-2025-07-20-typhoon-wipha-guangdong-outage",
@@ -608,11 +688,19 @@
         "url": "https://china.huanqiu.com/article/4NbLslgdcga"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "Typhoon Wipha (2025)"
     },
     {
       "event_id": "cn-2025-11-13-sinochem-quanzhou-crude-unit-fire",
@@ -655,11 +743,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "cn-2026-05-22-liushenyu-coal-mine-explosion",
@@ -726,11 +822,19 @@
         "url": "https://www.news.cn/local/20261021/9809659061f64a40ba325dd7c4cbd6b8/c.html"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 4,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "cn-2026-07-typhoons-bavi-mesak-hongxia-outages",
@@ -781,11 +885,19 @@
         "url": "https://www.rmzxw.com.cn/c/2026-07-30/3955014.shtml"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "cn-2025-09-24-typhoon-ragasa-guangdong-outage",
@@ -800,7 +912,7 @@
       "operator": null,
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Typhoon Ragasa (桦加沙) made landfall in Guangdong on 24 September 2025; winds brought down power lines and trees across the province.",
+      "summary": "Typhoon Ragasa (桦加沙) made landfall in Guangdong on 24 September 2025, bringing flooding and downed trees.",
       "effect": "Nearly half a million households lost power; more than a third were still without electricity on the morning of 25 September.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
@@ -810,6 +922,14 @@
         {
           "url": "https://www.nationalheraldindia.com/international/weakened-ragasa-lashes-southern-china-death-toll-rises-in-taiwan-and-philippines",
           "publisher": "National Herald (with agency inputs)",
+          "date": "2025-09-25",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://www.chinadailyhk.com/article/620570",
+          "publisher": "China Daily (Hong Kong edition)",
           "date": "2025-09-25",
           "language": "en",
           "source_role": "media",
@@ -824,11 +944,19 @@
         "url": "https://www.nationalheraldindia.com/international/weakened-ragasa-lashes-southern-china-death-toll-rises-in-taiwan-and-philippines"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-31",
         "threshold_version": "2026-10-30.1",
-        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "review_status": "dual_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 2,
+        "disposition": "corrected",
+        "source_count": 2,
+        "sources_opened_by_reviewer": 3,
+        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Typhoon Ragasa (2025)"
     }
   ]
 }

@@ -57,41 +57,56 @@
       "name": "EIA Refinery Capacity Report; EIA-860M; Monthly Energy Review",
       "role": "adopted",
       "licence": "US public domain",
-      "checked": "2026-10-30",
-      "cadence": "annual (refinery census) and monthly (EIA-860M, Monthly Energy Review)",
-      "stale_after_days": 400
+      "last_checked": "2026-10-30",
+      "publication_cadence": "annual (refinery census) and monthly (EIA-860M, Monthly Energy Review)",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": null,
+      "content_vintage": null
     },
     {
       "name": "EAGLE-I county outage history",
       "role": "adopted (aggregates only)",
       "licence": "CC BY 4.0",
-      "checked": "2026-10-30",
-      "cadence": "periodic history releases of 15-minute county outage snapshots",
-      "stale_after_days": 400
+      "last_checked": "2026-10-30",
+      "publication_cadence": "periodic history releases of 15-minute county outage snapshots",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": null,
+      "content_vintage": null
     },
     {
       "name": "DOE OE-417, PHMSA incident data, NERC",
       "role": "derived facts only",
       "licence": "varies; PHMSA latitude/longitude never read",
-      "checked": "2026-10-30",
-      "cadence": "event-driven reports; read when an event is researched",
-      "stale_after_days": 180
+      "last_checked": "2026-10-30",
+      "publication_cadence": "event-driven reports; read when an event is researched",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
     },
     {
       "name": "WRI Global Power Plant Database",
       "role": "rejected",
       "licence": "stale for the US",
-      "checked": "2026-10-30",
-      "cadence": null,
-      "stale_after_days": null
+      "last_checked": "2026-10-30",
+      "publication_cadence": null,
+      "stale_policy": null,
+      "stale_after_days": null,
+      "source_release": null,
+      "content_vintage": null
     },
     {
       "name": "Facility-level substation and line geodata",
       "role": "rejected",
       "licence": "outside the project's scope boundary",
-      "checked": "2026-10-30",
-      "cadence": null,
-      "stale_after_days": null
+      "last_checked": "2026-10-30",
+      "publication_cadence": null,
+      "stale_policy": null,
+      "stale_after_days": null,
+      "source_release": null,
+      "content_vintage": null
     }
   ],
   "research_gaps": [

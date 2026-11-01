@@ -66,11 +66,19 @@
         "url": "https://www.deccanherald.com/business/indias-power-deficit-slips-from-2-in-april-to-06-in-june-1130941.html"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 4,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "in-2022-02-21-chandigarh-power-strike-blackout",
@@ -125,11 +133,19 @@
         "url": "https://scroll.in/latest/1018068/scroll_in"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "in-2022-10-01-puducherry-power-strike-blackout",
@@ -184,11 +200,19 @@
         "url": "https://www.thenewsminute.com/article/puducherry-plunges-darkness-again-electricity-workers-strike-against-govt-168492"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "in-2023-03-16-uttar-pradesh-power-strike",
@@ -247,11 +271,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "in-2023-06-12-biparjoy-gujarat-port-suspensions",
@@ -306,11 +338,19 @@
         "url": "https://theprint.in/economy/reliance-industries-resumes-vessel-ops-at-indian-port-sources/1632369"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "Cyclone Biparjoy (2023)"
     },
     {
       "event_id": "in-2023-06-15-biparjoy-gujarat-power-outage",
@@ -365,11 +405,19 @@
         "url": "https://www.nationalheraldindia.com/amp/story/national/cyclone-biparjoy-gujarat-power-companies-suffer-rs-1013-cr-loss"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "Cyclone Biparjoy (2023)"
     },
     {
       "event_id": "in-2023-10-04-sikkim-glof-teesta-iii",
@@ -428,11 +476,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "South Lhonak glacial lake outburst flood (2023)"
     },
     {
       "event_id": "in-2023-10-04-sikkim-glof-teesta-v",
@@ -491,11 +547,19 @@
         "url": "https://psuwatch.com/newsupdates/teesta-v-fully-back-online-nhpc-restarts-3rd-and-final-unit-nearly-3-years-after-sikkim-flood"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "South Lhonak glacial lake outburst flood (2023)"
     },
     {
       "event_id": "in-2023-07-09-himachal-floods-hydro-shutdowns",
@@ -554,11 +618,19 @@
         "url": "https://tribuneindia.com/news/himachal/power-generation-back-to-over-90-level-in-state-533109"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "in-2023-12-04-cyclone-michaung-chennai-outage",
@@ -613,11 +685,19 @@
         "url": "https://www.dtnext.in/news/tamilnadu/88-per-cent-of-11-kv-feeders-lines-restored-in-chennai-tangedco-752540"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "Cyclone Michaung (2023)"
     },
     {
       "event_id": "in-2024-06-11-mandola-substation-fire-delhi-outage",
@@ -668,11 +748,19 @@
         "url": "https://www.theweek.in/wire-updates/national/2024/06/11/des54-dl-3rdld-power-outage.html"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "in-2024-10-23-cyclone-dana-odisha-port-suspensions",
@@ -727,11 +815,19 @@
         "url": "https://engine.online/news/operations-resume-at-most-indian-ports-638b"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "Cyclone Dana (2024)"
     },
     {
       "event_id": "in-2026-01-21-kashmir-snowstorm-outage",
@@ -782,11 +878,19 @@
         "url": "https://www.greaterkashmir.com/article/power-supply-restored-completely-across-kashmir-valley-kpdcl/472450"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "in-2026-05-13-khavda-re-complex-grid-disturbance",
@@ -845,11 +949,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "in-2026-04-20-hrrl-barmer-refinery-cdu-fire",
@@ -908,11 +1020,19 @@
         "url": "https://hdfcsky.com/news/hpcls-rajasthan-refinery-restarts-key-crude-unit-after-april-fire"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "in-2025-10-28-cyclone-montha-andhra-outage",
@@ -927,7 +1047,7 @@
       "operator": null,
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Severe cyclonic storm Montha crossed the Andhra Pradesh coast on 28 October 2025, damaging distribution poles and lines across the coastal districts.",
+      "summary": "Severe cyclonic storm Montha crossed the Andhra Pradesh coast on the night of 28-29 October 2025, damaging distribution poles and lines across the coastal districts.",
       "effect": "The eastern distribution company (APEPDCL) reported about 1.3 million service connections affected.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
@@ -941,6 +1061,14 @@
           "language": "en",
           "source_role": "media",
           "opened": true
+        },
+        {
+          "url": "https://m.thewire.in/article/environment/severe-cyclonic-storm-montha-makes-landfall-andhra-pradesh",
+          "publisher": "The Wire",
+          "date": "2025-10-29",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
         }
       ],
       "recovery": {
@@ -951,11 +1079,19 @@
         "url": "https://www.deccanchronicle.com/southern-states/andhra-pradesh/apepdcl-suffers-1047-crore-loss-7973-staff-work-on-war-footing-1913500"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-31",
         "threshold_version": "2026-10-30.1",
-        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "review_status": "dual_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 2,
+        "disposition": "corrected",
+        "source_count": 2,
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Cyclone Montha (2025)"
     }
   ]
 }

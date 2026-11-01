@@ -1,9 +1,10 @@
 {
-  "note": "What was searched, when, and how far it got. Counts only: the candidate queue's per-record narratives are kept off the public record (data/candidates/README.md). A window searched with the budget exhausted is PARTIAL, not researched-and-quiet.",
+  "note": "What was searched, when, and how far it got. Counts only: the candidate queue's per-record narratives are kept off the public record (data/candidates/README.md). A TARGETED pass chases named gaps and leads; a SYSTEMATIC pass declares its source lanes and window before searching, and is complete only when every lane was executed. A window searched with the budget exhausted is PARTIAL, not researched-and-quiet.",
   "passes": [
     {
       "date": "2026-10-30",
       "by": "iteration-14 incident and recovery lane",
+      "kind": "targeted",
       "window": [
         "2022-01-01",
         "2026-10-30"
@@ -23,6 +24,7 @@
     {
       "date": "2026-10-30",
       "by": "iteration-15 targeted research pass",
+      "kind": "targeted",
       "window": [
         "2022-01-01",
         "2026-10-30"

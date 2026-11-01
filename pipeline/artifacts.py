@@ -83,6 +83,8 @@ REQUIRED_WEB_PAYLOADS = (
     "history_series.json",
     "recovery_lifecycle.json",
     "explanations_regional.json",
+    # Iteration 16: what was actually published, and when (pipeline/production_history.py).
+    "production_history.json",
 )
 
 # Iteration 14: the country systems and the global home. Each lives in its own subdirectory of

@@ -1,5 +1,5 @@
 {
-  "note": "Hand-curated (iteration 15). Two records share an episode only when the record itself names the same hazard, or one source statement reports them together. Being close in time or place is not enough. Records not listed here are each their own episode.",
+  "note": "Hand-curated. Iteration-16 rule: records share an episode only for the same explicitly named hazard, the same explicitly identified common event or coordinated wave, or an explicit continuation of the same disruption, and every shared basis other than a named hazard cites the source that says so. A source that merely lists several incidents is provenance, not an episode; being close in time or place is never enough. Records not listed here are each their own episode (singleton).",
   "episodes": [
     {
       "episode_id": "cn-2022-08-sichuan-basin-heat-drought",
@@ -8,16 +8,21 @@
       "event_ids": [
         "cn-2022-08-15-sichuan-industrial-power-halt",
         "cn-2022-08-17-chongqing-industrial-power-curbs"
-      ]
+      ],
+      "hazard": "Yangtze-basin heat wave and drought (2022)"
     },
     {
       "episode_id": "cn-2022-yunnan-hydropower-shortage",
       "name": "Yunnan hydropower shortage, 2022-23",
-      "basis": "continuing_shortfall",
+      "basis": "explicit_continuation",
       "event_ids": [
         "cn-2022-09-10-yunnan-aluminium-power-cuts",
         "cn-2023-02-20-yunnan-aluminium-power-cuts-deepened"
-      ]
+      ],
+      "evidence": {
+        "url": "https://www.kitco.com/news/off-the-wire/2023-02-20/chinaaposs-yunnan-asks-aluminium-producers-further-cut-power-usage",
+        "says": "Reuters reports Yunnan extending its September 2022 curbs as the hydropower shortage continued (paraphrase)."
+      }
     },
     {
       "episode_id": "cn-2024-09-typhoon-yagi",
@@ -26,7 +31,8 @@
       "event_ids": [
         "cn-2024-09-06-typhoon-yagi-hainan-outage",
         "cn-2024-09-06-typhoon-yagi-guangdong-outage"
-      ]
+      ],
+      "hazard": "Typhoon Yagi (2024)"
     }
   ]
 }

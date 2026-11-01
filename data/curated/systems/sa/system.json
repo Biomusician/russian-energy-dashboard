@@ -57,33 +57,45 @@
       "name": "Aramco Annual Report",
       "role": "adopted (facts only)",
       "licence": "all rights reserved; not redistributed",
-      "checked": "2026-10-30",
-      "cadence": "annual (published about March for the prior year)",
-      "stale_after_days": 400
+      "last_checked": "2026-10-30",
+      "publication_cadence": "annual (published about March for the prior year)",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": null,
+      "content_vintage": null
     },
     {
       "name": "JODI Oil",
       "role": "adopted (context)",
       "licence": "terms not published",
-      "checked": "2026-10-30",
-      "cadence": "monthly",
-      "stale_after_days": 120
+      "last_checked": "2026-10-30",
+      "publication_cadence": "monthly",
+      "stale_policy": "monthly",
+      "stale_after_days": 120,
+      "source_release": null,
+      "content_vintage": null
     },
     {
       "name": "GASTAT, SEC, EIA, OPEC",
       "role": "derived facts only",
       "licence": "varies",
-      "checked": "2026-10-30",
-      "cadence": "varies by publisher; read when an event is researched",
-      "stale_after_days": 180
+      "last_checked": "2026-10-30",
+      "publication_cadence": "varies by publisher; read when an event is researched",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
     },
     {
       "name": "WRI Global Power Plant Database; OSM",
       "role": "rejected",
       "licence": "stale to 2016; no refinery or pipeline tagging",
-      "checked": "2026-10-30",
-      "cadence": null,
-      "stale_after_days": null
+      "last_checked": "2026-10-30",
+      "publication_cadence": null,
+      "stale_policy": null,
+      "stale_after_days": null,
+      "source_release": null,
+      "content_vintage": null
     }
   ],
   "research_gaps": [

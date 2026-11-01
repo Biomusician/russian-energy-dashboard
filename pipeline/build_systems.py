@@ -22,6 +22,7 @@ WHAT IT DELIBERATELY DOES NOT DO.
 """
 
 import datetime as dt
+import re
 
 from pipeline import geo, systems
 from pipeline.config import ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, PROCESSED, RAW, SECTORS
@@ -67,11 +68,16 @@ EVENT_FIELDS = (
     "geography_precision", "regions_affected", "facility_name", "facility_name_local", "operator",
     "asset_class", "cause", "summary", "effect", "inclusion_basis", "criterion_met",
     "threshold_basis", "capacity_affected", "sources", "recovery", "review", "episode_id",
+    "hazard_name", "publication",
 )
 # No `title`: headlines are the publishers' words, not ours, and the page shows the publisher.
 SOURCE_FIELDS = ("url", "publisher", "date", "language", "source_role", "opened")
 RECOVERY_FIELDS = ("research_status", "kind", "date", "evidence", "url")
-RECOVERY_STATUSES = ("EVIDENCE_FOUND", "RESEARCHED_NO_PUBLIC_EVIDENCE", "NOT_YET_RESEARCHED")
+# WITHHELD_ACTIVE_CAMPAIGN is a PUBLICATION state, not a research result: the record belongs to a
+# kinetic campaign that is still active, so its facility-specific recovery status is not published
+# (docs/CURRENT_EVENT_PUBLICATION_POLICY.md). It is never "no evidence" and never "not researched".
+WITHHELD = "WITHHELD_ACTIVE_CAMPAIGN"
+RECOVERY_STATUSES = ("EVIDENCE_FOUND", "RESEARCHED_NO_PUBLIC_EVIDENCE", "NOT_YET_RESEARCHED", WITHHELD)
 # What KIND of recovery evidence was found. Required whenever the status is EVIDENCE_FOUND: the
 # iteration-14 red team found an estimate, a "nothing was lost" case and a supply-continuity
 # statement all rendered as "recovery evidence found". Service restored is not a facility
@@ -83,6 +89,30 @@ ASSESSMENTS = ("READY", "EXPERIMENTAL", "INCOMPLETE", "UNSUITABLE", "INSUFFICIEN
                "NOT_APPLICABLE", "NOT_YET_RESEARCHED")
 
 RESEARCH_STATUSES = ("complete", "partial")
+# Iteration 16 splits research into two kinds. A TARGETED pass chases named gaps and leads; a
+# SYSTEMATIC pass declares its source lanes and window before searching and executes every lane.
+# Only a systematic pass can make research coverage complete (onboarding gate item 7B).
+RESEARCH_KINDS = ("systematic", "targeted")
+RESEARCH_OUTCOME_KEYS = ("candidates", "records", "accepted", "insufficient_evidence", "rejected",
+                         "duplicate", "out_of_scope", "held")
+RESEARCH_LANE_KEYS = ("lane", "source_family", "status", "reason")
+
+# SOURCE STALE LIMITS ARE DISPLAY POLICY, NOT METHODOLOGY (iteration 16). They decide when the
+# page tells a reader to re-check a source before relying on it. They never decide whether an
+# event is accepted, never enter a number, and never touch a historical reconstruction; a test
+# holds that. Each source names a class; its limit is the class's, never typed per source, so a
+# limit cannot drift away from its stated rationale.
+STALE_POLICIES = {
+    "monthly": {"days": 120, "rationale": "three monthly releases missed, plus a month of publication lag"},
+    "quarterly": {"days": 180, "rationale": "two quarterly releases missed"},
+    "semiannual": {"days": 400, "rationale": "two half-yearly releases missed, plus about a month of lag"},
+    "annual": {"days": 400, "rationale": "one annual release missed, plus about a month of lag"},
+    "event_driven": {"days": 180, "rationale": "no release cycle; the registry entry (access, licence, "
+                                               "address) is re-checked at least twice a year"},
+}
+# How often a SYSTEMATIC research pass should be repeated before research coverage reads as due.
+# Also display policy; like the stale limits it never changes an accepted event.
+RESEARCH_CADENCE_DAYS = 365
 
 
 def _in_use(source):
@@ -90,38 +120,117 @@ def _in_use(source):
 
 
 def validate_sources(system_id, doc, research_log):
-    """Every source a country relies on says when it was last checked and how often it changes,
-    and every research pass says what it covered and whether it finished (iteration 15)."""
+    """Every source a country relies on says when it was last checked, how often it publishes and
+    which stale policy applies; every research pass says what it covered and whether it finished.
+
+    Source freshness and research completeness are validated separately and never derived from
+    one another: a fresh registry says nothing about whether the event search was systematic."""
     problems = []
     for s in doc["sources"]:
-        if not s.get("checked"):
+        if not s.get("last_checked"):
             problems.append(f"source {s['name']!r} has no last-checked date")
-        if _in_use(s) and not (s.get("cadence") and s.get("stale_after_days")):
-            problems.append(f"source {s['name']!r} is used but states no cadence or stale limit")
+        if not _in_use(s):
+            continue
+        pol = s.get("stale_policy")
+        if not s.get("publication_cadence") or pol not in STALE_POLICIES:
+            problems.append(f"source {s['name']!r} is used but states no cadence or stale policy")
+        elif s.get("stale_after_days") != STALE_POLICIES[pol]["days"]:
+            problems.append(f"source {s['name']!r}: stale_after_days must be the {pol!r} policy's "
+                            f"{STALE_POLICIES[pol]['days']}, not {s.get('stale_after_days')!r}")
     for p in research_log["passes"]:
+        tag = f"research pass {p.get('date')} ({p.get('by')})"
         if p.get("status") not in RESEARCH_STATUSES:
-            problems.append(f"research pass {p.get('date')}: status must be one of {RESEARCH_STATUSES}")
+            problems.append(f"{tag}: status must be one of {RESEARCH_STATUSES}")
+        if p.get("kind") not in RESEARCH_KINDS:
+            problems.append(f"{tag}: kind must be one of {RESEARCH_KINDS}")
         if p.get("status") == "partial" and not p.get("status_reason"):
-            problems.append(f"research pass {p.get('date')}: a partial pass must say why")
+            problems.append(f"{tag}: a partial pass must say why")
         if not (p.get("window") and len(p["window"]) == 2 and p["window"][0] <= p["window"][1]):
-            problems.append(f"research pass {p.get('date')}: window must be [start, end]")
+            problems.append(f"{tag}: window must be [start, end]")
         # Counts only. A narrative field here would publish what the queue keeps private.
-        extra = set(p.get("outcome", {})) - {"records", "accepted", "insufficient_evidence",
-                                              "rejected", "duplicate", "out_of_scope", "held"}
+        outcome = p.get("outcome", {})
+        extra = set(outcome) - set(RESEARCH_OUTCOME_KEYS)
         if extra:
-            problems.append(f"research pass {p.get('date')}: outcome carries non-count fields {sorted(extra)}")
+            problems.append(f"{tag}: outcome carries non-count fields {sorted(extra)}")
+        if any(not isinstance(v, int) or isinstance(v, bool) for v in outcome.values()):
+            problems.append(f"{tag}: outcome values must be integer counts")
+        lanes = p.get("lanes") or []
+        for lane in lanes:
+            if set(lane) - set(RESEARCH_LANE_KEYS) or lane.get("status") not in RESEARCH_STATUSES:
+                problems.append(f"{tag}: lane {lane.get('lane')!r} must hold only "
+                                f"{RESEARCH_LANE_KEYS} with a status in {RESEARCH_STATUSES}")
+        if p.get("kind") == "systematic":
+            if not lanes:
+                problems.append(f"{tag}: a systematic pass declares its source lanes")
+            # Complete is a process claim: every declared lane executed. One skipped lane and the
+            # pass is partial, however quiet the other lanes were.
+            if p.get("status") == "complete" and any(lane.get("status") != "complete" for lane in lanes):
+                problems.append(f"{tag}: complete, but a declared lane is not")
+        elif p.get("status") == "complete":
+            problems.append(f"{tag}: only a systematic pass can be complete")
     if problems:
         raise ValueError(f"system {system_id} sources: " + "; ".join(problems))
 
 
-# Why two records may share an episode (iteration 15; GLOBAL_METHODOLOGY §5.3 fix 4). One
-# hurricane yields an outage record per state plus shut-ins and port closures; counting records
-# would make hazard-prone regions look several times more disrupted than they were.
+def research_freshness(research_log, kind="systematic"):
+    """When the event search was last done SYSTEMATICALLY, over what window, and when it is due.
+
+    Derived from the research log only, never from the source registry: sources being current
+    does not mean the search was. `next_due` is a date; whether it has passed is computed on the
+    reader's clock, like every other age on these pages."""
+    systematic = [p for p in research_log.get("passes", []) if p.get("kind") == kind]
+    last = max(systematic, key=lambda p: p["date"]) if systematic else None
+    due = None
+    if last:
+        due = (dt.date.fromisoformat(last["date"]) + dt.timedelta(days=RESEARCH_CADENCE_DAYS)).isoformat()
+    return {
+        "last_systematic_pass": last["date"] if last else None,
+        "coverage_window": last["window"] if last else None,
+        "completeness": last["status"] if last else "never_systematic",
+        "research_cadence_days": RESEARCH_CADENCE_DAYS,
+        "next_due": due,
+        "note": ("Research coverage describes the event search, not the sources: a country's sources "
+                 "can all be current while its search is incomplete, and a complete search can rest "
+                 "on a source whose own data is old. Complete means every declared source lane was "
+                 "executed over the window, not that nothing else happened."),
+    }
+
+
+# Why two records may share an episode (iteration 15, tightened in iteration 16). One hurricane
+# yields an outage record per state plus shut-ins and port closures; counting records would make
+# hazard-prone regions look several times more disrupted than they were. But a grouping is itself
+# a claim, so every basis is EXPLICIT: something a source says, never something inferred from
+# being close in time or place.
 EPISODE_BASES = {
     "named_hazard": "The records name the same storm, flood, heat wave or other hazard.",
-    "single_statement": "One source statement reported these records together.",
-    "continuing_shortfall": "A later record reports the same supply shortfall continuing.",
+    "explicit_common_event": "A source explicitly says these records belong to one common event.",
+    "coordinated_wave": "A source explicitly identifies these records as one coordinated attack or wave.",
+    "explicit_continuation": "A later record reports the same operational disruption continuing.",
 }
+SINGLETON = "singleton"
+SINGLETON_TEXT = "No other record is tied to this one by a named hazard or an explicit common event."
+# Retired in iteration 16. A source that LISTS several incidents in one statement is provenance,
+# not evidence that they are one event: the Saudi energy ministry's April 2026 statement listed
+# attacks it also said were separate. Named so the build can say why it refuses them.
+RETIRED_EPISODE_BASES = {
+    "single_statement": "one statement listing several records is not evidence they are one episode",
+    "continuing_shortfall": "renamed explicit_continuation",
+    "single_record": f"renamed {SINGLETON}",
+}
+# A shared basis other than a named hazard must point at the source that says so.
+EVIDENCED_BASES = ("explicit_common_event", "coordinated_wave", "explicit_continuation")
+
+# Causes whose records fall under an active campaign's publication rule.
+KINETIC_CAUSES = ("kinetic_strike", "sabotage")
+# Wording that reports a facility's CURRENT operating state. Not allowed in the summary or effect
+# of a record under an active campaign: it would publish there what the withheld recovery block
+# does not (docs/CURRENT_EVENT_PUBLICATION_POLICY.md §4).
+STATUS_WORDING = re.compile(
+    r"restart|resum|reopen|back (online|in service)|returned to|recover(ed|y)|restor|"
+    r"still (shut|offline|halted|closed|down)|remain(s|ed)? (shut|offline|halted|closed)|"
+    r"operating at|running at|operat(ing|ion) at \d|postpon|planned restart|"
+    r"not (yet )?resumed|had not resumed|knock-on",
+    re.I)
 
 
 # Exact UI wording (GLOBAL_METHODOLOGY §6.4), carried in the payload so every surface says the
@@ -204,7 +313,100 @@ def _event(raw, unit_names):
     return ev
 
 
-def validate(system_id, doc, events, unit_codes):
+# DUAL REVIEW (iteration 16, docs/REVIEW_GOVERNANCE.md). One researcher may find a record; a
+# record reaches the canonical public corpus only after a second, independent reviewer has opened
+# the evidence. Records published before the rule existed are grandfathered BY ID in a frozen list
+# that can only shrink; a new record cannot be added to it, so "legacy" is not a way round review.
+REVIEW_STATUSES = ("dual_reviewed", "legacy_single_review")
+REVIEW_DISPOSITIONS = ("confirmed", "corrected")
+GRANDFATHERED = SYSTEMS_CURATED / "review_grandfathered.json"
+CAMPAIGNS = SYSTEMS_CURATED / "conflict_campaigns.json"
+
+
+def load_grandfathered():
+    return set(read_json(GRANDFATHERED)["event_ids"])
+
+
+def review_problems(e, grandfathered):
+    """Why this record's review block cannot be published, or [] if it can."""
+    eid, r = e["event_id"], e.get("review") or {}
+    status = r.get("review_status")
+    if status not in REVIEW_STATUSES:
+        return [f"{eid}: review status {status!r} is not one of {REVIEW_STATUSES}"]
+    out = []
+    if not r.get("primary_review_complete"):
+        out.append(f"{eid}: primary review not complete")
+    if r.get("source_count") != len(e["sources"]):
+        out.append(f"{eid}: review source_count {r.get('source_count')!r} != {len(e['sources'])} sources")
+    if status == "legacy_single_review":
+        if eid not in grandfathered:
+            out.append(f"{eid}: single-reviewed, and not a grandfathered pre-iteration-16 record")
+        if r.get("independent_review_complete") or r.get("reviewer_count") != 1:
+            out.append(f"{eid}: a legacy record claims an independent review it did not have")
+    else:
+        if not r.get("independent_review_complete"):
+            out.append(f"{eid}: no independent review")
+        if (r.get("reviewer_count") or 0) < 2:
+            out.append(f"{eid}: dual review needs two reviewers")
+        if (r.get("sources_opened_by_reviewer") or 0) < 1:
+            out.append(f"{eid}: the independent reviewer opened no source")
+        if r.get("disposition") not in REVIEW_DISPOSITIONS:
+            out.append(f"{eid}: review disposition {r.get('disposition')!r} is not one of {REVIEW_DISPOSITIONS}")
+    return out
+
+
+def load_campaigns():
+    return read_json(CAMPAIGNS)
+
+
+def campaign_of(e, system_id, campaigns):
+    """The ACTIVE campaign whose publication rule covers this record, or None."""
+    for c in campaigns.get("campaigns", []):
+        rule = c.get("member_rule") or {}
+        if (c["system_id"] == system_id and c["status"] == "active" and c.get("policy_applied")
+                and e["cause"] in rule.get("causes", KINETIC_CAUSES) and e["date"] >= rule.get("from", "")):
+            return c
+    return None
+
+
+def apply_publication_policy(system_id, events, campaigns):
+    """Mark, and check, every record covered by an active campaign's publication rule.
+
+    The curated record must ALREADY carry the withheld marker: the import gate writes it, so the
+    evidence stays in the local queue and never reaches the public repository. The build refuses a
+    covered record that still holds recovery evidence or current-status wording, and refuses the
+    withheld marker on a record no active campaign covers, so a campaign recorded as ended forces a
+    re-import rather than leaving status hidden by accident."""
+    problems = []
+    for e in events:
+        c = campaign_of(e, system_id, campaigns)
+        rec = e["recovery"]
+        if c is None:
+            e["publication"] = None
+            if rec["research_status"] == WITHHELD:
+                problems.append(f"{e['event_id']}: recovery withheld but no active campaign covers it")
+            continue
+        e["publication"] = {
+            "rule": "active_campaign_current_status_withheld",
+            "campaign_id": c["campaign_id"],
+            "withheld": ["recovery"],
+            "note": ("This record belongs to an attack campaign still recorded as active. The event "
+                     "is published; the facility's restart, recovery and operating status are not, "
+                     "until the campaign has ended (docs/CURRENT_EVENT_PUBLICATION_POLICY.md)."),
+        }
+        if rec["research_status"] != WITHHELD or any(rec[k] for k in ("kind", "date", "evidence", "url")):
+            problems.append(f"{e['event_id']}: under active campaign {c['campaign_id']} but its "
+                            "recovery block is not the withheld marker")
+        for field in ("summary", "effect"):
+            m = STATUS_WORDING.search(e.get(field) or "")
+            if m:
+                problems.append(f"{e['event_id']}: {field} reports current status ({m.group(0)!r}) "
+                                "under an active campaign")
+    if problems:
+        raise ValueError(f"system {system_id} publication policy: " + "; ".join(problems))
+
+
+def validate(system_id, doc, events, unit_codes, grandfathered=None):
     """Refuse a system whose curated sources break the rules the UI depends on.
 
     A build failure here is deliberate: a country shown with an unstated sector, an event in a
@@ -255,32 +457,75 @@ def validate(system_id, doc, events, unit_codes):
             problems.append(f"{eid}: a recovery kind without evidence")
         if not e.get("review"):
             problems.append(f"{eid}: not reviewed")
+        else:
+            problems += review_problems(e, grandfathered if grandfathered is not None else load_grandfathered())
     if problems:
         raise ValueError(f"system {system_id}: " + "; ".join(problems))
 
 
-def validate_episodes(system_id, declared, event_ids):
-    """Refuse an episode file that would silently merge, drop or double-count records."""
+def validate_episodes(system_id, declared, events):
+    """Refuse an episode file that would silently merge, drop or double-count records, or group
+    them on anything weaker than an explicit statement (iteration 16 invariants):
+
+      * every record belongs to exactly one episode (a record no episode names is a singleton);
+      * no record is in two episodes, and every episode stays inside this system;
+      * a declared basis is one of the explicit bases, never a retired one or proximity;
+      * a named-hazard episode names its hazard, and every member names the same hazard;
+      * two records naming the same hazard are in the same episode (so dropping a member fails);
+      * an explicit-common-event, wave or continuation episode cites the source that says so,
+        and that source is one its members already cite.
+    """
+    by_id = {e["event_id"]: e for e in events}
     problems, seen_eps, owner = [], set(), {}
     for ep in declared:
         eid = ep["episode_id"]
-        if eid in seen_eps or eid in event_ids:
+        if eid in seen_eps or eid in by_id:
             # An undeclared record is its own episode under its own id, so an episode id equal
             # to an event id would merge two different things under one key.
             problems.append(f"episode id {eid!r} is not unique")
         seen_eps.add(eid)
-        if ep.get("basis") not in EPISODE_BASES:
-            problems.append(f"{eid}: unknown basis {ep.get('basis')!r}")
+        if not eid.startswith(f"{system_id}-"):
+            problems.append(f"{eid}: an episode id must belong to system {system_id!r}")
+        basis = ep.get("basis")
+        if basis in RETIRED_EPISODE_BASES:
+            problems.append(f"{eid}: basis {basis!r} is retired ({RETIRED_EPISODE_BASES[basis]})")
+        elif basis not in EPISODE_BASES:
+            problems.append(f"{eid}: unknown basis {basis!r}")
         if not ep.get("name"):
             problems.append(f"{eid}: an episode needs a name")
         if len(ep["event_ids"]) < 2:
             problems.append(f"{eid}: a declared episode groups at least two records")
         for m in ep["event_ids"]:
-            if m not in event_ids:
-                problems.append(f"{eid}: no event {m!r}")
+            if m not in by_id:
+                problems.append(f"{eid}: no event {m!r} in system {system_id}")
             elif m in owner:
                 problems.append(f"{m} is in two episodes ({owner[m]}, {eid})")
             owner[m] = eid
+        members = [by_id[m] for m in ep["event_ids"] if m in by_id]
+        if basis == "named_hazard":
+            hazard = ep.get("hazard")
+            if not hazard:
+                problems.append(f"{eid}: a named-hazard episode must name its hazard")
+            for m in members:
+                if m.get("hazard_name") != hazard:
+                    problems.append(f"{eid}: member {m['event_id']} names hazard "
+                                    f"{m.get('hazard_name')!r}, not {hazard!r}")
+        elif basis in EVIDENCED_BASES:
+            ev = ep.get("evidence") or {}
+            cited = {s["url"] for m in members for s in m["sources"]}
+            if not (ev.get("url") and ev.get("says")):
+                problems.append(f"{eid}: basis {basis!r} needs evidence {{url, says}} from a source")
+            elif ev["url"] not in cited:
+                problems.append(f"{eid}: its evidence URL is not a source of any member")
+    # Same hazard, same episode. Without this, a hurricane's records could be split across a
+    # declared episode and a stray singleton and counted twice.
+    by_hazard = {}
+    for e in events:
+        if e.get("hazard_name"):
+            by_hazard.setdefault(e["hazard_name"], set()).add(owner.get(e["event_id"], e["event_id"]))
+    for hazard, eps in sorted(by_hazard.items()):
+        if len(eps) > 1:
+            problems.append(f"records naming {hazard!r} are split across episodes {sorted(eps)}")
     if problems:
         raise ValueError(f"system {system_id} episodes: " + "; ".join(problems))
     return owner
@@ -301,7 +546,8 @@ def episodes_of(declared, events):
         out.append({
             "episode_id": eid,
             "name": ep["name"] if ep else None,
-            "basis": ep["basis"] if ep else "single_record",
+            "basis": ep["basis"] if ep else SINGLETON,
+            "hazard": ep.get("hazard") if ep else None,
             "event_ids": [e["event_id"] for e in members],
             "records": len(members),
             "first_date": min(e["date"] for e in members),
@@ -311,6 +557,9 @@ def episodes_of(declared, events):
             # implying its regions are the whole footprint.
             "has_country_level_record": any(not e["region_code"] for e in members),
         })
+        # Episode dates are derived from their members, so they always encompass them; asserted
+        # anyway because a later change that let an episode carry its own dates would break it.
+        assert all(out[-1]["first_date"] <= e["date"] <= out[-1]["last_date"] for e in members)
     out.sort(key=lambda x: (x["first_date"], x["episode_id"]))
     return out
 
@@ -323,10 +572,14 @@ def onboarding_gate(doc, events, profile, research_log=None):
     avoid. Items the code cannot check are stated with the reason they are partial.
     """
     metrics = profile.get("metrics", [])
-    passes = (research_log or {}).get("passes", [])
-    # Complete only if the newest pass finished. An older finished pass does not cover a later,
-    # interrupted one.
-    research_complete = bool(passes) and max(passes, key=lambda p: p["date"])["status"] == "complete"
+    # Item 7 was one gate meaning two things until iteration 16. It is now two independent items:
+    # 7A asks whether every source states its freshness; 7B asks whether the event SEARCH was
+    # systematic and finished. Neither is derived from the other: a registry checked yesterday
+    # says nothing about whether the search covered the window.
+    in_use = [s for s in doc["sources"] if _in_use(s)]
+    unstated = [s["name"] for s in in_use
+                if not (s.get("last_checked") and s.get("publication_cadence") and s.get("stale_policy"))]
+    rf = research_freshness(research_log or {})
     no_basis = [m["metric"] for m in metrics if not m.get("basis")]
     rulings_needed = any(r["status"] != "note" for r in doc["geography"].get("rulings", []))
 
@@ -353,13 +606,20 @@ def onboarding_gate(doc, events, profile, research_log=None):
                     "records and episodes."),
         item(6, "Safety tests extended to the country", "met",
              "The served-data gates recurse into every country payload."),
-        item(7, "Freshness: last refresh per source, with a stale notice",
-             "met" if research_complete else "partial",
-             "Every source states when it was last checked and how long it stays fresh, and the "
-             "page marks any source past that limit. " + (
-                 "The event search covered the whole window." if research_complete else
-                 "The event search itself has not covered the whole window: at least one research "
-                 "pass ended with its budget spent, so recent years are under-searched.")),
+        item("7A", "Source freshness: last check, cadence and stale policy per source",
+             "met" if not unstated else "partial",
+             "Every source in use states when it was last checked, how often it publishes and which "
+             "stale policy applies; the page marks any source past its limit on the reader's clock."
+             if not unstated else f"{len(unstated)} source(s) in use state no freshness metadata."),
+        item("7B", "Systematic research coverage",
+             {"complete": "met", "partial": "partial"}.get(rf["completeness"], "unmet"),
+             {"complete": f"The newest systematic pass ({rf['last_systematic_pass']}) executed every "
+                          "declared source lane over its window.",
+              "partial": f"The newest systematic pass ({rf['last_systematic_pass']}) did not execute "
+                         "every declared source lane; see the research log for which and why."
+              }.get(rf["completeness"],
+                    "No systematic pass yet: the record comes from targeted searches only, so "
+                    "events that no search looked for are missing.")),
         item(8, "Comparability fields and structural rules", "met",
              "comparability 'none', reporting environment on every count, fixed alphabetical "
              "order, no shared scale."),
@@ -386,7 +646,7 @@ def build_system(system_id, admin1, admin0, as_of):
     declared = read_json(src / "episodes.json")["episodes"] if (src / "episodes.json").exists() else []
     research_log = read_json(src / "research_log.json")
     validate_sources(system_id, doc, research_log)
-    episode_of = validate_episodes(system_id, declared, {r["event_id"] for r in raw_events})
+    campaigns = load_campaigns()
     reg = systems.system(system_id)
 
     us = units(system_id, admin1, admin0)
@@ -397,9 +657,11 @@ def build_system(system_id, admin1, admin0, as_of):
                          f"first-level units, Natural Earth gave {len(us)}")
     events = sorted((_event(r, unit_names) for r in raw_events),
                     key=lambda e: (e["date"], e["event_id"]))
+    episode_of = validate_episodes(system_id, declared, events)
     for e in events:
         e["episode_id"] = episode_of.get(e["event_id"], e["event_id"])
     validate(system_id, doc, events, unit_codes)
+    apply_publication_policy(system_id, events, campaigns)
     # An event dated after TODAY is a curation error and fails the build. An event dated after
     # the build's --as-of is not: a historical rebuild (the frozen 2026-08-28 regression) must
     # reconstruct the record as of that date, the way the theatre does, rather than refuse to
@@ -444,7 +706,8 @@ def build_system(system_id, admin1, admin0, as_of):
     recovery_counts = {k: sum(1 for e in events if e["recovery"]["research_status"] == k)
                        for k in RECOVERY_STATUSES}
     kind_counts = {k: sum(1 for e in events if e["recovery"]["kind"] == k) for k in RECOVERY_KINDS}
-    reviewed = max((e["review"]["reviewed"] for e in events), default=None)
+    reviewed = max((e["review"]["reviewed_at"] for e in events), default=None)
+    review_counts = {k: sum(1 for e in events if e["review"]["review_status"] == k) for k in REVIEW_STATUSES}
 
     payload = {
         "system_id": system_id,
@@ -487,8 +750,23 @@ def build_system(system_id, admin1, admin0, as_of):
             "note": "Counts what was reported and found, not what occurred.",
         },
         "inclusion_threshold": read_json(SYSTEMS_CURATED / "inclusion_threshold.json"),
-        "episode_bases": {**EPISODE_BASES,
-                          "single_record": "No other record is tied to this one by name or source."},
+        "episode_bases": {**EPISODE_BASES, SINGLETON: SINGLETON_TEXT},
+        # Who looked at the record before it was published (iteration 16). Counts, not names.
+        "review_summary": {
+            **review_counts,
+            "note": ("Dual reviewed: a researcher found the record and a second, independent "
+                     "reviewer opened its sources and checked identity, date, region, class, "
+                     "threshold, provenance, wording and episode. Legacy: published before dual "
+                     "review was required, checked by one reviewer against the threshold and the "
+                     "scope scan; these are grandfathered by id and are re-reviewed over time."),
+        },
+        "publication_policy": {
+            "withheld_records": sum(1 for e in events if e.get("publication")),
+            "campaigns": [{k: c.get(k) for k in ("campaign_id", "name", "status", "status_checked",
+                                                  "status_basis", "policy_applied")}
+                          for c in campaigns.get("campaigns", []) if c["system_id"] == system_id],
+            "release_rule": campaigns.get("release_rule"),
+        },
         "taxonomy": {"asset_classes": {k: labels[k] for k in used_classes},
                      "causes": {k: cause_labels[k] for k in used_causes}},
         "profile": profile,
@@ -499,6 +777,8 @@ def build_system(system_id, admin1, admin0, as_of):
         "record_reviewed": reviewed,
         "review_freshness_days": doc.get("review_freshness_days", 120),
         "research_log": research_log,
+        "research_freshness": research_freshness(research_log),
+        "stale_policies": STALE_POLICIES,
         "onboarding_gate": onboarding_gate(doc, events, profile, research_log),
         "audit_docs": doc["audit_docs"],
     }

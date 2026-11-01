@@ -1,0 +1,663 @@
+{
+  "note": "Vercel production deployments as recorded by GitHub's public deployments API. Captured by scripts/capture_deployments.py; read by pipeline/production_history.py. `state` is the deploy's final status, null where it has not been fetched yet.",
+  "repo": "Biomusician/russian-energy-dashboard",
+  "captured_at": "2026-11-01T01:17:24Z",
+  "deployments": [
+    {
+      "deployment_id": 6150812512,
+      "sha": "28200a75e7b54cb9c454ab9bf7804d09ace24665",
+      "environment": "Production",
+      "created_at": "2026-08-29T00:47:40Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6150869074,
+      "sha": "033c6af5562e6379ce97fb837c1024e6cbc99c24",
+      "environment": "Production",
+      "created_at": "2026-08-29T00:55:07Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6151319625,
+      "sha": "4e32dd5cc0d4e46dd14c943851574a630e06b398",
+      "environment": "Production",
+      "created_at": "2026-08-29T01:57:33Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6151366793,
+      "sha": "fb79a493b096dd836d4dbc5e5fefb6db27bc7db2",
+      "environment": "Production",
+      "created_at": "2026-08-29T02:04:37Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6151392993,
+      "sha": "ea8c02f45bb1aaba651cb84e18d706f1351e92d8",
+      "environment": "Production",
+      "created_at": "2026-08-29T02:08:22Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6155326641,
+      "sha": "c8efa367c6b4ee2ab4b9a67b8dd5e08f05806e1d",
+      "environment": "Production",
+      "created_at": "2026-08-29T11:42:10Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6157868161,
+      "sha": "f88b30cfde106d8ded06bb9541caa653451b905b",
+      "environment": "Production",
+      "created_at": "2026-08-29T16:42:28Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6157882441,
+      "sha": "8e07afcc28dc33f7c01a171fa8d85e82d5d43c76",
+      "environment": "Production",
+      "created_at": "2026-08-29T16:44:11Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6159730135,
+      "sha": "c6a682fc1d49a62a76a6a1bdf417fea844b811a9",
+      "environment": "Production",
+      "created_at": "2026-08-29T20:22:55Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6160685960,
+      "sha": "f4ab28c47296b89c4f2cff246b24d5a6f8b04cd5",
+      "environment": "Production",
+      "created_at": "2026-08-29T22:17:21Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6165710227,
+      "sha": "562f86095cf2fde64764888110779864d33065b2",
+      "environment": "Production",
+      "created_at": "2026-08-30T10:33:55Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6170805104,
+      "sha": "932a1b7bbd02b3ee9b0fc1aac229c3f6e1de3167",
+      "environment": "Production",
+      "created_at": "2026-08-30T20:16:57Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6170847746,
+      "sha": "4425ef78a6242e1c94022c0737e9c6a86d9383dc",
+      "environment": "Production",
+      "created_at": "2026-08-30T20:21:27Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6170972248,
+      "sha": "24d28b85dcc5f3dfacad0ebe6f67c85ed14b5bac",
+      "environment": "Production",
+      "created_at": "2026-08-30T20:34:53Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6173888347,
+      "sha": "c202013f84399ec9ea47d38c61d0cfb7ee580d19",
+      "environment": "Production",
+      "created_at": "2026-08-31T02:14:41Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6173897302,
+      "sha": "f048870c41d16a770b6c6780e83628bf05eae78a",
+      "environment": "Production",
+      "created_at": "2026-08-31T02:15:42Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6180364107,
+      "sha": "fdfeed539f870b7cb7cc47b09f436c7fee17a64b",
+      "environment": "Production",
+      "created_at": "2026-08-31T11:41:55Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6180921695,
+      "sha": "5cbee8d4ec708b7c7296f8fbffb5c95d4a900e6b",
+      "environment": "Production",
+      "created_at": "2026-08-31T12:20:38Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6192320478,
+      "sha": "bd637616542e4a4955002d589380d25782492c9e",
+      "environment": "Production",
+      "created_at": "2026-09-01T00:50:49Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6199034814,
+      "sha": "441974a4fa39d682ae7640638b309eb86da41e56",
+      "environment": "Production",
+      "created_at": "2026-09-01T10:12:37Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6219645160,
+      "sha": "24d172c69e3ef9dffd71024721783dde27895cd0",
+      "environment": "Production",
+      "created_at": "2026-09-02T09:43:32Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6241411063,
+      "sha": "1362ddb401b46c0d1507d21da74f906ebfb2856e",
+      "environment": "Production",
+      "created_at": "2026-09-03T09:55:58Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6261908146,
+      "sha": "383951b8171a63c69e91106d483651f0de802583",
+      "environment": "Production",
+      "created_at": "2026-09-04T09:49:54Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6269934821,
+      "sha": "770c6b1906a7f87440fa8318396a6834738d95c3",
+      "environment": "Production",
+      "created_at": "2026-09-04T17:55:14Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6279260678,
+      "sha": "e35bf41546359c0347eb183f686be9e649b4ac24",
+      "environment": "Production",
+      "created_at": "2026-09-05T09:10:22Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6291385521,
+      "sha": "4b0ebfa1a6ef9042b4ce6f0aa4dd3e14f295c585",
+      "environment": "Production",
+      "created_at": "2026-09-06T09:31:11Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6306685675,
+      "sha": "7bb523a2f99e353888935077022e39a884376e5b",
+      "environment": "Production",
+      "created_at": "2026-09-07T10:24:49Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6324946912,
+      "sha": "cbdf3bd3f71184aec51cdbe6e1ad696934fe231d",
+      "environment": "Production",
+      "created_at": "2026-09-08T09:46:57Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6347059009,
+      "sha": "263aeafaece1d9c5f31cc3c95773db34bba9d35e",
+      "environment": "Production",
+      "created_at": "2026-09-09T09:52:03Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6369013513,
+      "sha": "9ebdbe378d4f37f345b4a90698baa9ccbf292e1f",
+      "environment": "Production",
+      "created_at": "2026-09-10T09:50:21Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6390592826,
+      "sha": "b12d012234957d7ddebb37e8b59c9507ef5195dd",
+      "environment": "Production",
+      "created_at": "2026-09-11T09:46:59Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6408137910,
+      "sha": "eb5f2de1a15b3f7a3ed758cb43d49defdd70dbfd",
+      "environment": "Production",
+      "created_at": "2026-09-12T09:27:05Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6420479978,
+      "sha": "50909e2fd461bb91a1a87d8e7277c53ce71c87c0",
+      "environment": "Production",
+      "created_at": "2026-09-13T10:22:13Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6435364731,
+      "sha": "0d5ef883e0e5a795694afc07d5c804881036d511",
+      "environment": "Production",
+      "created_at": "2026-09-14T10:45:58Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6456474666,
+      "sha": "90d26abca5b8c5cee7fdd5b68942318791fac521",
+      "environment": "Production",
+      "created_at": "2026-09-15T10:09:53Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6478409079,
+      "sha": "697affabf0543ad8d5086331597845abeb985db6",
+      "environment": "Production",
+      "created_at": "2026-09-16T10:02:44Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6500250115,
+      "sha": "4bf4b2098bafa9411b7677ee147d21cb9f86986e",
+      "environment": "Production",
+      "created_at": "2026-09-17T10:04:26Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6521833022,
+      "sha": "47cba8fbb83f877eb92acc90411db06026ccfffe",
+      "environment": "Production",
+      "created_at": "2026-09-18T09:51:09Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6539444497,
+      "sha": "1f8d67cd2ccc656d82c175320777e21f333008b7",
+      "environment": "Production",
+      "created_at": "2026-09-19T09:37:04Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6551453377,
+      "sha": "e47da255f9601b007293f04a8c364be03eb4c07e",
+      "environment": "Production",
+      "created_at": "2026-09-20T09:53:40Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6799093149,
+      "sha": "128bdc71b2b1966c82199da96717b07f9ddcff1a",
+      "environment": "Production",
+      "created_at": "2026-10-02T01:27:24Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6802362814,
+      "sha": "794c5ae829f13bfaa408a6cb67ab9ec6f6967e2b",
+      "environment": "Production",
+      "created_at": "2026-10-02T06:01:42Z",
+      "creator": "vercel[bot]",
+      "state": null
+    },
+    {
+      "deployment_id": 6802662583,
+      "sha": "a9e30551bfb801dca5b4c56b52301434d39ce6df",
+      "environment": "Production",
+      "created_at": "2026-10-02T06:25:15Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 6802856867,
+      "sha": "96214a42e4d27954b7e149ac16834d2062b8535f",
+      "environment": "Production",
+      "created_at": "2026-10-02T06:40:17Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 6803023971,
+      "sha": "d7e475709cf6e7d722dd11f4e208707b530ea5d0",
+      "environment": "Production",
+      "created_at": "2026-10-02T06:52:51Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 6803092872,
+      "sha": "5ae8f7b4da17fa1b4eef06f63c095192c9a24448",
+      "environment": "Production",
+      "created_at": "2026-10-02T06:57:57Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 6803187504,
+      "sha": "b871126f4fc8b4d3d7546de73ef096e9c848dd71",
+      "environment": "Production",
+      "created_at": "2026-10-02T07:04:36Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 6803269737,
+      "sha": "8c1509b2663be1a3ea6566687edb35f33ec0392b",
+      "environment": "Production",
+      "created_at": "2026-10-02T07:10:29Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 6807209865,
+      "sha": "f3abca926e37ab4bdaffce47963620c989f9e246",
+      "environment": "Production",
+      "created_at": "2026-10-02T11:18:49Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 6826464213,
+      "sha": "79625bdd2f29e94495b836a89afdfb2abc468729",
+      "environment": "Production",
+      "created_at": "2026-10-03T10:29:17Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 6840214408,
+      "sha": "80796eecdd23b93ab0a73f2972b3627b2fe57947",
+      "environment": "Production",
+      "created_at": "2026-10-04T11:11:34Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 6858821854,
+      "sha": "2263eebb1702ddd018507d74dbda657f03d8f915",
+      "environment": "Production",
+      "created_at": "2026-10-05T12:21:55Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 6883457029,
+      "sha": "80c59d02eae714d1820a537c916ada199bd97ea2",
+      "environment": "Production",
+      "created_at": "2026-10-06T12:06:49Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 6909155241,
+      "sha": "813b2c47be679b48353eb3d47cce62f3d94953a3",
+      "environment": "Production",
+      "created_at": "2026-10-07T11:52:11Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 6935034949,
+      "sha": "4613dd973851bb6dff28a155a9aaf763ea2353ed",
+      "environment": "Production",
+      "created_at": "2026-10-08T12:06:49Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 6960091325,
+      "sha": "56ad203788abaa7541197e6d7d45f34f744c6b9c",
+      "environment": "Production",
+      "created_at": "2026-10-09T11:58:49Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 6979964264,
+      "sha": "6a77e67ec4fc02c238091d7b3703adc094d015d9",
+      "environment": "Production",
+      "created_at": "2026-10-10T11:15:51Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 6994864517,
+      "sha": "6b21414ff37ddcce300667f1b4b669698ad7c45d",
+      "environment": "Production",
+      "created_at": "2026-10-11T11:28:26Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7014972064,
+      "sha": "556aa206619565e2c4e6cf08fa643525128bf4c8",
+      "environment": "Production",
+      "created_at": "2026-10-12T13:15:47Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7038873295,
+      "sha": "965498caaf109c4590e599a0ec00e7e945681592",
+      "environment": "Production",
+      "created_at": "2026-10-13T12:47:41Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7062688711,
+      "sha": "10544ae32662c6022577d8fbc6ab7b2ab5653847",
+      "environment": "Production",
+      "created_at": "2026-10-14T10:18:48Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7089559527,
+      "sha": "a7c0ef3e37c4942746f03d7007c7767db89f7c9d",
+      "environment": "Production",
+      "created_at": "2026-10-15T10:01:08Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7116113904,
+      "sha": "16ac6ff4c2981f730ef214084b23a26aa763cdab",
+      "environment": "Production",
+      "created_at": "2026-10-16T09:55:48Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7132503125,
+      "sha": "9b3ae26022e7093605d30e835c9d6aa4a4fb1292",
+      "environment": "Production",
+      "created_at": "2026-10-17T00:40:44Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7137623723,
+      "sha": "9742a731b9a38de37193632021ab20df8b53853e",
+      "environment": "Production",
+      "created_at": "2026-10-17T09:27:40Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7152799148,
+      "sha": "d8d98763c59edcde7b65c8d7ea6fe739e66ff372",
+      "environment": "Production",
+      "created_at": "2026-10-18T09:43:05Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7171812142,
+      "sha": "69be403f228a2b039fd5b24c22629d1e55ad7337",
+      "environment": "Production",
+      "created_at": "2026-10-19T10:51:45Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7197023002,
+      "sha": "b9138d9025c4c8c6ef3ce6de0a744b9037208055",
+      "environment": "Production",
+      "created_at": "2026-10-20T10:09:57Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7223453341,
+      "sha": "3296395b500dad7e21fcb40cd286e7e05401925e",
+      "environment": "Production",
+      "created_at": "2026-10-21T10:15:41Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7249570421,
+      "sha": "60e4671ed1c1b45604f97e087c253c9a2bd5a65f",
+      "environment": "Production",
+      "created_at": "2026-10-22T10:17:09Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7275581372,
+      "sha": "8f6d75bf3fd4150d8a3d70fa24d144a9f84e7047",
+      "environment": "Production",
+      "created_at": "2026-10-23T10:10:02Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7296869609,
+      "sha": "cc0610a345bf8dbeeebc9d577beac5b5ac94c041",
+      "environment": "Production",
+      "created_at": "2026-10-24T09:37:00Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7311458285,
+      "sha": "356b7f9264176ca070d1a97698731d136336454e",
+      "environment": "Production",
+      "created_at": "2026-10-25T09:53:32Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7330345963,
+      "sha": "d7c030d51731cae36e34feb5cd7400a650d843e3",
+      "environment": "Production",
+      "created_at": "2026-10-26T11:12:47Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7356268242,
+      "sha": "f0465bb4619d7ef6bb1a20768a95c3227ad06989",
+      "environment": "Production",
+      "created_at": "2026-10-27T10:40:46Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7384039758,
+      "sha": "701e598e0053db23a93f0e1eb8ecbbb57ca7a7ee",
+      "environment": "Production",
+      "created_at": "2026-10-28T11:25:10Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7411125564,
+      "sha": "ed02073a51065fbef4ef7a9a0eb82b2308e99888",
+      "environment": "Production",
+      "created_at": "2026-10-29T11:36:05Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7437158073,
+      "sha": "0fede386bc11c6e8b5ddbfe49cf2e5937d42029c",
+      "environment": "Production",
+      "created_at": "2026-10-30T11:29:05Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7450433097,
+      "sha": "bc0324cf34f2019749744a7122f28e0e96a86922",
+      "environment": "Production",
+      "created_at": "2026-10-30T22:48:17Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7452729227,
+      "sha": "b8ee4718717781975f259931993e26dd9ea3069f",
+      "environment": "Production",
+      "created_at": "2026-10-31T02:00:58Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7455529749,
+      "sha": "47fdafee69fefb13fefb684dd65cee16dc051da9",
+      "environment": "Production",
+      "created_at": "2026-10-31T07:03:48Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    },
+    {
+      "deployment_id": 7457690707,
+      "sha": "02821837f70e0be6617a6573ef7013d06cb36c9f",
+      "environment": "Production",
+      "created_at": "2026-10-31T10:59:46Z",
+      "creator": "vercel[bot]",
+      "state": "success"
+    }
+  ]
+}

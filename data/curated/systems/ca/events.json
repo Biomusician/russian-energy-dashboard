@@ -58,11 +58,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "Derecho of 21 May 2022"
     },
     {
       "event_id": "ca-2022-05-21-derecho-quebec",
@@ -121,11 +129,19 @@
         "url": "https://en.wikipedia.org/wiki/May_2022_Canadian_derecho"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "Derecho of 21 May 2022"
     },
     {
       "event_id": "ca-2022-09-16-westshore-strike",
@@ -184,11 +200,19 @@
         "url": "https://www.townandcountrytoday.com/national-business/westshore-terminals-reaches-tentative-deal-with-union-work-resumes-at-terminal-5936439"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2022-09-24-fiona-nova-scotia",
@@ -239,11 +263,19 @@
         "url": "https://www.cbc.ca/lite/story/1.6597229"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "Post-tropical storm Fiona (2022)"
     },
     {
       "event_id": "ca-2022-12-23-holiday-storm-quebec",
@@ -302,11 +334,19 @@
         "url": "https://globalnews.ca/news/9381376/11-hydro-quebec-customers-who-lost-power-in-winter-storm-yet-to-be-reconnected"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2023-04-05-ice-storm-quebec",
@@ -365,11 +405,19 @@
         "url": "https://montreal.ctvnews.ca/all-power-restored-following-last-week-s-ice-storm-hydro-quebec-1.6353855"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2023-05-05-alberta-wildfire-shut-ins",
@@ -428,11 +476,19 @@
         "url": "https://www.kitco.com/news/off-the-wire/2023-05-10/update-1-alberta-producers-restart-oil-and-gas-operations-wildfires"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2023-07-13-storms-quebec",
@@ -475,11 +531,19 @@
         "url": "https://www.noovo.info/nouvelle/les-pannes-de-courant-pratiquement-terminees-au-quebec.html"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2023-09-16-lee-nova-scotia",
@@ -538,11 +602,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "Post-tropical storm Lee (2023)"
     },
     {
       "event_id": "ca-2023-12-18-windstorm-nova-scotia",
@@ -593,11 +665,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2024-01-12-parkland-burnaby-refinery",
@@ -656,11 +736,19 @@
         "url": "https://calgary.ctvnews.ca/parkland-refinery-returns-to-normal-operations-after-unplanned-january-shutdown-1.6828745"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2024-01-13-aeso-grid-alert",
@@ -719,11 +807,19 @@
         "url": "https://aeso.ca/aeso/media/aeso-thanks-albertans-for-quick-response-to-call-for-power-conservation/"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2024-04-05-aeso-load-shed",
@@ -782,11 +878,19 @@
         "url": "https://www.spglobal.com/market-intelligence/en/news-insights/articles/2024/4/alberta-grid-operator-forces-brief-blackouts-after-wind-lull-gas-plant-trip-81134042"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2024-04-16-ngtl-grande-prairie-mainline",
@@ -841,11 +945,19 @@
         "url": "https://www.worldpipelines.com/project-news/23042024/tc-energy-says-ngtl-pipeline-system-resumes-normal-operations-after-fire"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2024-07-04-suncor-firebag-wildfire",
@@ -900,11 +1012,19 @@
         "url": "https://rbnenergy.com/daily-posts/analyst-insight/alberta-wildfire-could-be-curtailing-oil-sands-output-range-200-mbd"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2024-07-16-toronto-flood-transmission-station",
@@ -963,11 +1083,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2024-08-09-debby-quebec",
@@ -1026,11 +1154,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": "Remnants of Tropical Storm Debby (2024)"
     },
     {
       "event_id": "ca-2024-11-19-bomb-cyclone-bc",
@@ -1089,11 +1225,19 @@
         "url": "https://globalnews.ca/news/10885380/bc-hydro-power-almost-restored-storm/"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2025-03-29-ice-storm-ontario",
@@ -1152,11 +1296,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2025-05-29-alberta-wildfire-oil-sands",
@@ -1215,11 +1367,19 @@
         "url": "https://www.cbc.ca/lite/story/1.7559552"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2025-12-19-windstorm-nova-scotia",
@@ -1262,11 +1422,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2026-01-24-bay-despoir-frazil-ice",
@@ -1325,11 +1493,19 @@
         "url": "https://ntv.ca/news/n-l-hydro-lifts-power-watch-advisory-returns-to-normal-operations/"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2026-03-11-ice-storm-quebec",
@@ -1380,11 +1556,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2026-03-17-windstorm-quebec",
@@ -1419,17 +1603,25 @@
         "research_status": "NOT_YET_RESEARCHED"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-31",
         "threshold_version": "2026-10-30.1",
-        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "review_status": "dual_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 2,
+        "disposition": "confirmed",
+        "source_count": 1,
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2026-07-02-thunderstorms-ontario",
-      "date": "2026-07-02",
+      "date": "2026-07-01",
       "date_precision": "day",
-      "date_end": null,
+      "date_end": "2026-07-02",
       "region_code": "CA-ON",
       "geography_precision": "admin1",
       "regions_affected": [],
@@ -1438,8 +1630,8 @@
       "operator": null,
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Severe thunderstorms with strong winds crossed Ontario on 2 July 2026 during a heat wave, uprooting trees and bringing down power lines.",
-      "effect": "More than 214,000 customers in Ontario lost power at the peak, according to Environment Canada.",
+      "summary": "Several rounds of severe thunderstorms with strong winds crossed Ontario on 1-2 July 2026 during a heat wave, uprooting trees and bringing down power lines.",
+      "effect": "More than 214,000 customers in Ontario lost power at the peak of the outages, according to Environment Canada. The date of the peak is not reported.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Grid outages affecting more than 100,000 customers.",
@@ -1449,6 +1641,14 @@
           "url": "https://www.cp24.com/news/canada/2026/07/03/55000-hydro-clients-in-quebec-ontario-without-power-after-severe-storms/",
           "publisher": "CP24 (The Canadian Press)",
           "date": "2026-07-03",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://www.narcity.com/ontario-heat-wave-travels-east-to-maritimes",
+          "publisher": "Narcity (The Canadian Press)",
+          "date": "2026-07-02",
           "language": "en",
           "source_role": "media",
           "opened": true
@@ -1462,11 +1662,19 @@
         "url": "https://www.cp24.com/news/canada/2026/07/03/55000-hydro-clients-in-quebec-ontario-without-power-after-severe-storms/"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-31",
         "threshold_version": "2026-10-30.1",
-        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "review_status": "dual_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 2,
+        "disposition": "corrected",
+        "source_count": 2,
+        "sources_opened_by_reviewer": 5,
+        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "ca-2026-07-02-thunderstorms-quebec",
@@ -1481,8 +1689,8 @@
       "operator": null,
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "The same 2 July 2026 thunderstorms brought down trees and power lines across southern Quebec.",
-      "effect": "Nearly 140,000 Hydro-Québec customers lost power at the peak, according to Environment Canada.",
+      "summary": "Severe thunderstorms with strong winds on 2 July 2026, during a heat wave, brought down trees and power lines across southern Quebec.",
+      "effect": "Nearly 140,000 customers in Quebec lost power at the peak, according to Environment Canada.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Grid outages affecting more than 100,000 customers.",
@@ -1505,11 +1713,19 @@
         "url": "https://www.cp24.com/news/canada/2026/07/03/55000-hydro-clients-in-quebec-ontario-without-power-after-severe-storms/"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-31",
         "threshold_version": "2026-10-30.1",
-        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "review_status": "dual_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 2,
+        "disposition": "corrected",
+        "source_count": 1,
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     }
   ]
 }

@@ -596,6 +596,22 @@ def main():
     snapshot["source_revisions"] = [r for r in (
         strike_rev, refinery_rev, (coverage or {}).get("source_revision")) if r]
 
+    # Which of the three historical questions this build answers (iteration 16,
+    # docs/HISTORICAL_REPRODUCIBILITY.md). A build for a past date is a CURRENT-EVIDENCE
+    # RECONSTRUCTION: today's code and curated corpus, with the Wikipedia inputs pinned to that
+    # date. It is never what the dashboard published on that date; that lives only in
+    # production_history.json, read from what was actually deployed.
+    reconstruction = args.as_of < dt.date.today().isoformat()
+    snapshot["history_concept"] = {
+        "mode": "current_evidence_reconstruction" if reconstruction else "current_build",
+        "label": (f"Current-evidence reconstruction for {args.as_of}" if reconstruction
+                  else "Current build"),
+        "note": ("Today's code and accepted corpus evaluated at a past date, with live article inputs "
+                 "pinned to their revision on that date. Not what the dashboard published then: see "
+                 "production_history.json for that." if reconstruction else
+                 "Today's code and accepted corpus evaluated at today's date."),
+    }
+
     snapshot["publication_freshness"] = {
         "as_of": snapshot["as_of"],
         "build_time": snapshot["build_time"],
@@ -665,6 +681,12 @@ def main():
         },
     )
 
+    # As-published history (iteration 16): what was actually deployed, read from git and the
+    # deployment ledger. Never rebuilt from old code, so it cannot be confused with the
+    # reconstruction above (pipeline/production_history.py).
+    from pipeline import production_history
+    write_json(PROCESSED / "production_history.json", production_history.build(ROOT))
+
     # Data manifest (iteration 5): one stamp of the schema version and the files this
     # build emitted, so a client can distinguish app/data skew from a genuine outage and
     # tests can assert the contract. Written last, before the mirror copies it across.
@@ -687,6 +709,7 @@ def main():
     from pipeline import build_systems
     build_systems.build(snapshot)
 
+
     _mirror_to_web()
 
     # Single source of truth for headline numbers (§2) — regenerated every build so no doc
@@ -695,6 +718,9 @@ def main():
     current_state.write(snapshot)
 
     log("-" * 62)
+    if reconstruction:
+        log(f"CURRENT-EVIDENCE RECONSTRUCTION for {args.as_of}: today's code and corpus, pinned "
+            "sources. NOT the value the dashboard published that day (production_history.json).")
     log(f"ESDI {snapshot['esdi']}  sectors " +
         "  ".join(f"{k}={v}" for k, v in snapshot["sectors"].items()))
     if coverage and oil_benchmark:

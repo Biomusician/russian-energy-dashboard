@@ -3,8 +3,8 @@ import type maplibregl from "maplibre-gl";
 import SimpleMap from "./SimpleMap";
 import SystemSwitcher from "./SystemSwitcher";
 import {
-  ENVIRONMENT_LABEL, READINESS_LABEL, RECOVERY_KIND_LABEL, RECOVERY_LABEL, SECTOR_STATE_LABEL,
-  labelFor, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type Episode,
+  ENVIRONMENT_LABEL, READINESS_LABEL, RECOVERY_KIND_LABEL, RECOVERY_LABEL, RESEARCH_COMPLETENESS_LABEL,
+  REVIEW_STATUS_LABEL, SECTOR_STATE_LABEL, labelFor, type CountrySystem, type SourceEntry, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type Episode,
   type ManifestSystem,
 } from "./manifest";
 import { navigate } from "./router";
@@ -183,6 +183,7 @@ export default function CountryView({ id }: { id: string }) {
             Event record reviewed {fmtDate(sys.record_reviewed)} · site rebuilt {fmtDate(sys.as_of)}
           </div>
         </div>
+        <ResearchStatus sys={sys} />
       </section>
 
       <p className="comparability" role="note">{sys.comparability_statement}</p>
@@ -246,6 +247,39 @@ const TAB_LABEL: Record<Tab, string> = {
   sources: "Sources & data quality",
   method: "Why no score",
 };
+
+/** Sources past their stale limit, on the reader's clock. Display only: never an analytic input. */
+function staleSources(sources: SourceEntry[], today: string): SourceEntry[] {
+  return sources.filter((x) => x.last_checked && x.stale_after_days != null
+    && daysBetween(x.last_checked, today) > x.stale_after_days);
+}
+
+/** Two INDEPENDENT axes, shown side by side so neither reads as the other: are the sources
+ *  current, and was the event search systematic? "Sources current, research incomplete" is a
+ *  normal, non-contradictory state. */
+function ResearchStatus({ sys }: { sys: CountrySystem }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const rf = sys.research_freshness;
+  const used = sys.sources.filter((x) => !x.role.startsWith("rejected"));
+  const late = staleSources(used, today);
+  const overdue = rf.next_due != null && rf.next_due < today;
+  return (
+    <div className="research-status" aria-label="Research status">
+      <div className="eyebrow">Research status</div>
+      <div className="small">
+        <span className={`badge research-${rf.completeness}`}>{RESEARCH_COMPLETENESS_LABEL[rf.completeness]}</span>
+        {rf.last_systematic_pass && <span className="dim"> · last systematic pass {fmtDate(rf.last_systematic_pass)}{overdue ? " (due again)" : ""}</span>}
+      </div>
+      <div className="small">
+        <span className={`badge sources-${late.length ? "stale" : "current"}`}>
+          {late.length ? `${late.length} of ${used.length} sources past their re-check limit` : `All ${used.length} sources within their re-check limits`}
+        </span>
+      </div>
+      <div className="small dim">Two separate questions: whether the sources are current, and whether
+        the search for events was systematic. One does not imply the other.</div>
+    </div>
+  );
+}
 
 function CountryHeader({ name, id, children }: { name: string; id: string; children?: React.ReactNode }) {
   return (
@@ -313,8 +347,9 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
     <div className="events-panel">
       <h2>All reported events</h2>
       <p className="small dim">{events.length} records in {bundle.episodes.length} episodes. An episode
-        is one hazard or one source statement: a storm that cut power in four states is one episode
-        of four records.</p>
+        is one named hazard or one event a source explicitly identifies as common: a storm that cut
+        power in four states is one episode of four records. Incidents merely reported in the same
+        statement stay separate episodes.</p>
       <ol className="event-list">
         {rows.map((row) => row.kind === "event"
           ? <EventItem key={row.e.event_id} e={row.e} bundle={bundle} />
@@ -377,6 +412,11 @@ function EventItem({ e, bundle, inEpisode = false }: { e: CountryEvent; bundle: 
         <span className={`rec rec-${recClass.toLowerCase()}`}>{recoveryText(e)}</span>
         {e.recovery.date && <span className="dim"> ({fmtDate(e.recovery.date)})</span>}
         {e.recovery.evidence && <span className="dim"> — {e.recovery.evidence}</span>}
+      </p>
+      {e.publication && <p className="small dim withheld-note">{e.publication.note}</p>}
+      <p className="small dim review-note">
+        <span className={`review-${e.review.review_status}`}>{labelFor(REVIEW_STATUS_LABEL, e.review.review_status)}</span>
+        {e.review.review_status === "dual_reviewed" && e.review.disposition === "corrected" && " · corrected on review"}
       </p>
       <p className="small sources">
         {e.sources.map((s, i) => (
@@ -458,16 +498,17 @@ function SourcesPanel({ bundle }: { bundle: CountryBundle }) {
         <thead><tr><th>Source</th><th>Use</th><th>Licence</th><th>Last checked</th></tr></thead>
         <tbody>
           {s.sources.map((x) => {
-            const age = x.checked ? daysBetween(x.checked, today) : null;
-            const late = age != null && x.stale_after_days != null && age > x.stale_after_days;
+            const late = staleSources([x], today).length > 0;
+            const pol = x.stale_policy ? s.stale_policies[x.stale_policy] : null;
             return (
               <tr key={x.name}>
                 <td>{x.name}</td>
                 <td className="small">{x.role}</td>
                 <td className="small dim">{x.licence}</td>
                 <td className="small">
-                  {x.checked ? fmtDate(x.checked) : "never"}
-                  {x.cadence && <div className="dim">Publishes: {x.cadence}</div>}
+                  {x.last_checked ? fmtDate(x.last_checked) : "never"}
+                  {x.publication_cadence && <div className="dim">Publishes: {x.publication_cadence}</div>}
+                  {pol && <div className="dim">Re-check within {pol.days} days ({x.stale_policy?.replace(/_/g, " ")}: {pol.rationale})</div>}
                   {late && <div className="stale-flag">Past its {x.stale_after_days}-day limit: re-check before relying on it</div>}
                 </td>
               </tr>
@@ -475,23 +516,41 @@ function SourcesPanel({ bundle }: { bundle: CountryBundle }) {
           })}
         </tbody>
       </table>
-      <h3 className="eyebrow">How far the event search got</h3>
+      <p className="small dim">Re-check limits are display policy: they never decide whether an event
+        is included and never enter a number.</p>
+      <h3 className="eyebrow">Research coverage: how far the event search got</h3>
+      <p className="small research-coverage">
+        <strong>{RESEARCH_COMPLETENESS_LABEL[s.research_freshness.completeness]}.</strong>{" "}
+        {s.research_freshness.last_systematic_pass
+          ? `Last systematic pass ${fmtDate(s.research_freshness.last_systematic_pass)}, covering ${fmtDate(s.research_freshness.coverage_window?.[0] ?? null)} – ${fmtDate(s.research_freshness.coverage_window?.[1] ?? null)}; next due ${fmtDate(s.research_freshness.next_due)}.`
+          : "Every pass so far was targeted at named gaps and leads."}
+      </p>
+      <p className="small dim">{s.research_freshness.note}</p>
       <p className="small dim">{s.research_log.note}</p>
       <table className="sector-table research-log">
         <thead><tr><th>Pass</th><th>Window searched</th><th>Status</th><th>Outcome</th></tr></thead>
         <tbody>
           {s.research_log.passes.map((p) => (
             <tr key={`${p.date}-${p.by}`}>
-              <td className="small">{fmtDate(p.date)}<div className="dim">{p.by}</div></td>
+              <td className="small">{fmtDate(p.date)}<div className="dim">{p.by}</div><div className="dim">{p.kind}</div></td>
               <td className="small">{fmtDate(p.window[0])} – {fmtDate(p.window[1])}<div className="dim">{p.scope}</div></td>
               <td className="small"><span className={`badge gate-${p.status === "complete" ? "met" : "partial"}`}>{p.status}</span>
-                {p.status_reason && <div className="dim">{p.status_reason}</div>}</td>
+                {p.status_reason && <div className="dim">{p.status_reason}</div>}
+                {p.lanes && p.lanes.length > 0 && (
+                  <ul className="dim lane-list">{p.lanes.map((l) => (
+                    <li key={l.lane}>{l.lane}{l.source_family ? ` (${l.source_family})` : ""}: {l.status}{l.reason ? ` (${l.reason})` : ""}</li>
+                  ))}</ul>
+                )}</td>
               <td className="small">{Object.entries(p.outcome).map(([k, n]) => `${k.replace(/_/g, " ")} ${n}`).join(" · ")}</td>
             </tr>
           ))}
         </tbody>
       </table>
       <h3 className="eyebrow">Recovery evidence across the recorded events</h3>
+      <p className="small dim recovery-meaning">"Recovery" on these pages means a cited public report
+        that a facility or service came back, fully or partly. Nothing is modelled: with no such report
+        the event says so, and an estimate is labelled an estimate. For an attack campaign still under
+        way, facility status is deliberately not published at all.</p>
       <ul className="small">
         {Object.entries(rec).map(([k, n]) => <li key={k}>{labelFor(RECOVERY_LABEL, k)}: {n}</li>)}
       </ul>
@@ -503,9 +562,11 @@ function SourcesPanel({ bundle }: { bundle: CountryBundle }) {
       )}
       <h3 className="eyebrow">Known gaps</h3>
       <ul className="small">{s.research_gaps.map((g, i) => <li key={i}>{g}</li>)}</ul>
-      <p className="small dim">Events were gathered by the open-source research passes above and reviewed
-        against the inclusion threshold, source rules and a scope scan. Claims were not
-        independently re-verified beyond the cited sources.
+      <h3 className="eyebrow">Review</h3>
+      <p className="small review-summary">{s.review_summary.dual_reviewed} of {bundle.events.length} events
+        independently reviewed; {s.review_summary.legacy_single_review} published before independent
+        review was required.</p>
+      <p className="small dim">{s.review_summary.note}
         {unrecorded > 0 && ` For ${unrecorded} of ${bundle.events.length} events the research lane did not record whether it read the cited sources.`}</p>
     </div>
   );

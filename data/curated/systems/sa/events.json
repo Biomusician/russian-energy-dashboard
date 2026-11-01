@@ -54,11 +54,19 @@
         "url": "https://www.timesofisrael.com/houthi-drone-attack-causes-temporary-reduction-in-saudi-oil-output/"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "sa-2026-02-23-juaymah-lpg-export-halt",
@@ -73,8 +81,8 @@
       "operator": "Saudi Aramco",
       "asset_class": "gas_processing",
       "cause": "unknown",
-      "summary": "Aramco said a small segment of the propane/butane delivery system at Juaymah was structurally damaged on 23 February 2026, halted LPG exports from the site and declared force majeure on shipments.",
-      "effect": "LPG export loadings from Juaymah halted; force majeure declared. Argus (15 Sep 2026): \"No LPG cargoes have left Ras Tanura following an accident at the facility on 23 February.\"",
+      "summary": "Aramco said structural damage at Juaymah on 23 February 2026 halted LPG exports from the site, and declared force majeure on shipments.",
+      "effect": "LPG export loadings from Juaymah halted; force majeure declared.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 2,
       "threshold_basis": "Clause 2: operator-confirmed suspension of energy (LPG) export loadings.",
@@ -105,11 +113,19 @@
         "url": "https://www.argusmedia.com/en/news-and-insights/latest-market-news/2878203-saudi-aramco-to-cut-propane-exports-in-1h27"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "sa-2026-03-02-ras-tanura-refinery-shutdown",
@@ -124,7 +140,7 @@
       "operator": "Saudi Aramco",
       "asset_class": "refinery",
       "cause": "kinetic_strike",
-      "summary": "Aramco shut the Ras Tanura refinery as a precaution while assessing damage after an attack; a limited fire was reported. The refinery later restarted.",
+      "summary": "Aramco shut the Ras Tanura refinery as a precaution while assessing damage after an attack; a limited fire was reported.",
       "effect": "Refinery shut down (energy ministry statement via state news agency, as reported by Bloomberg): shut \"as a precaution while assessing damage.\"",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
@@ -161,18 +177,26 @@
         }
       ],
       "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
-        "date": "2026-03-13",
-        "evidence": "Restart reported; operating rate NOT stated. Dates conflict: Dow Jones headline 10 Mar ('Saudi Aramco Says Ras Tanura Refinery Restarts'); industry monitor IIR via Iran International: restarted 13 Mar; The National (12 Apr): 'closed for 16 days before restarting'. Kind set to service_restored rather than full_restart because throughput after restart is unreported.",
-        "url": "https://www.iranintl.com/en/202603186057"
+        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
+        "kind": null,
+        "date": null,
+        "evidence": null,
+        "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "sa-2026-03-19-yanbu-loadings-halt",
@@ -187,7 +211,7 @@
       "operator": "Saudi Aramco",
       "asset_class": "oil_terminal",
       "cause": "kinetic_strike",
-      "summary": "Crude oil loadings at Yanbu were briefly halted after an incident at the adjacent SAMREF refinery, and resumed the same day.",
+      "summary": "Crude oil loadings at Yanbu were briefly halted after an incident at the SAMREF refinery.",
       "effect": "Crude loadings stopped briefly (Reuters, two sources; Bloomberg: 'briefly halted').",
       "inclusion_basis": "reported_effect",
       "criterion_met": 2,
@@ -220,18 +244,26 @@
         }
       ],
       "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
-        "date": "2026-03-19",
-        "evidence": "Reuters (two sources): \"Saudi oil loadings sent to the Red Sea port of Yanbu resumed after a brief halt.\" Halt length not reported.",
-        "url": "https://www.thenews.pk/print/1405481-saudi-port-of-yanbu-resumes-oil-loadings-two-sources-say"
+        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
+        "kind": null,
+        "date": null,
+        "evidence": null,
+        "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "sa-2026-04-08-satorp-jubail-shutdown",
@@ -246,8 +278,8 @@
       "operator": "SATORP (Aramco / TotalEnergies JV)",
       "asset_class": "refinery",
       "cause": "kinetic_strike",
-      "summary": "TotalEnergies said incidents on the night of 7-8 April damaged units at SATORP and the refinery was shut as a safety precaution; undamaged units restarted on 14 April.",
-      "effect": "Full shutdown 8-14 April; then operation at 230,000 b/d (TotalEnergies). TotalEnergies CEO (June): running at about 70%.",
+      "summary": "TotalEnergies said incidents on the night of 7-8 April damaged units at SATORP and the refinery was shut as a safety precaution.",
+      "effect": "Refinery shut from 8 April 2026 (TotalEnergies).",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
       "threshold_basis": "Clause 1: operator-confirmed refinery shutdown and sustained throughput cut.",
@@ -291,18 +323,26 @@
         }
       ],
       "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "partial_restart",
-        "date": "2026-04-14",
-        "evidence": "TotalEnergies: undamaged units restarted; operating at 230,000 b/d since 14 April. CEO Pouyanne (to French National Assembly, reported 18 Jun 2026): about 70% capacity; full repair probably not before early 2027 (an operator ESTIMATE, not an observation).",
-        "url": "https://www.dawn.com/news/1996027"
+        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
+        "kind": null,
+        "date": null,
+        "evidence": null,
+        "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 4,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "sa-2026-04-khurais-production-cut",
@@ -317,7 +357,7 @@
       "operator": "Saudi Aramco",
       "asset_class": "upstream_production",
       "cause": "kinetic_strike",
-      "summary": "The energy ministry said an attack on the Khurais facility cut production by about 300,000 b/d. On 12 April it said work to restore full capacity was still ongoing.",
+      "summary": "The energy ministry said an attack on the Khurais facility cut production by about 300,000 b/d.",
       "effect": "Production reduced by about 300,000 b/d (ministry: \"تأثر إنتاج حقل خريص بنحو 300 ألف برميل يومياً\").",
       "inclusion_basis": "reported_effect",
       "criterion_met": 7,
@@ -362,18 +402,26 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
+        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
         "kind": null,
         "date": null,
-        "evidence": "Ministry 12 Apr 2026: work 'still ongoing to restore full production capacity', completion 'will be announced'. No completion announcement found (search budget exhausted before a later check).",
-        "url": "https://www.okaz.com.sa/economy/saudi/2243786"
+        "evidence": null,
+        "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 4,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "sa-2026-04-manifa-production-cut",
@@ -388,7 +436,7 @@
       "operator": "Saudi Aramco",
       "asset_class": "upstream_production",
       "cause": "kinetic_strike",
-      "summary": "The energy ministry said an attack on the Manifa facility cut production by about 300,000 b/d; on 12 April it said the affected volumes had been recovered.",
+      "summary": "The energy ministry said an attack on the Manifa facility cut production by about 300,000 b/d.",
       "effect": "Production reduced by about 300,000 b/d (ministry).",
       "inclusion_basis": "reported_effect",
       "criterion_met": 7,
@@ -425,18 +473,26 @@
         }
       ],
       "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "full_restart",
-        "date": "2026-04-12",
-        "evidence": "Energy ministry 12 Apr 2026: the affected Manifa volumes (around 300,000 b/d) were recovered.",
-        "url": "https://english.aawsat.com/node/5261374"
+        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
+        "kind": null,
+        "date": null,
+        "evidence": null,
+        "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "sa-2026-04-east-west-pipeline-throughput-cut",
@@ -451,7 +507,7 @@
       "operator": "Saudi Aramco",
       "asset_class": "pipeline_oil",
       "cause": "kinetic_strike",
-      "summary": "The energy ministry said attacks on the East-West crude pipeline cut its pumped throughput by about 700,000 b/d. Full capacity was declared restored on 12 April.",
+      "summary": "The energy ministry said attacks on the East-West crude pipeline cut its pumped throughput by about 700,000 b/d.",
       "effect": "Pipeline throughput reduced by about 700,000 b/d (ministry: \"فقدان نحو 700 ألف برميل يومياً من طاقة الضخ\").",
       "inclusion_basis": "reported_effect",
       "criterion_met": 3,
@@ -488,18 +544,26 @@
         }
       ],
       "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "full_restart",
-        "date": "2026-04-12",
-        "evidence": "Energy ministry 12 Apr 2026: \"restored full pumping capacity through the East-West pipeline\", about 7 million b/d.",
-        "url": "https://english.aawsat.com/node/5261374"
+        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
+        "kind": null,
+        "date": null,
+        "evidence": null,
+        "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "sa-2026-04-juaymah-processing-fires",
@@ -547,18 +611,26 @@
         }
       ],
       "recovery": {
-        "research_status": "RESEARCHED_NO_PUBLIC_EVIDENCE",
+        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
         "kind": null,
         "date": null,
-        "evidence": "No restoration statement found; see sa-2026-02-23-juaymah-lpg-export-halt for the export-loading status (no confirmed resumption as of mid-September 2026).",
+        "evidence": null,
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "sa-2026-09-11-east-west-pipeline-shutdown",
@@ -573,8 +645,8 @@
       "operator": "Saudi Aramco",
       "asset_class": "pipeline_oil",
       "cause": "kinetic_strike",
-      "summary": "The energy ministry said the East-West crude pipeline was shut 'as a precautionary measure' after multiple attacks. Reuters sources later said it restarted on 22 September, with full capacity possibly six weeks or more away.",
-      "effect": "Pipeline shut down (ministry). Knock-on: crude loadings at Yanbu suspended (see sa-2026-09-yanbu-loadings-suspended).",
+      "summary": "The energy ministry said the East-West crude pipeline was shut 'as a precautionary measure' after multiple attacks.",
+      "effect": "Pipeline shut down (ministry).",
       "inclusion_basis": "reported_effect",
       "criterion_met": 3,
       "threshold_basis": "Clause 3: official statement that a crude trunk pipeline was shut down.",
@@ -614,18 +686,26 @@
         }
       ],
       "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "partial_restart",
-        "date": "2026-09-22",
-        "evidence": "Reuters (three sources): pipeline restarted on 22 Sep; may take six weeks or more to reach full capacity. Bloomberg source (16 Sep): aim to restore about half of capacity 'within days', full in about six weeks (ESTIMATE). An ARY News item says Aramco 'completely restarted' it at full capacity, but its dates are internally inconsistent - not relied on.",
-        "url": "https://www.bairdmaritime.com/story/shipping/tankers/yanbu-tanker-loadings-yet-to-resume-despite-saudi-pipeline-restart"
+        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
+        "kind": null,
+        "date": null,
+        "evidence": null,
+        "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 4,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "sa-2026-09-yanbu-loadings-suspended",
@@ -640,7 +720,7 @@
       "operator": "Saudi Aramco",
       "asset_class": "oil_terminal",
       "cause": "kinetic_strike",
-      "summary": "Shipping sources said crude loadings at Yanbu were suspended after the East-West pipeline was shut on 11 September. Loadings had not resumed by 24 September but had resumed before 1 October.",
+      "summary": "Shipping sources said crude loadings at Yanbu were suspended in mid-September 2026.",
       "effect": "Crude export loadings suspended (Reuters shipping sources, reported 15 Sep; Aramco declined comment).",
       "inclusion_basis": "reported_effect",
       "criterion_met": 2,
@@ -665,18 +745,26 @@
         }
       ],
       "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
+        "kind": null,
         "date": null,
-        "evidence": "Marine Insight (3 Oct 2026) says the 1 Oct incident came 'days after' Yanbu loadings resumed following the pipeline restart; Baird Maritime lists a 29 Sep headline that Yanbu crude flows resumed (not opened). Exact resumption date not verified.",
-        "url": "https://www.marineinsight.com/unknown-projectile-hits-saudi-arabias-yanbu-port-causing-fire-halting-tanker-loading/"
+        "evidence": null,
+        "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "sa-2026-07-27-jazan-refinery-shutdown",
@@ -691,8 +779,8 @@
       "operator": "Saudi Aramco",
       "asset_class": "refinery",
       "cause": "kinetic_strike",
-      "summary": "Industry monitor IIR reported that Aramco shut the Jazan refinery on 27 July 2026 after an attack claimed by Yemen's Houthis. After a fire at a refinery facility on 9 August, which the energy ministry said was extinguished, IIR reported the restart postponed to 30 August.",
-      "effect": "Refinery shut from 27 July 2026; planned restart moved from 15 August to 30 August.",
+      "summary": "Industry monitor IIR reported that Aramco shut the Jazan refinery on 27 July 2026 after an attack attributed to Yemen's Houthis.",
+      "effect": "Refinery shut from 27 July 2026 (industry monitor IIR, reported by Hydrocarbon Processing).",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
       "threshold_basis": "Refinery shut down, with the effect reported by an industry monitor.",
@@ -712,18 +800,26 @@
         }
       ],
       "recovery": {
-        "research_status": "RESEARCHED_NO_PUBLIC_EVIDENCE",
+        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
         "kind": null,
         "date": null,
-        "evidence": "No report confirming a restart was found in searches on 30 October 2026; the last report read gave a target of 30 August 2026.",
+        "evidence": null,
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-31",
         "threshold_version": "2026-10-30.1",
-        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "review_status": "dual_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 2,
+        "disposition": "corrected",
+        "source_count": 1,
+        "sources_opened_by_reviewer": 4,
+        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     }
   ]
 }

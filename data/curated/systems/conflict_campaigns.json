@@ -1,0 +1,47 @@
+{
+  "note": "Kinetic campaigns and how the current-event publication policy applies to each (docs/CURRENT_EVENT_PUBLICATION_POLICY.md). Status is a curated fact with a dated basis, re-checked when a country is researched. Read by pipeline/build_systems.py and scripts/import_candidates.py.",
+  "policy_version": "2026-10-31 (interim)",
+  "release_rule": {
+    "id": "A",
+    "status": "proposed, awaiting owner approval",
+    "text": "Facility-specific restart, recovery or operating status for a record in a campaign is published only once the campaign is recorded as ended and 30 days have passed. While it is active the event itself is published; its facility status is not.",
+    "release_after_end_days": 30
+  },
+  "campaigns": [
+    {
+      "campaign_id": "sa-2026-attacks-on-energy-facilities",
+      "system_id": "sa",
+      "name": "Attacks on Saudi energy facilities, 2026",
+      "status": "active",
+      "ended": null,
+      "status_checked": "2026-10-31",
+      "status_basis": "Attacks on Saudi energy facilities were still being reported in late October 2026, and no ceasefire was found (independent review, 2026-10-31).",
+      "member_rule": {
+        "causes": [
+          "kinetic_strike",
+          "sabotage"
+        ],
+        "from": "2026-01-01"
+      },
+      "policy_applied": true
+    },
+    {
+      "campaign_id": "theatre-strikes-on-energy-infrastructure",
+      "system_id": "russia_theatre",
+      "name": "Strikes on energy infrastructure in Russia, Belarus and Crimea, 2022 onward",
+      "status": "active",
+      "ended": null,
+      "status_checked": "2026-10-31",
+      "status_basis": "Strikes continue to be reported (the theatre's own daily build).",
+      "member_rule": {
+        "causes": [
+          "kinetic_strike",
+          "sabotage"
+        ],
+        "from": "2022-01-01"
+      },
+      "policy_applied": false,
+      "not_applied_reason": "The theatre's recovery evidence predates this policy and feeds its index. Applying the policy to its facility-level presentation changes what the Russia view shows, which the iteration-16 brief holds fixed: an owner decision (ITERATION_16_REVIEW, open questions)."
+    }
+  ]
+}

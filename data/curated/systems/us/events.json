@@ -58,11 +58,19 @@
         "url": "https://www.rivieramm.com/news-content-hub/after-the-fire-freeport-lng-cleared-to-restart-two-of-three-trains-75065"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2022-08-24-bp-whiting-electrical-fire",
@@ -113,11 +121,19 @@
         "url": "https://www.bicmagazine.com/api/amp/departments/operations/bp-restarting-whiting-indiana-refinery-production-units/"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2022-09-20-bp-husky-toledo-fire",
@@ -176,11 +192,19 @@
         "url": "https://www.13abc.com/2023/04/28/production-resumes-cenovus-toledo-refinery-more-than-6-months-after-fatal-fire"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 3,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2022-09-06-caiso-eea3-heat",
@@ -223,11 +247,19 @@
         "url": "https://www.eia.gov/todayinenergy/detail.php?id=54039"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2022-09-28-hurricane-ian-florida-outages",
@@ -270,11 +302,19 @@
         "url": "https://www.publicpower.org/periodical/article/outages-post-hurricane-ian-down-less-500000-florida"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Hurricane Ian (2022)"
     },
     {
       "event_id": "us-2022-12-07-keystone-kansas-spill",
@@ -325,11 +365,19 @@
         "url": "https://www.enr.com/articles/55680-keystone-pipe-has-full-restart-after-14000-barrel-spill-dec-7"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2022-12-23-winter-storm-elliott-maine-outages",
@@ -372,11 +420,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Winter Storm Elliott (2022)"
     },
     {
       "event_id": "us-2022-12-23-tva-rolling-blackouts-elliott",
@@ -431,11 +487,19 @@
         "url": "https://www.power-eng.com/?p=120269"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Winter Storm Elliott (2022)"
     },
     {
       "event_id": "us-2022-12-24-duke-energy-rolling-blackouts-elliott",
@@ -481,11 +545,19 @@
         "url": "https://www.wect.com/2023/01/03/duke-energy-reveals-timeline-events-leading-up-rolling-blackouts-christmas-eve"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Winter Storm Elliott (2022)"
     },
     {
       "event_id": "us-2022-12-23-pjm-forced-outages-elliott",
@@ -551,11 +623,19 @@
         "url": "https://insidelines.pjm.com/pjm-operated-reliably-throughout-winter-storm-challenges/"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Winter Storm Elliott (2022)"
     },
     {
       "event_id": "us-2022-12-winter-storm-elliott-gas-production",
@@ -598,11 +678,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Winter Storm Elliott (2022)"
     },
     {
       "event_id": "us-2023-02-01-texas-ice-storm-outages",
@@ -645,11 +733,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2023-02-22-michigan-ice-storm-outages",
@@ -692,11 +788,19 @@
         "url": "https://www.pbs.org/newshour/nation/5-days-after-severe-ice-storm-some-in-michigan-still-lack-power"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2023-08-25-marathon-garyville-tank-fire",
@@ -747,11 +851,19 @@
         "url": "https://www.argusmedia.com/es/news-and-insights/latest-market-news/2485045-marathon-garyville-resumes-normal-ops"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2023-08-30-hurricane-idalia-florida-outages",
@@ -794,11 +906,19 @@
         "url": "https://www.publicpower.org/periodical/article/public-power-utilities-fla-wrap-power-restoration-efforts-wake-hurricane"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Hurricane Idalia (2023)"
     },
     {
       "event_id": "us-2024-01-winter-storm-heather-gas-production",
@@ -841,11 +961,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Winter Storm Heather (2024)"
     },
     {
       "event_id": "us-2024-02-01-bp-whiting-power-outage",
@@ -896,11 +1024,19 @@
         "url": "https://inspectioneering.com/news/2024-03-18/11013/bps-whiting-refinery-back-to-normal-operations-following-february-outage"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2024-05-16-houston-derecho-outages",
@@ -943,11 +1079,19 @@
         "url": "https://www.tdworld.com/disaster-response/article/55041071/centerpoint-energy-continues-power-restoration-after-significant-storms"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2024-07-08-hurricane-beryl-texas-outages",
@@ -998,11 +1142,19 @@
         "url": "https://www.tdworld.com/disaster-response/news/55127087/centerpoint-energy-restores-power-to-more-than-98-of-impacted-customers"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Hurricane Beryl (2024)"
     },
     {
       "event_id": "us-2024-09-11-hurricane-francine-louisiana-outages",
@@ -1045,11 +1197,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Hurricane Francine (2024)"
     },
     {
       "event_id": "us-2024-09-11-hurricane-francine-gulf-shut-ins",
@@ -1092,11 +1252,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Hurricane Francine (2024)"
     },
     {
       "event_id": "us-2024-09-11-hurricane-francine-loop-closure",
@@ -1135,11 +1303,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Hurricane Francine (2024)"
     },
     {
       "event_id": "us-2024-09-27-hurricane-helene-south-carolina-outages",
@@ -1182,11 +1358,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Hurricane Helene (2024)"
     },
     {
       "event_id": "us-2024-09-27-hurricane-helene-georgia-outages",
@@ -1229,11 +1413,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Hurricane Helene (2024)"
     },
     {
       "event_id": "us-2024-09-27-hurricane-helene-north-carolina-outages",
@@ -1276,11 +1468,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Hurricane Helene (2024)"
     },
     {
       "event_id": "us-2024-09-26-hurricane-helene-florida-outages",
@@ -1323,11 +1523,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Hurricane Helene (2024)"
     },
     {
       "event_id": "us-2024-10-09-hurricane-milton-florida-outages",
@@ -1378,11 +1586,19 @@
         "url": "https://www.usatoday.com/story/news/nation/2024/10/13/hurricane-milton-biden-florida-sunday/75657451007/"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Hurricane Milton (2024)"
     },
     {
       "event_id": "us-2024-11-19-bomb-cyclone-washington-outages",
@@ -1425,11 +1641,19 @@
         "url": "https://en.wikipedia.org/wiki/November_2024_Northeast_Pacific_bomb_cyclone"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2025-04-08-keystone-north-dakota-rupture",
@@ -1480,11 +1704,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 2,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2026-01-24-winter-storm-fern-tennessee-outages",
@@ -1527,11 +1759,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Winter Storm Fern (2026)"
     },
     {
       "event_id": "us-2026-01-24-winter-storm-fern-mississippi-outages",
@@ -1574,11 +1814,19 @@
         "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-30",
         "threshold_version": "2026-10-30.1",
+        "review_status": "legacy_single_review",
+        "primary_review_complete": true,
+        "independent_review_complete": false,
+        "reviewer_count": 1,
+        "disposition": null,
+        "source_count": 1,
+        "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Winter Storm Fern (2026)"
     },
     {
       "event_id": "us-2025-02-01-pbf-martinez-refinery-fire",
@@ -1593,8 +1841,8 @@
       "operator": "PBF Energy",
       "asset_class": "refinery",
       "cause": "technical",
-      "summary": "A fire broke out on 1 February 2025 at PBF Energy's Martinez refinery and was not fully extinguished until 4 February. Units not damaged by the fire began restarting in April 2025; the fire-damaged units stayed shut until a rebuild finished in 2026.",
-      "effect": "The refinery ran at about 85,000-105,000 b/d of its 157,000 b/d capacity from early in the second quarter of 2025 until full operations resumed in May 2026.",
+      "summary": "A fire broke out on 1 February 2025 at PBF Energy's Martinez refinery and burned for several days. Units not damaged by the fire began restarting in April 2025; the fire-damaged units stayed shut until a rebuild finished in 2026.",
+      "effect": "The refinery ran at about 85,000-105,000 b/d of its 157,000 b/d capacity from early in the second quarter of 2025 (as reported in January 2026); PBF reported a return to full operations in May 2026.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
       "threshold_basis": "Refinery shut, then throughput materially cut for more than a year.",
@@ -1633,15 +1881,23 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "full_restart",
         "date": null,
-        "evidence": "PBF's second-quarter 2026 results release states the Martinez refinery returned to full operations in May 2026, after restart targets of year-end 2025 and early March 2026 slipped.",
+        "evidence": "PBF's second-quarter 2026 results release states the Martinez refinery returned to full operations in May 2026.",
         "url": "https://www.sec.gov/Archives/edgar/data/0001534504/000153450426000029/a991pressreleaseq2-26.htm"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-31",
         "threshold_version": "2026-10-30.1",
-        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "review_status": "dual_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 2,
+        "disposition": "corrected",
+        "source_count": 3,
+        "sources_opened_by_reviewer": 5,
+        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2025-10-02-chevron-el-segundo-fire",
@@ -1656,7 +1912,7 @@
       "operator": "Chevron",
       "asset_class": "refinery",
       "cause": "unknown",
-      "summary": "An explosion and fire in a jet-fuel production unit at Chevron's El Segundo refinery on the night of 2 October 2025 forced several process units offline. Chevron said the fire was extinguished on 4 October and confined to one of the refinery's eight process units; the cause was under investigation.",
+      "summary": "An explosion and fire at Chevron's El Segundo refinery on the night of 2 October 2025 forced several process units offline. Chevron said the fire was extinguished on 4 October.",
       "effect": "Several process units shut; Chevron said the refinery kept producing fuels at diminished rates.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
@@ -1681,18 +1937,26 @@
         }
       ],
       "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "partial_restoration",
-        "date": "2025-10-08",
-        "evidence": "On 8 October 2025 Chevron said it was restarting some of the shut units and the refinery was operating at diminished rates. Later reports of the damaged unit's restart were paywalled and were not read, so no completion is recorded.",
-        "url": "https://hydrocarbonprocessing.com/news/2025/10/chevron-working-to-restart-units-at-el-segundo-refinery-us-after-fire/"
+        "research_status": "RESEARCHED_NO_PUBLIC_EVIDENCE",
+        "kind": null,
+        "date": null,
+        "evidence": "The source read on 8 October 2025 said Chevron was working to restart units, an intention rather than a restart. No restart report from an openly readable source was found on review.",
+        "url": null
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-31",
         "threshold_version": "2026-10-30.1",
-        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "review_status": "dual_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 2,
+        "disposition": "corrected",
+        "source_count": 2,
+        "sources_opened_by_reviewer": 3,
+        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2025-05-25-miso-louisiana-load-shed",
@@ -1739,11 +2003,19 @@
         "url": "https://hoodline.com/2025/05/over-100-000-regain-power-in-new-orleans-after-rolling-blackouts-stabilize-grid/"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-31",
         "threshold_version": "2026-10-30.1",
-        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "review_status": "dual_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 2,
+        "disposition": "confirmed",
+        "source_count": 2,
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2026-03-23-valero-port-arthur-refinery-explosion",
@@ -1758,8 +2030,8 @@
       "operator": "Valero Energy",
       "asset_class": "refinery",
       "cause": "technical",
-      "summary": "An explosion and fire at a diesel hydrotreater at Valero's Port Arthur refinery on 23 March 2026, triggered by a release of process fluid, led Valero to shut the whole refinery the next day to extinguish the fire. No injuries were reported.",
-      "effect": "Refinery fully shut, then restarted in stages through April 2026; the fire-damaged diesel hydrotreater and an adjacent unit were still offline at the end of April.",
+      "summary": "An explosion and fire at Valero's Port Arthur refinery on 23 March 2026, triggered by a release of process fluid, led Valero to shut the whole refinery the next day to extinguish the fire. No injuries were reported.",
+      "effect": "Refinery fully shut, then restarted in stages through April 2026; the unit damaged by the fire and one other unit were still offline at the end of April.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
       "threshold_basis": "Whole refinery shut after an explosion and fire.",
@@ -1790,15 +2062,23 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "partial_restart",
         "date": "2026-04-30",
-        "evidence": "On its first-quarter 2026 call (reported 30 April) Valero said most units had restarted and throughput was expected to be fairly normalised by 1 May; the damaged diesel hydrotreater had no rebuild timeline. Partial restart only.",
+        "evidence": "Valero's first-quarter 2026 call, as reported on 30 April, said most units had restarted and throughput was expected to be fairly normalised by 1 May; the unit damaged by the fire had no rebuild timeline. Partial restart only.",
         "url": "https://www.ogj.com/refining-processing/refining/operations/news/55374647/valeros-port-arthur-refinery-faces-uncertain-timeline-for-diesel-hydrotreater-rebuild"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-31",
         "threshold_version": "2026-10-30.1",
-        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "review_status": "dual_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 2,
+        "disposition": "corrected",
+        "source_count": 2,
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": null
     },
     {
       "event_id": "us-2026-10-09-hurricane-isaias-outages",
@@ -1849,11 +2129,19 @@
         "url": "https://www.indexbox.io/blog/us-gulf-oil-and-gas-output-recovers-after-hurricane-isaias/"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-31",
         "threshold_version": "2026-10-30.1",
-        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "review_status": "dual_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 2,
+        "disposition": "confirmed",
+        "source_count": 2,
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Hurricane Isaias (2026)"
     },
     {
       "event_id": "us-2026-10-09-hurricane-isaias-gulf-shut-ins",
@@ -1868,7 +2156,7 @@
       "operator": null,
       "asset_class": "upstream_production",
       "cause": "natural_hazard",
-      "summary": "Ahead of Hurricane Isaias, offshore operators shut in most US Gulf oil and gas production. The federal offshore regulator reported nearly 63% of current Gulf oil output shut in.",
+      "summary": "Ahead of Hurricane Isaias, offshore operators shut in most US Gulf oil and gas production. Federal figures reported on 9 October showed most Gulf oil output shut in.",
       "effect": "Most Gulf oil and gas production shut in; less than 30% of oil and 25% of gas output was still shut in on 12 October.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 7,
@@ -1896,15 +2184,23 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "partial_restoration",
         "date": "2026-10-12",
-        "evidence": "Less than 30% of Gulf oil output and 25% of gas output remained shut in on 12 October as operators brought platforms back. Completion was not researched.",
+        "evidence": "Less than 30% of Gulf oil output and 25% of gas output remained shut in on 12 October, according to federal data reported by ICIS. Completion was not researched.",
         "url": "https://www.indexbox.io/blog/us-gulf-oil-and-gas-output-recovers-after-hurricane-isaias/"
       },
       "review": {
-        "reviewed": "2026-10-30",
+        "reviewed_at": "2026-10-31",
         "threshold_version": "2026-10-30.1",
-        "process": "Iteration-15 research pass: every listed source was opened and read before inclusion; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
+        "review_status": "dual_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 2,
+        "disposition": "corrected",
+        "source_count": 2,
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
-      }
+      },
+      "hazard_name": "Hurricane Isaias (2026)"
     }
   ]
 }

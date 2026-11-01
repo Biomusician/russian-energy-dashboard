@@ -6636,9 +6636,28 @@ def test_the_build_never_reads_the_candidate_queue():
                       if isinstance(n, (ast.Module, ast.FunctionDef, ast.ClassDef))
                       and n.body and isinstance(n.body[0], ast.Expr)
                       and isinstance(n.body[0].value, ast.Constant)}
+        # A path to the queue, written as a string or built with `/ "candidates"`. Since iteration
+        # 16 the research log publishes a COUNT named "candidates", so the bare word is allowed;
+        # a path to the directory is not.
         for n in ast.walk(tree):
             if isinstance(n, ast.Constant) and isinstance(n.value, str) and id(n) not in docstrings:
-                assert "candidates" not in n.value, f"{mod} references the candidate queue"
+                assert not re.search(r"candidates[/\\]|[/\\]candidates", n.value), \
+                    f"{mod} references the candidate queue"
+            if (isinstance(n, ast.BinOp) and isinstance(n.op, ast.Div)
+                    and isinstance(n.right, ast.Constant) and n.right.value == "candidates"):
+                raise AssertionError(f"{mod} builds a path into the candidate queue")
+
+
+def test_the_candidate_queue_guard_still_fires():
+    """The guard above, run against the two ways a module could reach the queue."""
+    import ast
+    for src in ('p = ROOT / "data" / "candidates"', 'p = "data/candidates/us.json"'):
+        tree = ast.parse(src)
+        hit = any((isinstance(n, ast.Constant) and isinstance(n.value, str)
+                   and re.search(r"candidates[/\\]|[/\\]candidates", n.value))
+                  or (isinstance(n, ast.BinOp) and isinstance(n.right, ast.Constant)
+                      and n.right.value == "candidates") for n in ast.walk(tree))
+        assert hit, src
 
 
 def test_the_country_vocabulary_extends_but_never_alters_the_theatre_taxonomy():
@@ -6670,7 +6689,10 @@ def test_the_import_gate_holds_what_it_should():
     ok = {"US-TX"}
     good = {"candidate_id": "us-2024-01-01-x", "suggested_disposition": "accept",
             "admin1_code": "US-TX", "geography_precision": "admin1", "summary": "A plant shut.",
-            "sources": [{"url": "https://e.x/a", "opened": True}]}
+            "sources": [{"url": "https://e.x/a", "opened": True}],
+            "primary_review": {"completed": "2026-10-31", "sources_opened": 1},
+            "independent_review": {"completed": "2026-10-31", "disposition": "confirmed",
+                                   "sources_opened": 1}}
     assert imp.review("us", good, ok) is None
     assert "disposition" in imp.review("us", {**good, "suggested_disposition": "reject"}, ok)
     unopened = {**good, "sources": [{"url": "https://e.x", "opened": False}]}
@@ -6762,11 +6784,11 @@ def test_the_onboarding_gate_is_published_and_honest():
     from pipeline import systems
     for sid in systems.COUNTRY_SYSTEMS:
         gate = _sys_payload(sid, "system.json")["onboarding_gate"]
-        assert [g["item"] for g in gate] == list(range(1, 9)), sid
+        # Item 7 is two items since iteration 16: 7A source freshness, 7B research coverage.
+        assert [g["item"] for g in gate] == [1, 2, 3, 4, 5, 6, "7A", "7B", 8], sid
         assert all(g["status"] in ("met", "partial", "unmet") and g["note"] for g in gate)
-        # Episodes exist since iteration 15, so item 5 is met. Item 7 follows the research log
-        # (test_the_published_research_log_is_counts_only_and_says_where_it_stopped): it may not
-        # read "met" while the newest search pass stopped short.
+        # Episodes exist since iteration 15, so item 5 is met. 7B follows the research log
+        # (test_the_published_research_log_is_counts_only_and_says_where_it_stopped).
         assert {g["item"]: g["status"] for g in gate}[5] == "met"
 
 
@@ -6905,7 +6927,7 @@ def test_every_country_record_belongs_to_exactly_one_episode():
         for ep in episodes:
             assert ep["records"] == len(ep["event_ids"]) >= 1
             # A named episode is a curated one; a single record is never dressed up with a name.
-            assert (ep["name"] is None) == (ep["basis"] == "single_record"), ep
+            assert (ep["name"] is None) == (ep["basis"] == "singleton"), ep
         summary = _sys_payload(sid, "system.json")["event_summary"]
         assert summary["episodes"] == len(episodes) <= summary["recorded_events"]
         assert summary["multi_record_episodes"] == sum(1 for ep in episodes if ep["records"] > 1)
@@ -6919,47 +6941,135 @@ def test_one_hurricane_is_one_episode_not_four():
     assert helene[0]["region_codes"] == ["US-FL", "US-GA", "US-NC", "US-SC"]
 
 
+def _ep_events():
+    """Three records of system x: two naming one storm, one attack with its own source."""
+    return [
+        {"event_id": "x-a", "hazard_name": "Storm S (2024)", "sources": [{"url": "https://s/1"}]},
+        {"event_id": "x-b", "hazard_name": "Storm S (2024)", "sources": [{"url": "https://s/2"}]},
+        {"event_id": "x-c", "hazard_name": None, "sources": [{"url": "https://s/3"}]},
+    ]
+
+
+def _ep_ok():
+    return [{"episode_id": "x-ep", "name": "Storm S", "basis": "named_hazard",
+             "hazard": "Storm S (2024)", "event_ids": ["x-a", "x-b"]}]
+
+
 def test_the_episode_file_cannot_merge_drop_or_double_count():
     from pipeline import build_systems as B
-    ids = {"a", "b", "c"}
-    ok = [{"episode_id": "ep", "name": "Storm", "basis": "named_hazard", "event_ids": ["a", "b"]}]
-    assert B.validate_episodes("x", ok, ids) == {"a": "ep", "b": "ep"}
+    ev, ok = _ep_events(), _ep_ok()
+    assert B.validate_episodes("x", ok, ev) == {"x-a": "x-ep", "x-b": "x-ep"}
     bad = {
-        "no event": [{**ok[0], "event_ids": ["a", "zz"]}],
-        "is in two episodes": ok + [{"episode_id": "ep2", "name": "n", "basis": "named_hazard",
-                                     "event_ids": ["b", "c"]}],
-        "at least two records": [{**ok[0], "event_ids": ["a"]}],
-        "is not unique": [{**ok[0], "episode_id": "c"}],
+        "no event": [{**ok[0], "event_ids": ["x-a", "x-b", "x-zz"]}],
+        "is in two episodes": ok + [{"episode_id": "x-ep2", "name": "n", "basis": "explicit_common_event",
+                                     "event_ids": ["x-b", "x-c"],
+                                     "evidence": {"url": "https://s/3", "says": "one event"}}],
+        "at least two records": [{**ok[0], "event_ids": ["x-a"]}],
+        "is not unique": [{**ok[0], "episode_id": "x-c"}],
         "unknown basis": [{**ok[0], "basis": "nearby"}],
+        "must belong to system": [{**ok[0], "episode_id": "y-ep"}],
     }
     for message, declared in bad.items():
         with pytest.raises(ValueError, match=message):
-            B.validate_episodes("x", declared, ids)
+            B.validate_episodes("x", declared, ev)
+
+
+def test_one_source_statement_is_not_an_episode():
+    """Iteration 16: a statement LISTING several incidents is provenance, not an episode. The
+    retired basis is refused by name, and so is any basis that is only proximity."""
+    from pipeline import build_systems as B
+    ev = _ep_events()
+    for basis in ("single_statement", "same_day", "nearby", "same_region"):
+        with pytest.raises(ValueError, match="retired|unknown basis"):
+            B.validate_episodes("x", [{"episode_id": "x-ep", "name": "n", "basis": basis,
+                                        "event_ids": ["x-a", "x-c"]}], ev)
+
+
+def test_an_explicit_episode_must_cite_the_source_that_says_so():
+    from pipeline import build_systems as B
+    ev = [*_ep_events()[:1], {"event_id": "x-d", "hazard_name": None, "sources": [{"url": "https://s/4"}]},
+          _ep_events()[2]]
+    ep = {"episode_id": "x-wave", "name": "Wave", "basis": "coordinated_wave", "event_ids": ["x-d", "x-c"]}
+    with pytest.raises(ValueError, match="needs evidence"):
+        B.validate_episodes("x", [ep], ev)
+    with pytest.raises(ValueError, match="not a source of any member"):
+        B.validate_episodes("x", [{**ep, "evidence": {"url": "https://elsewhere", "says": "one wave"}}], ev)
+    assert B.validate_episodes("x", [{**ep, "evidence": {"url": "https://s/4", "says": "one wave"}}], ev)
+
+
+def test_a_named_hazard_episode_shares_one_hazard_and_holds_all_its_records():
+    from pipeline import build_systems as B
+    ev, ok = _ep_events(), _ep_ok()
+    with pytest.raises(ValueError, match="must name its hazard"):
+        B.validate_episodes("x", [{**ok[0], "hazard": None}], ev)
+    with pytest.raises(ValueError, match="names hazard"):
+        B.validate_episodes("x", [{**ok[0], "event_ids": ["x-a", "x-c"]}], ev)
+    # Dropping a member that names the hazard leaves it a stray singleton: refused.
+    three = ev + [{"event_id": "x-e", "hazard_name": "Storm S (2024)", "sources": [{"url": "https://s/5"}]}]
+    with pytest.raises(ValueError, match="split across episodes"):
+        B.validate_episodes("x", ok, three)
+
+
+def test_every_shipped_episode_obeys_the_iteration_16_invariants():
+    """Run the build's own validator over what is curated, and check the published dates."""
+    from pipeline import build_systems as B, systems
+    for sid in systems.COUNTRY_SYSTEMS:
+        declared = json.loads((ROOT / "data" / "curated" / "systems" / sid / "episodes.json")
+                              .read_text(encoding="utf-8"))["episodes"]
+        events = json.loads((ROOT / "data" / "curated" / "systems" / sid / "events.json")
+                            .read_text(encoding="utf-8"))["events"]
+        B.validate_episodes(sid, declared, events)
+        assert all(ep["basis"] in B.EPISODE_BASES for ep in declared), sid
+
+
+@needs_systems
+def test_published_episode_dates_encompass_their_members():
+    from pipeline import systems
+    for sid in systems.COUNTRY_SYSTEMS:
+        payload = _sys_payload(sid, "events.json")
+        by_id = {e["event_id"]: e for e in payload["events"]}
+        for ep in payload["episodes"]:
+            for m in ep["event_ids"]:
+                assert ep["first_date"] <= by_id[m]["date"] <= ep["last_date"], (sid, ep["episode_id"])
 
 
 def test_a_historical_build_keeps_only_the_episode_records_that_existed():
     from pipeline import build_systems as B
-    declared = [{"episode_id": "ep", "name": "Storm", "basis": "named_hazard", "event_ids": ["a", "b"]}]
+    declared = [{"episode_id": "ep", "name": "Storm", "basis": "named_hazard", "hazard": "Storm",
+                 "event_ids": ["a", "b"]}]
     events = [{"event_id": "a", "episode_id": "ep", "date": "2024-01-01", "date_end": None,
                "region_code": "X-1"}]
     eps = B.episodes_of(declared, events)
-    assert eps == [{"episode_id": "ep", "name": "Storm", "basis": "named_hazard", "event_ids": ["a"],
-                    "records": 1, "first_date": "2024-01-01", "last_date": "2024-01-01",
-                    "region_codes": ["X-1"], "has_country_level_record": False}]
+    assert eps == [{"episode_id": "ep", "name": "Storm", "basis": "named_hazard", "hazard": "Storm",
+                    "event_ids": ["a"], "records": 1, "first_date": "2024-01-01",
+                    "last_date": "2024-01-01", "region_codes": ["X-1"],
+                    "has_country_level_record": False}]
+
+
+def _src_doc():
+    return {"sources": [{"name": "A", "role": "adopted", "last_checked": "2026-10-30",
+                         "publication_cadence": "monthly", "stale_policy": "monthly",
+                         "stale_after_days": 120},
+                        {"name": "B", "role": "rejected", "last_checked": "2026-10-30"}]}
+
+
+def _src_log(**kw):
+    return {"passes": [{"date": "2026-10-30", "by": "t", "kind": "targeted",
+                        "window": ["2022-01-01", "2026-10-30"], "status": "partial",
+                        "status_reason": "budget", "outcome": {"accepted": 1}, **kw}]}
 
 
 def test_every_used_source_states_when_it_was_checked_and_how_long_that_holds():
     from pipeline import build_systems as B
-    doc = {"sources": [{"name": "A", "role": "adopted", "checked": "2026-10-30",
-                        "cadence": "monthly", "stale_after_days": 120},
-                       {"name": "B", "role": "rejected", "checked": "2026-10-30"}]}
-    log = {"passes": [{"date": "2026-10-30", "window": ["2022-01-01", "2026-10-30"],
-                       "status": "partial", "status_reason": "budget", "outcome": {"accepted": 1}}]}
+    doc, log = _src_doc(), _src_log()
     B.validate_sources("x", doc, log)
     with pytest.raises(ValueError, match="no cadence"):
-        B.validate_sources("x", {"sources": [{**doc["sources"][0], "cadence": None}]}, log)
+        B.validate_sources("x", {"sources": [{**doc["sources"][0], "publication_cadence": None}]}, log)
     with pytest.raises(ValueError, match="no last-checked"):
-        B.validate_sources("x", {"sources": [{**doc["sources"][1], "checked": None}]}, log)
+        B.validate_sources("x", {"sources": [{**doc["sources"][1], "last_checked": None}]}, log)
+    # A limit is its policy's, never typed per source.
+    with pytest.raises(ValueError, match="must be the 'monthly' policy"):
+        B.validate_sources("x", {"sources": [{**doc["sources"][0], "stale_after_days": 90}]}, log)
     with pytest.raises(ValueError, match="must say why"):
         B.validate_sources("x", doc, {"passes": [{**log["passes"][0], "status_reason": None}]})
     # The research log publishes counts, never the queue's per-record narratives.
@@ -6977,34 +7087,47 @@ def test_the_published_research_log_is_counts_only_and_says_where_it_stopped():
         assert passes, sid
         for rp in passes:
             assert all(isinstance(v, int) for v in rp["outcome"].values()), (sid, rp)
-        latest = max(passes, key=lambda x: x["date"])
-        gate7 = {g["item"]: g for g in p["onboarding_gate"]}[7]
-        assert gate7["status"] == ("met" if latest["status"] == "complete" else "partial"), sid
+        # 7B follows the newest SYSTEMATIC pass, never the source registry and never a targeted
+        # pass: complete -> met, partial -> partial, none -> unmet.
+        systematic = [x for x in passes if x["kind"] == "systematic"]
+        gate7b = {g["item"]: g for g in p["onboarding_gate"]}["7B"]
+        want = ({"complete": "met", "partial": "partial"}[max(systematic, key=lambda x: x["date"])["status"]]
+                if systematic else "unmet")
+        assert gate7b["status"] == want, sid
+        assert p["research_freshness"]["completeness"] == (
+            max(systematic, key=lambda x: x["date"])["status"] if systematic else "never_systematic"), sid
         for s in p["sources"]:
-            assert s["checked"], (sid, s)
+            assert s["last_checked"], (sid, s)
 
 
-def test_a_later_research_pass_keeps_its_own_review_date_and_process():
-    """Iteration-15 records were read source by source; stamping them with the iteration-14
-    lane's 'single-pass' process text would misdescribe how they were checked."""
+def test_the_review_block_says_how_a_record_was_reviewed():
+    """A grandfathered record keeps its own single-review date and process; a dual-reviewed one
+    says so, with its reviewer's date and disposition. Neither borrows the other's wording."""
     imp = _import_gate()
     base = {"candidate_id": "us-x", "geography_precision": "admin1", "admin1_code": "US-TX",
             "date": "2026-01-01", "asset_class": "refinery", "cause": "technical", "summary": "s",
             "sources": [{"url": "https://example.org", "opened": True}]}
-    old = imp.to_event("us", base)["review"]
-    assert old["reviewed"] == imp.REVIEW_DATE and old["process"] == imp.DEFAULT_PROCESS
-    new = imp.to_event("us", {**base, "reviewed": "2026-10-30", "review_process": "read in a browser"})["review"]
-    assert new["reviewed"] == "2026-10-30" and new["process"] == "read in a browser"
+    old = imp.to_event("us", {**base, "reviewed": "2026-10-30", "review_process": "read in a browser"},
+                       grandfathered=frozenset({"us-x"}))["review"]
+    assert old["review_status"] == "legacy_single_review" and old["reviewer_count"] == 1
+    assert old["reviewed_at"] == "2026-10-30" and old["process"] == "read in a browser"
+    assert old["independent_review_complete"] is False
+    new = imp.to_event("us", {**base, "independent_review": {"completed": "2026-10-31", "disposition":
+                                                             "corrected", "sources_opened": 2}})["review"]
+    assert new["review_status"] == "dual_reviewed" and new["reviewer_count"] == 2
+    assert new["reviewed_at"] == "2026-10-31" and new["disposition"] == "corrected"
+    assert new["process"] == imp.DUAL_PROCESS and new["sources_opened_by_reviewer"] == 2
 
 
 @needs_systems
-def test_records_from_the_source_reading_pass_all_say_a_source_was_read():
+def test_dual_reviewed_records_say_a_source_was_read():
     from pipeline import systems
     seen = 0
     for sid in systems.COUNTRY_SYSTEMS:
         for e in _sys_payload(sid, "events.json")["events"]:
-            if e["review"]["process"].startswith("Iteration-15"):
+            if e["review"]["review_status"] == "dual_reviewed":
                 seen += 1
-                assert all(s["opened"] is True for s in e["sources"]), e["event_id"]
+                assert any(s["opened"] is True for s in e["sources"]), e["event_id"]
                 assert e["review"]["source_access"] == "at least one source read", e["event_id"]
-    assert seen > 0
+                assert e["review"]["sources_opened_by_reviewer"] >= 1, e["event_id"]
+    assert seen >= 12   # the twelve iteration-15 records, reviewed retroactively

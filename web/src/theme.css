@@ -1939,7 +1939,7 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
 .state-insufficient_evidence, .readiness-insufficient_evidence { color: var(--red); border-color: #6b2a26; }
 
 .country-ribbon {
-  display: grid; grid-template-columns: minmax(0, 2fr) auto minmax(0, 2fr); gap: 18px;
+  display: grid; grid-template-columns: minmax(0, 2fr) auto minmax(0, 2fr) minmax(0, 1.4fr); gap: 18px;
   padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--bg-panel); align-items: start;
 }
 .no-index-value { font-size: 26px; font-weight: 600; color: var(--text-faint); letter-spacing: 0.02em; }
@@ -1963,6 +1963,14 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
 .episode-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px; }
 .episode-group > .event-list { border-left: 2px solid var(--line); padding-left: 10px; }
 .stale-flag { color: var(--amber); }
+/* Iteration 16: research coverage and source freshness are separate badges, never one state. */
+.research-status .badge { display: inline-block; margin: 2px 0; }
+.research-complete, .sources-current { color: var(--green); border-color: #1f5a40; }
+.research-partial, .sources-stale { color: var(--amber); border-color: #6b5320; }
+.research-never_systematic { color: var(--text-dim); border-color: var(--line); }
+.withheld-note { border-left: 2px solid var(--amber); padding-left: 6px; }
+.review-note { margin-top: 0; }
+.lane-list { margin: 4px 0 0; padding-left: 16px; }
 .rec { font-weight: 600; }
 .rec-evidence_found { color: var(--green); }
 .rec-researched_no_public_evidence { color: var(--amber); }

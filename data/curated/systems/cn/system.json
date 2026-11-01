@@ -67,33 +67,45 @@
       "name": "NBS Statistical Communiqué and monthly energy releases",
       "role": "adopted (context)",
       "licence": "facts only",
-      "checked": "2026-10-30",
-      "cadence": "annual communiqué; monthly energy-production release",
-      "stale_after_days": 120
+      "last_checked": "2026-10-30",
+      "publication_cadence": "annual communiqué; monthly energy-production release",
+      "stale_policy": "monthly",
+      "stale_after_days": 120,
+      "source_release": null,
+      "content_vintage": null
     },
     {
       "name": "NEA power releases",
       "role": "adopted (context)",
       "licence": "facts only",
-      "checked": "2026-10-30",
-      "cadence": "monthly releases",
-      "stale_after_days": 120
+      "last_checked": "2026-10-30",
+      "publication_cadence": "monthly releases",
+      "stale_policy": "monthly",
+      "stale_after_days": 120,
+      "source_release": null,
+      "content_vintage": null
     },
     {
       "name": "GEM coal plant, coal mine and integrated power trackers",
       "role": "denominator candidates (not yet acquired)",
       "licence": "CC BY 4.0",
-      "checked": "2026-10-30",
-      "cadence": "tracker releases about twice a year",
-      "stale_after_days": 400
+      "last_checked": "2026-10-30",
+      "publication_cadence": "tracker releases about twice a year",
+      "stale_policy": "semiannual",
+      "stale_after_days": 400,
+      "source_release": null,
+      "content_vintage": null
     },
     {
       "name": "WRI Global Power Plant Database",
       "role": "rejected",
       "licence": "covers about 36% of 2025 capacity",
-      "checked": "2026-10-30",
-      "cadence": null,
-      "stale_after_days": null
+      "last_checked": "2026-10-30",
+      "publication_cadence": null,
+      "stale_policy": null,
+      "stale_after_days": null,
+      "source_release": null,
+      "content_vintage": null
     }
   ],
   "research_gaps": [
