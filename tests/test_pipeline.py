@@ -4258,8 +4258,15 @@ def test_the_real_build_emits_a_well_formed_ledger():
     # On most days no input changed and `changes` is empty, so the loop below checks nothing.
     # An empty ledger must then SAY it is a date-only build (iteration 14).
     if not led["changes"]:
-        assert led["time_progression_only"] is True
         assert led["change_count"] == 0
+        # A same-day rerun of identical inputs is the other legitimate empty ledger: nothing
+        # moved, not even time. It must then prove it with identical output fingerprints
+        # (found by the iteration-16 refresh simulation; a manual same-day refresh failed here).
+        if led["as_of_direction"] == "same_date":
+            assert led["esdi_delta"] == 0
+            assert led["previous_build_fingerprint"] == led["current_build_fingerprint"]
+        else:
+            assert led["time_progression_only"] is True
     for c in led["changes"]:
         assert c["category"] in D.CATEGORIES
         assert c["nature"] in D.NATURES
