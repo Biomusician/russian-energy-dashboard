@@ -2008,3 +2008,6 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
 .gate-unmet { color: var(--red); border-color: #6b2a26; }
 .rec-full_restart, .rec-service_restored, .rec-partial_restart, .rec-partial_restoration { color: var(--green); }
 .rec-estimate, .rec-supply_unaffected_statement, .rec-no_supply_lost { color: var(--amber); }
+/* Iteration 16: a past date is a reconstruction, said beside the number it qualifies. */
+.reconstruction-tag { font-size: 10px; letter-spacing: 0.04em; color: var(--amber); font-family: var(--mono); }
+.cmp-note { margin: 8px var(--pad) 12px; }

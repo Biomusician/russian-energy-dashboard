@@ -132,8 +132,10 @@ SEMANTICS = {
     "what_this_answers": (
         "What does today's dataset and model estimate for the system at each date?"),
     "what_this_does_not_answer": (
-        "What the dashboard displayed on those dates. No archive of past builds exists, and "
-        "nothing here reconstructs one."),
+        "What the dashboard displayed on those dates. That is the as-published history "
+        "(production_history.json, from deployed builds since 2026-08-29), a different question. "
+        "This series also reads today's live article inputs, so it is not the pinned-source "
+        "reconstruction either."),
     "controlling_dates": [
         {"concept": "Incident contribution",
          "field": "incident date",

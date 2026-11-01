@@ -366,21 +366,32 @@ declared in `pipeline/artifacts.py`.
 | `reporting_note` | country-specific sentence on how disruption gets reported |
 | `geography` | `unit_label`, `units_expected` (the build fails on a mismatch), `note`, `rulings[]` (`code`, `status`: `contains_disputed_area` / `disputed_unassigned` / `note`, `note`) |
 | `sectors[]` | one per sector: `sector`, `state` (GLOBAL_METHODOLOGY §7.1), `assessed_readiness` (the lane's verdict on what the evidence could reach), `reason` |
-| `sources[]` | `name`, `role`, `licence`, and since iteration 15 `checked` (last checked), `cadence` and `stale_after_days` (both null for a rejected source) |
+| `sources[]` | `name`, `role`, `licence`. Since iteration 16: `last_checked` (required), `source_release` and `content_vintage` (where known), and for a source in use `publication_cadence`, `stale_policy` (a key of `build_systems.STALE_POLICIES`) and `stale_after_days`, which must equal that policy's days. These are display policy only; they never enter acceptance or a number |
 | `research_gaps[]`, `audit_docs[]` | provenance |
 
 ### Input: `data/curated/systems/<id>/episodes.json` (hand-curated, iteration 15)
 
-`{"note", "episodes": [{"episode_id", "name", "basis", "event_ids"}]}`. `basis` is one of
-`build_systems.EPISODE_BASES`: `named_hazard`, `single_statement`, `continuing_shortfall`. A
-declared episode groups at least two records; a record in no declared episode is its own
-episode under its own id. The build refuses an unknown record, a record in two episodes, an
-episode id equal to an event id, or an unknown basis.
+`{"note", "episodes": [{"episode_id", "name", "basis", "event_ids", "hazard"?, "evidence"?}]}`.
+Since iteration 16, `basis` is one of `build_systems.EPISODE_BASES`:
+
+- `named_hazard`: needs `hazard`. Every member's `hazard_name` equals it, and every record
+  naming that hazard is a member.
+- `explicit_common_event`, `coordinated_wave`, `explicit_continuation`: each needs
+  `evidence {url, says}`, with the url among the members' sources.
+
+The retired bases (`single_statement`, `continuing_shortfall`, `single_record`) are refused.
+A declared episode groups at least two records. A record in no declared episode is a
+`singleton` under its own id. The build also refuses an unknown record, a record in two
+episodes, an episode id equal to an event id, or an episode id without the system's prefix.
 
 ### Input: `data/curated/systems/<id>/research_log.json` (hand-curated, iteration 15)
 
-`{"note", "passes": [{"date", "by", "window": [start, end], "scope", "status": "complete" |
-"partial", "status_reason", "outcome"}]}`. `outcome` holds integer counts only (`records`,
+`{"note", "passes": [{"date", "by", "kind": "systematic" | "targeted", "window": [start, end],
+"scope", "status": "complete" | "partial", "status_reason", "lanes"?, "outcome"}]}`.
+
+A systematic pass declares `lanes[]`. Each lane has `lane`, `source_family`, `status`, and a
+`reason` if partial; the build refuses any other key. A pass is `complete` only if it is
+systematic and every lane is complete. `outcome` holds integer counts only (`records`,
 `accepted`, `insufficient_evidence`, `rejected`, `duplicate`, `out_of_scope`, `held`); the build
 refuses any other key, so a queue narrative cannot reach the payload this way.
 
@@ -398,9 +409,42 @@ no headline titles), `recovery` (`research_status`: `EVIDENCE_FOUND` |
 `RESEARCHED_NO_PUBLIC_EVIDENCE` | `NOT_YET_RESEARCHED`; `kind`, required with evidence and null
 otherwise: `full_restart`, `partial_restart`, `service_restored`, `partial_restoration`,
 `estimate`, `supply_unaffected_statement`, `no_supply_lost`; `date`, `evidence`, `url`),
-`review` (`reviewed`, `threshold_version`, `process`, `source_access`; a record from a later
-research pass carries its own `reviewed` and `process`), `episode_id` (added by the build).
+`review` (iteration 16):
+
+- `reviewed_at`, `threshold_version`;
+- `review_status`: `dual_reviewed` | `legacy_single_review`. The latter is allowed only for ids
+  in `review_grandfathered.json`;
+- `primary_review_complete`, `independent_review_complete`, `reviewer_count`;
+- `disposition`: `confirmed` | `corrected` | null for legacy;
+- `source_count`, which must equal the published sources;
+- `sources_opened_by_reviewer`, `process`, `source_access`.
+
+Then:
+
+- `hazard_name`: the source's own name for the hazard, in the form "Hurricane Ian (2022)", or
+  null;
+- `episode_id`, added by the build;
+- `publication`, added by the build: null, or under an active campaign `{rule, campaign_id,
+  withheld: ["recovery", "status_citations"], note}`;
+- `recovery.research_status` may also be `WITHHELD_ACTIVE_CAMPAIGN`. That is a publication
+  state, not a research state, and it is allowed only on a record an active campaign covers.
+
 **No coordinates, ever.**
+
+### Input: `data/curated/systems/review_grandfathered.json` (iteration 16)
+
+`frozen_on` plus `event_ids`: the records published before dual review was required. A test
+holds the list at or below its frozen size, so it can only shrink.
+
+### Input: `data/curated/systems/conflict_campaigns.json` (iteration 16)
+
+`note`, `policy_version`, `release_rule` (proposed, not approved) and `campaigns[]`. Each
+campaign has:
+
+- `campaign_id`, `system_id`, `name`;
+- `status` (`active` | `ended`), `status_basis`, `status_checked`, `ended`;
+- `policy_applied`, plus `not_applied_reason` where the policy is not applied;
+- `member_rule {causes, from}`. See CURRENT_EVENT_PUBLICATION_POLICY.md.
 
 ### Input: `data/curated/systems/inclusion_threshold.json`
 
@@ -420,13 +464,25 @@ build date), and `onboarding_gate` (the eight items of GLOBAL_METHODOLOGY §7.2,
 `partial` or `unmet` with a note). Since iteration 15 also `event_summary.episodes` and
 `multi_record_episodes`, `episode_bases` (labels), and `research_log` (as curated).
 
+Since iteration 16, also:
+
+- `research_freshness`: `last_systematic_pass`, `coverage_window`, `completeness`
+  (`complete` | `partial` | `never_systematic`), `research_cadence_days`, `next_due`, `note`;
+- `stale_policies`: days plus rationale for each policy;
+- `review_summary`: dual-reviewed and legacy counts, with a note;
+- `publication_policy`: `withheld_records`, the system's applied campaigns, and the release
+  rule.
+
+`onboarding_gate` item 7 is now two items: `7A` (source freshness) and `7B` (systematic
+research coverage).
+
 The key is `evidence_readiness`, not `readiness`: `readiness` is on the scope boundary's
 forbidden-field list (force readiness), and the safety gate is not exempted for a synonym.
 
 ### Output: `systems/<id>/events.json`, `systems/<id>/regions.geojson`
 
 Events as above, sorted by date, plus `episodes[]`: `episode_id`, `name` (null for a single
-record), `basis` (`single_record` for one), `event_ids`, `records`, `first_date`, `last_date`,
+record), `basis` (`singleton` for one), `hazard`, `event_ids`, `records`, `first_date`, `last_date`,
 `region_codes`, `has_country_level_record`. Computed after the as-of filter. Regions: one feature per first-level unit with `code` (ISO
 3166-2, Indian codes as revised in 2023, `CN-HK`/`CN-MO` for the SARs), `name`, `status`, `note`,
 `recorded_events` (count of admin-1 events; `null` for a disputed, unassigned unit).
@@ -442,3 +498,40 @@ country figures), `order` (a statement that the order is alphabetical, never by 
 
 World: admin-0 features `a3`, `name`, `system_id` (null if unmonitored), `status`. Russia is
 drawn from admin-1; Crimea and Sevastopol are `a3: "UKR"`, `status: "occupied"`.
+
+## Iteration 16: the three histories
+
+### `snapshot.history_concept`
+
+`{mode, label, note}`. `mode` is `current_build` for a build at today's date, or
+`current_evidence_reconstruction` for `--as-of` a past date. A reconstruction is today's code
+and corpus at that date, with Wikipedia inputs pinned. It is never what the dashboard published
+then. `snapshot.context_geometry_inputs` records each OSM context file's Overpass
+`timestamp_osm_base`, sha256 prefix, bytes and query hash, with `scored: false`. OSM geometry is
+context only and enters no number (HISTORICAL_REPRODUCIBILITY.md).
+
+### Output: `production_history.json`
+
+The as-published history: `concept: "as_published"`, `label`, `what_this_answers`,
+`what_this_does_not_answer`, `source`, `earliest_reliable_as_published_date`, `before_earliest`
+(what is said for earlier dates), `excluded` (commits left out, and why), `ledger_captured_at`,
+and `entries[]`, one per committed production payload. Each entry has:
+
+- `sha`, `served_from`, `committed_at`;
+- `lineage`: `deployed` | `deploy_status_unverified` | `bot_refresh_presumed_deployed`;
+- `as_of`, `build_time`, `esdi`, `incident_total`, `schema_version`;
+- `methodology_fingerprint` (the blob of `methodology/scoring.json`);
+- `inputs_fingerprint` (sha256 of `build_inputs.groups`);
+- `outputs_fingerprint`, `snapshot_blob`, `event_ids_fingerprint`;
+- `events_added`, `events_removed`.
+
+It is read from git (`pipeline/production_history.py`) and computes nothing: values are what
+each deployed commit served. Before the earliest reliable date the answer is unavailable,
+never reconstructed.
+
+### Input: `data/curated/production_deployments.json`
+
+Vercel production deployments from GitHub's public deployments API, written by
+`scripts/capture_deployments.py`: `note`, `repo`, `captured_at` and `deployments[]`. Each
+deployment has `deployment_id`, `sha`, `created_at`, `creator`, `environment` and `state`; a
+state may be null until it is fetched.

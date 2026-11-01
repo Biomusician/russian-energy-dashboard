@@ -21,7 +21,13 @@
           "kinetic_strike",
           "sabotage"
         ],
-        "from": "2026-01-01"
+        "from": "2026-01-01",
+        "also_covers": [
+          {
+            "event_id": "sa-2026-02-23-juaymah-lpg-export-halt",
+            "reason": "Its own cause is unknown, but the site is a 2026 strike target (sa-2026-04-juaymah-processing-fires): its export status is that facility's status."
+          }
+        ]
       },
       "policy_applied": true
     },

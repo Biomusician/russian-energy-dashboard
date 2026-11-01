@@ -105,6 +105,11 @@ export interface CountrySystem {
     last_systematic_pass: string | null;
     coverage_window: [string, string] | null;
     completeness: "complete" | "partial" | "never_systematic";
+    /** Iteration 16: whether the newest systematic pass starts at the coverage start, and how
+     *  many of its declared lanes ran in full. Optional for older payloads. */
+    covers_full_window?: boolean;
+    lanes_declared?: number;
+    lanes_complete?: number;
     research_cadence_days: number;
     next_due: string | null;
     note: string;

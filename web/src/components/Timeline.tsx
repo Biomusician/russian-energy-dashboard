@@ -90,6 +90,9 @@ export default function Timeline({
             {selected ? bundle.snapshot.regions[selected]?.name : "Monitored area"} ·{" "}
             {fmtNum(series[step], 1)} index · {visibleIncidents.length} events shown
           </div>
+          {step !== dates.length - 1 && (
+            <div className="eyebrow reconstruction-tag">current-evidence reconstruction</div>
+          )}
         </div>
       </div>
 

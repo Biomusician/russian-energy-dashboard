@@ -95,7 +95,10 @@ RESEARCH_STATUSES = ("complete", "partial")
 RESEARCH_KINDS = ("systematic", "targeted")
 RESEARCH_OUTCOME_KEYS = ("candidates", "records", "accepted", "insufficient_evidence", "rejected",
                          "duplicate", "out_of_scope", "held")
-RESEARCH_LANE_KEYS = ("lane", "source_family", "status", "reason")
+RESEARCH_LANE_KEYS = ("lane", "source_family", "registry", "status", "reason")
+# The window every country system covers. A systematic pass that starts later is a top-up: it can
+# never make the whole record "complete" (iteration 16, research red team).
+COVERAGE_START = "2022-01-01"
 
 # SOURCE STALE LIMITS ARE DISPLAY POLICY, NOT METHODOLOGY (iteration 16). They decide when the
 # page tells a reader to re-check a source before relying on it. They never decide whether an
@@ -162,6 +165,21 @@ def validate_sources(system_id, doc, research_log):
         if p.get("kind") == "systematic":
             if not lanes:
                 problems.append(f"{tag}: a systematic pass declares its source lanes")
+            # The lanes are those of a plan committed BEFORE searching; the plan is named so a
+            # test can compare the two (tests/test_pipeline.py, the plan-commit test).
+            plan = p.get("plan") or {}
+            if not (plan.get("document") and plan.get("commit")):
+                problems.append(f"{tag}: a systematic pass names its plan document and commit")
+            registry = {x["name"] for x in doc["sources"] if _in_use(x)}
+            for lane in lanes:
+                if lane.get("status") == "partial" and not lane.get("reason"):
+                    problems.append(f"{tag}: lane {lane.get('lane')!r} is partial without a reason")
+                # A lane searched sources the registry must list, or source freshness would be
+                # stated for a different set of sources than the search used.
+                names = lane.get("registry") or []
+                if not names or set(names) - registry:
+                    problems.append(f"{tag}: lane {lane.get('lane')!r} names no registry source, or "
+                                    f"one not in use: {sorted(set(names) - registry)}")
             # Complete is a process claim: every declared lane executed. One skipped lane and the
             # pass is partial, however quiet the other lanes were.
             if p.get("status") == "complete" and any(lane.get("status") != "complete" for lane in lanes):
@@ -181,12 +199,21 @@ def research_freshness(research_log, kind="systematic"):
     systematic = [p for p in research_log.get("passes", []) if p.get("kind") == kind]
     last = max(systematic, key=lambda p: p["date"]) if systematic else None
     due = None
+    completeness = "never_systematic"
+    lanes = []
     if last:
         due = (dt.date.fromisoformat(last["date"]) + dt.timedelta(days=RESEARCH_CADENCE_DAYS)).isoformat()
+        lanes = last.get("lanes") or []
+        # A complete top-up over a later window does not complete the record from 2022.
+        covers = last["window"][0] <= COVERAGE_START
+        completeness = "complete" if last["status"] == "complete" and covers else "partial"
     return {
         "last_systematic_pass": last["date"] if last else None,
         "coverage_window": last["window"] if last else None,
-        "completeness": last["status"] if last else "never_systematic",
+        "covers_full_window": bool(last) and last["window"][0] <= COVERAGE_START,
+        "lanes_declared": len(lanes),
+        "lanes_complete": sum(1 for x in lanes if x.get("status") == "complete"),
+        "completeness": completeness,
         "research_cadence_days": RESEARCH_CADENCE_DAYS,
         "next_due": due,
         "note": ("Research coverage describes the event search, not the sources: a country's sources "
@@ -229,7 +256,7 @@ STATUS_WORDING = re.compile(
     r"restart|resum|reopen|back (online|in service)|returned to|recover(ed|y)|restor|"
     r"still (shut|offline|halted|closed|down)|remain(s|ed)? (shut|offline|halted|closed)|"
     r"operating at|running at|operat(ing|ion) at \d|postpon|planned restart|"
-    r"not (yet )?resumed|had not resumed|knock-on",
+    r"not (yet )?resumed|had not resumed|knock-on|cancel|expected|extended",
     re.I)
 
 
@@ -360,13 +387,37 @@ def load_campaigns():
 
 
 def campaign_of(e, system_id, campaigns):
-    """The ACTIVE campaign whose publication rule covers this record, or None."""
+    """The ACTIVE campaign whose publication rule covers this record, or None.
+
+    A record is covered by cause and date, or by name in `member_rule.also_covers`: a record at a
+    struck site whose own cause is not kinetic still reports that site's status (iteration 16,
+    safety red team: the Juaymah LPG halt traced a struck facility's outage for seven months)."""
     for c in campaigns.get("campaigns", []):
         rule = c.get("member_rule") or {}
-        if (c["system_id"] == system_id and c["status"] == "active" and c.get("policy_applied")
-                and e["cause"] in rule.get("causes", KINETIC_CAUSES) and e["date"] >= rule.get("from", "")):
+        if c["system_id"] != system_id or c["status"] != "active" or not c.get("policy_applied"):
+            continue
+        named = {x["event_id"] for x in rule.get("also_covers", [])}
+        if e["event_id"] in named or (e["cause"] in rule.get("causes", KINETIC_CAUSES)
+                                      and e["date"] >= rule.get("from", "")):
             return c
     return None
+
+
+# A citation published long after a covered event is where restart and operating status live, and
+# an opaque address ("/news/1996027") cannot be read for it. Such citations stay in the queue with
+# the other status evidence while the campaign is active.
+LATE_CITATION_DAYS = 7
+
+
+def late_citation(e, source):
+    """True if `source` was published more than LATE_CITATION_DAYS after the event (after the end
+    of the month for a month-precision date). An undated source counts as late."""
+    if not source.get("date"):
+        return True
+    start = dt.date.fromisoformat(e["date"][:10])
+    if e.get("date_precision") == "month":
+        start = (start.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)
+    return (dt.date.fromisoformat(source["date"][:10]) - start).days > LATE_CITATION_DAYS
 
 
 def apply_publication_policy(system_id, events, campaigns):
@@ -390,10 +441,13 @@ def apply_publication_policy(system_id, events, campaigns):
             "rule": "active_campaign_current_status_withheld",
             "campaign_id": c["campaign_id"],
             "withheld": ["recovery", "status_citations"],
-            "note": ("This record belongs to an attack campaign still recorded as active. The event "
-                     "is published; the facility's restart, recovery and operating status are not, "
-                     "nor are citations that report it, until the campaign has ended "
-                     "(docs/CURRENT_EVENT_PUBLICATION_POLICY.md)."),
+            # Plain reason first (UX red team, iteration 16); the policy document is named in
+            # `rule` and in the sources panel, not as a file path in the reader's way.
+            "note": ("Attacks on this country's energy facilities are still being reported. Saying "
+                     "whether a struck facility is back in operation could help time another "
+                     "attack, so the event is published but the facility's restart, recovery and "
+                     "operating status are not, nor are reports of them, until the campaign has "
+                     "ended."),
         }
         if rec["research_status"] != WITHHELD or any(rec[k] for k in ("kind", "date", "evidence", "url")):
             problems.append(f"{e['event_id']}: under active campaign {c['campaign_id']} but its "
@@ -401,6 +455,10 @@ def apply_publication_policy(system_id, events, campaigns):
         texts = [("summary", e.get("summary")), ("effect", e.get("effect")),
                  ("capacity note", (e.get("capacity_affected") or {}).get("source_says"))]
         texts += [("citation", s.get("url")) for s in e["sources"]]
+        for src in e["sources"]:
+            if late_citation(e, src):
+                problems.append(f"{e['event_id']}: citation dated {src.get('date')} is more than "
+                                f"{LATE_CITATION_DAYS} days after the event under an active campaign")
         for field, text in texts:
             m = STATUS_WORDING.search(text or "")
             if m:
@@ -614,9 +672,11 @@ def onboarding_gate(doc, events, profile, research_log=None):
         item(6, "Safety tests extended to the country", "met",
              "The served-data gates recurse into every country payload."),
         item("7A", "Source freshness: last check, cadence and stale policy per source",
-             "met" if not unstated else "partial",
+             "unmet" if not in_use else "met" if not unstated else "partial",
+             "No source is in use, so nothing can be fresh." if not in_use else
              "Every source in use states when it was last checked, how often it publishes and which "
-             "stale policy applies; the page marks any source past its limit on the reader's clock."
+             "stale policy applies. Met means the metadata is stated, not that every source is "
+             "within its limit: the page marks any source past its limit on the reader's clock."
              if not unstated else f"{len(unstated)} source(s) in use state no freshness metadata."),
         item("7B", "Systematic research coverage",
              {"complete": "met", "partial": "partial"}.get(rf["completeness"], "unmet"),

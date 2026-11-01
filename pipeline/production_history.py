@@ -51,10 +51,14 @@ def history_concept(as_of, today):
     if as_of < today:
         return {
             "mode": RECONSTRUCTION,
-            "label": f"Current-evidence reconstruction for {as_of}",
+            # "Pinned-source", not just "current-evidence": the timeline and comparison series
+            # are also current-evidence reconstructions but read TODAY's article revisions, so the
+            # two give different values for the same week under what used to be one label.
+            "label": f"Pinned-source reconstruction for {as_of}",
             "note": ("Today's code and accepted corpus evaluated at a past date, with live article "
                      "inputs pinned to their revision on that date. Not what the dashboard published "
-                     "then: see production_history.json for that."),
+                     "then (production_history.json), and not the timeline series, which reads "
+                     "today's article revisions."),
         }
     return {"mode": CURRENT, "label": "Current build",
             "note": "Today's code and accepted corpus evaluated at today's date."}

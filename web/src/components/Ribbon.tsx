@@ -2,6 +2,7 @@ import SystemSwitcher from "../global/SystemSwitcher";
 import type { Bundle } from "../types";
 import { fmtDate, fmtDelta, fmtNum } from "../data";
 import { assessFreshness } from "../freshness";
+import { reconstructionLabel } from "../briefing";
 import { severityColor } from "../palette";
 import { ExplainButton } from "./ui";
 import type { InspectTarget } from "./Inspector";
@@ -36,6 +37,7 @@ export default function Ribbon({
   // wrong" for a date the index was never computed on (iteration 14 found the `?? 0`).
   const esdi = national.esdi[step] ?? null;
   const isLatest = step === national.dates.length - 1;
+  const payloadReconstructed = (bundle.snapshot.history_concept?.mode ?? "current_build") !== "current_build";
   const coverage = snapshot.coverage;
   const rs = snapshot.recovery_stats;
 
@@ -83,17 +85,28 @@ export default function Ribbon({
               cadence the payload publishes. */}
           <div style={{ fontSize: 11, color: "var(--text-dim)" }}>
             {fmtDate(currentDate)}
-            {isLatest && (
+            {isLatest && !payloadReconstructed && (
               <span style={{ color: fresh.level === "fresh" ? "var(--accent)" : "var(--amber)" }}>
                 {" "}· {fresh.shortLabel}
               </span>
             )}
           </div>
+          {/* Iteration 16: a past date on this ribbon is today's evidence evaluated at that date,
+              never what the dashboard published then. A shared `d=` link lands here, so the label
+              travels with the number rather than living only in exports. */}
+          {(!isLatest || payloadReconstructed) && (
+            <div className="reconstruction-tag" title="Today's code and evidence evaluated at this date. What the dashboard actually published on a date is under Compare dates → As published.">
+              {payloadReconstructed && isLatest
+                ? bundle.snapshot.history_concept!.label
+                : reconstructionLabel(currentDate)}
+            </div>
+          )}
           <div style={{ fontSize: 10.5, color: "var(--text-faint)", maxWidth: 180, lineHeight: 1.4 }}>
             Belarus + monitored Russian regions + Crimea. Capacity at disrupted sites — not measured loss.
           </div>
           <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-            <ExplainButton label="the Monitored-Area ESDI" onClick={() => onExplain({ kind: "headline" })} />
+            <ExplainButton label="the Monitored-Area ESDI"
+                           onClick={() => onExplain(isLatest ? { kind: "headline" } : { kind: "historical", step })} />
             <BuildDelta bundle={bundle} isLatest={isLatest} onExplain={onExplain} />
           </div>
         </div>
@@ -108,7 +121,7 @@ export default function Ribbon({
           counts with nothing to tell them apart — an arithmetically impossible reading. */}
       <div className="ribbon-scroll">
       <div className="esdi-block" style={{ gap: 20 }} title="Current as at the latest build — these do not follow the timeline scrubber.">
-        <RecoveryStat value={rs.unresolved_count} label="Unresolved impairments" color="var(--amber)" current />
+        <RecoveryStat value={rs.unresolved_count} label="No restoration report (modelled)" color="var(--amber)" current />
         <RecoveryStat
           value={`${rs.observed_restoration_episodes}`}
           label="Observed-restoration episodes"
@@ -190,7 +203,7 @@ function RecoveryStat({
       <div className="num" style={{ fontSize: 26, lineHeight: 1, color }}>{value}</div>
       <div className="eyebrow" style={{ maxWidth: 96, lineHeight: 1.3 }}>
         {label}
-        {current && <span style={{ color: "var(--amber)" }}> · current</span>}
+        {current && <span style={{ color: "var(--amber)" }}> · latest build</span>}
       </div>
       {sub && <div style={{ fontSize: 9.5, color: "var(--text-faint)", fontFamily: "var(--mono)" }}>{sub}</div>}
     </div>

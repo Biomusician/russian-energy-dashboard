@@ -472,7 +472,7 @@
         "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
-        "evidence": "No restoration or restart evidence surfaced in the searches run; search was not exhaustive (lane search budget exhausted). Operator not recorded because no fetched source named it.",
+        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
         "url": null
       },
       "review": {

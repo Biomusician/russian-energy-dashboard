@@ -1,7 +1,7 @@
 {
   "note": "Vercel production deployments as recorded by GitHub's public deployments API. Captured by scripts/capture_deployments.py; read by pipeline/production_history.py. `state` is the deploy's final status, null where it has not been fetched yet.",
   "repo": "Biomusician/russian-energy-dashboard",
-  "captured_at": "2026-11-01T01:17:24Z",
+  "captured_at": "2026-11-01T02:33:36Z",
   "deployments": [
     {
       "deployment_id": 6150812512,
@@ -9,7 +9,7 @@
       "environment": "Production",
       "created_at": "2026-08-29T00:47:40Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6150869074,
@@ -17,7 +17,7 @@
       "environment": "Production",
       "created_at": "2026-08-29T00:55:07Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6151319625,
@@ -25,7 +25,7 @@
       "environment": "Production",
       "created_at": "2026-08-29T01:57:33Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6151366793,
@@ -33,7 +33,7 @@
       "environment": "Production",
       "created_at": "2026-08-29T02:04:37Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6151392993,
@@ -41,7 +41,7 @@
       "environment": "Production",
       "created_at": "2026-08-29T02:08:22Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6155326641,
@@ -49,7 +49,7 @@
       "environment": "Production",
       "created_at": "2026-08-29T11:42:10Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6157868161,
@@ -57,7 +57,7 @@
       "environment": "Production",
       "created_at": "2026-08-29T16:42:28Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6157882441,
@@ -65,7 +65,7 @@
       "environment": "Production",
       "created_at": "2026-08-29T16:44:11Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6159730135,
@@ -73,7 +73,7 @@
       "environment": "Production",
       "created_at": "2026-08-29T20:22:55Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6160685960,
@@ -81,7 +81,7 @@
       "environment": "Production",
       "created_at": "2026-08-29T22:17:21Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6165710227,
@@ -89,7 +89,7 @@
       "environment": "Production",
       "created_at": "2026-08-30T10:33:55Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6170805104,
@@ -97,7 +97,7 @@
       "environment": "Production",
       "created_at": "2026-08-30T20:16:57Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6170847746,
@@ -105,7 +105,7 @@
       "environment": "Production",
       "created_at": "2026-08-30T20:21:27Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6170972248,
@@ -113,7 +113,7 @@
       "environment": "Production",
       "created_at": "2026-08-30T20:34:53Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6173888347,
@@ -121,7 +121,7 @@
       "environment": "Production",
       "created_at": "2026-08-31T02:14:41Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6173897302,
@@ -129,7 +129,7 @@
       "environment": "Production",
       "created_at": "2026-08-31T02:15:42Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6180364107,
@@ -137,7 +137,7 @@
       "environment": "Production",
       "created_at": "2026-08-31T11:41:55Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6180921695,
@@ -145,7 +145,7 @@
       "environment": "Production",
       "created_at": "2026-08-31T12:20:38Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6192320478,
@@ -153,7 +153,7 @@
       "environment": "Production",
       "created_at": "2026-09-01T00:50:49Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6199034814,
@@ -161,7 +161,7 @@
       "environment": "Production",
       "created_at": "2026-09-01T10:12:37Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6219645160,
@@ -169,7 +169,7 @@
       "environment": "Production",
       "created_at": "2026-09-02T09:43:32Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6241411063,
@@ -177,7 +177,7 @@
       "environment": "Production",
       "created_at": "2026-09-03T09:55:58Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6261908146,
@@ -185,7 +185,7 @@
       "environment": "Production",
       "created_at": "2026-09-04T09:49:54Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6269934821,
@@ -193,7 +193,7 @@
       "environment": "Production",
       "created_at": "2026-09-04T17:55:14Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6279260678,
@@ -201,7 +201,7 @@
       "environment": "Production",
       "created_at": "2026-09-05T09:10:22Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6291385521,
@@ -209,7 +209,7 @@
       "environment": "Production",
       "created_at": "2026-09-06T09:31:11Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6306685675,
@@ -217,7 +217,7 @@
       "environment": "Production",
       "created_at": "2026-09-07T10:24:49Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6324946912,
@@ -225,7 +225,7 @@
       "environment": "Production",
       "created_at": "2026-09-08T09:46:57Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6347059009,
@@ -233,7 +233,7 @@
       "environment": "Production",
       "created_at": "2026-09-09T09:52:03Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6369013513,
@@ -241,7 +241,7 @@
       "environment": "Production",
       "created_at": "2026-09-10T09:50:21Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6390592826,
@@ -249,7 +249,7 @@
       "environment": "Production",
       "created_at": "2026-09-11T09:46:59Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6408137910,
@@ -257,7 +257,7 @@
       "environment": "Production",
       "created_at": "2026-09-12T09:27:05Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6420479978,
@@ -265,7 +265,7 @@
       "environment": "Production",
       "created_at": "2026-09-13T10:22:13Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6435364731,
@@ -273,7 +273,7 @@
       "environment": "Production",
       "created_at": "2026-09-14T10:45:58Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6456474666,
@@ -281,7 +281,7 @@
       "environment": "Production",
       "created_at": "2026-09-15T10:09:53Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6478409079,
@@ -289,7 +289,7 @@
       "environment": "Production",
       "created_at": "2026-09-16T10:02:44Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6500250115,
@@ -297,7 +297,7 @@
       "environment": "Production",
       "created_at": "2026-09-17T10:04:26Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6521833022,
@@ -305,7 +305,7 @@
       "environment": "Production",
       "created_at": "2026-09-18T09:51:09Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6539444497,
@@ -313,7 +313,7 @@
       "environment": "Production",
       "created_at": "2026-09-19T09:37:04Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6551453377,
@@ -321,7 +321,7 @@
       "environment": "Production",
       "created_at": "2026-09-20T09:53:40Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6799093149,
@@ -329,7 +329,7 @@
       "environment": "Production",
       "created_at": "2026-10-02T01:27:24Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6802362814,
@@ -337,7 +337,7 @@
       "environment": "Production",
       "created_at": "2026-10-02T06:01:42Z",
       "creator": "vercel[bot]",
-      "state": null
+      "state": "success"
     },
     {
       "deployment_id": 6802662583,

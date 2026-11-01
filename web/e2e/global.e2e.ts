@@ -210,7 +210,7 @@ test.describe("episodes and source freshness (iteration 15)", () => {
     await expect(page.locator(".source-table tbody tr")).toHaveCount(sys.sources.length);
     await expect(page.locator(".source-table")).toContainText("Publishes:");
     await expect(page.locator(".research-log tbody tr")).toHaveCount(sys.research_log.passes.length);
-    await expect(page.locator(".research-log")).toContainText("partial");
+    await expect(page.locator(".research-log")).toContainText("targeted search (never complete by design)");
   });
 
   test("a source past its limit is flagged on the reader's clock, not the build's", async ({ app, page }) => {
@@ -261,7 +261,7 @@ test.describe("provenance and coverage (iteration 16)", () => {
     });
     await app.open("?sys=ca");
     const status = page.getByLabel("Research status");
-    await expect(status).toContainText("past their re-check limit");
+    await expect(status).toContainText("overdue for a re-check");
     await expect(status.locator(".badge").first()).toHaveText(before);
   });
 

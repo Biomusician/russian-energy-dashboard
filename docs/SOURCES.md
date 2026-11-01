@@ -334,3 +334,25 @@ databases.
 facility-level substation and line geometry, pipeline route maps, plant coal-stock days,
 reservoir levels, pipeline utilisation, inter-regional transfer capacity, anything describing
 vulnerability, defences or attack method.
+
+## 10. Systematic-sweep source families (iteration 16)
+
+The US and Canada systematic sweeps enumerate these public source families, lane by lane.
+Each country's `docs/countries/<CC>_SYSTEMATIC_SWEEP.md` holds the plan and the execution
+record. Nothing is redistributed: events are restated in our own words, with links.
+
+| Lane | Source | Access | Notes |
+|---|---|---|---|
+| US G1 | DOE OE-417 electric disturbance annual summaries, `https://doe417.pnnl.gov/summaries/{YYYY}_Annual_Summary.xls(x)` | public, US public domain | The customer figure is an *incident total*, not a peak, so it corroborates scale and never qualifies a record on its own. No 2026 file yet |
+| US G2, CA CG2 | NERC State of Reliability, NERC event analyses, FERC inquiries | public | NERC often names a Canadian operator only as "a BA in Canada" |
+| US H1 | DOE CESER emergency situation reports | public | per-state peak outage figures |
+| US H2 | NOAA National Hurricane Center seasonal summaries and Tropical Cyclone Reports | public | a hazard path is never evidence of an effect |
+| US U1 | BSEE storm shut-in releases; EIA *Today in Energy* | public; BSEE's listing refused automated access and was not worked around | |
+| US P1 | PHMSA corrective action orders | public | latitude/longitude columns are never read |
+| US R1 | US Chemical Safety Board investigations | public | |
+| CA CG1 | Public Safety Canada, Canadian Disaster Database (Open Government extract) | Open Government Licence – Canada | the extract ends at 2022-12-22 |
+| CA CH1 | Environment and Climate Change Canada, "Canada's top ten weather stories" | public | |
+| CA CP1 | Canada Energy Regulator comprehensive incident data | OGL-Canada 2.0 | latitude/longitude and kilometre-post columns are never read, and the parse script asserts they are absent; the TSB half of the lane refused automated access |
+
+**Outage aggregators** such as PowerOutage.us are not used as evidence on their own. A figure
+that rests only on an aggregator is held (REVIEW_GOVERNANCE.md §6).

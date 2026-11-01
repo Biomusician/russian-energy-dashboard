@@ -4895,7 +4895,7 @@ def test_a_later_correction_changes_the_reconstruction_and_that_is_intended():
     # And the payload must say plainly that this is a reconstruction, so an improved estimate of
     # 2024 is never read as something the dashboard displayed in 2024.
     from pipeline import history
-    assert "No archive of past builds exists" in history.SEMANTICS["what_this_does_not_answer"]
+    assert "as-published history" in history.SEMANTICS["what_this_does_not_answer"]
     assert "correction" in history.__doc__
 
 
@@ -7159,7 +7159,7 @@ GRANDFATHERED_AT_FREEZE = 94
 
 def _ev(eid, **kw):
     base = {"event_id": eid, "date": "2026-04-01", "cause": "kinetic_strike", "summary": "s.",
-            "effect": "e.", "sources": [{"url": "https://e.x"}],
+            "effect": "e.", "sources": [{"url": "https://e.x", "date": "2026-04-02"}],
             "recovery": {"research_status": "NOT_YET_RESEARCHED", "kind": None, "date": None,
                          "evidence": None, "url": None}}
     return {**base, **kw}
@@ -7233,6 +7233,18 @@ def test_an_active_campaign_withholds_facility_status():
             {"url": "https://n.x/2026/08/aramco-delays-refinery-restart-to-august-30/"}])], _campaigns())
     with pytest.raises(ValueError, match="no publishable citation"):
         B.apply_publication_policy("x", [_ev("x-8", recovery=W, sources=[])], _campaigns())
+    # A citation published weeks later is where status lives, and an opaque address hides it.
+    with pytest.raises(ValueError, match="more than 7 days after the event"):
+        B.apply_publication_policy("x", [_ev("x-9", recovery=W, sources=[
+            {"url": "https://n.x/news/1996027", "date": "2026-04-29"}])], _campaigns())
+    # A month-precision event counts from the end of its month.
+    assert not B.late_citation({"date": "2026-09-01", "date_precision": "month"}, {"date": "2026-09-15"})
+    assert B.late_citation({"date": "2026-09-01", "date_precision": "day"}, {"date": "2026-09-15"})
+    # A record at a struck site is covered by name even when its own cause is not kinetic.
+    named = _campaigns()
+    named["campaigns"][0]["member_rule"]["also_covers"] = [{"event_id": "x-10", "reason": "same site"}]
+    assert B.campaign_of(_ev("x-10", cause="unknown"), "x", named)
+    assert not B.campaign_of(_ev("x-11", cause="unknown"), "x", named)
     # Outside an active campaign the marker is refused: an ended campaign forces a re-import.
     with pytest.raises(ValueError, match="no active campaign"):
         B.apply_publication_policy("x", [_ev("x-4", recovery=W)], _campaigns(status="ended"))
@@ -7256,14 +7268,15 @@ def test_the_import_gate_writes_the_withheld_marker_for_campaign_records():
     assert imp.to_event("x", r, campaigns=_campaigns(status="ended"))["recovery"]["kind"] == "full_restart"
     # Status citations and a status-bearing capacity note stay in the queue with the evidence, and
     # come back by themselves when the campaign ends.
-    r2 = {**r, "sources": [{"url": "https://e.x/refinery-shut-after-attack", "opened": True},
+    r2 = {**r, "sources": [{"url": "https://e.x/refinery-shut-after-attack", "date": "2026-04-02", "opened": True},
+                           {"url": "https://e.x/news/1996027", "date": "2026-04-29", "opened": True},
                            {"url": "https://e.x/refinery-to-resume-operations-in-2027", "opened": True}],
           "capacity_affected": {"value": 2, "unit": "b/d", "source_says": "running at half rate after the partial restart"}}
     ev2 = imp.to_event("x", r2, campaigns=_campaigns())
     assert [s["url"] for s in ev2["sources"]] == ["https://e.x/refinery-shut-after-attack"]
     assert ev2["capacity_affected"] is None
     back = imp.to_event("x", r2, campaigns=_campaigns(status="ended"))
-    assert len(back["sources"]) == 2 and back["capacity_affected"]["value"] == 2
+    assert len(back["sources"]) == 3 and back["capacity_affected"]["value"] == 2
 
 
 @needs_systems
@@ -7282,6 +7295,7 @@ def test_no_served_record_under_an_active_campaign_shows_facility_status():
                 for text in texts:
                     assert not B.STATUS_WORDING.search(text or ""), (e["event_id"], text)
                 assert e["sources"], e["event_id"]
+                assert not any(B.late_citation(e, s) for s in e["sources"]), e["event_id"]
             else:
                 assert e["publication"] is None and e["recovery"]["research_status"] != B.WITHHELD
     assert covered >= 9   # the Saudi 2026 records (Jazan held: its only citation reports status)
@@ -7318,9 +7332,28 @@ def test_research_coverage_is_not_inferred_from_source_freshness():
 def test_complete_means_every_declared_lane_was_executed():
     from pipeline import build_systems as B
     doc = _src_doc()
-    lanes = [{"lane": "G1", "status": "complete"}, {"lane": "R1", "status": "partial", "reason": "403"}]
+    plan = {"document": "docs/x.md", "commit": "abc1234"}
+    lanes = [{"lane": "G1", "registry": ["A"], "status": "complete"},
+             {"lane": "R1", "registry": ["A"], "status": "partial", "reason": "403"}]
     with pytest.raises(ValueError, match="a declared lane is not"):
-        B.validate_sources("x", doc, _src_log(kind="systematic", status="complete", lanes=lanes))
+        B.validate_sources("x", doc, _src_log(kind="systematic", status="complete", lanes=lanes, plan=plan))
+    ok = [{**x, "status": "complete"} for x in lanes]
+    B.validate_sources("x", doc, _src_log(kind="systematic", status="complete", lanes=ok, plan=plan))
+    # Iteration 16, research red team: the lanes must be a committed plan's, each must name the
+    # registry sources it searched, and a partial lane must say why.
+    with pytest.raises(ValueError, match="names its plan document and commit"):
+        B.validate_sources("x", doc, _src_log(kind="systematic", status="complete", lanes=ok))
+    with pytest.raises(ValueError, match="names no registry source"):
+        B.validate_sources("x", doc, _src_log(kind="systematic", lanes=[{"lane": "G1", "status": "complete"}], plan=plan))
+    with pytest.raises(ValueError, match="names no registry source"):   # B is rejected, not in use
+        B.validate_sources("x", doc, _src_log(kind="systematic", lanes=[{"lane": "G1", "registry": ["B"], "status": "complete"}], plan=plan))
+    with pytest.raises(ValueError, match="partial without a reason"):
+        B.validate_sources("x", doc, _src_log(kind="systematic", lanes=[{"lane": "G1", "registry": ["A"], "status": "partial"}], plan=plan))
+    # A complete top-up over a later window never completes the record from 2022.
+    top_up = _src_log(kind="systematic", status="complete", lanes=ok, plan=plan, window=["2026-09-01", "2026-10-30"])
+    rf = B.research_freshness(top_up)
+    assert rf["completeness"] == "partial" and rf["covers_full_window"] is False
+    assert B.research_freshness(_src_log(kind="systematic", status="complete", lanes=ok, plan=plan))["completeness"] == "complete"
     with pytest.raises(ValueError, match="declares its source lanes"):
         B.validate_sources("x", doc, _src_log(kind="systematic"))
     with pytest.raises(ValueError, match="only a systematic pass can be complete"):
@@ -7330,6 +7363,33 @@ def test_complete_means_every_declared_lane_was_executed():
     with pytest.raises(ValueError, match="must hold only"):
         B.validate_sources("x", doc, _src_log(kind="systematic", lanes=[
             {"lane": "R1", "status": "partial", "facility_notes": "hit twice, no effect"}]))
+
+
+@pytest.mark.repo_hygiene
+def test_a_systematic_pass_ran_the_lanes_its_committed_plan_declared():
+    """RESEARCH COMPLETENESS IS A PROCESS CLAIM. A pass's lanes are compared with Part A of its
+    plan AS COMMITTED, so a lane dropped from the log after the fact, or a lane invented for it,
+    fails here (iteration 16, research red team)."""
+    import re
+    from pipeline import systems
+    checked = 0
+    for sid in systems.COUNTRY_SYSTEMS:
+        log = json.loads((ROOT / "data" / "curated" / "systems" / sid / "research_log.json").read_text(encoding="utf-8"))
+        for p in log["passes"]:
+            if p["kind"] != "systematic":
+                continue
+            plan = p["plan"]
+            assert plan["document"].startswith("docs/countries/") and plan["document"].endswith(".md"), plan
+            r = subprocess.run(["git", "show", f"{plan['commit']}:{plan['document']}"], cwd=GIT_ROOT,
+                               capture_output=True, text=True, encoding="utf-8")
+            if r.returncode != 0:
+                pytest.skip(f"plan commit {plan['commit']} not in this clone")
+            part_a = r.stdout.split("## Part B")[0]
+            declared = re.findall(r"^\| ([A-Z]{1,2}\d) \|", part_a, flags=re.M)
+            assert declared, plan
+            assert [x["lane"] for x in p["lanes"]] == declared, (sid, declared)
+            checked += 1
+    assert checked >= 2   # the US and Canada sweeps
 
 
 @pytest.mark.skipif(not (ROOT / "data" / "raw" / "ne_10m_admin_1.geojson").exists(),
@@ -7421,10 +7481,19 @@ def test_october_10_backfill_as_published_vs_reconstruction():
     absent; as published on 10 October they are present; the current reconstruction carries them
     at their own event dates. Permanent fixture."""
     _check_backfill(_published_history())
-    current = {i["incident_id"]: i for i in json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))}
+    incidents = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    current = {i["incident_id"]: i for i in incidents}
     for eid in OCT10_BACKFILL:
         assert eid in current, eid
         assert current[eid]["date"] == eid.split(":")[1]
+    # The reconstruction itself (history_series, what the timeline and comparison show) counts
+    # them at their own dates: at the last weekly point before 9 October it already holds the
+    # four backfilled events dated on or before it, which the as-published 9 October build lacked.
+    h = json.loads((PROCESSED / "history_series.json").read_text(encoding="utf-8"))
+    step = max(k for k, d in enumerate(h["dates"]) if d < "2026-10-09")
+    cut = h["dates"][step]
+    assert h["incidents_to_date"][step] == sum(1 for i in incidents if i["date"] <= cut)
+    assert sum(1 for eid in OCT10_BACKFILL if eid.split(":")[1] <= cut) >= 4
 
 
 @pytest.mark.skipif(subprocess.run(["git", "-C", str(GIT_ROOT), "cat-file", "-e", "56ad203"],

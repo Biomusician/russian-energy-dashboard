@@ -709,8 +709,14 @@ def main():
 
     # Single source of truth for headline numbers (§2) — regenerated every build so no doc
     # drifts. A test asserts it matches the snapshot.
+    # A reconstruction is not the current state, so it never rewrites the document that says what
+    # the current state is (iteration 16, history red team). The payload itself still lands in
+    # data/processed, labelled by history_concept; a test refuses to let one be committed.
     from pipeline import current_state
-    current_state.write(snapshot)
+    if reconstruction:
+        log("CURRENT_STATE.md left untouched: this build is a reconstruction, not the current state.")
+    else:
+        current_state.write(snapshot)
 
     log("-" * 62)
     if reconstruction:

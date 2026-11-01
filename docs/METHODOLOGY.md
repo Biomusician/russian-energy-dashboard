@@ -485,3 +485,31 @@ Full analysis: [GLOBAL_METHODOLOGY.md](GLOBAL_METHODOLOGY.md). The decisions in 
 - **Owner decisions outstanding** are listed in GLOBAL_METHODOLOGY.md §8: the recovery model for
   non-conflict events, new causes (natural hazard, labour, supply shortfall) and an upstream
   sector, threshold parameters, grid consequence measures, and disputed-territory aggregate rules.
+
+## 11. History, provenance and review (iteration 16)
+
+None of this changes a number. It changes what a historical number is allowed to be called.
+
+- **Three histories, never one line.** A *current-evidence reconstruction* is today's code and
+  corpus evaluated at a past date; the comparison workspace defaults to it, and so does the
+  timeline. *As published* is what the deployed dashboard actually served, read from
+  deployed commits. It is reliable from 2026-08-29 and unavailable, never reconstructed, before
+  then. *Engineering regression fixtures* are synthetic test inputs. The pinned-source run
+  (`--as-of 2026-08-28` with Wikipedia inputs pinned) is a reconstruction reference, not an
+  archive. See [HISTORICAL_REPRODUCIBILITY.md](HISTORICAL_REPRODUCIBILITY.md).
+- **One event date is not one knowledge date.** The build of 2026-10-10 first served seven
+  events dated before the 2026-10-09 build. As published, the ESDI moved from 9.08 to 14.40.
+  A reconstruction places those events on their own dates, so it does not put their effect
+  between those two days. Both
+  are true, and they answer different questions. A test pins both.
+- **OSM geometry is context only.** Substations and lines feed the transmission context
+  measure. A fresh OSM fetch changed the geometry and left the ESDI and every sector value
+  identical. Each build records the Overpass base timestamp and a hash per input
+  (`snapshot.context_geometry_inputs`).
+- **Country records need two reviews** ([REVIEW_GOVERNANCE.md](REVIEW_GOVERNANCE.md)), and a
+  record under an active attack campaign publishes the event but not the facility's status
+  ([CURRENT_EVENT_PUBLICATION_POLICY.md](CURRENT_EVENT_PUBLICATION_POLICY.md)). The theatre's
+  own campaign is recorded but not yet under that policy; that is an owner decision.
+- **Non-conflict recovery** stays observed-only, with sourced estimates labelled as estimates.
+  Options for a model are evaluated, not deployed, in
+  [NONCONFLICT_RECOVERY_OPTIONS.md](NONCONFLICT_RECOVERY_OPTIONS.md).

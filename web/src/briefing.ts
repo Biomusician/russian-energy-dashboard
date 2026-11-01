@@ -145,6 +145,12 @@ export const HISTORICAL_CAVEAT =
   "Reconstructed with the current dataset and methodology. Not an archive of what was known at "
   + "those dates.";
 
+/** Iteration 16: an as-published comparison is NOT a reconstruction, and its map is the current
+ *  build — the image must say both, because the in-app warning does not travel with a PNG. */
+export const PUBLISHED_CAVEAT =
+  "Figures are what the deployed dashboard served on each date, read from deployed builds. The "
+  + "map is today's build, not either past build: past regional figures are not archived.";
+
 /** §8: concise, and never dropped for a tidier graphic. */
 /** §19: a recovery view names an evidence family, and the families are not interchangeable. */
 export const EPISODE_FAMILY_CAVEAT =
@@ -172,7 +178,9 @@ function sanitize(part: string): string {
 export function briefingFilename(ctx: BriefingContext, ext = "png"): string {
   const base = "energy-disruption-monitor";
   if (ctx.comparison) {
-    return `${base}_${sanitize(ctx.comparison.aResolved)}_to_`
+    // The concept is in the name: two histories of the same dates are different claims.
+    const concept = ctx.comparison.concept === "published" ? "as-published" : "reconstruction";
+    return `${base}_${concept}_${sanitize(ctx.comparison.aResolved)}_to_`
       + `${sanitize(ctx.comparison.bResolved)}.${ext}`;
   }
   if (ctx.episode) {
@@ -192,12 +200,15 @@ export function caveatsFor(opts: {
   transmissionVisible: boolean;
   pipelinesVisible: boolean;
   historical: boolean;
+  /** An as-published comparison: replaces the reconstruction caveat, never joins it. */
+  published?: boolean;
   episode?: boolean;
 }): string[] {
   const out = [METRIC_CAVEAT[opts.metricId] ?? METRIC_CAVEAT.esdi];
   if (opts.transmissionVisible) out.push(TRANSMISSION_CAVEAT);
   if (opts.pipelinesVisible) out.push(PIPELINE_CAVEAT);
-  if (opts.historical) out.push(HISTORICAL_CAVEAT);
+  if (opts.published) out.push(PUBLISHED_CAVEAT);
+  else if (opts.historical) out.push(HISTORICAL_CAVEAT);
   if (opts.episode) out.push(EPISODE_FAMILY_CAVEAT);
   return out;
 }
@@ -365,6 +376,7 @@ export function buildBriefingContext(args: {
     // A recovery trajectory is reconstructed from the current evidence set whatever date the map
     // is on, so it earns the reconstruction caveat even at the live date.
     historical: !!comparison || !isLive || !!episode,
+    published: comparison?.concept === "published",
     episode: !!episode,
   });
 

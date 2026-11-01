@@ -431,6 +431,10 @@ export interface SchemaCheck {
 export interface Snapshot {
   as_of: string;
   build_time: string;
+  /** Iteration 16: which history this payload is. `current_build` for a build at today's date;
+   *  anything else (a `--as-of` run) is a reconstruction and the page must say so. Optional: an
+   *  older payload will not carry it. */
+  history_concept?: { mode: string; label: string; note: string };
   /** P2: how old this BUILD is allowed to get before the reader is told. Reference dates and
    *  thresholds only — the age itself is computed in the browser, because an age computed at
    *  build time would freeze with the build. Optional: an N-1 payload will not carry it. */

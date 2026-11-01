@@ -70,58 +70,87 @@
         {
           "lane": "G1",
           "source_family": "DOE OE-417 electric disturbance annual summaries",
+          "registry": [
+            "DOE OE-417 electric disturbance reports and annual summaries"
+          ],
           "status": "partial",
           "reason": "2022-2025 enumerated in full; no 2026 annual summary is published yet"
         },
         {
           "lane": "G2",
           "source_family": "NERC and FERC event inquiries; NERC State of Reliability",
-          "status": "complete"
+          "registry": [
+            "NERC State of Reliability and event analyses; FERC inquiries"
+          ],
+          "status": "partial",
+          "reason": "every in-window report read; no State of Reliability report covering 2026 exists yet"
         },
         {
           "lane": "H1",
           "source_family": "DOE CESER emergency situation reports",
+          "registry": [
+            "DOE CESER emergency situation reports"
+          ],
           "status": "complete"
         },
         {
           "lane": "H2",
           "source_family": "NOAA National Hurricane Center seasonal summaries",
+          "registry": [
+            "NOAA National Hurricane Center summaries and Tropical Cyclone Reports"
+          ],
           "status": "partial",
           "reason": "NHC's own summaries read for 2022 only; 2023-2026 landfalls checked through secondary season records"
         },
         {
           "lane": "U1",
           "source_family": "BSEE storm shut-in releases; EIA Today in Energy",
+          "registry": [
+            "BSEE storm shut-in releases; EIA Today in Energy",
+            "EIA Refinery Capacity Report; EIA-860M; Monthly Energy Review"
+          ],
           "status": "partial",
           "reason": "BSEE's release listing refused automated access; EIA enumerated in full"
         },
         {
           "lane": "P1",
           "source_family": "PHMSA corrective action orders",
+          "registry": [
+            "PHMSA incident data and corrective action orders"
+          ],
           "status": "partial",
           "reason": "enumerated through 2026-10-02, the public data file's date; October 2026 not covered"
         },
         {
           "lane": "L1",
           "source_family": "US LNG export terminals",
+          "registry": [
+            "US LNG terminal reporting (operators, EIA, FERC)"
+          ],
           "status": "partial",
           "reason": "no public outage dataset; news search finds prominent outages only, and one terminal was not checked"
         },
         {
           "lane": "R1",
           "source_family": "CSB investigations; year-by-year refinery and gas-processing query set",
+          "registry": [
+            "US Chemical Safety Board investigations; refinery and gas-processing reporting"
+          ],
           "status": "partial",
           "reason": "CSB enumerated in full; the query set is a structured sample, not a census"
         },
         {
           "lane": "C1",
           "source_family": "MSHA and EIA coal reporting",
+          "registry": [
+            "MSHA and EIA coal reporting"
+          ],
           "status": "partial",
           "reason": "no public list of supply-cutting mine events; web search only"
         }
       ],
       "status": "partial",
-      "status_reason": "two of nine lanes complete; seven partial for the reasons listed per lane",
+      "status_reason": "one of nine lanes complete; eight partial for the reasons listed per lane",
       "outcome": {
         "candidates": 350,
         "accepted": 101,
@@ -129,6 +158,10 @@
         "held": 103,
         "duplicate": 42,
         "out_of_scope": 27
+      },
+      "plan": {
+        "document": "docs/countries/US_SYSTEMATIC_SWEEP.md",
+        "commit": "3c81d39"
       }
     }
   ]

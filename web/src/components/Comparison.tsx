@@ -396,7 +396,7 @@ function PublishedComparison({ published, a, b, onChange }: {
           {learned.length > 25 && <p className="small">…and {learned.length - 25} more.</p>}
         </section>
       )}
-      <p className="small warn-text">The map shows the current build: a past build's regional figures are
+      <p className="small warn-text cmp-note">The map shows the current build: a past build's regional figures are
         not archived, and a reconstruction drawn under this label would be the confusion this view exists to prevent.</p>
     </>
   );

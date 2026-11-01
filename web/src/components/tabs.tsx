@@ -296,9 +296,9 @@ export function OverviewTab(p: TabProps) {
           {/* Timeline-linked count above, as-at-build count below: without the marker the pair
               reads as impossible when scrubbed into history (18 events, 52 impaired). */}
           <KV
-            k="Facilities currently impaired"
-            v={<>{bundle.snapshot.recovery_stats.unresolved_count}<span style={{ color: "var(--amber)", fontSize: 10 }}> · current</span></>}
-            hint="As at the latest build — this does not follow the timeline scrubber."
+            k="Facilities with no restoration report"
+            v={<>{bundle.snapshot.recovery_stats.unresolved_count}<span style={{ color: "var(--amber)", fontSize: 10 }}> · latest build</span></>}
+            hint="As at the latest build — this does not follow the timeline scrubber. Most are modelled as not yet recovered because no public restoration report was found; it is not an observed operating status."
           />
           <KV k="Refining base tracked" v={`${fmtNum(bundle.snapshot.denominators.refining_mtpa, 0)} MTPA`} />
         </Block>
@@ -350,10 +350,12 @@ export function OverviewTab(p: TabProps) {
       />
 
       <Block title="Recorded activity">
-        <KV k="Events to date" v={regionIncidents.length} />
-        <KV k="Facilities affected" v={region.struck_facility_count} />
-        <KV k="Currently impaired (unresolved)" v={region.unresolved_count} />
-        <KV k="Reconstitution backlog" v={`${region.reconstitution_backlog_days} d`} hint="summed remaining reconstitution time across unresolved facilities" />
+        <KV k="Events to date" v={regionIncidents.length} hint="follows the timeline date" />
+        {/* The rows below are as at the latest build and do not follow the scrubber; unmarked,
+            "0 events to date" beside "2 impaired" read as a contradiction (UX red team, it. 16). */}
+        <KV k="Facilities affected · latest build" v={region.struck_facility_count} />
+        <KV k="No restoration report · latest build" v={region.unresolved_count} hint="open disruptions with no public restoration report: modelled as not yet recovered, not an observed status" />
+        <KV k="Modelled reconstitution backlog · latest build" v={`${region.reconstitution_backlog_days} d`} hint="summed modelled remaining reconstitution time across facilities with no restoration report" />
       </Block>
 
       <Block title="Regional intensity vs national contribution">
@@ -448,7 +450,7 @@ const RANK_METRICS: Metric[] = [
   {
     key: "unresolved",
     label: "Unresolved disruptions",
-    desc: "Facilities currently impaired with no credible restoration reported. Reflects the present, not the timeline position.",
+    desc: "Facilities with no credible restoration reported, modelled as not yet recovered. As at the latest build, not the timeline position, and not an observed operating status.",
     value: (code, c) => c.bundle.snapshot.regions[code]?.unresolved_count ?? 0,
     current: true,
   },
@@ -531,7 +533,7 @@ export function RankingsTab(p: TabProps) {
       <div className="ranking-picker">
         <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
           <button className="ghost" aria-pressed={true}>Ranked</button>
-          <button className="ghost" onClick={() => setView("burden")} title="Where is the unresolved burden greatest right now?">Active burden ›</button>
+          <button className="ghost" onClick={() => setView("burden")} title="Where is the modelled unresolved burden greatest, as at the latest build?">Active burden ›</button>
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <select className="ghost" value={metricKey} onChange={(e) => setMetricKey(e.target.value)}>
@@ -697,8 +699,8 @@ export function RecentTab(p: TabProps) {
               {isOccupiedRegion(i.region_code) && <span className="tag context">Ukraine · occupied</span>}
               {i.conflicting_reports && <span className="tag conflict">sources conflict</span>}
               {live && live.event_count > 1 && (
-                <span className="tag repeat" title={`This facility has ${live.event_count} recorded disruption events — a repeatedly targeted site, not a one-off.`}>
-                  struck ×{live.event_count}
+                <span className="tag repeat" title={`This facility has ${live.event_count} recorded disruption events in the corpus, not one.`}>
+                  {live.event_count} recorded events
                 </span>
               )}
             </div>
@@ -758,7 +760,7 @@ export function ReconstitutionTab(p: TabProps) {
 
       <div className="tiles">
         <Tile label="Unresolved disruptions" value={rs.unresolved_count} />
-        <Tile label="Currently reconstituted" value={rs.resolved_count} />
+        <Tile label="Restoration reported" value={rs.resolved_count} />
         <Tile
           label="Observed-restoration evidence"
           value={rs.observed_restoration_episodes}
@@ -980,7 +982,7 @@ export function EffectsTab(p: TabProps) {
         <KV k="Quantified capacity effect (events)" v={`${ad.quantified_incident_count} of ${ad.total_incident_count}`} hint="events whose sources quantified the capacity lost" />
         <KV k="Quantified refining lost" v={ad.quantified_mtpa > 0 ? `${fmtNum(ad.quantified_mtpa, 1)} MTPA` : "—"} />
         {region && (
-          <KV k="Currently impaired facilities" v={region.unresolved_count} hint="a directly recorded, unresolved disruption count" />
+          <KV k="Facilities with no restoration report" v={region.unresolved_count} hint="recorded disruptions with no public restoration report, as at the latest build" />
         )}
         <div style={{ fontSize: 10, color: "var(--text-faint)", marginTop: 4, lineHeight: 1.45 }}>
           Directly reported consequences only. Open reporting rarely quantifies lost output, so this layer is deliberately sparse — it is not padded with model output.
@@ -1156,7 +1158,7 @@ export function CostsTab(p: TabProps) {
           <em> reconstitution burden</em>: how many facilities remain impaired and how long
           they have stayed that way. This is directly observed, not modelled or priced.
         </div>
-        <KV k="Facilities still impaired" v={unresolved} hint="open, unresolved disruptions" />
+        <KV k="No restoration report" v={unresolved} hint="open disruptions with no public restoration report: modelled as not yet recovered, not observed" />
         <KV k="Summed remaining reconstitution time" v={`${backlogSource} d`} hint="sum of evidence-graded remaining reconstitution horizons across open facilities" />
         <KV k="Partial restarts (not yet full)" v={rs.partial_restart_episodes} hint="operations resumed but reconstitution incomplete" />
         <KV k="Observed full reconstitutions" v={rs.full_reconstitution_episodes} />

@@ -204,6 +204,10 @@ describe("comparison export", () => {
     expect(c.comparison!.aValue).toBe("15.34");
     expect(c.comparison!.bValue).toBe("14.40");
     expect(c.comparison!.resolvedNote).toContain("aaaaaaa");
+    // Red team, iteration 16: the export used to call these figures "Reconstructed".
+    expect(c.caveat).not.toContain("Reconstructed");
+    expect(c.caveat).toContain("The map is today's build");
+    expect(briefingFilename(c)).toMatch(/_as-published_/);
   });
 
   it("says unavailable, not a reconstructed value, before the first published build", () => {
@@ -261,7 +265,7 @@ describe("filenames", () => {
       history,
     });
     expect(briefingFilename(c))
-      .toBe("energy-disruption-monitor_2025-08-30_to_2026-09-03.png");
+      .toBe("energy-disruption-monitor_reconstruction_2025-08-30_to_2026-09-03.png");
   });
 
   it("uses the analytical date when scrubbed into the past", () => {
@@ -404,7 +408,7 @@ describe("recovery episode exports", () => {
       pointB: { requested_date: "2026-09-03", resolved_series_date: "2026-09-03", step: 1, exact: true },
       history,
     });
-    expect(briefingFilename(c)).toBe("energy-disruption-monitor_2025-08-30_to_2026-09-03.png");
+    expect(briefingFilename(c)).toBe("energy-disruption-monitor_reconstruction_2025-08-30_to_2026-09-03.png");
     // ...but the episode is still described in the frame.
     expect(c.episode!.facility).toBe("Ryazan refinery");
   });

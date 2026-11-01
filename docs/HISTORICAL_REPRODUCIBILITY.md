@@ -9,9 +9,14 @@ none of them may borrow another's label.
 
 | | Concept | Question it answers | Where it comes from | Label in data |
 |---|---|---|---|---|
-| A | **Current-evidence reconstruction** | Given everything in today's accepted corpus and today's code, what does the model estimate for date D? | `python -m pipeline.run --as-of D`; the weekly series in `history_series.json` | `snapshot.history_concept.mode = "current_evidence_reconstruction"`; `history_series.semantics` |
+| A1 | **Current-evidence reconstruction, pinned sources** | Given today's accepted corpus and code, with the live article inputs pinned to their revision on date D, what does the model estimate for D? | `python -m pipeline.run --as-of D` | `snapshot.history_concept.mode = "current_evidence_reconstruction"`, label "Pinned-source reconstruction for D" |
+| A2 | **Current-evidence reconstruction, today's sources** | The same question, with today's article revisions: the timeline and the comparison workspace | the weekly series in `history_series.json`, computed inside a current build | `history_series.semantics`; on screen "CURRENT-EVIDENCE RECONSTRUCTION FOR D" beside any past date |
 | B | **As-published snapshot** | What did this dashboard actually serve to readers then? | The payload committed at a commit Vercel actually deployed; `production_history.json` | `production_history.concept = "as_published"` |
 | C | **Engineering regression fixture** | Did a scoring transformation change unexpectedly? | Synthetic and immutable inputs held in `tests/` | Test names; never published |
+
+A1 and A2 answer the same question with different article revisions, so they can differ for the
+same week (16.16 for the pinned 2026-08-28 run, 16.51 for the series' 2026-08-29 point at iteration
+16). They used to share one label; since the history red team they do not.
 
 The doctrine in one line each:
 

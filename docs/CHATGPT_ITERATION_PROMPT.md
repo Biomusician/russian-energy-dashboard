@@ -56,8 +56,10 @@ A GitHub Action rebuilds daily and commits the payload.
   before the 9 October build.
 - **Active-campaign publication policy.** During an active kinetic campaign the event is
   published but a struck facility's restart, recovery or operating status is not (applied to
-  Saudi Arabia's 2026 campaign). A release rule — campaign recorded as ended plus 30 days — is
-  proposed, not approved. Applying the policy to the Russia theatre is an open owner decision.
+  Saudi Arabia's 2026 campaign). That includes citations whose address announces a restart,
+  citations published more than a week after the event, and records at a struck site whatever
+  their own cause. A release rule — campaign recorded as ended plus 30 days — is proposed, not
+  approved. Applying the policy to the Russia theatre is an open owner decision.
 - **Source freshness is not research completeness.** Each country states, separately, whether
   its sources are within their re-check limits and whether its event search was systematic. A
   systematic pass declares its source lanes and window before searching and is complete only if
@@ -65,9 +67,11 @@ A GitHub Action rebuilds daily and commits the payload.
 
 ## Known weaknesses (my own assessment)
 
-1. **Research coverage is uneven.** The US has had one systematic sweep (see
-   `docs/countries/US_SYSTEMATIC_SWEEP.md` for which lanes completed); the other four countries
-   have targeted passes only.
+1. **Research coverage is uneven, and no system is complete.** The US and Canada have each had
+   one systematic sweep. Both are partial: the US ran 1 of 9 lanes in full, Canada 0 of 7. The
+   reasons are sources that have not published 2026 data yet, a shared web-search budget, and
+   sites refusing automated access, which are never worked around. China, India and Saudi
+   Arabia have targeted passes only. See `docs/GLOBAL_RESEARCH_COVERAGE.md`.
 2. **Absolute thresholds** (100,000 customers, ~500 MW) mean different things in systems that
    differ thirtyfold in size, and there is no duration floor: very short whole-terminal LNG
    outages qualify.
@@ -78,7 +82,13 @@ A GitHub Action rebuilds daily and commits the payload.
    value, published with its sensitivity, and on a refinery capacity basis with a known 2.3×
    disagreement for one facility.
 5. **Same-model review.** Independent review is real in process and weak in diversity.
-6. **Visual regression** is pixel-golden on Windows only; Linux CI checks structure.
+6. **Visual regression** is pixel-golden on Windows only. Every platform, Linux CI included,
+   compares a coarse colour structure of each map with tolerance; its first Linux run is the
+   real test of that tolerance.
+7. **The theatre is still a facility-status feed in places.** It lists modelled impairment ages
+   and sourced status text for facilities struck in 2026. Applying the active-campaign policy to
+   it is the owner's decision, and a safety review counted the exposure
+   (`docs/CURRENT_EVENT_PUBLICATION_POLICY.md` §8).
 
 ## Hard constraints (non-negotiable)
 

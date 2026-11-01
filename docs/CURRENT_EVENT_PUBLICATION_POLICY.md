@@ -39,10 +39,17 @@ record, that the facility's status is not published while the campaign is active
 
 A record is covered when its system has a campaign recorded as `active` with `policy_applied:
 true`, its cause is `kinetic_strike` or `sabotage`, and it is dated on or after the campaign's
-`member_rule.from`. For a covered record:
+`member_rule.from`. A record is also covered if it is named in `member_rule.also_covers`, with a
+reason. This catches a record at a struck site whose own cause is not kinetic: its status is
+the site's status. The first such record is the February 2026 Juaymah LPG halt. Its recovery
+note traced the outage for seven months, and the site was struck in April. For a covered
+record:
 
 - `scripts/import_candidates.py` writes the withheld marker in place of the recovery block, drops
-  citations whose address matches `STATUS_WORDING`, and empties a capacity note that does; the
+  citations whose address matches `STATUS_WORDING` or that were published more than 7 days after
+  the event (after the end of the month for a month-precision date), and empties a capacity note
+  that matches. A late citation is where restart and operating status live, and an opaque address
+  such as `/news/1996027` cannot be read for it; the
   evidence stays in the queue. A covered record left with no publishable citation is **held**,
   not published uncited.
 - `pipeline/build_systems.py` refuses to build if a covered record carries recovery content, or
@@ -52,8 +59,8 @@ true`, its cause is `kinetic_strike` or `sabotage`, and it is dated on or after 
   deliberate re-import rather than leaving status hidden by accident.
 
 **Applied now:** Saudi Arabia, "Attacks on Saudi energy facilities, 2026", active (attacks were
-still reported in late October 2026; no ceasefire found). Nine 2026 kinetic records publish the
-event and withhold facility status; their summaries were trimmed of restart, operating-rate and
+still reported in late October 2026; no ceasefire found). Ten records publish the event and withhold facility status: nine 2026
+kinetic records, plus the Juaymah LPG halt by name; their summaries were trimmed of restart, operating-rate and
 dependency wording. The citation rule was added after the iteration-16 safety review of the
 served payload found status in places the summary check did not look:
 
@@ -149,3 +156,48 @@ Product text avoids presenting the dashboard as a real-time status board. Countr
 recovery as "a cited public report that a facility or service came back", and never use "live"
 for a country record. The theatre's ribbon item formerly labelled as live is
 discussed in ITERATION_16_REVIEW (wording audit).
+
+## 8. The iteration-16 safety review: what it found, and what is left for the owner
+
+An independent safety review read the served payloads. It found, and the project fixed:
+
+- **Status through records outside the cause rule.** Juaymah LPG is now covered by name.
+- **Status through late or opaque citations.** Citations published more than 7 days after a
+  covered event are held back. This moved three more Saudi citations into the queue.
+- **Status words the check missed.** "cancelled", "expected" and "extended" were added to
+  `STATUS_WORDING`.
+- **A facility-dependency clause.** "Halted after an incident at the SAMREF refinery" was
+  removed.
+- **Theatre wording banned whether or not a campaign is active:**
+  - Taman was described as the substation "through which all four Kerch energy-bridge lines
+    pass", with its outages "consistent with the hub not being reconstituted". That is
+    chokepoint and current-impairment framing.
+  - One record said the Ust-Luga crude terminal "looked undamaged".
+  - One record said Orsk's damaged equipment was "imported and under sanctions" (a supply-chain
+    weakness).
+  - One record named the cross-border feedstock dependency of the Orenburg plant.
+
+  Each clause was removed from `data/curated/recovery.csv`. The recovery horizons they supported
+  are unchanged.
+- **Modelled status shown as observed.** The theatre's "currently impaired" counts are mostly
+  modelled: 52 of 53 facilities have no restoration report and are modelled as not yet
+  recovered. They are now labelled "no restoration report (modelled) · latest build". The
+  "struck ×N" tag became "N recorded events".
+
+What remains is **the owner decision on the theatre**, with the review's counts so it can be
+weighed:
+
+- `live_disruptions` lists 53 facilities with an impairment age and a modelled reconstitution
+  horizon. 49 of them were struck in 2026, and 7 carry sourced status text.
+- `recovery_events` holds 25 rows covering 8 distinct 2026 incidents.
+- In 17 of the 26 regions with open disruptions there is exactly one facility, so the region's
+  backlog figures are that facility's status.
+- The build-change ledger would record a facility's recovery-status change as a dated entry.
+- The pipeline registry describes current flow on the CPC line.
+- Recovery-time distributions are published for classes with one or two observations.
+- Struck power plants can be joined, through `linked_asset_id`, to the asset layer's WRI plant
+  points. The asset layer shows every plant, struck or not, so this reveals no hidden location.
+  It does make the struck subset machine-joinable.
+
+Applying this policy to the theatre would withhold or aggregate all of these. That is the first
+owner decision in ITERATION_16_REVIEW.

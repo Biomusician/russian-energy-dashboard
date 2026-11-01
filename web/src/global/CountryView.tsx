@@ -163,6 +163,9 @@ export default function CountryView({ id }: { id: string }) {
       <section className="country-ribbon" aria-label="Headline">
         <div className="no-index">
           <div className="no-index-value" aria-label="No index">No index</div>
+          {/* Plain reason first (UX red team, iteration 16); the technical reason follows. */}
+          <div className="small no-index-plain">The disruption score was designed for strikes in a war; outages here are mostly weather and
+            accidents, so applying it would mislead. No score is shown, and that is not a score of zero.</div>
           <div className="small dim">{sys.no_index_reason}</div>
         </div>
         <div>
@@ -267,16 +270,28 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
     <div className="research-status" aria-label="Research status">
       <div className="eyebrow">Research status</div>
       <div className="small">
-        <span className={`badge research-${rf.completeness}`}>{RESEARCH_COMPLETENESS_LABEL[rf.completeness]}</span>
-        {rf.last_systematic_pass && <span className="dim"> · last systematic pass {fmtDate(rf.last_systematic_pass)}{overdue ? " (due again)" : ""}</span>}
+        <span className={`badge research-${rf.completeness}`}>
+          {RESEARCH_COMPLETENESS_LABEL[rf.completeness]}
+          {/* How partial, in the badge itself: "partial" reads the same at 1 of 9 and 8 of 9. */}
+          {rf.completeness !== "never_systematic" && rf.lanes_declared != null &&
+            `: ${rf.lanes_complete} of ${rf.lanes_declared} source lanes searched in full`}
+        </span>
+        {rf.last_systematic_pass && rf.coverage_window && (
+          <span className="dim"> · {fmtDate(rf.coverage_window[0])} – {fmtDate(rf.coverage_window[1])},
+            searched {fmtDate(rf.last_systematic_pass)}{overdue ? " (due again)" : ""}</span>
+        )}
       </div>
       <div className="small">
         <span className={`badge sources-${late.length ? "stale" : "current"}`}>
-          {late.length ? `${late.length} of ${used.length} sources past their re-check limit` : `All ${used.length} sources within their re-check limits`}
+          {late.length
+            ? `${late.length} of ${used.length} listed sources overdue for a re-check`
+            : `All ${used.length} listed sources re-checked on schedule`}
         </span>
       </div>
       <div className="small dim">Two separate questions: whether the sources are current, and whether
-        the search for events was systematic. One does not imply the other.</div>
+        the search for events was systematic. One does not imply the other. A source lane is one
+        family of sources searched end to end (for example, every federal outage report); details
+        under Sources &amp; data quality.</div>
     </div>
   );
 }
@@ -349,7 +364,7 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
       <p className="small dim">{events.length} records in {bundle.episodes.length} episodes. An episode
         is one named hazard or one event a source explicitly identifies as common: a storm that cut
         power in four states is one episode of four records. Incidents merely reported in the same
-        statement stay separate episodes.</p>
+        statement stay separate episodes, and a record linked to no other is an episode of one.</p>
       <ol className="event-list">
         {rows.map((row) => row.kind === "event"
           ? <EventItem key={row.e.event_id} e={row.e} bundle={bundle} />
@@ -407,6 +422,9 @@ function EventItem({ e, bundle, inEpisode = false }: { e: CountryEvent; bundle: 
       )}
       {ep && ep.records > 1 && !inEpisode && (
         <p className="small dim episode-note">Part of an episode: {ep.name} ({ep.records} records)</p>
+      )}
+      {(!ep || ep.records <= 1) && (
+        <p className="small dim episode-note">Standalone: not linked to any other record (an episode of one).</p>
       )}
       <p className="small">
         <span className={`rec rec-${recClass.toLowerCase()}`}>{recoveryText(e)}</span>
@@ -534,7 +552,8 @@ function SourcesPanel({ bundle }: { bundle: CountryBundle }) {
             <tr key={`${p.date}-${p.by}`}>
               <td className="small">{fmtDate(p.date)}<div className="dim">{p.by}</div><div className="dim">{p.kind}</div></td>
               <td className="small">{fmtDate(p.window[0])} – {fmtDate(p.window[1])}<div className="dim">{p.scope}</div></td>
-              <td className="small"><span className={`badge gate-${p.status === "complete" ? "met" : "partial"}`}>{p.status}</span>
+              <td className="small"><span className={`badge gate-${p.status === "complete" ? "met" : "partial"}`}>
+                {p.kind === "targeted" ? "targeted search (never complete by design)" : p.status}</span>
                 {p.status_reason && <div className="dim">{p.status_reason}</div>}
                 {p.lanes && p.lanes.length > 0 && (
                   <ul className="dim lane-list">{p.lanes.map((l) => (
@@ -578,13 +597,15 @@ function MethodPanel({ bundle }: { bundle: CountryBundle }) {
   return (
     <div>
       <h2>Why no score</h2>
-      <p className="small">{s.no_index_reason}</p>
+      <p className="small">The disruption score was designed for strikes in a war; outages here are mostly weather and
+      accidents, so applying it would mislead. No score is shown, and that is not a score of zero.</p>
+      <p className="small dim">{s.no_index_reason}</p>
       <p className="small">Reporting environment — {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}:
         {" "}{s.reporting_environment_text}</p>
       <h3 className="eyebrow">Onboarding gate</h3>
       <p className="small dim">
         {unmet > 0
-          ? `Shown as a research preview: ${unmet} of ${s.onboarding_gate.length} items of the onboarding gate are only partly met.`
+          ? `Shown as a research preview: ${unmet} of ${s.onboarding_gate.length} items of the onboarding gate are not met or only partly met.`
           : "Every item of the onboarding gate is met."}
       </p>
       <table className="sector-table">

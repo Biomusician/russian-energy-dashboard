@@ -37,6 +37,115 @@
         "insufficient_evidence": 1,
         "rejected": 1
       }
+    },
+    {
+      "date": "2026-10-31",
+      "by": "iteration-16 systematic sweep",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-10-31"
+      ],
+      "scope": "inclusion clauses 1-7 as written, 10 provinces and 3 territories; seven source lanes declared before searching (docs/countries/CA_SYSTEMATIC_SWEEP.md); every record dual-reviewed before publication",
+      "plan": {
+        "document": "docs/countries/CA_SYSTEMATIC_SWEEP.md",
+        "commit": "edd9cf6"
+      },
+      "source_families": [
+        "Canadian Disaster Database",
+        "NERC State of Reliability and event analyses",
+        "Environment Canada top ten weather stories",
+        "CER incident data; TSB pipeline investigations",
+        "Refinery, upgrader and gas-plant reporting",
+        "Wildfire and weather shut-in reporting",
+        "Export terminal reporting"
+      ],
+      "categories": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "lanes": [
+        {
+          "lane": "CG1",
+          "source_family": "Public Safety Canada, Canadian Disaster Database",
+          "registry": [
+            "Public Safety Canada, Canadian Disaster Database"
+          ],
+          "status": "partial",
+          "reason": "the public extract ends at 2022-12-22; 2023-2026 events are not yet in the source"
+        },
+        {
+          "lane": "CG2",
+          "source_family": "NERC State of Reliability and event analyses",
+          "registry": [
+            "NERC State of Reliability and event analyses"
+          ],
+          "status": "partial",
+          "reason": "every in-window report read; no report covering 2026 exists yet, and one FERC presentation refused automated access"
+        },
+        {
+          "lane": "CH1",
+          "source_family": "Environment Canada top ten weather stories",
+          "registry": [
+            "Environment and Climate Change Canada, top ten weather stories"
+          ],
+          "status": "partial",
+          "reason": "2022-2025 editions read in full; no 2026 edition yet"
+        },
+        {
+          "lane": "CP1",
+          "source_family": "CER incident data; TSB pipeline investigations",
+          "registry": [
+            "Canada Energy Regulator open data",
+            "Transportation Safety Board pipeline investigations"
+          ],
+          "status": "partial",
+          "reason": "CER data enumerated through 2026-09-25, the file's date; TSB refused automated access (not worked around)"
+        },
+        {
+          "lane": "CR1",
+          "source_family": "Refinery, upgrader and gas-plant reporting",
+          "registry": [
+            "Canadian refinery, upgrader and gas-plant reporting (operators, regulators)"
+          ],
+          "status": "partial",
+          "reason": "the year-by-year query set was not run: the shared web-search budget was spent; 6 of 17 facilities checked"
+        },
+        {
+          "lane": "CU1",
+          "source_family": "Wildfire and weather shut-in reporting",
+          "registry": [
+            "Alberta and BC wildfire and shut-in reporting (AER, provincial governments, operators)",
+            "Statistics Canada tables (web API)"
+          ],
+          "status": "partial",
+          "reason": "regulator, provincial and operator sources not enumerated; 2022 not examined"
+        },
+        {
+          "lane": "CL1",
+          "source_family": "Export terminal reporting",
+          "registry": [
+            "Canadian export terminal reporting (operators)"
+          ],
+          "status": "partial",
+          "reason": "three terminals checked through public pages only; three not checked"
+        }
+      ],
+      "status": "partial",
+      "status_reason": "no lane complete: three were limited by what the sources have published yet, four by the search budget and refused access",
+      "outcome": {
+        "candidates": 65,
+        "accepted": 3,
+        "rejected": 18,
+        "held": 28,
+        "duplicate": 16,
+        "out_of_scope": 0
+      }
     }
   ]
 }

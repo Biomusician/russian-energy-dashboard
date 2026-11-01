@@ -95,7 +95,7 @@ committed).
 
 ### B.1 Result
 
-**PARTIAL. Two of the nine lanes are complete; seven are partial, each for a stated reason.**
+**PARTIAL. One of the nine lanes is complete; eight are partial, each for a stated reason.**
 The pass is published with that status (`research_log.json`, "iteration-16 systematic
 sweep"), and the country page says "Systematic search partial".
 
@@ -116,7 +116,7 @@ iteration-15 records reviewed retroactively. 31 records are grandfathered as sin
 | Lane | Status | Accepted | Held | Rejected | Duplicate | Out of scope | Why not complete |
 |---|---|---|---|---|---|---|---|
 | G1 OE-417 | partial | 29 | 75 | 17 | 13 | 25 | 2022-2025 enumerated in full; no 2026 annual summary is published yet |
-| G2 NERC / FERC | **complete** | 1 | 2 | 7 | 5 | 0 | |
+| G2 NERC / FERC | partial | 1 | 2 | 7 | 5 | 0 | every in-window report read; no *State of Reliability* covering 2026 exists yet (the same reason that makes G1 partial; first recorded as complete, corrected after the research red team) |
 | H1 DOE CESER | **complete** | 14 | 11 | 3 | 11 | 1 | |
 | H2 NHC | partial | 2 | 2 | 16 | 2 | 0 | NHC's own summaries read for 2022 only; 2023-2026 landfalls checked through secondary season records |
 | U1 BSEE / EIA | partial | 2 | 2 | 3 | 4 | 0 | BSEE's release listing refused automated access (not worked around); EIA enumerated in full |
@@ -125,7 +125,8 @@ iteration-15 records reviewed retroactively. 31 records are grandfathered as sin
 | R1 CSB + query set | partial | 20 | 2 | 13 | 3 | 0 | CSB in full; the year-by-year query set is a structured sample, not a census |
 | C1 coal | partial | 6 | 2 | 0 | 0 | 0 | no public list of supply-cutting mine events; web search only |
 
-A record two lanes found counts once per lane in this table, so lane totals can exceed B.1.
+The lane columns are FINAL dispositions, after independent review: they include the reviewers' 11
+holds and 1 removal. Each candidate carries one lane tag, so the lane totals equal B.1 exactly.
 
 ### B.3 Why so much is held
 
@@ -171,9 +172,18 @@ Hurricanes and winter storms with records in several states are `named_hazard` e
 The Texas City records share one `explicit_common_event`. No episode was formed from timing
 or proximity.
 
+### B.5a A gap in Part A, stated rather than repaired
+
+R1's "year-by-year structured query" was not written into Part A, so nobody can check now that the
+same queries ran for every year. The queries the lane used are in the local lane log. The next
+plan must list the exact queries in Part A, and the Canada plan has the same gap (CR1).
+
 ### B.6 What the next pass must do to reach COMPLETE
 
-- G1: re-run when DOE publishes the 2026 OE-417 annual summary.
+- G1: re-run when DOE publishes the 2026 OE-417 annual summary. (The research red team believes DOE
+  also posts a running current-year file; unverified, because the search budget was spent. Check
+  first: if it exists, G1 can run now.)
+- G2: re-run when NERC publishes the State of Reliability covering 2026.
 - H2: read NHC's own Tropical Cyclone Reports for 2023-2026.
 - U1: get BSEE's storm releases through a route BSEE offers to automated readers, or read
   them by hand.

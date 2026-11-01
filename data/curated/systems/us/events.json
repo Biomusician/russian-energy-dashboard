@@ -416,7 +416,7 @@
         "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
-        "evidence": "No dedicated restoration search was run: the shared web-search budget was exhausted mid-run. The opened source(s) contain no restoration data. Status is 'not yet researched', not 'no evidence exists'.",
+        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
         "url": null
       },
       "review": {
@@ -674,7 +674,7 @@
         "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
-        "evidence": "No dedicated restoration search was run: the shared web-search budget was exhausted mid-run. The opened source(s) contain no restoration data. Status is 'not yet researched', not 'no evidence exists'.",
+        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
         "url": null
       },
       "review": {
@@ -957,7 +957,7 @@
         "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
-        "evidence": "No dedicated restoration search was run: the shared web-search budget was exhausted mid-run. The opened source(s) contain no restoration data. Status is 'not yet researched', not 'no evidence exists'.",
+        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
         "url": null
       },
       "review": {
@@ -1193,7 +1193,7 @@
         "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
-        "evidence": "No dedicated restoration search was run: the shared web-search budget was exhausted mid-run. The opened source(s) contain no restoration data. Status is 'not yet researched', not 'no evidence exists'.",
+        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
         "url": null
       },
       "review": {
@@ -1248,7 +1248,7 @@
         "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
-        "evidence": "No dedicated restoration search was run: the shared web-search budget was exhausted mid-run. The opened source(s) contain no restoration data. Status is 'not yet researched', not 'no evidence exists'.",
+        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
         "url": null
       },
       "review": {
@@ -1299,7 +1299,7 @@
         "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
-        "evidence": "No dedicated restoration search was run: the shared web-search budget was exhausted mid-run. The opened source(s) contain no restoration data. Status is 'not yet researched', not 'no evidence exists'.",
+        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
         "url": null
       },
       "review": {
@@ -1354,7 +1354,7 @@
         "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
-        "evidence": "The opened source (both halves checked) has no restoration data for this state. No dedicated restoration search was run: the shared web-search budget was exhausted mid-run. The opened source(s) contain no restoration data. Status is 'not yet researched', not 'no evidence exists'.",
+        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
         "url": null
       },
       "review": {
@@ -1409,7 +1409,7 @@
         "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
-        "evidence": "The opened source (both halves checked) has no restoration data for this state. No dedicated restoration search was run: the shared web-search budget was exhausted mid-run. The opened source(s) contain no restoration data. Status is 'not yet researched', not 'no evidence exists'.",
+        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
         "url": null
       },
       "review": {
@@ -1464,7 +1464,7 @@
         "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
-        "evidence": "The opened source (both halves checked) has no restoration data for this state. No dedicated restoration search was run: the shared web-search budget was exhausted mid-run. The opened source(s) contain no restoration data. Status is 'not yet researched', not 'no evidence exists'.",
+        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
         "url": null
       },
       "review": {
@@ -1519,7 +1519,7 @@
         "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
-        "evidence": "The opened source (both halves checked) has no restoration data for this state. No dedicated restoration search was run: the shared web-search budget was exhausted mid-run. The opened source(s) contain no restoration data. Status is 'not yet researched', not 'no evidence exists'.",
+        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
         "url": null
       },
       "review": {
@@ -1700,7 +1700,7 @@
         "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
-        "evidence": "Opened source has no restart information; KVRR fetch returned HTTP 429 and AP could not be fetched. No dedicated restoration search was run: the shared web-search budget was exhausted mid-run. The opened source(s) contain no restoration data. Status is 'not yet researched', not 'no evidence exists'.",
+        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
         "url": null
       },
       "review": {
@@ -1755,7 +1755,7 @@
         "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
-        "evidence": "No dedicated restoration search was run: the shared web-search budget was exhausted mid-run. The opened source(s) contain no restoration data. Status is 'not yet researched', not 'no evidence exists'.",
+        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
         "url": null
       },
       "review": {
@@ -1810,7 +1810,7 @@
         "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
-        "evidence": "No dedicated restoration search was run: the shared web-search budget was exhausted mid-run. The opened source(s) contain no restoration data. Status is 'not yet researched', not 'no evidence exists'.",
+        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
         "url": null
       },
       "review": {

@@ -288,6 +288,120 @@
         "Crude loadings stopped (Reuters, two sources)."
       ],
       "reason": "As above."
+    },
+    {
+      "event_id": "sa-2026-03-19-yanbu-loadings-halt",
+      "field": "summary",
+      "replace": [
+        " after an incident at the SAMREF refinery",
+        ""
+      ],
+      "reason": "Dependency between facilities is not published, campaign or not (CURRENT_EVENT_PUBLICATION_POLICY §2; safety red team, iteration 16)."
+    },
+    {
+      "event_id": "ca-2024-07-16-toronto-flood-transmission-station",
+      "field": "effect",
+      "replace": [
+        " (CBC citing Hydro One: nearly 170,000)",
+        ""
+      ],
+      "reason": "Independent review, iteration 16: the cited CBC page attributes 167,000 to Toronto Hydro and gives no 170,000 figure."
+    },
+    {
+      "event_id": "ca-2024-07-16-toronto-flood-transmission-station",
+      "field": "recovery.evidence",
+      "set": "Not yet recorded here: Toronto Hydro's major event report gives a restoration timeline, which a later pass will cite.",
+      "reason": "Independent review, iteration 16: the report is readable; the old note described this project's tooling, not the evidence."
+    },
+    {
+      "event_id": "us-2022-12-23-winter-storm-elliott-maine-outages",
+      "field": "recovery.evidence",
+      "set": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
+      "reason": "UX red team, iteration 16: the published note described the research tooling, not the evidence."
+    },
+    {
+      "event_id": "us-2022-12-winter-storm-elliott-gas-production",
+      "field": "recovery.evidence",
+      "set": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
+      "reason": "UX red team, iteration 16: the published note described the research tooling, not the evidence."
+    },
+    {
+      "event_id": "us-2024-01-winter-storm-heather-gas-production",
+      "field": "recovery.evidence",
+      "set": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
+      "reason": "UX red team, iteration 16: the published note described the research tooling, not the evidence."
+    },
+    {
+      "event_id": "us-2024-09-11-hurricane-francine-louisiana-outages",
+      "field": "recovery.evidence",
+      "set": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
+      "reason": "UX red team, iteration 16: the published note described the research tooling, not the evidence."
+    },
+    {
+      "event_id": "us-2024-09-11-hurricane-francine-gulf-shut-ins",
+      "field": "recovery.evidence",
+      "set": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
+      "reason": "UX red team, iteration 16: the published note described the research tooling, not the evidence."
+    },
+    {
+      "event_id": "us-2024-09-11-hurricane-francine-loop-closure",
+      "field": "recovery.evidence",
+      "set": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
+      "reason": "UX red team, iteration 16: the published note described the research tooling, not the evidence."
+    },
+    {
+      "event_id": "us-2026-01-24-winter-storm-fern-tennessee-outages",
+      "field": "recovery.evidence",
+      "set": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
+      "reason": "UX red team, iteration 16: the published note described the research tooling, not the evidence."
+    },
+    {
+      "event_id": "us-2026-01-24-winter-storm-fern-mississippi-outages",
+      "field": "recovery.evidence",
+      "set": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
+      "reason": "UX red team, iteration 16: the published note described the research tooling, not the evidence."
+    },
+    {
+      "event_id": "us-2024-09-27-hurricane-helene-south-carolina-outages",
+      "field": "recovery.evidence",
+      "set": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
+      "reason": "UX red team, iteration 16: the published note described the research tooling, not the evidence."
+    },
+    {
+      "event_id": "us-2024-09-27-hurricane-helene-georgia-outages",
+      "field": "recovery.evidence",
+      "set": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
+      "reason": "UX red team, iteration 16: the published note described the research tooling, not the evidence."
+    },
+    {
+      "event_id": "us-2024-09-27-hurricane-helene-north-carolina-outages",
+      "field": "recovery.evidence",
+      "set": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
+      "reason": "UX red team, iteration 16: the published note described the research tooling, not the evidence."
+    },
+    {
+      "event_id": "us-2024-09-26-hurricane-helene-florida-outages",
+      "field": "recovery.evidence",
+      "set": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
+      "reason": "UX red team, iteration 16: the published note described the research tooling, not the evidence."
+    },
+    {
+      "event_id": "us-2025-04-08-keystone-north-dakota-rupture",
+      "field": "recovery.evidence",
+      "set": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
+      "reason": "UX red team, iteration 16: the published note described the research tooling, not the evidence."
+    },
+    {
+      "event_id": "in-2023-10-04-sikkim-glof-teesta-iii",
+      "field": "recovery.evidence",
+      "set": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
+      "reason": "UX red team, iteration 16: the published note described the research tooling, not the evidence."
+    },
+    {
+      "event_id": "ca-2023-04-05-ice-storm-quebec",
+      "field": "hazard_name",
+      "set": "Ice storm of 5-6 April 2023",
+      "reason": "Independent review, iteration 16: Environment Canada describes one storm across Quebec and Ontario; the new Ontario record names it, so both records carry the name."
     }
   ]
 }

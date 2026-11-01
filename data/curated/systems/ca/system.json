@@ -81,6 +81,83 @@
       "content_vintage": null
     },
     {
+      "name": "Public Safety Canada, Canadian Disaster Database",
+      "role": "derived facts only",
+      "licence": "Open Government Licence – Canada",
+      "last_checked": "2026-10-31",
+      "publication_cadence": "added years after events conclude",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "NERC State of Reliability and event analyses",
+      "role": "derived facts only",
+      "licence": "public reports, cited",
+      "last_checked": "2026-10-31",
+      "publication_cadence": "annual reports; event analyses as published",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Environment and Climate Change Canada, top ten weather stories",
+      "role": "derived facts only",
+      "licence": "Open Government Licence – Canada",
+      "last_checked": "2026-10-31",
+      "publication_cadence": "annual",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Transportation Safety Board pipeline investigations",
+      "role": "derived facts only",
+      "licence": "Open Government Licence – Canada",
+      "last_checked": "2026-10-31",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Canadian refinery, upgrader and gas-plant reporting (operators, regulators)",
+      "role": "derived facts only",
+      "licence": "facts and links only",
+      "last_checked": "2026-10-31",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Alberta and BC wildfire and shut-in reporting (AER, provincial governments, operators)",
+      "role": "derived facts only",
+      "licence": "facts and links only",
+      "last_checked": "2026-10-31",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Canadian export terminal reporting (operators)",
+      "role": "derived facts only",
+      "licence": "facts and links only",
+      "last_checked": "2026-10-31",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
       "name": "CER pipeline map data",
       "role": "rejected",
       "licence": "reproduction prohibited",

@@ -85,6 +85,16 @@ MUTATIONS = [
          '        if rec["research_status"] != WITHHELD or any(rec[k] for k in ("kind", "date", "evidence", "url")):',
          "        if False:"))],
      "active_campaign_withholds_facility_status"),
+    # Added after the iteration-16 safety review: status leaked through citation addresses.
+    ("active-campaign status citation published (import)",
+     [("scripts/import_candidates.py", _text(
+         '        ev["sources"] = [s for s in ev["sources"] if not build_systems.STATUS_WORDING.search(s["url"] or "")]\n',
+         ""))],
+     "writes_the_withheld_marker"),
+    ("active-campaign status citation published (build)",
+     [("pipeline/build_systems.py", _text(
+         '        texts += [("citation", s.get("url")) for s in e["sources"]]\n', ""))],
+     "active_campaign_withholds_facility_status or no_served_record_under_an_active_campaign"),
     ("source stale threshold alters analytics",
      [("pipeline/build_systems.py", _text('    events = [e for e in events if e["date"] <= as_of]\n',
        '    events = [e for e in events if e["date"] <= as_of]\n'

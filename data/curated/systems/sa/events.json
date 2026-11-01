@@ -95,22 +95,14 @@
           "language": "en",
           "source_role": "media",
           "opened": null
-        },
-        {
-          "url": "https://www.argusmedia.com/en/news-and-insights/latest-market-news/2878203-saudi-aramco-to-cut-propane-exports-in-1h27",
-          "publisher": "Argus Media",
-          "date": "2026-09-15",
-          "language": "en",
-          "source_role": "industry",
-          "opened": null
         }
       ],
       "recovery": {
-        "research_status": "RESEARCHED_NO_PUBLIC_EVIDENCE",
+        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
         "kind": null,
         "date": null,
-        "evidence": "No confirmed resumption found. Bloomberg-sourced reports (late April) said suspension extended through May; OPIS reported July cargoes cancelled; Argus (15 Sep 2026) said some participants EXPECTED September loadings because Aramco issued September acceptances - an expectation, not observed loadings.",
-        "url": "https://www.argusmedia.com/en/news-and-insights/latest-market-news/2878203-saudi-aramco-to-cut-propane-exports-in-1h27"
+        "evidence": null,
+        "url": null
       },
       "review": {
         "reviewed_at": "2026-10-30",
@@ -120,7 +112,7 @@
         "independent_review_complete": false,
         "reviewer_count": 1,
         "disposition": null,
-        "source_count": 2,
+        "source_count": 1,
         "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
@@ -211,7 +203,7 @@
       "operator": "Saudi Aramco",
       "asset_class": "oil_terminal",
       "cause": "kinetic_strike",
-      "summary": "Crude oil loadings at Yanbu were halted after an incident at the SAMREF refinery.",
+      "summary": "Crude oil loadings at Yanbu were halted.",
       "effect": "Crude loadings stopped (Reuters, two sources).",
       "inclusion_basis": "reported_effect",
       "criterion_met": 2,
@@ -222,14 +214,6 @@
           "url": "https://boereport.com/2026/03/19/saudi-port-of-yanbu-stops-oil-loadings-two-sources-say/amp/",
           "publisher": "BOE Report (Reuters)",
           "date": "2026-03-19",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://amp.insurancejournal.com/news/international/2026/04/07/864740.htm",
-          "publisher": "Insurance Journal (Bloomberg)",
-          "date": "2026-04-07",
           "language": "en",
           "source_role": "media",
           "opened": null
@@ -250,7 +234,7 @@
         "independent_review_complete": false,
         "reviewer_count": 1,
         "disposition": null,
-        "source_count": 2,
+        "source_count": 1,
         "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
@@ -286,14 +270,6 @@
           "opened": null
         },
         {
-          "url": "https://www.dawn.com/news/1996027",
-          "publisher": "Dawn",
-          "date": "2026-04-29",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
           "url": "https://www.aleqt.com/الطاقة/توقف-العمليات-التشغيلية-في-عدد-من-منشآت-الطاقة-السعودية-8573",
           "publisher": "Al-Eqtisadiah (republishing SPA)",
           "date": "2026-04-09",
@@ -317,7 +293,7 @@
         "independent_review_complete": false,
         "reviewer_count": 1,
         "disposition": null,
-        "source_count": 3,
+        "source_count": 2,
         "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"

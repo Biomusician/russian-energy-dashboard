@@ -579,6 +579,22 @@ reporting artefact into a large drop in the published index. The two corpora hav
 > (fix 6's weights are undecided). Fixes 2, 3, 6 and 7 remain open; 3 and 6 are owner decisions
 > (§8).
 
+> **Status, iteration 16: the episode rule is tightened.** The iteration-15 rule let one source
+> statement listing several incidents make an episode (`single_statement`). That grouped five
+> Saudi April 2026 records on a ministry statement which never called them one event. The rule
+> is now **ONE SOURCE STATEMENT IS NOT NECESSARILY ONE EVENT.** Records share an episode only
+> on one of these bases:
+>
+> - **`named_hazard`**: every member names the same hazard, and every record naming that hazard
+>   is a member.
+> - **`explicit_common_event`** or **`coordinated_wave`**: a cited source calls the records one
+>   event or one wave. The episode carries the url and the source's own words.
+> - **`explicit_continuation`**: same evidence requirement.
+>
+> Timing and proximity never group records. A record in no declared episode is a `singleton`.
+> The build enforces every clause, and the mutation campaign shows each check catching its
+> violation (`scripts/mutation_campaign.py`).
+
 > **RECOMMENDATION (5).** Adopt the threshold **with fixes 1–7 before the first new-country
 > event is stored**. The cause vocabulary and duration floors are owner decisions, and
 > `inclusion_basis` is required for everything else to be honest. **Do not apply the threshold
@@ -685,7 +701,10 @@ facilities decay on the modelled horizon). The flag discloses; it does not demot
 
 ### 7.2 Country onboarding — the minimum to be shown at all
 
-A country is displayed only when **all** of these hold:
+A country is displayed only when items 1–6, 7A and 8 hold. Item 7B is reported, not required:
+since iteration 16, a country whose event search is not yet systematic and complete is shown as
+a research preview and says so on its page. Withholding it would hide a sourced record because
+the search was unfinished.
 
 1. **Scope statement approved**: admin-1 geometry and source, plus an explicit ruling on
    disputed or occupied territory, in the style of the Crimea rule. India and China raise
@@ -700,8 +719,16 @@ A country is displayed only when **all** of these hold:
    `inclusion_basis`, `criterion_met`, `episode_id` and an evidence kind on any volume.
 6. **Safety tests extended to the country**: no incident coordinates, no range-to-target
    fields, admin-region precision only, no ranking of intact assets.
-7. **Freshness**: a last-successful-refresh date for each source, with a stale banner past a
-   declared limit.
+7. **Since iteration 16, two separate items, because SOURCE FRESHNESS IS NOT RESEARCH
+   COMPLETENESS:**
+   - **7A, source freshness.** Every source has a `last_checked` date, and every source in
+     use has a re-check limit from a declared stale policy. Being past a limit flags the
+     source on the reader's clock. It never decides inclusion and never enters a number.
+   - **7B, systematic research coverage.** `met` means a systematic pass declared its lanes
+     before searching and ran every one of them across the window. `partial` means a
+     systematic pass left at least one lane short, for a stated reason. `unmet` means only
+     targeted searches have been run. 7B is a process claim, never a claim that no other
+     event exists.
 8. **Comparability fields**: `comparability: "none"` on counts, and §6.4's structural rules
    tested.
 

@@ -84,8 +84,13 @@ test.describe("export labels (both concepts)", () => {
     await setDates(page, "2026-10-09", "2026-10-10");
     await app.button(/briefing & export/i).click();
     await expect(page.locator(".brief-history-heading")).toHaveText("AS PUBLISHED ON 2026-10-09 AND 2026-10-10");
+    // The caveat travels with the image: never "Reconstructed" for published figures, and it says
+    // the map is today's build (history red team, iteration 16).
+    const caveats = page.locator(".brief-caveat");
+    await expect(caveats.filter({ hasText: "The map is today's build" })).toHaveCount(1);
+    await expect(caveats.filter({ hasText: /Reconstructed/ })).toHaveCount(0);
     const [download] = await Promise.all([page.waitForEvent("download"), app.button(/download png/i).click()]);
-    expect(download.suggestedFilename()).toMatch(/\.png$/);
+    expect(download.suggestedFilename()).toMatch(/_as-published_2026-10-09_to_2026-10-10\.png$/);
   });
 
   test("a briefing of a reconstruction says CURRENT-EVIDENCE RECONSTRUCTION", async ({ app, page }) => {
@@ -93,5 +98,13 @@ test.describe("export labels (both concepts)", () => {
     await app.button(/briefing & export/i).click();
     await expect(page.locator(".brief-history-heading")).toContainText("CURRENT-EVIDENCE RECONSTRUCTION FOR");
     await expect(page.locator(".brief-history-heading")).not.toContainText("AS PUBLISHED");
+  });
+
+  test("a scrubbed past date says it is a reconstruction, beside the number", async ({ app, page }) => {
+    // A shared d= link lands on a past date: the label must travel with the value.
+    await app.open("?sys=ru&d=2026-10-10");
+    await expect(page.locator(".esdi-meta .reconstruction-tag")).toContainText("CURRENT-EVIDENCE RECONSTRUCTION FOR 2026-10-10");
+    await app.open("?sys=ru");
+    await expect(page.locator(".esdi-meta .reconstruction-tag")).toHaveCount(0);
   });
 });
