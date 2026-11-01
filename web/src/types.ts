@@ -1151,6 +1151,42 @@ export interface HistorySeries {
   semantics: HistorySemantics;
 }
 
+/** One build the dashboard actually SERVED (iteration 16, pipeline/production_history.py).
+ *  Read from the payload committed at a deployed commit, never rebuilt. */
+export interface PublishedBuild {
+  sha: string;
+  served_from: string;
+  committed_at: string | null;
+  lineage: "deployed" | "deploy_status_unverified" | "bot_refresh_presumed_deployed";
+  as_of: string;
+  build_time: string | null;
+  esdi: number | null;
+  incident_total: number | null;
+  schema_version: number | null;
+  methodology_fingerprint: string | null;
+  inputs_fingerprint: string | null;
+  outputs_fingerprint: string | null;
+  snapshot_blob: string | null;
+  event_ids_fingerprint: string | null;
+  /** Events this build served that the build before it did not. Knowledge date, not event date. */
+  events_added: string[] | null;
+  events_removed: string[] | null;
+}
+
+/** As-published history. A different question from `HistorySeries`, which is a current-evidence
+ *  reconstruction; the two are never merged into one series or one label. */
+export interface ProductionHistory {
+  concept: "as_published";
+  label: string;
+  what_this_answers: string;
+  what_this_does_not_answer: string;
+  source: string;
+  entries: PublishedBuild[];
+  earliest_reliable_as_published_date: string | null;
+  before_earliest: "unavailable";
+  unavailable_reason?: string;
+}
+
 /** A comparison endpoint. Both dates are kept because the series is weekly and a requested day
  *  is resolved backwards to a series point — presenting the requested date alone would pass a
  *  weekly point off as a daily observation. */

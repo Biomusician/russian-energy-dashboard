@@ -50,7 +50,7 @@ export interface FreshnessAssessment {
   level: FreshnessLevel;
   /** Whole days from the build's as-of date to the reader's today, or null when unknowable. */
   days: number | null;
-  /** Short suffix for the ribbon, beside the date. Never the word "live" unless it is. */
+  /** Short suffix for the ribbon, beside the date. Never the word "live" (iteration 16). */
   shortLabel: string;
   /** Non-null only when the reader must be told something they would otherwise miss. */
   banner: string | null;
@@ -137,7 +137,9 @@ export function assessFreshnessOn(
   }
 
   if (days < ageing) {
-    return { level: "fresh", days, severe: false, shortLabel: "live", banner: null };
+    // "current build", never "live": in a conflict context "live" reads as real-time facility
+    // status, which this dashboard deliberately does not provide (CURRENT_EVENT_PUBLICATION_POLICY).
+    return { level: "fresh", days, severe: false, shortLabel: "current build", banner: null };
   }
 
   const span = `${days} ${plural(days)}`;     // "11 days"

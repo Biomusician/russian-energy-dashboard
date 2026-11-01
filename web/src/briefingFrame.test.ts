@@ -119,7 +119,7 @@ describe("the exported image carries its own context", () => {
 
   it("distinguishes an analytical date from the data as-of date in the image", () => {
     const d = draw({ ...CTX, analyticalDate: "2026-08-27" }).drawn;
-    expect(d).toContain("analytical date");
+    expect(d).toContain("CURRENT-EVIDENCE RECONSTRUCTION FOR");
     expect(d).toContain("data as of");
   });
 
@@ -267,7 +267,7 @@ describe("turning the title off does not make the image undatable", () => {
   it("still distinguishes an analytical date from the data as-of date", () => {
     const d = draw({ ...CTX, analyticalDate: "2026-08-27" },
                    { ...DEFAULT_OPTIONS, title: false }).drawn;
-    expect(d).toContain("analytical date");
+    expect(d).toContain("CURRENT-EVIDENCE RECONSTRUCTION FOR");
     expect(d).toContain("data as of");
   });
 });

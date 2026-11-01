@@ -18,6 +18,7 @@
  */
 
 import type { BriefingContext, BriefingOptions } from "./briefing";
+import { reconstructionLabel } from "./briefing";
 import { fmtDate } from "./data";
 import { SEVERITY_STOPS } from "./palette";
 
@@ -120,7 +121,7 @@ export function drawBriefingFrame(
     c.fillStyle = DIM;
     if (ctx0.analyticalDate) {
       // §4: a scrubbed view is a historical value and the image must never read as current.
-      c.fillText(`analytical date ${fmtDate(ctx0.analyticalDate)}`, W - pad, ry);
+      c.fillText(reconstructionLabel(ctx0.analyticalDate), W - pad, ry);
       c.fillStyle = FAINT;
       c.fillText(`data as of ${fmtDate(ctx0.asOf)}`, W - pad, ry + Math.round(20 * s));
       ry += Math.round(20 * s);
@@ -135,7 +136,7 @@ export function drawBriefingFrame(
     // coloured map of Russia that could be from any day of the war.
     const smallFont = `${Math.round(13 * s)}px ${SANS}`;
     const text = ctx0.analyticalDate
-      ? `${ctx0.metricLabel} — analytical date ${fmtDate(ctx0.analyticalDate)} `
+      ? `${ctx0.metricLabel} — ${reconstructionLabel(ctx0.analyticalDate)} `
         + `(data as of ${fmtDate(ctx0.asOf)})`
       : `${ctx0.metricLabel} — as of ${fmtDate(ctx0.asOf)}`;
     c.font = smallFont;
@@ -155,6 +156,11 @@ export function drawBriefingFrame(
 
   if (options.comparisonSummary && ctx0.comparison) {
     const cmp = ctx0.comparison;
+    // Which history the figures below are: never left for the reader to infer.
+    c.fillStyle = AMBER;
+    c.font = eyebrowFont;
+    c.fillText(cmp.heading, pad, y + Math.round(11 * s));
+    y += Math.round(20 * s);
     const cells: [string, string, string][] = [
       ["DATE A", fmtDate(cmp.aResolved), cmp.aValue],
       ["DATE B", fmtDate(cmp.bResolved), cmp.bValue],

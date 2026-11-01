@@ -57,11 +57,12 @@ describe("THE REGRESSION: a frozen build cannot describe itself as live", () => 
 });
 
 describe("the thresholds the payload publishes", () => {
-  it("is live on the build day and the day after", () => {
+  it("reads as the current build, never live, on the build day and the day after", () => {
     for (const today of ["2026-10-01", "2026-10-02"]) {
       const a = assessFreshness("2026-10-01", CADENCE, day(today));
       expect(a.level).toBe("fresh");
-      expect(a.shortLabel).toBe("live");
+      expect(a.shortLabel).toBe("current build");
+      expect(a.shortLabel).not.toContain("live");
       expect(a.banner).toBeNull();
     }
   });

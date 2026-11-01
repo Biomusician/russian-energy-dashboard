@@ -1,10 +1,11 @@
-/** Two-date comparison workspace (iteration 11 P6).
+/** Two-date comparison workspace (iteration 11 P6; two histories since iteration 16).
  *
- *  WHAT THIS COMPARES, AND WHAT IT DOES NOT. It answers "what does today's dataset and model
- *  estimate for the system at date A versus date B". It does NOT answer "what did the dashboard
- *  say on date A" — that would need an archive of past builds, and none exists. The distinction
- *  is stated at the top of the panel in the pipeline's own words rather than paraphrased here,
- *  because a paraphrase can drift from what the pipeline actually did.
+ *  TWO QUESTIONS, NEVER ONE SERIES. "Current reconstruction" answers "what does today's dataset
+ *  and model estimate for the system at date A versus date B" (history_series.json). "As
+ *  published" answers "what did the dashboard actually serve on date A and on date B"
+ *  (production_history.json, read from deployed commits). The reader picks one; the panel says
+ *  which, in the pipeline's own words, and the two are never drawn as one line. Before the first
+ *  deployed build, as-published is "unavailable" — never a reconstruction relabelled.
  *
  *  WHERE THE NUMBERS COME FROM. `history_series.json`, computed inside the scoring loop. This
  *  component performs no methodology arithmetic: it subtracts two published figures to show a
@@ -17,17 +18,28 @@
  */
 
 import { useEffect, useState } from "react";
-import type { Bundle, HistorySeries, Incident, ResolvedPoint } from "../types";
-import { fmtDate, fmtDelta, fmtNum, loadHistorySeries, resolvePoint, titleCase } from "../data";
+import type { Bundle, HistorySeries, Incident, ProductionHistory, PublishedBuild, ResolvedPoint } from "../types";
+import {
+  asPublishedOn, firstServedBetween, fmtDate, fmtDelta, fmtNum, loadHistorySeries,
+  loadProductionHistory, resolvePoint, titleCase,
+} from "../data";
 import type { InspectTarget } from "./Inspector";
 
 export type CompareMode = "A" | "B" | "delta";
+/** Which historical question the workspace answers. Defaults to the reconstruction. */
+export type HistoryConcept = "reconstruction" | "published";
 
 export interface CompareState {
   a: string;
   b: string;
   mode: CompareMode;
+  history?: HistoryConcept;
 }
+
+export const CONCEPT_LABEL: Record<HistoryConcept, string> = {
+  reconstruction: "Current reconstruction",
+  published: "As published",
+};
 
 /** Neutral by construction. "Improved" and "worsened" are claims about the world; these are
  *  claims about a model, which is all the data supports. */
@@ -48,11 +60,14 @@ export default function Comparison({
   onExplain: (t: InspectTarget) => void;
 }) {
   const [history, setHistory] = useState<HistorySeries | null | "loading">("loading");
+  const [published, setPublished] = useState<ProductionHistory | null | "loading">("loading");
   useEffect(() => {
     let live = true;
     loadHistorySeries().then((h) => { if (live) setHistory(h); });
+    loadProductionHistory().then((h) => { if (live) setPublished(h); });
     return () => { live = false; };
   }, []);
+  const concept: HistoryConcept = state.history ?? "reconstruction";
 
   if (history === "loading") {
     return <div className="empty" style={{ padding: 24 }}>Loading historical series…</div>;
@@ -95,15 +110,45 @@ export default function Comparison({
     ?? (bundle.snapshot.live_disruptions ?? []).find((d) => d.asset_id === id)?.name
     ?? id;
 
+  const selector = (
+    <div className="cmp-modes history-concept" role="group" aria-label="Which history">
+      <span className="eyebrow">History</span>
+      {(["reconstruction", "published"] as HistoryConcept[]).map((c) => (
+        <button key={c} className={`seg${concept === c ? " on" : ""}`} aria-pressed={concept === c}
+                onClick={() => onChange({ ...state, history: c })}>
+          {CONCEPT_LABEL[c]}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (concept === "published") {
+    return (
+      <div className="comparison">
+        <div className="section-head">
+          <div>
+            <h2 style={{ fontSize: 13 }}>Compare system state</h2>
+            <div className="eyebrow" style={{ marginTop: 3 }}>what the dashboard served on two dates</div>
+          </div>
+          <button className="ghost" onClick={onClose}>close</button>
+        </div>
+        {selector}
+        <PublishedComparison published={published} a={state.a} b={state.b}
+                             onChange={(a, b) => onChange({ ...state, a, b })} />
+      </div>
+    );
+  }
+
   return (
     <div className="comparison">
       <div className="section-head">
         <div>
           <h2 style={{ fontSize: 13 }}>Compare system state</h2>
-          <div className="eyebrow" style={{ marginTop: 3 }}>two analytical dates</div>
+          <div className="eyebrow" style={{ marginTop: 3 }}>current-evidence reconstruction at two dates</div>
         </div>
         <button className="ghost" onClick={onClose}>close</button>
       </div>
+      {selector}
 
       {/* The single sentence that prevents the major misunderstanding (§9). Rendered from the
           pipeline's own text so the UI cannot describe the comparison differently. */}
@@ -280,6 +325,104 @@ export default function Comparison({
         </dl>
         <p className="small warn-text">{history.semantics.what_this_does_not_answer}</p>
       </section>
+    </div>
+  );
+}
+
+const LINEAGE_LABEL: Record<PublishedBuild["lineage"], string> = {
+  deployed: "deploy recorded by Vercel",
+  deploy_status_unverified: "deploy recorded; final status not fetched",
+  bot_refresh_presumed_deployed: "daily refresh, presumed deployed (not yet in the ledger)",
+};
+
+/** As published: the builds actually served on A and on B, read from deployed commits. Headline
+ *  figures only — no regional map exists for a past build, so none is drawn. */
+function PublishedComparison({ published, a, b, onChange }: {
+  published: ProductionHistory | null | "loading";
+  a: string;
+  b: string;
+  onChange: (a: string, b: string) => void;
+}) {
+  if (published === "loading") return <div className="empty" style={{ padding: 16 }}>Loading publication history…</div>;
+  if (!published || !published.entries.length) {
+    return (
+      <div className="semantics-note published-unavailable">
+        As-published history is not available in this payload
+        {published?.unavailable_reason ? `: ${published.unavailable_reason}` : "."}
+      </div>
+    );
+  }
+  const first = published.earliest_reliable_as_published_date ?? published.entries[0].served_from.slice(0, 10);
+  const A = asPublishedOn(published, a);
+  const B = asPublishedOn(published, b);
+  const learned = A && B ? firstServedBetween(published, a, b) : [];
+  const d = A && B && A.esdi != null && B.esdi != null ? +(B.esdi - A.esdi).toFixed(2) : null;
+  return (
+    <>
+      <div className="semantics-note">{published.what_this_answers} It is not today's evidence about
+        those dates: that is the current reconstruction. Reliable from {fmtDate(first)}, the first
+        build recorded as deployed; before that it is unavailable, not reconstructed.</div>
+      <div className="cmp-dates">
+        {([["A", a], ["B", b]] as const).map(([label, day]) => (
+          <label key={label}>
+            <span className="eyebrow">Date {label}</span>
+            <input type="date" value={day} min={first}
+                   onChange={(e) => onChange(label === "A" ? e.target.value : a, label === "B" ? e.target.value : b)} />
+          </label>
+        ))}
+      </div>
+      <section className="cmp-block published-builds">
+        <h3>Monitored-area ESDI as published</h3>
+        <div className="cmp-headline">
+          <PublishedCell label="A" day={a} build={A} first={first} />
+          <PublishedCell label="B" day={b} build={B} first={first} />
+          <div>
+            <span className="eyebrow">Δ</span>
+            <span className="mono big">{d == null ? "—" : fmtDelta(d)}</span>
+          </div>
+        </div>
+        <p className="small">A published delta mixes everything that changed between two builds:
+          time passing, new events, corrections and methodology. The build ledger separates them
+          for consecutive builds; across a longer span they are not separable.</p>
+      </section>
+      {A && B && (
+        <section className="cmp-block">
+          <h3>Events the dashboard first served after A and by B ({learned.length})</h3>
+          <p className="small">Counted by when the dashboard LEARNED of each event, not when it happened.
+            An event dated months earlier appears here if research found it in this interval.</p>
+          {learned.length > 0 && (
+            <ul className="small mono published-learned">{learned.slice(0, 25).map((id) => <li key={id}>{id}</li>)}</ul>
+          )}
+          {learned.length > 25 && <p className="small">…and {learned.length - 25} more.</p>}
+        </section>
+      )}
+      <p className="small warn-text">The map shows the current build: a past build's regional figures are
+        not archived, and a reconstruction drawn under this label would be the confusion this view exists to prevent.</p>
+    </>
+  );
+}
+
+function PublishedCell({ label, day, build, first }: {
+  label: string; day: string; build: PublishedBuild | null; first: string;
+}) {
+  if (!build) {
+    return (
+      <div className="published-cell unavailable">
+        <span className="eyebrow">{label}</span>
+        <span className="mono big">—</span>
+        <span className="small">Unavailable on {fmtDate(day)}: the first published build was served on {fmtDate(first)}.</span>
+      </div>
+    );
+  }
+  return (
+    <div className="published-cell">
+      <span className="eyebrow">{label} · as published on {fmtDate(day)}</span>
+      <span className="mono big">{fmtNum(build.esdi, 2)}</span>
+      <span className="small">analytical date {fmtDate(build.as_of)} · {build.incident_total ?? "—"} events</span>
+      <span className="small dim">build {build.sha.slice(0, 7)} served from {fmtDate(build.served_from.slice(0, 10))} ·
+        {" "}{LINEAGE_LABEL[build.lineage]}</span>
+      <span className="small dim">methodology {build.methodology_fingerprint?.slice(0, 8) ?? "not recorded"} ·
+        schema {build.schema_version ?? "not recorded"}</span>
     </div>
   );
 }

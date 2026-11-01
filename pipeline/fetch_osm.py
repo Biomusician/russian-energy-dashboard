@@ -78,3 +78,35 @@ def fetch_all(max_age_hours=CACHE_HOURS):
 
 if __name__ == "__main__":
     fetch_all()
+
+
+def provenance(raw_dir):
+    """What OSM data this build drew its geometry from (iteration 16).
+
+    OSM feeds substations, transmission lines and pipeline routes: map context, and the
+    transmission CONTEXT counts. None of it enters a scored number (docs/HISTORICAL_REPRODUCIBILITY.md
+    §4), so OSM is deliberately not pinned like the Wikipedia inputs. This records enough to say
+    which OSM state a published map showed: Overpass's own data timestamp, a content hash and the
+    query identity. It does not make old maps rebuildable; Overpass serves only current data."""
+    import hashlib
+    import re
+    queries = {f"osm_{k}.json": f"[out:json][timeout:900];({sel}({BBOX}););out {mode} qt;"
+               for k, sel, mode in LAYERS}
+    out = []
+    for path in sorted(raw_dir.glob("osm_*.json")):
+        h = hashlib.sha256()
+        with open(path, "rb") as fh:
+            head = fh.read(1024)
+            h.update(head)
+            for chunk in iter(lambda: fh.read(1 << 20), b""):
+                h.update(chunk)
+        m = re.search(rb'"timestamp_osm_base"\s*:\s*"([^"]+)"', head)
+        q = queries.get(path.name)
+        out.append({
+            "file": path.name,
+            "osm_data_timestamp": m.group(1).decode("ascii") if m else None,
+            "sha256": h.hexdigest()[:16],
+            "bytes": path.stat().st_size,
+            "query_sha256": hashlib.sha256(q.encode("utf-8")).hexdigest()[:16] if q else None,
+        })
+    return {"endpoint": ENDPOINT, "scored": False, "files": out}

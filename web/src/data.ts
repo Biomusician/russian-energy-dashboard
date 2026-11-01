@@ -8,8 +8,7 @@
  *  tolerated. See docs/DEPLOYMENT.md. */
 
 import type {
-  Bundle, SchemaCheck, PipelineRegistry, RegionExplanation, BuildChanges, DataQuality,
-  HistorySeries, ResolvedPoint, LifecyclePayload,
+  Bundle, SchemaCheck, PipelineRegistry, RegionExplanation, BuildChanges, DataQuality, HistorySeries, ResolvedPoint, LifecyclePayload, ProductionHistory, PublishedBuild,
 } from "./types";
 
 const BASE = `${import.meta.env.BASE_URL}data`;
@@ -310,6 +309,36 @@ export async function loadDataQuality(): Promise<DataQuality | null> {
 /** The per-step historical series the comparison workspace consumes (P6). Lazy: it is only read
  *  when someone opens the comparison, and it holds every timestep. Absent file degrades to null
  *  and the workspace says the payload predates it rather than reconstructing anything. */
+let publishedCache: ProductionHistory | null = null;
+
+/** What the dashboard actually served (iteration 16). Optional: an older payload has none. */
+export async function loadProductionHistory(): Promise<ProductionHistory | null> {
+  if (publishedCache) return publishedCache;
+  publishedCache = await grabOptional<ProductionHistory | null>("production_history.json", null);
+  return publishedCache;
+}
+
+/** The build being served at the end of `day` (UTC), or null before history begins. Mirrors
+ *  `production_history.as_published_on`; it chooses a served build and computes nothing. */
+export function asPublishedOn(h: ProductionHistory, day: string): PublishedBuild | null {
+  let current: PublishedBuild | null = null;
+  for (const e of h.entries) {
+    if (e.served_from.slice(0, 10) <= day) current = e;
+    else break;
+  }
+  return current;
+}
+
+/** Events first SERVED after the build in force on `a` and up to the one in force on `b`. */
+export function firstServedBetween(h: ProductionHistory, a: string, b: string): string[] {
+  const out: string[] = [];
+  for (const e of h.entries) {
+    const d = e.served_from.slice(0, 10);
+    if (d > a && d <= b) out.push(...(e.events_added ?? []));
+  }
+  return out;
+}
+
 let historyCache: HistorySeries | null = null;
 export async function loadHistorySeries(): Promise<HistorySeries | null> {
   if (historyCache) return historyCache;

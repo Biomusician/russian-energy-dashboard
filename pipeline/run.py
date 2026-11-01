@@ -19,7 +19,7 @@ from pipeline import build_manifest, data_quality, diff_builds
 from pipeline import fetch_osm, fetch_osm_pipelines
 from pipeline.config import (
     ANALYTIC_CONCEPTS, ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, EVIDENCE_KINDS,
-    PROCESSED, PUBLICATION_CADENCE, ROOT, SCHEMA_VERSION,
+    PROCESSED, PUBLICATION_CADENCE, RAW, ROOT, SCHEMA_VERSION,
     SECTOR_OF_CLASS, SECTORS, WEB_DATA, WINDOW_START,
 )
 from pipeline.fetch_refineries import build as build_refineries
@@ -595,6 +595,9 @@ def main():
     # are edited (pipeline/wikirev.py).
     snapshot["source_revisions"] = [r for r in (
         strike_rev, refinery_rev, (coverage or {}).get("source_revision")) if r]
+    # Which OSM state the context geometry came from (iteration 16). Recorded, not pinned: OSM
+    # never enters a scored number, so it does not threaten analytical reproducibility.
+    snapshot["context_geometry_inputs"] = fetch_osm.provenance(RAW)
 
     # Which of the three historical questions this build answers (iteration 16,
     # docs/HISTORICAL_REPRODUCIBILITY.md). A build for a past date is a CURRENT-EVIDENCE

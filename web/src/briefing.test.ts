@@ -75,7 +75,7 @@ describe("exported context", () => {
     const c = ctx({ currentDate: "2026-08-27", step: 0 });
     expect(c.analyticalDate).toBe("2026-08-27");
     expect(c.asOf).toBe("2026-09-03");
-    expect(briefingSummaryLine(c)).toContain("analytical date");
+    expect(briefingSummaryLine(c)).toContain("CURRENT-EVIDENCE RECONSTRUCTION FOR");
     expect(briefingSummaryLine(c)).toContain("data as of");
   });
 
@@ -174,6 +174,44 @@ describe("comparison export", () => {
 
   it("says nothing about resolution when both dates were exact series points", () => {
     expect(ctx({ compare, pointA, pointB, history }).comparison!.resolvedNote).toBeNull();
+  });
+
+  // Iteration 16: a detached image must say which history it shows.
+  it("labels a reconstruction as a current-evidence reconstruction", () => {
+    const c = ctx({ compare, pointA, pointB, history });
+    expect(c.comparison!.concept).toBe("reconstruction");
+    expect(c.comparison!.heading).toBe("CURRENT-EVIDENCE RECONSTRUCTION FOR 2025-08-30 AND 2026-09-03");
+  });
+
+  const build = (sha: string, served: string, asOf: string, esdi: number) => ({
+    sha, served_from: `${served}T11:00:00Z`, committed_at: null, lineage: "deployed" as const,
+    as_of: asOf, build_time: null, esdi, incident_total: 184, schema_version: 2,
+    methodology_fingerprint: null, inputs_fingerprint: null, outputs_fingerprint: null,
+    snapshot_blob: null, event_ids_fingerprint: null, events_added: [], events_removed: [],
+  });
+  const published = {
+    concept: "as_published" as const, label: "As published", what_this_answers: "",
+    what_this_does_not_answer: "", source: "", before_earliest: "unavailable" as const,
+    earliest_reliable_as_published_date: "2026-08-29",
+    entries: [build("aaaaaaa1", "2026-08-29", "2026-08-29", 15.34), build("bbbbbbb2", "2026-10-10", "2026-10-10", 14.4)],
+  };
+
+  it("labels as-published values as published, with the builds that were served", () => {
+    const c = ctx({ compare: { a: "2026-09-01", b: "2026-10-10", mode: "delta", history: "published" },
+                    pointA, pointB, history, published });
+    expect(c.comparison!.concept).toBe("published");
+    expect(c.comparison!.heading).toBe("AS PUBLISHED ON 2026-09-01 AND 2026-10-10");
+    expect(c.comparison!.aValue).toBe("15.34");
+    expect(c.comparison!.bValue).toBe("14.40");
+    expect(c.comparison!.resolvedNote).toContain("aaaaaaa");
+  });
+
+  it("says unavailable, not a reconstructed value, before the first published build", () => {
+    const c = ctx({ compare: { a: "2026-08-28", b: "2026-10-10", mode: "delta", history: "published" },
+                    pointA, pointB, history, published });
+    expect(c.comparison!.aValue).toBe("unavailable");
+    expect(c.comparison!.delta).toBe("—");
+    expect(c.comparison!.resolvedNote).toContain("unavailable, not reconstructed");
   });
 });
 

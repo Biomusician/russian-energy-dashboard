@@ -105,7 +105,10 @@ def _entry(root, sha, served_at, lineage):
         "incident_total": snap.get("incident_total"),
         "schema_version": snap.get("schema_version"),
         "methodology_fingerprint": _blob_id(root, sha, METHODOLOGY_FILE),
-        "inputs_fingerprint": inputs.get("combined") if isinstance(inputs, dict) else None,
+        # One digest over the build's per-group input fingerprints (build_manifest), present from
+        # iteration 11 on; earlier builds did not record their inputs and say so with null.
+        "inputs_fingerprint": (hashlib.sha256(json.dumps(inputs["groups"], sort_keys=True).encode("utf-8"))
+                               .hexdigest()[:16] if isinstance(inputs, dict) and inputs.get("groups") else None),
         "outputs_fingerprint": snap.get("build_outputs_fingerprint"),
         "snapshot_blob": _blob_id(root, sha, f"{PAYLOAD_DIR}/snapshot.json"),
     }

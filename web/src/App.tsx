@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, loadBundle, stepFor } from "./data";
-import type { Asset, Bundle, Incident, RegionSnapshot } from "./types";
+import type { Asset, Bundle, Incident, RegionSnapshot, ProductionHistory } from "./types";
 import { decodeDeepLink, encodeDeepLink, has, type CameraState } from "./urlState";
 import Ribbon from "./components/Ribbon";
 import StalenessNotice from "./components/StalenessNotice";
@@ -19,7 +19,7 @@ import { downloadBlob, exportMapPng } from "./mapExport";
 import { localISODate } from "./freshness";
 import { ZERO_SHORT } from "./palette";
 import { drawBriefingFrame } from "./briefingFrame";
-import { fmtNum, loadHistorySeries, loadLifecycle, resolvePoint } from "./data";
+import { fmtNum, loadHistorySeries, loadLifecycle, loadProductionHistory, resolvePoint } from "./data";
 import type maplibregl from "maplibre-gl";
 import type { HistorySeries, LifecyclePayload } from "./types";
 import ComparisonTray from "./components/ComparisonTray";
@@ -101,6 +101,7 @@ export default function App() {
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportResult, setExportResult] = useState<string | null>(null);
   const [history, setHistory] = useState<HistorySeries | null>(null);
+  const [published, setPublished] = useState<ProductionHistory | null>(null);
   // Panel state to restore when briefing ends (§5). Briefing implies map focus; exiting must
   // not leave the reader in a stripped-down interface they did not choose.
   const preBriefing = useRef<{ mapFocus: boolean; dossier: boolean; filters: boolean } | null>(null);
@@ -109,7 +110,8 @@ export default function App() {
 
   useEffect(() => {
     if (briefing) loadHistorySeries().then(setHistory);
-  }, [briefing]);
+    if (briefing || compare?.history === "published") loadProductionHistory().then(setPublished);
+  }, [briefing, compare?.history]);
 
   // The exported frame must be able to name the episode the reader has open, so the payload is
   // fetched whenever an episode is selected — not only while the explorer panel is mounted.
@@ -425,7 +427,8 @@ export default function App() {
       selectionLabel: label,
       pipelinesVisible: filters.showGasNetwork || filters.showOilNetwork,
       history,
-      compare: compare ? { a: compare.a, b: compare.b, mode: compare.mode } : null,
+      compare: compare ? { a: compare.a, b: compare.b, mode: compare.mode, history: compare.history } : null,
+      published,
       pointA: compare ? resolvePoint(dates, compare.a) : null,
       pointB: compare ? resolvePoint(dates, compare.b) : null,
       episode: lifecycleEpisode
@@ -446,7 +449,7 @@ export default function App() {
         confidences: [filters.confidences.size, ALL_CONFIDENCES.length],
       },
     });
-  }, [bundle, step, currentDate, filters, selected, selectedAsset, compare, history,
+  }, [bundle, step, currentDate, filters, selected, selectedAsset, compare, history, published,
       lifecycleEpisode, lifecycleData, visibleIncidents]);
 
   const runExport = async (size: ExportSize) => {
@@ -593,7 +596,9 @@ export default function App() {
         flyTarget={flyTarget}
         layoutSignal={`${layoutMode}:${mapFocus}:${filtersIsDrawer}:${dossierIsDrawer}`}
         onMapReady={(m) => { mapRef.current = m; }}
-        comparison={compare ? {
+        // As published carries headline figures only: the map keeps the current build rather than
+        // paint a reconstruction under an as-published label.
+        comparison={compare && compare.history !== "published" ? {
           stepA: stepFor(bundle.national.dates, compare.a),
           stepB: stepFor(bundle.national.dates, compare.b),
           mode: compare.mode,

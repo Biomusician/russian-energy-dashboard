@@ -10,8 +10,8 @@
  *  this module is the one place either is decided, and it is unit-tested.
  */
 
-import type { Bundle, HistorySeries, LifecycleEpisode, ResolvedPoint } from "./types";
-import { FAMILY_LABEL, fmtDate, fmtNum } from "./data";
+import type { Bundle, HistorySeries, LifecycleEpisode, ResolvedPoint, ProductionHistory } from "./types";
+import { FAMILY_LABEL, fmtDate, fmtNum, asPublishedOn } from "./data";
 import { assessFreshnessOn } from "./freshness";
 
 export interface BriefingOptions {
@@ -61,7 +61,23 @@ export interface BriefingContext {
   provenance: Record<string, string | null>;
 }
 
+/** The heading an exported comparison carries, so a detached image never loses which history it
+ *  shows (iteration 16): a reconstruction and an as-published value are different claims. */
+export function historyHeading(concept: "reconstruction" | "published", a: string, b: string): string {
+  return concept === "published"
+    ? `AS PUBLISHED ON ${a} AND ${b}`
+    : `CURRENT-EVIDENCE RECONSTRUCTION FOR ${a} AND ${b}`;
+}
+
+/** A single-date label: a scrubbed map is a reconstruction for that date, never "the" value then. */
+export function reconstructionLabel(date: string): string {
+  return `CURRENT-EVIDENCE RECONSTRUCTION FOR ${date}`;
+}
+
 export interface ComparisonSummary {
+  /** Which historical question the values answer. */
+  concept: "reconstruction" | "published";
+  heading: string;
   aRequested: string;
   aResolved: string;
   bRequested: string;
@@ -248,7 +264,9 @@ export function buildBriefingContext(args: {
   selectionLabel: string | null;
   pipelinesVisible: boolean;
   history: HistorySeries | null;
-  compare: { a: string; b: string; mode: string } | null;
+  compare: { a: string; b: string; mode: string; history?: "reconstruction" | "published" } | null;
+  /** As-published history, needed only when the comparison shows it. */
+  published?: ProductionHistory | null;
   pointA: ResolvedPoint | null;
   pointB: ResolvedPoint | null;
   /** The recovery episode the reader has open, if any (§19). */
@@ -281,11 +299,33 @@ export function buildBriefingContext(args: {
   }
 
   let comparison: ComparisonSummary | null = null;
-  if (compare && pointA && pointB && history) {
+  if (compare && compare.history === "published") {
+    const pub = args.published ?? null;
+    const A = pub ? asPublishedOn(pub, compare.a) : null;
+    const B = pub ? asPublishedOn(pub, compare.b) : null;
+    const d = A && B && A.esdi != null && B.esdi != null ? +(B.esdi - A.esdi).toFixed(2) : null;
+    comparison = {
+      concept: "published",
+      heading: historyHeading("published", compare.a, compare.b),
+      aRequested: compare.a,
+      aResolved: A ? A.as_of : compare.a,
+      bRequested: compare.b,
+      bResolved: B ? B.as_of : compare.b,
+      aValue: A ? fmtNum(A.esdi, 2) : "unavailable",
+      bValue: B ? fmtNum(B.esdi, 2) : "unavailable",
+      delta: d == null ? "—" : (d > 0 ? "+" : d < 0 ? "−" : "±") + Math.abs(d).toFixed(2),
+      resolvedNote: (!A || !B)
+        ? `No published build before ${pub?.earliest_reliable_as_published_date ?? "the first deploy"}: unavailable, not reconstructed.`
+        : `Builds served: ${A.sha.slice(0, 7)} (analytical date ${A.as_of}) and ${B.sha.slice(0, 7)} (analytical date ${B.as_of}).`,
+      mode: compare.mode,
+    };
+  } else if (compare && pointA && pointB && history) {
     const a = history.esdi[pointA.step] ?? 0;
     const b = history.esdi[pointB.step] ?? 0;
     const d = +(b - a).toFixed(2);
     comparison = {
+      concept: "reconstruction",
+      heading: historyHeading("reconstruction", pointA.resolved_series_date, pointB.resolved_series_date),
       aRequested: compare.a,
       aResolved: pointA.resolved_series_date,
       bRequested: compare.b,
@@ -368,7 +408,7 @@ export function briefingSummaryLine(ctx: BriefingContext): string {
   const parts = [ctx.metricLabel];
   if (ctx.metricValue) parts.push(ctx.metricValue);
   parts.push(ctx.analyticalDate
-    ? `analytical date ${fmtDate(ctx.analyticalDate)} (data as of ${fmtDate(ctx.asOf)})`
+    ? `${reconstructionLabel(ctx.analyticalDate)} (data as of ${fmtDate(ctx.asOf)})`
     : `as of ${fmtDate(ctx.asOf)}`);
   return parts.join(" · ");
 }
