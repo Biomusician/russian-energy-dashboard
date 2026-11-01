@@ -34,4 +34,5 @@ web/e2e-results/
 web/e2e-report/
 
 # Research queues: working notes, not published (see data/candidates/README.md).
-data/candidates/*.json
+data/candidates/*
+!data/candidates/README.md
