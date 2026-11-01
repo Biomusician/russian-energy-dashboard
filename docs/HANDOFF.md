@@ -27,8 +27,10 @@ Current, durable state of the project. Read this first when resuming.
 - **Build/run**: `.venv\Scripts\python.exe -m pipeline.run` (pipeline + web payload);
   `cd web && ..\scripts\npm.cmd run dev -- --port 5178 --strictPort` (frontend). Tests:
   `.venv\Scripts\python.exe -m pytest tests/test_pipeline.py`; `cd web && ..\scripts\npm.cmd run typecheck`;
-  `..\scripts\npm.cmd run test` (vitest). Deterministic per `--as-of`; use `--as-of 2026-08-28` as
-  the frozen reference when decomposing a change so time decay doesn't contaminate attribution.
+  `..\scripts\npm.cmd run test` (vitest). Deterministic per `--as-of`; use `--as-of 2026-08-28` (the
+  pinned-source reconstruction reference) when decomposing a change so time decay doesn't
+  contaminate attribution. Three historical concepts, never one number:
+  [HISTORICAL_REPRODUCIBILITY.md](HISTORICAL_REPRODUCIBILITY.md).
 
 ## Iteration 15 end state (theme: depth — reproducible history, episodes, freshness, research)
 
@@ -278,16 +280,18 @@ Rules that are now structural, and are tested:
 Merged from `iteration-8`. A visualisation/navigation pass only; no scoring, weights, or corpus
 touched. See [ITERATION_8_REVIEW.md](ITERATION_8_REVIEW.md).
 
-**Read this first — the two builds.** Production and the frozen reference are different on
-purpose and both are correct:
+**Read this first — the builds, and the three kinds of history.** Production and the
+pinned-source reconstruction reference are different on purpose and both are correct. Neither is
+what the dashboard published on 2026-08-28; that question has its own answer
+(`production_history.json`, and before 2026-08-29 it is unavailable).
 
 | Build | Command | as_of | ESDI |
 |---|---|---|---|
 | production / release | `python -m pipeline.run` | build day | moves with time decay |
-| frozen regression | `python -m pipeline.run --as-of 2026-08-28` | 2026-08-28 | **16.16** since iteration 15, with the Wikipedia inputs pinned to their 2026-08-28 revisions (strike table oldid 1371858526) and byte-stable across reruns. Earlier values (18.50, then 16.8) read the then-current article and drifted with its edits |
+| pinned-source reconstruction reference | `python -m pipeline.run --as-of 2026-08-28` | 2026-08-28 | **16.16** at iteration 15: current code and curated corpus, Wikipedia inputs pinned to their 2026-08-28 revisions (strike table oldid 1371858526), byte-stable across reruns. It moves when code or curated data change, by design; earlier values (18.50, then 16.8) also drifted with article edits, which pinning removed |
 
-The frozen build is for apples-to-apples methodology comparison ONLY and must never be committed
-as the release payload — it would freeze the live dashboard at a stale date.
+The reconstruction reference is for apples-to-apples methodology comparison ONLY and must never be
+committed as the release payload — it would pin the live dashboard to a stale date.
 `test_release_payload_is_a_current_date_build_not_a_frozen_reference` now fails the suite if one
 is, so run a plain `python -m pipeline.run` before committing after any comparison run.
 

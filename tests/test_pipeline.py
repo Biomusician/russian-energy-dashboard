@@ -6701,6 +6701,17 @@ def test_the_import_gate_holds_what_it_should():
     assert "scope scan" in imp.review("us", {**good, "summary": "at 45.1234 N, 34.5 E"}, ok)
     assert "scope scan" in imp.review("us", {**good, "summary": "the weakest link"}, ok)
     assert "not a unit" in imp.review("us", {**good, "admin1_code": "US-ZZ"}, ok)
+    # Iteration 16: one researcher may discover; publication needs a second, independent look.
+    assert "no independent review" in imp.review("us", {**good, "independent_review": {}}, ok)
+    assert "no primary review" in imp.review("us", {**good, "primary_review": {}}, ok)
+    held = {**good, "independent_review": {**good["independent_review"], "disposition": "held"}}
+    assert "disposition 'held'" in imp.review("us", held, ok)
+    blind = {**good, "independent_review": {**good["independent_review"], "sources_opened": 0}}
+    assert "opened no source" in imp.review("us", blind, ok)
+    # A grandfathered pre-iteration-16 record passes on its single review; nothing else does.
+    single = {k: v for k, v in good.items() if k not in ("primary_review", "independent_review")}
+    assert imp.review("us", single, ok, frozenset({"us-2024-01-01-x"})) is None
+    assert imp.review("us", single, ok) is not None
 
 
 @pytest.mark.skipif(not (ROOT / "data" / "raw" / "ne_10m_admin_1.geojson").exists(),
@@ -7131,3 +7142,282 @@ def test_dual_reviewed_records_say_a_source_was_read():
                 assert e["review"]["source_access"] == "at least one source read", e["event_id"]
                 assert e["review"]["sources_opened_by_reviewer"] >= 1, e["event_id"]
     assert seen >= 12   # the twelve iteration-15 records, reviewed retroactively
+
+
+# --------------------------------------------------------------------------
+# Iteration 16: review governance, publication policy, freshness vs coverage, three histories
+# --------------------------------------------------------------------------
+
+# The number of records grandfathered when dual review began (2026-10-31). The list may only
+# shrink: a record leaves it when it is re-reviewed. Raising this number is the failure.
+GRANDFATHERED_AT_FREEZE = 94
+
+
+def _ev(eid, **kw):
+    base = {"event_id": eid, "date": "2026-04-01", "cause": "kinetic_strike", "summary": "s.",
+            "effect": "e.", "sources": [{"url": "https://e.x"}],
+            "recovery": {"research_status": "NOT_YET_RESEARCHED", "kind": None, "date": None,
+                         "evidence": None, "url": None}}
+    return {**base, **kw}
+
+
+def _campaigns(status="active", applied=True):
+    return {"campaigns": [{"campaign_id": "x-c", "system_id": "x", "name": "n", "status": status,
+                           "policy_applied": applied,
+                           "member_rule": {"causes": ["kinetic_strike", "sabotage"], "from": "2026-01-01"}}]}
+
+
+def test_the_build_refuses_a_record_without_two_reviews():
+    from pipeline import build_systems as B
+    dual = {"review_status": "dual_reviewed", "primary_review_complete": True,
+            "independent_review_complete": True, "reviewer_count": 2, "source_count": 1,
+            "sources_opened_by_reviewer": 1, "disposition": "confirmed"}
+    e = _ev("x-1", review=dual)
+    assert B.review_problems(e, set()) == []
+    assert B.review_problems({**e, "review": {**dual, "independent_review_complete": False}}, set())
+    assert B.review_problems({**e, "review": {**dual, "reviewer_count": 1}}, set())
+    assert B.review_problems({**e, "review": {**dual, "disposition": "held"}}, set())
+    legacy = {**dual, "review_status": "legacy_single_review", "independent_review_complete": False,
+              "reviewer_count": 1, "sources_opened_by_reviewer": None, "disposition": None}
+    # Legacy is a status a record HAS by id, never one it can claim.
+    assert B.review_problems({**e, "review": legacy}, {"x-1"}) == []
+    assert any("not a grandfathered" in p for p in B.review_problems({**e, "review": legacy}, set()))
+    fake = {**legacy, "independent_review_complete": True}
+    assert any("claims an independent review" in p for p in B.review_problems({**e, "review": fake}, {"x-1"}))
+
+
+def test_the_grandfather_list_only_shrinks_and_never_holds_a_dual_reviewed_record():
+    from pipeline import build_systems as B, systems
+    gf = B.load_grandfathered()
+    assert len(gf) <= GRANDFATHERED_AT_FREEZE
+    curated = {}
+    for sid in systems.COUNTRY_SYSTEMS:
+        for e in json.loads((ROOT / "data" / "curated" / "systems" / sid / "events.json")
+                            .read_text(encoding="utf-8"))["events"]:
+            curated[e["event_id"]] = e
+    assert gf <= set(curated), sorted(gf - set(curated))
+    for eid in gf:
+        assert curated[eid]["review"]["review_status"] == "legacy_single_review", eid
+    for eid, e in curated.items():
+        if eid not in gf:
+            assert e["review"]["review_status"] == "dual_reviewed", eid
+
+
+def test_an_active_campaign_withholds_facility_status():
+    """ONGOING CONFLICT MONITORING MUST NOT BECOME A FACILITY-STATUS FEED. A record under an
+    active campaign publishes the event and the withheld marker; anything more fails the build."""
+    from pipeline import build_systems as B
+    W = {"research_status": B.WITHHELD, "kind": None, "date": None, "evidence": None, "url": None}
+    ok = _ev("x-1", recovery=W)
+    B.apply_publication_policy("x", [ok], _campaigns())
+    assert ok["publication"]["withheld"] == ["recovery"]
+    leaked = _ev("x-2", recovery={**W, "research_status": "EVIDENCE_FOUND", "kind": "full_restart",
+                                  "date": "2026-04-12", "evidence": "restored"})
+    with pytest.raises(ValueError, match="not the withheld marker"):
+        B.apply_publication_policy("x", [leaked], _campaigns())
+    for text in ("The refinery later restarted.", "Operating at 70% since May.",
+                 "Restart postponed to 30 August.", "Loadings had not resumed by 24 September."):
+        with pytest.raises(ValueError, match="reports current status"):
+            B.apply_publication_policy("x", [_ev("x-3", recovery=W, summary=text)], _campaigns())
+    # Outside an active campaign the marker is refused: an ended campaign forces a re-import.
+    with pytest.raises(ValueError, match="no active campaign"):
+        B.apply_publication_policy("x", [_ev("x-4", recovery=W)], _campaigns(status="ended"))
+    # A natural-hazard record in the same system is not covered.
+    storm = _ev("x-5", cause="natural_hazard", summary="Power was restored on 3 May.")
+    B.apply_publication_policy("x", [storm], _campaigns())
+    assert storm["publication"] is None
+
+
+def test_the_import_gate_writes_the_withheld_marker_for_campaign_records():
+    imp = _import_gate()
+    r = {"candidate_id": "x-2026-04-01-a", "geography_precision": "country", "admin1_code": None,
+         "date": "2026-04-01", "asset_class": "refinery", "cause": "kinetic_strike", "summary": "s",
+         "sources": [{"url": "https://e.x", "opened": True}],
+         "recovery": {"research_status": "EVIDENCE_FOUND", "kind": "full_restart", "date": "2026-04-12",
+                      "evidence": "restored", "url": "https://e.x"},
+         "independent_review": {"completed": "2026-10-31", "disposition": "confirmed", "sources_opened": 1}}
+    ev = imp.to_event("x", r, campaigns=_campaigns())
+    assert ev["recovery"]["research_status"] == "WITHHELD_ACTIVE_CAMPAIGN"
+    assert all(ev["recovery"][k] is None for k in ("kind", "date", "evidence", "url"))
+    assert imp.to_event("x", r, campaigns=_campaigns(status="ended"))["recovery"]["kind"] == "full_restart"
+
+
+@needs_systems
+def test_no_served_record_under_an_active_campaign_shows_facility_status():
+    from pipeline import build_systems as B, systems
+    campaigns = B.load_campaigns()
+    covered = 0
+    for sid in systems.COUNTRY_SYSTEMS:
+        for e in _sys_payload(sid, "events.json")["events"]:
+            if B.campaign_of(e, sid, campaigns):
+                covered += 1
+                assert e["recovery"]["research_status"] == B.WITHHELD, e["event_id"]
+                assert e["publication"] and e["publication"]["withheld"] == ["recovery"]
+                for field in ("summary", "effect"):
+                    assert not B.STATUS_WORDING.search(e[field] or ""), (e["event_id"], field)
+            else:
+                assert e["publication"] is None and e["recovery"]["research_status"] != B.WITHHELD
+    assert covered >= 10   # the Saudi 2026 records
+
+
+def test_every_campaign_states_its_status_and_the_theatre_says_why_the_rule_waits():
+    from pipeline import build_systems as B
+    c = B.load_campaigns()
+    assert c["release_rule"]["status"].startswith("proposed")
+    for camp in c["campaigns"]:
+        assert camp["status"] in ("active", "ended") and camp["status_basis"] and camp["status_checked"]
+        if not camp["policy_applied"]:
+            assert camp.get("not_applied_reason"), camp["campaign_id"]
+    theatre = [x for x in c["campaigns"] if x["system_id"] == "russia_theatre"]
+    assert theatre and theatre[0]["status"] == "active"
+
+
+def test_research_coverage_is_not_inferred_from_source_freshness():
+    """SOURCE FRESHNESS IS NOT RESEARCH COMPLETENESS. Every source current and every pass
+    targeted: 7A met, 7B unmet. A complete systematic pass over old sources: 7B met."""
+    from pipeline import build_systems as B
+    doc = {**_src_doc(), "geography": {"rulings": []}}
+    gate = {g["item"]: g["status"] for g in B.onboarding_gate(doc, [], {"metrics": []}, _src_log())}
+    assert gate["7A"] == "met" and gate["7B"] == "unmet"
+    lanes = [{"lane": "G1", "status": "complete"}]
+    log = _src_log(kind="systematic", status="complete", status_reason=None, lanes=lanes)
+    stale = {**doc, "sources": [{**doc["sources"][0], "last_checked": "2001-01-01"}, doc["sources"][1]]}
+    gate = {g["item"]: g["status"] for g in B.onboarding_gate(stale, [], {"metrics": []}, log)}
+    assert gate["7B"] == "met"
+    assert B.research_freshness(log)["completeness"] == "complete"
+    assert B.research_freshness(_src_log())["completeness"] == "never_systematic"
+
+
+def test_complete_means_every_declared_lane_was_executed():
+    from pipeline import build_systems as B
+    doc = _src_doc()
+    lanes = [{"lane": "G1", "status": "complete"}, {"lane": "R1", "status": "partial", "reason": "403"}]
+    with pytest.raises(ValueError, match="a declared lane is not"):
+        B.validate_sources("x", doc, _src_log(kind="systematic", status="complete", lanes=lanes))
+    with pytest.raises(ValueError, match="declares its source lanes"):
+        B.validate_sources("x", doc, _src_log(kind="systematic"))
+    with pytest.raises(ValueError, match="only a systematic pass can be complete"):
+        B.validate_sources("x", doc, _src_log(status="complete"))
+    with pytest.raises(ValueError, match="integer counts"):
+        B.validate_sources("x", doc, _src_log(outcome={"accepted": "3 refineries"}))
+    with pytest.raises(ValueError, match="must hold only"):
+        B.validate_sources("x", doc, _src_log(kind="systematic", lanes=[
+            {"lane": "R1", "status": "partial", "facility_notes": "hit twice, no effect"}]))
+
+
+@pytest.mark.skipif(not (ROOT / "data" / "raw" / "ne_10m_admin_1.geojson").exists(),
+                    reason="Natural Earth cache not present")
+def test_stale_limits_never_change_what_a_system_publishes(tmp_path, monkeypatch):
+    """Stale limits are display policy. Shrinking every limit to one day changes nothing a
+    reader counts: the same events, episodes, gate 7B and research coverage."""
+    from pipeline import build_systems as B
+    a1, a0 = B.load_admin1(), B.load_admin0()
+    out = {}
+    for label, days in (("policy", None), ("one_day", 1)):
+        d = tmp_path / label
+        monkeypatch.setattr(B, "PROCESSED", d)
+        if days:
+            monkeypatch.setattr(B, "STALE_POLICIES", {k: {**v, "days": days} for k, v in B.STALE_POLICIES.items()})
+            monkeypatch.setattr(B, "validate_sources", lambda *a: None)
+        sysp = B.build_system("us", a1, a0, "2026-10-31")
+        ev = json.loads((d / "systems" / "us" / "events.json").read_text(encoding="utf-8"))
+        out[label] = (ev["events"], ev["episodes"], sysp["event_summary"], sysp["research_freshness"],
+                      {g["item"]: g["status"] for g in sysp["onboarding_gate"]}["7B"])
+    assert out["policy"] == out["one_day"]
+
+
+# --- three histories ---------------------------------------------------------------------------
+
+# The 2026-10-10 backfill: seven records dated BEFORE the 9 October build that the dashboard
+# first served on 10 October. The canonical proof that event date is not knowledge date.
+OCT10_BACKFILL = (
+    "gazprom-neftekhim-salavat:2026-10-08", "novoshakhtinsk-refinery:2026-09-25",
+    "nps-samara-prosvet:2026-04-21", "nps-samara-prosvet:2026-10-02", "nps-samara-prosvet:2026-10-07",
+    "omsk-refinery:2026-10-08", "perm-refinery:2026-09-25",
+)
+GIT_ROOT = Path(os.environ.get("EDM_GIT_ROOT", ROOT))
+
+
+def test_a_past_date_build_is_a_reconstruction_never_as_published():
+    """CURRENT RECONSTRUCTION IS NOT AS-PUBLISHED HISTORY."""
+    from pipeline import production_history as H
+    past = H.history_concept("2026-08-28", "2026-10-31")
+    assert past["mode"] == "current_evidence_reconstruction"
+    assert "reconstruction" in past["label"].lower() and "published" not in past["label"].lower()
+    assert H.history_concept("2026-10-31", "2026-10-31")["mode"] == "current_build"
+    assert H.CONCEPT == "as_published" and H.CONCEPT not in (past["mode"], H.CURRENT)
+
+
+@needs_build
+def test_the_committed_payload_says_it_is_the_current_build():
+    snap = json.loads((PROCESSED / "snapshot.json").read_text(encoding="utf-8"))
+    assert snap["history_concept"]["mode"] == "current_build"
+
+
+def _published_history():
+    return json.loads((PROCESSED / "production_history.json").read_text(encoding="utf-8"))
+
+
+@needs_build
+def test_as_published_history_holds_only_deployed_builds():
+    from pipeline import production_history as H
+    h = _published_history()
+    assert h["concept"] == "as_published" and h["entries"]
+    assert h["earliest_reliable_as_published_date"] == h["entries"][0]["served_from"][:10]
+    assert h["before_earliest"] == "unavailable"
+    served = [e["served_from"] for e in h["entries"]]
+    assert served == sorted(served)
+    for e in h["entries"]:
+        assert e["lineage"] in ("deployed", "deploy_status_unverified", "bot_refresh_presumed_deployed"), e
+        assert e["esdi"] is not None and e["as_of"] and e["sha"], e
+    # Before the first deploy there is no as-published value, and none is invented.
+    first = h["earliest_reliable_as_published_date"]
+    day_before = (dt.date.fromisoformat(first) - dt.timedelta(days=1)).isoformat()
+    assert H.as_published_on(h, day_before) is None
+    assert H.as_published_on(h, first) is not None
+
+
+def _check_backfill(h):
+    from pipeline import production_history as H
+    oct9, oct10 = H.as_published_on(h, "2026-10-09"), H.as_published_on(h, "2026-10-10")
+    assert oct9["as_of"] == "2026-10-09" and oct10["as_of"] == "2026-10-10"
+    assert oct9["incident_total"] == 176 and oct10["incident_total"] == 184
+    assert set(OCT10_BACKFILL) <= set(oct10["events_added"])
+    assert not set(OCT10_BACKFILL) & set(oct9["events_added"] or [])
+    # Every one of them predates the 9 October build: dated before it, known only after it.
+    assert all(eid.split(":")[1] < oct9["as_of"] for eid in OCT10_BACKFILL)
+
+
+@needs_build
+def test_october_10_backfill_as_published_vs_reconstruction():
+    """ONE EVENT DATE IS NOT ONE KNOWLEDGE DATE. As published on 9 October the seven records are
+    absent; as published on 10 October they are present; the current reconstruction carries them
+    at their own event dates. Permanent fixture."""
+    _check_backfill(_published_history())
+    current = {i["incident_id"]: i for i in json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))}
+    for eid in OCT10_BACKFILL:
+        assert eid in current, eid
+        assert current[eid]["date"] == eid.split(":")[1]
+
+
+@pytest.mark.skipif(subprocess.run(["git", "-C", str(GIT_ROOT), "cat-file", "-e", "56ad203"],
+                                   capture_output=True).returncode != 0,
+                    reason="git history with the 2026-10-09 deploy not available")
+def test_the_backfill_fixture_holds_when_history_is_rebuilt_from_git():
+    """The same fixture, rebuilt live from git and the ledger rather than read from the artefact,
+    so a change to how history is assembled cannot pass on a stale committed file."""
+    from pipeline import production_history as H
+    _check_backfill(H.build(GIT_ROOT))
+
+
+@pytest.mark.repo_hygiene
+def test_the_pinned_reconstruction_is_never_called_frozen_or_as_published():
+    """The 2026-08-28 value is a pinned-source reconstruction: current code and corpus with the
+    Wikipedia inputs pinned. Calling it frozen history or as-published would claim a time machine
+    it is not."""
+    text = (ROOT / "docs" / "HANDOFF.md").read_text(encoding="utf-8")
+    rows = [line for line in text.splitlines() if "--as-of 2026-08-28" in line and line.startswith("|")]
+    assert rows, "the HANDOFF reference table lost its 2026-08-28 row"
+    for row in rows:
+        assert "pinned-source reconstruction" in row, row
+        assert "frozen" not in row.lower() and "as-published" not in row.lower(), row

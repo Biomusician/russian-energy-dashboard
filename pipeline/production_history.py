@@ -40,6 +40,24 @@ LEDGER = "data/curated/production_deployments.json"
 BOT_AUTHOR = "dataset-refresh[bot]"
 METHODOLOGY_FILE = "methodology/scoring.json"
 CONCEPT = "as_published"
+RECONSTRUCTION = "current_evidence_reconstruction"
+CURRENT = "current_build"
+
+
+def history_concept(as_of, today):
+    """Which historical question a pipeline build answers. A build for a past date is a
+    current-evidence reconstruction, never an as-published value: it runs today's code over
+    today's corpus. Only `build()` below, reading what was deployed, can say what was published."""
+    if as_of < today:
+        return {
+            "mode": RECONSTRUCTION,
+            "label": f"Current-evidence reconstruction for {as_of}",
+            "note": ("Today's code and accepted corpus evaluated at a past date, with live article "
+                     "inputs pinned to their revision on that date. Not what the dashboard published "
+                     "then: see production_history.json for that."),
+        }
+    return {"mode": CURRENT, "label": "Current build",
+            "note": "Today's code and accepted corpus evaluated at today's date."}
 
 
 def _blob_id(root, sha, relpath):
