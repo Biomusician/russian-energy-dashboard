@@ -211,8 +211,8 @@
       "operator": "Saudi Aramco",
       "asset_class": "oil_terminal",
       "cause": "kinetic_strike",
-      "summary": "Crude oil loadings at Yanbu were briefly halted after an incident at the SAMREF refinery.",
-      "effect": "Crude loadings stopped briefly (Reuters, two sources; Bloomberg: 'briefly halted').",
+      "summary": "Crude oil loadings at Yanbu were halted after an incident at the SAMREF refinery.",
+      "effect": "Crude loadings stopped (Reuters, two sources).",
       "inclusion_basis": "reported_effect",
       "criterion_met": 2,
       "threshold_basis": "Clause 2: reported suspension of crude export loadings.",
@@ -221,14 +221,6 @@
         {
           "url": "https://boereport.com/2026/03/19/saudi-port-of-yanbu-stops-oil-loadings-two-sources-say/amp/",
           "publisher": "BOE Report (Reuters)",
-          "date": "2026-03-19",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://www.bloomberg.com/news/articles/2026-03-19/saudi-aramco-briefly-halted-loadings-at-yanbu-before-resuming",
-          "publisher": "Bloomberg",
           "date": "2026-03-19",
           "language": "en",
           "source_role": "media",
@@ -258,7 +250,7 @@
         "independent_review_complete": false,
         "reviewer_count": 1,
         "disposition": null,
-        "source_count": 3,
+        "source_count": 2,
         "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
@@ -283,11 +275,7 @@
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
       "threshold_basis": "Clause 1: operator-confirmed refinery shutdown and sustained throughput cut.",
-      "capacity_affected": {
-        "value": 230000,
-        "unit": "bbl/d",
-        "source_says": "TotalEnergies: since 14 April the refinery 'has been operating at a capacity of 230,000 b/d' - i.e. roughly half of the 460,000 b/d plant offline after the partial restart."
-      },
+      "capacity_affected": null,
       "sources": [
         {
           "url": "https://s.thepeninsula.qa/article/10/04/2026/totalenergies-says-saudi-refinery-shut-down-after-strikes",
@@ -301,14 +289,6 @@
           "url": "https://www.dawn.com/news/1996027",
           "publisher": "Dawn",
           "date": "2026-04-29",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://hirunews.lk/english/472649/damaged-saudi-oil-refinery-to-resume-operations-in-2027",
-          "publisher": "Hiru News",
-          "date": "2026-06-18",
           "language": "en",
           "source_role": "media",
           "opened": null
@@ -337,7 +317,7 @@
         "independent_review_complete": false,
         "reviewer_count": 1,
         "disposition": null,
-        "source_count": 4,
+        "source_count": 3,
         "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
@@ -594,14 +574,6 @@
           "opened": null
         },
         {
-          "url": "https://www.thenationalnews.com/business/energy/2026/04/12/saudi-arabia-restores-east-west-pipeline-capacity",
-          "publisher": "The National",
-          "date": "2026-04-12",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
           "url": "https://amp.insurancejournal.com/news/international/2026/04/07/864740.htm",
           "publisher": "Insurance Journal (Bloomberg)",
           "date": "2026-04-07",
@@ -625,7 +597,7 @@
         "independent_review_complete": false,
         "reviewer_count": 1,
         "disposition": null,
-        "source_count": 3,
+        "source_count": 2,
         "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
@@ -667,22 +639,6 @@
           "language": "en",
           "source_role": "media",
           "opened": null
-        },
-        {
-          "url": "https://shafaq.com/en/World/Saudi-Aramco-plans-East-West-pipeline-recovery-in-six-weeks",
-          "publisher": "Shafaq News (Bloomberg)",
-          "date": "2026-09-16",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://www.bairdmaritime.com/story/shipping/tankers/yanbu-tanker-loadings-yet-to-resume-despite-saudi-pipeline-restart",
-          "publisher": "Baird Maritime (Reuters)",
-          "date": "2026-09-24",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
         }
       ],
       "recovery": {
@@ -700,7 +656,7 @@
         "independent_review_complete": false,
         "reviewer_count": 1,
         "disposition": null,
-        "source_count": 4,
+        "source_count": 2,
         "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
@@ -734,14 +690,6 @@
           "language": "en",
           "source_role": "media",
           "opened": null
-        },
-        {
-          "url": "https://www.bairdmaritime.com/story/shipping/tankers/yanbu-tanker-loadings-yet-to-resume-despite-saudi-pipeline-restart",
-          "publisher": "Baird Maritime (Reuters)",
-          "date": "2026-09-24",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
         }
       ],
       "recovery": {
@@ -759,65 +707,10 @@
         "independent_review_complete": false,
         "reviewer_count": 1,
         "disposition": null,
-        "source_count": 2,
+        "source_count": 1,
         "sources_opened_by_reviewer": null,
         "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
         "source_access": "not recorded by the research lane"
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "sa-2026-07-27-jazan-refinery-shutdown",
-      "date": "2026-07-27",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "SA-09",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": "Jazan refinery",
-      "facility_name_local": null,
-      "operator": "Saudi Aramco",
-      "asset_class": "refinery",
-      "cause": "kinetic_strike",
-      "summary": "Industry monitor IIR reported that Aramco shut the Jazan refinery on 27 July 2026 after an attack attributed to Yemen's Houthis.",
-      "effect": "Refinery shut from 27 July 2026 (industry monitor IIR, reported by Hydrocarbon Processing).",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 1,
-      "threshold_basis": "Refinery shut down, with the effect reported by an industry monitor.",
-      "capacity_affected": {
-        "value": 400000,
-        "unit": "b/d",
-        "source_says": "400,000-barrel-per-day Jazan refinery"
-      },
-      "sources": [
-        {
-          "url": "https://hydrocarbonprocessing.com/news/2026/08/update-saudi-aramco-delays-jazan-oil-refinery-restart-to-august-30/",
-          "publisher": "Hydrocarbon Processing",
-          "date": "2026-08-11",
-          "language": "en",
-          "source_role": "industry",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-10-31",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "dual_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 2,
-        "disposition": "corrected",
-        "source_count": 1,
-        "sources_opened_by_reviewer": 4,
-        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
-        "source_access": "at least one source read"
       },
       "hazard_name": null
     }

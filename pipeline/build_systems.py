@@ -389,19 +389,26 @@ def apply_publication_policy(system_id, events, campaigns):
         e["publication"] = {
             "rule": "active_campaign_current_status_withheld",
             "campaign_id": c["campaign_id"],
-            "withheld": ["recovery"],
+            "withheld": ["recovery", "status_citations"],
             "note": ("This record belongs to an attack campaign still recorded as active. The event "
                      "is published; the facility's restart, recovery and operating status are not, "
-                     "until the campaign has ended (docs/CURRENT_EVENT_PUBLICATION_POLICY.md)."),
+                     "nor are citations that report it, until the campaign has ended "
+                     "(docs/CURRENT_EVENT_PUBLICATION_POLICY.md)."),
         }
         if rec["research_status"] != WITHHELD or any(rec[k] for k in ("kind", "date", "evidence", "url")):
             problems.append(f"{e['event_id']}: under active campaign {c['campaign_id']} but its "
                             "recovery block is not the withheld marker")
-        for field in ("summary", "effect"):
-            m = STATUS_WORDING.search(e.get(field) or "")
+        texts = [("summary", e.get("summary")), ("effect", e.get("effect")),
+                 ("capacity note", (e.get("capacity_affected") or {}).get("source_says"))]
+        texts += [("citation", s.get("url")) for s in e["sources"]]
+        for field, text in texts:
+            m = STATUS_WORDING.search(text or "")
             if m:
                 problems.append(f"{e['event_id']}: {field} reports current status ({m.group(0)!r}) "
                                 "under an active campaign")
+        if not e["sources"]:
+            problems.append(f"{e['event_id']}: under active campaign {c['campaign_id']} with no "
+                            "publishable citation")
     if problems:
         raise ValueError(f"system {system_id} publication policy: " + "; ".join(problems))
 

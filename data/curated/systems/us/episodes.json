@@ -2,26 +2,83 @@
   "note": "Hand-curated. Iteration-16 rule: records share an episode only for the same explicitly named hazard, the same explicitly identified common event or coordinated wave, or an explicit continuation of the same disruption, and every shared basis other than a named hazard cites the source that says so. A source that merely lists several incidents is provenance, not an episode; being close in time or place is never enough. Records not listed here are each their own episode (singleton).",
   "episodes": [
     {
+      "episode_id": "us-2022-02-texas-city-power-outage",
+      "name": "Citywide power outage, Texas City, February 2022",
+      "basis": "explicit_common_event",
+      "event_ids": [
+        "us-2022-02-04-marathon-galveston-bay-power-outage",
+        "us-2022-02-04-valero-texas-city-power-outage"
+      ],
+      "evidence": {
+        "url": "https://inspectioneering.com/news/2022-02-05/10003/marathon-galveston-bay-valero-texas-city-refineries-hit-by-power-outage-on-frid",
+        "says": "One citywide power outage shut both refineries (paraphrase of the source)."
+      }
+    },
+    {
+      "episode_id": "us-2022-09-hurricane-ian",
+      "name": "Hurricane Ian, September 2022",
+      "basis": "named_hazard",
+      "hazard": "Hurricane Ian (2022)",
+      "event_ids": [
+        "us-2022-09-27-hurricane-ian-gulf-shut-ins",
+        "us-2022-09-28-hurricane-ian-florida-fuel-terminals",
+        "us-2022-09-28-hurricane-ian-florida-outages",
+        "us-2022-09-30-hurricane-ian-north-carolina-outages",
+        "us-2022-09-30-hurricane-ian-south-carolina-outages"
+      ]
+    },
+    {
       "episode_id": "us-2022-12-winter-storm-elliott",
       "name": "Winter Storm Elliott, December 2022",
       "basis": "named_hazard",
       "event_ids": [
+        "us-2022-12-24-gulf-coast-refineries-cold-shutdowns",
         "us-2022-12-winter-storm-elliott-gas-production",
-        "us-2022-12-23-winter-storm-elliott-maine-outages",
-        "us-2022-12-23-tva-rolling-blackouts-elliott",
         "us-2022-12-23-pjm-forced-outages-elliott",
+        "us-2022-12-23-tva-rolling-blackouts-elliott",
+        "us-2022-12-23-winter-storm-elliott-maine-outages",
         "us-2022-12-24-duke-energy-rolling-blackouts-elliott"
       ],
       "hazard": "Winter Storm Elliott (2022)"
+    },
+    {
+      "episode_id": "us-2023-08-hurricane-idalia",
+      "name": "Hurricane Idalia, August 2023",
+      "basis": "named_hazard",
+      "hazard": "Hurricane Idalia (2023)",
+      "event_ids": [
+        "us-2023-08-30-hurricane-idalia-florida-outages",
+        "us-2023-08-30-hurricane-idalia-georgia-outages"
+      ]
+    },
+    {
+      "episode_id": "us-2024-01-winter-storm-heather",
+      "name": "Winter Storm Heather, January 2024",
+      "basis": "named_hazard",
+      "hazard": "Winter Storm Heather (2024)",
+      "event_ids": [
+        "us-2024-01-winter-storm-heather-gas-production",
+        "us-2024-01-13-winter-storm-heather-oregon-outages"
+      ]
+    },
+    {
+      "episode_id": "us-2024-07-hurricane-beryl",
+      "name": "Hurricane Beryl, July 2024",
+      "basis": "named_hazard",
+      "hazard": "Hurricane Beryl (2024)",
+      "event_ids": [
+        "us-2024-07-07-hurricane-beryl-freeport-lng-shutdown",
+        "us-2024-07-08-hurricane-beryl-texas-outages"
+      ]
     },
     {
       "episode_id": "us-2024-09-hurricane-francine",
       "name": "Hurricane Francine, September 2024",
       "basis": "named_hazard",
       "event_ids": [
-        "us-2024-09-11-hurricane-francine-louisiana-outages",
         "us-2024-09-11-hurricane-francine-gulf-shut-ins",
-        "us-2024-09-11-hurricane-francine-loop-closure"
+        "us-2024-09-11-hurricane-francine-loop-closure",
+        "us-2024-09-11-hurricane-francine-louisiana-outages"
       ],
       "hazard": "Hurricane Francine (2024)"
     },
@@ -30,20 +87,37 @@
       "name": "Hurricane Helene, September 2024",
       "basis": "named_hazard",
       "event_ids": [
+        "us-2024-09-25-hurricane-helene-gulf-shut-ins",
         "us-2024-09-26-hurricane-helene-florida-outages",
         "us-2024-09-27-hurricane-helene-georgia-outages",
+        "us-2024-09-27-hurricane-helene-indiana-outages",
+        "us-2024-09-27-hurricane-helene-kentucky-outages",
+        "us-2024-09-27-hurricane-helene-north-carolina-outages",
+        "us-2024-09-27-hurricane-helene-ohio-outages",
         "us-2024-09-27-hurricane-helene-south-carolina-outages",
-        "us-2024-09-27-hurricane-helene-north-carolina-outages"
+        "us-2024-09-27-hurricane-helene-tennessee-outages",
+        "us-2024-09-27-hurricane-helene-virginia-outages"
       ],
       "hazard": "Hurricane Helene (2024)"
+    },
+    {
+      "episode_id": "us-2024-10-hurricane-milton",
+      "name": "Hurricane Milton, October 2024",
+      "basis": "named_hazard",
+      "hazard": "Hurricane Milton (2024)",
+      "event_ids": [
+        "us-2024-10-09-hurricane-milton-florida-outages",
+        "us-2024-10-09-hurricane-milton-tampa-fuel-terminals"
+      ]
     },
     {
       "episode_id": "us-2026-01-winter-storm-fern",
       "name": "Winter storm of 23-27 January 2026 (Fern)",
       "basis": "named_hazard",
       "event_ids": [
-        "us-2026-01-24-winter-storm-fern-tennessee-outages",
-        "us-2026-01-24-winter-storm-fern-mississippi-outages"
+        "us-2026-01-winter-storm-fern-gas-production",
+        "us-2026-01-24-winter-storm-fern-mississippi-outages",
+        "us-2026-01-24-winter-storm-fern-tennessee-outages"
       ],
       "hazard": "Winter Storm Fern (2026)"
     },
@@ -52,8 +126,8 @@
       "name": "Hurricane Isaias, October 2026",
       "basis": "named_hazard",
       "event_ids": [
-        "us-2026-10-09-hurricane-isaias-outages",
-        "us-2026-10-09-hurricane-isaias-gulf-shut-ins"
+        "us-2026-10-09-hurricane-isaias-gulf-shut-ins",
+        "us-2026-10-09-hurricane-isaias-outages"
       ],
       "hazard": "Hurricane Isaias (2026)"
     }

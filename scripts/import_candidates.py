@@ -223,6 +223,15 @@ def to_event(system_id, r, grandfathered=frozenset(), campaigns=None):
     # An active campaign's records ship with the withheld marker; the evidence stays in the queue.
     if campaigns and build_systems.campaign_of(ev, system_id, campaigns):
         ev["recovery"] = _withheld_recovery()
+        # A citation whose address announces a restart ("…-delays-restart-to-august-30") publishes
+        # that status in the source list, and a capacity note quoting a post-restart operating rate
+        # publishes it in our words. Both stay in the queue with the rest of the status evidence,
+        # so the release rule restores them without re-research (iteration 16, safety red team).
+        ev["sources"] = [s for s in ev["sources"] if not build_systems.STATUS_WORDING.search(s["url"] or "")]
+        ev["review"]["source_count"] = len(ev["sources"])
+        cap = ev["capacity_affected"] or {}
+        if build_systems.STATUS_WORDING.search(cap.get("source_says") or ""):
+            ev["capacity_affected"] = None
     return ev
 
 
@@ -242,7 +251,12 @@ def run(system_id):
     for r in queue:
         why = review(system_id, r, unit_codes, grandfathered)
         if why is None:
-            accepted.append(to_event(system_id, r, grandfathered, campaigns))
+            ev = to_event(system_id, r, grandfathered, campaigns)
+            if ev["sources"]:
+                accepted.append(ev)
+            else:
+                held.append((r["candidate_id"], "active campaign: every citation reports facility "
+                                                 "status, so none can be published"))
         elif r.get("suggested_disposition") == "accept":
             held.append((r["candidate_id"], why))
     out = ROOT / "data" / "curated" / "systems" / system_id / "events.json"

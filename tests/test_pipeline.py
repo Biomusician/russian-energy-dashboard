@@ -6945,11 +6945,15 @@ def test_every_country_record_belongs_to_exactly_one_episode():
 
 
 @needs_systems
-def test_one_hurricane_is_one_episode_not_four():
-    helene = [ep for ep in _sys_payload("us", "events.json")["episodes"]
-              if ep["episode_id"] == "us-2024-09-hurricane-helene"]
-    assert len(helene) == 1 and helene[0]["records"] == 4
-    assert helene[0]["region_codes"] == ["US-FL", "US-GA", "US-NC", "US-SC"]
+def test_one_hurricane_is_one_episode_not_many():
+    """Helene's records (four states at iteration 15; nine states and the Gulf shut-ins after
+    the iteration-16 sweep) are one episode, holding every record that names the storm."""
+    payload = _sys_payload("us", "events.json")
+    helene = [ep for ep in payload["episodes"] if ep["episode_id"] == "us-2024-09-hurricane-helene"]
+    naming = sorted(e["event_id"] for e in payload["events"] if e.get("hazard_name") == "Hurricane Helene (2024)")
+    assert len(helene) == 1 and sorted(helene[0]["event_ids"]) == naming
+    assert {"US-FL", "US-GA", "US-NC", "US-SC"} <= set(helene[0]["region_codes"])
+    assert helene[0]["has_country_level_record"]   # the Gulf shut-ins are not one state's
 
 
 def _ep_events():
@@ -7210,7 +7214,7 @@ def test_an_active_campaign_withholds_facility_status():
     W = {"research_status": B.WITHHELD, "kind": None, "date": None, "evidence": None, "url": None}
     ok = _ev("x-1", recovery=W)
     B.apply_publication_policy("x", [ok], _campaigns())
-    assert ok["publication"]["withheld"] == ["recovery"]
+    assert ok["publication"]["withheld"] == ["recovery", "status_citations"]
     leaked = _ev("x-2", recovery={**W, "research_status": "EVIDENCE_FOUND", "kind": "full_restart",
                                   "date": "2026-04-12", "evidence": "restored"})
     with pytest.raises(ValueError, match="not the withheld marker"):
@@ -7219,6 +7223,16 @@ def test_an_active_campaign_withholds_facility_status():
                  "Restart postponed to 30 August.", "Loadings had not resumed by 24 September."):
         with pytest.raises(ValueError, match="reports current status"):
             B.apply_publication_policy("x", [_ev("x-3", recovery=W, summary=text)], _campaigns())
+    # Status leaks through our capacity note or a citation's address as easily as through the
+    # summary (iteration 16, safety red team: "…-delays-jazan-oil-refinery-restart-to-august-30").
+    with pytest.raises(ValueError, match="capacity note reports current status"):
+        B.apply_publication_policy("x", [_ev("x-6", recovery=W, capacity_affected={
+            "value": 1, "unit": "b/d", "source_says": "operating at 230,000 b/d since 14 April"})], _campaigns())
+    with pytest.raises(ValueError, match="citation reports current status"):
+        B.apply_publication_policy("x", [_ev("x-7", recovery=W, sources=[
+            {"url": "https://n.x/2026/08/aramco-delays-refinery-restart-to-august-30/"}])], _campaigns())
+    with pytest.raises(ValueError, match="no publishable citation"):
+        B.apply_publication_policy("x", [_ev("x-8", recovery=W, sources=[])], _campaigns())
     # Outside an active campaign the marker is refused: an ended campaign forces a re-import.
     with pytest.raises(ValueError, match="no active campaign"):
         B.apply_publication_policy("x", [_ev("x-4", recovery=W)], _campaigns(status="ended"))
@@ -7240,6 +7254,16 @@ def test_the_import_gate_writes_the_withheld_marker_for_campaign_records():
     assert ev["recovery"]["research_status"] == "WITHHELD_ACTIVE_CAMPAIGN"
     assert all(ev["recovery"][k] is None for k in ("kind", "date", "evidence", "url"))
     assert imp.to_event("x", r, campaigns=_campaigns(status="ended"))["recovery"]["kind"] == "full_restart"
+    # Status citations and a status-bearing capacity note stay in the queue with the evidence, and
+    # come back by themselves when the campaign ends.
+    r2 = {**r, "sources": [{"url": "https://e.x/refinery-shut-after-attack", "opened": True},
+                           {"url": "https://e.x/refinery-to-resume-operations-in-2027", "opened": True}],
+          "capacity_affected": {"value": 2, "unit": "b/d", "source_says": "running at half rate after the partial restart"}}
+    ev2 = imp.to_event("x", r2, campaigns=_campaigns())
+    assert [s["url"] for s in ev2["sources"]] == ["https://e.x/refinery-shut-after-attack"]
+    assert ev2["capacity_affected"] is None
+    back = imp.to_event("x", r2, campaigns=_campaigns(status="ended"))
+    assert len(back["sources"]) == 2 and back["capacity_affected"]["value"] == 2
 
 
 @needs_systems
@@ -7252,12 +7276,15 @@ def test_no_served_record_under_an_active_campaign_shows_facility_status():
             if B.campaign_of(e, sid, campaigns):
                 covered += 1
                 assert e["recovery"]["research_status"] == B.WITHHELD, e["event_id"]
-                assert e["publication"] and e["publication"]["withheld"] == ["recovery"]
-                for field in ("summary", "effect"):
-                    assert not B.STATUS_WORDING.search(e[field] or ""), (e["event_id"], field)
+                assert e["publication"] and e["publication"]["withheld"] == ["recovery", "status_citations"]
+                texts = [e["summary"], e["effect"], (e["capacity_affected"] or {}).get("source_says")]
+                texts += [s["url"] for s in e["sources"]]
+                for text in texts:
+                    assert not B.STATUS_WORDING.search(text or ""), (e["event_id"], text)
+                assert e["sources"], e["event_id"]
             else:
                 assert e["publication"] is None and e["recovery"]["research_status"] != B.WITHHELD
-    assert covered >= 10   # the Saudi 2026 records
+    assert covered >= 9   # the Saudi 2026 records (Jazan held: its only citation reports status)
 
 
 def test_every_campaign_states_its_status_and_the_theatre_says_why_the_rule_waits():

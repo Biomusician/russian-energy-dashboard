@@ -110,9 +110,10 @@
     }
   ],
   "research_gaps": [
-    "Coverage is targeted, not systematic: no month-by-month sweep of OE-417 or EAGLE-I has been done, so smaller qualifying grid events are under-recorded.",
-    "Unverified leads: the La Porte NGL pipeline fire (Sep 2024) and Winter Storm Fern gas freeze-offs (Jan 2026) were not read from a source and are not recorded.",
-    "US territories are outside this system's geography: three accepted Puerto Rico events are held pending an owner decision."
+    "The first systematic sweep (iteration 16) is PARTIAL: two of its nine source lanes completed. The grid lane has no 2026 data yet (DOE has not published a 2026 OE-417 summary), so January-October 2026 grid events rest on the hazard and targeted lanes; the refinery, LNG and coal lanes are structured samples of news reporting, not censuses.",
+    "103 candidates were held, most of them OE-417 rows whose figure is an incident total rather than a peak at one time; they are not recorded until a peak figure from a utility, state agency or DOE is found.",
+    "Peak figures that rest only on an outage aggregator are held. The grandfathered Winter Storm Elliott Maine record rests on such a snapshot and is queued for re-review.",
+    "US territories are outside this system's geography: Puerto Rico events found by research are held pending an owner decision."
   ],
   "audit_docs": [
     "docs/countries/US_SOURCE_AUDIT.md",
