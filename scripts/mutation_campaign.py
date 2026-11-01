@@ -88,7 +88,8 @@ MUTATIONS = [
     # Added after the iteration-16 safety review: status leaked through citation addresses.
     ("active-campaign status citation published (import)",
      [("scripts/import_candidates.py", _text(
-         '        ev["sources"] = [s for s in ev["sources"] if not build_systems.STATUS_WORDING.search(s["url"] or "")]\n',
+         '        ev["sources"] = [s for s in ev["sources"] if not build_systems.STATUS_WORDING.search(s["url"] or "")\n'
+         '                         and not build_systems.late_citation(ev, s)]\n',
          ""))],
      "writes_the_withheld_marker"),
     ("active-campaign status citation published (build)",
