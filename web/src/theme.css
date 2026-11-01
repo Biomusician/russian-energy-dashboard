@@ -1747,6 +1747,7 @@ ol.stages { list-style: none; margin: 6px 0 0; padding: 0 0 0 12px; }
 .brief-compare strong { font-family: var(--mono); font-size: 17px; color: var(--text); }
 .brief-compare .mono { font-size: 10px; color: var(--text-faint); }
 .brief-resolved { flex-basis: 100%; margin: 2px 0 0; font-size: 10px; color: var(--amber); }
+.brief-history-heading { flex-basis: 100%; margin: 0 0 2px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--amber); }
 
 /* A recovery episode names a facility, a family and an outcome. Given its own block rather than
    folded into the selection label, because the family/outcome distinction is the point. */

@@ -3,10 +3,19 @@
 How to add a monitored country, or grow one that exists. Everything here is a pipeline and data
 change; the frontend reads the manifest and needs no edit.
 
-Before starting, read `GLOBAL_METHODOLOGY.md` §7.2 (the eight-point onboarding gate) and the
-project's scope boundary in `CLAUDE.md`. **Both apply in full to every country.**
+Before starting, read `GLOBAL_METHODOLOGY.md` §7.2 (the onboarding gate; since iteration 16 its
+item 7 is two items, 7A source freshness and 7B systematic research coverage), the project's scope
+boundary in `CLAUDE.md`, and `REVIEW_GOVERNANCE.md`. **All of them apply in full to every
+country.**
 
 ## 1. Research (no code)
+
+**Write the search plan first.** A systematic pass starts with
+`docs/countries/<CC>_SYSTEMATIC_SWEEP.md` Part A, committed before any search runs. Part A
+declares the window, the geography, the qualifying definitions and the source lanes, and gives
+each lane its enumeration method. Part B records what actually ran, lane by lane, as counts. A
+pass is `complete` only if every declared lane ran across the whole window; anything less is
+`partial`, with the reason. `US_SYSTEMATIC_SWEEP.md` is the template.
 
 Two lanes, each writing only its own files:
 
@@ -47,12 +56,29 @@ Write `data/curated/systems/<id>/system.json` by hand (copy an existing one):
   is drawn but never receives events.
 - `sectors`: one entry per sector in `config.SECTORS`, each with `state`, `assessed_readiness`
   and a `reason`. The build refuses SCORED/EXPERIMENTAL until something is computed.
-- `sources` (each with `checked`, `cadence` and `stale_after_days` unless rejected),
-  `research_gaps`, `audit_docs`.
+- `sources`. Every source has `last_checked`, `source_release` and `content_vintage` where
+  known. A source in use also needs `publication_cadence` and a `stale_policy` from
+  `build_systems.STALE_POLICIES`, with `stale_after_days` equal to that policy's days. The limits
+  are display policy. They never decide inclusion and never enter a number, and a test enforces
+  that.
+- `research_gaps`, `audit_docs`.
 
-Also write `episodes.json` (any records that share one hazard or one source statement; the
-rule is in GLOBAL_METHODOLOGY §5.3 fix 4 as implemented in iteration 15) and
-`research_log.json` (one entry per research pass: window, status, and outcome COUNTS only).
+Also write `episodes.json` and `research_log.json`.
+
+**`episodes.json`.** Declare an episode only on an explicit basis (GLOBAL_METHODOLOGY §5.3):
+
+- `named_hazard`: every member names the same hazard. Records naming the same hazard must
+  all be in it.
+- `explicit_common_event` or `coordinated_wave`: a cited source calls the records one event or
+  one wave. Give `evidence {url, says}`, with the url among the members' sources.
+- `explicit_continuation`: the same evidence requirement.
+
+A source that merely lists several incidents is provenance, not an episode. Timing and
+proximity never group records. An undeclared record is a `singleton`.
+
+**`research_log.json`.** One entry per pass. Give its `kind` (`systematic` or `targeted`) and,
+for a systematic pass, its lanes with a status each. Record the window, the status and the
+outcome **counts** only.
 
 Copy the lane's profile to `profile.json`.
 
@@ -61,6 +87,20 @@ Copy the lane's profile to `profile.json`.
 ```
 .venv\Scripts\python.exe scripts\import_candidates.py <id>
 ```
+
+**Two reviews before publication (iteration 16).** The researcher who found a record is the
+primary reviewer. An independent reviewer then opens the evidence and records a disposition
+(`confirmed`, `corrected`, `held` or `removed`) and how many sources they opened, under
+`independent_review` in the queue record. The gate refuses a record with no independent
+review, with any disposition other than confirmed or corrected, or whose reviewer opened no
+source.
+
+Only the frozen iteration-14 list in `review_grandfathered.json` is exempt. That list may only
+shrink, and a test enforces it.
+
+For a system with an active kinetic campaign (`conflict_campaigns.json`), the gate also writes
+the withheld recovery marker. It keeps status citations and status-bearing capacity notes in
+the queue, and it holds any record left uncited (`CURRENT_EVENT_PUBLICATION_POLICY.md`).
 
 A later research pass sets `reviewed`, `review_process` and `research_pass` on its records;
 the gate carries the first two into the published `review` block. It applies

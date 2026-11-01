@@ -422,7 +422,9 @@ function PublishedCell({ label, day, build, first }: {
       <span className="small dim">build {build.sha.slice(0, 7)} served from {fmtDate(build.served_from.slice(0, 10))} ·
         {" "}{LINEAGE_LABEL[build.lineage]}</span>
       <span className="small dim">methodology {build.methodology_fingerprint?.slice(0, 8) ?? "not recorded"} ·
-        schema {build.schema_version ?? "not recorded"}</span>
+        schema {build.schema_version ?? "not recorded"} ·
+        {" "}source inputs {build.inputs_fingerprint?.slice(0, 8) ?? "not recorded"} ·
+        {" "}event set {build.event_ids_fingerprint?.slice(0, 8) ?? "not recorded"}</span>
     </div>
   );
 }

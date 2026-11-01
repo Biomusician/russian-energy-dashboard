@@ -54,6 +54,8 @@ export default function Briefing({
 
         {options.comparisonSummary && ctx.comparison && (
           <div className="brief-compare">
+            {/* Which history these figures are, on screen exactly as in the exported image. */}
+            <p className="brief-history-heading">{ctx.comparison.heading}</p>
             <div><span className="eyebrow">Date A</span>
               <span className="mono">{fmtDate(ctx.comparison.aResolved)}</span>
               <strong>{ctx.comparison.aValue}</strong></div>

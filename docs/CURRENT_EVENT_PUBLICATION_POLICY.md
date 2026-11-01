@@ -28,6 +28,8 @@ facility and kept current, it would be exactly the feed this project must never 
 | Operating rate after the event ("running at about 70%") | no | same |
 | Planned or postponed restart dates | no | same |
 | Dependency between facilities ("knock-on", "after the pipeline was shut") | no | removed for everyone, campaign or not |
+| A citation whose address announces status ("…-delays-refinery-restart-to-august-30", "…-to-resume-operations-in-2027") | no | the local candidate queue, restored automatically when the campaign ends |
+| A capacity note quoting a post-event operating rate | no — the capacity field is left empty | same |
 
 The withheld marker is a **publication state**, `WITHHELD_ACTIVE_CAMPAIGN`, distinct from the
 research states: it never reads as "no evidence" or "not researched". The page says, on the
@@ -39,17 +41,30 @@ A record is covered when its system has a campaign recorded as `active` with `po
 true`, its cause is `kinetic_strike` or `sabotage`, and it is dated on or after the campaign's
 `member_rule.from`. For a covered record:
 
-- `scripts/import_candidates.py` writes the withheld marker in place of the recovery block; the
-  evidence stays in the queue.
+- `scripts/import_candidates.py` writes the withheld marker in place of the recovery block, drops
+  citations whose address matches `STATUS_WORDING`, and empties a capacity note that does; the
+  evidence stays in the queue. A covered record left with no publishable citation is **held**,
+  not published uncited.
 - `pipeline/build_systems.py` refuses to build if a covered record carries recovery content, or
-  if its summary or effect contains current-status wording (`STATUS_WORDING`), and refuses the
+  if its summary, effect, capacity note or any citation address contains current-status wording
+  (`STATUS_WORDING`), or if it has no citation, and refuses the
   withheld marker on a record no active campaign covers — so recording a campaign as ended forces a
   deliberate re-import rather than leaving status hidden by accident.
 
 **Applied now:** Saudi Arabia, "Attacks on Saudi energy facilities, 2026", active (attacks were
-still reported in late October 2026; no ceasefire found). Ten 2026 kinetic records publish the
+still reported in late October 2026; no ceasefire found). Nine 2026 kinetic records publish the
 event and withhold facility status; their summaries were trimmed of restart, operating-rate and
-dependency wording. The 2022 Yanbu record is outside the 2026 campaign and is unchanged.
+dependency wording. The citation rule was added after the iteration-16 safety review of the
+served payload found status in places the summary check did not look:
+
+- six citations' addresses, across five records, announced restarts, resumptions or recovery
+  plans; they were moved back to the queue;
+- one capacity note quoted SATORP's post-restart operating rate; it was emptied;
+- one effect line said loadings stopped "briefly"; it was reworded through a review edit.
+
+The tenth record, the July 2026 Jazan refinery shutdown, is **held**. Its only citation's
+address announces a restart delay, and no other public source has been opened yet. It returns
+when one is found, or when the campaign ends. The 2022 Yanbu record is outside the 2026 campaign and is unchanged.
 
 **Not covered, by design:** natural-hazard, technical and unknown-cause records, including in
 the same country. The February 2026 Juaymah LPG halt is recorded by its source as an accident

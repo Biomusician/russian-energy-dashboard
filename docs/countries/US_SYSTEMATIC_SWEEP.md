@@ -89,4 +89,97 @@ an honest result.
 
 ## Part B — execution record
 
-*(Filled in as the lanes run. Counts only; per-record narratives stay in the local queue.)*
+Executed 2026-10-31 by three research lanes (grid, hazard, facility) and six independent review
+batches. Counts only; per-record narratives stay in the local queue (`data/candidates/`, never
+committed).
+
+### B.1 Result
+
+**PARTIAL. Two of the nine lanes are complete; seven are partial, each for a stated reason.**
+The pass is published with that status (`research_log.json`, "iteration-16 systematic
+sweep"), and the country page says "Systematic search partial".
+
+| | Count |
+|---|---|
+| Candidates examined | 350 |
+| Accepted after independent review | 101 (43 confirmed as found, 58 corrected by the reviewer) |
+| Rejected | 77 (76 by the lanes, 1 removed by the reviewer) |
+| Held | 103 (92 by the lanes, 11 by the reviewer or the lead) |
+| Duplicate | 42 (17 of them were already in the corpus under the same id) |
+| Out of scope | 27 (US territories, outside the window) |
+
+The US corpus went from 37 records to 138. 107 are dual-reviewed: the 101 above plus 6
+iteration-15 records reviewed retroactively. 31 records are grandfathered as single-review.
+
+### B.2 Lane by lane
+
+| Lane | Status | Accepted | Held | Rejected | Duplicate | Out of scope | Why not complete |
+|---|---|---|---|---|---|---|---|
+| G1 OE-417 | partial | 29 | 75 | 17 | 13 | 25 | 2022-2025 enumerated in full; no 2026 annual summary is published yet |
+| G2 NERC / FERC | **complete** | 1 | 2 | 7 | 5 | 0 | |
+| H1 DOE CESER | **complete** | 14 | 11 | 3 | 11 | 1 | |
+| H2 NHC | partial | 2 | 2 | 16 | 2 | 0 | NHC's own summaries read for 2022 only; 2023-2026 landfalls checked through secondary season records |
+| U1 BSEE / EIA | partial | 2 | 2 | 3 | 4 | 0 | BSEE's release listing refused automated access (not worked around); EIA enumerated in full |
+| P1 PHMSA | partial | 18 | 1 | 10 | 2 | 1 | enumerated through 2026-10-02, the public data file's date |
+| L1 LNG | partial | 9 | 6 | 8 | 2 | 0 | no public outage dataset; news search finds prominent outages only; one terminal not checked |
+| R1 CSB + query set | partial | 20 | 2 | 13 | 3 | 0 | CSB in full; the year-by-year query set is a structured sample, not a census |
+| C1 coal | partial | 6 | 2 | 0 | 0 | 0 | no public list of supply-cutting mine events; web search only |
+
+A record two lanes found counts once per lane in this table, so lane totals can exceed B.1.
+
+### B.3 Why so much is held
+
+- **G1 is the main source of held records (75).** OE-417 reports an *incident total* of
+  customers, which can be cumulative across a multi-day event or several states. The A.2
+  definition needs a *peak at one time in one state*. Where no opened source gave that peak,
+  the row is held, never accepted on the total. This is the strictest call in the sweep.
+- **Aggregator-only figures are held.** A PowerOutage.us number quoted without a utility or
+  agency figure is held (Hurricane Nicole 2022, by lead ruling). If the owner wants
+  aggregator figures accepted, that is a rule change.
+- **Port closures without a terminal-level statement** are held under L1 (3 records).
+
+### B.4 Lead rulings during the sweep (owner review requested)
+
+These are recorded in `REVIEW_GOVERNANCE.md` §6, and each narrows the rule rather than
+widening it:
+
+1. **Trunk pipeline** means an interstate or major transmission line. Five lines below that
+   bar were rejected: Buckeye 602, Plains Buffalo, Enterprise C92.1, Marathon 8-inch Utah and
+   Texas Gas 16-inch Louisiana.
+2. **LNG terminals have no duration floor,** as the rule is written. This is flagged in
+   ITERATION_16_REVIEW as an open question.
+3. **Pipeline loop segments** with a PHMSA shutdown order but no stated supply effect are
+   accepted under clause 3 as written. This is flagged for the owner.
+4. **Records accepted on stated wording:** the Deer Park secondary crude unit, because the
+   source states a throughput effect, and the Linden "production outage", because it is the
+   operator's wording.
+5. **Held:** Martinez Renewables, and Freeport December 2025, because the evidence was not
+   opened.
+6. **Removed:** Elba Island. The effect was inferred from timing alone, which the
+   no-proximity rule forbids.
+
+### B.5 Episodes
+
+Hurricanes and winter storms with records in several states are `named_hazard` episodes:
+
+- Helene: 10 states
+- Elliott: 6
+- Ian: 5
+- Francine and Fern: 3 each
+- Beryl, Heather, Idalia, Isaias and Milton: 2 each
+
+The Texas City records share one `explicit_common_event`. No episode was formed from timing
+or proximity.
+
+### B.6 What the next pass must do to reach COMPLETE
+
+- G1: re-run when DOE publishes the 2026 OE-417 annual summary.
+- H2: read NHC's own Tropical Cyclone Reports for 2023-2026.
+- U1: get BSEE's storm releases through a route BSEE offers to automated readers, or read
+  them by hand.
+- P1: extend the PHMSA file past 2026-10-02.
+- L1: check the remaining terminal, and define a terminal-level enumeration source.
+- R1 and C1 have no census source. Their best possible status is "partial, by construction",
+  unless the owner accepts a declared query set as a complete enumeration for these classes.
+  That is an open owner decision.
+

@@ -75,7 +75,17 @@ records is the stronger check and remains an owner option.
 | Batch | Records | Confirmed | Corrected | Held | Removed |
 |---|---:|---:|---:|---:|---:|
 | Retroactive review of the iteration-15 additions | 12 | 3 | 9 | 0 | 0 |
-| US systematic sweep, new records | see [countries/US_SYSTEMATIC_SWEEP.md](countries/US_SYSTEMATIC_SWEEP.md) Part B | | | | |
+| US systematic sweep, lane-accepted records | 113 | 43 | 58 | 11 | 1 |
+
+The US sweep's 113 lane-accepted records went to six independent review batches. 101 were
+published; Part B of [countries/US_SYSTEMATIC_SWEEP.md](countries/US_SYSTEMATIC_SWEEP.md) records
+the lane-level counts, including the 92 records the lanes themselves held. The removed record is
+Elba Island, whose effect had been inferred from timing.
+
+**After review, at publication.** Jazan's review disposition is *corrected*, but the record is now
+held by the active-campaign publication policy: its only citation's address announces a restart
+delay ([CURRENT_EVENT_PUBLICATION_POLICY.md](CURRENT_EVENT_PUBLICATION_POLICY.md) §3). This is a
+publication hold, not a review finding, so the review counts above are unchanged.
 
 The iteration-15 corrections were: unit-level wording trimmed (El Segundo, Port Arthur), two
 recovery claims that overstated their sources (El Segundo's "working to restart" shown as partial

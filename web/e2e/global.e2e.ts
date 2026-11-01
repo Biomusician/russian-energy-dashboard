@@ -1,4 +1,4 @@
-import { test, expect, pixelStats, readBytes } from "./fixtures";
+import { test, expect, colourGrid, pixelStats, readBytes, readStructure, structureProfile } from "./fixtures";
 
 /**
  * The global home and the five country systems, in a real browser (iteration 14).
@@ -119,9 +119,12 @@ test.describe("country systems", () => {
       if (e.region_code) counts[e.region_code] = { n: (counts[e.region_code]?.n ?? 0) + 1, name: e.region_name };
     }
     const [code, { n, name }] = Object.entries(counts).sort((a, b) => b[1].n - a[1].n)[0];
+    // Multi-region records naming this region are listed beside it, never counted in it.
+    const shared = events.filter((e: { geography_precision: string; regions_affected: string[] }) =>
+      e.geography_precision !== "admin1" && e.regions_affected.includes(code)).length;
     await app.open(`?sys=us&r=${code}`);
     await expect(page.getByRole("heading", { name, level: 2 })).toBeVisible();
-    await expect(page.locator(".event-item")).toHaveCount(n);
+    await expect(page.locator(".event-item")).toHaveCount(n + shared);
     await app.button("Show all").click();
     await expect(page.locator(".event-item")).toHaveCount(events.length);
     await expect(page).not.toHaveURL(/[?&]r=/);
@@ -183,9 +186,13 @@ test.describe("episodes and source freshness (iteration 15)", () => {
     await expect(ribbon).toContainText(`in ${sys.event_summary.episodes} episodes`);
     const multi = payload.episodes.filter((ep: { records: number }) => ep.records > 1);
     await expect(page.locator(".episode-group")).toHaveCount(multi.length);
+    // The count comes from the payload: the iteration-16 sweep found Helene in ten states, and
+    // the next sweep may find more. What is fixed is that one hurricane is one group.
+    const ep = payload.episodes.find((x: { hazard: string | null }) => x.hazard?.startsWith("Hurricane Helene"));
     const helene = page.locator(".episode-group").filter({ hasText: "Hurricane Helene" });
-    await expect(helene.locator(".event-item")).toHaveCount(4);
-    await expect(helene).toContainText("4 records");
+    await expect(helene).toHaveCount(1);
+    await expect(helene.locator(".event-item")).toHaveCount(ep.records);
+    await expect(helene).toContainText(`${ep.records} records`);
     // Grouping never hides a record.
     await expect(page.locator(".event-item")).toHaveCount(payload.events.length);
   });
@@ -210,12 +217,99 @@ test.describe("episodes and source freshness (iteration 15)", () => {
     await page.route("**/data/systems/ca/system.json", async (route) => {
       const res = await route.fetch();
       const body = await res.json();
-      body.sources[0].checked = "2020-01-01";
+      body.sources[0].last_checked = "2020-01-01";
       await route.fulfill({ response: res, json: body });
     });
     await app.open("?sys=ca");
     await app.button("Sources & data quality").click();
     await expect(page.locator(".source-table .stale-flag")).toHaveCount(1);
+  });
+});
+
+test.describe("provenance and coverage (iteration 16)", () => {
+  test("research completeness and source freshness are two separate badges", async ({ app, page }) => {
+    await app.open("?sys=us");
+    const sys = await countryPayload(page, "us", "system.json");
+    const status = page.getByLabel("Research status");
+    // The US has had a systematic sweep; whether it completed is the payload's claim, read here.
+    const label = { complete: "Systematic search complete", partial: "Systematic search partial",
+                    never_systematic: "Targeted searches only" }[sys.research_freshness.completeness as string]!;
+    await expect(status).toContainText(label);
+    await expect(status).toContainText("One does not imply the other");
+    await app.button("Sources & data quality").click();
+    await expect(page.locator(".research-coverage")).toContainText(label);
+    // A systematic pass lists its lanes, each with its own status.
+    const pass = sys.research_log.passes.find((x: { kind: string }) => x.kind === "systematic");
+    await expect(page.locator(".lane-list li")).toHaveCount(pass.lanes.length);
+  });
+
+  test("a country never searched systematically says so, whatever its sources' freshness", async ({ app, page }) => {
+    await app.open("?sys=cn");
+    const sys = await countryPayload(page, "cn", "system.json");
+    test.skip(sys.research_freshness.completeness !== "never_systematic", "China has had a systematic pass");
+    await expect(page.getByLabel("Research status")).toContainText("Targeted searches only");
+  });
+
+  test("stale sources change the freshness badge and leave research completeness alone", async ({ app, page }) => {
+    await app.open("?sys=ca");
+    const before = await page.getByLabel("Research status").locator(".badge").first().innerText();
+    await page.route("**/data/systems/ca/system.json", async (route) => {
+      const res = await route.fetch();
+      const body = await res.json();
+      for (const s of body.sources) s.last_checked = "2020-01-01";
+      await route.fulfill({ response: res, json: body });
+    });
+    await app.open("?sys=ca");
+    const status = page.getByLabel("Research status");
+    await expect(status).toContainText("past their re-check limit");
+    await expect(status.locator(".badge").first()).toHaveText(before);
+  });
+
+  test("an active attack campaign publishes the event, never the facility's status", async ({ app, page }) => {
+    await app.open("?sys=sa");
+    const events = (await countryPayload(page, "sa", "events.json")).events as
+      { event_id: string; publication: { note: string } | null }[];
+    const covered = events.filter((e) => e.publication);
+    expect(covered.length).toBeGreaterThan(0);
+    await expect(page.locator(".withheld-note")).toHaveCount(covered.length);
+    const items = page.locator(".event-item").filter({ has: page.locator(".withheld-note") });
+    for (let i = 0; i < covered.length; i++) {
+      const item = items.nth(i);
+      await expect(item).toContainText("Facility status not published while the attack campaign is active");
+      // The same wording rule the build enforces, on what the reader actually sees — minus the
+      // policy note itself, which names what is withheld.
+      const text = await item.evaluate((el) => {
+        const c = el.cloneNode(true) as HTMLElement;
+        c.querySelector(".withheld-note")?.remove();
+        return c.innerText;
+      });
+      expect(text).not.toMatch(/restart|resum|reopen|back online|operating at|running at|recover|restor/i);
+    }
+  });
+
+  test("every record says how it was reviewed, and the sources panel totals it", async ({ app, page }) => {
+    await app.open("?sys=us");
+    const sys = await countryPayload(page, "us", "system.json");
+    const events = (await countryPayload(page, "us", "events.json")).events;
+    await expect(page.locator(".review-note")).toHaveCount(events.length);
+    await expect(page.locator(".review-note .review-dual_reviewed")).toHaveCount(sys.review_summary.dual_reviewed);
+    await app.button("Sources & data quality").click();
+    await expect(page.locator(".review-summary"))
+      .toContainText(`${sys.review_summary.dual_reviewed} of ${events.length} events`);
+  });
+
+  test("recovery is defined where it is shown", async ({ app, page }) => {
+    await app.open("?sys=us");
+    await app.button("Sources & data quality").click();
+    await expect(page.locator(".recovery-meaning")).toContainText("Nothing is modelled");
+  });
+
+  test("records grouped only by an explicit basis: one statement listing incidents is not an episode", async ({ app, page }) => {
+    await app.open("?sys=sa");
+    const payload = await countryPayload(page, "sa", "events.json");
+    const multi = payload.episodes.filter((ep: { records: number }) => ep.records > 1);
+    for (const ep of multi) expect(["named_hazard", "explicit_common_event", "coordinated_wave", "explicit_continuation"]).toContain(ep.basis);
+    await expect(page.locator(".episode-group")).toHaveCount(multi.length);
   });
 });
 
@@ -283,6 +377,39 @@ test.describe("responsive", () => {
       });
     }
   }
+});
+
+test.describe("map structure (every platform)", () => {
+  // The cross-platform guard (iteration 16). The pixel goldens below are win32-only, so on Linux
+  // CI nothing compared the map to anything. A coarse grid of cell means survives font and
+  // anti-aliasing differences and still fails a blank map, a wrong extent or a wrong palette.
+  for (const q of ["", "?sys=ru", "?sys=us", "?sys=sa"]) {
+    const name = q ? q.slice(5) : "home";
+    test(`map structure: ${name}`, async ({ app, page }) => {
+      await app.open(q);
+      const png = await page.locator("[data-map-state]").screenshot();
+      const now = await colourGrid(page, png);
+      const spread = (g: number[][]) => Math.max(...g.flat()) - Math.min(...g.flat());
+      expect(spread(now), "the map is one flat colour").toBeGreaterThan(40);
+      const want = structureProfile(`e2e/__structure__/map-${name}.json`, now);
+      test.skip(want === null, "structure profile recorded");
+      const off = now.filter((c, i) => Math.max(...c.map((v, k) => Math.abs(v - want![i][k]))) > 32);
+      expect(off.length, `cells off the recorded structure: ${off.length} of ${now.length}`)
+        .toBeLessThanOrEqual(Math.floor(now.length * 0.1));
+    });
+  }
+
+  test("map structure: the check itself fails a blank map", async ({ app, page }) => {
+    // A negative control: a guard never shown to fail is not known to guard anything.
+    await app.open("?sys=us");
+    await page.addStyleTag({ content: "[data-map-state] canvas { visibility: hidden !important; }" });
+    const png = await page.locator("[data-map-state]").screenshot();
+    const now = await colourGrid(page, png);
+    const want = readStructure("e2e/__structure__/map-us.json");
+    test.skip(want === null, "no recorded profile to compare against");
+    const off = now.filter((c, i) => Math.max(...c.map((v, k) => Math.abs(v - want![i][k]))) > 32);
+    expect(off.length).toBeGreaterThan(Math.floor(now.length * 0.1));
+  });
 });
 
 test.describe("screenshot goldens", () => {
