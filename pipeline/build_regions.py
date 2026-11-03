@@ -13,7 +13,8 @@ point-in-region index and then discarded.
 """
 
 from pipeline import geo
-from pipeline.config import PROCESSED, aoi_regions, context_units
+from pipeline import outputs
+from pipeline.config import RAW, aoi_regions, context_units
 from pipeline.util import fetch, log, read_json, write_json
 
 NE_URL = (
@@ -28,7 +29,7 @@ SIMPLIFY_TOLERANCE = 0.01
 
 def load_natural_earth():
     fetch(NE_URL, "ne_10m_admin_1.geojson", max_age_hours=24 * 30)
-    return read_json(PROCESSED.parent / "raw" / "ne_10m_admin_1.geojson")
+    return read_json(RAW / "ne_10m_admin_1.geojson")
 
 
 def build():
@@ -98,10 +99,10 @@ def build():
         log(f"regions: built special unit {unit['code']} ({unit['name']}) from "
             f"{len(parts)} Natural Earth feature(s)")
 
-    write_json(PROCESSED / "regions.json", meta)
-    write_json(PROCESSED / "regions.geojson", {"type": "FeatureCollection", "features": features})
+    write_json(outputs.processed() / "regions.json", meta)
+    write_json(outputs.processed() / "regions.geojson", {"type": "FeatureCollection", "features": features})
 
-    size_mb = (PROCESSED / "regions.geojson").stat().st_size / 1e6
+    size_mb = (outputs.processed() / "regions.geojson").stat().st_size / 1e6
     log(f"regions: wrote {len(meta)} regions, geometry {size_mb:.2f} MB")
 
     return geo.RegionIndex(index_input), {m["code"]: m for m in meta}

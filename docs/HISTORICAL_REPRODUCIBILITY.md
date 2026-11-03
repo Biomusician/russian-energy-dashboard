@@ -9,7 +9,7 @@ none of them may borrow another's label.
 
 | | Concept | Question it answers | Where it comes from | Label in data |
 |---|---|---|---|---|
-| A1 | **Current-evidence reconstruction, pinned sources** | Given today's accepted corpus and code, with the live article inputs pinned to their revision on date D, what does the model estimate for D? | `python -m pipeline.run --as-of D` | `snapshot.history_concept.mode = "current_evidence_reconstruction"`, label "Pinned-source reconstruction for D" |
+| A1 | **Current-evidence reconstruction, pinned sources** | Given today's accepted corpus and code, with the live article inputs pinned to their revision on date D, what does the model estimate for D? | `python -m pipeline.run --mode reconstruction --as-of D --output-root <dir>` (never `data/processed`; refused there since iteration 17) | `snapshot.history_concept.mode = "current_evidence_reconstruction"`, label "Pinned-source reconstruction for D" |
 | A2 | **Current-evidence reconstruction, today's sources** | The same question, with today's article revisions: the timeline and the comparison workspace | the weekly series in `history_series.json`, computed inside a current build | `history_series.semantics`; on screen "CURRENT-EVIDENCE RECONSTRUCTION FOR D" beside any past date |
 | B | **As-published snapshot** | What did this dashboard actually serve to readers then? | The payload committed at a commit Vercel actually deployed; `production_history.json` | `production_history.concept = "as_published"` |
 | C | **Engineering regression fixture** | Did a scoring transformation change unexpectedly? | Synthetic and immutable inputs held in `tests/` | Test names; never published |
@@ -41,7 +41,8 @@ fixed commit. It does not turn the build into a time machine:
 So a reconstruction answers "what does today's evidence say about D?" — which is usually the
 more useful question for analysis, and never the question "what did readers see on D?".
 
-**The pinned-source reconstruction reference.** `--as-of 2026-08-28` is the project's standing
+**The pinned-source reconstruction reference.** `--mode reconstruction --as-of 2026-08-28
+--output-root data/reconstruction/2026-08-28` is the project's standing
 reconstruction reference for decomposing a change without time decay. At iteration 15 it gave
 **ESDI 16.16**, byte-stable across reruns. It is a type-A value. It is not "frozen history" and
 not "as published": it moves, by design, whenever code or curated data change. Its earlier

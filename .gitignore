@@ -36,3 +36,5 @@ web/e2e-report/
 # Research queues: working notes, not published (see data/candidates/README.md).
 data/candidates/*
 !data/candidates/README.md
+# Iteration 17: historical reconstructions are written here, never into data/processed.
+data/reconstruction/

@@ -25,7 +25,8 @@ import datetime as dt
 import re
 
 from pipeline import geo, systems
-from pipeline.config import ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, PROCESSED, RAW, SECTORS
+from pipeline.config import ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, RAW, SECTORS
+from pipeline import outputs
 from pipeline.util import fetch, log, read_json, write_json
 
 SYSTEMS_CURATED = CURATED / "systems"
@@ -849,7 +850,7 @@ def build_system(system_id, admin1, admin0, as_of):
         "onboarding_gate": onboarding_gate(doc, events, profile, research_log),
         "audit_docs": doc["audit_docs"],
     }
-    out = PROCESSED / systems.root(system_id)
+    out = outputs.processed() / systems.root(system_id)
     out.mkdir(parents=True, exist_ok=True)
     write_json(out / "system.json", payload)
     write_json(out / "events.json", {"system_id": system_id, "as_of": as_of, "events": events,
@@ -872,7 +873,7 @@ def build_world(admin1, admin0):
     owner = {a3: s["id"] for s in systems.SYSTEMS for a3 in s["admin0_a3"]}
     # Only the theatre's own regions are "monitored": the Far Eastern district is drawn as Russia
     # but is not in the area of interest, and the home map must not claim otherwise.
-    theatre_names = {r["natural_earth_name"] for r in read_json(PROCESSED / "regions.json")
+    theatre_names = {r["natural_earth_name"] for r in read_json(outputs.processed() / "regions.json")
                      if r.get("country") == "RU"}
     # Natural Earth's own disputed units at admin-0 (Siachen) are drawn as disputed, never as
     # anyone's.
@@ -955,9 +956,9 @@ def build(theatre_snapshot):
     as_of = theatre_snapshot["as_of"]
     admin1, admin0 = load_admin1(), load_admin0()
     payloads = {sid: build_system(sid, admin1, admin0, as_of) for sid in systems.COUNTRY_SYSTEMS}
-    (PROCESSED / "global").mkdir(parents=True, exist_ok=True)
-    write_json(PROCESSED / "global" / "world.geojson", build_world(admin1, admin0))
+    (outputs.processed() / "global").mkdir(parents=True, exist_ok=True)
+    write_json(outputs.processed() / "global" / "world.geojson", build_world(admin1, admin0))
     build_time = theatre_snapshot.get("build_time") or dt.datetime.now(dt.timezone.utc).isoformat()
-    write_json(PROCESSED / "global" / "manifest.json",
+    write_json(outputs.processed() / "global" / "manifest.json",
                build_manifest(payloads, theatre_snapshot, build_time), indent=2)
     return payloads

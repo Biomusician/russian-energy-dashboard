@@ -106,6 +106,13 @@ def render(snapshot, test_count):
 
 
 def write(snapshot, path=DOC):
+    # A reconstruction or fixture must never describe itself as the current state, whoever
+    # calls this (iteration 17: the plan already forbids it; this refuses regardless).
+    from pipeline import outputs
+    outputs.require("write_current_state")
+    if (snapshot.get("build_mode") or "current") != "current":
+        raise outputs.OutputRefused(f"CURRENT_STATE.md describes current builds, not a "
+                                    f"{snapshot.get('build_mode')} build")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(render(snapshot, count_tests()), encoding="utf-8")
     return path

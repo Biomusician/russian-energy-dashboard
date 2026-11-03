@@ -27,8 +27,9 @@ Current, durable state of the project. Read this first when resuming.
 - **Build/run**: `.venv\Scripts\python.exe -m pipeline.run` (pipeline + web payload);
   `cd web && ..\scripts\npm.cmd run dev -- --port 5178 --strictPort` (frontend). Tests:
   `.venv\Scripts\python.exe -m pytest tests/test_pipeline.py`; `cd web && ..\scripts\npm.cmd run typecheck`;
-  `..\scripts\npm.cmd run test` (vitest). Deterministic per `--as-of`; use `--as-of 2026-08-28` (the
-  pinned-source reconstruction reference) when decomposing a change so time decay doesn't
+  `..\scripts\npm.cmd run test` (vitest). Deterministic per `--as-of`; use
+  `--mode reconstruction --as-of 2026-08-28 --output-root data/reconstruction/2026-08-28` (the
+  pinned-source reconstruction reference, in its own directory since iteration 17) when decomposing a change so time decay doesn't
   contaminate attribution. Three historical concepts, never one number:
   [HISTORICAL_REPRODUCIBILITY.md](HISTORICAL_REPRODUCIBILITY.md).
 
@@ -87,7 +88,6 @@ See [ITERATION_16_REVIEW.md](ITERATION_16_REVIEW.md); its last section lists the
 **Open.**
 
 - The theatre's facility-status exposure (policy §8).
-- `--as-of` sharing the output directory.
 - Canada's facility lanes.
 - Systematic plans for China, India and Saudi Arabia.
 - The owner decisions in ITERATION_16_REVIEW.
@@ -351,12 +351,16 @@ what the dashboard published on 2026-08-28; that question has its own answer
 | Build | Command | as_of | ESDI |
 |---|---|---|---|
 | production / release | `python -m pipeline.run` | build day | moves with time decay |
-| pinned-source reconstruction reference | `python -m pipeline.run --as-of 2026-08-28` | 2026-08-28 | **16.16** at iteration 15: current code and curated corpus, Wikipedia inputs pinned to their 2026-08-28 revisions (strike table oldid 1371858526), byte-stable across reruns. It moves when code or curated data change, by design; earlier values (18.50, then 16.8) also drifted with article edits, which pinning removed |
+| pinned-source reconstruction reference | `python -m pipeline.run --mode reconstruction --as-of 2026-08-28 --output-root data/reconstruction/2026-08-28` | 2026-08-28 | **16.16** at iteration 15: current code and curated corpus, Wikipedia inputs pinned to their 2026-08-28 revisions (strike table oldid 1371858526), byte-stable across reruns. It moves when code or curated data change, by design; earlier values (18.50, then 16.8) also drifted with article edits, which pinning removed |
 
-The reconstruction reference is for apples-to-apples methodology comparison ONLY and must never be
-committed as the release payload — it would pin the live dashboard to a stale date.
-`test_release_payload_is_a_current_date_build_not_a_frozen_reference` now fails the suite if one
-is, so run a plain `python -m pipeline.run` before committing after any comparison run.
+The reconstruction reference is for apples-to-apples methodology comparison ONLY. Since iteration
+17 it cannot reach the payload by accident (`pipeline/outputs.py`): a past `--as-of` without
+`--mode reconstruction` is refused before any work; a reconstruction or fixture into
+`data/processed`, `web/public/data` or a directory containing them is refused; and a reconstruction
+never mirrors, never rewrites CURRENT_STATE and never computes a production ledger. Write it to
+`data/reconstruction/` (gitignored) or any scratch directory; nothing needs rebuilding afterwards.
+`--allow-protected-root` exists for the one deliberate case and still mirrors nothing.
+`test_release_payload_is_a_current_date_build_not_a_frozen_reference` remains as the last line.
 
 **A `dataset-refresh[bot]` rebuilds and commits the data daily** (`.github/workflows/refresh.yml`:
 current-date `python -m pipeline.run`, then `pytest`). Consequences worth knowing:
@@ -452,8 +456,8 @@ made numbers more defensible, not larger. Highlights:
   the payload was pinned to the 2026-08-28 reconstruction reference (then called "frozen"). That was the iteration-8 mistake,
   corrected later in that same iteration; the stale wording survived and contradicted the "two
   builds" table above it until iteration 10.) A plain `python -m pipeline.run` is correct and is
-  what the refresh bot runs. `--as-of 2026-08-28` is **comparison-only** and must never be
-  committed; `test_release_payload_is_a_current_date_build_not_a_frozen_reference` fails the suite
+  what the refresh bot runs. `--as-of 2026-08-28` is **comparison-only**, must never be
+  committed, and since iteration 17 is refused unless written to its own `--output-root`; `test_release_payload_is_a_current_date_build_not_a_frozen_reference` fails the suite
   if it is, and `test_docs_do_not_claim_the_release_payload_is_frozen` fails if a doc starts
   claiming otherwise again.
 - **MapLibre only allows `["zoom"]` as the direct input to a top-level interpolate/step.** Nesting

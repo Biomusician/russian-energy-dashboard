@@ -504,7 +504,10 @@ drawn from admin-1; Crimea and Sevastopol are `a3: "UKR"`, `status: "occupied"`.
 ### `snapshot.history_concept`
 
 `{mode, label, note}`. `mode` is `current_build` for a build at today's date, or
-`current_evidence_reconstruction` for `--as-of` a past date. A reconstruction is today's code
+`current_evidence_reconstruction` for `--mode reconstruction --as-of` a past date, or
+`engineering_fixture` for `--mode fixture`. `snapshot.build_mode` (iteration 17) is `current`,
+`reconstruction` or `fixture`; only a `current` build is ever written to `data/processed/`
+(`pipeline/outputs.py`), and the committed payload is tested to say so. A reconstruction is today's code
 and corpus at that date, with Wikipedia inputs pinned. It is never what the dashboard published
 then. `snapshot.context_geometry_inputs` records each OSM context file's Overpass
 `timestamp_osm_base`, sha256 prefix, bytes and query hash, with `scored: false`. OSM geometry is

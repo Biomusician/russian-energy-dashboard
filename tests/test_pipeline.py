@@ -1172,11 +1172,25 @@ def test_processed_output_is_deterministic():
         work = Path(tmp) / "repo"
         shutil.copytree(ROOT, work, symlinks=True, ignore=shutil.ignore_patterns(
             ".git", ".venv", "node_modules", "dist", "tools", "__pycache__", ".pytest_cache"))
-        subprocess.run(
-            [sys.executable, "-m", "pipeline.run", "--as-of", as_of],
-            cwd=work, check=True, capture_output=True,
-        )
-        out = work / "data" / "processed"
+        import datetime as _dt
+        if as_of == _dt.date.today().isoformat():
+            subprocess.run([sys.executable, "-m", "pipeline.run", "--as-of", as_of],
+                           cwd=work, check=True, capture_output=True)
+            out = work / "data" / "processed"
+        else:
+            # Since iteration 17 a past date is a RECONSTRUCTION and may not be built into
+            # data/processed. A reconstruction pins its Wikipedia inputs to that date's revision,
+            # so it is not comparable with the committed current build: build it twice and
+            # require the two to agree byte for byte, which is what determinism means.
+            outs = []
+            for i in (1, 2):
+                o = Path(tmp) / f"recon{i}"
+                subprocess.run([sys.executable, "-m", "pipeline.run", "--mode", "reconstruction",
+                                "--as-of", as_of, "--output-root", str(o)],
+                               cwd=work, check=True, capture_output=True)
+                outs.append(o)
+            before = {n: (outs[0] / n).read_text(encoding="utf-8") for n in watched}
+            out = outs[1]
         for name, text in before.items():
             rebuilt = (out / name).read_text(encoding="utf-8")
             if name == "snapshot.json":
@@ -6727,7 +6741,8 @@ def test_a_historical_as_of_build_reconstructs_country_systems_instead_of_failin
     """The frozen 2026-08-28 regression build used to die on Saudi events from September 2026.
     An as-of build must show the record as of that date; only an event after TODAY is an error."""
     from pipeline import build_systems as B
-    monkeypatch.setattr(B, "PROCESSED", tmp_path)
+    from pipeline import outputs
+    monkeypatch.setitem(outputs._target, "root", tmp_path)  # write beside, never into, the payload
     a1, a0 = B.load_admin1(), B.load_admin0()
     full = B.build_system("sa", a1, a0, "2026-10-30")
     early = B.build_system("sa", a1, a0, "2026-08-28")
@@ -7409,7 +7424,8 @@ def test_stale_limits_never_change_what_a_system_publishes(tmp_path, monkeypatch
     out = {}
     for label, days in (("policy", None), ("one_day", 1)):
         d = tmp_path / label
-        monkeypatch.setattr(B, "PROCESSED", d)
+        from pipeline import outputs
+        monkeypatch.setitem(outputs._target, "root", d)
         if days:
             monkeypatch.setattr(B, "STALE_POLICIES", {k: {**v, "days": days} for k, v in B.STALE_POLICIES.items()})
             monkeypatch.setattr(B, "validate_sources", lambda *a: None)
@@ -7524,3 +7540,189 @@ def test_the_pinned_reconstruction_is_never_called_frozen_or_as_published():
     for row in rows:
         assert "pinned-source reconstruction" in row, row
         assert "frozen" not in row.lower() and "as-published" not in row.lower(), row
+
+
+# --------------------------------------------------------------------------
+# Iteration 17: historical output isolation (pipeline/outputs.py)
+# --------------------------------------------------------------------------
+# Until iteration 16 a past --as-of wrote into data/processed and three guards stood between that
+# and a release. These tests hold the replacement: a build declares its mode, and only a current
+# build for today may write the production payload, mirror it or rewrite CURRENT_STATE.
+
+def _today():
+    import datetime as _dt
+    return _dt.date.today().isoformat()
+
+
+@pytest.mark.parametrize("mode,as_of,root,allow", [
+    ("current", "2026-08-28", None, False),                       # a past date is not current
+    ("current", None, "SCRATCH", False),                          # current writes only processed
+    ("reconstruction", "2026-08-28", None, False),                # no root
+    ("reconstruction", "TODAY", "SCRATCH", False),                # today is not the past
+    ("reconstruction", "2026-08-28", "PROCESSED", False),
+    ("reconstruction", "2026-08-28", "WEB_DATA", False),
+    ("reconstruction", "2026-08-28", "DATA", False),              # an ancestor of processed
+    ("reconstruction", "2026-08-28", "WEB_DATA_SUB", False),      # inside the web bundle
+    ("fixture", "2026-08-28", None, False),
+    ("fixture", "2026-08-28", "PROCESSED", True),                 # the override is reconstruction-only
+    ("fixture", "2026-08-28", "WEB_DATA", False),
+    ("archive", "2026-08-28", "SCRATCH", False),                  # not a pipeline mode
+])
+def test_output_plan_refuses_the_dangerous_combinations(tmp_path, mode, as_of, root, allow):
+    from pipeline import outputs
+    from pipeline.config import PROCESSED as P, WEB_DATA as W, DATA as D
+    roots = {None: None, "SCRATCH": tmp_path / "out", "PROCESSED": P, "WEB_DATA": W, "DATA": D,
+             "WEB_DATA_SUB": W / "systems"}
+    as_of = {None: _today(), "TODAY": _today()}.get(as_of, as_of)
+    with pytest.raises(outputs.OutputRefused):
+        outputs.plan(mode, as_of, _today(), roots[root], allow)
+
+
+def test_output_plan_grants_only_a_current_build_the_production_capabilities(tmp_path):
+    from pipeline import outputs
+    from pipeline.config import PROCESSED as P
+    cur = outputs.plan("current", _today(), _today())
+    assert cur["root"] == P and cur["mirror_web"] and cur["write_current_state"] and cur["production_ledger"]
+    for mode, as_of in (("reconstruction", "2026-08-28"), ("fixture", "2026-08-28"), ("fixture", _today())):
+        p = outputs.plan(mode, as_of, _today(), tmp_path / mode)
+        assert Path(p["root"]) == tmp_path / mode
+        assert not (p["mirror_web"] or p["write_current_state"] or p["production_ledger"]), (mode, p)
+    # The explicit override moves where a reconstruction writes, never what it may do.
+    o = outputs.plan("reconstruction", "2026-08-28", _today(), P, allow_protected_root=True)
+    assert not (o["mirror_web"] or o["write_current_state"] or o["production_ledger"])
+
+
+def test_a_reconstruction_target_refuses_mirror_and_current_state(tmp_path):
+    """The second line of defence: even a caller that skipped the plan check cannot mirror a
+    reconstruction or rewrite CURRENT_STATE from one."""
+    from pipeline import outputs, current_state
+    import pipeline.run as R
+    saved = dict(outputs._target)
+    try:
+        outputs.set_target(outputs.plan("reconstruction", "2026-08-28", _today(), tmp_path / "r"))
+        assert outputs.processed() == tmp_path / "r"
+        with pytest.raises(outputs.OutputRefused):
+            outputs.require("mirror_web")
+        with pytest.raises(outputs.OutputRefused):
+            current_state.write({"build_mode": "reconstruction"}, path=tmp_path / "CS.md")
+        with pytest.raises(outputs.OutputRefused):
+            R._mirror_to_web()
+        assert not (tmp_path / "CS.md").exists()
+    finally:
+        outputs._target.clear()
+        outputs._target.update(saved)
+    # And a current target still refuses a snapshot that says it is a reconstruction.
+    with pytest.raises(outputs.OutputRefused):
+        current_state.write({"build_mode": "reconstruction"}, path=tmp_path / "CS.md")
+
+
+def test_a_refused_build_touches_nothing():
+    """The CLI refuses before any work: a past date with no mode exits non-zero and leaves the
+    production payload, the web bundle and CURRENT_STATE byte-identical."""
+    import hashlib
+    import subprocess
+    import sys
+
+    def digest():
+        h = hashlib.sha256()
+        files = sorted(p for root in (PROCESSED, ROOT / "web" / "public" / "data")
+                       for p in root.rglob("*") if p.is_file())
+        for p in files + [ROOT / "docs" / "CURRENT_STATE.md"]:
+            h.update(p.as_posix().encode())
+            h.update(p.read_bytes())
+        return h.hexdigest()
+
+    before = digest()
+    for argv in (["--as-of", "2026-08-28"],
+                 ["--mode", "reconstruction", "--as-of", "2026-08-28", "--output-root", str(PROCESSED)],
+                 ["--mode", "fixture", "--output-root", str(ROOT / "web" / "public" / "data")]):
+        r = subprocess.run([sys.executable, "-m", "pipeline.run", *argv], cwd=ROOT,
+                           capture_output=True, text=True, encoding="utf-8", timeout=120)
+        assert r.returncode != 0 and "OutputRefused" in r.stderr, (argv, r.stderr[-300:])
+        assert "build starting" not in r.stderr + r.stdout, argv
+    assert digest() == before
+
+
+def test_no_build_module_names_the_production_directory():
+    """Every writer asks outputs.processed() where to write. A module that imports PROCESSED from
+    config, or builds a path from a literal "processed", could write the production payload from a
+    reconstruction. Two standalone read-only diagnostics, which the build never imports, are listed."""
+    import ast
+    allowed = {"config.py", "outputs.py", "artifacts.py"}   # the definition, the guard, the manifest list
+    readonly = {"analyse_pipeline_gaps.py", "audit_generation_denominator.py"}
+    run_src = (ROOT / "pipeline" / "run.py").read_text(encoding="utf-8")
+    problems = []
+    for path in sorted((ROOT / "pipeline").glob("*.py")):
+        if path.name in allowed:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module == "pipeline.config":
+                if any(a.name == "PROCESSED" for a in node.names):
+                    problems.append(f"{path.name}:{node.lineno} imports PROCESSED")
+            if path.name in readonly or path.name == "current_state.py":
+                continue
+            if isinstance(node, ast.Constant) and node.value == "processed":
+                problems.append(f"{path.name}:{node.lineno} builds a 'processed' path")
+    # current_state's one literal is its read-only CLI (`python -m pipeline.current_state`).
+    cs = (ROOT / "pipeline" / "current_state.py").read_text(encoding="utf-8")
+    assert cs.count('"processed"') == 1, "current_state.py gained a second processed path"
+    for name in readonly:
+        assert f"pipeline.{name[:-3]}" not in run_src and f"import {name[:-3]}" not in run_src, name
+    assert not problems, problems
+
+
+def test_every_write_into_the_web_bundle_asks_permission_first():
+    """WEB_DATA is written only by functions that call outputs.require("mirror_web")."""
+    import ast
+    problems = []
+    for path in sorted((ROOT / "pipeline").glob("*.py")):
+        if path.name in ("config.py", "outputs.py", "artifacts.py"):
+            continue
+        text = path.read_text(encoding="utf-8")
+        for fn in (n for n in ast.walk(ast.parse(text)) if isinstance(n, ast.FunctionDef)):
+            if "WEB_DATA" not in {n.id for n in ast.walk(fn) if isinstance(n, ast.Name)}:
+                continue
+            src = ast.get_source_segment(text, fn) or ""
+            writes = any(w in src for w in ("copy2", "copytree", "write_json", "write_text", "unlink", "rmtree"))
+            if writes and 'outputs.require("mirror_web")' not in src:
+                problems.append(f"{path.name}:{fn.name}")
+    assert not problems, problems
+
+
+def test_the_committed_payload_is_a_current_mode_build():
+    """A reconstruction's snapshot names its mode, so one copied over the payload by hand still
+    fails the release-payload tests."""
+    snap = _snapshot()
+    assert snap.get("build_mode") == "current", snap.get("build_mode")
+    from pipeline import production_history as H
+    assert H.history_concept("2026-08-28", _today(), build_mode="fixture")["mode"] == H.FIXTURE
+    assert H.history_concept("2026-08-28", _today(), build_mode="reconstruction")["mode"] == \
+        "current_evidence_reconstruction"
+
+
+def test_a_blind_review_packet_carries_no_earlier_conclusion():
+    """Iteration 17: a reviewer who reads the researcher's disposition first tends to confirm it.
+    blind() is the one place that decides what a reviewer sees; it must drop every field that
+    records what someone already concluded, and every source's opened/assessment flags."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("review_packets", ROOT / "scripts" / "review_packets.py")
+    RP = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(RP)
+    record = {"event_id": "us-x", "date": "2024-01-01", "cause": "natural_hazard", "summary": "s",
+              "geography_precision": "admin1",
+              "suggested_disposition": "accept", "disposition_reason": "looks fine",
+              "primary_review": {"sources_opened": 3}, "review": {"primary": "lead", "second": "x"},
+              "research_pass": "iteration-17-us", "lane": "G1", "duplicate_of": None,
+              "sources": [{"url": "https://e.x/a", "publisher": "P", "date": "2024-01-02",
+                           "opened": True, "note": "confirms", "assessment": "strong",
+                           "source_role": "media"}]}
+    out = RP.blind(record)
+    assert set(out) <= set(RP.VISIBLE) | {"sources"}
+    for leaked in ("suggested_disposition", "disposition_reason", "primary_review", "review",
+                   "research_pass", "lane", "duplicate_of"):
+        assert leaked not in out, leaked
+    assert all(set(s) <= set(RP.SOURCE_FIELDS) for s in out["sources"])
+    assert "opened" not in out["sources"][0] and out["sources"][0]["url"] == "https://e.x/a"
+    # The fields a reviewer must not see are not in the visible list by accident either.
+    assert not {"review", "suggested_disposition", "disposition_reason", "lane"} & set(RP.VISIBLE)

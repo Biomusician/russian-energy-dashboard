@@ -30,7 +30,8 @@ with map.project(), which keeps the map free of any glyph endpoint (no external 
 """
 
 from pipeline import geo
-from pipeline.config import PROCESSED, RAW
+from pipeline.config import RAW
+from pipeline import outputs
 from pipeline.util import fetch, log, read_json, write_json
 
 ADMIN0_URL = (
@@ -280,12 +281,12 @@ def build():
 
     river_features = _build_rivers(rivers)
 
-    write_json(PROCESSED / "context_land.geojson", {"type": "FeatureCollection", "features": land_features})
-    write_json(PROCESSED / "context_borders.geojson", {"type": "FeatureCollection", "features": border_features})
-    write_json(PROCESSED / "ocean.geojson", {"type": "FeatureCollection", "features": ocean_features})
-    write_json(PROCESSED / "rivers.geojson", {"type": "FeatureCollection", "features": river_features})
+    write_json(outputs.processed() / "context_land.geojson", {"type": "FeatureCollection", "features": land_features})
+    write_json(outputs.processed() / "context_borders.geojson", {"type": "FeatureCollection", "features": border_features})
+    write_json(outputs.processed() / "ocean.geojson", {"type": "FeatureCollection", "features": ocean_features})
+    write_json(outputs.processed() / "rivers.geojson", {"type": "FeatureCollection", "features": river_features})
 
-    total = sum((PROCESSED / f).stat().st_size for f in
+    total = sum((outputs.processed() / f).stat().st_size for f in
                 ("context_land.geojson", "context_borders.geojson", "ocean.geojson", "rivers.geojson")) / 1e6
     labelled_rivers = sum(1 for f in river_features if "label_name" in f["properties"])
     log(f"context: {len(land_features)} countries, {len(ocean_features)} ocean parts, "

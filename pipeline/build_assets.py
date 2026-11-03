@@ -22,7 +22,8 @@ import csv
 
 from pipeline import geo
 from pipeline.build_regions import build as build_regions
-from pipeline.config import PROCESSED, RAW
+from pipeline.config import RAW
+from pipeline import outputs
 from pipeline.fetch_osm import fetch_all as fetch_osm
 from pipeline.util import log, write_json
 
@@ -230,11 +231,11 @@ def build():
     # assets.json is written by run.py AFTER the curated supplement is merged in, so the
     # emitted file and the facet counts see the same asset list.
     write_json(
-        PROCESSED / "assets_lines.geojson",
+        outputs.processed() / "assets_lines.geojson",
         {"type": "FeatureCollection", "features": line_features},
     )
 
-    size = (PROCESSED / "assets_lines.geojson").stat().st_size / 1e6
+    size = (outputs.processed() / "assets_lines.geojson").stat().st_size / 1e6
     log(f"assets: line layer {size:.2f} MB")
 
     return point_assets, line_features, region_meta

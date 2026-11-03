@@ -34,7 +34,7 @@ import json
 import math
 
 from pipeline import geo
-from pipeline.config import PROCESSED
+from pipeline import outputs
 from pipeline.util import log, read_json, write_json
 
 # Applied to the ASSEMBLED route, never to an individual member way.
@@ -895,8 +895,8 @@ def build(relations=None, member_tags=None, way_elements=None, analytic_osm_ids=
     report = quality_report(routes, way_lengths)
 
     if write:
-        gas_path = PROCESSED / "context_gas_network.geojson"
-        oil_path = PROCESSED / "context_oil_network.geojson"
+        gas_path = outputs.processed() / "context_gas_network.geojson"
+        oil_path = outputs.processed() / "context_oil_network.geojson"
         # Fail-safe: never overwrite a good committed network with nothing (Overpass down on a
         # cache-less runner). Degrade to yesterday's context rather than dropping it.
         if not gas and not oil and gas_path.exists() and oil_path.exists():
@@ -906,10 +906,10 @@ def build(relations=None, member_tags=None, way_elements=None, analytic_osm_ids=
             return {"pipeline_gas": g, "pipeline_oil": o}
         write_json(gas_path, {"type": "FeatureCollection", "features": gas})
         write_json(oil_path, {"type": "FeatureCollection", "features": oil})
-        write_json(PROCESSED / "pipeline_network_quality.json", report)
-        write_json(PROCESSED / "pipeline_registry.json",
+        write_json(outputs.processed() / "pipeline_network_quality.json", report)
+        write_json(outputs.processed() / "pipeline_registry.json",
                    registry_payload(entities, nodes, routes))
-        mb = sum((PROCESSED / f).stat().st_size for f in
+        mb = sum((outputs.processed() / f).stat().st_size for f in
                  ("context_gas_network.geojson", "context_oil_network.geojson")) / 1e6
         log(f"pipeline-network: {report['pipeline_gas']['routes']} gas + "
             f"{report['pipeline_oil']['routes']} oil canonical routes, "

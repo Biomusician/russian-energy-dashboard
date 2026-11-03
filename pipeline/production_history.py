@@ -42,12 +42,17 @@ METHODOLOGY_FILE = "methodology/scoring.json"
 CONCEPT = "as_published"
 RECONSTRUCTION = "current_evidence_reconstruction"
 CURRENT = "current_build"
+FIXTURE = "engineering_fixture"
 
 
-def history_concept(as_of, today):
+def history_concept(as_of, today, build_mode=None):
     """Which historical question a pipeline build answers. A build for a past date is a
     current-evidence reconstruction, never an as-published value: it runs today's code over
-    today's corpus. Only `build()` below, reading what was deployed, can say what was published."""
+    today's corpus. Only `build()` below, reading what was deployed, can say what was published.
+    A fixture build (iteration 17) is an engineering test input and says so."""
+    if build_mode == "fixture":
+        return {"mode": FIXTURE, "label": f"Engineering fixture build for {as_of}",
+                "note": "A test or experiment build. Never published, never a history of anything."}
     if as_of < today:
         return {
             "mode": RECONSTRUCTION,
