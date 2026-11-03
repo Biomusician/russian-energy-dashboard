@@ -249,3 +249,172 @@ def has_downweighted_estimate(record):
     if not record:
         return False
     return bool(record.get("estimate_central_days")) and not _conf_ok(record)
+
+
+# --------------------------------------------------------------------------------------------
+# Active-campaign publication policy (iteration 17; docs/OPERATIONAL_STATUS_DELAY_OPTIONS.md)
+# --------------------------------------------------------------------------------------------
+# Every modelled number the theatre publishes is a function of public strike dates and a fixed
+# class horizon: it carries no information about any facility's state today. The one channel
+# that does is RECOVERY EVIDENCE: a restart reported last week, or a repair estimate whose
+# horizon has not yet closed, says what a struck facility is doing now. During an active
+# campaign that is withheld until it is history. Withholding it from the dossier alone would not
+# do: a region with one struck facility publishes that facility's state through its regional
+# index, and the build ledger would announce the day the evidence arrived. So the record is
+# removed before anything reads it, and the index scores the incident on the modelled horizon
+# exactly as if no evidence existed yet.
+
+# The words a reader sees on every campaign incident without released evidence (brief §45). On
+# EVERY one, not only where a record was actually withheld: a note that appeared only on those
+# would itself say which facilities have fresh reporting.
+WITHHELD_NOTE = ("Current facility status withheld during active campaign; historical recovery "
+                 "evidence may be published later.")
+
+_CAMPAIGN_DAYS = _SCORING.get("campaign_publication", {}).get("evidence_embargo_days")
+CAMPAIGNS_FILE = CURATED / "systems" / "conflict_campaigns.json"
+THEATRE_SYSTEM = "russia_theatre"
+
+
+def theatre_campaign():
+    """The theatre's campaign entry when it is active and its policy applied, else None."""
+    if not CAMPAIGNS_FILE.exists():
+        return None
+    for c in read_json(CAMPAIGNS_FILE)["campaigns"]:
+        if c["system_id"] == THEATRE_SYSTEM and c["status"] == "active" and c.get("policy_applied"):
+            return c
+    return None
+
+
+def is_campaign_member(incident, campaign):
+    rule = campaign["member_rule"]
+    return incident.get("cause") in rule["causes"] and (incident.get("date") or "") >= rule["from"]
+
+
+def evidence_date(record, incident_date):
+    """The latest date the record's evidence describes. An undated record (a status or a
+    forecast with no observation date) falls back to the incident date: the source's own
+    publication date is not curated, so this is a floor, not the publication date."""
+    dates = [d for d in (_date(record.get("observed_date")),
+                         _date(record.get("partial_operations_resumed_at"))) if d]
+    return max(dates) if dates else _date(incident_date)
+
+
+def release_date(record, incident_date, embargo_days):
+    """First date on which the record may be published and scored during an active campaign.
+    None means it can never be released (no date at all): fail closed."""
+    ev = evidence_date(record, incident_date)
+    if ev is None:
+        return None
+    release = ev + dt.timedelta(days=embargo_days)
+    # A forward repair estimate is a statement about the future: until its upper bound has
+    # passed it predicts the facility's state today, however old the article.
+    horizon = record.get("estimate_upper_days") or record.get("estimate_central_days")
+    start = _date(incident_date)
+    if horizon and start:
+        release = max(release, start + dt.timedelta(days=int(horizon)))
+    return release
+
+
+def apply_campaign_embargo(records, incidents, as_of, embargo_days=None, campaign="theatre"):
+    """Return (records a build at `as_of` may use, policy summary for the snapshot).
+
+    The summary carries a COUNT only. Listing withheld incidents would itself say which
+    facilities have fresh recovery reporting."""
+    camp = theatre_campaign() if campaign == "theatre" else campaign
+    days = _CAMPAIGN_DAYS if embargo_days is None else embargo_days
+    if camp is None or days is None:
+        return dict(records), {"applied": False, "reason": "no active campaign with the policy applied"}
+    when = as_of if isinstance(as_of, dt.date) else dt.date.fromisoformat(as_of)
+    inc_by_id = {i["incident_id"]: i for i in incidents}
+    kept, withheld = {}, 0
+    for iid, rec in records.items():
+        inc = inc_by_id.get(iid)
+        if inc is None or not is_campaign_member(inc, camp):
+            kept[iid] = rec
+            continue
+        rel = release_date(rec, inc.get("date"), days)
+        if rel is not None and rel <= when:
+            kept[iid] = rec
+        else:
+            withheld += 1
+    return kept, {
+        "applied": True,
+        "campaign_id": camp["campaign_id"],
+        "evidence_embargo_days": days,
+        "rule": ("While the campaign is active, a recovery record for one of its incidents is used "
+                 f"only once its evidence is at least {days} days old and any repair estimate it "
+                 "carries has run its course. Until then the incident is scored on the modelled "
+                 "class horizon and no facility status is shown."),
+        "withheld_records": withheld,
+    }
+
+
+def young_campaign_records(records, incidents, today, embargo_days=None):
+    """Incident ids whose recovery record is still under embargo TODAY. A current build refuses
+    to run while any is in the curated file: the repository is published too, so a record that
+    may not be shown may not be committed either. Kept locally until its release date."""
+    kept, summary = apply_campaign_embargo(records, incidents, today, embargo_days)
+    return sorted(set(records) - set(kept)) if summary["applied"] else []
+
+
+# An effect reported within this many days of the strike is "the effect reported at the time":
+# occurrence, published at once. Reported later, it describes how the facility is doing since --
+# status -- and waits like recovery evidence. The same window as a country system's late-citation
+# rule (build_systems.LATE_CITATION_DAYS).
+AT_THE_TIME_DAYS = 7
+
+
+def effect_release_date(effect, incident_date, embargo_days):
+    start = _date(incident_date)
+    seen = _date(effect.get("as_of_date")) or start
+    if seen is None:
+        return None
+    if start and (seen - start).days <= AT_THE_TIME_DAYS:
+        return seen
+    return seen + dt.timedelta(days=embargo_days)
+
+
+def embargo_effects(by_incident, incidents, as_of, embargo_days=None):
+    """Drop per-incident effects of campaign incidents that are not yet releasable at `as_of`.
+    Returns (kept, withheld count, ids still embargoed). National aggregates name no facility
+    and are untouched."""
+    camp = theatre_campaign()
+    days = _CAMPAIGN_DAYS if embargo_days is None else embargo_days
+    if camp is None or days is None:
+        return by_incident, 0, []
+    when = as_of if isinstance(as_of, dt.date) else dt.date.fromisoformat(as_of)
+    inc_by_id = {i["incident_id"]: i for i in incidents}
+    kept, withheld, ids = {}, 0, set()
+    for iid, effects in by_incident.items():
+        inc = inc_by_id.get(iid)
+        if inc is None or not is_campaign_member(inc, camp):
+            kept[iid] = effects
+            continue
+        ok = []
+        for e in effects:
+            rel = effect_release_date(e, inc.get("date"), days)
+            if rel is not None and rel <= when:
+                ok.append(e)
+            else:
+                withheld += 1
+                ids.add(iid)
+        if ok:
+            kept[iid] = ok
+    return kept, withheld, sorted(ids)
+
+
+def annotate_withheld(live_disruptions, incidents, policy):
+    """Put WITHHELD_NOTE on each live disruption whose driving incident belongs to the campaign
+    and carries no released recovery evidence (it is scored on the modelled horizon)."""
+    camp = theatre_campaign()
+    if not policy.get("applied") or camp is None:
+        return 0
+    inc_by_id = {i["incident_id"]: i for i in incidents}
+    n = 0
+    for d in live_disruptions:
+        r = d.get("recovery") or {}
+        inc = inc_by_id.get(r.get("incident_id") or d.get("driving_incident_id"))
+        if inc and is_campaign_member(inc, camp) and r.get("scoring_evidence_kind") == "modelled":
+            r["publication_note"] = WITHHELD_NOTE
+            n += 1
+    return n

@@ -15,7 +15,7 @@
 
 ## Recovery
 - **Observed-restoration episodes (monitored area)**: n = 9
-- **Recovery records / partial / full / estimate**: 26 / 13 / 10 / 3
+- **Recovery records / partial / full / estimate**: 23 / 13 / 10 / 0
 - **Per-class medians (n ≥ 3)**: refining 47.0d
 - **Pooled cross-class median (mixed-infrastructure, not headline)**: 22.0
 
@@ -33,7 +33,7 @@
 
 ## Strategic effects (source-backed, observational)
 - **National/macro datapoints**: 8
-- **Per-incident effects**: 18 across 15 incidents
+- **Per-incident effects**: 17 across 15 incidents
 
 ## Tests
-- **Python test functions** (`tests/test_pipeline.py`): 451 (pytest reports more cases — some functions are parametrized)
+- **Python test functions** (`tests/test_pipeline.py`): 460 (pytest reports more cases — some functions are parametrized)

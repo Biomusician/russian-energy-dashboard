@@ -149,6 +149,11 @@ export function RecoveryLine({ r }: { r: RecoveryState }) {
           modelled horizon ~{r.reconstitution_horizon_days} d (assumption)
         </span>
       )}
+      {r.publication_note && (
+        <span className="withheld-note" style={{ color: "var(--text-dim)", flexBasis: "100%" }}>
+          {r.publication_note}
+        </span>
+      )}
     </div>
   );
 }

@@ -175,6 +175,8 @@ export interface RecoveryState {
   what_source_establishes: string | null;
   source_confidence: string | null;
   recovery_sources: { url: string }[];
+  /** Iteration 17: present on every active-campaign incident scored on the modelled horizon. */
+  publication_note?: string;
 }
 
 export interface LiveDisruption {
@@ -526,6 +528,17 @@ export interface Snapshot {
   coverage_matrix?: Record<string, CoverageMatrixEntry>;
   experimental_indices?: { gas_processing: GasProcessingIndex | null };
   strategic_effects?: StrategicEffects;
+  /** Iteration 17: the theatre's active-campaign publication policy. Counts only, never ids. */
+  campaign_policy?: {
+    applied: boolean;
+    reason?: string;
+    campaign_id?: string;
+    evidence_embargo_days?: number;
+    rule?: string;
+    withheld_records?: number;
+    withheld_effects?: number;
+  };
+  build_mode?: "current" | "reconstruction" | "fixture";
   economic_context: EconomicContext | null;
   refinery_reconciliation: RefineryReconciliation | null;
   facet_counts: FacetCounts;

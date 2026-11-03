@@ -7726,3 +7726,149 @@ def test_a_blind_review_packet_carries_no_earlier_conclusion():
     assert "opened" not in out["sources"][0] and out["sources"][0]["url"] == "https://e.x/a"
     # The fields a reviewer must not see are not in the visible list by accident either.
     assert not {"review", "suggested_disposition", "disposition_reason", "lane"} & set(RP.VISIBLE)
+
+
+# --------------------------------------------------------------------------
+# Iteration 17: the theatre's active-campaign publication policy (pipeline/recovery.py)
+# --------------------------------------------------------------------------
+# Modelled numbers are functions of public strike dates and a fixed class horizon. Recovery
+# evidence is the one channel that says what a struck facility is doing now, so during an active
+# campaign it waits until it is history -- for display, scoring and the ledger alike.
+
+_CAMP = {"campaign_id": "t", "system_id": "russia_theatre", "status": "active", "policy_applied": True,
+         "member_rule": {"causes": ["kinetic_strike", "sabotage"], "from": "2022-01-01"}}
+
+
+def _erec(**kw):
+    base = {"recovery_status": "partial_restart", "observed_date": None,
+            "partial_operations_resumed_at": None, "estimate_central_days": None,
+            "estimate_upper_days": None}
+    return {**base, **kw}
+
+
+def test_recovery_evidence_is_released_only_once_it_is_history():
+    import datetime as _dt
+    from pipeline import recovery as R
+    inc = [{"incident_id": "a", "date": "2026-08-01", "cause": "kinetic_strike"},
+           {"incident_id": "b", "date": "2026-08-01", "cause": "kinetic_strike"},
+           {"incident_id": "c", "date": "2026-08-01", "cause": "technical"},
+           {"incident_id": "d", "date": "2026-03-01", "cause": "kinetic_strike"},
+           {"incident_id": "e", "date": "2026-03-01", "cause": "kinetic_strike"}]
+    recs = {"a": _erec(partial_operations_resumed_at="2026-08-03"),      # 2 days after strike
+            "b": _erec(observed_date="2026-08-03"),
+            "c": _erec(observed_date="2026-08-03"),                     # not a campaign member
+            "d": _erec(recovery_status="impaired", estimate_central_days=200, estimate_upper_days=300),
+            "e": _erec(recovery_status="impaired")}                     # undated: incident date floor
+    kept, s = R.apply_campaign_embargo(recs, inc, _dt.date(2026, 9, 1), 60, campaign=_CAMP)
+    assert set(kept) == {"c", "e"}, kept           # a, b young; d's estimate horizon still open
+    assert s["withheld_records"] == 3 and s["applied"]
+    kept, _ = R.apply_campaign_embargo(recs, inc, _dt.date(2026, 10, 2), 60, campaign=_CAMP)
+    assert {"a", "b"} <= set(kept) and "d" not in kept   # 60 days on, a and b are history
+    kept, _ = R.apply_campaign_embargo(recs, inc, _dt.date(2026, 12, 27), 60, campaign=_CAMP)
+    assert "d" in kept                                   # 1 March + 300 days
+    # Fail closed: a record with no date anywhere is never released.
+    assert R.release_date(_erec(), None, 60) is None
+
+
+def test_the_policy_summary_counts_and_never_names():
+    """Listing withheld incidents would itself say which facilities have fresh reporting."""
+    import datetime as _dt
+    from pipeline import recovery as R
+    inc = [{"incident_id": "x", "date": "2026-08-01", "cause": "kinetic_strike"}]
+    _, s = R.apply_campaign_embargo({"x": _erec(observed_date="2026-08-02")}, inc,
+                                    _dt.date(2026, 8, 10), 60, campaign=_CAMP)
+    assert s["withheld_records"] == 1
+    assert "x" not in json.dumps(s)
+    snap = _snapshot()
+    pol = snap["campaign_policy"]
+    assert pol["applied"] and pol["evidence_embargo_days"] == 60
+    assert set(pol) <= {"applied", "campaign_id", "evidence_embargo_days", "rule", "withheld_records",
+                        "withheld_effects"}, pol
+
+
+def test_an_effect_reported_at_the_time_is_occurrence_and_a_later_one_waits():
+    from pipeline import recovery as R
+    import datetime as _dt
+    assert R.effect_release_date({"as_of_date": "2026-08-05"}, "2026-08-01", 60) == _dt.date(2026, 8, 5)
+    assert R.effect_release_date({"as_of_date": "2026-08-20"}, "2026-08-01", 60) == _dt.date(2026, 10, 19)
+
+
+def test_the_committed_corpus_holds_nothing_still_under_embargo():
+    """The repository is published as well as the payload. A current build refuses while any
+    embargoed record is in the curated files; this holds the committed files to that today."""
+    import datetime as _dt
+    from pipeline import recovery as R
+    incs = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    incs = incs["incidents"] if isinstance(incs, dict) else incs
+    today = _dt.date.today()
+    assert R.young_campaign_records(R.load_recovery_records(), incs, today) == []
+    import csv as _csv
+    by = {}
+    for row in _csv.DictReader((ROOT / "data" / "curated" / "effects.csv").open(encoding="utf-8")):
+        if row["incident_id"]:
+            by.setdefault(row["incident_id"], []).append(row)
+    assert R.embargo_effects(by, incs, today)[2] == []
+
+
+def test_a_current_build_applies_the_embargo_before_the_index_reads_recovery():
+    """One map, filtered once, before build_index and the effects payload: an index that moved on
+    evidence the dossier withheld would publish it through the number."""
+    src = (ROOT / "pipeline" / "run.py").read_text(encoding="utf-8")
+    emb = src.index("recovery_by_incident, campaign_policy = recovery_mod.apply_campaign_embargo(")
+    assert emb < src.index("build_index.build(")
+    assert src.index("young_campaign_records") < emb
+    assert "recovery_by_incident = load_recovery_records()" in src[:emb]
+    assert src.count("load_recovery_records()") == 1
+
+
+def test_every_campaign_incident_without_released_evidence_carries_the_note():
+    from pipeline import recovery as R
+    snap = _snapshot()
+    incs = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    incs = {i["incident_id"]: i for i in (incs["incidents"] if isinstance(incs, dict) else incs)}
+    camp = R.theatre_campaign()
+    assert camp is not None
+    checked = 0
+    for d in snap["live_disruptions"]:
+        r = d["recovery"]
+        inc = incs.get(r["incident_id"])
+        member = inc is not None and R.is_campaign_member(inc, camp)
+        if member and r["scoring_evidence_kind"] == "modelled":
+            assert r.get("publication_note") == R.WITHHELD_NOTE, d["asset_id"]
+            checked += 1
+        elif not member:
+            assert "publication_note" not in r, d["asset_id"]
+    assert checked >= 10
+
+
+def test_theatre_text_holds_the_same_abstraction_rules_as_the_countries():
+    """Iteration 17 safety review: the country records were stripped of unit inventories,
+    criticality framing and repair timelines; the theatre's own notes, effects and recovery text
+    are held to the same rule. Occurrence and the plant-level effect stay."""
+    import csv as _csv
+    import re as _re
+    banned = _re.compile(
+        r"\b(?:CDU|AVT|ELOU|AT)-\d|\bunit (?:No\.? ?)?\d|\bunits? \d+ and \d+|three of its four|"
+        r"\b(?:largest|biggest|key node|main node|critical|sole)\b|power-bridge|energy bridge|"
+        r"repairs? (?:could|would|will) take|hard to replace|\d+ of \d+ tanks", _re.I)
+    hits = []
+    for name, cols in (("incidents.csv", ("notes",)), ("effects.csv", ("value_text",)),
+                       ("recovery.csv", ("what_source_establishes", "estimate_basis")),
+                       # The inventory describes facilities that may never have been struck:
+                       # ranking them by size or importance is the framing the scope forbids.
+                       ("assets_supplement.csv", ("note", "notes")),
+                       ("refineries_supplement.csv", ("inclusion_reason",))):
+        for row in _csv.DictReader((ROOT / "data" / "curated" / name).open(encoding="utf-8")):
+            for c in cols:
+                m = banned.search(row.get(c) or "")
+                if m:
+                    hits.append(f"{name} {list(row.values())[0]} {c}: ...{m.group(0)}...")
+    assert not hits, "\n".join(hits)
+
+
+def test_the_study_override_is_refused_in_a_current_build():
+    import subprocess
+    import sys
+    r = subprocess.run([sys.executable, "-m", "pipeline.run", "--evidence-embargo-days", "7"],
+                       cwd=ROOT, capture_output=True, text=True, encoding="utf-8", timeout=120)
+    assert r.returncode != 0 and "study override" in r.stderr

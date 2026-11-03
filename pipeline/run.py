@@ -26,6 +26,7 @@ from pipeline.config import (
 from pipeline.fetch_refineries import build as build_refineries
 from pipeline.fetch_wikipedia import build as build_wikipedia
 from pipeline.recovery import load_recovery_records
+from pipeline import recovery as recovery_mod
 from pipeline import artifacts, horizon_sensitivity, outputs, wikirev
 from pipeline.util import log, read_csv, read_json, write_json
 
@@ -448,7 +449,12 @@ def main():
                     help="required for reconstruction and fixture builds; never data/processed")
     ap.add_argument("--allow-protected-root", action="store_true",
                     help="let a reconstruction overwrite the working-tree payload (never mirrored)")
+    ap.add_argument("--evidence-embargo-days", type=int, default=None,
+                    help="study only: override the campaign recovery embargo (refused in a current build)")
     args = ap.parse_args()
+    if args.evidence_embargo_days is not None and args.mode == "current":
+        raise outputs.OutputRefused("--evidence-embargo-days is a study override; the published "
+                                    "embargo comes from methodology/scoring.json")
     # Validated before any work: a refused combination costs nothing and writes nothing.
     outputs.set_target(outputs.plan(args.mode, args.as_of, dt.date.today().isoformat(),
                                     args.output_root, args.allow_protected_root))
@@ -507,6 +513,22 @@ def main():
         f"{len(incidents) - len(in_aoi)} unplaced"
     )
 
+    # Active-campaign policy (iteration 17): recovery evidence that still says what a struck
+    # facility is doing now is removed before anything reads it -- dossier, index and ledger
+    # alike (pipeline/recovery.py). A current build refuses outright if such a record is in the
+    # curated file at all: the repository is published as well as the payload.
+    if args.mode == "current":
+        young = recovery_mod.young_campaign_records(recovery_by_incident, incidents, args.as_of)
+        if young:
+            raise SystemExit(
+                f"refused: {len(young)} recovery record(s) for active-campaign incidents are still "
+                f"under embargo and may not be committed: {', '.join(young)}. Hold them outside the curated files "
+                "until their release date (docs/OPERATIONAL_STATUS_DELAY_OPTIONS.md).")
+    recovery_by_incident, campaign_policy = recovery_mod.apply_campaign_embargo(
+        recovery_by_incident, incidents, args.as_of, args.evidence_embargo_days)
+    log(f"campaign policy: {campaign_policy.get('withheld_records', 0)} recovery record(s) withheld"
+        if campaign_policy["applied"] else f"campaign policy: {campaign_policy['reason']}")
+
     # Transmission network context: HV-line count per region (the transmission BURDEN is an
     # event-burden proxy, not a capacity share; the tracked network is shown as context only).
     tx_lines_by_region = collections.Counter(
@@ -554,6 +576,17 @@ def main():
     snapshot["economic_context"] = crea
     # Source-backed observed effects (§25-28), keyed to incidents in the AOI universe.
     snapshot["strategic_effects"] = load_effects({i["incident_id"] for i in in_aoi})
+    # The same campaign policy for effects: a consequence reported at the time is occurrence; one
+    # reported later is status and waits (pipeline/recovery.py).
+    _kept, _withheld, _young = recovery_mod.embargo_effects(
+        snapshot["strategic_effects"]["by_incident"], incidents, args.as_of, args.evidence_embargo_days)
+    if args.mode == "current" and _young:
+        raise SystemExit(f"refused: effects for {len(_young)} active-campaign incident(s) report status "
+                         f"still under embargo: {', '.join(_young)}. Hold them outside the curated files "
+                "until their release date (docs/OPERATIONAL_STATUS_DELAY_OPTIONS.md).")
+    snapshot["strategic_effects"]["by_incident"] = _kept
+    if campaign_policy["applied"]:
+        campaign_policy["withheld_effects"] = _withheld
     snapshot["facet_counts"] = _facet_counts(assets, lines, incidents, snapshot, ctx_net)
 
     # Network SOURCE COVERAGE (iteration 9, §21). Deliberately in the snapshot rather than a
@@ -618,6 +651,8 @@ def main():
     snapshot["history_concept"] = production_history.history_concept(
         args.as_of, dt.date.today().isoformat(), build_mode=args.mode)
     snapshot["build_mode"] = args.mode
+    snapshot["campaign_policy"] = campaign_policy
+    recovery_mod.annotate_withheld(snapshot["live_disruptions"], incidents, campaign_policy)
     reconstruction = args.mode != "current"
 
     snapshot["publication_freshness"] = {

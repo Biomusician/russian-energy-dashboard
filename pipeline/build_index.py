@@ -899,7 +899,7 @@ def _gas_processing_index(gpp_census, live, today):
             "Capacities are not internally comparable: the census mixes DESIGN nameplate "
             "(Orenburg 45, Astrakhan 12 — actual throughput markedly lower, Astrakhan ~5.4) with "
             "actual-throughput figures for others, so the total is not like-for-like.",
-            "Non-exhaustive by construction: the largest Russian GPP (Amur, ~42 bcm/y) is "
+            "Non-exhaustive by construction: Russia's Amur GPP (~42 bcm/y) is "
             "correctly out of the AOI; condensate-stabilisation plants (Surgut, Novy Urengoy, "
             "Purovsky) are a different function and excluded.",
         ],

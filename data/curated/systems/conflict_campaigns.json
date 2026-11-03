@@ -46,8 +46,13 @@
         ],
         "from": "2022-01-01"
       },
-      "policy_applied": false,
-      "not_applied_reason": "The theatre's recovery evidence predates this policy and feeds its index. Applying the policy to its facility-level presentation changes what the Russia view shows, which the iteration-16 brief holds fixed: an owner decision (ITERATION_16_REVIEW, open questions)."
+      "policy_applied": true,
+      "policy_rule": {
+        "id": "theatre-embargo",
+        "applied_since": "iteration 17 (2026-11-03)",
+        "text": "Occurrence is published at administrative-region level as before. A recovery record for a campaign incident (restart, restoration, repair estimate or current status) is used for display, scoring and the build ledger only once its evidence is at least methodology/scoring.json campaign_publication.evidence_embargo_days old and any repair estimate it carries has run its course; until then the incident is scored on the modelled class horizon and the dossier says why. Recorded withheld records are counted, never named. A current build refuses to run with an embargoed record in the curated file, because the repository is published too.",
+        "differs_from_country_rule": "Saudi Arabia keeps full withholding (no facility status until the campaign ends + 30 days, release_rule A). The theatre's index is built on recovery evidence, so it releases evidence once it is history instead; docs/OPERATIONAL_STATUS_DELAY_OPTIONS.md."
+      }
     }
   ]
 }

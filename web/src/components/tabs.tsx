@@ -1164,6 +1164,14 @@ export function CostsTab(p: TabProps) {
         <KV k="Observed full reconstitutions" v={rs.full_reconstitution_episodes} />
       </Block>
 
+      {bundle.snapshot.campaign_policy?.applied && (
+        <Note>
+          <strong>Active-campaign publication policy.</strong> {bundle.snapshot.campaign_policy.rule}{" "}
+          Recovery records withheld in this build: {bundle.snapshot.campaign_policy.withheld_records ?? 0};
+          later effect reports withheld: {bundle.snapshot.campaign_policy.withheld_effects ?? 0}. Counted, never named.
+        </Note>
+      )}
+
       <Note warn>
         Monetary repair-cost and economic-consequence figures are populated only from public
         sources, and almost none exist today, so most dollar values are deliberately absent.

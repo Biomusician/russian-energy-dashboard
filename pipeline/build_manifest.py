@@ -52,6 +52,8 @@ INPUT_GROUPS = {
     # How the index is computed. A change here moves every number at once.
     "methodology": [
         "methodology/scoring.json",
+        # Whether a campaign is active decides whether the recovery embargo applies (iteration 17).
+        "data/curated/systems/conflict_campaigns.json",
     ],
     # Canonical pipeline identity, aliases, temporal status and topology.
     "pipeline_registry": [

@@ -73,6 +73,10 @@
     "_partial_note": "When a source reports partial operations resumed but not full reconstitution, impairment is held no lower than this until full reconstitution evidence arrives -- a restart is not a return to full capability."
   },
 
+  "campaign_publication": {
+    "_comment": "Iteration 17 (docs/OPERATIONAL_STATUS_DELAY_OPTIONS.md). While a kinetic campaign is active (data/curated/systems/conflict_campaigns.json), a recovery record for one of its incidents is used -- for display, for scoring and in the build ledger alike -- only once (a) its evidence is at least evidence_embargo_days old and (b) any forward repair estimate it carries has run its course (incident date + upper estimate). Before that the incident is scored on the class's modelled horizon, exactly as if no recovery evidence existed. One rule for all three uses, because an index that moved on evidence the dossier withheld would publish the evidence through the number.",
+    "evidence_embargo_days": 60
+  },
   "recovery_precedence": {
     "_comment": [
       "Iteration 2: recovery is now INCIDENT-level and evidence precedence is RULE-based,",
