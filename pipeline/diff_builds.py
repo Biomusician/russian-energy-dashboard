@@ -59,6 +59,9 @@ CATEGORIES = {
     "incident_revised": "data",
     "source_added": "data",
     "recovery_evidence_added": "world",
+    # Evidence an active-campaign policy no longer shows (iteration 17). One aggregate row, never
+    # per facility: naming the facility would say whose status is current enough to withhold.
+    "recovery_withheld_campaign_policy": "methodology",
     "recovery_status_changed": "world",
     "asset_added": "data",
     "asset_capacity_revised": "data",
@@ -248,9 +251,17 @@ def _recovery_changes(prev_snap, curr_snap, previous_as_of):
     out = []
     p = {d["asset_id"]: d for d in (prev_snap.get("live_disruptions") or [])}
     c = {d["asset_id"]: d for d in (curr_snap.get("live_disruptions") or [])}
+    withheld = 0
     for aid in sorted(set(p) & set(c)):
         pr = (p[aid].get("recovery") or {})
         cr = (c[aid].get("recovery") or {})
+        # A campaign disruption whose evidence the policy now holds back, but the previous build
+        # showed: report it only as a count. The previous build's evidence is history already
+        # published; the CHANGE is what would single the facility out.
+        if (c[aid].get("publication_note") and pr.get("scoring_evidence_kind") not in (None, "modelled")
+                and cr.get("scoring_evidence_kind") in (None, "modelled")):
+            withheld += 1
+            continue
         effective = cr.get("as_of") or cr.get("observed_date") or c[aid].get("latest")
         current = _is_new_in_world(effective, previous_as_of)
         base = {
@@ -280,6 +291,14 @@ def _recovery_changes(prev_snap, curr_snap, previous_as_of):
                         else "current_event",
                         "detail": f"evidence {pr.get('scoring_evidence_kind')} -> "
                                   f"{cr.get('scoring_evidence_kind')}"})
+    if withheld:
+        out.append({"category": "recovery_withheld_campaign_policy", "nature": "methodology",
+                    "record_class": "correction", "id": "campaign-policy:withheld",
+                    "asset_id": None, "label": "active-campaign publication policy",
+                    "date": None, "effective_date": None,
+                    "detail": (f"{withheld} facility recovery record(s) shown in the previous build "
+                               "are no longer shown while the campaign is active; which ones is "
+                               "not published (METHODOLOGY §12)")})
     return out
 
 

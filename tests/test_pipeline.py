@@ -8006,3 +8006,30 @@ def test_the_corpus_totals_are_sums_and_never_per_country():
     # Scalars only: a dict or list keyed by country would be a league table.
     assert all(isinstance(v, (int, str)) for v in c.values()), c
     assert not (set(c) & {s for s in systems.COUNTRY_SYSTEMS})
+
+
+def test_the_ledger_never_names_a_facility_whose_evidence_the_campaign_policy_withholds():
+    """Iteration 17 red team: the production ledger itemised 'Orsk refinery: evidence estimated ->
+    modelled' on the build that first applied the embargo, naming the facility whose status was
+    current enough to withhold. A withdrawal on a campaign disruption is now a count only; a
+    release (modelled -> observed, evidence at least 60 days old) is still itemised."""
+    from pipeline import diff_builds as D
+    note = "Current facility status withheld during active campaign; historical recovery evidence may be published later."
+    prev = {"live_disruptions": [
+        {"asset_id": "a", "name": "A refinery", "recovery": {"recovery_status": "impaired", "scoring_evidence_kind": "estimated"}},
+        {"asset_id": "b", "name": "B refinery", "recovery": {"recovery_status": "impaired", "scoring_evidence_kind": "modelled"}},
+    ]}
+    curr = {"live_disruptions": [
+        {"asset_id": "a", "name": "A refinery", "publication_note": note,
+         "recovery": {"recovery_status": "impaired", "scoring_evidence_kind": "modelled"}},
+        {"asset_id": "b", "name": "B refinery",
+         "recovery": {"recovery_status": "substantially_restored", "scoring_evidence_kind": "observed",
+                      "observed_date": "2026-08-01"}},
+    ]}
+    rows = D._recovery_changes(prev, curr, "2026-11-03")
+    text = json.dumps(rows)
+    assert "A refinery" not in text and '"a"' not in text
+    agg = [r for r in rows if r["category"] == "recovery_withheld_campaign_policy"]
+    assert len(agg) == 1 and agg[0]["asset_id"] is None and agg[0]["detail"].startswith("1 ")
+    assert agg[0]["category"] in D.CATEGORIES
+    assert any(r["asset_id"] == "b" for r in rows)
