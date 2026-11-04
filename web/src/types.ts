@@ -1288,7 +1288,8 @@ export interface LifecycleEpisode {
   publication_date_available: boolean;
   /** Only ever populated from a build ledger with provable lineage, and it means "first present
    *  in this dashboard" — never "when the report was published" or "when anyone learned it". */
-  first_seen: { build_date: string; commit: string } | null;
+  /** Iteration 17: "present_before_tracking" carries no date -- first appearance is not known. */
+  first_seen: { status?: "first_served" | "present_before_tracking"; build_date: string | null; commit: string | null } | null;
 }
 
 export interface DurationSummary {

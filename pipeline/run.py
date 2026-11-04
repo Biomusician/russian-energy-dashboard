@@ -27,6 +27,7 @@ from pipeline.fetch_refineries import build as build_refineries
 from pipeline.fetch_wikipedia import build as build_wikipedia
 from pipeline.recovery import load_recovery_records
 from pipeline import recovery as recovery_mod
+from pipeline import production_history
 from pipeline import artifacts, horizon_sensitivity, outputs, wikirev
 from pipeline.util import log, read_csv, read_json, write_json
 
@@ -537,6 +538,9 @@ def main():
         and f["properties"].get("region_code")
     )
 
+    # The as-published history is read from git once: the lifecycle needs each record's first
+    # served build (iteration 17 first-seen audit), and the same object is written below.
+    published_history = production_history.build(ROOT)
     (national, regional, snapshot, regional_explanations, history_series,
  lifecycle_payload) = build_index.build(**(index_kwargs := dict(
         incidents=in_aoi,
@@ -548,6 +552,9 @@ def main():
         recovery_by_incident=recovery_by_incident,
         transmission_lines_by_region=dict(tx_lines_by_region),
         region_context=region_context,
+        # A reconstruction for D may not know a record was first served after D (hindsight).
+        first_seen={k: v for k, v in (published_history.get("first_seen") or {}).items()
+                    if not v.get("served_from") or v["served_from"][:10] <= args.as_of},
     )))
 
     # Canonical refinery linkage completeness (§9) — identity/linkage, NOT disruption coverage.
@@ -647,7 +654,6 @@ def main():
     # RECONSTRUCTION: today's code and curated corpus, with the Wikipedia inputs pinned to that
     # date. It is never what the dashboard published on that date; that lives only in
     # production_history.json, read from what was actually deployed.
-    from pipeline import production_history
     snapshot["history_concept"] = production_history.history_concept(
         args.as_of, dt.date.today().isoformat(), build_mode=args.mode)
     snapshot["build_mode"] = args.mode
@@ -734,7 +740,7 @@ def main():
     # As-published history (iteration 16): what was actually deployed, read from git and the
     # deployment ledger. Never rebuilt from old code, so it cannot be confused with the
     # reconstruction above (pipeline/production_history.py).
-    write_json(outputs.processed() / "production_history.json", production_history.build(ROOT))
+    write_json(outputs.processed() / "production_history.json", published_history)
 
     # Data manifest (iteration 5): one stamp of the schema version and the files this
     # build emitted, so a client can distinguish app/data skew from a genuine outage and

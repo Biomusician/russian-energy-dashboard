@@ -152,7 +152,7 @@ def _facility_weight(incs, when, recovery_by_incident):
 
 
 def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of,
-          recovery_by_incident=None, transmission_lines_by_region=None, region_context=None):
+          recovery_by_incident=None, transmission_lines_by_region=None, region_context=None, first_seen=None):
     """Return (national_series, regional_series, snapshot)."""
     recovery_by_incident = recovery_by_incident or {}
     region_context = region_context or {}
@@ -340,7 +340,8 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
     lifecycle_payload = lifecycle.build(
         incidents, recovery_by_incident, snapshot.get("recovery_events") or [], timeline,
         lambda inc, when, rec: _weight_at(inc, when, rec),
-        lambda inc, rec: _weight_trace(inc, timeline[-1], rec))
+        lambda inc, rec: _weight_trace(inc, timeline[-1], rec),
+        first_seen_by_incident=first_seen)
 
     # The historical series the two-date comparison consumes (P6). Built from the values this
     # loop already produced — the workspace reads it and computes no scores of its own.

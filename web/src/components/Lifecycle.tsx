@@ -303,10 +303,11 @@ function EpisodeDetail({
         )}
         {/* §2: never call this "when we learned it". */}
         <p className="small">
-          {e.first_seen
-            ? `First present in dashboard: ${fmtDate(e.first_seen.build_date)}`
-            : "First-present-in-dashboard is unavailable: it requires a build ledger with "
-              + "provable lineage."}
+          {e.first_seen?.status === "present_before_tracking"
+            ? "Already in the dashboard when as-published tracking began (2026-08-29); when it first appeared is not known."
+            : e.first_seen?.build_date
+              ? `First present in dashboard: ${fmtDate(e.first_seen.build_date)}`
+              : "Not in any served build yet, or the as-published history is unavailable to this build."}
         </p>
       </section>
 

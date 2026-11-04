@@ -177,8 +177,18 @@ def build(root):
     # Which events each served build ADDED or REMOVED relative to the build served before it.
     # This is the knowledge-date record: an event can be dated 2025 and first served in 2026.
     prev_ids = None
+    # First served build carrying each record (iteration 17, first-seen audit). A record already in
+    # the first reliable build was present BEFORE tracking began: when it first appeared is not
+    # known, and it is labelled so rather than given the tracking start as a fabricated date.
+    first_seen = {}
     for e in rows:
         ids = _event_ids(root, e["sha"])
+        if ids is not None:
+            for eid in ids:
+                if eid not in first_seen:
+                    first_seen[eid] = ({"status": "present_before_tracking", "served_from": None, "sha": None}
+                                       if prev_ids is None else
+                                       {"status": "first_served", "served_from": e["served_from"], "sha": e["sha"]})
         e["event_ids_fingerprint"] = (hashlib.sha256("\n".join(ids).encode("utf-8")).hexdigest()[:16]
                                       if ids is not None else None)
         if ids is None or prev_ids is None:
@@ -190,6 +200,7 @@ def build(root):
             prev_ids = ids
 
     base["entries"] = rows
+    base["first_seen"] = first_seen
     base["excluded"] = excluded
     base["ledger_captured_at"] = ledger.get("captured_at")
     base["earliest_reliable_as_published_date"] = rows[0]["served_from"][:10] if rows else None

@@ -347,10 +347,12 @@ TEMPORAL_MODEL = {
                   "left null rather than inferred from a retrieval time, a URL fragment or a "
                   "commit date — none of which is a publication date.")},
         {"field": "dashboard_first_seen_build", "label": "First present in dashboard",
-         "available": False,
-         "note": ("Available only from the build ledger, and only when its lineage is provable. "
-                  "It is NOT when the report was published or when anyone learned of it — the "
-                  "report may have existed long before this dataset ingested it.")},
+         "available": True,
+         "note": ("From the as-published history (iteration 17): the first served build that "
+                  "carried the record. A record already in the first reliable build (2026-08-29) "
+                  "is 'present before tracking' — when it first appeared is not known and no date "
+                  "is given. It is NOT when the report was published or when anyone learned of "
+                  "it — the report may have existed long before this dataset ingested it.")},
     ],
     "warning": (
         "These four are different questions. A lifecycle that averaged them would produce a "
@@ -381,9 +383,11 @@ def build(incidents, recovery_by_incident, recovery_events, timeline, weight_fn,
         event = by_incident.get(iid)
         if not record and not event:
             continue
+        fs = first_seen_by_incident.get(iid)
         episodes.append(build_episode(
             inc, record, event, timeline, weight_fn, trace_fn,
-            first_seen=first_seen_by_incident.get(iid)))
+            first_seen=({"status": fs["status"], "build_date": (fs.get("served_from") or "")[:10] or None,
+                         "commit": fs.get("sha")} if fs else None)))
     episodes.sort(key=lambda e: (e["incident_date"] or ""), reverse=True)
 
     families = {}

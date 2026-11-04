@@ -5235,9 +5235,18 @@ def test_first_seen_is_populated_only_when_supplied_by_a_valid_ledger():
     out = lifecycle.build(
         [_lc_incident()], {}, [_lc_event()], timeline,
         weight_fn=lambda inc, when, rec: 0.5, trace_fn=lambda inc, rec: {},
-        first_seen_by_incident={"lc1": {"build_date": "2026-08-01", "commit": "abc1234"}})
-    assert out["episodes"][0]["first_seen"]["build_date"] == "2026-08-01"
+        first_seen_by_incident={"lc1": {"status": "first_served", "served_from": "2026-08-01T00:47:40Z",
+                                        "sha": "abc1234"}})
+    fs = out["episodes"][0]["first_seen"]
+    assert (fs["build_date"], fs["commit"], fs["status"]) == ("2026-08-01", "abc1234", "first_served")
     assert out["episodes_with_first_seen"] == 1
+    # Iteration 17: a record already in the first reliable build gets no date at all.
+    out = lifecycle.build(
+        [_lc_incident()], {}, [_lc_event()], timeline,
+        weight_fn=lambda inc, when, rec: 0.5, trace_fn=lambda inc, rec: {},
+        first_seen_by_incident={"lc1": {"status": "present_before_tracking", "served_from": None, "sha": None}})
+    fs = out["episodes"][0]["first_seen"]
+    assert fs["status"] == "present_before_tracking" and fs["build_date"] is None and fs["commit"] is None
 
 
 def test_no_first_seen_claim_when_the_ledger_lineage_is_invalid():
@@ -7902,3 +7911,40 @@ def test_a_blind_reviewed_record_needs_every_role_to_accept():
     assert B.review_problems(ev, frozenset()) == []
     bad = {**ev, "review": {**rv, "roles": {**rv["roles"], "safety": "hold"}}}
     assert any("safety" in p for p in B.review_problems(bad, frozenset()))
+
+
+@pytest.mark.skipif(subprocess.run(["git", "-C", str(ROOT), "cat-file", "-e", "56ad203"],
+                                   capture_output=True).returncode != 0,
+                    reason="git history with the 2026-10-09 deploy not available")
+def test_archive_extraction_returns_exactly_what_was_served(tmp_path):
+    """Iteration 17, the fourth historical concept: what a deployed build SERVED, copied out of git
+    with no code run over any corpus. The October 9/10 fixture: 9.08 then 14.40, the seven
+    backfilled records absent from the first and present in the second."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("xp", ROOT / "scripts" / "extract_published.py")
+    xp = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(xp)
+    p9 = xp.extract("2026-10-09", tmp_path / "d9")
+    p10 = xp.extract("2026-10-10", tmp_path / "d10")
+    assert (p9["esdi"], p10["esdi"]) == (9.08, 14.4)
+    assert p9["lineage"] == p10["lineage"] == "deployed"
+    ids = lambda d: {i["incident_id"] for i in json.loads((tmp_path / d / "incidents.json").read_text(encoding="utf-8"))}
+    assert not set(OCT10_BACKFILL) & ids("d9") and set(OCT10_BACKFILL) <= ids("d10")
+    with pytest.raises(xp.ExtractRefused):
+        xp.extract("2026-10-09", PROCESSED)
+    with pytest.raises(xp.ExtractRefused):
+        xp.extract("2026-08-01", tmp_path / "early")
+
+
+@needs_build
+def test_first_seen_is_the_first_served_build_and_never_a_fabricated_date():
+    """Iteration 17 first-seen audit. The seven October-10 backfilled records were first served on
+    10 October; records already in the first reliable build are 'present before tracking' with no
+    date, never the tracking start passed off as their first appearance."""
+    h = json.loads((PROCESSED / "production_history.json").read_text(encoding="utf-8"))
+    fs = h["first_seen"]
+    for eid in OCT10_BACKFILL:
+        assert fs[eid]["status"] == "first_served" and fs[eid]["served_from"][:10] == "2026-10-10", eid
+    before = [v for v in fs.values() if v["status"] == "present_before_tracking"]
+    assert before and all(v["served_from"] is None and v["sha"] is None for v in before)
+    assert {v["status"] for v in fs.values()} <= {"first_served", "present_before_tracking"}
