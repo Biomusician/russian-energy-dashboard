@@ -975,6 +975,38 @@ def build_world(admin1, admin0):
     return {"type": "FeatureCollection", "features": feats}
 
 
+def corpus_totals(country_payloads):
+    """Descriptive totals across every country system together (brief §50).
+
+    One number per measure for the five countries summed, never one per country: a per-country
+    list here would be a ranking. Lanes are counted from each country's newest systematic pass.
+    """
+    lanes_done = lanes_all = 0
+    for p in country_payloads.values():
+        passes = [x for x in p["research_log"]["passes"] if x["kind"] == "systematic"]
+        if passes:
+            newest = max(passes, key=lambda x: x["date"])
+            lanes_all += len(newest.get("lanes") or [])
+            lanes_done += sum(1 for l in newest.get("lanes") or [] if l["status"] == "complete")
+    tot = lambda f: sum(f(p) for p in country_payloads.values())  # noqa: E731
+    return {
+        "countries": len(country_payloads),
+        "records": tot(lambda p: p["event_summary"]["recorded_events"]),
+        "episodes": tot(lambda p: p["event_summary"]["episodes"]),
+        "independently_reviewed": tot(lambda p: p["review_summary"].get("blind_reviewed", 0)
+                                      + p["review_summary"].get("dual_reviewed", 0)),
+        "blind_reviewed": tot(lambda p: p["review_summary"].get("blind_reviewed", 0)),
+        "registry_sources": tot(lambda p: sum(1 for s in p["sources"] if _in_use(s))),
+        "records_with_recovery_evidence": tot(lambda p: p["event_summary"]["recovery_research"]["EVIDENCE_FOUND"]),
+        "records_with_status_withheld": tot(lambda p: p["event_summary"]["recovery_research"][WITHHELD]),
+        "research_lanes_complete": lanes_done,
+        "research_lanes": lanes_all,
+        "note": ("Totals for the five country systems together. Counts what was reported, found and "
+                 "reviewed, not what occurred; reporting environments differ, so no share of these "
+                 "totals belongs to any one country in a comparable way. The theatre is not included."),
+    }
+
+
 def build_manifest(country_payloads, theatre_snapshot, build_time):
     entries = []
     for s in systems.SYSTEMS:
@@ -1010,6 +1042,7 @@ def build_manifest(country_payloads, theatre_snapshot, build_time):
         "reporting_environments": systems.REPORTING_ENVIRONMENTS,
         # Fixed, alphabetical order from the registry. Never sorted by any figure.
         "order": "alphabetical by name; never by any figure",
+        "corpus": corpus_totals(country_payloads),
         "systems": entries,
     }
 

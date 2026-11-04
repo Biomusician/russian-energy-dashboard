@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_time": "2026-11-04T01:05:32+00:00",
+  "build_time": "2026-11-04T01:20:17+00:00",
   "selection": {
     "rule": "The five largest total primary energy producers in the world, excluding Russia.",
     "source": "U.S. EIA International Energy Statistics, total primary energy production, 2024",
@@ -17,6 +17,19 @@
     "conflict_restricted": "Disruption is reported under wartime restrictions by the authorities concerned, so independent, attacker-side and open-source reporting carry most of the record."
   },
   "order": "alphabetical by name; never by any figure",
+  "corpus": {
+    "countries": 5,
+    "records": 200,
+    "episodes": 166,
+    "independently_reviewed": 200,
+    "blind_reviewed": 85,
+    "registry_sources": 47,
+    "records_with_recovery_evidence": 107,
+    "records_with_status_withheld": 8,
+    "research_lanes_complete": 0,
+    "research_lanes": 35,
+    "note": "Totals for the five country systems together. Counts what was reported, found and reviewed, not what occurred; reporting environments differ, so no share of these totals belongs to any one country in a comparable way. The theatre is not included."
+  },
   "systems": [
     {
       "id": "ca",

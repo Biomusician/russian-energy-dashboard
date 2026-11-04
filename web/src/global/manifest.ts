@@ -26,9 +26,25 @@ export interface ManifestSystem {
   files: string[];
 }
 
+/** Totals for the five countries together (iteration 17). Never one figure per country. */
+export interface CorpusTotals {
+  countries: number;
+  records: number;
+  episodes: number;
+  independently_reviewed: number;
+  blind_reviewed: number;
+  registry_sources: number;
+  records_with_recovery_evidence: number;
+  records_with_status_withheld: number;
+  research_lanes_complete: number;
+  research_lanes: number;
+  note: string;
+}
+
 export interface Manifest {
   schema_version: number;
   build_time: string;
+  corpus?: CorpusTotals;
   selection: { rule: string; source: string; source_url: string; caveat: string };
   comparability_statement: string;
   reporting_environments: Record<string, string>;

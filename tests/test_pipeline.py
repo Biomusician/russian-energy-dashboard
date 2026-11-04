@@ -7991,3 +7991,18 @@ def test_osm_provenance_names_every_query_and_the_relations_used():
         assert f["query_sha256"] and f["sha256"] and f["osm_data_timestamp"], name
     rel = by["osm_pipeline_relations.json"]
     assert rel["relation_count"] > 0 and len(rel["relation_ids_sha256"]) == 16
+
+
+@needs_systems
+def test_the_corpus_totals_are_sums_and_never_per_country():
+    """Brief §50: safe descriptive counts for the five countries together; no per-country figure."""
+    from pipeline import systems
+    c = _manifest()["corpus"]
+    assert c["countries"] == len(systems.COUNTRY_SYSTEMS)
+    pay = {sid: _sys_payload(sid, "system.json") for sid in systems.COUNTRY_SYSTEMS}
+    assert c["records"] == sum(p["event_summary"]["recorded_events"] for p in pay.values())
+    assert c["episodes"] == sum(p["event_summary"]["episodes"] for p in pay.values())
+    assert 0 <= c["research_lanes_complete"] <= c["research_lanes"]
+    # Scalars only: a dict or list keyed by country would be a league table.
+    assert all(isinstance(v, (int, str)) for v in c.values()), c
+    assert not (set(c) & {s for s in systems.COUNTRY_SYSTEMS})
