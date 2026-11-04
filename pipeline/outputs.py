@@ -24,6 +24,7 @@ directory; nothing else in the pipeline may name `PROCESSED` for writing (a test
 Archive extraction — reading what a past deployed build served — is not a pipeline mode at all:
 it runs no code over the corpus. See `scripts/extract_published.py`.
 """
+import os
 from pathlib import Path
 
 from pipeline.config import PROCESSED, ROOT, WEB_DATA
@@ -46,11 +47,46 @@ def _inside(path, parent):
         return False
 
 
+def _same(a, b):
+    try:
+        return os.path.samefile(a, b)
+    except OSError:
+        return False
+
+
+def _existing_chain(path):
+    """`path` and its ancestors, those that exist."""
+    p = Path(path).resolve()
+    return [x for x in (p, *p.parents) if x.exists()]
+
+
+def _alias_prefix(path):
+    # Extended-length, device and UNC spellings (a leading double backslash) can name a local
+    # directory under a prefix
+    # that resolve() does not normalise; an output root never needs one (lane-D red team).
+    s = str(path).replace("/", "\\")
+    return s.startswith("\\\\")
+
+
 def _protected(path):
     """Inside a protected root, or an ancestor of one (writing `data/` or `web/` would write
-    beside, and under some layouts over, the production payload)."""
+    beside, and under some layouts over, the production payload).
+
+    Compared by path AND by filesystem identity: a string comparison alone let
+    a UNC spelling of the local data/processed through (iteration 17, lane-D red team)."""
+    if _alias_prefix(path):
+        return True
     p = Path(path).resolve()
-    return any(_inside(p, root) or _inside(root, p) for root in PROTECTED)
+    if any(_inside(p, root) or _inside(root, p) for root in PROTECTED):
+        return True
+    for root in PROTECTED:
+        root_chain = [Path(root).resolve(), *Path(root).resolve().parents]
+        for anc in _existing_chain(p):
+            if _same(anc, root):
+                return True          # path is inside root
+        if p.exists() and any(_same(p, r) for r in root_chain if r.exists()):
+            return True              # path is root or one of its ancestors
+    return False
 
 
 def plan(mode, as_of, today, output_root=None, allow_protected_root=False):
@@ -71,7 +107,10 @@ def plan(mode, as_of, today, output_root=None, allow_protected_root=False):
     if mode == "reconstruction" and as_of >= today:
         raise OutputRefused(f"a reconstruction is for a past date; {as_of} is not before {today}")
     if _protected(output_root):
-        if mode == "reconstruction" and allow_protected_root:
+        # The override names exactly the working-tree payload, never the served bundle, the repo
+        # root or an alias of either (lane-D red team).
+        if (mode == "reconstruction" and allow_protected_root and not _alias_prefix(output_root)
+                and _same(Path(output_root).resolve(), PROCESSED)):
             pass  # explicit, deliberate, and still never mirrored or recorded as current
         else:
             raise OutputRefused(

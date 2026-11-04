@@ -541,6 +541,10 @@ def main():
     # The as-published history is read from git once: the lifecycle needs each record's first
     # served build (iteration 17 first-seen audit), and the same object is written below.
     published_history = production_history.build(ROOT)
+    if args.mode != "current":
+        # What was served after the reconstruction date is hindsight; cut it here, once, so the
+        # lifecycle and the emitted production_history.json both see only what was known on D.
+        published_history = production_history.known_on(published_history, args.as_of)
     (national, regional, snapshot, regional_explanations, history_series,
  lifecycle_payload) = build_index.build(**(index_kwargs := dict(
         incidents=in_aoi,
@@ -553,8 +557,7 @@ def main():
         transmission_lines_by_region=dict(tx_lines_by_region),
         region_context=region_context,
         # A reconstruction for D may not know a record was first served after D (hindsight).
-        first_seen={k: v for k, v in (published_history.get("first_seen") or {}).items()
-                    if not v.get("served_from") or v["served_from"][:10] <= args.as_of},
+        first_seen=published_history.get("first_seen") or {},
     )))
 
     # Canonical refinery linkage completeness (§9) — identity/linkage, NOT disruption coverage.

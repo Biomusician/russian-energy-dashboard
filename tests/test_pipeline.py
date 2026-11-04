@@ -8033,3 +8033,65 @@ def test_the_ledger_never_names_a_facility_whose_evidence_the_campaign_policy_wi
     assert len(agg) == 1 and agg[0]["asset_id"] is None and agg[0]["detail"].startswith("1 ")
     assert agg[0]["category"] in D.CATEGORIES
     assert any(r["asset_id"] == "b" for r in rows)
+
+
+# --- iteration 17 final red team, lane D (history and provenance) -----------------------------
+
+@pytest.mark.skipif(os.name != "nt", reason="UNC and extended-length paths are Windows spellings")
+@pytest.mark.parametrize("spell", [
+    lambda p: "\\\\?\\" + str(p),
+    lambda p: "\\\\localhost\\" + str(p).replace(":", "$", 1),
+    lambda p: "\\\\127.0.0.1\\" + str(p).replace(":", "$", 1),
+    lambda p: "\\\\?\\UNC\\localhost\\" + str(p).replace(":", "$", 1),
+])
+def test_an_alias_spelling_of_a_protected_root_is_refused(spell):
+    """Lane D: a UNC spelling (localhost, C$ share) of data/processed resolved to a different string
+    and passed a string comparison. Refused now, whatever the mode or the override."""
+    from pipeline import outputs
+    from pipeline.config import WEB_DATA
+    for root in (PROCESSED, WEB_DATA):
+        for mode, allow in (("reconstruction", False), ("reconstruction", True), ("fixture", False)):
+            with pytest.raises(outputs.OutputRefused):
+                outputs.plan(mode, "2026-10-01", "2026-11-03", spell(root.resolve()), allow)
+
+
+def test_the_override_names_only_the_working_tree_payload(tmp_path):
+    """Lane D: --allow-protected-root let a reconstruction write the served bundle or the repo."""
+    from pipeline import outputs
+    from pipeline.config import WEB_DATA
+    for root in (WEB_DATA, ROOT, ROOT / "data", ROOT / "web"):
+        with pytest.raises(outputs.OutputRefused):
+            outputs.plan("reconstruction", "2026-10-01", "2026-11-03", root, True)
+    assert outputs.plan("reconstruction", "2026-10-01", "2026-11-03", PROCESSED, True)["mirror_web"] is False
+    assert outputs.plan("reconstruction", "2026-10-01", "2026-11-03", tmp_path, False)["root"] == tmp_path
+
+
+def test_a_reconstruction_knows_only_what_was_served_by_its_date():
+    """Lane D: a reconstruction for D emitted the whole as-published history, 42 builds served
+    after D and nine first-seen facts learned after D. And before the first reliable build even
+    'present before tracking' is hindsight."""
+    from pipeline import production_history as ph
+    h = {"earliest_reliable_as_published_date": "2026-08-29",
+         "entries": [{"served_from": "2026-08-29T10:00:00Z"}, {"served_from": "2026-10-10T10:00:00Z"}],
+         "first_seen": {"a": {"status": "present_before_tracking", "served_from": None, "sha": None},
+                        "b": {"status": "first_served", "served_from": "2026-10-10T10:00:00Z", "sha": "x"}}}
+    k = ph.known_on(h, "2026-10-01")
+    assert len(k["entries"]) == 1 and set(k["first_seen"]) == {"a"} and k["known_on"] == "2026-10-01"
+    assert ph.known_on(h, "2026-05-01")["first_seen"] == {} and ph.known_on(h, "2026-05-01")["entries"] == []
+    assert set(ph.known_on(h, "2026-11-03")["first_seen"]) == {"a", "b"}
+    assert len(h["entries"]) == 2          # the input is not mutated
+
+
+def test_archive_extraction_refuses_bad_days_and_non_empty_targets(tmp_path):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("xp", ROOT / "scripts" / "extract_published.py")
+    xp = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(xp)
+    for day in ("2026-10-09junk", "2026-13-01", "20261009"):
+        with pytest.raises(xp.ExtractRefused):
+            xp.served_on(day, history={"entries": []}, today="2026-11-03")
+    with pytest.raises(xp.ExtractRefused):
+        xp.served_on("2027-06-01", history={"entries": []}, today="2026-11-03")
+    (tmp_path / "stray.json").write_text("{}", encoding="utf-8")
+    with pytest.raises(xp.ExtractRefused):
+        xp.extract("2026-10-09", tmp_path)

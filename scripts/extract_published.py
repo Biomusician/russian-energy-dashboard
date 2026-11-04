@@ -4,17 +4,20 @@
 
 The fourth way to look at the past, and deliberately not a pipeline mode: it runs no scoring code
 over any corpus. It finds the build that was being served at the end of the UTC day (the
-as-published history, pipeline/production_history.py), and writes that commit's payload
-(`data/processed/`) out of git, byte for byte, with a provenance file saying which commit, from
+as-published history, pipeline/production_history.py), and writes that commit's served payload
+(`web/public/data/`, the bundle Vercel deployed) out of git, byte for byte, with a provenance file saying which commit, from
 when, and on what lineage evidence. Compare with:
 
     pipeline.run --mode reconstruction --as-of D   today's code and corpus evaluated at D
     production_history.json                         the index of served builds, not their payloads
 
-It refuses: a day before the first reliable as-published build (the history says when); and an
-output directory that is, or contains, the production payload or the web bundle.
+It refuses: a malformed day; a day after today (UTC); a day before the first reliable
+as-published build (the history says when); an output directory that is not empty (stray files
+would sit beside the extracted ones under one provenance file); and an output directory that is,
+or contains, the production payload or the web bundle.
 """
 import argparse
+import datetime as dt
 import json
 import subprocess
 import sys
@@ -35,8 +38,16 @@ def _git(*args, binary=False):
     return r.stdout if binary else r.stdout.decode("utf-8")
 
 
-def served_on(day, history=None):
+def served_on(day, history=None, today=None):
     """The as-published entry served at the end of `day`, or refuse."""
+    try:
+        if dt.date.fromisoformat(day).isoformat() != day:
+            raise ValueError
+    except ValueError:
+        raise ExtractRefused(f"{day!r} is not a YYYY-MM-DD day") from None
+    today = today or dt.datetime.now(dt.timezone.utc).date().isoformat()
+    if day > today:
+        raise ExtractRefused(f"{day} is after today ({today} UTC): nothing has been served on it yet")
     history = history or production_history.build(ROOT)
     entry = production_history.as_published_on(history, day)
     if entry is None:
@@ -48,6 +59,8 @@ def served_on(day, history=None):
 def extract(day, out, history=None):
     if outputs._protected(out):
         raise ExtractRefused(f"{out} is, or contains, the production payload or the web bundle")
+    if Path(out).exists() and any(Path(out).iterdir()):
+        raise ExtractRefused(f"{out} is not empty; extract into a new directory")
     entry = served_on(day, history)
     sha = entry["sha"]
     files = [f for f in _git("ls-tree", "-r", "--name-only", sha, PAYLOAD_DIR).splitlines() if f]

@@ -207,6 +207,23 @@ def build(root):
     return base
 
 
+def known_on(history, day):
+    """The as-published history as it could have been known at the end of `day` (iteration 17,
+    lane-D red team). A reconstruction for D must not carry builds served after D, nor first-seen
+    facts learned after D. Before the first reliable build nothing is known at all: not even
+    "present before tracking", which is itself a fact learned on that first build."""
+    out = dict(history)
+    out["entries"] = [e for e in history.get("entries") or [] if e["served_from"][:10] <= day]
+    earliest = history.get("earliest_reliable_as_published_date")
+    if earliest is None or day < earliest:
+        out["first_seen"] = {}
+    else:
+        out["first_seen"] = {k: v for k, v in (history.get("first_seen") or {}).items()
+                             if not v.get("served_from") or v["served_from"][:10] <= day}
+    out["known_on"] = day
+    return out
+
+
 def as_published_on(history, day):
     """The build being served at the end of `day` (YYYY-MM-DD), or None before history begins.
     Served-from times are UTC; a day is the UTC day."""
