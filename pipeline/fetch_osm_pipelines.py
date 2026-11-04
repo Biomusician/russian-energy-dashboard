@@ -38,11 +38,18 @@ PAUSE_SECONDS = 10
 CACHE_HOURS = 24 * 30      # pipeline topology changes monthly at most; be gentle on Overpass
 
 
+# The two queries, named once so the build's provenance can hash exactly what was fetched.
+RELATIONS_QUERY = (f'[out:json][timeout:900];'
+                   f'(relation["type"="route"]["route"="pipeline"]({CORRIDOR}););'
+                   f'out geom;')
+MEMBER_TAGS_QUERY = (f'[out:json][timeout:900];'
+                     f'relation["type"="route"]["route"="pipeline"]({CORRIDOR})->.r;'
+                     f'way(r.r);out tags;')
+
+
 def fetch_relations(max_age_hours=CACHE_HOURS):
     """Pipeline route relations WITH member geometry."""
-    query = (f'[out:json][timeout:900];'
-             f'(relation["type"="route"]["route"="pipeline"]({CORRIDOR}););'
-             f'out geom;')
+    query = RELATIONS_QUERY
     log("osm-pipelines: route relations (with member geometry)")
     raw = fetch(ENDPOINT, "osm_pipeline_relations.json", max_age_hours=max_age_hours,
                 data=query, content_type="application/x-www-form-urlencoded")
@@ -58,9 +65,7 @@ def fetch_member_tags(max_age_hours=CACHE_HOURS):
     Needed because substance is frequently tagged on the members rather than the relation: of 478
     relations only 174 carry a usable `substance` themselves. Returns {way_id: tags}.
     """
-    query = (f'[out:json][timeout:900];'
-             f'relation["type"="route"]["route"="pipeline"]({CORRIDOR})->.r;'
-             f'way(r.r);out tags;')
+    query = MEMBER_TAGS_QUERY
     log("osm-pipelines: relation member way tags")
     raw = fetch(ENDPOINT, "osm_pipeline_relation_member_tags.json", max_age_hours=max_age_hours,
                 data=query, content_type="application/x-www-form-urlencoded")

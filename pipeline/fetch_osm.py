@@ -90,8 +90,11 @@ def provenance(raw_dir):
     query identity. It does not make old maps rebuildable; Overpass serves only current data."""
     import hashlib
     import re
+    from pipeline import fetch_osm_pipelines as P
     queries = {f"osm_{k}.json": f"[out:json][timeout:900];({sel}({BBOX}););out {mode} qt;"
                for k, sel, mode in LAYERS}
+    queries["osm_pipeline_relations.json"] = P.RELATIONS_QUERY
+    queries["osm_pipeline_relation_member_tags.json"] = P.MEMBER_TAGS_QUERY
     out = []
     for path in sorted(raw_dir.glob("osm_*.json")):
         h = hashlib.sha256()
@@ -102,11 +105,20 @@ def provenance(raw_dir):
                 h.update(chunk)
         m = re.search(rb'"timestamp_osm_base"\s*:\s*"([^"]+)"', head)
         q = queries.get(path.name)
-        out.append({
+        entry = {
             "file": path.name,
             "osm_data_timestamp": m.group(1).decode("ascii") if m else None,
             "sha256": h.hexdigest()[:16],
             "bytes": path.stat().st_size,
             "query_sha256": hashlib.sha256(q.encode("utf-8")).hexdigest()[:16] if q else None,
-        })
+        }
+        if path.name == "osm_pipeline_relations.json":
+            # Which route relations the pipeline network was assembled from: a count and a hash
+            # of the sorted ids, so two builds can be told apart without listing every id.
+            ids = sorted(e["id"] for e in json.loads(path.read_text(encoding="utf-8")).get("elements", [])
+                         if e.get("type") == "relation")
+            entry["relation_count"] = len(ids)
+            entry["relation_ids_sha256"] = hashlib.sha256(
+                ",".join(map(str, ids)).encode("ascii")).hexdigest()[:16]
+        out.append(entry)
     return {"endpoint": ENDPOINT, "scored": False, "files": out}

@@ -132,9 +132,32 @@ and every sector value were identical to the build before it.
 
 What OSM does change is the **map**. For archival purposes each build now records which OSM state
 it drew (`snapshot.context_geometry_inputs`): Overpass's own data timestamp, a content hash and
-a hash of the query, per layer. That says which OSM snapshot a published map showed. It cannot
+a hash of the query, per layer, and for the pipeline route relations their count and a hash of
+their sorted ids (iteration 17). That says which OSM snapshot a published map showed. It cannot
 re-create an old map — Overpass serves only current data — and exact cartographic replay is not
 worth building: the score, not the line work, is what has to be reproducible.
+
+## 4a. The curated corpus has a history too (iteration 17)
+
+A reconstruction uses **today's** curated corpus. When the corpus changes, every reconstruction
+changes with it, including reconstructions of dates when the old version was what readers saw.
+Iteration 17 is the clearest case so far:
+
+- **Country records held at review.** The blind three-role review held 19 of the 94 records first
+  published in iteration 14. They left `data/curated/systems/<id>/events.json`, so a
+  reconstruction of any date now lacks them, while the as-published history still contains them
+  for every day they were served. Neither is wrong: one says what today's reviewed evidence
+  supports for that date, the other what was shown on it.
+- **Corrections.** 75 published records carry review corrections (`review_edits.json`). A
+  reconstruction shows the corrected text for every date.
+- **The theatre's embargo.** Recovery evidence younger than 60 days on the reconstruction date is
+  withheld exactly as in a current build, so the pinned 2026-08-28 reference moved from 16.16 to
+  16.48. Three open-horizon repair estimates also left the curated file and are held locally
+  until their horizons close.
+
+git is the audit trail for all of it: `git log -p -- data/curated/` shows every record added,
+corrected or held, with the commit that did it. `scripts/extract_published.py` recovers what was
+served on any day from 2026-08-29. Neither the build nor the UI tries to merge the two.
 
 ## 5. C — engineering regression fixtures
 

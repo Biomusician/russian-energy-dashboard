@@ -7977,3 +7977,17 @@ def test_source_health_matches_the_published_events_and_stays_out_of_the_manifes
         assert sum(h["opened"].values()) == h["citations"], sid
     for s in _manifest()["systems"]:
         assert "source_health" not in set(_walk_keys(s)) and "citations" not in set(_walk_keys(s)), s["id"]
+
+
+@pytest.mark.skipif(not (ROOT / "data" / "raw" / "osm_pipeline_relations.json").exists(),
+                    reason="OSM cache not present")
+def test_osm_provenance_names_every_query_and_the_relations_used():
+    """Brief §39: timestamp, query, hash and relation ids for every OSM context input."""
+    from pipeline import fetch_osm
+    prov = fetch_osm.provenance(ROOT / "data" / "raw")
+    assert prov["scored"] is False
+    by = {f["file"]: f for f in prov["files"]}
+    for name, f in by.items():
+        assert f["query_sha256"] and f["sha256"] and f["osm_data_timestamp"], name
+    rel = by["osm_pipeline_relations.json"]
+    assert rel["relation_count"] > 0 and len(rel["relation_ids_sha256"]) == 16

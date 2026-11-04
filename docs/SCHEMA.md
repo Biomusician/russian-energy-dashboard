@@ -559,6 +559,9 @@ state may be null until it is fetched.
   `present_before_tracking` (no date claimed) or `first_served`. Field
   `dashboard_first_seen_build` is `available: true`.
 - `production_history.json` → `first_seen`: incident id → `{status, served_from, sha}`.
+- `snapshot.context_geometry_inputs.files[]`: every OSM file now carries `query_sha256` (the two
+  pipeline-relation queries were null before); `osm_pipeline_relations.json` adds `relation_count`
+  and `relation_ids_sha256` (sha256 prefix of the sorted relation ids).
 
 ### Country systems
 
