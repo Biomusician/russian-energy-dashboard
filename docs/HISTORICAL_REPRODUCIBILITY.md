@@ -148,8 +148,9 @@ Iteration 17 is the clearest case so far:
   reconstruction of any date now lacks them, while the as-published history still contains them
   for every day they were served. Neither is wrong: one says what today's reviewed evidence
   supports for that date, the other what was shown on it.
-- **Corrections.** 75 published records carry review corrections (`review_edits.json`). A
-  reconstruction shows the corrected text for every date.
+- **Corrections.** 79 of the 85 records published after blind review carry at least one
+  correction (307 field edits in `review_edits.json`). A reconstruction shows the corrected text
+  for every date.
 - **The theatre's embargo.** Recovery evidence younger than 60 days on the reconstruction date is
   withheld exactly as in a current build, so the pinned 2026-08-28 reference moved from 16.16 to
   16.48. Three open-horizon repair estimates also left the curated file and are held locally
