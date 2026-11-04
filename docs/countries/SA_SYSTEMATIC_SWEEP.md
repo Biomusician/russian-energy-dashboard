@@ -39,4 +39,27 @@ Split agents, fixed search caps, progress after each lane, blind three-role revi
 
 ## Part B — execution record
 
-*(Filled in after the lanes run. Counts only.)*
+Run on 2026-11-03 against the plan as committed in `a7f3a36`. The research log (`data/curated/systems/sa/research_log.json`) is the record; this section restates it as counts.
+
+**0 of 5 lanes complete** for the window 2022-01-01 to 2026-11-03. A lane is complete only if its declared universe was searched to the end of the window; none was.
+
+### B.1 Dispositions
+
+candidates 30 · accepted 0 · rejected 2 · duplicate 18 · held 6 · out of scope 4
+
+No candidate was accepted by a lane: 18 of 30 were duplicates of published records, and the 6 held stay in the local queue with their reasons.
+
+### B.2 Lane by lane
+
+| Lane | Status | Covered through | Why not complete |
+|---|---|---|---|
+| SA1 | partial | 2026-11-03 | SPA and the ministry site could not be enumerated directly (SPA renders by script; moenergy.gov.sa did not respond), so the lane depends on search; four English year-queries were not run under the 15-search cap; the 2022 Arabic query was run unfiltered and the first attempt was cut off (counted). |
+| SA2 | partial | 2026-11-03 | Both queries were run (search covers all years), but the Tadawul announcement list refused automated access (403) and aramco.com's news list rendered only its latest item, so the declared universe was not enumerated; the 2022-2025 annual reports were not read. |
+| SA3 | partial | 2022-01-01 | JODI's universe carries no attribution text by design, so it can never supply an attributed production effect; GASTAT's energy release listing was not reached. Not searched across the window. |
+| SA4 | partial | 2022-01-01 | The MOMR archive refused automated access (HTTP 402 on both the legacy and current addresses). No issue was read. |
+| SA5 | partial | 2026-11-03 | 6 of the plan's 15 SA5 queries were run before the 15-search personal cap; 2023 and 2024 had no query; several outlets refused (402/login wall). |
+
+### B.3 What the next pass must do
+
+Run the lanes marked not started first, then the partial lanes from their `covered_through` date. Refusals (HTTP 402/403, login walls, script-rendered listings) are not worked around; a lane that depends on one stays partial and says so.
+

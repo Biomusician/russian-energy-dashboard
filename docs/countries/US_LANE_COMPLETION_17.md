@@ -49,4 +49,33 @@ proposed record, not the researcher's rationale.
 
 ## Part B — execution record
 
-*(Filled in after the lanes run. Counts only.)*
+Run on 2026-11-03 against the plan as committed in `a7f3a36`. The research log (`data/curated/systems/us/research_log.json`) is the record; this section restates it as counts.
+
+**0 of 9 lanes complete** for the window 2022-01-01 to 2026-11-03. A lane is complete only if its declared universe was searched to the end of the window; none was.
+
+### B.1 Dispositions
+
+candidates 78 · accepted 3 · rejected 25 · duplicate 38 · held 8 · out of scope 3
+
+4 lane-accepted candidates went to blind review: 3 published, 1 held (Hurricane Lee in Maine: whether the reported customer figure meets the threshold is an owner question).
+
+### B.2 Lane by lane
+
+Lane H1 was declared in Part A but not assigned to an agent in this iteration. It is recorded as partial, covered through 2026-10-31 (its iteration-16 completion), and the plan-commit test is what caught the omission.
+
+| Lane | Status | Covered through | Why not complete |
+|---|---|---|---|
+| G1 | partial | 2025-12-31 | 2022-2025 enumerated in full (iteration 16, carried forward, re-verified unchanged). 2026 has no published OE-417 annual summary, so the lane's universe for 2026-01-01 to 2026-11-03 cannot be searched. |
+| G2 | partial | 2025-12-31 | Every in-window report on NERC's event-analysis page and every SOR published to date was read (iteration 16; re-verified today as unchanged). Partial because no SOR yet covers 2026 events and ferc.gov refuses automated access (403, not worked around), so the FERC side of the universe cannot be enumerated. |
+| H1 | partial | 2026-10-31 | Complete through 2026-10-31 in iteration 16 and carried forward, as the plan declares; not re-run for 2026-11-01 to 2026-11-03, so not complete for this window. |
+| H2 | partial | 2026-06-16 | Every published TCR in the declared universe was read and every US energy effect it documents was dispositioned. Partial because NHC has not yet published the TCRs for four 2026 US-affecting storms (Arthur, Edouard, Isaias; Lowell in the eastern Pacific). |
+| U1 | partial | 2026-11-03 | The EIA half is covered through 2026-11-03 and every weather shut-in article dispositioned. Partial because BSEE refused automated access again (HTTP 403 on a single polite retry), so BSEE's storm shut-in releases still cannot be enumerated, and because the plan's site-search strings could only be run through a general eia.gov-restricted search. |
+| P1 | partial | 2026-11-03 | The CAO universe itself is enumerated across the whole window: the raw file is current to 2026-11-03 and lists 30 CAO cases opened 2022-01-01 onward, exactly the 30 iteration 16 dispositioned; no CAO was opened or issued after 21 Sep 2026. Marked partial only because the plan's second endpoint, the PHMSA incident data files, refused the fetch (HTTP 403). LEAD may rule the lane complete, since the  |
+| L1 | partial | 2026-11-03 | Only Sabine Pass (10 of the plan's 90 queries) was run before the personal search cap; the other eight terminals were not searched in this pass. Even fully run, per-terminal news search is not a census of terminal outages. |
+| R1 | partial | 2026-11-03 | All 15 plan queries were run and both CSB lists read, but R1 has no census source: it is complete only for the declared query set, never for 'every refinery event' (plan A.1; partial by construction until the owner rules, ITERATION_16_REVIEW s.12 item 5). |
+| C1 | partial | 2026-11-03 | All 10 plan queries were run, but C1 has no census source (MSHA and EIA publish no list of mine events that cut supply): complete only for the declared query set, partial by construction until the owner rules (plan A.1). |
+
+### B.3 What the next pass must do
+
+Run the lanes marked not started first, then the partial lanes from their `covered_through` date. Refusals (HTTP 402/403, login walls, script-rendered listings) are not worked around; a lane that depends on one stays partial and says so.
+

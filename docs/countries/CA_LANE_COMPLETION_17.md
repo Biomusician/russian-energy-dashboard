@@ -33,4 +33,30 @@ written after each source family, blind three-role review before import.
 
 ## Part B — execution record
 
-*(Filled in after the lanes run. Counts only.)*
+Run on 2026-11-03 against the plan as committed in `a7f3a36`. The research log (`data/curated/systems/ca/research_log.json`) is the record; this section restates it as counts.
+
+**0 of 8 lanes complete** for the window 2022-01-01 to 2026-11-03. A lane is complete only if its declared universe was searched to the end of the window; none was.
+
+### B.1 Dispositions
+
+candidates 56 · accepted 6 · rejected 12 · duplicate 11 · held 27 · out of scope 0
+
+6 lane-accepted candidates went to blind review: all 6 published (some with corrections every role confirmed).
+
+### B.2 Lane by lane
+
+| Lane | Status | Covered through | Why not complete |
+|---|---|---|---|
+| CG1 | partial | 2022-12-22 | The source has published nothing after 2022-12-22. The newest edition is the one iteration 16 enumerated; 2023-2026 is absent from the source, not unsearched. |
+| CG2 | partial | 2025-12-31 | Every published SOR and event report was covered, but no SOR covering 2026 exists yet; covered_through is the end of the latest operating year NERC has reported. |
+| CG3 | partial | 2025-12-31 | AESO is enumerated completely through 2025-12-31 from its own records, but it has published no list for 2026 (its live feeds are empty and keep no archive); 2026 rests on one search that found nothing. IESO publishes no archive of its emergency declarations (the notice archive keeps 90 days), so IESO coverage rests on searches. Hydro-Québec's archive is complete as a list of releases but HQ did no |
+| CH1 | partial | 2025-12-31 | No 2026 edition exists, so January-November 2026 is outside this source; two holds remain without a utility peak; and two iteration-16 rejections rest on ECCC wording rather than a utility figure. |
+| CP1 | partial | 2026-10-22 | CER file enumerated across the window to its latest reported date (2026-10-22) and every screened row dispositioned (this pass re-emits the 10 interruption-flag rows; the other 41 keep their iteration-16 dispositions, unchanged). Partial because the TSB half was refused (HTTP 403), the CER file stops at 2026-10-22, and no public-report check of the interruption rows was possible within the lane (n |
+| CR1 | partial | 2026-11-03 | All 15 declared queries run (every year 2022-2026). Partial by construction (plan A.1: no census source; a declared query set is complete only if the owner accepts it), and because several result pages refused fetch (moosejawtoday, oilandgas360, energynow, Biofuels Digest) and some results were undated archive items. |
+| CU1 | partial | 2026-06-01 | Five of ten declared queries run (2022 both, 2026 both, 2024 one); 2023 and 2025 not searched; no AER/provincial/operator enumeration; partial by construction in any case (no census source). |
+| CL1 | partial | not started | Not executed: the personal search cap was spent on CR1 and CU1 in the instructed order, and the one direct fetch (LNG Canada news) was refused. |
+
+### B.3 What the next pass must do
+
+Run the lanes marked not started first, then the partial lanes from their `covered_through` date. Refusals (HTTP 402/403, login walls, script-rendered listings) are not worked around; a lane that depends on one stays partial and says so.
+

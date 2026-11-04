@@ -38,4 +38,28 @@ import (REVIEW_GOVERNANCE.md).
 
 ## Part B — execution record
 
-*(Filled in after the lanes run. Counts only.)*
+Run on 2026-11-03 against the plan as committed in `a7f3a36`. The research log (`data/curated/systems/cn/research_log.json`) is the record; this section restates it as counts.
+
+**0 of 6 lanes complete** for the window 2022-01-01 to 2026-11-03. A lane is complete only if its declared universe was searched to the end of the window; none was.
+
+### B.1 Dispositions
+
+candidates 13 · accepted 0 · rejected 2 · duplicate 2 · held 9 · out of scope 0
+
+No candidate was accepted by a lane, so nothing went to review; the 9 held candidates stay in the local queue with their reasons.
+
+### B.2 Lane by lane
+
+| Lane | Status | Covered through | Why not complete |
+|---|---|---|---|
+| CN1 | partial | 2026-10-19 | Enumeration only, by fetch. Two of roughly 57 monthly releases in the window were read (June and September 2026). Neither attributes any change to a cause: the June 2026 release reports raw coal down 9.7% y/y (the Liushenyu aftermath, already in the corpus) and crude processing down 17.7% y/y, both without a stated cause. The release format states figures only, so this lane is unlikely to yield ca |
+| CN2 | partial | 2026-11-03 | All 15 plan queries run, but the endpoints nea.gov.cn, sgcc.com.cn and csg.cn news were not enumerated directly, and the US-indexed search tool returned mostly provincial and municipal orderly-power-use PLANS and foreign blackouts rather than Chinese event reporting. |
+| CN3 | partial | 2026-11-03 | All 10 plan queries run, but results came almost entirely from English-language wire and analyst coverage; no provincial government or energy-bureau notice was found and opened for any year, so the lane's declared universe (provincial official notices) was not reached. |
+| CN4 | partial | 2022-01-01 | Not started: the search cap was reached first. HKEX and SSE announcement search was not enumerated directly either (those are interactive search forms, not static listings). |
+| CN5 | partial | 2026-11-03 | Only the refinery-fire query family was run (5 of 15 queries); the coal-mine and gas-pipeline families were not run because the personal 30-search cap was reached. The refinery query itself returned almost entirely foreign refineries and no Xinhua, People's Daily, Caixin or The Paper page. |
+| CN6 | partial | 2022-01-01 | Not started: the personal 30-search cap was spent on CN2, CN3 and part of CN5 in the plan's lane order. Some Reuters/Bloomberg syndications were opened incidentally in CN3 and are recorded there. |
+
+### B.3 What the next pass must do
+
+Run the lanes marked not started first, then the partial lanes from their `covered_through` date. Refusals (HTTP 402/403, login walls, script-rendered listings) are not worked around; a lane that depends on one stays partial and says so.
+
