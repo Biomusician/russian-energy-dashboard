@@ -57,7 +57,7 @@ STAGE_MEANING = {
     "flow_rerouting": (
         "Throughput was routed around the damage. The damaged asset itself is NOT repaired, and "
         "this stage says nothing about its condition."),
-    "partial_operations_resumed": "Some operations resumed. The facility is not fully restored.",
+    "partial_operations_resumed": "Some operations resumed. No full restoration was reported.",
     "service_restoration": (
         "The service the facility provides was restored. This does not establish that the "
         "facility was rebuilt."),

@@ -1,5 +1,5 @@
 name,region_code,capacity_mtpa,operator,source_url,source_date,inclusion_reason
-Moscow Refinery,RU-MOW,12.15,Gazprom Neft,https://en.wikipedia.org/wiki/Moscow_Refinery,2026-06,"Major refinery (Kapotnya, ~245,000 bbl/d) absent from the Wikipedia List of oil refineries base parse. Supplies ~40% of the Moscow region's fuel."
+Moscow Refinery,RU-MOW,12.15,Gazprom Neft,https://en.wikipedia.org/wiki/Moscow_Refinery,2026-06,"Refinery (~245,000 bbl/d) absent from the Wikipedia List of oil refineries base parse."
 Ilsky Refinery,RU-KDA,6.6,Ilsky NPZ (INPZ),https://en.wikipedia.org/wiki/Deep_strike_campaign,2025,"Absent from the base List parse; capacity per the Deep strike campaign table (sourced to the Moscow Times refinery database)."
 Slavyansk ECO Refinery,RU-KDA,5.2,Slavyansk ECO,https://en.wikipedia.org/wiki/Deep_strike_campaign,2025,"Absent from the base List parse; capacity per the Deep strike campaign table."
 TAIF-NK Refinery,RU-TA,8.5,TAIF-NK,https://en.wikipedia.org/wiki/Deep_strike_campaign,2025,"Nizhnekamsk refinery operated by TAIF-NK, DISTINCT from the Tatneft/TANECO Nizhnekamsk entry already in the base list. Capacity per the Deep strike campaign table."

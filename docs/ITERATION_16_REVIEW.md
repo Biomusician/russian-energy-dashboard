@@ -77,7 +77,7 @@ Ontario/Quebec July 2026, and Saudi April 2026.
     struck site's outage for seven months.
 
   Ten records are covered.
-- **Jazan is held.** Its only citation is a restart-delay article. It returns when an
+- **Jazan is held.** Its only citation's address states facility status. It returns when an
   independent source for the shutdown is found, or when the campaign ends.
 
 ## 5. US systematic sweep

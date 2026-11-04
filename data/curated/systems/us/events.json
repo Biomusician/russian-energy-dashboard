@@ -581,7 +581,7 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "service_restored",
         "date": "2022-12-24",
-        "evidence": "Duke said power would be restored by end of day 24 Dec.",
+        "evidence": "WECT reported power restored by about 4:30 p.m. on 24 Dec.",
         "url": "https://www.wect.com/2023/01/03/duke-energy-reveals-timeline-events-leading-up-rolling-blackouts-christmas-eve"
       },
       "review": {
@@ -701,14 +701,14 @@
       "asset_class": "upstream_production",
       "cause": "natural_hazard",
       "summary": "EIA reports Winter Storm Elliott cut US natural gas production, with sub-zero temperatures in the Northeast and freeze conditions in the Permian Basin.",
-      "effect": "Northeast (incl. Appalachian Basin) output fell by more than 6 Bcf/d and Permian output by about 3 Bcf/d; weekly US production was interrupted by more than 15 Bcf/d (S&P Global estimates cited by EIA).",
+      "effect": "Northeast (incl. Appalachian Basin) output fell by more than 6 Bcf/d and Permian output by about 3 Bcf/d.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 7,
       "threshold_basis": "Production shut in at a material volume per a federal statistical agency.",
       "capacity_affected": {
-        "value": 15,
+        "value": 6,
         "unit": "bcf/d",
-        "source_says": "weekly U.S. production interrupted by more than 15 Bcf/d; Northeast >6 Bcf/d; Permian ~3 Bcf/d"
+        "source_says": "Northeast (incl. Appalachian Basin) output fell by more than 6 Bcf/d; Permian output by about 3 Bcf/d (EIA)"
       },
       "sources": [
         {

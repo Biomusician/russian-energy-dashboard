@@ -1,6 +1,6 @@
 # Current-event publication policy: kinetic campaigns
 
-*Iteration 16. Status: the interim rule (§3) is implemented; the release rule (§5) is a
+*Iterations 16-17. Status: the interim rule (§3) is implemented, and the theatre's delayed form of it since iteration 17; the release rule (§5) is a
 PROPOSAL awaiting owner approval. Machine-readable form: `data/curated/systems/conflict_campaigns.json`.*
 
 **ONGOING CONFLICT MONITORING MUST NOT BECOME A FACILITY-STATUS FEED.**
@@ -28,7 +28,7 @@ facility and kept current, it would be exactly the feed this project must never 
 | Operating rate after the event ("running at about 70%") | no | same |
 | Planned or postponed restart dates | no | same |
 | Dependency between facilities ("knock-on", "after the pipeline was shut") | no | removed for everyone, campaign or not |
-| A citation whose address announces status ("…-delays-refinery-restart-to-august-30", "…-to-resume-operations-in-2027") | no | the local candidate queue, restored automatically when the campaign ends |
+| A citation whose address announces status (a restart delay, a resumption date) | no | the local candidate queue, restored automatically when the campaign ends |
 | A capacity note quoting a post-event operating rate | no — the capacity field is left empty | same |
 
 The withheld marker is a **publication state**, `WITHHELD_ACTIVE_CAMPAIGN`, distinct from the
@@ -70,7 +70,7 @@ served payload found status in places the summary check did not look:
 - one effect line said loadings stopped "briefly"; it was reworded through a review edit.
 
 The tenth record, the July 2026 Jazan refinery shutdown, is **held**. Its only citation's
-address announces a restart delay, and no other public source has been opened yet. It returns
+address states facility status, and no other public source has been opened yet. It returns
 when one is found, or when the campaign ends. The 2022 Yanbu record is outside the 2026 campaign and is unchanged.
 
 **Not covered, by design:** natural-hazard, technical and unknown-cause records, including in
@@ -172,13 +172,11 @@ An independent safety review read the served payloads. It found, and the project
 - **A facility-dependency clause.** "Halted after an incident at the SAMREF refinery" was
   removed.
 - **Theatre wording banned whether or not a campaign is active:**
-  - Taman was described as the substation "through which all four Kerch energy-bridge lines
-    pass", with its outages "consistent with the hub not being reconstituted". That is
-    chokepoint and current-impairment framing.
-  - One record said the Ust-Luga crude terminal "looked undamaged".
-  - One record said Orsk's damaged equipment was "imported and under sanctions" (a supply-chain
-    weakness).
-  - One record named the cross-border feedstock dependency of the Orenburg plant.
+  - One record used chokepoint and current-impairment framing for a substation.
+  - One record described a terminal as undamaged.
+  - One record described a supply-chain weakness of damaged equipment.
+  - One record named a cross-border feedstock dependency (removed from the theatre's notes and
+    effects in iteration 17 as well).
 
   Each clause was removed from `data/curated/recovery.csv`. The recovery horizons they supported
   are unchanged.

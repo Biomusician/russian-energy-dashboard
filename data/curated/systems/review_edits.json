@@ -2410,6 +2410,124 @@
       "field": "hazard_name",
       "set": null,
       "reason": "Iteration-17 blind review, role C: no cited source uses this label (REVIEW_GOVERNANCE §6); role C's correction covered both April 2023 ice-storm records, and the Quebec record is held, leaving this one standalone."
+    },
+    {
+      "event_id": "sa-2026-04-khurais-production-cut",
+      "field": "summary",
+      "set": "The energy ministry reported on 9 April 2026 that an earlier attack on the Khurais facility cut its production capacity by about 300,000 b/d. The attack date was not given and may precede April.",
+      "reason": "Final red team, lane B (iteration 17): the source reports a loss of production capacity, and gives no attack date (SPA: 'recently'; Bloomberg: some incidents appear to predate 7 April)."
+    },
+    {
+      "event_id": "sa-2026-04-khurais-production-cut",
+      "field": "effect",
+      "replace": [
+        "Production reduced by about 300,000 b/d",
+        "Production capacity reduced by about 300,000 b/d"
+      ],
+      "reason": "Final red team, lane B (iteration 17): the source says production capacity."
+    },
+    {
+      "event_id": "sa-2026-04-manifa-production-cut",
+      "field": "summary",
+      "set": "The energy ministry reported on 9 April 2026 that an attack on the Manifa facility cut its production capacity by about 300,000 b/d. The attack date was not given and may precede April.",
+      "reason": "Final red team, lane B (iteration 17): the source reports a loss of production capacity, and gives no attack date."
+    },
+    {
+      "event_id": "sa-2026-04-manifa-production-cut",
+      "field": "effect",
+      "replace": [
+        "Production reduced by about 300,000 b/d",
+        "Production capacity reduced by about 300,000 b/d"
+      ],
+      "reason": "Final red team, lane B (iteration 17): the source says production capacity."
+    },
+    {
+      "event_id": "sa-2026-04-juaymah-processing-fires",
+      "field": "summary",
+      "set": "The energy ministry reported on 9 April 2026 that fires at the Juaymah processing facilities affected LPG and NGL exports. The date of the fires was not given and may precede April.",
+      "reason": "Final red team, lane B (iteration 17): the source gives no date for the fires."
+    },
+    {
+      "event_id": "cn-2023-02-20-yunnan-aluminium-power-cuts-deepened",
+      "field": "recovery.kind",
+      "set": "estimate",
+      "reason": "Final red team, lane B (iteration 17): the evidence is an expectation and an instruction ('would be allowed to recover 20 per cent', date 'still being worked out'), not an observed restart."
+    },
+    {
+      "event_id": "in-2026-04-20-hrrl-barmer-refinery-cdu-fire",
+      "field": "recovery.kind",
+      "set": "partial_restart",
+      "reason": "Final red team, lane B (iteration 17): HPCL's filing reports the crude unit started, followed by 'a phased ramp-up': a partial restart."
+    },
+    {
+      "event_id": "us-2022-12-winter-storm-elliott-gas-production",
+      "field": "effect",
+      "replace": [
+        "; weekly US production was interrupted by more than 15 Bcf/d (S&P Global estimates cited by EIA)",
+        ""
+      ],
+      "reason": "Final red team, lane B (iteration 17): EIA's 15 Bcf/d sentence covers three storms (Uri, Elliott, Heather), not Elliott alone."
+    },
+    {
+      "event_id": "us-2022-12-winter-storm-elliott-gas-production",
+      "field": "capacity_affected",
+      "set": {
+        "value": 6,
+        "unit": "bcf/d",
+        "source_says": "Northeast (incl. Appalachian Basin) output fell by more than 6 Bcf/d; Permian output by about 3 Bcf/d (EIA)"
+      },
+      "reason": "Final red team, lane B (iteration 17): the 15 Bcf/d figure is not Elliott's; the Elliott-specific regional figures are kept."
+    },
+    {
+      "event_id": "cn-2023-01-15-panjin-haoye-refinery-explosion",
+      "field": "summary",
+      "replace": [
+        " Cause: technical (not sabotage or a natural hazard).",
+        ""
+      ],
+      "reason": "Final red team, lane B (iteration 17): review-process text, not a claim from the source."
+    },
+    {
+      "event_id": "cn-2023-07-28-typhoon-doksuri-quanzhou-outage",
+      "field": "threshold_basis",
+      "replace": [
+        "per an official city government account",
+        "per the government's official WeChat account"
+      ],
+      "reason": "Final red team, lane B (iteration 17): the source says only 'the government's official WeChat account'."
+    },
+    {
+      "event_id": "us-2022-12-24-duke-energy-rolling-blackouts-elliott",
+      "field": "recovery.evidence",
+      "set": "WECT reported power restored by about 4:30 p.m. on 24 Dec.",
+      "reason": "Final red team, lane B (iteration 17): the cited article reports the restoration itself; the forecast was cited before."
+    },
+    {
+      "event_id": "ca-2024-11-19-bomb-cyclone-bc",
+      "field": "effect",
+      "replace": [
+        "; outages at one point affected more than 300,000 properties",
+        ""
+      ],
+      "reason": "Final red team, lane B (iteration 17): not found in any source that could be opened (CP24 says more than 200,000; CBC refused)."
+    },
+    {
+      "event_id": "in-2022-02-21-chandigarh-power-strike-blackout",
+      "field": "summary",
+      "replace": [
+        " The administration told the High Court the outage resulted from sabotage by striking employees; the army was called in to help restore supply.",
+        " The army was called in to help restore supply."
+      ],
+      "reason": "Final red team, lane B (iteration 17): the High Court claim was not found in any source that could be opened."
+    },
+    {
+      "event_id": "in-2022-02-21-chandigarh-power-strike-blackout",
+      "field": "effect",
+      "replace": [
+        "; hospitals rescheduled or postponed planned surgeries and many areas lost water supply",
+        ""
+      ],
+      "reason": "Final red team, lane B (iteration 17): not found in any source that could be opened (The Tribune mentions neither)."
     }
   ]
 }

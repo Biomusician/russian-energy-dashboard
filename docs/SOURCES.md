@@ -227,8 +227,8 @@ the "typical recovery" median is now shown (47 days). A sample:
 | Facility | Kind | Evidence |
 |---|---|---|
 | Kuibyshev refinery | **Observed** | Reuters industry sources: halted 10 Jun 2026, resumed 21 Aug 2026 (~72 d) |
-| Omsk refinery | **Estimated** | Reuters industry source: "at least half a year" after CDU-10 damage |
-| Moscow Refinery | **Estimated** | Industry sources (via strike table): ≥6 months offline after June 2026 strikes |
+| Omsk refinery | **Estimated** | repair estimate held under the campaign policy until its horizon passes (METHODOLOGY §12) |
+| Moscow Refinery | **Estimated** | repair estimate held under the campaign policy until its horizon passes (METHODOLOGY §12) |
 
 The observed vs estimated distinction is structural and drives both the score and the
 UI language. Kuibyshev's 28 Aug 2026 re-strike is after the dataset's as-of date and is

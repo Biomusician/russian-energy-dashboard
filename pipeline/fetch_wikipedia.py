@@ -81,10 +81,31 @@ def parse_citation(ref_src, named_refs):
         found = bare.group(1).strip()
     return {
         "url": found,
-        "title": _clean_field(_TITLE.search(body)),
+        "title": safe_title(_clean_field(_TITLE.search(body))),
         "publisher": _clean_field(_WORK.search(body)),
         "date": _clean_field(_DATE.search(body)),
     }
+
+
+# A headline is the publisher's words, and some carry exactly what this project never publishes:
+# how far a strike reached ("1,300 km deep", "870 Miles Into Russia"), how air defence fared, or
+# which facility matters most ("largest", "key hub"). The parser already refuses the strike
+# table's "Distance (km)" column; the same figure must not arrive through a citation's title
+# (iteration 17 safety red team). Such a title is dropped and the page shows the publisher's
+# host name instead. The link itself is unchanged.
+_UNSAFE_TITLE = re.compile(
+    r"\d[\d,.]*\s*(?:km|kilomet\w*|miles?|mi)\b"
+    r"|\b(?:deep|far)\s+(?:in|into|inside)\b|\binto russia\b|\bfrom the (?:border|front)\b|\brange\b"
+    r"|air[- ]defen[cs]e|anti-drone|\bintercept\w*|\bblinded\b|\bevad\w*"
+    r"|\b(?:largest|biggest|key|main|only|major|critical|vital|strategic|hub|top|"
+    r"(?:second|third|fourth|fifth)-largest)\b",
+    re.I)
+
+
+def safe_title(title):
+    if title and _UNSAFE_TITLE.search(title):
+        return None
+    return title
 
 
 def _clean_field(match):

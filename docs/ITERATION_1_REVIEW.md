@@ -86,8 +86,8 @@ grows, and the infrastructure base (plants, grid) is fully populated.
 | Facility | Kind | Basis |
 |---|---|---|
 | Kuibyshev refinery | **Observed** | Reuters industry sources: repairs 1 Jul → resumed 21 Aug 2026 (~72 d) |
-| Omsk refinery | **Estimated** | Reuters industry source: "at least half a year" |
-| Moscow Refinery | **Estimated** | Industry sources (Wikipedia strike table): ≥6 months offline |
+| Omsk refinery | **Estimated** | repair estimate held under the campaign policy until its horizon passes (METHODOLOGY §12) |
+| Moscow Refinery | **Estimated** | repair estimate held under the campaign policy until its horizon passes (METHODOLOGY §12) |
 | 32 other live facilities | **Modelled** | Generic per-sector reconstitution horizon (assumption) |
 
 So of ~35 currently-disrupted facilities, **1 has an observed recovery time and 2 have

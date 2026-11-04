@@ -14,8 +14,8 @@
       "operator": "Chandigarh Electricity Department",
       "asset_class": "system_wide",
       "cause": "labour",
-      "summary": "A 72-hour strike by electricity department staff against privatisation, beginning the night of 21 Feb 2022, was followed by a blackout across large parts of the union territory lasting 36-40 hours. The administration told the High Court the outage resulted from sabotage by striking employees; the army was called in to help restore supply.",
-      "effect": "Blackout across roughly half of Chandigarh (The Wire) lasting 36-40 hours; hospitals rescheduled or postponed planned surgeries and many areas lost water supply.",
+      "summary": "A 72-hour strike by electricity department staff against privatisation, beginning the night of 21 Feb 2022, was followed by a blackout across large parts of the union territory lasting 36-40 hours. The army was called in to help restore supply.",
+      "effect": "Blackout across roughly half of Chandigarh (The Wire) lasting 36-40 hours.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Clause 5: loss of supply across about half of a UT of ~1.1 million people for 36-40 hours (extent-based; no customer count published).",
@@ -604,82 +604,6 @@
       "hazard_name": "Cyclone Dana (2024)"
     },
     {
-      "event_id": "in-2026-05-13-khavda-re-complex-grid-disturbance",
-      "date": "2026-05-13",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "IN-GJ",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": "Khavda renewable energy complex",
-      "facility_name_local": null,
-      "operator": null,
-      "asset_class": "power_plant_other",
-      "cause": "technical",
-      "summary": "A grid disturbance at about 14:09 on 13 May 2026 tripped about 15.9 GW of capacity at the Khavda renewable energy complex in Gujarat. The exact cause was not reported.",
-      "effect": "~8,963 MW of wind/solar generation lost.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 4,
-      "threshold_basis": "Clause 4: about 8,963 MW of generation forced offline in one event (Grid-India-reported). No customer load-loss figure or grid-operator emergency declaration was found, so clause 5 is not claimed.",
-      "capacity_affected": {
-        "value": 8963,
-        "unit": "MW generation lost",
-        "source_says": "total generation loss of 8,963 MW (Renewable Watch, citing Grid-India)"
-      },
-      "sources": [
-        {
-          "url": "https://powerpeakdigest.com/khavda-grid-disturbance-9gw-re-loss/",
-          "publisher": "Power Peak Digest",
-          "date": null,
-          "language": "en",
-          "source_role": "industry",
-          "opened": null
-        },
-        {
-          "url": "https://powerpeakdigest.com/wrpc-khavda-grid-disturbance-measures/",
-          "publisher": "Power Peak Digest",
-          "date": null,
-          "language": "en",
-          "source_role": "industry",
-          "opened": null
-        },
-        {
-          "url": "https://renewablewatch.in/2026/06/30/editorial-june-2026/",
-          "publisher": "Renewable Watch",
-          "date": "2026-06-30",
-          "language": "en",
-          "source_role": "industry",
-          "opened": null
-        }
-      ],
-      "recovery": {
-        "research_status": "RESEARCHED_NO_PUBLIC_EVIDENCE",
-        "kind": null,
-        "date": null,
-        "evidence": "No restoration timeline found; sources cover the trip and regulatory follow-up only.",
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-11-03",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 3,
-        "sources_opened_by_reviewer": 1,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "not recorded by the research lane",
-        "roles": {
-          "evidence": "accept_with_correction",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
-    },
-    {
       "event_id": "in-2026-04-20-hrrl-barmer-refinery-cdu-fire",
       "date": "2026-04-20",
       "date_precision": "day",
@@ -730,7 +654,7 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "full_restart",
+        "kind": "partial_restart",
         "date": "2026-06-18",
         "evidence": "HPCL announced in a stock-exchange filing on 18 Jun 2026 that the crude unit had restarted (announcement date).",
         "url": "https://hdfcsky.com/news/hpcls-rajasthan-refinery-restarts-key-crude-unit-after-april-fire"
@@ -813,66 +737,6 @@
         "source_access": "at least one source read"
       },
       "hazard_name": "Cyclone Montha (2025)"
-    },
-    {
-      "event_id": "in-2026-09-05-ntpc-power-station-trip-chhattisgarh",
-      "date": "2026-09-05",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "IN-CG",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": "NTPC Korba Super Thermal Power Station",
-      "facility_name_local": null,
-      "operator": "NTPC Ltd",
-      "asset_class": "power_plant_thermal",
-      "cause": "technical",
-      "summary": "NTPC's Korba station in Chhattisgarh tripped after a fault, taking 2,600 MW offline; the source says this raised the risk of a power crisis in several western-region states and that supply arrangements in two union territories were reportedly disrupted.",
-      "effect": "2,600 MW of generation lost when the station tripped; the source reports a risk of power crisis in Chhattisgarh, Madhya Pradesh, Maharashtra, Gujarat and Goa, and supply arrangements reportedly disrupted in Daman and Diu and Dadra and Nagar Haveli.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 4,
-      "threshold_basis": "Clause 4: power plant well above 500 MW forced offline (2,600 MW) with a reported supply effect.",
-      "capacity_affected": {
-        "value": 2600,
-        "unit": "MW",
-        "source_says": "cutting off 2,600 MW of electricity supply"
-      },
-      "sources": [
-        {
-          "url": "https://www.patrika.com/en/korba-news/ntpc-korba-jamnipali-power-crisis-seven-states-2600mw-20884504",
-          "publisher": "Patrika",
-          "date": "2026-09-05",
-          "language": "en",
-          "source_role": "media",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "RESEARCHED_NO_PUBLIC_EVIDENCE",
-        "kind": null,
-        "date": null,
-        "evidence": "No public confirmation of restart found.",
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-11-03",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 1,
-        "sources_opened_by_reviewer": 1,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "at least one source read",
-        "roles": {
-          "evidence": "accept_with_correction",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
     }
   ]
 }
