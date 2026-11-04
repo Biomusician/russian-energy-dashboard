@@ -154,3 +154,49 @@ At the current rate of evidence, that is several sweeps away for every class exc
 2. Should an unresolved non-conflict event age out of "unresolved" after a stated period, with
    no claim that it recovered, purely as a display policy? This would be the recovery
    counterpart of the source re-check limits. It must never alter acceptance or numbers.
+
+## Iteration 17 update (brief §32-34)
+
+**Still research only; recovery stays observed-only.** No duration model, no fallback horizon and
+no fitted curve is deployed for any country. A country event with no recovery report says so; an
+estimate is labelled an estimate.
+
+**Reporting rule for any recovery statistic, here and anywhere it is shown:** with fewer than
+three cases the cases are listed one by one; a median (with its range) is given only from three.
+A median of two numbers reads as a typical value and is not one. The iteration-16 table above
+breaks this rule in one cell (US coal, n = 2); the table below replaces it.
+
+Measured on 2026-11-03 from the curated corpora after the iteration-17 review (200 records),
+same definition as §2: days from the event to the first dated, observed recovery report (full or
+partial restart, service or partial restoration). Estimates and "no supply lost" statements are
+excluded. This is a lower bound on recovery time, not an estimate of it.
+
+| Country | Class | n | Days |
+|---|---|---|---|
+| US | grid | 22 | median 4 (0–11) |
+| US | pipelines | 15 | median 17 (4–199) |
+| US | LNG/terminals | 8 | median 3 (1–248) |
+| US | refining/processing | 7 | median 7 (0–220) |
+| US | production | 3 | median 4 (3–6) |
+| US | coal | 2 | cases: 339, 459 |
+| Canada | grid | 8 | median 1 (0–4) |
+| Canada | coal terminal | 1 | case: 23 |
+| Canada | production | 1 | case: 5 |
+| Canada | hydro generation | 1 | case: 1 |
+| China | grid | 5 | median 6 (1–113) |
+| China | refining/processing | 1 | case: 55 |
+| China | coal | 1 | case: 131 |
+| India | grid | 3 | median 2 (0–7) |
+| India | LNG/terminals | 2 | cases: 3, 7 |
+| India | refining/processing | 1 | case: 59 |
+| India | hydro generation | 1 | case: 1016 |
+| Saudi Arabia | — | 0 | none published: 8 of 9 records are under the active-campaign policy, whose facility status is withheld |
+
+Coverage of recovery evidence at the same date: US 62 observed, 11 estimate only, 7 researched
+without public evidence, 59 not yet researched (139 records); Canada 18 / 1 / 0 / 9 (28); China
+7 / 0 / 5 / 0 (12); India 7 / 1 / 3 / 1 (12).
+
+What changes the conclusion of §3: nothing. Every non-US class outside grid has three cases or
+fewer, and the ranges that do exist span two orders of magnitude. Option A (no modelled decay)
+remains the only option the evidence supports. The Saudi row is a policy outcome, not a research
+gap, and must not be read as "no recovery".
