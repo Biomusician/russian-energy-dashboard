@@ -7888,7 +7888,7 @@ def test_the_study_override_is_refused_in_a_current_build():
 
 
 def test_a_blind_reviewed_record_needs_every_role_to_accept():
-    """Iteration 17 (REVIEW_GOVERNANCE §8): no majority vote. Two accepts and one hold is a hold,
+    """Iteration 17 (REVIEW_GOVERNANCE §7): no majority vote. Two accepts and one hold is a hold,
     and the published block carries each role's verdict but never its reasoning."""
     imp = _import_gate()
     from pipeline import build_systems as B

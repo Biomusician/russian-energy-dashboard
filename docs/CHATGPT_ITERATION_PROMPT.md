@@ -1,4 +1,4 @@
-# Prompt for iterating with ChatGPT (current as of iteration 16)
+# Prompt for iterating with ChatGPT (current as of iteration 17)
 
 Paste everything below the line into ChatGPT. It is self-contained and asks for output you can
 hand straight back to a coding agent. It deliberately carries **no live numbers**: those are in
@@ -14,7 +14,7 @@ energy infrastructure, aggregated to first-level administrative region**. Its ma
 calibrated honesty about what is and is not known, with a good map attached. I want help
 deciding what to do next, not help writing code.
 
-## What exists (iteration 16)
+## What exists (iteration 17)
 
 **Six monitored systems.**
 
@@ -30,65 +30,66 @@ deciding what to do next, not help writing code.
    the ESDI's weights, decay and transmission measure do not transfer, so `index` is null with a
    stated reason. Systems are never ranked or compared by count.
 
-**Wave 2** (Indonesia, Iran, Australia or others) has **not** started, deliberately: the
-current six needed a repeatable research process first.
+**Wave 2** (Indonesia, Iran, Australia or others) has **not** started, deliberately. Iteration
+17's rule was to add no country until the existing six are governed, reproducible, reviewable
+and operationally mature; its own readiness answer is in `docs/ITERATION_17_REVIEW.md`.
 
 **Stack.** Python 3.13 stdlib-only ETL → static JSON → Vite + React + TypeScript + MapLibre →
 Vercel static hosting. No database, server, API key or basemap; zero external runtime requests.
 A GitHub Action rebuilds daily and commits the payload.
 
-## Governance now in place (iteration 16)
+## Governance now in place (iteration 17)
 
-- **Dual review.** One researcher may find a record; a country record is published only after
-  an independent reviewer opens the evidence and checks identity, date, region, class,
-  threshold, provenance, wording and episode. Records from before the rule are grandfathered by
-  id in a list that can only shrink. The reviewers so far were separate model sessions —
-  independent in context and evidence-reading, not in model.
+- **Blind three-role review.** A country record is published only after an evidence reviewer, a
+  safety reviewer and a taxonomy reviewer, none seeing the researcher's reasoning or each other,
+  all accept it and all confirm the reconciled wording. Any reject rejects; any hold, duplicate
+  or owner question holds; there is no majority vote. The records first published in iteration
+  14 on a single review have all been through it, and the grandfather list is empty. Earlier
+  records were dual reviewed (a researcher and one independent reviewer). Every reviewer so far
+  is a separate model session: independent in context, not in model.
 - **Episodes.** Records share an episode only for the same named hazard, an explicitly
-  identified common event or coordinated wave, or an explicit continuation. A statement that
-  merely lists several incidents is provenance, not an episode; proximity in time or place is
-  never enough.
-- **Three historical concepts, never one number.** A *current-evidence reconstruction* (today's
-  code and corpus at a past date, Wikipedia inputs pinned to that date); an *as-published*
-  history read from commits Vercel actually deployed (reliable from 2026-08-29; before that
-  unavailable, not reconstructed); and *engineering regression fixtures* (synthetic inputs in
-  tests). Event date is not knowledge date: the 2026-10-10 build first served seven events dated
-  before the 9 October build.
-- **Active-campaign publication policy.** During an active kinetic campaign the event is
-  published but a struck facility's restart, recovery or operating status is not (applied to
-  Saudi Arabia's 2026 campaign). That includes citations whose address announces a restart,
-  citations published more than a week after the event, and records at a struck site whatever
-  their own cause. A release rule — campaign recorded as ended plus 30 days — is proposed, not
-  approved. Applying the policy to the Russia theatre is an open owner decision.
-- **Source freshness is not research completeness.** Each country states, separately, whether
-  its sources are within their re-check limits and whether its event search was systematic. A
-  systematic pass declares its source lanes and window before searching and is complete only if
-  every lane ran.
+  identified common event or coordinated wave, or an explicit continuation. One flat episode
+  layer; proximity in time or place is never enough.
+- **Three historical concepts, never one number, and isolated outputs.** A *current-evidence
+  reconstruction* (today's code and corpus at a past date, Wikipedia inputs pinned to that
+  date) is written only to its own directory; *as-published* history is read from commits Vercel
+  actually deployed (reliable from 2026-08-29), and a script extracts any served day's payload
+  byte for byte; *engineering fixtures* are synthetic. Only a build for today may write the
+  production payload. Event date is not knowledge date, and "first seen" comes from the served
+  history, never from an event date.
+- **Active-campaign publication policy, now for the theatre too.** Saudi Arabia: the event is
+  published, the facility's restart or operating status is not, until the campaign ends plus 30
+  days (proposed, not approved). The theatre (since iteration 17): occurrence and modelled
+  exposure are published as before, but recovery evidence enters display, scoring and the
+  change ledger only once it is 60 days old and any repair estimate has run its course. Counts
+  of what is withheld are published; ids never are.
+- **Research completeness, by lane.** A systematic pass declares its lanes, universes, queries
+  and window in a plan committed before searching. Each lane records how far it got
+  (`covered_through`); a lane is complete only if its universe was searched to the end of the
+  window. Refusals (403, paywalls, script-only sites) are never worked around.
+- **Source freshness is separate** from research completeness, and both from build freshness.
+  Each country also publishes source health: citations by role and language, how many carry a
+  date, and "opened" versus "not recorded".
 
 ## Known weaknesses (my own assessment)
 
-1. **Research coverage is uneven, and no system is complete.** The US and Canada have each had
-   one systematic sweep. Both are partial: the US ran 1 of 9 lanes in full, Canada 0 of 7. The
-   reasons are sources that have not published 2026 data yet, a shared web-search budget, and
-   sites refusing automated access, which are never worked around. China, India and Saudi
-   Arabia have targeted passes only. See `docs/GLOBAL_RESEARCH_COVERAGE.md`.
-2. **Absolute thresholds** (100,000 customers, ~500 MW) mean different things in systems that
-   differ thirtyfold in size, and there is no duration floor: very short whole-terminal LNG
-   outages qualify.
-3. **Non-conflict recovery has no model.** Country events carry observed recovery evidence where
-   a source states it, nothing modelled. Whether they need a model at all is open
+1. **No research lane is complete in any country.** Iteration 17 ran systematic passes in all
+   five: every lane is partial, for stated reasons (sources not yet published for 2026, a
+   per-agent search cap, sites refusing automated access, lanes with no census source).
+2. **Inclusion thresholds** are absolute (100,000 customers, ~500 MW), with no duration floor
+   and open questions about grid alerts with no load shed, pipeline "interruption" flags,
+   cross-border pipelines and event totals versus peaks. A study proposes rules; none is
+   adopted (`docs/THRESHOLD_STUDY.md`).
+3. **Non-conflict recovery has no model**, and the evidence does not support one: outside US
+   grid outages, every class has three or fewer observed cases
    (`docs/NONCONFLICT_RECOVERY_OPTIONS.md`).
 4. **The theatre's index still rests on an assumed reconstitution horizon** for most of its
-   value, published with its sensitivity, and on a refinery capacity basis with a known 2.3×
-   disagreement for one facility.
-5. **Same-model review.** Independent review is real in process and weak in diversity.
-6. **Visual regression** is pixel-golden on Windows only. Every platform, Linux CI included,
-   compares a coarse colour structure of each map with tolerance; its first Linux run is the
-   real test of that tolerance.
-7. **The theatre is still a facility-status feed in places.** It lists modelled impairment ages
-   and sourced status text for facilities struck in 2026. Applying the active-campaign policy to
-   it is the owner's decision, and a safety review counted the exposure
-   (`docs/CURRENT_EVENT_PUBLICATION_POLICY.md` §8).
+   value, and the embargo makes it overstate exposure slightly for up to 60 days after a
+   restoration is reported.
+5. **Same-model review.** Independent in process, weak in diversity.
+6. **Held records wait on the owner.** A set of country records is held on rule questions
+   (citation addresses naming a city, grid alerts without load shed, partial pipeline cuts,
+   peaks versus totals). They are listed in `docs/ITERATION_17_REVIEW.md`.
 
 ## Hard constraints (non-negotiable)
 

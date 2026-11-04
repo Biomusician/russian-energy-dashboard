@@ -397,7 +397,7 @@ def _event(raw, unit_names):
 # the evidence. Records published before the rule existed are grandfathered BY ID in a frozen list
 # that can only shrink; a new record cannot be added to it, so "legacy" is not a way round review.
 REVIEW_STATUSES = ("blind_reviewed", "dual_reviewed", "legacy_single_review")
-# Iteration 17: three blind roles, every one of which must have accepted (REVIEW_GOVERNANCE §8).
+# Iteration 17: three blind roles, every one of which must have accepted (REVIEW_GOVERNANCE §7).
 BLIND_ROLES = ("evidence", "safety", "taxonomy")
 BLIND_PASS = ("accept", "accept_with_correction")
 REVIEW_DISPOSITIONS = ("confirmed", "corrected")

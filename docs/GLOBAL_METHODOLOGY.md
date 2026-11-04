@@ -26,6 +26,26 @@ The governing rules this document is held to, verbatim from the project:
 
 ---
 
+## Canonical policy summary (current as of iteration 17)
+
+**This section is the one place the country-system rules are stated together.** The analysis
+below (§0-§9) is dated 2026-10-30 and kept as written; where a later iteration decided
+something, this summary says what is in force and where it is enforced. If a rule here and a
+detail elsewhere disagree, this summary and the code it names are right, and the other document
+is stale.
+
+| Policy | What is in force | Authoritative source | Enforced by |
+|---|---|---|---|
+| **Event inclusion** | A record enters only if it meets one clause of the inclusion rule (facility shutdown, terminal or port, trunk pipeline, forced generation loss or load shed, customers or emergency declaration, mine supply, upstream production) and names the clause and its basis. Thresholds are absolute; the iteration-17 study's proposals (grid alerts without load shed, pipeline flags, cross-border pipelines, a duration floor, peaks versus totals) are **not** adopted. | `data/curated/systems/inclusion_threshold.json` (version 2026-10-30.1); [THRESHOLD_STUDY.md](THRESHOLD_STUDY.md) | `build_systems.validate`; import gate |
+| **Episode grouping** | One flat layer. Records share an episode only for the same named hazard (every record naming it, and only those), an explicitly identified common event or coordinated wave, or an explicit continuation, each citing the source that says so. Otherwise a record is its own episode. A hierarchy (hazard, regional disruption, facility) was evaluated in iteration 17 and not adopted: no count or view needs the middle level, and a region view already lists a hazard's records separately with their episode. | `data/curated/systems/<id>/episodes.json`; [REVIEW_GOVERNANCE.md](REVIEW_GOVERNANCE.md) §6 | `build_systems.validate_episodes` |
+| **Review** | New records: blind three-role review (evidence, safety, taxonomy), all must accept and all must confirm the reconciled text; any reject rejects, any hold, duplicate or owner question holds; no majority vote. Records published before iteration 17 are dual reviewed or blind reviewed; the grandfather list is empty and may not grow. | [REVIEW_GOVERNANCE.md](REVIEW_GOVERNANCE.md) §7 | `scripts/import_candidates.py`; `build_systems.review_problems`; mutation campaign |
+| **Active campaigns** | Country: the event is published, the facility's restart, recovery or operating status is not, while the campaign is active (release: campaign ended plus 30 days, proposed). Theatre: occurrence and modelled exposure as before; recovery evidence is used only once 60 days old and past any estimate horizon; counts withheld are published, ids never. | `data/curated/systems/conflict_campaigns.json`; [CURRENT_EVENT_PUBLICATION_POLICY.md](CURRENT_EVENT_PUBLICATION_POLICY.md); [OPERATIONAL_STATUS_DELAY_OPTIONS.md](OPERATIONAL_STATUS_DELAY_OPTIONS.md) | `build_systems.apply_publication_policy`; `recovery.apply_campaign_embargo`; the current build refuses embargoed curated rows |
+| **Country readiness** | No country has a score. `index` and `headline` are null with a reason; a sector state claiming a value fails the build. A country is shown at all only through the onboarding gate (§7.2), with research completeness (by lane, with `covered_through`) and source freshness stated as separate badges. | §7 below; [COUNTRY_ONBOARDING.md](COUNTRY_ONBOARDING.md) | `build_systems.onboarding_gate`; publication-gate tests |
+| **Recovery semantics** | Observed only. A cited report of a restart or restoration, labelled by kind (full or partial restart, service or partial restoration, estimate, "no supply lost"); no modelled decay or fallback horizon for any country. An estimate is labelled an estimate. Any recovery statistic lists the cases when there are fewer than three. | [NONCONFLICT_RECOVERY_OPTIONS.md](NONCONFLICT_RECOVERY_OPTIONS.md) | `RECOVERY_KINDS` in `build_systems`; import gate |
+| **Comparison** | Never rank systems or compare counts or scores across them. Systems are listed alphabetically; the manifest carries only totals for the five countries together. | §6 below | manifest tests |
+
+---
+
 ## 0. The short version
 
 | # | Question | Recommendation |

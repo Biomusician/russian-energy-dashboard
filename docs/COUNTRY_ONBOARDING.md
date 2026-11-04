@@ -15,7 +15,13 @@ country.**
 declares the window, the geography, the qualifying definitions and the source lanes, and gives
 each lane its enumeration method. Part B records what actually ran, lane by lane, as counts. A
 pass is `complete` only if every declared lane ran across the whole window; anything less is
-`partial`, with the reason. `US_SYSTEMATIC_SWEEP.md` is the template.
+`partial`, with the reason. Since iteration 17 each lane in Part A names its **universe** (what
+"complete" means for it: a census file, a report archive, or an exact query set), its endpoint or
+exact queries, and its clauses, and each lane in the research log records `covered_through`, the
+last date its universe was searched to. A lane with no census source is partial by construction
+until the owner accepts a declared query set as complete. `US_LANE_COMPLETION_17.md` is the
+template; the plan's commit is recorded in the log and a test compares the logged lanes with
+Part A as committed.
 
 Two lanes, each writing only its own files:
 
@@ -88,15 +94,23 @@ Copy the lane's profile to `profile.json`.
 .venv\Scripts\python.exe scripts\import_candidates.py <id>
 ```
 
-**Two reviews before publication (iteration 16).** The researcher who found a record is the
-primary reviewer. An independent reviewer then opens the evidence and records a disposition
-(`confirmed`, `corrected`, `held` or `removed`) and how many sources they opened, under
-`independent_review` in the queue record. The gate refuses a record with no independent
-review, with any disposition other than confirmed or corrected, or whose reviewer opened no
-source.
+**Blind three-role review before publication (iteration 17; REVIEW_GOVERNANCE.md §7).** The
+researcher who found a record is the primary reviewer. Then:
 
-Only the frozen iteration-14 list in `review_grandfathered.json` is exempt. That list may only
-shrink, and a test enforces it.
+1. `scripts\review_packets.py queue <cc> <pass>` writes blind packets: the claim and its
+   sources, never the researcher's reasoning or disposition.
+2. Three independent reviewers, one per role (A evidence, B safety and abstraction, C taxonomy
+   and episodes), each return a verdict per record without seeing each other.
+3. `scripts\merge_reviews.py` applies the outcome rule (any reject rejects; any hold, duplicate
+   or owner question holds; no majority vote). A reconciler merges corrections to the same
+   field into one text that adds nothing.
+4. `scripts\apply_reviews.py` writes the corrections to `review_edits.json` and the verdicts to
+   the queue; `--confirm` runs the confirmation round, in which every role checks the final text
+   and one objection holds the record.
+
+The gate publishes such a record as `blind_reviewed` with each role's verdict and never the
+reasoning. It still refuses a record with no independent review or whose reviewer opened no
+source. The grandfather list (`review_grandfathered.json`) is empty and may not grow.
 
 For a system with an active kinetic campaign (`conflict_campaigns.json`), the gate also writes
 the withheld recovery marker. It keeps status citations and status-bearing capacity notes in
@@ -109,6 +123,22 @@ in-geography, scope-clean records, writes `events.json`, and prints every lane-a
 it held back and why. **Read that list.** A scope-scan hit is held for a person; the fix is a
 recorded edit with a reason, never a silent rewrite. Read the shipped summaries too: the scan
 is a net, not a reviewer (it did not catch a substation described as a city's in-feed).
+
+## 4a. Required before a country is shown (iteration 17)
+
+Wave 2 should cost less than Wave 1 because the contract is now written down. A new country is
+not added to `SYSTEMS` until every item below exists, and each is checked by the build or the
+browser suite:
+
+| Requirement | Where | Checked by |
+|---|---|---|
+| A systematic plan, committed before searching, with lanes, universes and `covered_through` | `docs/countries/<CC>_SYSTEMATIC_SWEEP.md`, `research_log.json` | plan-commit test; `ends_early` validation |
+| A source registry with licence verdicts, cadences and stale policies | `system.json` → `sources` | `validate_sources` |
+| An episode model: explicit bases only | `episodes.json` | `validate_episodes` |
+| Independent review: blind three-role for every record | queue → `review_edits.json` → `events.json` | import gate; `review_problems`; mutation campaign |
+| Research freshness (by lane) and source freshness, shown as separate badges | `research_log.json`; `sources` | gate items 7A and 7B; browser tests |
+| A campaign entry if any record comes from an active kinetic campaign | `conflict_campaigns.json` | publication-policy tests |
+| Real-browser QA: map drawn, every sector stated, events listed, PNG export, no sideways scroll at phone width, map structure on every platform | `web/e2e/global.e2e.ts` (`COUNTRIES`) | the browser suite |
 
 ## 5. Build and test
 

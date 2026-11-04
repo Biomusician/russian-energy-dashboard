@@ -93,7 +93,7 @@ DUAL_PROCESS = ("Found by a research lane; then a second, independent reviewer o
                 "episode before publication.")
 GRANDFATHERED = ROOT / "data" / "curated" / "systems" / "review_grandfathered.json"
 PASSING_DISPOSITIONS = ("confirmed", "corrected")
-# Iteration 17: three blind roles (docs/REVIEW_GOVERNANCE.md §8). A record reviewed this way names
+# Iteration 17: three blind roles (docs/REVIEW_GOVERNANCE.md §7). A record reviewed this way names
 # the standard; every role must have accepted it, and the reconciled text is what they accepted.
 BLIND = "blind_three_role"
 BLIND_ROLES = ("evidence", "safety", "taxonomy")

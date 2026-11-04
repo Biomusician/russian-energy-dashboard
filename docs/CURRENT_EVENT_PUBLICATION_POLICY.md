@@ -78,19 +78,22 @@ the same country. The February 2026 Juaymah LPG halt is recorded by its source a
 (cause unknown), so it is not a campaign record; its component-level wording and a dated
 current-status quote were trimmed all the same.
 
-**Not applied yet — the Russia theatre.** The theatre is the original, larger case of the same
-problem: its war is an active campaign, and it publishes facility-level recovery evidence (26
-records; 8 for 2026 incidents with 2026 evidence dates) and a "live disruptions" list of 53
-facilities with modelled impairment ages. The register records the theatre's campaign as active
-with `policy_applied: false` and the reason: the theatre's recovery evidence feeds its index, and
-applying the policy changes what the Russia view shows, which this iteration's brief held fixed.
-Applying it is the first owner decision in ITERATION_16_REVIEW. If applied, the index would be
-unaffected (it aggregates to region and sector); the facility-level presentation would change.
+**The Russia theatre (applied since iteration 17, in its own form).** The theatre is the
+original, larger case of the same problem. Withholding all facility status, as for Saudi Arabia,
+would freeze its recovery model for the war's duration, so the theatre applies a delay instead:
+occurrence is published at administrative-region level as before; modelled exposure is
+published; recovery evidence (a restart, a restoration, a repair estimate, a late effect report)
+is used for display, scoring and the change ledger only once it is 60 days old and past any
+estimate horizon. The counts withheld are published, the ids never; every campaign disruption
+without released evidence carries the withheld-status note. The evidence for 60 days, the index
+cost and the leakage audits are in [OPERATIONAL_STATUS_DELAY_OPTIONS.md](OPERATIONAL_STATUS_DELAY_OPTIONS.md);
+`conflict_campaigns.json` records `policy_applied: true` with the rule.
 
 A residual, stated rather than hidden: a regional exposure figure aggregates recovery evidence,
 so in a region with one struck facility a falling regional value still reflects that facility's
 restart. Aggregation to region is the accepted safeguard in the practices below, but it is not
-perfect in single-facility regions.
+perfect in single-facility regions. For the theatre the delay closes most of it: a regional
+value moves only on modelled values and on evidence at least 60 days old.
 
 ## 4. Comparable practice (the evidence for §5)
 
@@ -199,5 +202,10 @@ weighed:
   points. The asset layer shows every plant, struck or not, so this reveals no hidden location.
   It does make the struck subset machine-joinable.
 
-Applying this policy to the theatre would withhold or aggregate all of these. That is the first
-owner decision in ITERATION_16_REVIEW.
+Applying this policy to the theatre would withhold or aggregate all of these. That was the first
+owner decision in ITERATION_16_REVIEW. **Iteration 17 applied it** in the delayed form above
+(the brief asked for it): recovery evidence and late effect reports wait 60 days; the iteration-17
+safety review removed unit inventories, criticality framing, a strike-damage count, sub-region
+places with outage times and sanctions-tied repair timelines from the theatre's curated text;
+and recovery-time medians are published only from three cases. The `linked_asset_id` join
+remains (it reveals no hidden location) and is listed for the owner in ITERATION_17_REVIEW.

@@ -6,7 +6,7 @@
 Reads `data/candidates/review17/<prefix>_{A,B,C}.json` (local, gitignored) and writes
 `<prefix>_merged.json` beside them. Writes nothing that is published.
 
-THE RULE (docs/REVIEW_GOVERNANCE.md §8). Three roles review blind: A evidence, B safety and
+THE RULE (docs/REVIEW_GOVERNANCE.md §7). Three roles review blind: A evidence, B safety and
 abstraction, C taxonomy and episodes. There is no majority vote. A record goes forward only if
 every role accepts it, with or without corrections:
 
