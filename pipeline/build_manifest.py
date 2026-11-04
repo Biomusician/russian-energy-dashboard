@@ -21,6 +21,7 @@ with no raw cache from silently looking identical to one with a full cache.
 
 import hashlib
 import json
+from pathlib import Path
 
 from pipeline.config import SCHEMA_VERSION
 
@@ -75,8 +76,17 @@ INPUT_GROUPS = {
 }
 
 
+# Text inputs are hashed with line endings normalised: a Windows checkout holds CRLF copies of
+# files git stores as LF, so the same commit fingerprinted differently on this machine and on the
+# runner (iteration 17, operations red team). Binary inputs are hashed as they are.
+_TEXT_SUFFIXES = {".csv", ".json", ".geojson", ".md", ".txt", ".py", ".toml", ".yml", ".yaml"}
+
+
 def _hash_file(path):
     h = hashlib.sha256()
+    if Path(path).suffix.lower() in _TEXT_SUFFIXES:
+        h.update(Path(path).read_bytes().replace(b"\r\n", b"\n"))
+        return h.hexdigest()
     with open(path, "rb") as fh:
         for chunk in iter(lambda: fh.read(65536), b""):
             h.update(chunk)

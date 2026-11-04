@@ -226,8 +226,8 @@ Eight records are held for the owner (six grandfathered, two new). Each turns on
 - China: a cumulative national typhoon-season aggregate as one record.
 - India: coal-shortage load shedding (cause "unknown" versus a new fuel-supply-shortfall cause);
   IOCL (does isolating one pipeline section meet clause 3).
-- Saudi Arabia: the East-West pipeline throughput cut (a partial cut under clause 3); Yanbu
-  loadings suspended as a consequence of that cut.
+- Saudi Arabia: a partial pipeline throughput cut (does clause 3 cover it), and a port record
+  that turns on the same ruling.
 - US: Hurricane Lee in Maine (multi-state record re-scoped to one state's peak).
 
 Other questions raised in review, not holding records: Ras Tanura's published capacity figure may

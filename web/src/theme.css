@@ -1726,6 +1726,9 @@ ol.stages { list-style: none; margin: 6px 0 0; padding: 0 0 0 12px; }
    map rather than taking a grid row, so the map never shrinks to make room for its own caption. */
 .briefing-frame {
   position: absolute;
+  /* The map's grid area, not the whole shell: covering the shell drew the briefing title over
+     the still-visible header and ribbon (iteration 17 UX red team). */
+  grid-area: map;
   inset: 0;
   z-index: 30;
   display: flex;
@@ -1963,11 +1966,15 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
   padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--bg-panel); align-items: start;
 }
 .no-index-value { font-size: 26px; font-weight: 600; color: var(--text-faint); letter-spacing: 0.02em; }
+/* The page scrolls; the body never shrinks below its content. With `flex: 1; min-height: 0` a
+   tall ribbon (one column on a phone) squeezed the body to ~40px, so the map was drawn over the
+   tabs and the events, sources and "why no score" panels could not be reached (iteration 17,
+   UX red team). */
 .country-body {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 420px); gap: 12px;
-  padding: 12px 16px 24px; min-height: 0; flex: 1;
+  padding: 12px 16px 24px; flex: 1 0 auto;
 }
-.country-map { display: flex; flex-direction: column; min-height: 0; }
+.country-map { display: flex; flex-direction: column; min-height: 440px; }
 .country-map .simple-map { flex: 1; min-height: 420px; }
 .country-side { padding: 12px; border: 1px solid var(--line); overflow: auto; max-height: 78vh; }
 .country-side h2 { font-size: 14px; margin: 8px 0; }
@@ -2002,8 +2009,12 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
 @media (max-width: 900px) {
   .country-ribbon { grid-template-columns: minmax(0, 1fr); }
   .country-body { grid-template-columns: minmax(0, 1fr); }
+  .country-map { min-height: 360px; }
   .country-map .simple-map { min-height: 340px; }
-  .country-side { max-height: none; }
+  .country-side { max-height: none; overflow: visible; }
+  /* Wide tables scroll inside themselves, never the page (the research log is ~570px). */
+  .country-side .sector-table { display: block; max-width: 100%; overflow-x: auto; }
+  .country-side .badge { white-space: normal; }
 }
 
 /* Print / PDF: the document, not the controls. A WebGL map does not reliably print, so the
@@ -2030,3 +2041,11 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
 /* Iteration 16: a past date is a reconstruction, said beside the number it qualifies. */
 .reconstruction-tag { font-size: 10px; letter-spacing: 0.04em; color: var(--amber); font-family: var(--mono); }
 .cmp-note { margin: 8px var(--pad) 12px; }
+
+/* Iteration 17 UX red team: once the drawer toggles moved into the map's grid area, they sat on
+   the map's own top row -- the zoom control and the "Full AOI" preset on the left, the scope
+   note on the right -- which could no longer be clicked or read. When a toggle is present, the
+   map's top row moves down by one button height on that side. */
+.shell:has(.drawer-toggles:not(.right) .drawer-btn) .maplibregl-ctrl-top-left { margin-top: 36px; }
+.shell:has(.drawer-toggles:not(.right) .drawer-btn) .camera-controls { top: 46px; }
+.shell:has(.drawer-toggles.right .drawer-btn) .map-scope-note { margin-top: 36px; }

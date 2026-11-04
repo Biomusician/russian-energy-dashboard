@@ -373,6 +373,27 @@ test.describe("provenance and coverage (iteration 16)", () => {
     await expect(page.getByRole("heading", { name: "United States", level: 1 })).toBeVisible();
   });
 
+  test("on a phone a country page's tabs, events and sources are reachable (iteration 17)", async ({ app, page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await app.open("?sys=us");
+    // The body used to be squeezed to ~40px under the one-column ribbon, with the map drawn over
+    // the tabs: nothing below the legend could be reached.
+    const h = await page.locator(".country-body").evaluate((el) => el.getBoundingClientRect().height);
+    expect(h).toBeGreaterThan(800);
+    const sources = app.button("Sources & data quality");
+    await sources.scrollIntoViewIfNeeded();
+    await sources.click();
+    await expect(page.locator(".source-browser-table tbody tr").first()).toBeVisible();
+    const sideways = await page.locator(".global-page").evaluate((el) => el.scrollWidth > window.innerWidth);
+    expect(sideways).toBe(false);
+  });
+
+  test("the no-index reason is true for every country, including one under attack", async ({ app, page }) => {
+    await app.open("?sys=sa");
+    await expect(page.locator(".no-index-plain")).not.toContainText(/weather/i);
+    await expect(page.locator(".no-index-plain")).toContainText("do not transfer");
+  });
+
   test("a broken events file is contained to its system", async ({ app, page }) => {
     app.allowConsoleError(/status of 500/);
     await page.route("**/data/systems/sa/events.json", (route) => route.fulfill({ status: 500, body: "" }));

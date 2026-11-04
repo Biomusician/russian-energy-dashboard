@@ -34,8 +34,8 @@ export interface CorpusTotals {
   independently_reviewed: number;
   blind_reviewed: number;
   registry_sources: number;
-  records_with_recovery_evidence: number;
-  records_with_status_withheld: number;
+  records_with_observed_recovery: number;
+  records_with_recovery_estimate_only: number;
   research_lanes_complete: number;
   research_lanes: number;
   note: string;
@@ -174,6 +174,7 @@ export interface SourceHealth {
   single_source_events: number;
   events_with_first_party_source: number;
   first_party_roles: string[];
+  first_party_excludes?: string;
   note: string;
 }
 
@@ -292,7 +293,7 @@ export async function loadCountry(entry: ManifestSystem, signal: AbortSignal): P
   if (system.system_id !== entry.id) {
     throw new Error(`${entry.root}/system.json describes ${system.system_id}, not ${entry.id}`);
   }
-  const bad = shapeProblems(system, events);
+  const bad = shapeProblems(system, events, regions);
   if (bad.length) throw new Error(`${entry.root}: malformed payload (${bad.join(", ")})`);
   return { system, events: events.events, episodes: events.episodes ?? [], regions };
 }
@@ -300,7 +301,7 @@ export async function loadCountry(entry: ManifestSystem, signal: AbortSignal): P
 /** The parts of a country payload the view reads without a guard. A malformed one is refused at
  *  load, so it fails as "this system could not be loaded" and the others stay usable, instead
  *  of throwing during render and taking the whole dashboard down (iteration 17, §65). */
-export function shapeProblems(system: unknown, events: unknown): string[] {
+export function shapeProblems(system: unknown, events: unknown, regions?: unknown): string[] {
   const s = (system ?? {}) as Record<string, unknown>;
   const e = (events ?? {}) as Record<string, unknown>;
   const obj = (x: unknown) => typeof x === "object" && x !== null && !Array.isArray(x);
@@ -309,8 +310,23 @@ export function shapeProblems(system: unknown, events: unknown): string[] {
     if (!Array.isArray(s[k])) out.push(`${k} is not a list`);
   }
   for (const k of ["event_summary", "review_summary", "publication_policy", "research_freshness",
-                   "geography", "profile", "taxonomy", "stale_policies"]) {
+                   "geography", "profile", "taxonomy", "stale_policies", "inclusion_threshold",
+                   "episode_bases"]) {
     if (!obj(s[k])) out.push(`${k} is missing`);
+  }
+  // Nested fields the view also reads unguarded (iteration 17, test-architecture red team).
+  if (obj(s.geography) && !Array.isArray((s.geography as Record<string, unknown>).rulings ?? [])) {
+    out.push("geography.rulings is not a list");
+  }
+  if (obj(s.event_summary) && !obj((s.event_summary as Record<string, unknown>).recovery_kinds)) {
+    out.push("event_summary.recovery_kinds is missing");
+  }
+  if (Array.isArray(e.events) && (e.events as unknown[]).some((x) => !obj(x) || !obj((x as Record<string, unknown>).review)
+      || !Array.isArray((x as Record<string, unknown>).sources) || !obj((x as Record<string, unknown>).recovery))) {
+    out.push("an event lacks its review, sources or recovery");
+  }
+  if (regions !== undefined && !(obj(regions) && Array.isArray((regions as Record<string, unknown>).features))) {
+    out.push("regions.features is not a list");
   }
   const log = s.research_log as Record<string, unknown> | undefined;
   if (!obj(log) || !Array.isArray(log!.passes)) out.push("research_log.passes is not a list");

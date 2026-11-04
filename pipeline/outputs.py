@@ -33,6 +33,8 @@ MODES = ("current", "reconstruction", "fixture")
 # Directories a non-current build must never write into: the committed production payload, the
 # web bundle Vercel serves, and the working-tree root above them.
 PROTECTED = (PROCESSED, WEB_DATA)
+# The one place inside the repository a reconstruction or fixture may write (gitignored).
+RECONSTRUCTION_DIR = ROOT / "data" / "reconstruction"
 
 
 class OutputRefused(ValueError):
@@ -106,6 +108,15 @@ def plan(mode, as_of, today, output_root=None, allow_protected_root=False):
         raise OutputRefused(f"a {mode} build needs an explicit --output-root outside data/processed")
     if mode == "reconstruction" and as_of >= today:
         raise OutputRefused(f"a reconstruction is for a past date; {as_of} is not before {today}")
+    # Inside the repository a non-current build may write only under data/reconstruction/
+    # (gitignored). Anywhere else in the tree is someone's source of truth: a root of data/curated
+    # would have written each country's events.json over its curated file (iteration 17,
+    # test-architecture red team). Outside the repository (a scratch dir, a test's tmp_path) is fine.
+    resolved = Path(output_root).resolve()
+    in_repo = _inside(resolved, ROOT) or any(_same(a, ROOT) for a in _existing_chain(resolved))
+    if in_repo and not _protected(output_root) and not _inside(resolved, RECONSTRUCTION_DIR):
+        raise OutputRefused(f"a {mode} build may write inside the repository only under "
+                            f"data/reconstruction/; {output_root} is not")
     if _protected(output_root):
         # The override names exactly the working-tree payload, never the served bundle, the repo
         # root or an alias of either (lane-D red team).

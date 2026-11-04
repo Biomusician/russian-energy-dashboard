@@ -20,4 +20,9 @@ markers = [
   # Measured, not theorised: creating docs/ITERATION_13_REVIEW.md turned the suite red, and
   # would have frozen the daily refresh.
   "repo_hygiene: asserts about the repository, not the payload; never gates publication",
+  # Tests that need the gitignored source cache (data/raw). CI has no cache and skips them, so a
+  # regression in one would surface first in the scheduled refresh and freeze publication
+  # (iteration 17, operations red team). They test reconstruction and display policy, not the
+  # payload being published, so refresh.yml deselects them too; run them locally.
+  "needs_raw_cache: needs data/raw; skipped in CI, deselected from the refresh gate",
 ]

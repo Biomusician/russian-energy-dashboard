@@ -258,7 +258,8 @@ def _recovery_changes(prev_snap, curr_snap, previous_as_of):
         # A campaign disruption whose evidence the policy now holds back, but the previous build
         # showed: report it only as a count. The previous build's evidence is history already
         # published; the CHANGE is what would single the facility out.
-        if (c[aid].get("publication_note") and pr.get("scoring_evidence_kind") not in (None, "modelled")
+        # The build puts the note on the disruption's recovery block (recovery.annotate_withheld).
+        if (cr.get("publication_note") and pr.get("scoring_evidence_kind") not in (None, "modelled")
                 and cr.get("scoring_evidence_kind") in (None, "modelled")):
             withheld += 1
             continue
@@ -440,8 +441,10 @@ def _sector_attribution(prev_snap, curr_snap, rescaled_sectors):
     pc = {c["sector"]: c for c in pe["contributions"]}
     cc = {c["sector"]: c for c in ce["contributions"]}
     rows = []
-    for s in sorted(set(pc) | set(cc), key=lambda x: -abs(
-            (cc.get(x, {}).get("index_points", 0.0)) - (pc.get(x, {}).get("index_points", 0.0)))):
+    # Ties broken by sector name: set order varies between runs, and a reordered ledger read as a
+    # substantive change to the refresh's change detector (operations red team).
+    for s in sorted(set(pc) | set(cc), key=lambda x: (-abs(
+            (cc.get(x, {}).get("index_points", 0.0)) - (pc.get(x, {}).get("index_points", 0.0))), x)):
         before = pc.get(s, {}).get("index_points", 0.0)
         after = cc.get(s, {}).get("index_points", 0.0)
         if before == 0.0 and after == 0.0:
@@ -513,7 +516,7 @@ def _facility_attribution(prev_snap, curr_snap, rescaled_sectors, separable):
                 "attribution_exact": reason is None,
                 "non_additive_reason": reason,
             })
-    rows.sort(key=lambda r: -abs(r["delta"]))
+    rows.sort(key=lambda r: (-abs(r["delta"]), r["sector"]))
     return rows
 
 

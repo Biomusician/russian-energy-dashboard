@@ -105,7 +105,7 @@ test for this.
 
 | Sector | Base | Source |
 |---|---|---|
-| Refining | **280.6 MTPA** | 35-refinery national inventory: Wikipedia's *List of oil refineries* (30) + a sourced curated supplement (5), audited in iteration 2. A `refinery_reconciliation` block reports this as **85.0% of the ~330 MTPA national estimate** (gap 49.4), an explicit lower bound — not padded toward 330 with unlike facilities |
+| Refining | **tracked refinery base** (current figure in [CURRENT_STATE.md](CURRENT_STATE.md)) | National inventory: Wikipedia's *List of oil refineries* plus a sourced curated supplement, audited in iteration 2. A `refinery_reconciliation` block reports it as a share of the national crude nameplate reference, an explicit lower bound — not padded toward the reference with unlike facilities. (The iteration-2 figures, 280.6 MTPA and 85% of ~330, are historical.) |
 | Electric generation | **219,992 MW** | Sum of WRI plant capacities inside the AOI (thermal + hydro + nuclear + other), capacity basis like refining |
 | Transmission | **event-burden, not capacity** | No open capacity denominator exists. A voltage-weighted count of disrupted substations/lines is scored against a documented **saturation constant of 8 weighted concurrent events = 100**. Network inventory (substations, lines) is *context, not a denominator*; the measure is never expressed as "% offline" |
 | Oil logistics | Refining base (proxy) | No published throughput denominator exists; flagged as a proxy in the emitted metadata |

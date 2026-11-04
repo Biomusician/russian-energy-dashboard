@@ -115,6 +115,9 @@ def load_recovery_records():
             "observed_date": row.get("observed_date") or row.get("reconstituted_at"),
             "observed_days": _num(row.get("observed_days")) or _num(row.get("reconstitution_observed_days")),
             "partial_operations_resumed_at": row.get("partial_operations_resumed_at"),
+            # The date the cited source reports the state as of, when it gives no restart date
+            # (iteration 17): what the campaign embargo counts from. Optional column.
+            "evidence_as_of": (row.get("evidence_as_of") or "").strip() or None,
             "partial_or_full": row.get("partial_or_full"),
             "estimate_lower_days": _num(row.get("est_lower_days")),
             "estimate_central_days": _num(row.get("est_central_days")),
@@ -290,13 +293,25 @@ def is_campaign_member(incident, campaign):
     return incident.get("cause") in rule["causes"] and (incident.get("date") or "") >= rule["from"]
 
 
+# Statuses that report an observation. One with no date of any kind is never released during a
+# campaign: falling back to the incident date released a "substantially restored" report on the
+# day it was published (iteration 17, analytics red team).
+_OBSERVED_STATUSES = {"partial_restart", "substantially_restored", "fully_reconstituted"}
+
+
 def evidence_date(record, incident_date):
-    """The latest date the record's evidence describes. An undated record (a status or a
-    forecast with no observation date) falls back to the incident date: the source's own
-    publication date is not curated, so this is a floor, not the publication date."""
+    """The latest date the record's evidence describes: an observed restoration or restart date,
+    or the date the source reports the state as of (`evidence_as_of`). A forecast with none of
+    these falls back to the incident date, because its estimate horizon decides its release. An
+    observed status with none of these has no date at all: None, so it fails closed."""
     dates = [d for d in (_date(record.get("observed_date")),
-                         _date(record.get("partial_operations_resumed_at"))) if d]
-    return max(dates) if dates else _date(incident_date)
+                         _date(record.get("partial_operations_resumed_at")),
+                         _date(record.get("evidence_as_of"))) if d]
+    if dates:
+        return max(dates)
+    if record.get("recovery_status") in _OBSERVED_STATUSES:
+        return None
+    return _date(incident_date)
 
 
 def release_date(record, incident_date, embargo_days):
@@ -366,7 +381,9 @@ AT_THE_TIME_DAYS = 7
 
 def effect_release_date(effect, incident_date, embargo_days):
     start = _date(incident_date)
-    seen = _date(effect.get("as_of_date")) or start
+    # An undated effect is never released during a campaign: assuming "reported at the time" let
+    # a later status report through at once (iteration 17, test-architecture red team).
+    seen = _date(effect.get("as_of_date"))
     if seen is None:
         return None
     if start and (seen - start).days <= AT_THE_TIME_DAYS:
@@ -415,6 +432,16 @@ def annotate_withheld(live_disruptions, incidents, policy):
         r = d.get("recovery") or {}
         inc = inc_by_id.get(r.get("incident_id") or d.get("driving_incident_id"))
         if inc and is_campaign_member(inc, camp) and r.get("scoring_evidence_kind") == "modelled":
-            r["publication_note"] = WITHHELD_NOTE
+            # Where released evidence (at least the embargo old) is on the card, the plain note
+            # would contradict the status shown beside it (analytics and UX red teams). Say what
+            # is withheld instead: anything after it. Both notes reveal only what is shown.
+            if r.get("recovery_status") not in (None, "impaired", "unknown"):
+                when = r.get("observed_date") or r.get("partial_operations_resumed_at")
+                r["publication_note"] = (
+                    (f"Status shown is as of {when}" if when else "Status shown is historical")
+                    + "; anything later is withheld during the active campaign (recovery evidence is "
+                    f"published once it is {policy.get('evidence_embargo_days')} days old).")
+            else:
+                r["publication_note"] = WITHHELD_NOTE
             n += 1
     return n

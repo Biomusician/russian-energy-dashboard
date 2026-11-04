@@ -91,7 +91,10 @@ def _ledger(root):
 
 def _bot_commits_after(root, since_iso):
     """Daily-refresh commits on HEAD's history committed after `since_iso`, oldest first."""
-    out = _git(root, "log", "--reverse", "--format=%H %cI", f"--author={BOT_AUTHOR}",
+    # --fixed-strings: git reads --author as a regex, and "[bot]" is a character class that
+    # matches no commit, so no bot refresh ever entered the history (iteration 17, operations red
+    # team).
+    out = _git(root, "log", "--reverse", "--format=%H %cI", "--fixed-strings", f"--author={BOT_AUTHOR}",
                f"--since={since_iso}", "HEAD")
     if not out:
         return []

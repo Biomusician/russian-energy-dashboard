@@ -13,6 +13,7 @@ a scheduled job is the whole backend.
 import argparse
 import collections
 import datetime as dt
+import os
 import shutil
 
 from pipeline import build_assets, build_context, build_index, build_pipeline_network
@@ -441,6 +442,20 @@ def _build_coverage(in_aoi, benchmark, snapshot):
     return oil_benchmark, matrix
 
 
+def _embargo_refusal(what, ids):
+    """An embargoed row in the curated files. Locally the build refuses, naming the rows, so the
+    curator moves them to the local hold. In the scheduled refresh it must not freeze daily
+    publication (the September-outage shape: a correct check stopping the data), and the rows are
+    already kept out of the payload by the embargo itself. There it reports an error with a COUNT
+    only -- Actions logs are public -- and carries on (iteration 17, operations red team)."""
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        print(f"::error::{what}; withheld from this build, but the rows are in the public "
+              "repository. Move them to the local hold (docs/OPERATIONAL_STATUS_DELAY_OPTIONS.md).")
+        return
+    raise SystemExit(f"refused: {what}: {', '.join(ids)}. Hold them outside the curated files "
+                     "until their release date (docs/OPERATIONAL_STATUS_DELAY_OPTIONS.md).")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--as-of", default=dt.date.today().isoformat())
@@ -521,10 +536,8 @@ def main():
     if args.mode == "current":
         young = recovery_mod.young_campaign_records(recovery_by_incident, incidents, args.as_of)
         if young:
-            raise SystemExit(
-                f"refused: {len(young)} recovery record(s) for active-campaign incidents are still "
-                f"under embargo and may not be committed: {', '.join(young)}. Hold them outside the curated files "
-                "until their release date (docs/OPERATIONAL_STATUS_DELAY_OPTIONS.md).")
+            _embargo_refusal(f"{len(young)} recovery record(s) for active-campaign incidents are "
+                             "still under embargo and may not be committed", young)
     recovery_by_incident, campaign_policy = recovery_mod.apply_campaign_embargo(
         recovery_by_incident, incidents, args.as_of, args.evidence_embargo_days)
     log(f"campaign policy: {campaign_policy.get('withheld_records', 0)} recovery record(s) withheld"
@@ -591,9 +604,8 @@ def main():
     _kept, _withheld, _young = recovery_mod.embargo_effects(
         snapshot["strategic_effects"]["by_incident"], incidents, args.as_of, args.evidence_embargo_days)
     if args.mode == "current" and _young:
-        raise SystemExit(f"refused: effects for {len(_young)} active-campaign incident(s) report status "
-                         f"still under embargo: {', '.join(_young)}. Hold them outside the curated files "
-                "until their release date (docs/OPERATIONAL_STATUS_DELAY_OPTIONS.md).")
+        _embargo_refusal(f"effects for {len(_young)} active-campaign incident(s) report status still "
+                         "under embargo", _young)
     snapshot["strategic_effects"]["by_incident"] = _kept
     if campaign_policy["applied"]:
         campaign_policy["withheld_effects"] = _withheld

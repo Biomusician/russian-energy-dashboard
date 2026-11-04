@@ -246,6 +246,9 @@ def to_event(system_id, r, grandfathered=frozenset(), campaigns=None):
     # An active campaign's records ship with the withheld marker; the evidence stays in the queue.
     if campaigns and build_systems.campaign_of(ev, system_id, campaigns):
         ev["recovery"] = _withheld_recovery()
+        # An end date on a struck facility's record says when its outage ended: status by another
+        # name (iteration 17, test-architecture red team). It stays in the queue too.
+        ev["date_end"] = None
         # A citation whose address announces a restart ("…-delays-restart-to-august-30") publishes
         # that status in the source list, and a capacity note quoting a post-restart operating rate
         # publishes it in our words. Both stay in the queue with the rest of the status evidence,

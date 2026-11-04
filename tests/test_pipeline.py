@@ -3005,7 +3005,10 @@ def test_release_payload_is_a_current_date_build_not_a_frozen_reference():
     Two different builds are legitimate and deliberately produce different headlines:
 
         production   python -m pipeline.run                     -> as_of = build day
-        regression   python -m pipeline.run --as-of 2026-08-28   -> the frozen comparison point
+        reference    python -m pipeline.run --mode reconstruction --as-of 2026-08-28
+                       --output-root data/reconstruction/2026-08-28
+                     -> the pinned-source comparison point, written outside data/processed
+                        (since iteration 17 a past --as-of without --mode reconstruction is refused)
 
     The frozen build exists ONLY for apples-to-apples methodology comparison across iterations;
     ESDI moves with time decay, so shipping a frozen payload would freeze the live dashboard at
@@ -6744,6 +6747,7 @@ def test_the_import_gate_holds_what_it_should():
     assert imp.review("us", single, ok) is not None
 
 
+@pytest.mark.needs_raw_cache
 @pytest.mark.skipif(not (ROOT / "data" / "raw" / "ne_10m_admin_1.geojson").exists(),
                     reason="Natural Earth cache not present")
 def test_a_historical_as_of_build_reconstructs_country_systems_instead_of_failing(tmp_path, monkeypatch):
@@ -7033,8 +7037,11 @@ def test_one_source_statement_is_not_an_episode():
 
 def test_an_explicit_episode_must_cite_the_source_that_says_so():
     from pipeline import build_systems as B
+    # Both members cite the statement that groups them (since iteration 17 one member's source
+    # cannot vouch for another).
+    xc = _ep_events()[2]
     ev = [*_ep_events()[:1], {"event_id": "x-d", "hazard_name": None, "sources": [{"url": "https://s/4"}]},
-          _ep_events()[2]]
+          {**xc, "sources": xc["sources"] + [{"url": "https://s/4"}]}]
     ep = {"episode_id": "x-wave", "name": "Wave", "basis": "coordinated_wave", "event_ids": ["x-d", "x-c"]}
     with pytest.raises(ValueError, match="needs evidence"):
         B.validate_episodes("x", [ep], ev)
@@ -7418,7 +7425,21 @@ def test_a_systematic_pass_ran_the_lanes_its_committed_plan_declared():
             r = subprocess.run(["git", "show", f"{plan['commit']}:{plan['document']}"], cwd=GIT_ROOT,
                                capture_output=True, text=True, encoding="utf-8")
             if r.returncode != 0:
-                pytest.skip(f"plan commit {plan['commit']} not in this clone")
+                # Skip only where history is genuinely absent (a shallow clone). A full clone that
+                # lacks the commit means the plan reference is wrong or forged: that fails (lane-G
+                # red team: a bad commit turned the whole test into a skip).
+                shallow = subprocess.run(["git", "rev-parse", "--is-shallow-repository"], cwd=GIT_ROOT,
+                                         capture_output=True, text=True).stdout.strip() == "true"
+                if shallow:
+                    pytest.skip(f"plan commit {plan['commit']} not in this shallow clone")
+                pytest.fail(f"{sid}: plan commit {plan['commit']} / {plan['document']} not found in git")
+            # The plan must predate the log entry that claims it: committed BEFORE searching.
+            added = subprocess.run(["git", "log", "--reverse", "--format=%H", "-S", f'"date": "{p["date"]}"',
+                                    "--", f"data/curated/systems/{sid}/research_log.json"], cwd=GIT_ROOT,
+                                   capture_output=True, text=True).stdout.split()[:1]
+            for sha in added:
+                anc = subprocess.run(["git", "merge-base", "--is-ancestor", plan["commit"], sha], cwd=GIT_ROOT)
+                assert anc.returncode == 0, (sid, plan["commit"], "is not an ancestor of", sha)
             part_a = r.stdout.split("## Part B")[0]
             declared = re.findall(r"^\| ([A-Z]{1,2}\d) \|", part_a, flags=re.M)
             assert declared, plan
@@ -7427,6 +7448,7 @@ def test_a_systematic_pass_ran_the_lanes_its_committed_plan_declared():
     assert checked >= 2   # the US and Canada sweeps
 
 
+@pytest.mark.needs_raw_cache
 @pytest.mark.skipif(not (ROOT / "data" / "raw" / "ne_10m_admin_1.geojson").exists(),
                     reason="Natural Earth cache not present")
 def test_stale_limits_never_change_what_a_system_publishes(tmp_path, monkeypatch):
@@ -7847,7 +7869,12 @@ def test_every_campaign_incident_without_released_evidence_carries_the_note():
         inc = incs.get(r["incident_id"])
         member = inc is not None and R.is_campaign_member(inc, camp)
         if member and r["scoring_evidence_kind"] == "modelled":
-            assert r.get("publication_note") == R.WITHHELD_NOTE, d["asset_id"]
+            # The plain note where nothing is released; where released evidence is on the card,
+            # the dated variant, never a note that contradicts the status beside it.
+            if r.get("recovery_status") in (None, "impaired", "unknown"):
+                assert r.get("publication_note") == R.WITHHELD_NOTE, d["asset_id"]
+            else:
+                assert "anything later is withheld" in r.get("publication_note", ""), d["asset_id"]
             checked += 1
         elif not member:
             assert "publication_note" not in r, d["asset_id"]
@@ -7979,6 +8006,7 @@ def test_source_health_matches_the_published_events_and_stays_out_of_the_manifes
         assert "source_health" not in set(_walk_keys(s)) and "citations" not in set(_walk_keys(s)), s["id"]
 
 
+@pytest.mark.needs_raw_cache
 @pytest.mark.skipif(not (ROOT / "data" / "raw" / "osm_pipeline_relations.json").exists(),
                     reason="OSM cache not present")
 def test_osm_provenance_names_every_query_and_the_relations_used():
@@ -7990,7 +8018,12 @@ def test_osm_provenance_names_every_query_and_the_relations_used():
     for name, f in by.items():
         assert f["query_sha256"] and f["sha256"] and f["osm_data_timestamp"], name
     rel = by["osm_pipeline_relations.json"]
-    assert rel["relation_count"] > 0 and len(rel["relation_ids_sha256"]) == 16
+    # Recomputed, not shape-checked (lane G: hashing the ids unsorted would have passed).
+    import hashlib
+    raw = json.loads((ROOT / "data" / "raw" / "osm_pipeline_relations.json").read_text(encoding="utf-8"))
+    ids = sorted(e["id"] for e in raw["elements"] if e.get("type") == "relation")
+    assert rel["relation_count"] == len(ids) > 0
+    assert rel["relation_ids_sha256"] == hashlib.sha256(",".join(map(str, ids)).encode("ascii")).hexdigest()[:16]
 
 
 @needs_systems
@@ -8002,7 +8035,24 @@ def test_the_corpus_totals_are_sums_and_never_per_country():
     pay = {sid: _sys_payload(sid, "system.json") for sid in systems.COUNTRY_SYSTEMS}
     assert c["records"] == sum(p["event_summary"]["recorded_events"] for p in pay.values())
     assert c["episodes"] == sum(p["event_summary"]["episodes"] for p in pay.values())
-    assert 0 <= c["research_lanes_complete"] <= c["research_lanes"]
+    # Every field recomputed from the payloads (lane G: a lane count that counted every lane as
+    # complete passed the old bounds check).
+    rs = lambda p, k: p["review_summary"].get(k, 0)  # noqa: E731
+    assert c["blind_reviewed"] == sum(rs(p, "blind_reviewed") for p in pay.values())
+    assert c["independently_reviewed"] == sum(rs(p, "blind_reviewed") + rs(p, "dual_reviewed") for p in pay.values())
+    assert c["registry_sources"] == sum(sum(1 for s in p["sources"] if not s["role"].startswith("rejected")) for p in pay.values())
+    events = [e for sid in systems.COUNTRY_SYSTEMS for e in _sys_payload(sid, "events.json")["events"]]
+    assert c["records_with_observed_recovery"] == sum(
+        1 for e in events if e["recovery"]["kind"] in ("full_restart", "partial_restart", "service_restored", "partial_restoration"))
+    assert c["records_with_recovery_estimate_only"] == sum(1 for e in events if e["recovery"]["kind"] == "estimate")
+    done = total = 0
+    for p in pay.values():
+        sysm = [x for x in p["research_log"]["passes"] if x["kind"] == "systematic"]
+        newest = max(sysm, key=lambda x: x["date"])
+        total += len(newest["lanes"])
+        done += sum(1 for lane in newest["lanes"] if lane["status"] == "complete" and lane.get("covered_through") == newest["window"][1])
+    assert (c["research_lanes_complete"], c["research_lanes"]) == (done, total)
+    assert "records_with_status_withheld" not in c
     # Scalars only: a dict or list keyed by country would be a league table.
     assert all(isinstance(v, (int, str)) for v in c.values()), c
     assert not (set(c) & {s for s in systems.COUNTRY_SYSTEMS})
@@ -8020,8 +8070,11 @@ def test_the_ledger_never_names_a_facility_whose_evidence_the_campaign_policy_wi
         {"asset_id": "b", "name": "B refinery", "recovery": {"recovery_status": "impaired", "scoring_evidence_kind": "modelled"}},
     ]}
     curr = {"live_disruptions": [
-        {"asset_id": "a", "name": "A refinery", "publication_note": note,
-         "recovery": {"recovery_status": "impaired", "scoring_evidence_kind": "modelled"}},
+        # The note's real position, as recovery.annotate_withheld writes it (lane A: the first
+        # version of this test put it at the top level and so tested nothing real).
+        {"asset_id": "a", "name": "A refinery",
+         "recovery": {"recovery_status": "impaired", "scoring_evidence_kind": "modelled",
+                      "publication_note": note}},
         {"asset_id": "b", "name": "B refinery",
          "recovery": {"recovery_status": "substantially_restored", "scoring_evidence_kind": "observed",
                       "observed_date": "2026-08-01"}},
@@ -8095,3 +8148,82 @@ def test_archive_extraction_refuses_bad_days_and_non_empty_targets(tmp_path):
     (tmp_path / "stray.json").write_text("{}", encoding="utf-8")
     with pytest.raises(xp.ExtractRefused):
         xp.extract("2026-10-09", tmp_path)
+
+
+# --- iteration 17 final red team, lane G (test architecture) ----------------------------------
+
+def test_an_end_date_on_an_active_campaign_record_fails_the_build():
+    """Lane G: date_end bypassed the Saudi suppression; 'start - end' publishes when the struck
+    facility's outage ended. The build refuses it; the import gate drops it."""
+    from pipeline import build_systems as B
+    camp = {"campaigns": [{"campaign_id": "c", "system_id": "sa", "status": "active", "policy_applied": True,
+                           "cause": "kinetic_strike", "start": "2026-01-01", "end": None}]}
+    ev = {"event_id": "sa-x", "date": "2026-03-02", "date_end": "2026-03-25", "cause": "kinetic_strike",
+          "summary": "s", "effect": "e", "threshold_basis": "t", "capacity_affected": None,
+          "sources": [{"url": "https://example.org/a", "date": "2026-03-03"}],
+          "recovery": {"research_status": B.WITHHELD, "kind": None, "date": None, "evidence": None, "url": None}}
+    if B.campaign_of(ev, "sa", camp) is None:
+        pytest.skip("campaign matching rule differs from this fixture")
+    with pytest.raises(ValueError, match="end date"):
+        B.apply_publication_policy("sa", [dict(ev)], camp)
+    ok = dict(ev, date_end=None)
+    B.apply_publication_policy("sa", [ok], camp)
+
+
+def test_a_reconstruction_writes_inside_the_repo_only_under_data_reconstruction():
+    """Lane G: a reconstruction rooted at data/curated would write each country's events.json over
+    its curated source of truth. Inside the repository only data/reconstruction/ is allowed."""
+    from pipeline import outputs
+    for rel in ("data/curated", "data/curated/systems", "data/candidates", "methodology", "docs",
+                "pipeline", "tests", "web/src", "data/raw"):
+        with pytest.raises(outputs.OutputRefused):
+            outputs.plan("reconstruction", "2026-10-01", "2026-11-03", ROOT / rel, False)
+        with pytest.raises(outputs.OutputRefused):
+            outputs.plan("fixture", "2026-10-01", "2026-11-03", ROOT / rel, False)
+    ok = outputs.plan("reconstruction", "2026-10-01", "2026-11-03", ROOT / "data" / "reconstruction" / "x", False)
+    assert ok["mirror_web"] is False
+
+
+@pytest.mark.skipif(subprocess.run(["git", "-C", str(ROOT), "cat-file", "-e", "4656234"],
+                                   capture_output=True).returncode != 0,
+                    reason="git history with the 2026-11-03 bot refresh not available")
+def test_bot_refresh_commits_enter_the_as_published_history():
+    """Lane F: '--author=dataset-refresh[bot]' is a regex whose '[bot]' matches nothing, so every
+    unattended refresh after the last ledger capture was missing from the history."""
+    from pipeline import production_history as P
+    shas = [s for s, _ in P._bot_commits_after(ROOT, "2026-11-01T00:00:00Z")]
+    assert any(s.startswith("4656234") for s in shas), shas
+
+
+def test_an_episode_cannot_merge_two_named_hazards_or_rest_on_one_members_source():
+    """Lane G: an explicit_common_event holding an Ida record, a Uri record and an unrelated third
+    passed, because the hazard check ran only for named_hazard episodes and the evidence URL had
+    to be cited by just one member."""
+    from pipeline import build_systems as B
+    src = lambda u: [{"url": u}]  # noqa: E731
+    ev = [{"event_id": "us-a", "hazard_name": "Ida", "sources": src("https://x/ev")},
+          {"event_id": "us-b", "hazard_name": "Uri", "sources": src("https://x/b")},
+          {"event_id": "us-c", "hazard_name": None, "sources": src("https://x/c")}]
+    ep = [{"episode_id": "us-ep", "name": "n", "basis": "explicit_common_event", "event_ids": ["us-a", "us-b", "us-c"],
+           "evidence": {"url": "https://x/ev", "says": "one event"}}]
+    with pytest.raises(ValueError) as e:
+        B.validate_episodes("us", ep, ev)
+    assert "different hazards" in str(e.value) and "only one member" in str(e.value)
+
+
+def test_the_review_outcome_rule_has_no_majority_and_never_guesses_acceptance():
+    """Lane G: merge_reviews.outcome had no test, and relied on an assert that python -O strips."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("mr", ROOT / "scripts" / "merge_reviews.py")
+    mr = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mr)
+    A, W = "ACCEPT", "ACCEPT_WITH_CORRECTION"
+    assert mr.outcome({"A": A, "B": W, "C": A}) == "accept"
+    assert mr.outcome({"A": A, "B": A, "C": "HOLD"}) == "hold"          # two accepts do not outvote
+    assert mr.outcome({"A": A, "B": "REJECT", "C": "HOLD"}) == "reject"
+    assert mr.outcome({"A": A, "B": "DUPLICATE", "C": A}) == "hold"
+    assert mr.outcome({"A": "NEEDS_HUMAN_DECISION", "B": A, "C": A}) == "owner"
+    with pytest.raises(ValueError):
+        mr.outcome({"A": A, "B": "ACCEPT_WITH_CORRECTIONS", "C": A})    # a misspelling is not a pass
+    with pytest.raises(ValueError):
+        mr.outcome({"A": A, "B": A})                                   # a missing role is not a pass

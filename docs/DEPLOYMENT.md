@@ -87,10 +87,21 @@ demand via **workflow_dispatch**. It:
 1. Checks out the repo.
 2. Sets up Python 3.13.
 3. Restores the `data/raw` cache, then **rebuilds the dataset** (`python -m pipeline.run`).
-4. **Runs the full test suite** (`python -m pytest`) — including the scope/coordinate
-   gates and the dataset-sanity floor.
-5. **Commits `data/processed/` + `web/public/data/` only if something substantive changed**,
-   then pushes (which triggers the Vercel redeploy).
+4. **Runs the publication gate**: `RUN_BUILD_TESTS=1 python -m pytest -m "not repo_hygiene and
+   not needs_raw_cache"` — every test about the data being published, including the
+   scope/coordinate gates and the dataset-sanity floor. Prose lints (`repo_hygiene`) and tests that
+   need the source cache (`needs_raw_cache`) run in `ci.yml` and locally, where a failure cannot
+   freeze publication.
+5. **Commits only if something substantive changed** (`scripts/ci_data_changed.py`), staging
+   exactly the paths `scripts/staging_paths.py` names (`data/processed/`, `web/public/data/`,
+   `docs/CURRENT_STATE.md`) and checking them with `scripts/verify_staged.py`; then pushes, which
+   triggers the Vercel redeploy.
+
+**Failure behaviour added in iteration 17.** If a theatre recovery or effect row still under the
+campaign embargo is committed to `data/curated/`, a local current build refuses and names the
+rows. The scheduled refresh does not refuse: it reports an `::error::` with a count only (its logs
+are public), keeps the rows out of the payload as the embargo always does, and publishes. The
+fix is to move the rows to the local hold (`docs/HANDOFF.md`).
 
 Two properties worth knowing:
 

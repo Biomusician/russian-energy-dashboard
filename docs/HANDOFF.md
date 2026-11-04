@@ -52,7 +52,8 @@ summary".
   embargoed row is in `data/curated/recovery.csv` or `effects.csv`.** New theatre recovery
   evidence therefore waits in `data/candidates/held_recovery.csv` / `held_effects.csv` (local)
   until its release date, then moves into the curated file. Check those two files at the start
-  of each session: three estimates (Omsk, Moscow, Orsk) and one effect are waiting.
+  of each session: three repair estimates and two effect rows are waiting (their names stay in the
+  local files: naming them would say whose status the policy withholds).
 - **Blind three-role review** for every country record (REVIEW_GOVERNANCE §7; the workflow is
   in COUNTRY_ONBOARDING §4). The grandfather list is empty. 22 records are held locally in the
   queues, 8 of them on owner rulings.
@@ -102,7 +103,7 @@ See [ITERATION_16_REVIEW.md](ITERATION_16_REVIEW.md); its last section lists the
   not the facility's restart or operating status. That covers citations whose address states
   status, citations published more than 7 days after the event, and records at a struck site
   named in `conflict_campaigns.json` → `also_covers`. Jazan is held because its only citation
-  is a restart-delay article. The theatre is recorded but not under the policy: owner decision.
+  is an article whose address states facility status. The theatre is recorded but not under the policy: owner decision.
   [CURRENT_EVENT_PUBLICATION_POLICY.md](CURRENT_EVENT_PUBLICATION_POLICY.md).
 - **Episodes are explicit.**
   - `named_hazard`: every record naming the hazard, and only those.

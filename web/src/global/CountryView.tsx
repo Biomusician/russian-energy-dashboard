@@ -164,8 +164,9 @@ export default function CountryView({ id }: { id: string }) {
         <div className="no-index">
           <div className="no-index-value" aria-label="No index">No index</div>
           {/* Plain reason first (UX red team, iteration 16); the technical reason follows. */}
-          <div className="small no-index-plain">The disruption score was designed for strikes in a war; outages here are mostly weather and
-            accidents, so applying it would mislead. No score is shown, and that is not a score of zero.</div>
+          <div className="small no-index-plain">The disruption score was built for one strike campaign against one energy system; its
+            weights and recovery model do not transfer to this country's system, so applying it would mislead.
+            No score is shown, and that is not a score of zero.</div>
           <div className="small dim">{sys.no_index_reason}</div>
         </div>
         <div>
@@ -403,6 +404,12 @@ function recoveryText(e: CountryEvent): string {
   return labelFor(RECOVERY_LABEL, r.research_status);
 }
 
+/** A first-level unit's name for a code, from the system's own regions; the code if unknown. */
+function unitName(bundle: CountryBundle, code: string): string {
+  const f = bundle.regions.features.find((x) => (x.properties as { code?: string } | null)?.code === code);
+  return ((f?.properties as { name?: string } | null)?.name) ?? code;
+}
+
 /** `inEpisode`: drawn inside its episode's group, which already names the episode. */
 function EventItem({ e, bundle, inEpisode = false }: { e: CountryEvent; bundle: CountryBundle; inEpisode?: boolean }) {
   const tax = bundle.system.taxonomy;
@@ -418,7 +425,7 @@ function EventItem({ e, bundle, inEpisode = false }: { e: CountryEvent; bundle: 
       <p className="small">{e.summary}</p>
       {e.effect && <p className="small"><span className="dim">Reported effect: </span>{e.effect}</p>}
       {e.regions_affected.length > 0 && (
-        <p className="small dim">Regions affected: {e.regions_affected.join(", ")}</p>
+        <p className="small dim">Regions affected: {e.regions_affected.map((c) => unitName(bundle, c)).join(", ")}</p>
       )}
       {ep && ep.records > 1 && !inEpisode && (
         <p className="small dim episode-note">Part of an episode: {ep.name} ({ep.records} records)</p>
@@ -441,7 +448,9 @@ function EventItem({ e, bundle, inEpisode = false }: { e: CountryEvent; bundle: 
           <a key={i} href={s.url} target="_blank" rel="noreferrer">{s.publisher ?? new URL(s.url).hostname}</a>
         ))}
         <span className="dim">{e.review.source_access === "not recorded by the research lane"
-          ? "· whether these were read was not recorded" : ""}</span>
+          ? (e.review.review_status === "legacy_single_review"
+            ? "· whether these were read was not recorded"
+            : "· the researcher's reading was not recorded; the independent review opened them") : ""}</span>
       </p>
     </li>
   );
@@ -542,7 +551,7 @@ function SourcesPanel({ bundle }: { bundle: CountryBundle }) {
       <p className="small research-coverage">
         <strong>{RESEARCH_COMPLETENESS_LABEL[s.research_freshness.completeness]}.</strong>{" "}
         {s.research_freshness.last_systematic_pass
-          ? `Last systematic pass ${fmtDate(s.research_freshness.last_systematic_pass)}, covering ${fmtDate(s.research_freshness.coverage_window?.[0] ?? null)} – ${fmtDate(s.research_freshness.coverage_window?.[1] ?? null)}; next due ${fmtDate(s.research_freshness.next_due)}.`
+          ? `Last systematic pass ${fmtDate(s.research_freshness.last_systematic_pass)}, over a declared window of ${fmtDate(s.research_freshness.coverage_window?.[0] ?? null)} – ${fmtDate(s.research_freshness.coverage_window?.[1] ?? null)}; ${s.research_freshness.completeness === "complete" ? `next due ${fmtDate(s.research_freshness.next_due)}` : "its unfinished lanes are due now"}.`
           : "Every pass so far was targeted at named gaps and leads."}
       </p>
       <p className="small dim">{s.research_freshness.note}</p>
@@ -610,7 +619,7 @@ function SourceHealthBlock({ h }: { h: SourceHealth }) {
         <li>{h.citations} citations from {h.publishers} publishers, across {h.events} events.</li>
         <li>By role: {roles}.</li>
         <li>{h.events_with_first_party_source} of {h.events} events cite at least one first-party
-          source (the operator, a regulator, a government body or a dataset); {h.single_source_events} rest
+          source (the operator, a regulator, a government body or a dataset; Wikipedia does not count); {h.single_source_events} rest
           on a single citation.</li>
         <li>Opened by the researcher: {h.opened.opened} recorded opened, {h.opened.not_opened} recorded
           not opened, {h.opened.not_recorded} not recorded.</li>
@@ -665,12 +674,13 @@ function SourceBrowser({ events }: { events: CountryEvent[] }) {
               <td className="small dim">{[...r.roles].map((x) => labelFor(ROLE_TEXT, x)).join(", ")}</td>
               <td className="small">
                 <button type="button" className="linklike" aria-expanded={open === r.publisher}
+                  aria-label={`${r.events.length} event${r.events.length === 1 ? "" : "s"} citing ${r.publisher}`}
                   onClick={() => setOpen(open === r.publisher ? null : r.publisher)}>
                   {r.events.length} event{r.events.length === 1 ? "" : "s"}
                 </button>
                 {open === r.publisher && (
                   <ul className="dim lane-list">
-                    {r.events.map((e) => <li key={e.event_id}>{fmtDate(e.date)}: {e.summary}</li>)}
+                    {r.events.map((e) => <li key={e.event_id}>{fmtEventDate(e)}: {e.summary}</li>)}
                     {[...r.urls].map((u) => <li key={u}><a href={u} target="_blank" rel="noopener noreferrer">{u}</a></li>)}
                   </ul>
                 )}
@@ -689,8 +699,9 @@ function MethodPanel({ bundle }: { bundle: CountryBundle }) {
   return (
     <div>
       <h2>Why no score</h2>
-      <p className="small">The disruption score was designed for strikes in a war; outages here are mostly weather and
-      accidents, so applying it would mislead. No score is shown, and that is not a score of zero.</p>
+      <p className="small">The disruption score was built for one strike campaign against one energy system; its
+            weights and recovery model do not transfer to this country's system, so applying it would mislead.
+            No score is shown, and that is not a score of zero.</p>
       <p className="small dim">{s.no_index_reason}</p>
       <p className="small">Reporting environment — {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}:
         {" "}{s.reporting_environment_text}</p>

@@ -574,5 +574,23 @@ state may be null until it is fetched.
   "complete" lane that ends early.
 - `system.json` → `source_health`: `{events, citations, publishers, by_role, by_language,
   opened: {opened, not_opened, not_recorded}, dated, single_source_events,
-  events_with_first_party_source, first_party_roles, note}`. Inside one country only; never in
-  the manifest.
+  events_with_first_party_source, first_party_roles, first_party_excludes, note}`. Inside one
+  country only; never in the manifest. Wikipedia never counts as first-party.
+- `global/manifest.json` → `corpus`: `{countries, records, episodes, independently_reviewed,
+  blind_reviewed, registry_sources, records_with_observed_recovery,
+  records_with_recovery_estimate_only, research_lanes_complete, research_lanes, note}`. Totals for
+  the five countries together, scalars only, never one figure per country.
+- A record under an active campaign carries `date_end: null` (an end date would say when the
+  facility's outage ended); the build refuses one that does not.
+
+### Theatre inputs
+
+- `data/curated/recovery.csv` → optional `evidence_as_of`: the date the cited source reports the
+  state as of, where it gives no restart date. The campaign embargo counts from it. A record with an
+  observed status and no date of any kind is never released during a campaign; nor is an effect row
+  with no `as_of_date`.
+
+### Tests
+
+- Marker `needs_raw_cache`: tests that need the gitignored `data/raw` source cache. CI skips them;
+  the refresh gate deselects them; run them locally.

@@ -85,6 +85,8 @@ RECOVERY_STATUSES = ("EVIDENCE_FOUND", "RESEARCHED_NO_PUBLIC_EVIDENCE", "NOT_YET
 # rebuilt; an estimate is not an observation; partial is not full.
 RECOVERY_KINDS = ("full_restart", "partial_restart", "service_restored", "partial_restoration",
                   "estimate", "supply_unaffected_statement", "no_supply_lost")
+# The kinds that report a facility or service actually coming back (fully or partly).
+OBSERVED_RECOVERY_KINDS = ("full_restart", "partial_restart", "service_restored", "partial_restoration")
 # What a lane may say a sector COULD reach. Published beside, never as, the sector state.
 ASSESSMENTS = ("READY", "EXPERIMENTAL", "INCOMPLETE", "UNSUITABLE", "INSUFFICIENT_EVIDENCE",
                "NOT_APPLICABLE", "NOT_YET_RESEARCHED")
@@ -219,6 +221,10 @@ def research_freshness(research_log, kind="systematic"):
         # A complete top-up over a later window does not complete the record from 2022.
         covers = last["window"][0] <= COVERAGE_START
         completeness = "complete" if last["status"] == "complete" and covers else "partial"
+        # A partial pass does not reset the clock: its unfinished lanes are owed now (analytics
+        # red team: every country read "next due" a year out with 0 of N lanes complete).
+        if completeness != "complete":
+            due = last["date"]
     return {
         "last_systematic_pass": last["date"] if last else None,
         "coverage_window": last["window"] if last else None,
@@ -288,6 +294,14 @@ COMPARABILITY_STATEMENT = (
 FIRST_PARTY_ROLES = ("official", "government", "regulator", "operator", "dataset")
 
 
+def _first_party(source):
+    # Wikipedia is curated as a "dataset" in some records, but it is an aggregator of other
+    # publishers, not the body that ran or measured the system (analytics red team).
+    return (source["source_role"] in FIRST_PARTY_ROLES
+            and "wikipedia" not in (source.get("publisher") or "").lower()
+            and "wikipedia.org" not in (source.get("url") or "").lower())
+
+
 def source_health(events):
     """Describe the citations behind a country's published events, inside that country only.
 
@@ -313,8 +327,9 @@ def source_health(events):
         "dated": sum(1 for s in cites if s.get("date")),
         "single_source_events": sum(1 for e in events if len(e["sources"]) == 1),
         "events_with_first_party_source": sum(
-            1 for e in events if any(s["source_role"] in FIRST_PARTY_ROLES for s in e["sources"])),
+            1 for e in events if any(_first_party(s) for s in e["sources"])),
         "first_party_roles": list(FIRST_PARTY_ROLES),
+        "first_party_excludes": "Wikipedia, whatever role a record gives it",
         "note": ("Describes the citations of the published events in this country. Not opened and "
                  "not recorded are different: a lane that did not record whether it opened a "
                  "source is not evidence that it did not. Nothing here is comparable across "
@@ -512,7 +527,11 @@ def apply_publication_policy(system_id, events, campaigns):
         if rec["research_status"] != WITHHELD or any(rec[k] for k in ("kind", "date", "evidence", "url")):
             problems.append(f"{e['event_id']}: under active campaign {c['campaign_id']} but its "
                             "recovery block is not the withheld marker")
+        if e.get("date_end"):
+            problems.append(f"{e['event_id']}: under active campaign {c['campaign_id']} but carries "
+                            "an end date, which says when the facility's outage ended")
         texts = [("summary", e.get("summary")), ("effect", e.get("effect")),
+                 ("threshold basis", e.get("threshold_basis")),
                  ("capacity note", (e.get("capacity_affected") or {}).get("source_says"))]
         texts += [("citation", s.get("url")) for s in e["sources"]]
         for src in e["sources"]:
@@ -642,6 +661,16 @@ def validate_episodes(system_id, declared, events):
                 problems.append(f"{eid}: basis {basis!r} needs evidence {{url, says}} from a source")
             elif ev["url"] not in cited:
                 problems.append(f"{eid}: its evidence URL is not a source of any member")
+            elif basis != "explicit_continuation" and sum(
+                    1 for m in members if any(s["url"] == ev["url"] for s in m["sources"])) < 2:
+                # One member's source cannot vouch for the others (test-architecture red team). A
+                # continuation is the exception: the later record's own source says what it
+                # continues.
+                problems.append(f"{eid}: its evidence URL is cited by only one member")
+        # Two different named hazards are two events, whatever basis is claimed.
+        hazards = {m.get("hazard_name") for m in members if m.get("hazard_name")}
+        if len(hazards) > 1:
+            problems.append(f"{eid}: members name different hazards {sorted(hazards)}")
     # Same hazard, same episode. Without this, a hurricane's records could be split across a
     # declared episode and a stray singleton and counted twice.
     by_hazard = {}
@@ -997,8 +1026,12 @@ def corpus_totals(country_payloads):
                                       + p["review_summary"].get("dual_reviewed", 0)),
         "blind_reviewed": tot(lambda p: p["review_summary"].get("blind_reviewed", 0)),
         "registry_sources": tot(lambda p: sum(1 for s in p["sources"] if _in_use(s))),
-        "records_with_recovery_evidence": tot(lambda p: p["event_summary"]["recovery_research"]["EVIDENCE_FOUND"]),
-        "records_with_status_withheld": tot(lambda p: p["event_summary"]["recovery_research"][WITHHELD]),
+        # Observed reports only: an estimate or a "no supply lost" statement is not a report that a
+        # facility came back (analytics red team). No withheld-status total: every such record is
+        # one country's, so the total would be that country's figure.
+        "records_with_observed_recovery": tot(lambda p: sum(
+            n for k, n in p["event_summary"]["recovery_kinds"].items() if k in OBSERVED_RECOVERY_KINDS)),
+        "records_with_recovery_estimate_only": tot(lambda p: p["event_summary"]["recovery_kinds"].get("estimate", 0)),
         "research_lanes_complete": lanes_done,
         "research_lanes": lanes_all,
         "note": ("Totals for the five country systems together. Counts what was reported, found and "

@@ -41,7 +41,13 @@ def outcome(dispositions):
         return "hold"
     if "NEEDS_HUMAN_DECISION" in ds:
         return "owner"
-    assert ds <= set(PASS), ds
+    # An unknown disposition (a misspelling such as "ACCEPT_WITH_CORRECTIONS") is never read as
+    # acceptance. A real check, not an assert: `python -O` strips asserts (lane-G red team).
+    unknown = ds - set(PASS)
+    if unknown:
+        raise ValueError(f"unknown disposition(s) {sorted(unknown)}; expected {PASS} or a hold/reject")
+    if set(dispositions) != set(ROLES):
+        raise ValueError(f"a verdict from every role is required: got {sorted(dispositions)}")
     return "accept"
 
 

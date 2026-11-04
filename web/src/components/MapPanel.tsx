@@ -5,7 +5,7 @@ import type { Asset, Bundle, Incident, PipelineRegistry } from "../types";
 import {
   CLASS_COLOR, ESDI_DELTA_STOPS, SEVERITY_STOPS, ZERO_SHORT, zeroIsUnmeasured,
 } from "../palette";
-import { displayName, fmtDelta, fmtNum, loadContextLayer, loadPipelineRegistry, titleCase, windowRef } from "../data";
+import { daysBetween, displayName, fmtDelta, fmtNum, loadContextLayer, loadPipelineRegistry, titleCase, windowRef } from "../data";
 import { iconImageId, prewarmIcons } from "../icons";
 import { AssetHoverCard } from "./AssetDetail";
 import { RouteDetail } from "./RouteDetail";
@@ -1192,9 +1192,14 @@ export default function MapPanel({
 
   const isDelta = filters.metric === "esdi_delta_30d" || filters.metric === "esdi_delta_90d"
     || comparison?.mode === "delta";
-  const deltaSpanDays = isDelta
-    ? windowRef(bundle.national.dates, step, filters.metric === "esdi_delta_30d" ? 30 : 90).actualComparisonDays
-    : 0;
+  // A two-date comparison spans its own A -> B dates; only the 30/90-day metrics use a window
+  // (UX red team: the comparison legend reported the 90-day window's span, not A to B).
+  const dates = bundle.national.dates;
+  const deltaSpanDays = comparison?.mode === "delta" && dates[comparison.stepA] && dates[comparison.stepB]
+    ? Math.abs(daysBetween(dates[comparison.stepA], dates[comparison.stepB]))
+    : isDelta
+      ? windowRef(dates, step, filters.metric === "esdi_delta_30d" ? 30 : 90).actualComparisonDays
+      : 0;
   // ESDI (and its deltas) are precomputed per region over every class; only the event-count
   // surface responds to the type filter.
   const indexIgnoresClassFilter =

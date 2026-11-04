@@ -110,13 +110,13 @@ export default function GlobalHome() {
         )}
         {manifest?.corpus && (
           <section className="panel global-note corpus-totals" aria-label="Country record, all five together">
-            <div className="eyebrow">The country record so far, all five countries together</div>
+            <h2 className="eyebrow">The country record so far, all five countries together</h2>
             <p className="small">
               {manifest.corpus.records} reported disruptions in {manifest.corpus.episodes} episodes;{" "}
               {manifest.corpus.independently_reviewed} independently reviewed ({manifest.corpus.blind_reviewed} blind
-              by three reviewers). {manifest.corpus.records_with_recovery_evidence} with a cited recovery
-              report; {manifest.corpus.records_with_status_withheld} whose facility status is withheld under an
-              active attack campaign. {manifest.corpus.registry_sources} registry sources. Research lanes
+              by three reviewers). {manifest.corpus.records_with_observed_recovery} with a cited report that the
+              facility or service came back; {manifest.corpus.records_with_recovery_estimate_only} with only an
+              estimate. {manifest.corpus.registry_sources} registry sources. Research lanes
               complete: {manifest.corpus.research_lanes_complete} of {manifest.corpus.research_lanes}.
             </p>
             <p className="small dim">{manifest.corpus.note}</p>

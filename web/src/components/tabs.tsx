@@ -1147,19 +1147,21 @@ export function CostsTab(p: TabProps) {
 
       <div className="tiles">
         <Tile label="Facilities awaiting reconstitution" value={unresolved} />
-        <Tile label="Reconstitution backlog (days)" value={backlogSource} small />
+        <Tile label="Modelled reconstitution backlog (days)" value={backlogSource} small />
         <Tile label="Median impairment age (days)" value={rs.median_impairment_age_days ?? "—"} small />
         <Tile label="Full reconstitutions observed" value={rs.full_reconstitution_episodes} small />
       </div>
 
       <Block title="Reconstitution burden — the non-monetary cost">
         <div style={{ fontSize: 10.5, color: "var(--text-dim)", marginBottom: 8, lineHeight: 1.5 }}>
-          Where repair-cost figures are absent, the recoverable cost signal is the
-          <em> reconstitution burden</em>: how many facilities remain impaired and how long
-          they have stayed that way. This is directly observed, not modelled or priced.
+          Where repair-cost figures are absent, the cost signal is the
+          <em> reconstitution burden</em>: how many struck facilities have no public restoration
+          report, and how long since they were struck. The count and the ages are observed (from
+          public strike dates); the backlog in days is <strong>modelled</strong>: an assumed class
+          horizon minus the time elapsed, not a report of any facility's state.
         </div>
         <KV k="No restoration report" v={unresolved} hint="open disruptions with no public restoration report: modelled as not yet recovered, not observed" />
-        <KV k="Summed remaining reconstitution time" v={`${backlogSource} d`} hint="sum of evidence-graded remaining reconstitution horizons across open facilities" />
+        <KV k="Summed remaining reconstitution time (modelled)" v={`${backlogSource} d`} hint="sum over open facilities of the assumed class horizon minus the days elapsed since the strike; an assumption, not an observation" />
         <KV k="Partial restarts (not yet full)" v={rs.partial_restart_episodes} hint="operations resumed but reconstitution incomplete" />
         <KV k="Observed full reconstitutions" v={rs.full_reconstitution_episodes} />
       </Block>

@@ -84,7 +84,7 @@ jobs:
         # would have frozen the daily publication over a documentation edit -- the September
         # outage's exact shape. ci.yml runs the whole suite, where that failure is loud and
         # cannot stop the data.
-        run: python -m pytest -m "not repo_hygiene"
+        run: python -m pytest -m "not repo_hygiene and not needs_raw_cache"
 
       - name: Commit if data changed
         id: commit
