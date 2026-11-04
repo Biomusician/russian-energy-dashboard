@@ -16,7 +16,7 @@ none of them may borrow another's label.
 
 A1 and A2 answer the same question with different article revisions, so they can differ for the
 same week (16.16 for the pinned 2026-08-28 run, 16.51 for the series' 2026-08-29 point at iteration
-16). They used to share one label; since the history red team they do not.
+16; the pinned run reads 16.48 at iteration 17). They used to share one label; since the history red team they do not.
 
 The doctrine in one line each:
 
@@ -44,7 +44,9 @@ more useful question for analysis, and never the question "what did readers see 
 **The pinned-source reconstruction reference.** `--mode reconstruction --as-of 2026-08-28
 --output-root data/reconstruction/2026-08-28` is the project's standing
 reconstruction reference for decomposing a change without time decay. At iteration 15 it gave
-**ESDI 16.16**, byte-stable across reruns. It is a type-A value. It is not "frozen history" and
+**ESDI 16.16**, byte-stable across reruns. At iteration 17 it gives **16.48**: the theatre's
+campaign embargo (`docs/OPERATIONAL_STATUS_DELAY_OPTIONS.md`) withholds five restorations that
+were under 60 days old on 2026-08-28, and three open-horizon repair estimates left the curated file. It is a type-A value. It is not "frozen history" and
 not "as published": it moves, by design, whenever code or curated data change. Its earlier
 values (18.50, then 16.8) also drifted with Wikipedia edits; pinning removed that drift only.
 

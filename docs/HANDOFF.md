@@ -351,7 +351,7 @@ what the dashboard published on 2026-08-28; that question has its own answer
 | Build | Command | as_of | ESDI |
 |---|---|---|---|
 | production / release | `python -m pipeline.run` | build day | moves with time decay |
-| pinned-source reconstruction reference | `python -m pipeline.run --mode reconstruction --as-of 2026-08-28 --output-root data/reconstruction/2026-08-28` | 2026-08-28 | **16.16** at iteration 15: current code and curated corpus, Wikipedia inputs pinned to their 2026-08-28 revisions (strike table oldid 1371858526), byte-stable across reruns. It moves when code or curated data change, by design; earlier values (18.50, then 16.8) also drifted with article edits, which pinning removed |
+| pinned-source reconstruction reference | `python -m pipeline.run --mode reconstruction --as-of 2026-08-28 --output-root data/reconstruction/2026-08-28` | 2026-08-28 | **16.48** at iteration 17 (16.16 at iteration 15; the campaign embargo withholds five restorations that were under 60 days old on that date, and three open-horizon estimates left the curated file): current code and curated corpus, Wikipedia inputs pinned to their 2026-08-28 revisions (strike table oldid 1371858526), byte-stable across reruns. It moves when code or curated data change, by design; earlier values (18.50, then 16.8) also drifted with article edits, which pinning removed |
 
 The reconstruction reference is for apples-to-apples methodology comparison ONLY. Since iteration
 17 it cannot reach the payload by accident (`pipeline/outputs.py`): a past `--as-of` without
