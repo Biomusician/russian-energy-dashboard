@@ -55,8 +55,8 @@ summary".
   of each session: three repair estimates and two effect rows are waiting (their names stay in the
   local files: naming them would say whose status the policy withholds).
 - **Blind three-role review** for every country record (REVIEW_GOVERNANCE §7; the workflow is
-  in COUNTRY_ONBOARDING §4). The grandfather list is empty. 22 records are held locally in the
-  queues, 8 of them on owner rulings.
+  in COUNTRY_ONBOARDING §4). The grandfather list is empty. 27 records are held locally in the
+  queues, 12 of them on owner rulings.
 - **Lane contract.** Every systematic lane records `covered_through`; complete means searched to
   the window's end. All five countries have had a systematic pass; 0 of 35 lanes are complete.
 - **Source health and corpus totals.** `system.json` → `source_health` (inside a country only);

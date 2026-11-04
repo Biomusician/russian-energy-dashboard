@@ -126,7 +126,7 @@ First systematic plans, committed before searching, and first passes:
 
 **Lane contract** (all countries): each lane records `covered_through`; "complete" requires the
 end of the window; the build fails a complete lane that ends early. Corpus after review: **200
-records** (209 − 19 held + 10 new), 166 episodes; **0 of 35 lanes complete**. Per-agent search
+records** (209 − 19 held + 10 new), 166 episodes; **0 of 35 lanes complete**. The final red team held five more: **195** at release (§19). Per-agent search
 caps, with lane logs written after every source family, replaced the shared budget that stalled
 iteration 16.
 
@@ -180,11 +180,26 @@ Fixed, each held by a new browser test:
   and adding one would group records by proximity, which the episode rules forbid.
 - Dedup audits of the US and Canada corpora (§47-48): no duplicate found; the pairs the
   date/region/class screen flagged were different facilities or different events.
-- Final red team: see §19.
+- Final red team (seven lanes): §19.
 
 ## 13. Tests
 
-*Filled in at the release gate (§19).*
+At the release commit:
+
+| Gate | Result |
+|---|---|
+| Python suite (`pytest tests`) | **504 passed, 2 skipped** (479 test functions; some parametrised) |
+| Publication gate as the refresh runs it (`RUN_BUILD_TESTS=1 -m "not repo_hygiene and not needs_raw_cache"`) | **486 passed**, 20 deselected |
+| Frontend unit (vitest) | **242 passed**, 18 files |
+| Typecheck (`tsc --noEmit`) and production build (`tsc -b && vite build`) | pass |
+| Browser E2E (Playwright, real Chromium) | **102 passed, 1 skipped** |
+| Cross-platform map structure checks | pass (part of the E2E run) |
+| Mutation campaign | **36 of 36 caught** (27 before the final red team, 9 added for its fixes) |
+| History isolation, reconstruction, research governance, safety scan | inside the suites above; all pass |
+| Next-day refresh simulation (clean worktree, the bot's exact steps as 2026-11-04 UTC) | build, 473 gated tests, change detection and staged-artifact verification pass; ESDI 7.68 from time decay alone |
+
+The next-day simulation found the first ledger leak (§19); the red team found that the first fix
+read the wrong field. Both are covered by a test and a mutation now.
 
 ## 14. Performance
 
@@ -218,7 +233,8 @@ Measured on the release candidate:
 
 ## 17. Owner questions holding records
 
-Eight records are held for the owner (six grandfathered, two new). Each turns on a rule:
+Twelve records are held for the owner: six grandfathered, two new, and four held by the final
+red team. Each turns on a rule:
 
 - Citation addresses or publisher names that name a city; facility names finer than admin-1;
   renaming a published id (these also held records at confirmation).
@@ -230,6 +246,11 @@ Eight records are held for the owner (six grandfathered, two new). Each turns on
 - Saudi Arabia: a partial pipeline throughput cut (does clause 3 cover it), and a port record
   that turns on the same ruling.
 - US: Hurricane Lee in Maine (multi-state record re-scoped to one state's peak).
+- Clause 4 with no reported load shed (final red team): a renewable-complex grid disturbance and a
+  coal-station trip in India, a hydro station in Canada. The rule question is the one REVIEW_GOVERNANCE
+  §7.3 already names. All three had been published; they are held until the owner rules.
+- Canada: a December 2025 windstorm whose only figure is cumulative (final red team), the same
+  question as the December 2023 record.
 
 Other questions raised in review, not holding records: Ras Tanura's published capacity figure may
 overstate (the ministry said "some units"); the Jazan hold; Houston peak versus total; the CA
@@ -238,8 +259,68 @@ snowstorm ECCC source and the Milton Fox Weather source should probably record `
 
 ## 18. Wave 2 readiness
 
-*Answered after the release gate (§19).*
+**CONDITIONAL — not yet.** Against the brief's criteria:
+
+| Criterion | State |
+|---|---|
+| Theatre policy closed | Met in code (60-day delay, estimate horizon, fail-closed dates, leak audits); D = 60 awaits the owner's confirmation |
+| Historical output isolated | Met: modes, identity-checked protected roots, in-repo restriction, hindsight cut from reconstructions, archive extraction |
+| Independent review proven | Met: blind three-role review of all 94 grandfathered records and every new record; the outcome rule is tested and mutated |
+| US systematic coverage substantially improved | **Not met**: 0 of 9 lanes complete; most are blocked by sources not yet publishing 2026 or refusing access, and L1 ran one terminal of nine |
+| Canada coverage substantially improved | **Not met**: 0 of 8; CL1 not run, CU1 half run |
+| China, India, Saudi plans established | Met: plans committed before searching and first passes run (0 of 18 lanes complete) |
+| Known UX defects closed | Met, including two red-team blockers |
+| Publication gate hardened | Met |
+
+Wave 2 is justified when (1) the owner has ruled on the held-record questions (§17), which decide
+what every country, new ones included, may publish; (2) the lanes stopped by a search cap, not by a
+source, have been run (US L1, Canada CU1 and CL1, China CN4-CN6, India IN5-IN6); and (3) one
+unattended refresh cycle has been observed in production on the iteration-17 architecture. Adding
+countries before (1) would multiply the held-record backlog under rules that may still change.
 
 ## 19. Release
 
-*Filled in at the release gate.*
+### Final red team (§81)
+
+Seven independent lanes, each read-only, each asked "find reasons not to ship".
+
+| Lane | Blockers found | Fixed |
+|---|---|---|
+| A safety | 4: the change ledger named the facility whose estimate is withheld (the first fix read the note from the wrong field); a citation address announced a withheld six-month estimate; two held estimates quoted in docs; strike distances ("1,300 km deep") in source titles | all |
+| B sources (73 records opened) | 2: a cumulative outage figure published as a peak while the same question holds another record; a region set the lane thought incomplete | the first held; the second **declined**: the reviewers set the regions to where the attacks happened, and adding the pipeline's origin region would describe the route |
+| C analytics | 1: the Costs tab called a modelled backlog "directly observed" | yes |
+| D history | 1: UNC and extended-length spellings of `data/processed` passed the protected-root check | yes, by filesystem identity |
+| E UX | 2: country pages unusable on a phone (body squeezed to ~40px under the ribbon); the "no index" reason said outages are "mostly weather", false for Saudi Arabia | both |
+| F operations | 0 | n/a |
+| G tests | 0 (6 should-fix gaps, 3 notes) | all should-fix gaps |
+
+Should-fix items also fixed: dependency, criticality and sub-region wording in theatre text; an
+open-ended post-attack flow reduction; the embargo failing open for undated status and effect
+rows; a refusal that could have frozen the daily refresh (it now reports a count and withholds);
+a reconstruction able to write over the curated files; the as-published history never picking up
+bot refreshes (`[bot]` read as a regex); campaign records' end dates; merged hazards in episodes;
+corpus totals counting estimates as recovery; Wikipedia counted as first-party; a partial
+research pass resetting its due date; nondeterministic ledger order; line-ending-dependent input
+fingerprints; tests skipped in CI but run by the refresh; 15 record corrections and 5 more holds
+(three clause-4 records with no load shed, for the owner; a cumulative-not-peak outage, for the
+owner; one unattributed figure); the withheld note contradicting a released status; the compare
+legend's span; map controls under the drawer toggles; briefing over the header; accessible names;
+month-precision dates.
+
+Not fixed, recorded for the owner (§16-§17): citation URL slugs that carry the publisher's
+framing (for example a "power gateway" slug for Taman, an "only helium plant" slug), the same
+owner question as citation addresses naming a city; the git history and the commit message of
+6de2c61, which name the three held estimates (history is not rewritten; the diff shows the same
+rows); the `linked_asset_id` join; held rows exist only on this machine.
+
+### Corpus at release
+
+195 country records (209 at the start; 19 held at the grandfathered review, 10 new published,
+5 held by the red team), 161 episodes, every record independently reviewed (81 blind by three
+roles, 114 dual). 27 records are held in the local queues, 12 of them for the owner. 0 of 35
+research lanes complete.
+
+### Gate
+
+All gates in §13 green at the release commit. Pushed after a fetch confirmed `origin/main` had not
+moved (still `4656234`); production checks in §15.
