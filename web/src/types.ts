@@ -1114,6 +1114,7 @@ export interface DataQuality {
   build_time: string | null;
   build_date_is_not_a_source_date: string;
   sector_states: SectorQuality[];
+  unresolved_asset_labels?: { ids: string[]; note: string };
   sources: SourceRecord[];
   sources_by_freshness: Record<string, number>;
   sources_without_release_identifier: string[];
@@ -1162,6 +1163,9 @@ export interface HistorySeries {
   /** Which facilities were contributing at each step. Identity, not a count:
    *  "which stopped contributing between A and B" cannot be answered by a number. */
   contributing_asset_ids: string[][];
+  /** Iteration 17: a label for every id above that has one anywhere in the corpus. */
+  asset_names?: Record<string, string>;
+  unresolved_asset_ids?: string[];
   incidents_to_date: number[];
   recovery_evidence_to_date: number[];
   reconstitutions_to_date: number[];

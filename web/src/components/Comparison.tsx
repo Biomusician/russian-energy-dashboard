@@ -20,7 +20,7 @@
 import { useEffect, useState } from "react";
 import type { Bundle, HistorySeries, Incident, ProductionHistory, PublishedBuild, ResolvedPoint } from "../types";
 import {
-  asPublishedOn, firstServedBetween, fmtDate, fmtDelta, fmtNum, loadHistorySeries,
+  asPublishedOn, assetLabel, firstServedBetween, fmtDate, fmtDelta, fmtNum, loadHistorySeries,
   loadProductionHistory, resolvePoint, titleCase,
 } from "../data";
 import type { InspectTarget } from "./Inspector";
@@ -105,10 +105,10 @@ export default function Comparison({
   const startedContributing = [...contribB].filter((id) => !contribA.has(id));
   const stoppedContributing = [...contribA].filter((id) => !contribB.has(id));
 
-  const nameOf = (id: string) =>
-    bundle.assets.find((a) => a.asset_id === id)?.name
-    ?? (bundle.snapshot.live_disruptions ?? []).find((d) => d.asset_id === id)?.name
-    ?? id;
+  const nameOf = (id: string) => assetLabel(id,
+    history.asset_names?.[id],
+    bundle.assets.find((a) => a.asset_id === id)?.name,
+    (bundle.snapshot.live_disruptions ?? []).find((d) => d.asset_id === id)?.name);
 
   const selector = (
     <div className="cmp-modes history-concept" role="group" aria-label="Which history">

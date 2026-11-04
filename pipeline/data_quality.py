@@ -487,7 +487,7 @@ def cannot_tell_you(snapshot, explanations):
     return items
 
 
-def build(snapshot, as_of):
+def build(snapshot, as_of, history_series=None):
     explanations = snapshot.get("explanations") or {}
     sources = build_sources(as_of)
     by_status = {}
@@ -503,6 +503,14 @@ def build(snapshot, as_of):
             "The build date says when this page was generated. It says nothing about how old any "
             "source is. Each source below carries its own release, retrieval and content dates."),
         "sector_states": sector_states(snapshot, explanations),
+        # Iteration 17: an id the dashboard would otherwise print raw. The UI shows a humanised
+        # label or "Unknown asset" for these and this count says how many there are.
+        "unresolved_asset_labels": {
+            "ids": list((history_series or {}).get("unresolved_asset_ids") or []),
+            "note": ("Facilities that contribute to the history series but carry no name in any "
+                     "inventory or incident record. Shown as a label derived from the id, or "
+                     "'Unknown asset'; never as a raw internal id."),
+        },
         "capacity_measurement_audit": snapshot.get("capacity_measurement_audit"),
         "sources": sources,
         "sources_by_freshness": by_status,

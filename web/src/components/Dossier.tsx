@@ -135,7 +135,10 @@ bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSele
                 {compareRegions?.includes(region.code) ? "✓ comparing" : "+ compare"}
               </button>
             )}
-            <button className="ghost" onClick={() => onSelect(null)}>close</button>
+            {/* Not "close": in drawer mode the panel has its own close control, and two buttons
+                with one word and two meanings is the iteration-17 defect. This one deselects. */}
+            <button className="ghost" onClick={() => onSelect(null)}
+              title="Clear the selected region and return to the monitored-area picture">clear selection</button>
           </div>
         )}
       </div>

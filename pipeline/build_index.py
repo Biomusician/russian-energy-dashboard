@@ -347,7 +347,8 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
     from pipeline import history
     history_series = history.build(
         national["dates"], timeline_fracs, contributor_counts, sector_weights, covered,
-        national, incidents, snapshot.get("recovery_events") or [])
+        national, incidents, snapshot.get("recovery_events") or [],
+        names={aid: (info or {}).get("name") for aid, info in facility_info.items()})
     return (national, regional, snapshot, regional_explanations, history_series,
             lifecycle_payload)
 

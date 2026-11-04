@@ -1252,6 +1252,15 @@ function DataQualityView({
         )}
       </Block>
 
+      <Block title="Unlabelled facilities">
+        <p className="small unresolved-labels">
+          {dq.unresolved_asset_labels?.ids.length
+            ? `${dq.unresolved_asset_labels.ids.length} contributing facilities carry no name in any inventory or incident record; they are shown with a label derived from their id, or as "Unknown asset".`
+            : "Every facility the history series names has a label from an inventory or incident record."}
+        </p>
+        {dq.unresolved_asset_labels?.note && <p className="small dim">{dq.unresolved_asset_labels.note}</p>}
+      </Block>
+
       {[...byRole.entries()].map(([role, sources]) => (
         <Block key={role} title={`${titleCase(role)} sources (${sources.length})`}>
           {sources.map((src) => <SourceCard key={src.source_id} src={src} />)}

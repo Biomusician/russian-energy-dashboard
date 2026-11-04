@@ -434,7 +434,7 @@ function EventItem({ e, bundle, inEpisode = false }: { e: CountryEvent; bundle: 
       {e.publication && <p className="small dim withheld-note">{e.publication.note}</p>}
       <p className="small dim review-note">
         <span className={`review-${e.review.review_status}`}>{labelFor(REVIEW_STATUS_LABEL, e.review.review_status)}</span>
-        {e.review.review_status === "dual_reviewed" && e.review.disposition === "corrected" && " · corrected on review"}
+        {e.review.review_status !== "legacy_single_review" && e.review.disposition === "corrected" && " · corrected on review"}
       </p>
       <p className="small sources">
         {e.sources.map((s, i) => (
@@ -582,8 +582,9 @@ function SourcesPanel({ bundle }: { bundle: CountryBundle }) {
       <h3 className="eyebrow">Known gaps</h3>
       <ul className="small">{s.research_gaps.map((g, i) => <li key={i}>{g}</li>)}</ul>
       <h3 className="eyebrow">Review</h3>
-      <p className="small review-summary">{s.review_summary.dual_reviewed} of {bundle.events.length} events
-        independently reviewed; {s.review_summary.legacy_single_review} published before independent
+      <p className="small review-summary">{(s.review_summary.blind_reviewed ?? 0) + s.review_summary.dual_reviewed} of {bundle.events.length} events
+        independently reviewed ({s.review_summary.blind_reviewed ?? 0} blind by three reviewers,{" "}
+        {s.review_summary.dual_reviewed} by one); {s.review_summary.legacy_single_review} published before independent
         review was required.</p>
       <p className="small dim">{s.review_summary.note}
         {unrecorded > 0 && ` For ${unrecorded} of ${bundle.events.length} events the research lane did not record whether it read the cited sources.`}</p>

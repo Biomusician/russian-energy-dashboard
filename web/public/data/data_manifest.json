@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-11-03T23:54:13+00:00",
+  "build_time": "2026-11-04T00:09:25+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -14,7 +14,7 @@
     },
     {
       "name": "data_quality.json",
-      "bytes": 26302,
+      "bytes": 26537,
       "optional": false
     },
     {
@@ -24,7 +24,7 @@
     },
     {
       "name": "history_series.json",
-      "bytes": 88882,
+      "bytes": 91410,
       "optional": false
     },
     {

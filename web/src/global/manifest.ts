@@ -115,7 +115,7 @@ export interface CountrySystem {
     note: string;
   };
   stale_policies: Record<string, { days: number; rationale: string }>;
-  review_summary: { dual_reviewed: number; legacy_single_review: number; note: string };
+  review_summary: { blind_reviewed?: number; dual_reviewed: number; legacy_single_review: number; note: string };
   publication_policy: {
     withheld_records: number;
     campaigns: { campaign_id: string; name: string; status: string; status_checked: string;
@@ -197,7 +197,9 @@ export interface CountryEvent {
               evidence: string | null; url: string | null };
   review: {
     reviewed_at: string;
-    review_status: "dual_reviewed" | "legacy_single_review";
+    review_status: "blind_reviewed" | "dual_reviewed" | "legacy_single_review";
+    /** Blind three-role review (iteration 17): each role's verdict, never its reasoning. */
+    roles?: { evidence: string; safety: string; taxonomy: string };
     primary_review_complete: boolean;
     independent_review_complete: boolean;
     reviewer_count: number;
@@ -297,6 +299,7 @@ export const RECOVERY_LABEL: Record<string, string> = {
 };
 
 export const REVIEW_STATUS_LABEL: Record<string, string> = {
+  blind_reviewed: "Blind reviewed by three independent reviewers",
   dual_reviewed: "Independently reviewed",
   legacy_single_review: "Single review (published before independent review was required)",
 };

@@ -167,6 +167,62 @@ test.describe("responsive", () => {
   }
 });
 
+// Iteration 17: the four defects the iteration-16 red team reproduced, each held by a browser test.
+test.describe("iteration-17 UX defects", () => {
+  for (const [w, h] of [[390, 844], [430, 932], [1280, 720]] as const) {
+    test(`at ${w}x${h} the timeline chart has width and its scrubber is on screen`, async ({ app, page }) => {
+      await page.setViewportSize({ width: w, height: h });
+      await app.open();
+      const m = await page.evaluate(() => {
+        const chart = document.querySelector(".tl-chart")!.getBoundingClientRect();
+        const scrub = document.querySelector(".timeline input.scrub")!.getBoundingClientRect();
+        return { chart: chart.width, scrubBottom: scrub.bottom, vh: window.innerHeight };
+      });
+      expect(m.chart, "timeline chart width").toBeGreaterThan(w * 0.6);
+      expect(m.scrubBottom, "scrubber below the viewport").toBeLessThanOrEqual(m.vh);
+    });
+  }
+
+  test("at 1024 the drawer toggles sit on the map, not on the ribbon title", async ({ app, page }) => {
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await app.open();
+    const m = await page.evaluate(() => {
+      const r = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+      return { ribbonBottom: r(".ribbon").bottom, toggleTop: r(".drawer-toggles").top,
+               strip: (document.querySelector(".ribbon-scroll") as HTMLElement).clientWidth };
+    });
+    expect(m.toggleTop).toBeGreaterThanOrEqual(m.ribbonBottom);
+    expect(m.strip, "the ribbon metric strip is squeezed to nothing").toBeGreaterThan(250);
+  });
+
+  test("a drawer has one close control, Escape closes it and focus returns to its toggle", async ({ app, page }) => {
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await app.open();
+    const toggle = page.locator('.drawer-btn[aria-controls="dossier-panel"]');
+    await toggle.click();
+    await expect(page.locator("#dossier-panel")).toHaveClass(/drawer-open/);
+    await expect(page.locator("#dossier-panel button", { hasText: /^close/ })).toHaveCount(1);
+    await page.locator("#dossier-panel .drawer-close button").focus();
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#dossier-panel")).not.toHaveClass(/drawer-open/);
+    await expect(toggle).toBeFocused();
+  });
+
+  test("the comparison never prints a raw facility id", async ({ app, page }) => {
+    await app.open();
+    const history = await page.evaluate(async () => (await fetch("/data/history_series.json")).json());
+    expect(history.unresolved_asset_ids ?? []).toEqual([]);
+    const ids: string[] = [...new Set<string>((history.contributing_asset_ids as string[][]).flat())];
+    for (const id of ids) expect(history.asset_names[id], id).toBeTruthy();
+  });
+
+  test("the system picker never shows a bare system code while loading", async ({ app, page }) => {
+    await app.open();
+    const labels = await page.locator(".sys-switch option").allTextContents();
+    expect(labels.some((l) => /^[A-Z]{2}$/.test(l.trim()))).toBe(false);
+  });
+});
+
 test.describe("legacy links", () => {
   // Representative links from iterations 8-13. Each must open without error; the fixture fails
   // the test on any console or page error.

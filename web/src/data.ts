@@ -254,6 +254,18 @@ export function inWindow<T>(
   });
 }
 
+/** A reader-facing label for an asset id: its name if any source gives one, else a label derived
+ *  from the slug ("kuibyshev-refinery" -> "Kuibyshev refinery"), else "Unknown asset". Never the
+ *  raw id (iteration 17 defect: nine contributing facilities printed as internal ids). */
+export function assetLabel(id: string, ...names: (string | null | undefined)[]): string {
+  const named = names.find((n) => n && n.trim());
+  if (named) return displayName(named);
+  const words = id.replace(/:.*$/, "").split(/[-_]+/).filter((w) => w && !/^\d+$/.test(w));
+  if (!words.length) return "Unknown asset";
+  const text = words.join(" ");
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 /** First line of a name, for single-line UI rows.
  *
  *  A few curated corpus entries are multi-line complexes ("Ust-Luga Multimodal Complex\n* Ust-Luga

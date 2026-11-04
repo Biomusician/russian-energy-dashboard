@@ -7872,3 +7872,29 @@ def test_the_study_override_is_refused_in_a_current_build():
     r = subprocess.run([sys.executable, "-m", "pipeline.run", "--evidence-embargo-days", "7"],
                        cwd=ROOT, capture_output=True, text=True, encoding="utf-8", timeout=120)
     assert r.returncode != 0 and "study override" in r.stderr
+
+
+def test_a_blind_reviewed_record_needs_every_role_to_accept():
+    """Iteration 17 (REVIEW_GOVERNANCE §8): no majority vote. Two accepts and one hold is a hold,
+    and the published block carries each role's verdict but never its reasoning."""
+    imp = _import_gate()
+    from pipeline import build_systems as B
+    base = {"candidate_id": "us-x", "geography_precision": "admin1", "admin1_code": "US-TX",
+            "date": "2026-01-01", "asset_class": "refinery", "cause": "technical", "summary": "s",
+            "suggested_disposition": "accept", "primary_review": {"completed": "2026-11-03"},
+            "sources": [{"url": "https://example.org", "opened": True}]}
+    ok = {"completed": "2026-11-03", "disposition": "corrected", "sources_opened": 2,
+          "standard": imp.BLIND, "roles": {"evidence": "accept", "safety": "accept_with_correction",
+                                           "taxonomy": "accept"}}
+    units = {"US-TX"}
+    assert imp.review("us", {**base, "independent_review": ok}, units) is None
+    split = {**ok, "roles": {**ok["roles"], "taxonomy": "hold"}}
+    assert "taxonomy" in imp.review("us", {**base, "independent_review": split}, units)
+    ev = imp.to_event("us", {**base, "independent_review": ok})
+    rv = ev["review"]
+    assert rv["review_status"] == "blind_reviewed" and rv["reviewer_count"] == 4
+    assert rv["roles"] == ok["roles"] and rv["process"] == imp.BLIND_PROCESS
+    assert all(isinstance(v, str) for v in rv["roles"].values()) and "rationale" not in rv
+    assert B.review_problems(ev, frozenset()) == []
+    bad = {**ev, "review": {**rv, "roles": {**rv["roles"], "safety": "hold"}}}
+    assert any("safety" in p for p in B.review_problems(bad, frozenset()))

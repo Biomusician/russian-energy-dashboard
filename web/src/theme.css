@@ -192,10 +192,12 @@ html[data-mapfocus="on"] .shell {
 /* --- drawer affordances ---------------------------------------------------------------- */
 .drawer-toggles {
   position: absolute;
-  /* Offset by the staleness strip when there is one, so the floating chips never cover a
-     "NOT CURRENT" warning. StalenessNotice measures and publishes --staleness-h; it is 0 on a
-     healthy build, which restores the original position exactly. */
-  top: calc(10px + var(--staleness-h, 0px));
+  /* Iteration 17: anchored to the MAP's grid area, not the shell. Positioned against the shell
+     they sat on top of the ribbon title at 1024px ("LAYERS" over "Energy Disruption Monitor").
+     An absolutely positioned grid item uses its grid area as its containing block, so this also
+     clears the staleness strip and the ribbon at every height without measuring either. */
+  grid-area: map;
+  top: 10px;
   left: 10px;
   z-index: 30;
   display: flex;
@@ -362,6 +364,11 @@ html[data-chrome="compact"] .ribbon-scroll::-webkit-scrollbar { height: 4px; }
   justify-content: center;
   min-width: 260px;
 }
+/* Iteration 17: content-sized, the brand took 564px at 1024 and left the metric strip 113px for
+   507px of content, clipped mid-word. Measured at 1024: a 380px brand costs the ribbon 11px of
+   height (its button row wraps once) and gives the strip 297px. Only where the layout is narrow:
+   on wider screens the buttons fit on one line and capping would make the ribbon taller. */
+html[data-layout="narrow"] .ribbon-brand { flex: 0 1 380px; }
 
 .ribbon-title { font-size: 14px; letter-spacing: 0.01em; }
 .ribbon-sub { color: var(--text-dim); font-size: 11px; margin-top: 3px; }
@@ -720,6 +727,15 @@ html[data-chrome="compact"] .tl-sub { display: none; }
 .tl-date { font-family: var(--mono); font-size: 17px; font-variant-numeric: tabular-nums; }
 
 .tl-chart { flex: 1; position: relative; min-width: 0; }
+
+/* Phone width (iteration 17 defect: at 390-430px the 186-232px control column left the chart 0px
+   wide). Below 600px the controls take one row and the chart its own full-width row. */
+@media (max-width: 600px) {
+  .timeline, html[data-chrome="compact"] .timeline { flex-wrap: wrap; gap: 6px 12px; }
+  .tl-controls, html[data-chrome="compact"] .tl-controls { min-width: 0; flex: 1 1 100%; }
+  .tl-chart { flex: 1 1 100%; }
+  .tl-chart .tl-legend-mid { display: none; }
+}
 
 input[type="range"].scrub {
   width: 100%;
@@ -1119,9 +1135,12 @@ html[data-chrome="compact"] .esdi-block { padding: 4px 12px; }
 html[data-chrome="compact"] .esdi-value { font-size: 24px; line-height: 1.05; }
 
 /* The sparkline is decoration next to the scrubber; it does not need 91px on a 720px screen. */
-html[data-chrome="compact"] .tl-chart { height: 34px; }
+/* Iteration 17: this capped the whole .tl-chart box at 34px, and the box also holds the scrubber
+   and the date row -- they overflowed below the viewport, out of reach. Cap the drawing only; the
+   start/end legend is redundant beside the date readout and goes in compact. */
 html[data-chrome="compact"] .tl-chart svg,
-html[data-chrome="compact"] .tl-chart canvas { height: 34px !important; }
+html[data-chrome="compact"] .tl-chart canvas { height: 30px !important; }
+html[data-chrome="compact"] .tl-chart > div:last-child { display: none; }
 
 /* ---------- responsive map overlays (hotfix §11) ----------
    The scope note measured 268x218 on a 1067x504 map — 11% of the workspace, permanently. It is

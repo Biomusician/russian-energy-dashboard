@@ -73,8 +73,19 @@ def _cumulative(dates, event_dates):
 
 
 def build(dates, timeline_fracs, contributor_ids, weights, covered,
-          national, incidents, recovery_events):
-    """Per-step decomposition and counts, from the values the scorer already computed."""
+          national, incidents, recovery_events, names=None):
+    """Per-step decomposition and counts, from the values the scorer already computed.
+
+    `names` labels every contributing id. Iteration 17: the comparison resolved ids through
+    assets.json and live_disruptions only, so a facility that had decayed out of both rendered as
+    its raw id ("kuibyshev-refinery"). The series now carries a label for every id it names; one
+    with no name anywhere is listed in `unresolved_asset_ids` and surfaced in Data Quality."""
+    names = dict(names or {})
+    for i in incidents:
+        if i.get("asset_id") and i.get("asset_name"):
+            names.setdefault(i["asset_id"], i["asset_name"])
+    every_id = sorted({aid for c in contributor_ids for aid in c})
+    asset_names = {aid: names.get(aid) for aid in every_id}
     total_w = sum(weights[s] for s in covered)
     sectors = sorted(covered)
 
@@ -112,6 +123,8 @@ def build(dates, timeline_fracs, contributor_ids, weights, covered,
         # Identity, not just a count. "Which facilities stopped contributing between A and B" is
         # a question the comparison must answer exactly, and a count cannot answer it.
         "contributing_asset_ids": [list(c) for c in contributor_ids],
+        "asset_names": {k: v for k, v in asset_names.items() if v},
+        "unresolved_asset_ids": [k for k, v in asset_names.items() if not v],
         "incidents_to_date": _cumulative(dates, [i.get("date") for i in incidents]),
         "recovery_evidence_to_date": _cumulative(
             dates, [r.get("evidence_date") for r in recovery_events]),

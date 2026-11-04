@@ -31,8 +31,9 @@ export default function SystemSwitcher({ current }: { current: string | null }) 
         {systems?.map((s) => (
           <option key={s.id} value={s.id}>{s.name}</option>
         ))}
-        {/* Keep the current system selectable even before (or without) the manifest. */}
-        {!systems && current && <option value={current}>{current.toUpperCase()}</option>}
+        {/* Keep the current system selectable even before (or without) the manifest. Not its id:
+            "RU" flashed here on every load (iteration 17) -- an internal code, not a name. */}
+        {!systems && current && <option value={current}>{failed ? "Current system" : "Loading systems…"}</option>}
       </select>
       {failed && <span className="small warn-text">System list unavailable</span>}
     </label>

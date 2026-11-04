@@ -715,7 +715,7 @@ def main():
     # Data quality and source freshness (§5, addendum §14). Derived at build time from the
     # source registry and the artefacts on disk, never hand-written in a component: a freshness
     # statement typed into React is true on the day it is typed and silently false afterwards.
-    write_json(outputs.processed() / "data_quality.json", data_quality.build(snapshot, args.as_of))
+    write_json(outputs.processed() / "data_quality.json", data_quality.build(snapshot, args.as_of, history_series))
     write_json(outputs.processed() / "refinery_inventory.json",
                {"refineries": refineries, "total_mtpa": round(refining_total, 1),
                 "reconciliation": refinery_reconciliation})

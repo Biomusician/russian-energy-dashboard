@@ -293,9 +293,10 @@ test.describe("provenance and coverage (iteration 16)", () => {
     const events = (await countryPayload(page, "us", "events.json")).events;
     await expect(page.locator(".review-note")).toHaveCount(events.length);
     await expect(page.locator(".review-note .review-dual_reviewed")).toHaveCount(sys.review_summary.dual_reviewed);
+    await expect(page.locator(".review-note .review-blind_reviewed")).toHaveCount(sys.review_summary.blind_reviewed ?? 0);
     await app.button("Sources & data quality").click();
-    await expect(page.locator(".review-summary"))
-      .toContainText(`${sys.review_summary.dual_reviewed} of ${events.length} events`);
+    const independent = (sys.review_summary.blind_reviewed ?? 0) + sys.review_summary.dual_reviewed;
+    await expect(page.locator(".review-summary")).toContainText(`${independent} of ${events.length} events`);
   });
 
   test("recovery is defined where it is shown", async ({ app, page }) => {

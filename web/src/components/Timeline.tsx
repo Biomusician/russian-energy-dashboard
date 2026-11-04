@@ -136,7 +136,7 @@ export default function Timeline({
         />
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9.5, color: "var(--text-faint)" }}>
           <span>{fmtDate(dates[0])}</span>
-          <span>bars: recorded events per week · line: exposure index</span>
+          <span className="tl-legend-mid">bars: recorded events per week · line: exposure index</span>
           <span>{fmtDate(dates[last])}</span>
         </div>
       </div>

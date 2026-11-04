@@ -345,7 +345,10 @@ def _event(raw, unit_names):
 # record reaches the canonical public corpus only after a second, independent reviewer has opened
 # the evidence. Records published before the rule existed are grandfathered BY ID in a frozen list
 # that can only shrink; a new record cannot be added to it, so "legacy" is not a way round review.
-REVIEW_STATUSES = ("dual_reviewed", "legacy_single_review")
+REVIEW_STATUSES = ("blind_reviewed", "dual_reviewed", "legacy_single_review")
+# Iteration 17: three blind roles, every one of which must have accepted (REVIEW_GOVERNANCE §8).
+BLIND_ROLES = ("evidence", "safety", "taxonomy")
+BLIND_PASS = ("accept", "accept_with_correction")
 REVIEW_DISPOSITIONS = ("confirmed", "corrected")
 GRANDFATHERED = SYSTEMS_CURATED / "review_grandfathered.json"
 CAMPAIGNS = SYSTEMS_CURATED / "conflict_campaigns.json"
@@ -374,8 +377,13 @@ def review_problems(e, grandfathered):
     else:
         if not r.get("independent_review_complete"):
             out.append(f"{eid}: no independent review")
-        if (r.get("reviewer_count") or 0) < 2:
-            out.append(f"{eid}: dual review needs two reviewers")
+        if (r.get("reviewer_count") or 0) < (4 if status == "blind_reviewed" else 2):
+            out.append(f"{eid}: {status} needs {'a researcher and three blind reviewers' if status == 'blind_reviewed' else 'two reviewers'}")
+        if status == "blind_reviewed":
+            roles = r.get("roles") or {}
+            failed = [k for k in BLIND_ROLES if roles.get(k) not in BLIND_PASS]
+            if failed:
+                out.append(f"{eid}: blind review role(s) {failed} did not accept")
         if (r.get("sources_opened_by_reviewer") or 0) < 1:
             out.append(f"{eid}: the independent reviewer opened no source")
         if r.get("disposition") not in REVIEW_DISPOSITIONS:
@@ -822,11 +830,13 @@ def build_system(system_id, admin1, admin0, as_of):
         # Who looked at the record before it was published (iteration 16). Counts, not names.
         "review_summary": {
             **review_counts,
-            "note": ("Dual reviewed: a researcher found the record and a second, independent "
-                     "reviewer opened its sources and checked identity, date, region, class, "
-                     "threshold, provenance, wording and episode. Legacy: published before dual "
-                     "review was required, checked by one reviewer against the threshold and the "
-                     "scope scan; these are grandfathered by id and are re-reviewed over time."),
+            "note": ("Blind reviewed (since iteration 17): three independent reviewers, none of "
+                     "whom saw the researcher's reasoning or each other, checked the evidence, the "
+                     "safety of the wording and the classification; all three accepted it. Dual "
+                     "reviewed: a researcher found the record and a second, independent reviewer "
+                     "opened its sources. Legacy: published before independent review was required, "
+                     "checked by one reviewer against the threshold and the scope scan; these are "
+                     "grandfathered by id and leave the list as they are re-reviewed."),
         },
         "publication_policy": {
             "withheld_records": sum(1 for e in events if e.get("publication")),

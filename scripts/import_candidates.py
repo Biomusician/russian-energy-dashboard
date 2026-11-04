@@ -93,6 +93,18 @@ DUAL_PROCESS = ("Found by a research lane; then a second, independent reviewer o
                 "episode before publication.")
 GRANDFATHERED = ROOT / "data" / "curated" / "systems" / "review_grandfathered.json"
 PASSING_DISPOSITIONS = ("confirmed", "corrected")
+# Iteration 17: three blind roles (docs/REVIEW_GOVERNANCE.md §8). A record reviewed this way names
+# the standard; every role must have accepted it, and the reconciled text is what they accepted.
+BLIND = "blind_three_role"
+BLIND_ROLES = ("evidence", "safety", "taxonomy")
+BLIND_PASS = ("accept", "accept_with_correction")
+BLIND_PROCESS = ("Found by a research lane; then reviewed blind by three independent reviewers, "
+                 "none of whom saw the researcher's rationale or each other: one opened the sources "
+                 "and checked identity, date, region, threshold and every figure; one checked the "
+                 "text for placement finer than first-level region, inventories, dependency and "
+                 "status wording; one checked class, cause, hazard name, episode and duplicates. "
+                 "Published only because all three accepted it; their corrections were reconciled "
+                 "into this text.")
 
 
 def _texts(r):
@@ -135,6 +147,11 @@ def review(system_id, r, unit_codes, grandfathered=frozenset()):
             return f"independent review disposition {indep.get('disposition')!r}"
         if (indep.get("sources_opened") or 0) < 1:
             return "the independent reviewer opened no source"
+        if indep.get("standard") == BLIND:
+            roles = indep.get("roles") or {}
+            failed = [k for k in BLIND_ROLES if roles.get(k) not in BLIND_PASS]
+            if failed:
+                return f"blind review: role(s) {failed} did not accept"
     return None
 
 
@@ -165,22 +182,28 @@ def apply_edits(r, edits):
 def _review_block(r, grandfathered):
     indep = r.get("independent_review") or {}
     legacy = r["candidate_id"] in grandfathered and not indep.get("completed")
-    return {
+    blind = not legacy and indep.get("standard") == BLIND
+    block = {
         # A record from a later research pass carries its own date and process (iteration 15);
         # the iteration-14 lanes' records predate the fields and keep the defaults.
         "reviewed_at": (r.get("reviewed") or REVIEW_DATE) if legacy else indep["completed"],
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review" if legacy else "dual_reviewed",
+        "review_status": "legacy_single_review" if legacy else ("blind_reviewed" if blind else "dual_reviewed"),
         "primary_review_complete": True,
         "independent_review_complete": not legacy,
-        "reviewer_count": 1 if legacy else 2,
+        "reviewer_count": 1 if legacy else (1 + len(BLIND_ROLES) if blind else 2),
         "disposition": None if legacy else indep["disposition"],
         "source_count": len(r["sources"]),
         "sources_opened_by_reviewer": None if legacy else indep.get("sources_opened"),
-        "process": (r.get("review_process") or DEFAULT_PROCESS) if legacy else DUAL_PROCESS,
+        "process": ((r.get("review_process") or DEFAULT_PROCESS) if legacy
+                    else BLIND_PROCESS if blind else DUAL_PROCESS),
         "source_access": ("at least one source read" if any(s.get("opened") is True for s in r["sources"])
                           else "not recorded by the research lane"),
     }
+    if blind:
+        # Each role's verdict, never its rationale: the reasons stay in the local review files.
+        block["roles"] = {k: indep["roles"][k] for k in BLIND_ROLES}
+    return block
 
 
 def _withheld_recovery():
