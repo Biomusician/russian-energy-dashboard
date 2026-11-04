@@ -96,7 +96,7 @@ RESEARCH_STATUSES = ("complete", "partial")
 RESEARCH_KINDS = ("systematic", "targeted")
 RESEARCH_OUTCOME_KEYS = ("candidates", "records", "accepted", "insufficient_evidence", "rejected",
                          "duplicate", "out_of_scope", "held")
-RESEARCH_LANE_KEYS = ("lane", "source_family", "registry", "status", "reason")
+RESEARCH_LANE_KEYS = ("lane", "source_family", "registry", "status", "reason", "covered_through")
 # The window every country system covers. A systematic pass that starts later is a top-up: it can
 # never make the whole record "complete" (iteration 16, research red team).
 COVERAGE_START = "2022-01-01"
@@ -175,6 +175,17 @@ def validate_sources(system_id, doc, research_log):
             for lane in lanes:
                 if lane.get("status") == "partial" and not lane.get("reason"):
                     problems.append(f"{tag}: lane {lane.get('lane')!r} is partial without a reason")
+                # The lane completion contract (iteration 17): a lane says how far its universe was
+                # searched. Complete means searched to the end of the pass window; a source that
+                # has not yet published the tail of the window leaves the lane partial.
+                ct = lane.get("covered_through")
+                if ct is not None and (not isinstance(ct, str) or (p.get("window") and ct > p["window"][1])):
+                    problems.append(f"{tag}: lane {lane.get('lane')!r} covered_through {ct!r} is not a date "
+                                    "within the pass window")
+                ends_early = ct is not None and p.get("window") and ct < p["window"][1]
+                if lane.get("status") == "complete" and ends_early:
+                    problems.append(f"{tag}: lane {lane.get('lane')!r} is complete but covered only "
+                                    f"through {ct}")
                 # A lane searched sources the registry must list, or source freshness would be
                 # stated for a different set of sources than the search used.
                 names = lane.get("registry") or []

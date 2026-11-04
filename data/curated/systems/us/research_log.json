@@ -163,6 +163,143 @@
         "document": "docs/countries/US_SYSTEMATIC_SWEEP.md",
         "commit": "3c81d39"
       }
+    },
+    {
+      "date": "2026-11-03",
+      "by": "iteration-17 lane completion",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-03"
+      ],
+      "scope": "inclusion clauses 1-7 as written; lanes and exact queries declared before searching (docs/countries/US_LANE_COMPLETION_17.md); every published record reviewed blind by three independent roles and confirmed on its final text",
+      "source_families": [
+        "DOE Form OE-417 electric emergency incident and disturbance annual summaries, doe417.pnnl.gov/summaries (the DOE-417 por",
+        "NERC event-analysis reports page and NERC State of Reliability (SOR) page, nerc.com; FERC/NERC joint inquiry and review ",
+        "DOE CESER emergency situation reports",
+        "NOAA National Hurricane Center Tropical Cyclone Reports (TCRs), read from NHC's own season indexes for the Atlantic and ",
+        "BSEE Gulf storm shut-in statistics releases (bsee.gov newsroom); EIA Today in Energy articles on weather-driven producti",
+        "PHMSA pipeline enforcement raw data file (all Corrective Action Order cases)",
+        "Per-terminal web query for unplanned LNG export terminal shutdowns",
+        "CSB investigations list; year-by-year structured web query (refinery and gas-processing shutdowns)",
+        "Year-by-year structured web query for US coal-mine events that cut supply (MSHA and EIA where surfaced)"
+      ],
+      "categories": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "lanes": [
+        {
+          "lane": "G1",
+          "source_family": "DOE Form OE-417 electric emergency incident and disturbance annual summaries, doe417.pnnl.gov/summaries (the DOE-417 portal's 'Annual Summaries Archives').",
+          "registry": [
+            "DOE OE-417 electric disturbance reports and annual summaries"
+          ],
+          "status": "partial",
+          "reason": "2022-2025 enumerated in full (iteration 16, carried forward, re-verified unchanged). 2026 has no published OE-417 annual summary, so the lane's universe for 2026-01-01 to 2026-11-03 cannot be searched.",
+          "covered_through": "2025-12-31"
+        },
+        {
+          "lane": "G2",
+          "source_family": "NERC event-analysis reports page and NERC State of Reliability (SOR) page, nerc.com; FERC/NERC joint inquiry and review reports (ferc.gov major-event pages).",
+          "registry": [
+            "NERC State of Reliability and event analyses; FERC inquiries"
+          ],
+          "status": "partial",
+          "reason": "Every in-window report on NERC's event-analysis page and every SOR published to date was read (iteration 16; re-verified today as unchanged). Partial because no SOR yet covers 2026 events and ferc.gov refuses automated access (403, not worked around), so the FERC side of the universe cannot be enumerated.",
+          "covered_through": "2025-12-31"
+        },
+        {
+          "lane": "H1",
+          "source_family": "DOE CESER emergency situation reports",
+          "registry": [
+            "DOE CESER emergency situation reports"
+          ],
+          "status": "partial",
+          "reason": "Complete through 2026-10-31 in iteration 16 and carried forward, as the plan declares; not re-run for 2026-11-01 to 2026-11-03, so not complete for this window.",
+          "covered_through": "2026-10-31"
+        },
+        {
+          "lane": "H2",
+          "source_family": "NOAA National Hurricane Center Tropical Cyclone Reports (TCRs), read from NHC's own season indexes for the Atlantic and eastern Pacific basins, 2022-2026.",
+          "registry": [
+            "NOAA National Hurricane Center summaries and Tropical Cyclone Reports"
+          ],
+          "status": "partial",
+          "reason": "Every published TCR in the declared universe was read and every US energy effect it documents was dispositioned. Partial because NHC has not yet published the TCRs for four 2026 US-affecting storms (Arthur, Edouard, Isaias; Lowell in the eastern Pacific).",
+          "covered_through": "2026-06-16"
+        },
+        {
+          "lane": "U1",
+          "source_family": "BSEE Gulf storm shut-in statistics releases (bsee.gov newsroom); EIA Today in Energy articles on weather-driven production shut-ins and freeze-offs (eia.gov/tod",
+          "registry": [
+            "BSEE storm shut-in releases; EIA Today in Energy",
+            "EIA Refinery Capacity Report; EIA-860M; Monthly Energy Review"
+          ],
+          "status": "partial",
+          "reason": "The EIA half is covered through 2026-11-03 and every weather shut-in article dispositioned. Partial because BSEE refused automated access again (HTTP 403 on a single polite retry), so BSEE's storm shut-in releases still cannot be enumerated, and because the plan's site-search strings could only be run through a general eia.gov-restricted search.",
+          "covered_through": "2026-11-03"
+        },
+        {
+          "lane": "P1",
+          "source_family": "PHMSA pipeline enforcement raw data file (all Corrective Action Order cases)",
+          "registry": [
+            "PHMSA incident data and corrective action orders"
+          ],
+          "status": "partial",
+          "reason": "The CAO universe itself is enumerated across the whole window: the raw file is current to 2026-11-03 and lists 30 CAO cases opened 2022-01-01 onward, exactly the 30 iteration 16 dispositioned; no CAO was opened or issued after 21 Sep 2026. Marked partial only because the plan's second endpoint, the PHMSA incident data files, refused the fetch (HTTP 403). LEAD may rule the lane complete, since the ",
+          "covered_through": "2026-11-03"
+        },
+        {
+          "lane": "L1",
+          "source_family": "Per-terminal web query for unplanned LNG export terminal shutdowns",
+          "registry": [
+            "US LNG terminal reporting (operators, EIA, FERC)"
+          ],
+          "status": "partial",
+          "reason": "Only Sabine Pass (10 of the plan's 90 queries) was run before the personal search cap; the other eight terminals were not searched in this pass. Even fully run, per-terminal news search is not a census of terminal outages.",
+          "covered_through": "2026-11-03"
+        },
+        {
+          "lane": "R1",
+          "source_family": "CSB investigations list; year-by-year structured web query (refinery and gas-processing shutdowns)",
+          "registry": [
+            "US Chemical Safety Board investigations; refinery and gas-processing reporting"
+          ],
+          "status": "partial",
+          "reason": "All 15 plan queries were run and both CSB lists read, but R1 has no census source: it is complete only for the declared query set, never for 'every refinery event' (plan A.1; partial by construction until the owner rules, ITERATION_16_REVIEW s.12 item 5).",
+          "covered_through": "2026-11-03"
+        },
+        {
+          "lane": "C1",
+          "source_family": "Year-by-year structured web query for US coal-mine events that cut supply (MSHA and EIA where surfaced)",
+          "registry": [
+            "MSHA and EIA coal reporting"
+          ],
+          "status": "partial",
+          "reason": "All 10 plan queries were run, but C1 has no census source (MSHA and EIA publish no list of mine events that cut supply): complete only for the declared query set, partial by construction until the owner rules (plan A.1).",
+          "covered_through": "2026-11-03"
+        }
+      ],
+      "status": "partial",
+      "status_reason": "0 of 9 lanes complete for the window to 2026-11-03; each is partial for the reason stated per lane",
+      "outcome": {
+        "candidates": 78,
+        "accepted": 3,
+        "rejected": 25,
+        "duplicate": 38,
+        "held": 8,
+        "out_of_scope": 3
+      },
+      "plan": {
+        "document": "docs/countries/US_LANE_COMPLETION_17.md",
+        "commit": "a7f3a36"
+      }
     }
   ]
 }

@@ -14,15 +14,15 @@
       "operator": "Freeport LNG",
       "asset_class": "lng_terminal",
       "cause": "technical",
-      "summary": "A fire and explosion at the Freeport LNG export terminal took the plant fully offline. Regulators later attributed the release to overpressure of an LNG piping segment.",
-      "effect": "Whole three-train terminal shut for about eight months; an LNG export facility.",
+      "summary": "A fire and explosion at the Freeport LNG export terminal took the plant fully offline. A release of LNG led to the formation and ignition of a natural gas vapour cloud.",
+      "effect": "Terminal shut for about eight months.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
       "threshold_basis": "LNG plant shut down entirely after an explosion and fire.",
       "capacity_affected": {
         "value": 15,
         "unit": "Mt/y LNG",
-        "source_says": "15 million tonnes per annum nameplate with all three trains running"
+        "source_says": "15 million tonnes per annum nameplate."
       },
       "sources": [
         {
@@ -54,21 +54,26 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "partial_restart",
         "date": "2023-02-11",
-        "evidence": "First LNG production and ship loading resumed 11 Feb 2023 (after FERC approved loading from Dock 1 on 9 Feb). On 21 Feb 2023 FERC cleared two of three trains for commercial operation; the third train still needed further approval, and the second berth/third tank were expected back around May 2023. Partial restart only, not full reconstitution.",
+        "evidence": "First LNG production and ship loading resumed 11 Feb 2023. In late Feb 2023 regulators cleared part of the plant for commercial operation; further approvals were pending.",
         "url": "https://www.rivieramm.com/news-content-hub/after-the-fire-freeport-lng-cleared-to-restart-two-of-three-trains-75065"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 3,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -85,7 +90,7 @@
       "operator": "BP",
       "asset_class": "refinery",
       "cause": "technical",
-      "summary": "An electrical fire confined to one electrical system at BP's Whiting refinery caused loss of utilities elsewhere in the plant.",
+      "summary": "An electrical fire at BP's Whiting refinery led to a sitewide shutdown.",
       "effect": "Sitewide shutdown of the refinery.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
@@ -117,21 +122,26 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "partial_restart",
         "date": "2022-08-31",
-        "evidence": "Phased restart began Wednesday 31 Aug 2022 with crude distillation units, then fuel units including an FCC; on 2 Sep BP said the refinery was 'returning to normal operation'. No source opened confirms a date for full normal operation.",
+        "evidence": "Phased restart began Wednesday 31 Aug 2022; on 2 Sep BP said the refinery was 'returning to normal operation'.",
         "url": "https://www.bicmagazine.com/api/amp/departments/operations/bp-restarting-whiting-indiana-refinery-production-units/"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -148,7 +158,7 @@
       "operator": "BP (Cenovus from Feb 2023)",
       "asset_class": "refinery",
       "cause": "technical",
-      "summary": "A fatal fire at the BP-Husky Toledo refinery (Oregon, Ohio) killed two workers.",
+      "summary": "A fatal fire at the BP-Husky Toledo refinery killed two workers.",
       "effect": "Refinery shut down in September 2022 after the fire and stayed down until a phased restart in spring 2023.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
@@ -156,7 +166,7 @@
       "capacity_affected": {
         "value": 160000,
         "unit": "bbl/d",
-        "source_says": "Search-result coverage cites 150,800 b/d (Reuters via secondary) and 160,000 bpd (Hydrocarbon Engineering); the opened article gives no figure"
+        "source_says": "Argus and Hydrocarbon Engineering: a 160,000 b/d refinery"
       },
       "sources": [
         {
@@ -173,7 +183,7 @@
           "date": "2022-09-21",
           "language": "en",
           "source_role": "industry",
-          "opened": false
+          "opened": true
         },
         {
           "url": "https://www.hydrocarbonengineering.com/refining/08062023/cenovus-toledo-refinery-to-restart",
@@ -181,28 +191,33 @@
           "date": "2023-06-08",
           "language": "en",
           "source_role": "industry",
-          "opened": false
+          "opened": true
         }
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
         "kind": "partial_restart",
         "date": "2023-04-28",
-        "evidence": "By late April 2023 the smaller-capacity crude unit had restarted and was producing refined products; the larger crude unit was expected to start in May 2023 and ramp to full rates through Q2. Date is the article date, not a sourced unit-restart date. A June 2023 Hydrocarbon Engineering item (not opened) indicates full return slipped past late May.",
+        "evidence": "By late April 2023 the refinery had restarted a crude unit and was producing refined products; full rates were expected through Q2 2023 (13abc). Date is the article date, not a sourced restart date. A Hydrocarbon Engineering item of 8 Jun 2023 says the refinery had previously been expected fully online in late May 2023 and that start-up of the rest of the facility was still pending.",
         "url": "https://www.13abc.com/2023/04/28/production-resumes-cenovus-toledo-refinery-more-than-6-months-after-fatal-fire"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 3,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 3,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -220,14 +235,14 @@
       "asset_class": "system_wide",
       "cause": "natural_hazard",
       "summary": "During a September heat wave CAISO set an all-time demand record and declared Energy Emergency Alert Stage 3 shortly after the peak because it forecast later energy deficiencies.",
-      "effect": "EEA 3 declared; conservation appeals and demand response were used and rotating outages were avoided.",
+      "effect": "EEA 3 declared shortly after the peak; CAISO and state officials used conservation appeals (Flex Alert, a Wireless Emergency Alert) and demand response to avoid rolling blackouts.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Grid-operator EEA 3 declaration (clause 5 names EEA3 explicitly).",
       "capacity_affected": {
         "value": 51426,
         "unit": "MW",
-        "source_says": "EIA: all-time demand high of 51,426 MW at 4:55 p.m. (CAISO later cites 52,061 MW)"
+        "source_says": "EIA: all-time demand high of 51,426 MW at 4:55 p.m. on 6 Sep 2022"
       },
       "sources": [
         {
@@ -247,17 +262,22 @@
         "url": "https://www.eia.gov/todayinenergy/detail.php?id=54039"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -274,7 +294,7 @@
       "operator": null,
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Hurricane Ian made landfall near Port Charlotte as a Category 4 storm, causing widespread outages across Florida.",
+      "summary": "Hurricane Ian made landfall in southwest Florida as a Category 4 storm, causing widespread outages across Florida.",
       "effect": "About 2.7 million Florida customers without power at the peak (DOE, 29 Sep). DOE said Ian mainly impacted the distribution system, with no significant transmission damage reported.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
@@ -298,21 +318,26 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "service_restored",
         "date": "2022-10-04",
-        "evidence": "Partial: about 394,000 Florida outages remained on the afternoon of 4 Oct 2022, down 85% from peak; Florida public power utilities restored 99.99% of customers able to take service within six days. Search-result coverage (Florida Politics, not opened: paywalled) reports all FPL customers restored by 9 Oct. DOE said parts of the distribution system in the hardest-hit areas would need rebuilding, so physical reconstitution lagged service restoration.",
+        "evidence": "Partial: about 394,000 Florida outages remained on the afternoon of 4 Oct 2022, down 85% from peak; Florida public power utilities restored 99.99% of customers able to take service within six days.",
         "url": "https://www.publicpower.org/periodical/article/outages-post-hurricane-ian-down-less-500000-florida"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Hurricane Ian (2022)"
     },
@@ -361,21 +386,26 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "full_restart",
         "date": "2022-12-30",
-        "evidence": "Unaffected parts of the system resumed around mid-December (search-result coverage, not opened); full restart reported 30 Dec 2022, with the regulator requiring operating pressure to stay 20% below the pre-spill level. Flow restored under a restriction, so this is not unconstrained full reconstitution; site remediation continued into 2023.",
+        "evidence": "Full restart reported 30 Dec 2022, under a regulator-set operating restriction; site remediation continued into 2023.",
         "url": "https://www.enr.com/articles/55680-keystone-pipe-has-full-restart-after-14000-barrel-spill-dec-7"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -420,17 +450,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "confirmed",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Winter Storm Elliott (2022)"
     },
@@ -456,7 +491,7 @@
       "asset_class": "system_wide",
       "cause": "natural_hazard",
       "summary": "During Winter Storm Elliott TVA imposed rolling blackouts across its service area for the first time in its 90-year history.",
-      "effect": "TVA mandated local power companies curtail load (10% on 24 Dec per search coverage); TVA lost about 20% of available generation, with 38 of 232 units losing power, mostly from frozen instrumentation, and needed about 17% more power than available.",
+      "effect": "TVA directed local power companies to cut load twice: a 5% system-wide reduction for 2 h 15 min on 23 Dec and 5-10% curtailments for 5 h 40 min on 24 Dec. TVA lost about 20% of available generation and needed about 17% more power than was available.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 4,
       "threshold_basis": "Generation shortfall forcing rotating outages.",
@@ -476,28 +511,33 @@
           "date": null,
           "language": "en",
           "source_role": "media",
-          "opened": false
+          "opened": true
         }
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
         "kind": "service_restored",
         "date": "2022-12-24",
-        "evidence": "Rolling blackouts were one set on the afternoon of 23 Dec and two on the morning of 24 Dec, in 15-minute increments (search-result coverage, not opened). Generation: 14 of the 38 lost units returned to service within 48 hours (opened); no source gives the return date of the other 24.",
+        "evidence": "TVA directed load curtailments on two occasions, 23 Dec (2 h 15 min) and 24 Dec (5 h 40 min); local power companies ran short rolling outages, one saying about 15 minutes each (Local 3 News).",
         "url": "https://www.power-eng.com/?p=120269"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Winter Storm Elliott (2022)"
     },
@@ -517,8 +557,8 @@
       "operator": "Duke Energy (Carolinas and Progress)",
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Duke Energy imposed rolling blackouts in the Carolinas on Christmas Eve during Winter Storm Elliott after losing about 1,300 MW of generating capability to equipment malfunctions and failing to obtain expected out-of-state purchases.",
-      "effect": "About 500,000 customers across the Carolinas had service interrupted; the automated tool shed 600 MW in the Duke Energy Progress area before it stopped responding.",
+      "summary": "Duke Energy imposed rolling blackouts in the Carolinas on Christmas Eve during Winter Storm Elliott after losing about 1,300 MW of generating capability.",
+      "effect": "About 500,000 customers across the Carolinas had service interrupted.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 4,
       "threshold_basis": "Generation shortfall forcing rotating outages (also exceeds clause 5's 100,000 customers).",
@@ -541,21 +581,26 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "service_restored",
         "date": "2022-12-24",
-        "evidence": "Duke said power would be restored by end of day 24 Dec; some customers in southeastern North Carolina were not restored until about 4:30 p.m.",
+        "evidence": "Duke said power would be restored by end of day 24 Dec.",
         "url": "https://www.wect.com/2023/01/03/duke-energy-reveals-timeline-events-leading-up-rolling-blackouts-christmas-eve"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Winter Storm Elliott (2022)"
     },
@@ -619,21 +664,26 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "no_supply_lost",
         "date": "2022-12-25",
-        "evidence": "All PJM emergency procedures ended 10 p.m. Sunday 25 Dec 2022. No customer load was shed, so there is no service restoration to record; no opened source gives a return-to-service timeline for the forced-out units.",
+        "evidence": "All PJM emergency procedures ended 10 p.m. Sunday 25 Dec 2022. No customer load was shed.",
         "url": "https://insidelines.pjm.com/pjm-operated-reliably-throughout-winter-storm-challenges/"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Winter Storm Elliott (2022)"
     },
@@ -678,74 +728,24 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "confirmed",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Winter Storm Elliott (2022)"
-    },
-    {
-      "event_id": "us-2023-02-01-texas-ice-storm-outages",
-      "date": "2023-02-01",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "US-TX",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": null,
-      "asset_class": "system_wide",
-      "cause": "natural_hazard",
-      "summary": "An ice storm across central and north Texas brought down lines; Austin Energy was hardest hit.",
-      "effect": "About 262,000 Texas customers still without power at 4:30 a.m. on 3 Feb (a later snapshot, not the peak); just over 100,000 Oncor customers out in North/Central Texas. Search coverage (not opened) puts Austin Energy at about 160,000-170,000 customers (around 30%) out on 1 Feb.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 5,
-      "threshold_basis": "More than 100,000 customers without supply.",
-      "capacity_affected": {
-        "value": 262000,
-        "unit": "customers",
-        "source_says": "about 262,000 without power as of 4:30 a.m. Friday 3 Feb (snapshot, not peak)"
-      },
-      "sources": [
-        {
-          "url": "https://www.kpbs.org/news/news/environment/2023/02/02/texas-ice-storm-leaves-hundreds-of-thousands-without-power",
-          "publisher": "KPBS / NPR",
-          "date": "2023-02-02",
-          "language": "en",
-          "source_role": "media",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
-        "date": "2023-02-06",
-        "evidence": "Partial: an Austin Energy update of 6 Feb said more than 95% of its customers had power (search-result coverage, not opened). Opened source only says Austin Energy could not give a system-wide restoration estimate.",
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-10-30",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
-        "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
-        "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
-      },
-      "hazard_name": null
     },
     {
       "event_id": "us-2023-02-22-michigan-ice-storm-outages",
@@ -760,8 +760,8 @@
       "operator": null,
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "An ice storm in southern Michigan caused what DTE called the largest ice storm in its history.",
-      "effect": "More than 800,000 outages statewide at the peak; more than 600,000 DTE customers and about 237,000 Consumers Energy customers lost power.",
+      "summary": "An ice storm in Michigan brought down tree limbs and lines, causing more than 800,000 outages statewide at the peak.",
+      "effect": "More than 800,000 outages statewide at the peak; DTE later said more than 600,000 of its customers had been restored since the storm.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "More than 100,000 customers without supply.",
@@ -788,17 +788,22 @@
         "url": "https://www.pbs.org/newshour/nation/5-days-after-severe-ice-storm-some-in-michigan-still-lack-power"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -815,11 +820,11 @@
       "operator": "Marathon Petroleum",
       "asset_class": "refinery",
       "cause": "technical",
-      "summary": "A naphtha storage tank fire at Marathon's Garyville refinery damaged two tanks; units closest to the fire were shut but the plant was not closed entirely.",
+      "summary": "A storage tank fire at Marathon's Garyville refinery led to units being shut; the plant was not closed entirely.",
       "effect": "Refinery ran at reduced rates for about a week; no volume or percentage of the cut is given.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
-      "threshold_basis": "Units shut with a reported throughput effect ('running at reduced rates', 'cut throughput').",
+      "threshold_basis": "Units shut with a reported throughput effect ('running at reduced rates', 'curtailed throughputs').",
       "capacity_affected": {
         "value": 596000,
         "unit": "bbl/d",
@@ -847,21 +852,26 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "full_restart",
         "date": "2023-08-31",
-        "evidence": "Marathon spokesperson told Argus the refinery had 'resumed normal operations and is running at planned rates'. Tank repair status not reported.",
+        "evidence": "Marathon spokesperson told Argus the refinery had 'resumed normal operations and is running at planned rates'.",
         "url": "https://www.argusmedia.com/es/news-and-insights/latest-market-news/2485045-marathon-garyville-resumes-normal-ops"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -878,7 +888,7 @@
       "operator": null,
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Hurricane Idalia made landfall in Florida's Big Bend as a Category 3 storm.",
+      "summary": "Hurricane Idalia made landfall on Florida's Gulf coast as a Category 3 storm.",
       "effect": "Peak statewide outages of 288,248 customers.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
@@ -906,17 +916,22 @@
         "url": "https://www.publicpower.org/periodical/article/public-power-utilities-fla-wrap-power-restoration-efforts-wake-hurricane"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Hurricane Idalia (2023)"
     },
@@ -961,17 +976,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "confirmed",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Winter Storm Heather (2024)"
     },
@@ -988,15 +1008,15 @@
       "operator": "BP",
       "asset_class": "refinery",
       "cause": "technical",
-      "summary": "A plantwide power failure (reported as a transformer failure) forced BP to shut its Whiting refinery and evacuate non-essential staff.",
-      "effect": "Full refinery shutdown and more than six weeks of downtime; Chicago-area gasoline prices rose at least 20 cents per gallon.",
+      "summary": "A plantwide power failure forced BP to shut its Whiting refinery.",
+      "effect": "Full refinery shutdown; BP said on 18 Mar 2024 that the refinery was back to normal operations for the first time since the 1 Feb outage. Gasoline prices rose at least 20 cents a gallon in the days after the outage.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
       "threshold_basis": "Whole refinery shut down.",
       "capacity_affected": {
         "value": 435000,
         "unit": "bbl/d",
-        "source_says": "435,000 barrels per day, the largest refinery in the U.S. Midwest"
+        "source_says": "435,000 barrels per day."
       },
       "sources": [
         {
@@ -1006,90 +1026,32 @@
           "language": "en",
           "source_role": "industry",
           "opened": true
-        },
-        {
-          "url": "https://hydrocarbonprocessing.com/news/2024/02/power-loss-forces-bp-to-shut-biggest-us-midwest-refinery/",
-          "publisher": "Hydrocarbon Processing",
-          "date": null,
-          "language": "en",
-          "source_role": "industry",
-          "opened": false
         }
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
         "kind": "full_restart",
         "date": "2024-03-18",
-        "evidence": "Power returned 2 Feb (search-result coverage) but units stayed down for inspections; on 18 Mar 2024 BP said the plant was 'back to normal operations'. Announcement date, not a sourced unit-restart date.",
+        "evidence": "On 18 Mar 2024 BP said the plant was 'back to normal operations'. Announcement date, not a sourced unit-restart date.",
         "url": "https://inspectioneering.com/news/2024-03-18/11013/bps-whiting-refinery-back-to-normal-operations-following-february-outage"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
-        "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "us-2024-05-16-houston-derecho-outages",
-      "date": "2024-05-16",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "US-TX",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": "CenterPoint Energy",
-      "asset_class": "transmission_line",
-      "cause": "natural_hazard",
-      "summary": "A derecho with hurricane-force winds and tornadoes struck the Greater Houston area, damaging CenterPoint's transmission and distribution systems.",
-      "effect": "Roughly 930,000 customers lost power (T&D World: 700,000 restored = 75% of those affected). CenterPoint deployed mobile generation at some substations because of transmission damage.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 5,
-      "threshold_basis": "Grid event with transmission damage causing loss of supply to far more than 100,000 customers.",
-      "capacity_affected": {
-        "value": 900000,
-        "unit": "customers",
-        "source_says": "over 900,000 customers out at peak (CenterPoint via search coverage); opened source implies ~930,000"
-      },
-      "sources": [
-        {
-          "url": "https://www.tdworld.com/disaster-response/article/55041071/centerpoint-energy-continues-power-restoration-after-significant-storms",
-          "publisher": "T&D World",
-          "date": "2024-05-20",
-          "language": "en",
-          "source_role": "industry",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
-        "date": "2024-05-20",
-        "evidence": "Partial: about 700,000 customers (75%) restored by 20 May with ~240,000 still out; CenterPoint expected restoration to be substantially complete by the evening of 22 May (estimate). Search-result coverage (not opened) reports 99% with power by 23 May.",
-        "url": "https://www.tdworld.com/disaster-response/article/55041071/centerpoint-energy-continues-power-restoration-after-significant-storms"
-      },
-      "review": {
-        "reviewed_at": "2026-10-30",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
-        "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -1106,7 +1068,7 @@
       "operator": "CenterPoint Energy",
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Hurricane Beryl made landfall near Matagorda, Texas, as a Category 1 storm and caused widespread outages in the Houston region.",
+      "summary": "Hurricane Beryl made landfall on the Texas coast as a Category 1 storm and caused widespread outages.",
       "effect": "More than 2.26 million CenterPoint customers lost power at the peak; more than 2.7 million households and businesses overall.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
@@ -1138,21 +1100,26 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "service_restored",
         "date": "2024-07-17",
-        "evidence": "Partial: more than 98% of impacted customers restored by 17 Jul 2024; CenterPoint said it was on track to restore all customers able to receive power by 18 Jul (estimate, not confirmed in sources opened).",
+        "evidence": "More than 98% of impacted customers restored by 17 Jul 2024.",
         "url": "https://www.tdworld.com/disaster-response/news/55127087/centerpoint-energy-restores-power-to-more-than-98-of-impacted-customers"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Hurricane Beryl (2024)"
     },
@@ -1169,8 +1136,8 @@
       "operator": null,
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Hurricane Francine made landfall in Terrebonne Parish, Louisiana, as a Category 2 storm.",
-      "effect": "About 450,000 lost power in Louisiana, mostly due to fallen debris (source says 'people').",
+      "summary": "Hurricane Francine made landfall in Louisiana as a Category 2 storm.",
+      "effect": "About 450,000 people lost power in Louisiana, mostly due to fallen debris.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "More than 100,000 without supply.",
@@ -1197,17 +1164,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Hurricane Francine (2024)"
     },
@@ -1232,7 +1204,7 @@
       "capacity_affected": {
         "value": 39,
         "unit": "percent of Gulf oil and gas production",
-        "source_says": "knocked out 39% of oil and natural gas production in the Gulf"
+        "source_says": "the storm knocked out 39% of oil and natural gas production (Wikipedia, citing Reuters 12 Sep 2024; Gulf of Mexico context)"
       },
       "sources": [
         {
@@ -1252,17 +1224,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Hurricane Francine (2024)"
     },
@@ -1303,17 +1280,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "confirmed",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Hurricane Francine (2024)"
     },
@@ -1331,14 +1313,14 @@
       "asset_class": "system_wide",
       "cause": "natural_hazard",
       "summary": "Hurricane Helene caused widespread power outages in South Carolina in late September 2024.",
-      "effect": "Peak outages in South Carolina: more than 1.3 million; the most of any state affected by Helene.",
+      "effect": "Peak outages in South Carolina: more than 1.3 million.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Loss of supply to far more than 100,000 customers.",
       "capacity_affected": {
         "value": 1300000,
         "unit": "customers",
-        "source_says": "more than 1.3 million; the most of any state affected by Helene"
+        "source_says": "More than 1.3 million customers."
       },
       "sources": [
         {
@@ -1358,17 +1340,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Hurricane Helene (2024)"
     },
@@ -1386,7 +1373,7 @@
       "asset_class": "system_wide",
       "cause": "natural_hazard",
       "summary": "Hurricane Helene caused widespread power outages in Georgia in late September 2024.",
-      "effect": "Peak outages in Georgia: ~1.28 million (estimated).",
+      "effect": "Power outages in Georgia totalled an estimated 1.28 million customers.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Loss of supply to far more than 100,000 customers.",
@@ -1413,17 +1400,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Hurricane Helene (2024)"
     },
@@ -1441,7 +1433,7 @@
       "asset_class": "system_wide",
       "cause": "natural_hazard",
       "summary": "Hurricane Helene caused widespread power outages in North Carolina in late September 2024.",
-      "effect": "Peak outages in North Carolina: at least 879,000.",
+      "effect": "At least 879,000 North Carolina customers lost power.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Loss of supply to far more than 100,000 customers.",
@@ -1468,17 +1460,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Hurricane Helene (2024)"
     },
@@ -1496,14 +1493,14 @@
       "asset_class": "system_wide",
       "cause": "natural_hazard",
       "summary": "Hurricane Helene caused widespread power outages in Florida in late September 2024.",
-      "effect": "Peak outages in Florida: ~1.69 million; outages already occurring in Tampa Bay by the morning of Sept. 26.",
+      "effect": "Around 1.69 million Florida customers lost power.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Loss of supply to far more than 100,000 customers.",
       "capacity_affected": {
         "value": 1690000,
         "unit": "customers",
-        "source_says": "~1.69 million; outages already occurring in Tampa Bay by the morning of Sept. 26"
+        "source_says": "About 1.69 million customers."
       },
       "sources": [
         {
@@ -1523,17 +1520,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Hurricane Helene (2024)"
     },
@@ -1550,8 +1552,8 @@
       "operator": null,
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Hurricane Milton made landfall near Siesta Key, Florida, as a Category 3 storm on the evening of 9 Oct 2024.",
-      "effect": "More than 3 million homes and buildings statewide lost power; Hillsborough County had about 500,000 customers out.",
+      "summary": "Hurricane Milton made landfall on Florida's Gulf coast as a Category 3 storm on the evening of 9 Oct 2024.",
+      "effect": "More than 3 million homes and buildings statewide lost power.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Loss of supply to far more than 100,000 customers.",
@@ -1582,21 +1584,26 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "estimate",
         "date": "2024-10-15",
-        "evidence": "Only an estimate found: a USA Today headline of 13 Oct 2024 (cited in the opened page's references, article not opened) said Florida power 'will be restored by Tuesday'. No confirmed restoration date.",
+        "evidence": "Only an estimate found: a news headline of 13 Oct 2024 said Florida power 'will be restored by Tuesday'. No confirmed restoration date.",
         "url": "https://www.usatoday.com/story/news/nation/2024/10/13/hurricane-milton-biden-florida-sunday/75657451007/"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Hurricane Milton (2024)"
     },
@@ -1613,15 +1620,15 @@
       "operator": null,
       "asset_class": "transmission_line",
       "cause": "natural_hazard",
-      "summary": "A Northeast Pacific bomb cyclone struck western Washington on 19-20 Nov 2024.",
-      "effect": "About 650,000 people in western Washington lost power; over 400 miles of Puget Sound Energy transmission lines were affected; Snohomish County PUD had over 135,000 customers out.",
+      "summary": "A Northeast Pacific bomb cyclone struck Washington state on 19-20 Nov 2024.",
+      "effect": "About 650,000 people in Washington lost power; one county utility had over 135,000 customers out.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Grid event with transmission damage causing loss of supply to far more than 100,000.",
       "capacity_affected": {
         "value": 650000,
         "unit": "people",
-        "source_says": "About 650,000 people lost power in western Washington"
+        "source_says": "About 650,000 people lost power"
       },
       "sources": [
         {
@@ -1637,21 +1644,26 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "service_restored",
         "date": "2024-11-25",
-        "evidence": "Partial: by 23 Nov PSE had repaired 47 of its 49 affected substations but 66,000 customers still lacked service; Snohomish PUD restored 99% of its customers by 25 Nov. No full-restoration date for PSE in the opened source. Substation repairs are physical reconstitution; customer counts are service restoration — kept separate here.",
+        "evidence": "By 25 Nov a county utility had restored 99% of its customers; a larger utility still had customers without service on 23 Nov.",
         "url": "https://en.wikipedia.org/wiki/November_2024_Northeast_Pacific_bomb_cyclone"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -1665,11 +1677,11 @@
       "regions_affected": [],
       "facility_name": "Keystone Pipeline System",
       "facility_name_local": null,
-      "operator": "TC Energy",
+      "operator": "South Bow",
       "asset_class": "pipeline_oil",
       "cause": "technical",
       "summary": "The Keystone crude pipeline ruptured in North Dakota; about 3,500 barrels were later estimated released.",
-      "effect": "Pipeline shut down after the rupture (reported by KVRR, cited by the opened page)..",
+      "effect": "Pipeline shut down after the rupture (CBS News; South Bow said shutdown and response began at about 7:42 a.m.).",
       "inclusion_basis": "reported_effect",
       "criterion_met": 3,
       "threshold_basis": "Crude trunk pipeline shut down.",
@@ -1688,12 +1700,12 @@
           "opened": true
         },
         {
-          "url": "https://www.kvrr.com/2025/04/08/keystone-pipeline-ruptures-near-fort-ransom/",
-          "publisher": "KVRR Local News",
+          "url": "https://www.cbsnews.com/news/keystone-oil-pipeline-shut-down-north-dakota/",
+          "publisher": "CBS News",
           "date": "2025-04-08",
           "language": "en",
           "source_role": "media",
-          "opened": false
+          "opened": true
         }
       ],
       "recovery": {
@@ -1704,17 +1716,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -1732,14 +1749,14 @@
       "asset_class": "system_wide",
       "cause": "natural_hazard",
       "summary": "The 23-27 January 2026 winter storm (Winter Storm Fern) brought ice and snow that caused large outages in Tennessee.",
-      "effect": "Peak outages in Tennessee: as many as 300,000 estimated at peak; Nashville Electric Service peaked at 230,000, its highest ever.",
+      "effect": "As many as 300,000 people in Tennessee were estimated to have lost power; more than 250,000 outages statewide remained on 26 Jan.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "More than 100,000 customers without supply.",
       "capacity_affected": {
         "value": 300000,
-        "unit": "customers",
-        "source_says": "as many as 300,000 estimated at peak; Nashville Electric Service peaked at 230,000, its highest ever"
+        "unit": "people",
+        "source_says": "As many as 300,000 people were estimated to have lost power."
       },
       "sources": [
         {
@@ -1759,17 +1776,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Winter Storm Fern (2026)"
     },
@@ -1814,17 +1836,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "confirmed",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "at least one source read"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Winter Storm Fern (2026)"
     },
@@ -2575,6 +2602,74 @@
         "source_access": "at least one source read"
       },
       "hazard_name": null
+    },
+    {
+      "event_id": "us-2022-11-10-hurricane-nicole-florida-outages",
+      "date": "2022-11-10",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "US-FL",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": null,
+      "facility_name_local": null,
+      "operator": null,
+      "asset_class": "system_wide",
+      "cause": "natural_hazard",
+      "summary": "Hurricane Nicole made landfall on Florida's east coast on 10 November 2022 and caused large power outages in Florida.",
+      "effect": "More than 330,000 Florida customers were without power on the morning of 10 Nov 2022 (PowerOutage.US via Fox Business, with AP contributing); NHC reports over 300,000 homes and businesses in the affected region lost power.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 5,
+      "threshold_basis": "Clause 5: more than 330,000 customers out at one time in Florida on the morning of 10 Nov 2022 (PowerOutage.US via Fox Business).",
+      "capacity_affected": {
+        "value": 330000,
+        "unit": "customers",
+        "source_says": "more than 330,000 customers are in the dark"
+      },
+      "sources": [
+        {
+          "url": "https://www.nhc.noaa.gov/data/tcr/AL172022_Nicole.pdf",
+          "publisher": "NOAA National Hurricane Center",
+          "date": "2023-03-17",
+          "language": "en",
+          "source_role": "government",
+          "opened": true
+        },
+        {
+          "url": "https://foxbusiness.com/lifestyle/nicole-leaves-florida-customers-without-power",
+          "publisher": "Fox Business (AP contributed)",
+          "date": "2022-11-10",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "NOT_YET_RESEARCHED",
+        "kind": null,
+        "date": null,
+        "evidence": "",
+        "url": null
+      },
+      "review": {
+        "reviewed_at": "2026-11-03",
+        "threshold_version": "2026-10-30.1",
+        "review_status": "blind_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
+        "source_count": 2,
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept",
+          "taxonomy": "accept"
+        }
+      },
+      "hazard_name": "Hurricane Nicole (2022)"
     },
     {
       "event_id": "us-2022-12-31-california-storm-outages",
@@ -5045,6 +5140,74 @@
         "sources_opened_by_reviewer": 1,
         "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
+      },
+      "hazard_name": "Hurricane Debby (2024)"
+    },
+    {
+      "event_id": "us-2024-08-08-tropical-storm-debby-north-carolina-outages",
+      "date": "2024-08-08",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "US-NC",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": null,
+      "facility_name_local": null,
+      "operator": null,
+      "asset_class": "system_wide",
+      "cause": "natural_hazard",
+      "summary": "Debby crossed North Carolina on 8 August 2024 after a second landfall in South Carolina as a subtropical storm, and downed trees and power lines caused large outages in North Carolina.",
+      "effect": "Nearly 132,000 North Carolina outages at 10:30 a.m. EDT on 8 Aug 2024 (PowerOutage.us via WFAE); NHC gives about 520,000 customers affected over the event.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 5,
+      "threshold_basis": "Clause 5: about 132,000 customers out at one time in North Carolina.",
+      "capacity_affected": {
+        "value": 132000,
+        "unit": "customers",
+        "source_says": "nearly 132,000 outages were reported across the state"
+      },
+      "sources": [
+        {
+          "url": "https://www.nhc.noaa.gov/data/tcr/AL042024_Debby.pdf",
+          "publisher": "NOAA National Hurricane Center",
+          "date": "2025-02-04",
+          "language": "en",
+          "source_role": "government",
+          "opened": true
+        },
+        {
+          "url": "https://www.wfae.org/charlotte-area/2024-08-08/132-000-without-power-as-debby-churns-across-north-carolina",
+          "publisher": "WFAE",
+          "date": "2024-08-08",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "NOT_YET_RESEARCHED",
+        "kind": null,
+        "date": null,
+        "evidence": "",
+        "url": null
+      },
+      "review": {
+        "reviewed_at": "2026-11-03",
+        "threshold_version": "2026-10-30.1",
+        "review_status": "blind_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
+        "source_count": 2,
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept",
+          "taxonomy": "accept_with_correction"
+        }
       },
       "hazard_name": "Hurricane Debby (2024)"
     },
@@ -8135,6 +8298,66 @@
         "sources_opened_by_reviewer": 1,
         "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
+      },
+      "hazard_name": null
+    },
+    {
+      "event_id": "us-2025-02-12-par-pacific-wyoming-refinery-shutdown",
+      "date": "2025-02-12",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "US-WY",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": "Wyoming refinery",
+      "facility_name_local": null,
+      "operator": "Par Pacific Holdings",
+      "asset_class": "refinery",
+      "cause": "technical",
+      "summary": "Par Pacific's refinery in Wyoming shut after an operating incident on 12 February 2025 and remained shut for repairs.",
+      "effect": "The 18,000 b/d refinery remained shut for repairs as of 26 February 2025.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 1,
+      "threshold_basis": "Clause 1: refinery shut down; the whole 18,000 b/d plant reported shut for repairs.",
+      "capacity_affected": {
+        "value": 18000,
+        "unit": "b/d",
+        "source_says": "remains shut for repairs"
+      },
+      "sources": [
+        {
+          "url": "https://mnimarkets.com/articles/par-pacific-wyoming-shut-for-repair-montana-set-for-april-work-1740591039136",
+          "publisher": "MNI Market News",
+          "date": "2025-02-26",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "estimate",
+        "date": "2025-05-26",
+        "evidence": "Estimate only: the company expected 50% utilisation by mid-April and normal rates before Memorial Day 2025; no observed restart found.",
+        "url": "https://mnimarkets.com/articles/par-pacific-wyoming-shut-for-repair-montana-set-for-april-work-1740591039136"
+      },
+      "review": {
+        "reviewed_at": "2026-11-03",
+        "threshold_version": "2026-10-30.1",
+        "review_status": "blind_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
+        "source_count": 1,
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     }

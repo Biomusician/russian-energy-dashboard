@@ -7174,9 +7174,11 @@ def test_dual_reviewed_records_say_a_source_was_read():
 # Iteration 16: review governance, publication policy, freshness vs coverage, three histories
 # --------------------------------------------------------------------------
 
-# The number of records grandfathered when dual review began (2026-10-31). The list may only
-# shrink: a record leaves it when it is re-reviewed. Raising this number is the failure.
-GRANDFATHERED_AT_FREEZE = 94
+# The number of records grandfathered when dual review began (2026-10-31) was 94. The list may only
+# shrink: a record leaves it when it is re-reviewed. Iteration 17 blind-reviewed all 94, so the
+# bound is now zero: no record may ever again be published on a single review. Raising it is the
+# failure.
+GRANDFATHERED_AT_FREEZE = 0
 
 
 def _ev(eid, **kw):
@@ -7226,7 +7228,7 @@ def test_the_grandfather_list_only_shrinks_and_never_holds_a_dual_reviewed_recor
         assert curated[eid]["review"]["review_status"] == "legacy_single_review", eid
     for eid, e in curated.items():
         if eid not in gf:
-            assert e["review"]["review_status"] == "dual_reviewed", eid
+            assert e["review"]["review_status"] in ("dual_reviewed", "blind_reviewed"), eid
 
 
 def test_an_active_campaign_withholds_facility_status():
@@ -7320,7 +7322,9 @@ def test_no_served_record_under_an_active_campaign_shows_facility_status():
                 assert not any(B.late_citation(e, s) for s in e["sources"]), e["event_id"]
             else:
                 assert e["publication"] is None and e["recovery"]["research_status"] != B.WITHHELD
-    assert covered >= 9   # the Saudi 2026 records (Jazan held: its only citation reports status)
+    # The Saudi 2026 records: Jazan is held (its only citation reports status), and the iteration-17
+    # blind review sent two more to the owner (April East-West cut, September Yanbu suspension).
+    assert covered >= 8
 
 
 def test_every_campaign_states_its_status_and_the_theatre_says_why_the_rule_waits():

@@ -108,3 +108,72 @@ Recorded so a reviewer and a later researcher apply them the same way:
   line, a gathering line, or station and tank piping does not qualify.
 - **Hazard names.** The name the source uses, in the corpus form "Hurricane Ian (2022)"; a source
   that says only "winter storm" gets no hazard name.
+
+## 7. Blind three-role review (iteration 17)
+
+Dual review (§1) had one weakness the iteration-16 red team named: the second reviewer read the
+researcher's rationale and disposition first, and a reviewer who knows the conclusion tends to
+confirm it. Since iteration 17 a record is reviewed **blind by three independent roles**, none of
+whom sees the researcher's reasoning, the researcher's disposition, an earlier review, or each
+other:
+
+| Role | Checks | Opens sources |
+|---|---|---|
+| A — evidence | identity, date, admin-1 code, threshold clause, every figure and quoted phrase | yes |
+| B — safety and abstraction | nothing finer than admin-1; no inventories, criticality, dependency, vulnerability, defence or attack-method detail; no status wording on a kinetic record; no process text; citation addresses | no |
+| C — taxonomy and episodes | class, cause, hazard name, episode basis, duplicates and parent/child double counts | no |
+
+`scripts/review_packets.py` builds the packets; `blind()` decides what a reviewer may see and a
+test holds it to that.
+
+### 7.1 The outcome rule — no majority vote
+
+`scripts/merge_reviews.py` combines the three verdicts:
+
+| Any role says | Outcome |
+|---|---|
+| REJECT | rejected |
+| HOLD or DUPLICATE | held |
+| NEEDS_HUMAN_DECISION | held for the owner (§7.3) |
+| all ACCEPT / ACCEPT_WITH_CORRECTION | accepted, every correction applied |
+
+Two accepts and a hold is a hold. Material disagreement is never voted away.
+
+### 7.2 Reconciliation and confirmation
+
+Corrections to different fields apply as they stand. Where two roles rewrote the same field, a
+**reconciler** — who sees all three reviews and is not a fourth reviewer — writes one text that makes
+every correction and adds nothing (data/candidates/review17/RECONCILER_BRIEF.md). A correction that
+cannot be honoured alongside another holds the record; a conditional correction goes to the owner;
+an id rename always goes to the owner (ids are permanent references). The reconciled text is then
+sent back to **every role for confirmation**: each confirms the final text against its own
+criteria or objects, and **one objection holds the record**. The reconciled edits are recorded in
+`data/curated/systems/review_edits.json` with the roles each one carries, so a re-import reproduces
+the reviewed text. `scripts/apply_reviews.py` writes them and the verdicts; the import gate
+(`scripts/import_candidates.py`) and the build (`pipeline/build_systems.py review_problems`)
+refuse a `blind_reviewed` record unless every role accepted it.
+
+The published review block says `blind_reviewed`, carries each role's verdict and never its
+reasoning; the reasons stay in the local review files.
+
+### 7.3 When the owner decides
+
+A reviewer escalates instead of deciding when the question is about **the rule**, not the record:
+
+- whether a clause covers a kind of event it does not name (a partial pipeline throughput cut under
+  clause 3; a forced generation loss with no reported load shed under clause 4);
+- whether an event total or a multi-region total can stand for a single-unit peak (clause 5);
+- a cause the taxonomy has no word for (a fuel-supply shortfall);
+- anything that would change what every country publishes (facility names finer than admin-1;
+  citation addresses that name a city; renaming a published id);
+- whether two records are one event when no source says so either way.
+
+An escalated record is **held, not published**, until the owner rules. The owner's ruling is
+recorded in §6 so that every later review applies it the same way.
+
+### 7.4 Iteration-17 outcomes
+
+The 94 records grandfathered in iteration 16 were all reviewed this way, in data-governance order
+(2026 kinetic; single-source; weak-source; multi-region; unusual cause; the rest), and **the
+grandfather list is now empty**. Counts, reasons and the owner questions are in
+`docs/ITERATION_17_REVIEW.md`.

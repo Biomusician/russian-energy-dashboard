@@ -36,6 +36,122 @@
         "accepted": 1,
         "insufficient_evidence": 2
       }
+    },
+    {
+      "date": "2026-11-03",
+      "by": "iteration-17 first systematic pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-03"
+      ],
+      "scope": "inclusion clauses 1-7 as written; lanes and exact queries declared before searching (docs/countries/IN_SYSTEMATIC_SWEEP.md); every published record reviewed blind by three independent roles and confirmed on its final text",
+      "source_families": [
+        "Grid-India (formerly POSOCO) and CEA grid-disturbance / grid-incident reports",
+        "Ministry of Power releases (pib.gov.in) on major outages and supply emergencies",
+        "PPAC / MoPNG refinery and pipeline disruption statements (via the plan's media queries)",
+        "Ministry of Coal and Coal India: mine accidents and production suspensions (via the plan's media query)",
+        "PNGRB: gas pipeline incidents and supply interruptions",
+        "State SLDC and discom notices of load shedding or major outages",
+        "Credible national media (PTI, The Hindu, Indian Express, Times of India, Mint) via search"
+      ],
+      "categories": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "lanes": [
+        {
+          "lane": "IN1",
+          "source_family": "Grid-India (formerly POSOCO) and CEA grid-disturbance / grid-incident reports",
+          "registry": [
+            "Grid-India and CEA grid-disturbance reports"
+          ],
+          "status": "partial",
+          "reason": "Census endpoint unreachable: every Grid-India / POSOCO / RLDC host tried refused the connection from this environment (as in the iteration-16 source audit), and CEA does not publish a grid-disturbance report listing (Grid Management and NPC division pages carry only an SOP and one 2020 extract). No year of the window was enumerated.",
+          "covered_through": null
+        },
+        {
+          "lane": "IN2",
+          "source_family": "Ministry of Power releases (pib.gov.in) on major outages and supply emergencies",
+          "registry": [
+            "Ministry of Power releases (PIB)"
+          ],
+          "status": "partial",
+          "reason": "All five plan queries ran, but the search engine ignored the site:pib.gov.in operator and returned no pib.gov.in page for any year, so the lane's universe (PIB Ministry of Power releases) was not actually enumerated. Results were secondary coverage, RPC agendas and foreign grids.",
+          "covered_through": "2026-11-03"
+        },
+        {
+          "lane": "IN3",
+          "source_family": "PPAC / MoPNG refinery and pipeline disruption statements (via the plan's media queries)",
+          "registry": [
+            "PPAC, CEA, National Power Portal, Ministry of Coal",
+            "Ministry of Petroleum and Natural Gas releases (PIB)"
+          ],
+          "status": "partial",
+          "reason": "All ten plan queries ran, but the lane's declared universe is PPAC / MoPNG / PIB-MoPNG statements and none of those endpoints was enumerated; the queries returned media coverage only, weighted to a few repeated stories. No follow-up searches were possible within the cap.",
+          "covered_through": "2026-11-03"
+        },
+        {
+          "lane": "IN4",
+          "source_family": "Ministry of Coal and Coal India: mine accidents and production suspensions (via the plan's media query)",
+          "registry": [
+            "PPAC, CEA, National Power Portal, Ministry of Coal",
+            "Coal India disclosures"
+          ],
+          "status": "partial",
+          "reason": "All five plan queries ran, but coal.gov.in and coalindia.in were not enumerated (Coal India's site was unreachable in the iteration-16 audit) and results were dominated by pre-window incidents (Talcher 2019, Lalmatia 2016) for every year. Finding nothing in 2022-2025 is not evidence of no events.",
+          "covered_through": "2026-11-03"
+        },
+        {
+          "lane": "IN5",
+          "source_family": "PNGRB: gas pipeline incidents and supply interruptions",
+          "registry": [
+            "PNGRB notices"
+          ],
+          "status": "partial",
+          "reason": "Not run.",
+          "covered_through": null
+        },
+        {
+          "lane": "IN6",
+          "source_family": "State SLDC and discom notices of load shedding or major outages",
+          "registry": [
+            "State load-despatch centre and distribution-company notices"
+          ],
+          "status": "partial",
+          "reason": "Not run.",
+          "covered_through": null
+        },
+        {
+          "lane": "IN7",
+          "source_family": "Credible national media (PTI, The Hindu, Indian Express, Times of India, Mint) via search",
+          "registry": [
+            "Indian national media (PTI, The Hindu, Indian Express, Times of India, Mint)"
+          ],
+          "status": "partial",
+          "reason": "All ten plan queries ran, but results were not restricted to the five named outlets, were dominated by repeated undated stories, and the 30-search cap left no budget to follow up 403 or snippet-only items. The refinery queries surfaced no new in-window refinery event beyond those logged in IN3.",
+          "covered_through": "2026-11-03"
+        }
+      ],
+      "status": "partial",
+      "status_reason": "0 of 7 lanes complete; the others are partial for the reasons stated per lane",
+      "outcome": {
+        "candidates": 22,
+        "accepted": 1,
+        "rejected": 4,
+        "duplicate": 1,
+        "held": 11,
+        "out_of_scope": 3
+      },
+      "plan": {
+        "document": "docs/countries/IN_SYSTEMATIC_SWEEP.md",
+        "commit": "a7f3a36"
+      }
     }
   ]
 }

@@ -393,7 +393,7 @@ def embargo_effects(by_incident, incidents, as_of, embargo_days=None):
         ok = []
         for e in effects:
             rel = effect_release_date(e, inc.get("date"), days)
-            if rel is not None and rel <= when:
+            if rel is not None and when >= rel:
                 ok.append(e)
             else:
                 withheld += 1

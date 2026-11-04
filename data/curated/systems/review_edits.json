@@ -402,6 +402,2014 @@
       "field": "hazard_name",
       "set": "Ice storm of 5-6 April 2023",
       "reason": "Independent review, iteration 16: Environment Canada describes one storm across Quebec and Ontario; the new Ontario record names it, so both records carry the name."
+    },
+    {
+      "event_id": "us-2022-09-06-caiso-eea3-heat",
+      "field": "capacity_affected.source_says",
+      "set": "EIA: all-time demand high of 51,426 MW at 4:55 p.m. on 6 Sep 2022",
+      "reason": "Iteration-17 blind review, role(s) A: A: drops the 52,061 MW CAISO figure, which is not in the only opened source."
+    },
+    {
+      "event_id": "us-2022-09-06-caiso-eea3-heat",
+      "field": "effect",
+      "set": "EEA 3 declared shortly after the peak; CAISO and state officials used conservation appeals (Flex Alert, a Wireless Emergency Alert) and demand response to avoid rolling blackouts.",
+      "reason": "Iteration-17 blind review, role(s) A: A: keeps to the source ('to avoid rolling blackouts') instead of asserting outages were avoided."
+    },
+    {
+      "event_id": "us-2022-09-28-hurricane-ian-florida-outages",
+      "field": "summary",
+      "set": "Hurricane Ian made landfall in southwest Florida as a Category 4 storm, causing widespread outages across Florida.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the landfall town (finer than admin-1)."
+    },
+    {
+      "event_id": "us-2022-09-28-hurricane-ian-florida-outages",
+      "field": "recovery.evidence",
+      "set": "Partial: about 394,000 Florida outages remained on the afternoon of 4 Oct 2022, down 85% from peak; Florida public power utilities restored 99.99% of customers able to take service within six days.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the unopened-search remark and the distribution-rebuild remark."
+    },
+    {
+      "event_id": "us-2022-12-24-duke-energy-rolling-blackouts-elliott",
+      "field": "summary",
+      "set": "Duke Energy imposed rolling blackouts in the Carolinas on Christmas Eve during Winter Storm Elliott after losing about 1,300 MW of generating capability.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the out-of-state purchase (supply-dependency) wording."
+    },
+    {
+      "event_id": "us-2022-12-24-duke-energy-rolling-blackouts-elliott",
+      "field": "effect",
+      "set": "About 500,000 customers across the Carolinas had service interrupted.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the load-shed-tool failure detail."
+    },
+    {
+      "event_id": "us-2022-12-24-duke-energy-rolling-blackouts-elliott",
+      "field": "recovery.evidence",
+      "set": "Duke said power would be restored by end of day 24 Dec.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the sub-state area reference."
+    },
+    {
+      "event_id": "us-2023-02-22-michigan-ice-storm-outages",
+      "field": "summary",
+      "set": "An ice storm in Michigan brought down tree limbs and lines, causing more than 800,000 outages statewide at the peak.",
+      "reason": "Iteration-17 blind review, role(s) A: A: drops 'largest ice storm in its history' and 'southern Michigan', neither in the opened source."
+    },
+    {
+      "event_id": "us-2023-02-22-michigan-ice-storm-outages",
+      "field": "effect",
+      "set": "More than 800,000 outages statewide at the peak; DTE later said more than 600,000 of its customers had been restored since the storm.",
+      "reason": "Iteration-17 blind review, role(s) A: A: replaces the unsourced 600,000-lost and 237,000 Consumers figures with the sourced 600,000+ restored."
+    },
+    {
+      "event_id": "us-2023-08-30-hurricane-idalia-florida-outages",
+      "field": "summary",
+      "set": "Hurricane Idalia made landfall on Florida's Gulf coast as a Category 3 storm.",
+      "reason": "Iteration-17 blind review, role(s) B: B: replaces 'Big Bend' (sub-state region)."
+    },
+    {
+      "event_id": "us-2024-05-16-houston-derecho-outages",
+      "field": "summary",
+      "set": "A derecho with hurricane-force winds and tornadoes struck southeast Texas, damaging a utility's transmission and distribution systems.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the metro area (finer than admin-1)."
+    },
+    {
+      "event_id": "us-2024-05-16-houston-derecho-outages",
+      "field": "effect",
+      "set": "Roughly 930,000 customers lost power (700,000 restored = 75% of those affected).",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the substation-level mobile-generation detail."
+    },
+    {
+      "event_id": "us-2024-05-16-houston-derecho-outages",
+      "field": "capacity_affected.source_says",
+      "set": "Over 900,000 customers out at peak (utility figure).",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the search-coverage process text."
+    },
+    {
+      "event_id": "us-2024-05-16-houston-derecho-outages",
+      "field": "recovery.evidence",
+      "set": "About 700,000 customers (75%) restored by 20 May with about 240,000 still out.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the forward estimate and the unopened-search remark."
+    },
+    {
+      "event_id": "us-2024-09-11-hurricane-francine-louisiana-outages",
+      "field": "summary",
+      "set": "Hurricane Francine made landfall in Louisiana as a Category 2 storm.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the parish (finer than admin-1)."
+    },
+    {
+      "event_id": "us-2024-09-11-hurricane-francine-louisiana-outages",
+      "field": "effect",
+      "set": "About 450,000 people lost power in Louisiana, mostly due to fallen debris.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the '(source says people)' working note. B's text said 'customers'; kept 'people', the source's unit (A verified; capacity_affected.unit is people), so no new claim is introduced."
+    },
+    {
+      "event_id": "us-2024-09-11-hurricane-francine-gulf-shut-ins",
+      "field": "capacity_affected.source_says",
+      "set": "the storm knocked out 39% of oil and natural gas production (Wikipedia, citing Reuters 12 Sep 2024; Gulf of Mexico context)",
+      "reason": "Iteration-17 blind review, role(s) A: A: removes 'in the Gulf' from the quotation; it is context, not the source's wording."
+    },
+    {
+      "event_id": "us-2024-09-26-hurricane-helene-florida-outages",
+      "field": "effect",
+      "set": "Around 1.69 million Florida customers lost power.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: 'lost power', not 'peak outages' (may be cumulative). B: removes the Tampa Bay metro reference."
+    },
+    {
+      "event_id": "us-2024-09-26-hurricane-helene-florida-outages",
+      "field": "capacity_affected.source_says",
+      "set": "About 1.69 million customers.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the sub-state metro reference."
+    },
+    {
+      "event_id": "us-2024-09-27-hurricane-helene-south-carolina-outages",
+      "field": "effect",
+      "set": "Peak outages in South Carolina: more than 1.3 million.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the 'most of any state' cross-state ranking."
+    },
+    {
+      "event_id": "us-2024-09-27-hurricane-helene-south-carolina-outages",
+      "field": "capacity_affected.source_says",
+      "set": "More than 1.3 million customers.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the cross-state ranking."
+    },
+    {
+      "event_id": "us-2024-09-27-hurricane-helene-georgia-outages",
+      "field": "effect",
+      "set": "Power outages in Georgia totalled an estimated 1.28 million customers.",
+      "reason": "Iteration-17 blind review, role(s) A: A: the source says 'totaled', not a peak."
+    },
+    {
+      "event_id": "us-2024-09-27-hurricane-helene-north-carolina-outages",
+      "field": "effect",
+      "set": "At least 879,000 North Carolina customers lost power.",
+      "reason": "Iteration-17 blind review, role(s) A: A: the source says 'lost power', not 'peak outages'."
+    },
+    {
+      "event_id": "us-2024-11-19-bomb-cyclone-washington-outages",
+      "field": "summary",
+      "set": "A Northeast Pacific bomb cyclone struck Washington state on 19-20 Nov 2024.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes 'western Washington' (sub-state)."
+    },
+    {
+      "event_id": "us-2024-11-19-bomb-cyclone-washington-outages",
+      "field": "effect",
+      "set": "About 650,000 people in Washington lost power; one county utility had over 135,000 customers out.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the transmission-line mileage and the county name."
+    },
+    {
+      "event_id": "us-2024-11-19-bomb-cyclone-washington-outages",
+      "field": "recovery.evidence",
+      "set": "By 25 Nov a county utility had restored 99% of its customers; a larger utility still had customers without service on 23 Nov.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes substation counts (component inventory / repair progress)."
+    },
+    {
+      "event_id": "us-2026-01-24-winter-storm-fern-tennessee-outages",
+      "field": "capacity_affected",
+      "set": {
+        "value": 300000,
+        "unit": "people",
+        "source_says": "As many as 300,000 people were estimated to have lost power."
+      },
+      "reason": "Iteration-17 blind review, role(s) A, B: A: unit is people, not customers, wording as the source. B: removes the city utility name and 'highest ever' from source_says (and B's 'at peak' dropped, which A's wording does not support)."
+    },
+    {
+      "event_id": "us-2026-01-24-winter-storm-fern-tennessee-outages",
+      "field": "effect",
+      "set": "As many as 300,000 people in Tennessee were estimated to have lost power; more than 250,000 outages statewide remained on 26 Jan.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: unit and wording aligned with the source, adds the sourced 26 Jan statewide figure. B: removes the city utility name and 'highest ever'."
+    },
+    {
+      "event_id": "us-2024-10-09-hurricane-milton-florida-outages",
+      "field": "summary",
+      "set": "Hurricane Milton made landfall on Florida's Gulf coast as a Category 3 storm on the evening of 9 Oct 2024.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the landfall place (finer than admin-1)."
+    },
+    {
+      "event_id": "us-2024-10-09-hurricane-milton-florida-outages",
+      "field": "effect",
+      "set": "More than 3 million homes and buildings statewide lost power.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the county-level figure."
+    },
+    {
+      "event_id": "us-2024-10-09-hurricane-milton-florida-outages",
+      "field": "recovery.evidence",
+      "set": "Only an estimate found: a news headline of 13 Oct 2024 said Florida power 'will be restored by Tuesday'. No confirmed restoration date.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the unopened-article process remark."
+    },
+    {
+      "event_id": "us-2025-04-08-keystone-north-dakota-rupture",
+      "field": "operator",
+      "set": "South Bow",
+      "reason": "Iteration-17 blind review, role(s) A: A: CBS News (opened) and the Wikipedia infobox name South Bow as operator in 2025."
+    },
+    {
+      "event_id": "us-2025-04-08-keystone-north-dakota-rupture",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://en.wikipedia.org/wiki/Keystone_Pipeline",
+          "publisher": "Wikipedia",
+          "title": "Keystone Pipeline",
+          "date": null,
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://www.cbsnews.com/news/keystone-oil-pipeline-shut-down-north-dakota/",
+          "publisher": "CBS News",
+          "date": "2025-04-08",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) A, B: A: replaces the dead KVRR page with CBS News (opened per A). B: removes the town-bearing KVRR address. CBS URL passes rule 4 (no sub-admin-1 place, no ranking or inventory; same-day date)."
+    },
+    {
+      "event_id": "us-2025-04-08-keystone-north-dakota-rupture",
+      "field": "effect",
+      "set": "Pipeline shut down after the rupture (CBS News; South Bow said shutdown and response began at about 7:42 a.m.).",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: replaces the dead-source attribution with CBS. B: removes the 'cited by the opened page' process wording and the double full stop."
+    },
+    {
+      "event_id": "us-2022-12-23-tva-rolling-blackouts-elliott",
+      "field": "effect",
+      "set": "TVA directed local power companies to cut load twice: a 5% system-wide reduction for 2 h 15 min on 23 Dec and 5-10% curtailments for 5 h 40 min on 24 Dec. TVA lost about 20% of available generation and needed about 17% more power than was available.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: replaces the search-coverage 10% with the opened Local 3 News percentages and durations. B: removes the unit counts and the frozen-instrumentation failure mode."
+    },
+    {
+      "event_id": "us-2022-12-23-tva-rolling-blackouts-elliott",
+      "field": "recovery.evidence",
+      "set": "TVA directed load curtailments on two occasions, 23 Dec (2 h 15 min) and 24 Dec (5 h 40 min); local power companies ran short rolling outages, one saying about 15 minutes each (Local 3 News).",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: replaces unopened search coverage with the opened Local 3 News account. B: removes unit-return counts and the process remark; the local utility is left unnamed, matching B's handling of city utilities; 'opened' carried by the source flag instead of the text."
+    },
+    {
+      "event_id": "us-2022-12-23-tva-rolling-blackouts-elliott",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://www.power-eng.com/?p=120269",
+          "publisher": "Power Engineering",
+          "title": "TVA lost around 20% of available power production during December storm",
+          "date": "2023-05-10",
+          "language": "en",
+          "source_role": "industry",
+          "opened": true
+        },
+        {
+          "url": "https://www.local3news.com/local-news/update-tva-releases-internal-report-after-rolling-holiday-blackouts/article_c10bfd92-876d-11ed-96bb-5f6ec7f8bbe1.html",
+          "publisher": "Local 3 News",
+          "title": "TVA releases internal report after rolling holiday blackouts",
+          "date": null,
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) A: A: corrections cite Local 3 News as opened and A's sources_opened confirms it; opened flag set true."
+    },
+    {
+      "event_id": "us-2022-12-23-pjm-forced-outages-elliott",
+      "field": "recovery.evidence",
+      "set": "All PJM emergency procedures ended 10 p.m. Sunday 25 Dec 2022. No customer load was shed.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the research-process remark."
+    },
+    {
+      "event_id": "us-2022-06-08-freeport-lng-explosion",
+      "field": "summary",
+      "set": "A fire and explosion at the Freeport LNG export terminal took the plant fully offline. A release of LNG led to the formation and ignition of a natural gas vapour cloud.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: replaces the unsupported overpressure attribution with the Riviera vapour-cloud account. B: the piping-segment (component) cause is gone; the vapour-cloud sentence names no component."
+    },
+    {
+      "event_id": "us-2022-06-08-freeport-lng-explosion",
+      "field": "effect",
+      "set": "Terminal shut for about eight months.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the three-train inventory."
+    },
+    {
+      "event_id": "us-2022-06-08-freeport-lng-explosion",
+      "field": "capacity_affected.source_says",
+      "set": "15 million tonnes per annum nameplate.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the train count."
+    },
+    {
+      "event_id": "us-2022-06-08-freeport-lng-explosion",
+      "field": "recovery.evidence",
+      "set": "First LNG production and ship loading resumed 11 Feb 2023. In late Feb 2023 regulators cleared part of the plant for commercial operation; further approvals were pending.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes dock, train and tank-level restart detail."
+    },
+    {
+      "event_id": "us-2022-08-24-bp-whiting-electrical-fire",
+      "field": "summary",
+      "set": "An electrical fire at BP's Whiting refinery led to a sitewide shutdown.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the single-system / loss-of-utilities dependency detail."
+    },
+    {
+      "event_id": "us-2022-08-24-bp-whiting-electrical-fire",
+      "field": "recovery.evidence",
+      "set": "Phased restart began Wednesday 31 Aug 2022; on 2 Sep BP said the refinery was 'returning to normal operation'.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the unit-by-unit restart order."
+    },
+    {
+      "event_id": "us-2022-09-20-bp-husky-toledo-fire",
+      "field": "summary",
+      "set": "A fatal fire at the BP-Husky Toledo refinery killed two workers.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the city name (Oregon, Ohio)."
+    },
+    {
+      "event_id": "us-2022-09-20-bp-husky-toledo-fire",
+      "field": "capacity_affected.source_says",
+      "set": "Argus and Hydrocarbon Engineering: a 160,000 b/d refinery",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: both opened sources give 160,000; the search-coverage 150,800 and 'opened article gives no figure' wording are outdated. B: no process text ('opened' is carried by the source flags)."
+    },
+    {
+      "event_id": "us-2022-09-20-bp-husky-toledo-fire",
+      "field": "recovery.evidence",
+      "set": "By late April 2023 the refinery had restarted a crude unit and was producing refined products; full rates were expected through Q2 2023 (13abc). Date is the article date, not a sourced restart date. A Hydrocarbon Engineering item of 8 Jun 2023 says the refinery had previously been expected fully online in late May 2023 and that start-up of the rest of the facility was still pending.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: keeps the June item, now opened, and the article-date caveat. B: removes the unit-by-unit status (smaller/larger crude unit, 'sequential')."
+    },
+    {
+      "event_id": "us-2022-09-20-bp-husky-toledo-fire",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://www.13abc.com/2023/04/28/production-resumes-cenovus-toledo-refinery-more-than-6-months-after-fatal-fire",
+          "publisher": "WTVG 13abc",
+          "title": "Production resumes at Cenovus Toledo refinery more than 6 months after fatal fire",
+          "date": "2023-04-28",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://www.argusmedia.com/es/news/2373087-bp-toledo-refinery-shuts-down-after-fire-update-3",
+          "publisher": "Argus Media",
+          "title": "BP Toledo refinery shuts down after fire: Update 3",
+          "date": "2022-09-21",
+          "language": "en",
+          "source_role": "industry",
+          "opened": true
+        },
+        {
+          "url": "https://www.hydrocarbonengineering.com/refining/08062023/cenovus-toledo-refinery-to-restart",
+          "publisher": "Hydrocarbon Engineering",
+          "title": "Cenovus' Toledo refinery to restart",
+          "date": "2023-06-08",
+          "language": "en",
+          "source_role": "industry",
+          "opened": true
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) A: A: relabels Argus and Hydrocarbon Engineering as opened; A's sources_opened confirms both."
+    },
+    {
+      "event_id": "us-2022-12-07-keystone-kansas-spill",
+      "field": "recovery.evidence",
+      "set": "Full restart reported 30 Dec 2022, under a regulator-set operating restriction; site remediation continued into 2023.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the unopened-search remark and the specific pressure restriction."
+    },
+    {
+      "event_id": "us-2023-08-25-marathon-garyville-tank-fire",
+      "field": "threshold_basis",
+      "set": "Units shut with a reported throughput effect ('running at reduced rates', 'curtailed throughputs').",
+      "reason": "Iteration-17 blind review, role(s) A: A: 'cut throughput' is not a quote; the source says 'curtailed throughputs'."
+    },
+    {
+      "event_id": "us-2023-08-25-marathon-garyville-tank-fire",
+      "field": "summary",
+      "set": "A storage tank fire at Marathon's Garyville refinery led to units being shut; the plant was not closed entirely.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the tank count and 'units closest to the fire'."
+    },
+    {
+      "event_id": "us-2023-08-25-marathon-garyville-tank-fire",
+      "field": "recovery.evidence",
+      "set": "Marathon spokesperson told Argus the refinery had 'resumed normal operations and is running at planned rates'.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the tank-repair remark."
+    },
+    {
+      "event_id": "us-2024-02-01-bp-whiting-power-outage",
+      "field": "effect",
+      "set": "Full refinery shutdown; BP said on 18 Mar 2024 that the refinery was back to normal operations for the first time since the 1 Feb outage. Gasoline prices rose at least 20 cents a gallon in the days after the outage.",
+      "reason": "Iteration-17 blind review, role(s) A: A: replaces the derived 'more than six weeks of downtime' with the two sourced dates. 'Chicago-area' dropped under rule 9 (city finer than admin-1), not by any role."
+    },
+    {
+      "event_id": "us-2024-02-01-bp-whiting-power-outage",
+      "field": "summary",
+      "set": "A plantwide power failure forced BP to shut its Whiting refinery and evacuate non-essential staff.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the transformer attribution (component)."
+    },
+    {
+      "event_id": "us-2024-02-01-bp-whiting-power-outage",
+      "field": "capacity_affected.source_says",
+      "set": "435,000 barrels per day.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes 'largest refinery in the U.S. Midwest'."
+    },
+    {
+      "event_id": "us-2024-02-01-bp-whiting-power-outage",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://inspectioneering.com/news/2024-03-18/11013/bps-whiting-refinery-back-to-normal-operations-following-february-outage",
+          "publisher": "Inspectioneering (Reuters)",
+          "title": "BP's Whiting refinery back to normal operations following February outage",
+          "date": "2024-03-18",
+          "language": "en",
+          "source_role": "industry",
+          "opened": true
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the hydrocarbonprocessing.com citation whose address carries 'biggest'; the Inspectioneering citation remains."
+    },
+    {
+      "event_id": "us-2024-07-08-hurricane-beryl-texas-outages",
+      "field": "summary",
+      "set": "Hurricane Beryl made landfall on the Texas coast as a Category 1 storm and caused widespread outages.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the landfall town and metro region."
+    },
+    {
+      "event_id": "us-2024-07-08-hurricane-beryl-texas-outages",
+      "field": "recovery.evidence",
+      "set": "More than 98% of impacted customers restored by 17 Jul 2024.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the forward estimate."
+    },
+    {
+      "event_id": "ca-2025-12-19-windstorm-nova-scotia",
+      "field": "summary",
+      "set": "High winds overnight on 19-20 December 2025 brought trees and branches into power lines across Nova Scotia.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removed the Cape Breton sub-admin-1 reference."
+    },
+    {
+      "event_id": "ca-2025-12-19-windstorm-nova-scotia",
+      "field": "effect",
+      "set": "Roughly 186,000 Nova Scotia Power customers had lost power as of 8 a.m. on 20 December, of whom more than 90,000 had been restored (about 96,000 still out at that time).",
+      "reason": "Iteration-17 blind review, role(s) A: A: made explicit that 186,000 is a cumulative count, not a simultaneous peak."
+    },
+    {
+      "event_id": "ca-2025-12-19-windstorm-nova-scotia",
+      "field": "threshold_basis",
+      "set": "Grid event affecting about 100,000 customers or more: 186,000 cumulative by 8 a.m. 20 December (operator); at least ~96,000 were out at the same time.",
+      "reason": "Iteration-17 blind review, role(s) A: A: threshold basis states the cumulative figure and the arithmetic simultaneous floor."
+    },
+    {
+      "event_id": "ca-2022-09-24-fiona-nova-scotia",
+      "field": "summary",
+      "set": "Post-tropical storm Fiona struck Nova Scotia on 24 September 2022, leaving about 80% of Nova Scotia's electricity customers without power.",
+      "reason": "Iteration-17 blind review, role(s) A: A: removed the unverified 'largest outage in Nova Scotia Power's history'."
+    },
+    {
+      "event_id": "ca-2022-09-24-fiona-nova-scotia",
+      "field": "effect",
+      "set": "Fiona left more than 500,000 customers in the region without power, including about 80% of all Nova Scotia customers (Wikipedia, citing the Globe and Mail).",
+      "reason": "Iteration-17 blind review, role(s) A: A: replaced the unverifiable 415,000 peak (CBC 403) with the opened Wikipedia figure."
+    },
+    {
+      "event_id": "ca-2022-09-24-fiona-nova-scotia",
+      "field": "capacity_affected",
+      "set": null,
+      "reason": "Iteration-17 blind review, role(s) A: A: 415,000 not verifiable from an opened source."
+    },
+    {
+      "event_id": "ca-2022-09-24-fiona-nova-scotia",
+      "field": "recovery",
+      "set": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "service_restored",
+        "date": null,
+        "evidence": "UNVERIFIED: cited CBC page (1.6597229) returns 403; not confirmed by an opened source.",
+        "url": "https://www.cbc.ca/lite/story/1.6597229"
+      },
+      "reason": "Iteration-17 blind review, role(s) A: A: recovery claim marked unverified (cited page 403)."
+    },
+    {
+      "event_id": "ca-2022-09-24-fiona-nova-scotia",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://www.cbc.ca/lite/story/1.6597229",
+          "publisher": "CBC News",
+          "title": "Power restored to most of Nova Scotia, more than 4,500 without power in P.E.I. 2 weeks after Fiona",
+          "date": "2022-10-07",
+          "language": "en",
+          "source_role": "media"
+        },
+        {
+          "url": "https://atlantic.ctvnews.ca/nearly-500-000-maritimers-without-power-in-fiona-s-wake-1.6083020",
+          "publisher": "CTV Atlantic",
+          "title": "Nearly 500,000 Maritimers without power in Fiona's wake",
+          "date": "2022-09-24",
+          "language": "en",
+          "source_role": "media"
+        },
+        {
+          "url": "https://en.wikipedia.org/wiki/Hurricane_Fiona",
+          "publisher": "Wikipedia",
+          "date": null,
+          "language": "en",
+          "source_role": "dataset",
+          "opened": true
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) A: A: added Wikipedia 'Hurricane Fiona' (dataset, opened by A; no page date given, so date null); existing CBC and CTV citations kept as A did not ask to remove them."
+    },
+    {
+      "event_id": "ca-2026-03-11-ice-storm-quebec",
+      "field": "summary",
+      "set": "Freezing rain on 11-12 March 2026 caused widespread outages across southern Quebec.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A and B both removed 'Montérégie worst hit'; A's 'including the Montreal area' dropped (city, B's rule) and A's 'high winds' dropped because its only support is the Cult MTL page B removes."
+    },
+    {
+      "event_id": "ca-2026-03-11-ice-storm-quebec",
+      "field": "effect",
+      "set": "Hydro-Québec's outage site showed 209,795 addresses without power early on 12 March, down to 96,417 by 2:40 p.m. that day.",
+      "reason": "Iteration-17 blind review, role(s) A: A: removed the unverified equipment-damage statement; added the 2:40 p.m. Global News figure."
+    },
+    {
+      "event_id": "ca-2026-03-11-ice-storm-quebec",
+      "field": "recovery",
+      "set": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": null,
+        "evidence": "Partial only: 96,417 addresses still affected at 2:40 p.m. on 12 March 2026, down from 209,795 early that morning; no completion statement found.",
+        "url": "https://globalnews.ca/news/11727261/quebec-power-outages-ice-storm"
+      },
+      "reason": "Iteration-17 blind review, role(s) A, B: A replaced the unsourced 8,300 figure with the opened Global News figure; B's removal of '(search-result reporting)' is satisfied because A's text carries no process wording."
+    },
+    {
+      "event_id": "ca-2026-03-11-ice-storm-quebec",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://globalnews.ca/news/11727261/quebec-power-outages-ice-storm",
+          "publisher": "Global News",
+          "title": "Hundreds of thousands of Hydro Quebec customers without power after ice storm",
+          "date": "2026-03-12",
+          "language": "en",
+          "source_role": "media"
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) B: B: removed the Cult MTL citation (city in address)."
+    },
+    {
+      "event_id": "ca-2022-09-16-westshore-strike",
+      "field": "facility_name",
+      "set": "Westshore Terminals",
+      "reason": "Iteration-17 blind review, role(s) B: B: removed the 'Roberts Bank' locality."
+    },
+    {
+      "event_id": "ca-2022-09-16-westshore-strike",
+      "field": "summary",
+      "set": "An ILWU Local 502 work stoppage beginning at midnight on 16 September 2022 suspended operations at Westshore Terminals' coal export facility.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: wording and start time from the operator release; B: 'at Roberts Bank' removed."
+    },
+    {
+      "event_id": "ca-2022-09-16-westshore-strike",
+      "field": "effect",
+      "set": "Westshore said the stoppage would cause a complete suspension of terminal operations. It later cut its 2022 throughput estimate to 24-25 Mt from 27.5 Mt, citing the labour disruption together with weaker-than-expected performance by its US rail carrier (BNSF) in the second half of the year.",
+      "reason": "Iteration-17 blind review, role(s) A: A: throughput cut attributed to both stated causes; 'port officials confirmed' (BIV 403) removed."
+    },
+    {
+      "event_id": "ca-2022-09-16-westshore-strike",
+      "field": "threshold_basis",
+      "set": "Energy (coal) export terminal operations suspended, stated by the operator.",
+      "reason": "Iteration-17 blind review, role(s) A: A: removed 'physically confirmed by port officials' (BIV 403)."
+    },
+    {
+      "event_id": "ca-2022-09-16-westshore-strike",
+      "field": "capacity_affected.unit",
+      "set": "Mt (approx. reduction in 2022 throughput guidance; operator attributes it to the strike and to rail underperformance)",
+      "reason": "Iteration-17 blind review, role(s) A: A: the 3 Mt is not attributable to the strike alone."
+    },
+    {
+      "event_id": "ca-2022-09-16-westshore-strike",
+      "field": "recovery.url",
+      "set": "https://www.newswire.ca/news-releases/westshore-terminals-tentative-agreement-with-ilwu-local-502-819777617.html",
+      "reason": "Iteration-17 blind review, role(s) A: A: recovery now points to the opened operator release (Canadian Press page 403)."
+    },
+    {
+      "event_id": "ca-2022-09-16-westshore-strike",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://biv.com/article/2022/09/strike-action-shuts-down-operations-roberts-banks-westshore-coal-terminal",
+          "publisher": "Business in Vancouver",
+          "title": "Strike action shuts down operations at Roberts Bank's Westshore coal terminal",
+          "date": "2022-09-19",
+          "language": "en",
+          "source_role": "media"
+        },
+        {
+          "url": "https://www.townandcountrytoday.com/national-business/westshore-terminals-reaches-tentative-deal-with-union-work-resumes-at-terminal-5936439",
+          "publisher": "Canadian Press",
+          "title": "Westshore Terminals reaches tentative deal with union, work resumes at terminal",
+          "date": "2022-10-10",
+          "language": "en",
+          "source_role": "media"
+        },
+        {
+          "url": "https://newswire.ca/news-releases/work-stoppage-by-ilwu-local-502-881746579.html",
+          "publisher": "Westshore Terminals (Newswire)",
+          "title": "Work stoppage by ILWU Local 502",
+          "date": "2022-09-16",
+          "language": "en",
+          "source_role": "operator"
+        },
+        {
+          "url": "https://www.newswire.ca/news-releases/westshore-terminals-tentative-agreement-with-ilwu-local-502-819777617.html",
+          "publisher": "Westshore Terminals (Newswire)",
+          "date": "2022-10-10",
+          "language": "en",
+          "source_role": "operator",
+          "opened": true
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) A: A: added the 10 Oct 2022 operator release (opened by A); corrected the existing work-stoppage release date to 2022-09-16."
+    },
+    {
+      "event_id": "ca-2024-04-16-ngtl-grande-prairie-mainline",
+      "field": "summary",
+      "set": "A segment of the NOVA Gas Transmission (NGTL) system ruptured in Alberta on 16 April 2024, followed by a brush fire; the CER triggered an emergency response.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: 'caught fire' corrected to rupture followed by a brush fire; B (facility_name reason covers the summary): town name and pipe diameter removed, so A's '36-inch Grande Prairie Mainline' is not reintroduced."
+    },
+    {
+      "event_id": "ca-2024-04-16-ngtl-grande-prairie-mainline",
+      "field": "effect",
+      "set": "The affected section was fully isolated (CER); on 22 April TC Energy said it had stood down its emergency response and moved to repair and restoration.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: removed the unverified 'no commercial impact' and TSB release volume; A's 'reduced pressure on the segment' dropped because B removed operating-pressure detail."
+    },
+    {
+      "event_id": "ca-2024-04-16-ngtl-grande-prairie-mainline",
+      "field": "facility_name",
+      "set": "NGTL pipeline system (segment)",
+      "reason": "Iteration-17 blind review, role(s) B: B: removed town name."
+    },
+    {
+      "event_id": "ca-2024-04-16-ngtl-grande-prairie-mainline",
+      "field": "threshold_basis",
+      "set": "Gas trunk pipeline segment shut down.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removed '36-inch mainline' (component spec)."
+    },
+    {
+      "event_id": "ca-2024-04-16-ngtl-grande-prairie-mainline",
+      "field": "date_end",
+      "set": "2024-04-22",
+      "reason": "Iteration-17 blind review, role(s) A: A: matches the TC Energy statement date in the opened source."
+    },
+    {
+      "event_id": "ca-2024-04-16-ngtl-grande-prairie-mainline",
+      "field": "recovery",
+      "set": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restart",
+        "date": "2024-04-22",
+        "evidence": "On 22 April 2024 TC Energy said it had stood down its emergency response and moved to the repair and restoration phase; the wider NGTL system was reported back in service.",
+        "url": "https://www.worldpipelines.com/project-news/23042024/tc-energy-says-ngtl-pipeline-system-resumes-normal-operations-after-fire"
+      },
+      "reason": "Iteration-17 blind review, role(s) A, B: A: date 22 April and opened-source wording; B: no regulator pressure order (A's closing sentence about it dropped)."
+    },
+    {
+      "event_id": "ca-2022-05-21-derecho-ontario",
+      "field": "effect",
+      "set": "About 586,000 customer outages in Ontario at the storm's height (IESO; Wikipedia attributes them to Hydro One); more than 15,000 properties in eastern Ontario were still without power on 30 May.",
+      "reason": "Iteration-17 blind review, role(s) A: A: attribution of 586,000 tightened; 30 May count from Global News."
+    },
+    {
+      "event_id": "ca-2022-05-21-derecho-ontario",
+      "field": "threshold_basis",
+      "set": "Loss of supply to >=100,000 customers (586,000 outages in Ontario per IESO briefing).",
+      "reason": "Iteration-17 blind review, role(s) A: A: Hydro One attribution is Wikipedia's, not IESO's."
+    },
+    {
+      "event_id": "ca-2022-05-21-derecho-ontario",
+      "field": "hazard_name",
+      "set": "May 2022 Canadian derecho",
+      "reason": "Iteration-17 blind review, role(s) C: C: use the cited Wikipedia article's own title instead of an analyst label."
+    },
+    {
+      "event_id": "ca-2022-05-21-derecho-quebec",
+      "field": "summary",
+      "set": "The same 21 May 2022 derecho caused widespread outages in western and southern Quebec.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removed the three named sub-province regions."
+    },
+    {
+      "event_id": "ca-2022-05-21-derecho-quebec",
+      "field": "recovery",
+      "set": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": null,
+        "evidence": "Partial only: forty percent of Hydro-Québec outages continued two days after the storm, and five percent of customers were without power for more than a week; no completion date found.",
+        "url": "https://en.wikipedia.org/wiki/May_2022_Canadian_derecho"
+      },
+      "reason": "Iteration-17 blind review, role(s) A, B: A: the 95%-by-27-May claim is not in the cited page, replaced with what it says; B's removal of '(as reported in the Wikipedia summary)' is satisfied as A's text has no process wording."
+    },
+    {
+      "event_id": "ca-2022-05-21-derecho-quebec",
+      "field": "hazard_name",
+      "set": "May 2022 Canadian derecho",
+      "reason": "Iteration-17 blind review, role(s) C: C: cited source's own name; episode ca-2022-05-derecho hazard changes in step (episode edit listed on the Ontario record)."
+    },
+    {
+      "event_id": "ca-2022-12-23-holiday-storm-quebec",
+      "field": "effect",
+      "set": "At its height the storm knocked out power for more than 350,000 Hydro-Québec customers (Canadian Press).",
+      "reason": "Iteration-17 blind review, role(s) A: A: 380,758 not verifiable (Hydro-Québec release renders empty); opened Canadian Press figure used."
+    },
+    {
+      "event_id": "ca-2022-12-23-holiday-storm-quebec",
+      "field": "capacity_affected",
+      "set": {
+        "value": 350000,
+        "unit": "customers",
+        "source_says": "at its height knocked out power for more than 350,000 hydro customers"
+      },
+      "reason": "Iteration-17 blind review, role(s) A: A: opened-source figure."
+    },
+    {
+      "event_id": "ca-2022-12-23-holiday-storm-quebec",
+      "field": "recovery.evidence",
+      "set": "As of 1 January 2023, Hydro-Québec said 11 customers who lost power in the storm still had no electricity.",
+      "reason": "Iteration-17 blind review, role(s) A: A: removed the unverified 85%/63-hour figure; article dated 1 Jan 2023."
+    },
+    {
+      "event_id": "ca-2022-12-23-holiday-storm-quebec",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://amp.cbc.ca/lite/story/1.6696318",
+          "publisher": "CBC News",
+          "title": "Power outages grip Quebec after snow, freezing rain and high winds hit province",
+          "date": "2022-12-23",
+          "language": "en",
+          "source_role": "media"
+        },
+        {
+          "url": "https://globalnews.ca/news/9381376/11-hydro-quebec-customers-who-lost-power-in-winter-storm-yet-to-be-reconnected",
+          "publisher": "Global News / Canadian Press",
+          "title": "11 Hydro-Québec customers who lost power in winter storm yet to be reconnected",
+          "date": "2023-01-01",
+          "language": "en",
+          "source_role": "media"
+        },
+        {
+          "url": "https://news.hydroquebec.com/en/press-releases/1914/update-on-the-power-outages-that-affected-quebec-during-the-2022-holiday-season/",
+          "publisher": "Hydro-Québec",
+          "title": "Update on the power outages that affected Quebec during the 2022 holiday season",
+          "date": "2023-01-19",
+          "language": "en",
+          "source_role": "official"
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) A: A: Global News article date corrected to 2023-01-01 (sources[1].date)."
+    },
+    {
+      "event_id": "ca-2023-04-05-ice-storm-quebec",
+      "field": "summary",
+      "set": "Freezing rain on 5 April 2023 brought down ice-laden trees and lines across southern Quebec.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removed city/region names."
+    },
+    {
+      "event_id": "ca-2023-04-05-ice-storm-quebec",
+      "field": "effect",
+      "set": "About 1.1 million Hydro-Québec customers were without power at the height of the crisis.",
+      "reason": "Iteration-17 blind review, role(s) A: A: 'on the morning of 6 April' not in an opened source."
+    },
+    {
+      "event_id": "ca-2023-04-05-ice-storm-quebec",
+      "field": "capacity_affected.source_says",
+      "set": "1,1 million de foyers qui étaient affectés par une panne au plus fort de la crise",
+      "reason": "Iteration-17 blind review, role(s) A: A: verbatim Noovo wording replaces the unverified English quote."
+    },
+    {
+      "event_id": "ca-2023-04-05-ice-storm-quebec",
+      "field": "recovery",
+      "set": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": null,
+        "evidence": "Partial only: 134,932 customers still without power at 9:31 p.m. on 8 April 2023; Hydro-Québec expected 100,000-150,000 to wait until Monday or a few days longer. Completion not confirmed from an opened source.",
+        "url": "https://www.noovo.info/nouvelle/verglas-2023-pres-de-300-000-clients-dhydro-quebec-toujours-prives-delectricite.html"
+      },
+      "reason": "Iteration-17 blind review, role(s) A: A: the CTV 'all power restored' page is dead (404); partial restoration from the opened Noovo page."
+    },
+    {
+      "event_id": "ca-2023-05-05-alberta-wildfire-shut-ins",
+      "field": "summary",
+      "set": "Wildfires across Alberta in early May 2023 forced oil and gas producers to shut in production and evacuate staff.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removed the compressor-station component sentence."
+    },
+    {
+      "event_id": "ca-2023-05-05-alberta-wildfire-shut-ins",
+      "field": "effect",
+      "set": "Reuters tallied at least 319,000 boe/d shut in (about 3.7% of national output); Crescent Point (45,000 boe/d) and Paramount (45,000 boe/d) were among the operators reporting shut-ins.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: Paramount corrected to 45,000 boe/d; B: 'among the largest' ranking replaced."
+    },
+    {
+      "event_id": "ca-2023-05-05-alberta-wildfire-shut-ins",
+      "field": "recovery.evidence",
+      "set": "By 10 May Crescent Point had restored ~75% of its 45,000 boe/d; some output was re-curtailed by 18 May.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removed facility-count and compressor-unit restart detail."
+    },
+    {
+      "event_id": "ca-2023-09-16-lee-nova-scotia",
+      "field": "effect",
+      "set": "More than 146,000 Nova Scotia Power customers lost electricity at the storm's peak; about 280,000 customers were affected over the storm (Nova Scotia Power, via Global News).",
+      "reason": "Iteration-17 blind review, role(s) A: A: 160,000 and 277,000 not in an opened source; The Coast and Global figures used."
+    },
+    {
+      "event_id": "ca-2023-09-16-lee-nova-scotia",
+      "field": "recovery.evidence",
+      "set": "Partial only: about 18,000 outages remained at 2 p.m. on 18 September 2023, with most expected restored by that night; no completion date found.",
+      "reason": "Iteration-17 blind review, role(s) A: A: the 7,000 figure is not in an opened source; Global News 18 Sept figure used."
+    },
+    {
+      "event_id": "ca-2024-01-12-parkland-burnaby-refinery",
+      "field": "summary",
+      "set": "Parkland's Burnaby refinery shut down unplanned on 12 January 2024 because of extreme cold; a processing-unit issue during restart on 21 January extended the outage.",
+      "reason": "Iteration-17 blind review, role(s) A: A: added the 21 January restart-incident date (opened Yahoo source)."
+    },
+    {
+      "event_id": "ca-2024-01-12-parkland-burnaby-refinery",
+      "field": "effect",
+      "set": "The refinery was out until 29 March 2024; Parkland guided approximately 20 percent composite utilisation for Q1 2024.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: 'roughly seven weeks' corrected to the 29 March return and the unverified fuel-share sentence removed; B: the same supply-share (dependency) sentence removed. A's Q1 EBITDA-loss clause dropped because its only support is the operator release refused under rule 4."
+    },
+    {
+      "event_id": "ca-2024-01-13-aeso-grid-alert",
+      "field": "threshold_clause",
+      "set": 5,
+      "reason": "Iteration-17 blind review, role(s) A: A: no rotating outages, so clause 4 not met; clause 5 (EEA 3 from 15:30 per MSA) is (published as criterion_met)."
+    },
+    {
+      "event_id": "ca-2024-01-13-aeso-grid-alert",
+      "field": "threshold_basis",
+      "set": "Grid-operator emergency declaration: AESO Grid Alert (EEA 3 from 15:30, per MSA) plus a province-wide Emergency Alert; no firm load was shed.",
+      "reason": "Iteration-17 blind review, role(s) A: A: aligned with clause 5 and the MSA wording."
+    },
+    {
+      "event_id": "ca-2024-01-13-aeso-grid-alert",
+      "field": "effect",
+      "set": "Grid emergency declared; demand fell by 100 MW almost immediately and by 200 MW within minutes, and the AESO said rotating outages were avoided. The Market Surveillance Administrator cited record demand, unanticipated generation outages and limited imports, and estimated the alert cut demand by about 350 MW over an hour.",
+      "reason": "Iteration-17 blind review, role(s) A: A: 100 MW then 200 MW; MSA causes corrected."
+    },
+    {
+      "event_id": "ca-2024-01-13-aeso-grid-alert",
+      "field": "capacity_affected.source_says",
+      "set": "The MSA estimates the Alert reduced demand by approximately 350 MW over an hour.",
+      "reason": "Iteration-17 blind review, role(s) A: A: verbatim MSA wording."
+    },
+    {
+      "event_id": "ca-2024-04-05-aeso-load-shed",
+      "field": "summary",
+      "set": "Under an EEA 3 grid emergency from 06:49 on 5 April 2024, a generation shortfall combined with about 400 MW less wind than forecast led the AESO to direct rotating outages.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: EEA 3 timing and the ~400 MW as the wind shortfall (MSA); B: the single-unit trip (395 MW at 08:48) removed as unit-level."
+    },
+    {
+      "event_id": "ca-2024-04-05-aeso-load-shed",
+      "field": "effect",
+      "set": "The AESO issued 244 MW of load-shed instructions at 08:53 and cancelled them at 09:19 (MSA); it was Alberta's first firm load shed since 2013.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: MSA figures replace the unverified 250 MW, 09:16 and 20,000-customer claims; B: city and utility removed, so the 'thousands of Edmontonians' sentence is dropped (its only source is the CTV Edmonton page B removes)."
+    },
+    {
+      "event_id": "ca-2024-04-05-aeso-load-shed",
+      "field": "capacity_affected.source_says",
+      "set": "The AESO issued 244 MW of load shed instructions at 08:53 ... Load shed was cancelled at 09:19.",
+      "reason": "Iteration-17 blind review, role(s) A: A: MSA wording; unverified 'AESO directed 250 MW' dropped."
+    },
+    {
+      "event_id": "ca-2024-04-05-aeso-load-shed",
+      "field": "recovery",
+      "set": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "service_restored",
+        "date": "2024-04-05",
+        "evidence": "Load shed was cancelled at 09:19 and the EEA 3 event ended at 11:00 on 5 April 2024 (MSA).",
+        "url": "https://www.albertamsa.ca/assets/Documents/January-and-April-2024-Event-Report.pdf"
+      },
+      "reason": "Iteration-17 blind review, role(s) A: A: S&P page 403; MSA gives 09:19."
+    },
+    {
+      "event_id": "ca-2024-04-05-aeso-load-shed",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://aeso.ca/aeso/media/media-briefing-overview-of-the-grid-alerts",
+          "publisher": "AESO",
+          "title": "Media Briefing: Overview of the Grid Alerts",
+          "date": "2024-04-05",
+          "language": "en",
+          "source_role": "official"
+        },
+        {
+          "url": "https://www.albertamsa.ca/assets/Documents/January-and-April-2024-Event-Report.pdf",
+          "publisher": "Alberta Market Surveillance Administrator",
+          "title": "January and April 2024 Event Report",
+          "date": "2024-06-01",
+          "language": "en",
+          "source_role": "official"
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) B: B: removed the CTV Edmonton citation (city in address)."
+    },
+    {
+      "event_id": "ca-2024-08-09-debby-quebec",
+      "field": "summary",
+      "set": "Record rainfall and wind from the remnants of Tropical Storm Debby hit southern Quebec on 9 August 2024.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removed the substation-flooding component detail."
+    },
+    {
+      "event_id": "ca-2024-08-09-debby-quebec",
+      "field": "recovery",
+      "set": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": null,
+        "evidence": "Partial only: about 75,000 customers still out at 1:30 p.m. on Saturday 10 August 2024; Hydro-Québec expected the vast majority restored by the end of that evening. No completion date found.",
+        "url": "https://www.theweathernetwork.com/en/news/weather/severe/southern-quebec-still-struggles-with-remnants-of-tropical-storm-debby"
+      },
+      "reason": "Iteration-17 blind review, role(s) A: A: the 18,000 figure is in the CBC page (403); replaced from the opened Weather Network page."
+    },
+    {
+      "event_id": "ca-2024-08-09-debby-quebec",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://www.ctvnews.ca/montreal/article/hundreds-of-thousands-of-customers-lose-power-in-quebec-as-heavy-rain-hammers-province/",
+          "publisher": "CTV Montreal",
+          "title": "Hundreds of thousands of customers lose power in Quebec as heavy rain hammers province",
+          "date": "2024-08-09",
+          "language": "en",
+          "source_role": "media"
+        },
+        {
+          "url": "https://montreal.ctvnews.ca/storm-debby-over-94-000-hydro-quebec-customers-still-without-power-1.6996133",
+          "publisher": "CTV Montreal",
+          "title": "Storm Debby: Over 94,000 Hydro-Quebec customers still without power",
+          "date": "2024-08-10",
+          "language": "en",
+          "source_role": "media"
+        },
+        {
+          "url": "https://amp.cbc.ca/lite/story/1.7291210",
+          "publisher": "CBC News",
+          "title": "Southern Quebec still struggles with remnants of tropical storm Debby",
+          "date": "2024-08-11",
+          "language": "en",
+          "source_role": "media"
+        },
+        {
+          "url": "https://www.theweathernetwork.com/en/news/weather/severe/southern-quebec-still-struggles-with-remnants-of-tropical-storm-debby",
+          "publisher": "The Weather Network",
+          "date": "2024-08-10",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) A: A: added The Weather Network, 10 Aug 2024 (opened by A; carries the peak figure). Passes rule 4: no sub-admin-1 place, component or ranking in URL."
+    },
+    {
+      "event_id": "ca-2024-08-09-debby-quebec",
+      "field": "hazard_name",
+      "set": "Tropical Storm Debby (2024)",
+      "reason": "Iteration-17 blind review, role(s) C: C: corpus form type + name + year; 'Remnants of' is a stage, not the name."
+    },
+    {
+      "event_id": "ca-2024-11-19-bomb-cyclone-bc",
+      "field": "summary",
+      "set": "A bomb cyclone with gusts up to 170 km/h hit coastal British Columbia on 19-20 November 2024.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: unverified 'more than half on Vancouver Island' and the grammar fixed; B: Vancouver Island removed, so A's 'concentrated on Vancouver Island' is not used."
+    },
+    {
+      "event_id": "ca-2024-11-19-bomb-cyclone-bc",
+      "field": "effect",
+      "set": "About 270,000 BC Hydro customers were without power at the storm's peak; outages at one point affected more than 300,000 properties.",
+      "reason": "Iteration-17 blind review, role(s) A: A: 320,000 total not in an opened source; Global's 'more than 300,000 properties' used."
+    },
+    {
+      "event_id": "ca-2025-03-29-ice-storm-ontario",
+      "field": "summary",
+      "set": "An ice storm on 29-31 March 2025 hit central and eastern Ontario; municipal states of emergency were declared. Hydro One called it its most severe weather event since the 1998 ice storm.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removed the two named cities."
+    },
+    {
+      "event_id": "ca-2025-05-29-alberta-wildfire-oil-sands",
+      "field": "summary",
+      "set": "Wildfires in northern Alberta in late May 2025 forced Cenovus to shut in Christina Lake and CNRL to shut in Jackfish 1.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: 'Phase 2B' removed; B: 'south of Fort McMurray' and the MEG power-line restart delay removed, so A's MEG clause is not used."
+    },
+    {
+      "event_id": "ca-2025-05-29-alberta-wildfire-oil-sands",
+      "field": "effect",
+      "set": "Cenovus shut in about 238,000 bbl/d at Christina Lake from 29 May; CNRL shut in about 36,500 bbl/d at Jackfish 1. Bloomberg reported almost 350,000 bbl/d of heavy crude production shut (~7% of Canadian output).",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: Reuters 344,000 (CBC 403) replaced by Bloomberg's 'almost 350,000'; B: MEG phase-level item removed."
+    },
+    {
+      "event_id": "ca-2025-05-29-alberta-wildfire-oil-sands",
+      "field": "capacity_affected",
+      "set": {
+        "value": 274500,
+        "unit": "bbl/d",
+        "source_says": "Cenovus ~238,000 bbl/d off-line at Christina Lake; CNRL 36,500 bbl/d shut in at Jackfish 1"
+      },
+      "reason": "Iteration-17 blind review, role(s) A: A: operator volumes from an opened page; the 344,000 aggregate is unverifiable."
+    },
+    {
+      "event_id": "ca-2025-05-29-alberta-wildfire-oil-sands",
+      "field": "recovery",
+      "set": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restart",
+        "date": "2025-06-03",
+        "evidence": "UNVERIFIED: cited CBC page (1.7559552) returns 403; on 3 June Bloomberg reported only that Cenovus expected to resume 'near term'.",
+        "url": "https://www.cbc.ca/lite/story/1.7559552"
+      },
+      "reason": "Iteration-17 blind review, role(s) A, B: A: recovery marked unverified; B's removal of ramp-rate and MEG power-restoration detail is satisfied as A's text has neither (B's 'resumed on 3 June' not used, since A says that is unverified)."
+    },
+    {
+      "event_id": "ca-2026-01-24-bay-despoir-frazil-ice",
+      "field": "summary",
+      "set": "Ice conditions halted generation at the Bay d'Espoir hydroelectric station during a January 2026 cold snap; NL Hydro moved the island grid from Power Watch to Power Warning.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removed the intake-blockage mechanism (plant failure mode)."
+    },
+    {
+      "event_id": "ca-2026-01-24-bay-despoir-frazil-ice",
+      "field": "effect",
+      "set": "604 MW of generation was unavailable; NL Hydro avoided a Power Emergency and rolling outages.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removed the interconnection import (dependency)."
+    },
+    {
+      "event_id": "ca-2026-01-24-bay-despoir-frazil-ice",
+      "field": "recovery.kind",
+      "set": "service_restored",
+      "reason": "Iteration-17 blind review, role(s) A: A: no unit count or output given, so full_restart overstates it."
+    },
+    {
+      "event_id": "ca-2026-01-24-bay-despoir-frazil-ice",
+      "field": "recovery.evidence",
+      "set": "NL Hydro lifted the Power Warning on the evening of 25 January after getting Bay d'Espoir running again, and lifted the Power Watch on the morning of 26 January; rotating outages were not needed.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: 'six of seven units back' unsupported, removed; B: unit count removed - A's text satisfies both."
+    },
+    {
+      "event_id": "cn-2023-07-28-typhoon-doksuri-quanzhou-outage",
+      "field": "summary",
+      "set": "Typhoon Doksuri (杜苏芮) swept into southeastern Fujian on 28 July 2023; video showed power lines sparking and bursting into flames, and residents reported power cuts.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: landfall point and 'morning' removed, opened-source description used; B: city/county names and the fallback-flag sentence removed."
+    },
+    {
+      "event_id": "cn-2023-07-28-typhoon-doksuri-quanzhou-outage",
+      "field": "effect",
+      "set": "'more than 500,000 homes lost power', per the government's official WeChat account (Reuters via Asharq Al-Awsat, 28 July). The article does not state the figure's geographic scope explicitly.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: unread 500,658 excerpt removed, scope stated as not explicit; B: city name and search-excerpt note removed. B's 'in one Fujian coastal city' not used because A says the source does not state the scope."
+    },
+    {
+      "event_id": "cn-2024-09-06-typhoon-yagi-guangdong-outage",
+      "field": "summary",
+      "set": "Super Typhoon Yagi made landfall in Hainan and Guangdong.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: unsupported 'second landfall in Xuwen County after crossing Hainan' removed; B: county, 'hardest-hit' place names and the fallback-flag sentence removed."
+    },
+    {
+      "event_id": "cn-2024-09-06-typhoon-yagi-guangdong-outage",
+      "field": "effect",
+      "set": "Xinhua (12 Sept), citing the Guangdong power grid company: as of 8 p.m. on 12 Sept 'power had been restored to more than 1 million households affected by Yagi' in Guangdong.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: unread Yangcheng Evening News figures removed, attribution tightened; B: 'which implies' inference removed (A's closing 'so more than 1 million lost supply' inference dropped for the same reason)."
+    },
+    {
+      "event_id": "cn-2025-11-13-sinochem-quanzhou-crude-unit-fire",
+      "field": "facility_name",
+      "set": "Sinochem refinery",
+      "reason": "Iteration-17 blind review, role(s) B: B: unit designation removed. B made keeping 'Quanzhou' conditional on the owner; under rules 5 and 9 it is not written (see owner question)."
+    },
+    {
+      "event_id": "cn-2025-11-13-sinochem-quanzhou-crude-unit-fire",
+      "field": "summary",
+      "set": "A fire at a Sinochem refinery in Fujian injured seven, per state media.",
+      "reason": "Iteration-17 blind review, role(s) B: B: unit number and date-inference sentence removed; 'Quanzhou' withheld as in facility_name."
+    },
+    {
+      "event_id": "cn-2025-11-13-sinochem-quanzhou-crude-unit-fire",
+      "field": "effect",
+      "set": "Seven trade sources: Sinochem shut a crude unit of about 240,000 bpd (refinery about 300,000 bpd) after the fire.",
+      "reason": "Iteration-17 blind review, role(s) B: B: unit number removed; unit scale kept as the threshold basis."
+    },
+    {
+      "event_id": "cn-2025-11-13-sinochem-quanzhou-crude-unit-fire",
+      "field": "capacity_affected.source_says",
+      "set": "About 240,000 bpd crude unit capacity; refinery about 300,000 bpd.",
+      "reason": "Iteration-17 blind review, role(s) B: B: research-fragment text replaced."
+    },
+    {
+      "event_id": "cn-2022-09-10-yunnan-aluminium-power-cuts",
+      "field": "summary",
+      "set": "A drought and lower-than-average rainfall cut Yunnan's hydropower generation. Electrolytic aluminium smelters were ordered to cut power use from 10 Sept 2022, and the cut was deepened from 15 Sept.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: unsupported 75-80% hydropower share removed, 15 Sept date per source; B: dependency framing ('hydropower-reliant' and the share) and the internal flag removed."
+    },
+    {
+      "event_id": "cn-2022-09-10-yunnan-aluminium-power-cuts",
+      "field": "effect",
+      "set": "Caixin (10 Sept): smelters ordered to gradually reduce electricity use by 10% over five days starting Saturday (10 Sept). Caixin (15 Sept): the provincial government instructed firms to cut power use by 15-30% from Thursday (15 Sept), which industry insiders said would slash 800,000 t to 1.6 Mt of aluminium production capacity.",
+      "reason": "Iteration-17 blind review, role(s) A: A: Reuters 1.1 Mt claim removed (not in this record's sources)."
+    },
+    {
+      "event_id": "cn-2022-09-10-yunnan-aluminium-power-cuts",
+      "field": "operator",
+      "set": null,
+      "reason": "Iteration-17 blind review, role(s) A, B: A: attribution rests on AlCircle, not a source of this record, so null; that also removes the prefecture bureau and 'per AlCircle' wording B targeted. B's 'Yunnan Power Grid' not kept because A found no cited source naming it."
+    },
+    {
+      "event_id": "cn-2023-01-15-panjin-haoye-refinery-explosion",
+      "field": "summary",
+      "set": "On 15 Jan 2023 an explosion and fire hit an independent refinery in Liaoning during maintenance work. Initial reports (16 Jan) gave 2 dead, 12 missing and 34 injured. Cause: technical (not sabotage or a natural hazard).",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: unsourced final toll and investigation classification replaced by the opened sources' figures; B: unit-level location (alkylation unit) removed."
+    },
+    {
+      "event_id": "cn-2023-01-15-panjin-haoye-refinery-explosion",
+      "field": "effect",
+      "set": "Reuters (16 Jan, citing trade sources and consultancy JLC): Panjin Haoye 'has shut down its entire oil refinery and petrochemical complex'. It ran at about 110,000 bpd in December 2022.",
+      "reason": "Iteration-17 blind review, role(s) B: B: repair-timeline speculation ('may be closed for months') removed."
+    },
+    {
+      "event_id": "cn-2023-01-15-panjin-haoye-refinery-explosion",
+      "field": "threshold_basis",
+      "set": "Whole refinery shut after an explosion, with crude refining capacity and throughput reported (crude refinery of 130,000 bpd, clause 1).",
+      "reason": "Iteration-17 blind review, role(s) A, B: A and B: the researcher's question to the lead removed; A's wording keeps the verified 130,000 bpd capacity."
+    },
+    {
+      "event_id": "cn-2025-07-20-typhoon-wipha-guangdong-outage",
+      "field": "summary",
+      "set": "Typhoon Wipha (韦帕) made landfall on the Guangdong coast on 20 July 2025, causing outages across six major Guangdong cities.",
+      "reason": "Iteration-17 blind review, role(s) B: B: landfall city and the fallback-flag sentence removed."
+    },
+    {
+      "event_id": "cn-2025-07-20-typhoon-wipha-guangdong-outage",
+      "field": "recovery.evidence",
+      "set": "截至22日17时，两省电网经全力抢修，已全面恢复供电 (Guangdong and Fujian grids fully restored by 17:00 on 22 July).",
+      "reason": "Iteration-17 blind review, role(s) B: B: city-level last-restored sentence removed."
+    },
+    {
+      "event_id": "cn-2022-06-18-shanghai-petchem-fire",
+      "field": "facility_name",
+      "set": "Sinopec Shanghai Petrochemical",
+      "reason": "Iteration-17 blind review, role(s) B: B: district (Jinshan) removed."
+    },
+    {
+      "event_id": "cn-2022-06-18-shanghai-petchem-fire",
+      "field": "summary",
+      "set": "A fire broke out around 04:00 on 18 June 2022 at the chemicals division; one person died and one was lightly injured. The company then shut its crude refining and ethylene units.",
+      "reason": "Iteration-17 blind review, role(s) B: B: unit-area and pipeline-spread component detail removed."
+    },
+    {
+      "event_id": "cn-2022-06-18-shanghai-petchem-fire",
+      "field": "capacity_affected.source_says",
+      "set": "16 million tonnes/year crude refining (site capacity).",
+      "reason": "Iteration-17 blind review, role(s) B: B: researcher's critique of Reuters removed."
+    },
+    {
+      "event_id": "cn-2022-06-18-shanghai-petchem-fire",
+      "field": "recovery.evidence",
+      "set": "Sinopec 'has partially restarted operations' at the 320,000-bpd Shanghai refinery (QCintel headline and lead). Full restart date not found.",
+      "reason": "Iteration-17 blind review, role(s) B: B: paywall/process notes removed."
+    },
+    {
+      "event_id": "cn-2023-02-20-yunnan-aluminium-power-cuts-deepened",
+      "field": "effect",
+      "set": "Reuters (20 Feb 2023, citing Shanghai Securities News): producers told to bring power use to about 40-42% from the September level. Mysteel estimated the expanded rationing (about 1 GW) would cut about 740,000 t/yr of capacity. AlCircle (Jun 2023, citing an industry researcher): cumulative cuts reduced capacity by 1.65 Mt.",
+      "reason": "Iteration-17 blind review, role(s) B: B: the 'ambiguous to/by' working note removed. The source's 'from the September level' is kept (B's 'of' would resolve an ambiguity A says the source leaves open) and the A-verified AlCircle sentence, which B's stated correction did not target, is kept."
+    },
+    {
+      "event_id": "cn-2023-02-22-alxa-xinjing-open-pit-collapse",
+      "field": "facility_name",
+      "set": "Inner Mongolia Alxa Xinjing Coal Industry Co open-pit coal mine",
+      "reason": "Iteration-17 blind review, role(s) B: B: league location '(Alxa League)' removed; registered company name retained by B."
+    },
+    {
+      "event_id": "cn-2023-02-22-alxa-xinjing-open-pit-collapse",
+      "field": "summary",
+      "set": "A catastrophic slope collapse at an open-pit coal mine in Inner Mongolia killed 53 and injured 6. The State Council-approved investigation classed it as a particularly serious production-safety liability accident and recommended a special nationwide campaign to find and fix major mine-safety hazards.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: unsupported 'triggered inspections ... nationwide rectification orders' replaced by the investigation's recommendation; B: league name removed."
+    },
+    {
+      "event_id": "cn-2023-02-22-alxa-xinjing-open-pit-collapse",
+      "field": "effect",
+      "set": "Cailian Press (23 Feb): all local coal mines halted production for hazard checks. Reuters via Kitco (9 May, citing a 24 Apr document it could not independently verify, and Mysteel): 32 open-pit mines in Inner Mongolia with 26.55 Mt of capacity halted, and 23.55 Mt of planned expansions paused.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: unsupported 'Reuters: Inner Mongolia ordered inspections at all open-pit mines' removed; B: banner name and the remark on the Bloomberg figure removed. The Bloomberg headline goes too (as in B's text): without A's caveat its 50 Mt figure would read as operating capacity."
+    },
+    {
+      "event_id": "cn-2024-09-06-typhoon-yagi-hainan-outage",
+      "field": "summary",
+      "set": "Super Typhoon Yagi (摩羯) made landfall in Hainan at 16:20 on 6 Sept 2024. About a third of the province's electricity customers lost power.",
+      "reason": "Iteration-17 blind review, role(s) B: B: county landfall and the internal flag sentence removed."
+    },
+    {
+      "event_id": "cn-2026-05-22-liushenyu-coal-mine-explosion",
+      "field": "summary",
+      "set": "A gas explosion at 19:29 on 22 May 2026 at the Liushenyu coal mine in Shanxi killed 82 and left 2 missing. The operator's four mines were ordered to halt, and widespread safety inspections across Shanxi suspended mining capacity.",
+      "reason": "Iteration-17 blind review, role(s) A: A: unsupported '17 years' framing removed; 'blanket inspections' softened to the opened sources' wording."
+    },
+    {
+      "event_id": "cn-2026-05-22-liushenyu-coal-mine-explosion",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://www.news.cn/20260524/461e769dac1a4d5d909e843ae1d9dcd9/c.html",
+          "publisher": "新华网 (Xinhua)",
+          "title": "山西通洲集团留神峪煤矿瓦斯爆炸事故造成82人死亡2人失联",
+          "date": "2026-05-24",
+          "language": "zh",
+          "source_role": "media"
+        },
+        {
+          "url": "https://en.sxcoal.com/news/detail/2079732858476507137",
+          "publisher": "Sxcoal",
+          "title": "Shanxi raw coal output decrease in Jun far more severe than 2024",
+          "date": "2026-07-22",
+          "language": "en",
+          "source_role": "industry"
+        },
+        {
+          "url": "https://www.miningweekly.com/article/chinas-june-coal-output-falls-97-year-on-year-after-mine-accident-2026-07-17",
+          "publisher": "Mining Weekly (Reuters)",
+          "title": "China's June coal output falls 9.7% year-on-year after mine accident",
+          "date": "2026-07-17",
+          "language": "en",
+          "source_role": "media"
+        },
+        {
+          "url": "https://www.news.cn/local/20261021/9809659061f64a40ba325dd7c4cbd6b8/c.html",
+          "publisher": "新华网 (Xinhua)",
+          "title": "山西加快煤矿复产增产保供 9月原煤产量近8千万吨",
+          "date": "2026-10-21",
+          "language": "zh",
+          "source_role": "media"
+        },
+        {
+          "url": "https://tradingeconomics.com/china/coal-production-yoy/news/567053",
+          "publisher": "Trading Economics",
+          "date": "2026-07-15",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) A: A: Trading Economics added (opened by A; URL passes rule 4) as an opened alternative to Mining Weekly (HTTP 403), which A did not ask to remove."
+    },
+    {
+      "event_id": "cn-2026-05-22-liushenyu-coal-mine-explosion",
+      "field": "recovery.evidence",
+      "set": "Xinhua (21 Oct 2026): Shanxi September raw coal output was 78.826 Mt, a four-month high; more than 200 mines had completed rectification and resumed production. In mid-September NDRC, NEA and the National Mine Safety Administration issued a notice urging coal provinces and companies to advance resumption and reach design output safely. Return to pre-accident y/y output levels was not reported. The date is month-end of September, the month the output figure covers.",
+      "reason": "Iteration-17 blind review, role(s) A: A: tighter match to the source wording (推进复产达产)."
+    },
+    {
+      "event_id": "in-2024-06-11-mandola-substation-fire-delhi-outage",
+      "field": "admin1_codes_affected",
+      "set": [
+        "IN-DL"
+      ],
+      "reason": "Iteration-17 blind review, role(s) A: A: both opened sources put the whole supply effect in Delhi; the field was empty."
+    },
+    {
+      "event_id": "in-2024-06-11-mandola-substation-fire-delhi-outage",
+      "field": "summary",
+      "set": "A fire at a Power Grid Corporation of India substation in Uttar Pradesh on the afternoon of 11 Jun 2024 caused outages in Delhi during a heatwave. The asset is in Uttar Pradesh; the supply effect fell in Delhi (IN-DL).",
+      "reason": "Iteration-17 blind review, role(s) B: B: drops the Delhi sub-areas and the named-substation framing; A had no summary change."
+    },
+    {
+      "event_id": "in-2022-02-21-chandigarh-power-strike-blackout",
+      "field": "summary",
+      "set": "A 72-hour strike by electricity department staff against privatisation, beginning the night of 21 Feb 2022, was followed by a blackout across large parts of the union territory lasting 36-40 hours. The administration told the High Court the outage resulted from sabotage by striking employees, which the employees disputed; the army was called in to help restore supply.",
+      "reason": "Iteration-17 blind review, role(s) B: B: frames sabotage as the administration's allegation and records it as disputed."
+    },
+    {
+      "event_id": "in-2022-02-21-chandigarh-power-strike-blackout",
+      "field": "effect",
+      "set": "Blackout across roughly half of Chandigarh (The Wire) lasting 36-40 hours; hospitals rescheduled or postponed planned surgeries and many areas lost water supply.",
+      "reason": "Iteration-17 blind review, role(s) A: A: replaces the unsourced '~40% for 24+ hours' official estimate with The Wire's 'half' and the 36-40 hour duration."
+    },
+    {
+      "event_id": "in-2022-02-21-chandigarh-power-strike-blackout",
+      "field": "threshold_basis",
+      "set": "Clause 5: loss of supply across about half of a UT of ~1.1 million people for 36-40 hours (extent-based; no customer count published).",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: extent 'about half' replaces the unsourced 40% official estimate and the basis is stated as extent; B: drops the 'asset class flagged' internal note."
+    },
+    {
+      "event_id": "in-2022-02-21-chandigarh-power-strike-blackout",
+      "field": "recovery.evidence",
+      "set": "Power restored in most parts of the city after 36+ hours (UT Adviser, 23 Feb 2022); employees rejoined work the evening of 23 Feb (some sectors still out that afternoon).",
+      "reason": "Iteration-17 blind review, role(s) A: A: Scroll says employees rejoined work, not that the strike was 'withdrawn'; attributes restoration to the UT Adviser."
+    },
+    {
+      "event_id": "in-2023-03-16-uttar-pradesh-power-strike",
+      "field": "facility_name",
+      "set": "Uttar Pradesh state thermal generation",
+      "reason": "Iteration-17 blind review, role(s) B: B: three named stations with per-station MW is a plant inventory."
+    },
+    {
+      "event_id": "in-2023-03-16-uttar-pradesh-power-strike",
+      "field": "summary",
+      "set": "A 72-hour strike by Uttar Pradesh power-sector employees from about 22:00 on 16 Mar 2023 shut thermal generation and disrupted distribution; official sources said rural outages were about double the urban figure. The strike was called off on 19 Mar 2023 after talks with the state energy minister.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: 'about 22:00' and the sourced rural statement replace the unsourced 'most rural areas without power for two days'; B: station names removed."
+    },
+    {
+      "event_id": "in-2023-03-16-uttar-pradesh-power-strike",
+      "field": "effect",
+      "set": "IANS: ~2,392 MW of generation unavailable by the evening of 18 Mar (~17% of 13,856 MW demand); urban and semi-urban feeders shut affected ~13 lakh households, rural outages said to be about double. The power minister said there was no shortage.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: drops the unsourced union 1,850 MW claim; B: drops per-station MW and the feeder count."
+    },
+    {
+      "event_id": "in-2023-03-16-uttar-pradesh-power-strike",
+      "field": "capacity_affected.source_says",
+      "set": "2,392 MW power generation, which is 17 per cent of the total 13,856 MW demand, was not available (IANS).",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: drops the unverified union 1,850 MW figure; B: drops the per-plant sum."
+    },
+    {
+      "event_id": "in-2023-06-12-biparjoy-gujarat-port-suspensions",
+      "field": "summary",
+      "set": "Ahead of Cyclone Biparjoy's landfall in Gujarat (15-16 Jun 2023), Gujarat ports suspended operations, including oil product exports and vessel operations at several ports. A refinery operator said its refinery was not shut but directed vessels not to enter the port limits.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the port-to-refinery dependency wording and the coal-terminal component; A accepted unchanged."
+    },
+    {
+      "event_id": "in-2023-06-15-biparjoy-gujarat-power-outage",
+      "field": "date_end",
+      "set": null,
+      "reason": "Iteration-17 blind review, role(s) A: A: 30 Jun 2023 was a forecast completion date, not an observed end; the end is unknown."
+    },
+    {
+      "event_id": "in-2023-06-15-biparjoy-gujarat-power-outage",
+      "field": "summary",
+      "set": "Cyclone Biparjoy's landfall in Gujarat on 15-16 Jun 2023 damaged distribution infrastructure and cut power across eight districts. Gujarat power companies estimated damage at Rs 1,013 crore.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the pole count."
+    },
+    {
+      "event_id": "in-2023-06-15-biparjoy-gujarat-power-outage",
+      "field": "effect",
+      "set": "Initially ~4,600 villages without power (Telangana Today); restoration later reported across 3,495 towns and 4,917 villages in eight districts, with 28 villages still pending on 22 Jun.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: attributes the 4,600 figure to Telangana Today; B: removes the pole count."
+    },
+    {
+      "event_id": "in-2023-06-15-biparjoy-gujarat-power-outage",
+      "field": "recovery.evidence",
+      "set": "By 22 Jun 2023 power restored in 3,495 towns and 4,917 villages; 28 villages pending due to waterlogging. Service restoration only.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the forward completion estimate (consistent with A's date_end fix)."
+    },
+    {
+      "event_id": "in-2023-10-04-sikkim-glof-teesta-v",
+      "field": "summary",
+      "set": "The same 3-4 Oct 2023 flood severely impacted NHPC's 510 MW Teesta-V station and knocked it offline. The station returned to service in July 2026.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: 'severely impacted' replaces the unsourced 'overtopped the dam'; B: drops the landslide setback and damage figure."
+    },
+    {
+      "event_id": "in-2023-10-04-sikkim-glof-teesta-v",
+      "field": "capacity_affected.source_says",
+      "set": "510 MW installed.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the unit configuration."
+    },
+    {
+      "event_id": "in-2023-10-04-sikkim-glof-teesta-v",
+      "field": "recovery.evidence",
+      "set": "NHPC stock-exchange filing: the station returned to its full 510 MW in July 2026.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes unit-by-unit restart dates."
+    },
+    {
+      "event_id": "in-2023-12-04-cyclone-michaung-chennai-outage",
+      "field": "date_end",
+      "set": null,
+      "reason": "Iteration-17 blind review, role(s) A: A: no opened source gives 8 Dec; last observed state is 5 Dec with feeders still being restored."
+    },
+    {
+      "event_id": "in-2023-12-04-cyclone-michaung-chennai-outage",
+      "field": "summary",
+      "set": "Cyclone Michaung's rains flooded the Tamil Nadu coast on 3-4 Dec 2023; supply was switched off in flooded areas as a safety measure and parts of the affected area stayed dark for days. TANGEDCO said demand in the affected area fell to 112 MW on 4 Dec.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the city name and the flooded-network-assets inference."
+    },
+    {
+      "event_id": "in-2023-12-04-cyclone-michaung-chennai-outage",
+      "field": "effect",
+      "set": "Most of the affected area's 11 kV feeders were switched off (minister, 4 Dec, 'tripped for safety reasons'); demand fell to an all-time low of 112 MW on 4 Dec and recovered to 1,100-1,500 MW on 5 Dec; some substations were still flooded on 5 Dec.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: drops the unsourced 'until 8 Dec', adds the minister's wording and the sourced flooded-substation fact; B: no feeder counts or city. A's named substations are not written (rule 9)."
+    },
+    {
+      "event_id": "in-2023-12-04-cyclone-michaung-chennai-outage",
+      "field": "recovery.evidence",
+      "set": "TANGEDCO reported most feeders restored by 5 Dec 2023, with work still under way on the rest; the state government said 80% of power supply was restored (5 Dec).",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: 80% attributed to the state government, not the Chief Secretary, and the unsourced 8 Dec restoration dropped; B: no feeder counts."
+    },
+    {
+      "event_id": "in-2024-10-23-cyclone-dana-odisha-port-suspensions",
+      "field": "summary",
+      "set": "Ahead of Cyclone Dana's landfall in Odisha on 24-25 Oct 2024, great danger signal 10 was hoisted at Dhamra and Paradip and port operations at both were suspended: vessels were moved to safe waters, Paradip cargo operations halted and Dhamra truck and rake movements stopped. Paradip handles crude/POL and coal; Dhamra mainly handles coal.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: force-majeure claim dropped (only on 403 GAC pages), suspension details from opened sources; B: landfall locality and 'major' characterisation dropped (and the internal asset-class note)."
+    },
+    {
+      "event_id": "in-2024-10-23-cyclone-dana-odisha-port-suspensions",
+      "field": "recovery.evidence",
+      "set": "Odisha and West Bengal ports resumed operations on 26 Oct 2024 after two days of partial or full suspension; Dhamra lifted its suspension that day; Reuters reported no cyclone-related damage at ports in either state.",
+      "reason": "Iteration-17 blind review, role(s) A: A: force-majeure revocation and Dhamra waterlogging dropped (only on the 403 GAC page)."
+    },
+    {
+      "event_id": "in-2024-10-23-cyclone-dana-odisha-port-suspensions",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://www.gac.com/hot-port-news/severe-cyclonic-storm-due-to-cross-coast",
+          "publisher": "GAC Hot Port News",
+          "title": "Severe cyclonic storm due to cross coast",
+          "date": "2024-10-23",
+          "language": "en",
+          "source_role": "industry"
+        },
+        {
+          "url": "https://engine.online/news/operations-resume-at-most-indian-ports-638b",
+          "publisher": "ENGINE (Reuters)",
+          "title": "Operations resume at most Indian ports",
+          "date": "2024-10-28",
+          "language": "en",
+          "source_role": "industry"
+        },
+        {
+          "url": "https://gac.com/hot-port-news/force-majeure-revoked",
+          "publisher": "GAC Hot Port News",
+          "title": "Force majeure revoked",
+          "date": "2024-10-26",
+          "language": "en",
+          "source_role": "industry"
+        },
+        {
+          "url": "https://engine.online/news/several-indian-ports-brace-for-cyclone-dana-impact-636d",
+          "publisher": "ENGINE",
+          "date": "2024-10-24",
+          "language": "en",
+          "source_role": "industry",
+          "opened": true
+        },
+        {
+          "url": "https://www.orissapost.com/cyclone-dana-great-danger-signal-number-10-issued-at-3-ports-in-odisha/amp/",
+          "publisher": "Orissa Post",
+          "date": null,
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) A: A: adds ENGINE (24 Oct 2024) and Orissa Post, both opened by A; both pass rule 4. Orissa Post date left null because A gave it only as '~2024-10-23'. GAC sources kept (A asked to add, not remove)."
+    },
+    {
+      "event_id": "in-2026-04-20-hrrl-barmer-refinery-cdu-fire",
+      "field": "summary",
+      "set": "A fire on 20 Apr 2026 at the HPCL Rajasthan refinery, then in commissioning, led HPCL to isolate units of the crude section; the Prime Minister's inauguration the next day was postponed. HPCL attributed the fire to a suspected hydrocarbon leak; no injuries.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the unit inventory (CDU, VDU, all units in the section)."
+    },
+    {
+      "event_id": "in-2026-04-20-hrrl-barmer-refinery-cdu-fire",
+      "field": "effect",
+      "set": "Crude processing at the refinery halted and commissioning/ramp-up disrupted for ~2 months; about 1.8 million barrels of crude were redirected to HPCL's Mumbai and Visakhapatnam refineries. Kpler: plant not yet contributing to the national product pool, so market supply impact limited.",
+      "reason": "Iteration-17 blind review, role(s) A: A: drops the unopened HPCL 'not material' statement; adds ThePrint's crude diversion (the throughput effect)."
+    },
+    {
+      "event_id": "in-2026-04-20-hrrl-barmer-refinery-cdu-fire",
+      "field": "threshold_basis",
+      "set": "Clause 1: refinery crude processing halted for about two months, with crude redirected to other refineries. The plant was in commissioning (commercial operation had been indicated for 1 July), so the effect is a commissioning delay, not lost market supply.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: crude diversion added and 'COD scheduled 1 Jul 2026' replaced by ThePrint's undated 'indicated for 1 July'; B: 'flagged' working removed."
+    },
+    {
+      "event_id": "in-2026-04-20-hrrl-barmer-refinery-cdu-fire",
+      "field": "capacity_affected.source_says",
+      "set": "9 million metric tonnes per annum (ThePrint)",
+      "reason": "Iteration-17 blind review, role(s) A: A: no opened source gives 'about 180,000 bpd'."
+    },
+    {
+      "event_id": "in-2026-04-20-hrrl-barmer-refinery-cdu-fire",
+      "field": "recovery.evidence",
+      "set": "HPCL announced in a stock-exchange filing on 18 Jun 2026 that the crude unit had restarted (announcement date).",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the product-slate (operating-status) listing."
+    },
+    {
+      "event_id": "in-2026-05-13-khavda-re-complex-grid-disturbance",
+      "field": "summary",
+      "set": "A grid disturbance at about 14:09 on 13 May 2026 tripped about 15.9 GW of capacity at the Khavda renewable energy complex in Gujarat. The exact cause was not reported.",
+      "reason": "Iteration-17 blind review, role(s) A: A: opened time, tripped capacity and 'cause not reported' replace the unopened 14:02-14:09 window, 'complete outage', WRPC measures and 'under examination'. Not written: A's 'three pooling stations' (component inventory), '~17 EHV lines tripping in ~16 s' and the 'largest generation-loss event' characterisation. Both were removed as scope-boundary edits in iteration 14 (rule 4)."
+    },
+    {
+      "event_id": "in-2026-05-13-khavda-re-complex-grid-disturbance",
+      "field": "threshold_clause",
+      "set": 4,
+      "reason": "Iteration-17 blind review, role(s) A: A: follows from dropping clause 5 (no customer count or emergency declaration in an opened source)."
+    },
+    {
+      "event_id": "in-2026-05-13-khavda-re-complex-grid-disturbance",
+      "field": "threshold_basis",
+      "set": "Clause 4: about 8,963 MW of generation forced offline in one event (Grid-India-reported). No customer load-loss figure or grid-operator emergency declaration was found, so clause 5 is not claimed.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: clause 5 dropped with its reason; B: 'flagged' asset-class working removed. B's value kept clause 5 only because it edited the published text for wording, not the clause."
+    },
+    {
+      "event_id": "in-2026-05-13-khavda-re-complex-grid-disturbance",
+      "field": "capacity_affected.source_says",
+      "set": "total generation loss of 8,963 MW (Renewable Watch, citing Grid-India)",
+      "reason": "Iteration-17 blind review, role(s) A: A: points to the source that could be opened."
+    },
+    {
+      "event_id": "in-2026-05-13-khavda-re-complex-grid-disturbance",
+      "field": "recovery.evidence",
+      "set": "No restoration timeline found; sources cover the trip and regulatory follow-up only.",
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the research-process remark."
+    },
+    {
+      "event_id": "sa-2026-03-02-ras-tanura-refinery-shutdown",
+      "field": "capacity_affected.source_says",
+      "set": "Bloomberg/World Oil: the 550,000 b/d refinery was shut.",
+      "reason": "Iteration-17 blind review, role(s) B: B: dropped the analyst working ('full shutdown, so nameplate = affected throughput'); value and unit unchanged."
+    },
+    {
+      "event_id": "sa-2026-03-19-yanbu-loadings-halt",
+      "field": "summary",
+      "set": "Oil loadings at Yanbu port were halted during a reported attack; the sources do not report the port itself being struck.",
+      "reason": "Iteration-17 blind review, role(s) A: A: 'oil' not 'crude' (source wording); states the halt in sequence with the reported interception rather than implying a strike on the port. Replaces the text left after the iteration-16 replace edits. Lead edit at import: the reconciled text named the weapon and its interception, which the scope scan forbids (defence and attack-method detail); the role-A point, a halt rather than a strike on the port, is kept."
+    },
+    {
+      "event_id": "sa-2026-03-19-yanbu-loadings-halt",
+      "field": "effect",
+      "set": "Oil loadings stopped (Reuters, two sources).",
+      "reason": "Iteration-17 blind review, role(s) A: A: 'oil loadings' is the source wording; 'crude' is not in the opened source."
+    },
+    {
+      "event_id": "sa-2026-04-khurais-production-cut",
+      "field": "effect",
+      "set": "Production reduced by about 300,000 b/d (ministry: \"أدى إلى انخفاض إنتاجه بمقدار 300 ألف برميل يوميًا من طاقته الإنتاجية\").",
+      "reason": "Iteration-17 blind review, role(s) A: A: quote replaced with the 9 Apr event-time SPA wording; the old quote came from the 12 Apr follow-up status statement."
+    },
+    {
+      "event_id": "sa-2026-04-khurais-production-cut",
+      "field": "capacity_affected.source_says",
+      "set": "Energy ministry source via SPA, 9 Apr 2026: an earlier attack on Khurais reduced its output by 300,000 b/d of its production capacity.",
+      "reason": "Iteration-17 blind review, role(s) A: A: matches the 9 Apr source wording; value and unit unchanged."
+    },
+    {
+      "event_id": "sa-2026-04-khurais-production-cut",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://www.aleqt.com/الطاقة/توقف-العمليات-التشغيلية-في-عدد-من-منشآت-الطاقة-السعودية-8573",
+          "publisher": "Al-Eqtisadiah (republishing SPA)",
+          "title": "توقف العمليات التشغيلية في عدد من منشآت الطاقة السعودية",
+          "date": "2026-04-09",
+          "language": "ar",
+          "source_role": "official"
+        },
+        {
+          "url": "https://www.thenationalnews.com/business/energy/2026/04/09/saudi-output-capacity-cut-by-600000-barrels-a-day-due-to-iran-war",
+          "publisher": "The National",
+          "title": "Saudi output capacity cut by 600,000 barrels a day due to Iran war",
+          "date": "2026-04-09",
+          "language": "en",
+          "source_role": "media"
+        },
+        {
+          "url": "https://www.al-monitor.com/originals/2026/04/attacks-cut-saudi-oil-output-and-east-west-pipeline-flow-state-news-agency-says",
+          "publisher": "Al-Monitor (Reuters)",
+          "title": "Attacks cut Saudi oil output and East-West pipeline flow, state news agency says",
+          "date": "2026-04-09",
+          "language": "en",
+          "source_role": "media"
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) A, B: A and B agree: remove the 12 Apr Okaz citation (A: its content is facility status; B: opaque address, cannot be read for status). Whole object removed; the three 9 Apr citations remain."
+    },
+    {
+      "event_id": "sa-2026-04-08-satorp-jubail-shutdown",
+      "field": "summary",
+      "set": "TotalEnergies said incidents on the night of 7-8 April caused damage at the SATORP refinery and the refinery was shut as a precaution while the damage was assessed.",
+      "reason": "Iteration-17 blind review, role(s) A: A: operator wording ('as a precaution while the damage was assessed'); drops 'safety' and the plural 'units damaged' component detail."
+    },
+    {
+      "event_id": "sa-2026-04-08-satorp-jubail-shutdown",
+      "field": "threshold_basis",
+      "set": "Clause 1: operator-confirmed refinery shutdown after attacks.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A and B both remove 'sustained throughput cut' (unsupported; implies continuing state). A's text kept because it contains B's removal and adds nothing B's rules bar."
+    },
+    {
+      "event_id": "sa-2026-09-11-east-west-pipeline-shutdown",
+      "field": "admin1_codes_affected",
+      "set": [
+        "SA-01",
+        "SA-03"
+      ],
+      "reason": "Iteration-17 blind review, role(s) A: A: both opened sources (including The National, which remains cited) place the attacks in the Riyadh and Madinah regions; admin-1 only. Published as regions_affected; region_code and geography_precision unchanged."
+    },
+    {
+      "event_id": "sa-2026-09-11-east-west-pipeline-shutdown",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://www.thenationalnews.com/news/2026/09/11/saudi-arabia-closes-east-west-oil-pipeline-following-attacks/",
+          "publisher": "The National",
+          "title": "Saudi Arabia closes East-West oil pipeline following attacks",
+          "date": "2026-09-11",
+          "language": "en",
+          "source_role": "media"
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) B: B: Al Jazeera address carries 'critical' framing; whole object removed. The National (11 Sep) is the one remaining citation. The two queue-only citations dated 16 and 24 Sep (recovery/resumption wording in the address, the second also more than 7 days late; already withheld from the payload by the campaign rule) are left out of this value so the edit itself carries no status-bearing address."
+    },
+    {
+      "event_id": "sa-2022-03-20-yasref-yanbu",
+      "field": "summary",
+      "set": "The Saudi energy ministry said an attack on YASREF facilities led to a temporary reduction in the refinery's production.",
+      "reason": "Iteration-17 blind review, role(s) B: B: drops the 'only site in the 20 March 2022 wave' cross-site comparison."
+    },
+    {
+      "event_id": "sa-2022-03-20-yasref-yanbu",
+      "field": "effect",
+      "set": "Ministry: the attack led to a temporary reduction in the refinery's production. No volume or duration given.",
+      "reason": "Iteration-17 blind review, role(s) B: B: drops the inventory-compensation clause (supply-buffer information)."
+    },
+    {
+      "event_id": "sa-2022-03-20-yasref-yanbu",
+      "field": "recovery.evidence",
+      "set": null,
+      "reason": "Iteration-17 blind review, role(s) B: B: no restart/status or inventory-cover content on a kinetic record."
+    },
+    {
+      "event_id": "sa-2022-03-20-yasref-yanbu",
+      "field": "recovery.url",
+      "set": null,
+      "reason": "Iteration-17 blind review, role(s) B: B: as above; the recovery block carries no status content."
+    },
+    {
+      "event_id": "us-2022-11-10-hurricane-nicole-florida-outages",
+      "field": "effect",
+      "set": "More than 330,000 Florida customers were without power on the morning of 10 Nov 2022 (PowerOutage.US via Fox Business, with AP contributing); NHC reports over 300,000 homes and businesses in the affected region lost power.",
+      "reason": "Iteration-17 blind review, role(s) A: A: NHC figure is for 'the affected region', not Florida; Fox Business staff story with AP contributing, not an AP story."
+    },
+    {
+      "event_id": "us-2022-11-10-hurricane-nicole-florida-outages",
+      "field": "threshold_basis",
+      "set": "Clause 5: more than 330,000 customers out at one time in Florida on the morning of 10 Nov 2022 (PowerOutage.US via Fox Business).",
+      "reason": "Iteration-17 blind review, role(s) A: A: the NHC 'over 300,000' figure is not a simultaneous peak, so it no longer supports the at-one-time test."
+    },
+    {
+      "event_id": "us-2022-11-10-hurricane-nicole-florida-outages",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://www.nhc.noaa.gov/data/tcr/AL172022_Nicole.pdf",
+          "publisher": "NOAA National Hurricane Center",
+          "title": "Tropical Cyclone Report: Hurricane Nicole (AL172022)",
+          "date": "2023-03-17",
+          "language": "en",
+          "source_role": "government",
+          "opened": true
+        },
+        {
+          "url": "https://foxbusiness.com/lifestyle/nicole-leaves-florida-customers-without-power",
+          "publisher": "Fox Business (AP contributed)",
+          "title": "Nicole leaves over 330K Florida customers without power",
+          "date": "2022-11-10",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) A: A: Fox Business publisher corrected to 'Fox Business (AP contributed)'; other source objects unchanged."
+    },
+    {
+      "event_id": "us-2024-08-08-tropical-storm-debby-north-carolina-outages",
+      "field": "summary",
+      "set": "Debby crossed North Carolina on 8 August 2024 after a second landfall in South Carolina as a subtropical storm, and downed trees and power lines caused large outages in North Carolina.",
+      "reason": "Iteration-17 blind review, role(s) A: A: Debby made its second landfall in South Carolina as a subtropical storm; it did not cross North Carolina as a tropical storm."
+    },
+    {
+      "event_id": "us-2024-08-08-tropical-storm-debby-north-carolina-outages",
+      "field": "hazard_name",
+      "set": "Hurricane Debby (2024)",
+      "reason": "Iteration-17 blind review, role(s) C: C: hazard_name set identical to the published Florida record's ('Hurricane Debby (2024)') so validate_episodes() matches them; the value was already identical."
+    },
+    {
+      "event_id": "us-2025-02-12-par-pacific-wyoming-refinery-shutdown",
+      "field": "facility_name",
+      "set": "Wyoming refinery",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: Newcastle is not in the opened source; B: a town is finer than admin-1. Both give the same value."
+    },
+    {
+      "event_id": "us-2025-02-12-par-pacific-wyoming-refinery-shutdown",
+      "field": "recovery.evidence",
+      "set": "Estimate only: the company expected 50% utilisation by mid-April and normal rates before Memorial Day 2025; no observed restart found.",
+      "reason": "Iteration-17 blind review, role(s) B: B: drops research-process wording ('was opened')."
+    },
+    {
+      "event_id": "us-2025-02-12-par-pacific-wyoming-refinery-shutdown",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://mnimarkets.com/articles/par-pacific-wyoming-shut-for-repair-montana-set-for-april-work-1740591039136",
+          "publisher": "MNI Market News",
+          "title": "Par Pacific Wyoming shut for repair, Montana set for April work",
+          "date": "2025-02-26",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the marketnews.com duplicate (a redirect to the same article) whose publisher field held research text."
+    },
+    {
+      "event_id": "ca-2023-04-25-quebec-generation-loss-outage",
+      "field": "summary",
+      "set": "Around noon on 25 April 2023 an unexpected loss of generation supplying the Quebec grid set off automatic protection, cutting power to customers across southern Quebec.",
+      "reason": "Iteration-17 blind review, role(s) B: B: drops the Montreal and Quebec City area names (finer than admin-1)."
+    },
+    {
+      "event_id": "ca-2023-04-25-quebec-generation-loss-outage",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://www.noovo.info/nouvelle/panne-majeure-pres-de-500-000-quebecois-prives-delectricite-selon-hydro-quebec.html",
+          "publisher": "Noovo Info",
+          "title": "Panne majeure : près de 500 000 Québécois privés d'électricité selon Hydro-Québec",
+          "date": "2023-04-25",
+          "language": "fr",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://www.narcity.com/fr/panne-courant-cause-est-devoilee-hydro-quebec",
+          "publisher": "Narcity Québec",
+          "title": "Panne de courant majeure : La cause est dévoilée et Hydro-Québec s'explique",
+          "date": "2023-04-25",
+          "language": "fr",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://www.cbc.ca/1.6821747",
+          "publisher": "CBC News",
+          "title": "Service back after nearly 500,000 Hydro-Québec customers lose power (HTTP 403; not opened)",
+          "date": "2023-04-25",
+          "language": "en",
+          "source_role": "media",
+          "opened": false
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) B: B: removes the globalnews.ca source, whose address names a generating station; A's notes confirm Noovo carries the restoration claim, so B's fallback ('keep only if no alternative') does not apply."
+    },
+    {
+      "event_id": "ca-2023-04-25-quebec-generation-loss-outage",
+      "field": "recovery",
+      "set": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "service_restored",
+        "date": "2023-04-25",
+        "evidence": "Service largely restored by late afternoon the same day (Noovo).",
+        "url": "https://www.noovo.info/nouvelle/panne-majeure-pres-de-500-000-quebecois-prives-delectricite-selon-hydro-quebec.html"
+      },
+      "reason": "Iteration-17 blind review, role(s) B: B: recovery.url now points at Noovo; the '<45,000 by 14:30' figure, sourced only to the removed Global News page, is dropped and the evidence cites Noovo only."
+    },
+    {
+      "event_id": "ca-2023-04-25-quebec-generation-loss-outage",
+      "field": "effect",
+      "set": "Hydro-Québec reported about 500,000 customers without power at about 12:30.",
+      "reason": "Iteration-17 blind review, role(s) B: Consequence of B's source removal: the '<45,000 by 14:30' figure was supported only by the removed Global News page (A's notes), so it is dropped; nothing added."
+    },
+    {
+      "event_id": "ca-2023-07-06-quebec-transmission-outage",
+      "field": "summary",
+      "set": "An equipment failure on Hydro-Québec's transmission system on the afternoon of 6 July 2023, during hot weather, cut power to customers in southern Quebec.",
+      "reason": "Iteration-17 blind review, role(s) B: B: drops the island of Montreal and Montérégie (sub-admin-1)."
+    },
+    {
+      "event_id": "ca-2023-07-06-quebec-transmission-outage",
+      "field": "effect",
+      "set": "Noovo reported more than 115,000 Hydro-Québec customers without power at one time; about 200,000 customers were affected over the course of the outage.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: the 115,000 figure is Noovo's own caption, not a Hydro-Québec statement; B: 'in Montreal' (a city) removed."
+    },
+    {
+      "event_id": "ca-2024-04-04-spring-snowstorm-quebec",
+      "field": "summary",
+      "set": "A late spring storm of heavy snow, rain and strong north-east winds on 4 April 2024 brought down lines across southern Quebec.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: 'wet' unsupported, wind given as north-east winds; B: Montreal and the Laurentides (sub-admin-1) removed."
+    },
+    {
+      "event_id": "ca-2024-04-04-spring-snowstorm-quebec",
+      "field": "effect",
+      "set": "Around 07:00 Hydro-Québec reported 300,000 customers without power (Noovo); Time Out Montréal reported about 280,000 out that morning; Noovo also says 600,000 customers lost power 'au plus fort de la tempête'.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: explicit at-one-time 300,000 at ~07:00 replaces the possibly cumulative 600,000 as the lead figure; the Montreal sub-count in A's text is dropped under B's admin-1 rule (rule 9)."
+    },
+    {
+      "event_id": "ca-2024-04-04-spring-snowstorm-quebec",
+      "field": "threshold_basis",
+      "set": "Grid event affecting about 100,000 customers or more: 300,000 customers out at one time around 07:00 (Hydro-Québec via Noovo).",
+      "reason": "Iteration-17 blind review, role(s) A: A: rests on the explicit at-one-time figure."
+    },
+    {
+      "event_id": "ca-2024-04-04-spring-snowstorm-quebec",
+      "field": "capacity_affected",
+      "set": {
+        "value": 300000,
+        "unit": "customers",
+        "source_says": "la société d'État signalait que 300 000 de ses abonnés ... étaient plongés dans le noir"
+      },
+      "reason": "Iteration-17 blind review, role(s) A, B: A: 300,000 at one time with a stated time; the quote's Montreal clause is elided with '...' under B's admin-1 rule (rule 9)."
+    },
+    {
+      "event_id": "ca-2025-01-27-windstorm-quebec",
+      "field": "summary",
+      "set": "Violent winds, reaching blizzard conditions at their height, on 27 January 2025 caused numerous power outages across Quebec.",
+      "reason": "Iteration-17 blind review, role(s) A: A: the source mentions no blowing snow and no specific report of trees or lines down."
+    },
+    {
+      "event_id": "ca-2025-01-27-windstorm-quebec",
+      "field": "recovery.evidence",
+      "set": "Hydro-Québec reported 9,850 addresses still without power at about 08:15 on 28 January; restoration was expected by noon in several places; no completion date found.",
+      "reason": "Iteration-17 blind review, role(s) A: A: exact figure (9,850 addresses at ~08:15) and stated expectation from the source."
+    },
+    {
+      "event_id": "in-2025-11-16-gail-pipeline-damage-maharashtra",
+      "field": "cause",
+      "set": "technical",
+      "reason": "Iteration-17 blind review, role(s) C: C: 'other' is not in the cause vocabulary; third-party mechanical damage is technical by corpus precedent."
+    },
+    {
+      "event_id": "in-2025-11-16-gail-pipeline-damage-maharashtra",
+      "field": "summary",
+      "set": "Third-party damage on 16 Nov 2025 to a GAIL gas pipeline interrupted gas supply to a city gas distribution network in Maharashtra; CNG stations in parts of the state went offline and industrial and commercial users were advised to switch fuel.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: '18-inch' unsupported, and industrial and commercial users were 'advised' to switch; B: city gate station, city names and 'supplying' framing removed. A's 'main supply pipeline inside the RCF compound' not used (a site finer than admin-1 and dependency wording, B's rules)."
+    },
+    {
+      "event_id": "in-2025-11-16-gail-pipeline-damage-maharashtra",
+      "field": "effect",
+      "set": "Gas supply to a city gas distribution network in Maharashtra was interrupted from 16 Nov 2025; several CNG stations were non-operational; domestic PNG was prioritised; supply to affected CNG stations was restored on the afternoon of 18 Nov 2025.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: only CNG supply is reported restored on 18 Nov (afternoon), so the end is stated as that, not '16 to 18 Nov'; B: the named city gate station removed."
+    },
+    {
+      "event_id": "in-2025-11-16-gail-pipeline-damage-maharashtra",
+      "field": "threshold_basis",
+      "set": "Clause 3: gas transmission pipeline shut down for repair after damage, with a reported supply effect in Maharashtra.",
+      "reason": "Iteration-17 blind review, role(s) B: B: 'Mumbai region' (sub-admin-1) replaced by Maharashtra."
+    },
+    {
+      "event_id": "in-2025-11-16-gail-pipeline-damage-maharashtra",
+      "field": "recovery",
+      "set": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2025-11-18",
+        "evidence": "MGL said on 18 Nov 2025 that rectification of the damaged GAIL pipeline was complete and supply to affected CNG stations was restored; restoration to industrial and commercial customers was still in progress.",
+        "url": "https://www.theweek.in/wire-updates/business/2025/11/18/bom34-mh-cng-ld-disruption.html"
+      },
+      "reason": "Iteration-17 blind review, role(s) A, B: A: recovery rests on the opened PTI report, kind partial_restoration (industrial/commercial restoration still in progress), not the FilingReader AI summary; B: clock times dropped (B's literal 'GAIL filing ... supply normalised' text is not used because A shows those claims come only from the AI summary); city names removed under B's rule."
+    },
+    {
+      "event_id": "in-2025-11-16-gail-pipeline-damage-maharashtra",
+      "field": "sources",
+      "set": [
+        {
+          "url": "https://www.freepressjournal.in/mumbai/gas-supply-disrupted-across-mumbai-thane-and-navi-mumbai-after-damage-to-gail-pipeline-at-rcf-cng-stations-affected",
+          "publisher": "Free Press Journal",
+          "title": null,
+          "date": "2025-11-16",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://www.theweek.in/wire-updates/business/2025/11/18/bom34-mh-cng-ld-disruption.html",
+          "publisher": "The Week (PTI)",
+          "title": null,
+          "date": "2025-11-18",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "reason": "Iteration-17 blind review, role(s) A: A: the FilingReader AI-summary source replaced by the opened The Week (PTI) report, which passes the rule-4 check (address names Maharashtra only); Free Press Journal kept (see owner question)."
+    },
+    {
+      "event_id": "in-2026-09-05-ntpc-power-station-trip-chhattisgarh",
+      "field": "summary",
+      "set": "NTPC's Korba station in Chhattisgarh tripped after a fault, taking 2,600 MW offline; the source says this raised the risk of a power crisis in several western-region states and that supply arrangements in two union territories were reportedly disrupted.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: the source reports a risk of power crisis in the states and reported disruption only in two union territories; B: unit count, township name and switchyard/breaker-testing detail removed."
+    },
+    {
+      "event_id": "in-2026-09-05-ntpc-power-station-trip-chhattisgarh",
+      "field": "effect",
+      "set": "2,600 MW of generation lost when the station tripped; the source reports a risk of power crisis in Chhattisgarh, Madhya Pradesh, Maharashtra, Gujarat and Goa, and supply arrangements reportedly disrupted in Daman and Diu and Dadra and Nagar Haveli.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: risk is not disruption, and the two union territories are named; B: 'all units' count removed."
+    },
+    {
+      "event_id": "in-2026-09-05-ntpc-power-station-trip-chhattisgarh",
+      "field": "capacity_affected.source_says",
+      "set": "cutting off 2,600 MW of electricity supply",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: verbatim source phrase; it also satisfies B (no unit inventory). B's '2,600 MW tripped' is not verbatim, so A's quote is used."
+    },
+    {
+      "event_id": "in-2026-09-05-ntpc-power-station-trip-chhattisgarh",
+      "field": "recovery.evidence",
+      "set": "No public confirmation of restart found.",
+      "reason": "Iteration-17 blind review, role(s) A, B: A: research-budget text removed; B: expected-restart timing also removed. B's text does both."
+    },
+    {
+      "event_id": "in-2026-09-05-ntpc-power-station-trip-chhattisgarh",
+      "field": "admin1_code",
+      "set": "IN-CG",
+      "reason": "The India system's units are Natural Earth's codes; Chhattisgarh is IN-CG there (ISO 3166-2 now uses IN-CT). Same unit, the system's code."
+    },
+    {
+      "event_id": "us-2024-02-01-bp-whiting-power-outage",
+      "field": "summary",
+      "set": "A plantwide power failure forced BP to shut its Whiting refinery.",
+      "reason": "Iteration-17 confirmation round, lead fix (deletion only or role A's own sourced wording): A: 'evacuate non-essential staff' lost its only source when the Hydrocarbon Processing citation was removed."
+    },
+    {
+      "event_id": "us-2024-02-01-bp-whiting-power-outage",
+      "field": "recovery",
+      "set": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "full_restart",
+        "date": "2024-03-18",
+        "evidence": "On 18 Mar 2024 BP said the plant was 'back to normal operations'. Announcement date, not a sourced unit-restart date.",
+        "url": "https://inspectioneering.com/news/2024-03-18/11013/bps-whiting-refinery-back-to-normal-operations-following-february-outage"
+      },
+      "reason": "Iteration-17 confirmation round, lead fix (deletion only or role A's own sourced wording): B: 'search-result coverage' is research-process text; the unopened claim it carried is dropped with it."
+    },
+    {
+      "event_id": "us-2024-11-19-bomb-cyclone-washington-outages",
+      "field": "capacity_affected.source_says",
+      "set": "About 650,000 people lost power",
+      "reason": "Iteration-17 confirmation round, lead fix (deletion only or role A's own sourced wording): B: 'western Washington' is a sub-state region; the quotation is truncated, not reworded."
+    },
+    {
+      "event_id": "ca-2023-05-05-alberta-wildfire-shut-ins",
+      "field": "summary",
+      "set": "Wildfires across Alberta in early May 2023 forced oil and gas producers to shut in production.",
+      "reason": "Iteration-17 confirmation round, lead fix (deletion only or role A's own sourced wording): A: 'and evacuate staff' is in no opened source."
+    },
+    {
+      "event_id": "ca-2024-08-09-debby-quebec",
+      "field": "effect",
+      "set": "Hydro-Québec reported more than 550,000 customers without power at the peak.",
+      "reason": "Iteration-17 confirmation round, lead fix (deletion only or role A's own sourced wording): A: '(other reports: 460,000-500,000)' is in no opened cited source."
+    },
+    {
+      "event_id": "ca-2022-09-24-fiona-nova-scotia",
+      "field": "recovery",
+      "set": {
+        "research_status": "NOT_YET_RESEARCHED",
+        "kind": null,
+        "date": null,
+        "evidence": null,
+        "url": null
+      },
+      "reason": "Iteration-17 confirmation round, lead fix (deletion only or role A's own sourced wording): A and B: restoration is not shown by any opened source and the 'UNVERIFIED' note was process text; restoration is now stated as not yet established."
+    },
+    {
+      "event_id": "ca-2025-05-29-alberta-wildfire-oil-sands",
+      "field": "recovery",
+      "set": {
+        "research_status": "NOT_YET_RESEARCHED",
+        "kind": null,
+        "date": null,
+        "evidence": null,
+        "url": null
+      },
+      "reason": "Iteration-17 confirmation round, lead fix (deletion only or role A's own sourced wording): A and B: the 3 June partial restart is unsupported (the opened source says only 'near term') and the 'UNVERIFIED' note was process text."
+    },
+    {
+      "event_id": "cn-2023-02-20-yunnan-aluminium-power-cuts-deepened",
+      "field": "summary",
+      "set": "With the hydropower shortage continuing, Yunnan ordered electrolytic aluminium producers to cut power use further, extending the curbs imposed in September 2022.",
+      "reason": "Iteration-17 confirmation round, lead fix (deletion only or role A's own sourced wording): B: 'Flag: system_wide.' is internal text."
+    },
+    {
+      "event_id": "in-2022-02-21-chandigarh-power-strike-blackout",
+      "field": "summary",
+      "set": "A 72-hour strike by electricity department staff against privatisation, beginning the night of 21 Feb 2022, was followed by a blackout across large parts of the union territory lasting 36-40 hours. The administration told the High Court the outage resulted from sabotage by striking employees; the army was called in to help restore supply.",
+      "reason": "Iteration-17 confirmation round, lead fix (deletion only or role A's own sourced wording): A: 'which the employees disputed' is in no opened source. The sabotage claim stays attributed to the administration."
+    },
+    {
+      "event_id": "in-2026-04-20-hrrl-barmer-refinery-cdu-fire",
+      "field": "effect",
+      "set": "Crude processing at the refinery halted and commissioning/ramp-up disrupted for ~2 months; about 1.8 million barrels of crude were redirected to other refineries. Kpler: plant not yet contributing to the national product pool, so market supply impact limited.",
+      "reason": "Iteration-17 confirmation round, lead fix (deletion only or role A's own sourced wording): B: the destination refineries were named by city (inter-refinery routing)."
+    },
+    {
+      "event_id": "in-2023-12-04-cyclone-michaung-chennai-outage",
+      "field": "effect",
+      "set": "About two in five of the affected area's 11 kV feeders were shut on 4 Dec (state minister); demand fell to an all-time low of 112 MW on 4 Dec and recovered to 1,100-1,500 MW on 5 Dec; some substations were still flooded on 5 Dec.",
+      "reason": "Iteration-17 confirmation round, lead fix (deletion only or role A's own sourced wording): A: 'most' misstated the minister's figure (roughly 39%); no feeder count is given (an inventory)."
+    },
+    {
+      "event_id": "in-2023-12-04-cyclone-michaung-chennai-outage",
+      "field": "summary",
+      "set": "Cyclone Michaung's rains flooded the Tamil Nadu coast on 3-4 Dec 2023; supply was switched off in flooded areas as a safety measure and restoration was still under way on 5 Dec. TANGEDCO said demand in the affected area fell to 112 MW on 4 Dec.",
+      "reason": "Iteration-17 confirmation round, lead fix (deletion only or role A's own sourced wording): A: 'stayed dark for days' went beyond the last sourced state (restoration under way on 5 Dec)."
+    },
+    {
+      "event_id": "in-2023-12-04-cyclone-michaung-chennai-outage",
+      "field": "threshold_basis",
+      "set": "Clause 5: loss of supply to a large urban population (demand in the affected area fell to 112 MW). Part of the outage was precautionary (de-energising flooded areas), part due to flooded equipment.",
+      "reason": "Iteration-17 confirmation round, lead fix (deletion only or role A's own sourced wording): B: a city name and the internal word 'flagged'."
+    },
+    {
+      "event_id": "ca-2023-04-05-ice-storm-ontario",
+      "field": "hazard_name",
+      "set": null,
+      "reason": "Iteration-17 blind review, role C: no cited source uses this label (REVIEW_GOVERNANCE §6); role C's correction covered both April 2023 ice-storm records, and the Quebec record is held, leaving this one standalone."
     }
   ]
 }

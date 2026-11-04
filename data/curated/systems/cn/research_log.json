@@ -36,6 +36,110 @@
         "accepted": 1,
         "insufficient_evidence": 3
       }
+    },
+    {
+      "date": "2026-11-03",
+      "by": "iteration-17 first systematic pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-03"
+      ],
+      "scope": "inclusion clauses 1-7 as written; lanes and exact queries declared before searching (docs/countries/CN_SYSTEMATIC_SWEEP.md); every published record reviewed blind by three independent roles and confirmed on its final text",
+      "source_families": [
+        "National statistics: NBS monthly energy production releases (能源生产情况), read for production effects explicitly attributed ",
+        "National Energy Administration and grid companies (State Grid, China Southern Grid): notices of major outages, orderly p",
+        "Provincial outage and disruption reporting: provincial energy bureaus and government notices of power rationing or grid ",
+        "Major state enterprises (Sinopec, PetroChina, CNOOC, China Shenhua, State Power Investment): HKEX and SSE announcements ",
+        "Credible Chinese-language media: Xinhua, People's Daily, Caixin, The Paper",
+        "International corroboration: Reuters, Bloomberg, S&P Global reporting of Chinese energy disruptions"
+      ],
+      "categories": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "lanes": [
+        {
+          "lane": "CN1",
+          "source_family": "National statistics: NBS monthly energy production releases (能源生产情况), read for production effects explicitly attributed to a disruption",
+          "registry": [
+            "NBS Statistical Communiqué and monthly energy releases"
+          ],
+          "status": "partial",
+          "reason": "Enumeration only, by fetch. Two of roughly 57 monthly releases in the window were read (June and September 2026). Neither attributes any change to a cause: the June 2026 release reports raw coal down 9.7% y/y (the Liushenyu aftermath, already in the corpus) and crude processing down 17.7% y/y, both without a stated cause. The release format states figures only, so this lane is unlikely to yield ca",
+          "covered_through": "2026-10-19"
+        },
+        {
+          "lane": "CN2",
+          "source_family": "National Energy Administration and grid companies (State Grid, China Southern Grid): notices of major outages, orderly power use, emergency responses",
+          "registry": [
+            "NEA power releases",
+            "State Grid and China Southern Grid notices"
+          ],
+          "status": "partial",
+          "reason": "All 15 plan queries run, but the endpoints nea.gov.cn, sgcc.com.cn and csg.cn news were not enumerated directly, and the US-indexed search tool returned mostly provincial and municipal orderly-power-use PLANS and foreign blackouts rather than Chinese event reporting.",
+          "covered_through": "2026-11-03"
+        },
+        {
+          "lane": "CN3",
+          "source_family": "Provincial outage and disruption reporting: provincial energy bureaus and government notices of power rationing or grid emergencies",
+          "registry": [
+            "Provincial government and energy-bureau notices"
+          ],
+          "status": "partial",
+          "reason": "All 10 plan queries run, but results came almost entirely from English-language wire and analyst coverage; no provincial government or energy-bureau notice was found and opened for any year, so the lane's declared universe (provincial official notices) was not reached.",
+          "covered_through": "2026-11-03"
+        },
+        {
+          "lane": "CN4",
+          "source_family": "Major state enterprises (Sinopec, PetroChina, CNOOC, China Shenhua, State Power Investment): HKEX and SSE announcements of facility incidents or production susp",
+          "registry": [
+            "State energy enterprise exchange announcements (Sinopec, PetroChina, CNOOC, China Shenhua, SPIC)"
+          ],
+          "status": "partial",
+          "reason": "Not started: the search cap was reached first. HKEX and SSE announcement search was not enumerated directly either (those are interactive search forms, not static listings).",
+          "covered_through": "2022-01-01"
+        },
+        {
+          "lane": "CN5",
+          "source_family": "Credible Chinese-language media: Xinhua, People's Daily, Caixin, The Paper",
+          "registry": [
+            "Chinese national media (Xinhua, People's Daily, Caixin, The Paper)"
+          ],
+          "status": "partial",
+          "reason": "Only the refinery-fire query family was run (5 of 15 queries); the coal-mine and gas-pipeline families were not run because the personal 30-search cap was reached. The refinery query itself returned almost entirely foreign refineries and no Xinhua, People's Daily, Caixin or The Paper page.",
+          "covered_through": "2026-11-03"
+        },
+        {
+          "lane": "CN6",
+          "source_family": "International corroboration: Reuters, Bloomberg, S&P Global reporting of Chinese energy disruptions",
+          "registry": [
+            "International news agencies and energy press (Reuters, Bloomberg, AP, S&P Global, Argus)"
+          ],
+          "status": "partial",
+          "reason": "Not started: the personal 30-search cap was spent on CN2, CN3 and part of CN5 in the plan's lane order. Some Reuters/Bloomberg syndications were opened incidentally in CN3 and are recorded there.",
+          "covered_through": "2022-01-01"
+        }
+      ],
+      "status": "partial",
+      "status_reason": "0 of 6 lanes complete; the others are partial for the reasons stated per lane",
+      "outcome": {
+        "candidates": 13,
+        "accepted": 0,
+        "rejected": 2,
+        "duplicate": 2,
+        "held": 9,
+        "out_of_scope": 0
+      },
+      "plan": {
+        "document": "docs/countries/CN_SYSTEMATIC_SWEEP.md",
+        "commit": "a7f3a36"
+      }
     }
   ]
 }

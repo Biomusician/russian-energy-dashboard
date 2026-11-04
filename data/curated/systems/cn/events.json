@@ -9,12 +9,12 @@
       "region_code": "CN-SH",
       "geography_precision": "admin1",
       "regions_affected": [],
-      "facility_name": "Sinopec Shanghai Petrochemical (Jinshan complex)",
+      "facility_name": "Sinopec Shanghai Petrochemical",
       "facility_name_local": "上海石化",
       "operator": "Sinopec Shanghai Petrochemical Co",
       "asset_class": "refinery",
       "cause": "technical",
-      "summary": "A fire broke out around 04:00 on 18 June 2022 in the No.1 ethylene glycol unit area of the chemicals division and spread to some nearby pipelines; one person died and one was lightly injured. The fire started in a chemical unit, but the company then shut its crude refining and ethylene units.",
+      "summary": "A fire broke out around 04:00 on 18 June 2022 at the chemicals division; one person died and one was lightly injured. The company then shut its crude refining and ethylene units.",
       "effect": "Company spokesperson (via Reuters/Arab News): it 'has shut its crude oil refining and ethylene units to evaluate safety risks', duration unspecified. Company notice (NBD, 19 June): main production units were shut down in an orderly way and it was preparing them for restart.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
@@ -22,7 +22,7 @@
       "capacity_affected": {
         "value": 16,
         "unit": "million tonnes/year crude refining (site capacity)",
-        "source_says": "plant has processing capacity for 16 million tonnes of crude a year and 700,000 t ethylene; Reuters does not say the whole crude capacity stayed offline for the full period"
+        "source_says": "16 million tonnes/year crude refining (site capacity)."
       },
       "sources": [
         {
@@ -54,157 +54,28 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "partial_restart",
         "date": "2022-08-12",
-        "evidence": "QCintel headline and lead (body paywalled): Sinopec 'has partially restarted operations' at the 320,000-bpd Shanghai refinery. The exact restart date, which units restarted and when full operation resumed were not found.",
+        "evidence": "Sinopec 'has partially restarted operations' at the 320,000-bpd Shanghai refinery (QCintel headline and lead). Full restart date not found.",
         "url": "https://www.qcintel.com/article/sinopec-s-shanghai-refinery-partially-resumes-after-june-fire-report-7831.html"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 3,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
-    },
-    {
-      "event_id": "cn-2022-08-15-sichuan-industrial-power-halt",
-      "date": "2022-08-15",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "CN-SC",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": "State Grid Sichuan Electric Power (国网四川省电力公司) and the Sichuan Department of Economy and Information Technology (四川省经济和信息化厅), the issuing bodies",
-      "asset_class": "system_wide",
-      "cause": "natural_hazard",
-      "summary": "A drought in the Yangtze basin and record heat cut hydropower output (more than 80% of Sichuan's electricity) while demand surged. An emergency notice ordered a near-total production halt for industrial power users in 19 of the province's 21 prefecture-level divisions. Flag: system_wide.",
-      "effect": "《关于扩大工业企业让电于民实施范围的紧急通知》 (14 Aug): every industrial power user in the orderly-use plan, white-listed priority firms included, was ordered to halt production entirely (safety loads excepted) from 00:00 on 15 Aug to 24:00 on 20 Aug 2022, in every city or prefecture except Panzhihua and Liangshan. Reuters-syndicated and The Register reports say the curbs were later extended (The Register: 'to Saturday', i.e. 27 Aug). Named plants that halted include CATL Yibin (per Jiemian), Toyota's Chengdu JV and solar polysilicon makers.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 4,
-      "threshold_basis": "Hydropower generation shortfall forced provincial industrial power rationing, ordered officially.",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://www.thepaper.cn/newsDetail_forward_19461932",
-          "publisher": "澎湃新闻 (The Paper)",
-          "date": "2022-08-15",
-          "language": "zh",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://www.cls.cn/detail/1101023",
-          "publisher": "财联社 (Cailian Press)",
-          "date": "2022-08-16",
-          "language": "zh",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://www.aljazeera.com/economy/2022/8/17/chinese-factories-close-as-drought-hits-hydropower",
-          "publisher": "Al Jazeera (AP)",
-          "date": "2022-08-17",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://www.theregister.com/2022/08/25/chinas_chongqing_orders_factory_extends/",
-          "publisher": "The Register",
-          "date": "2022-08-25",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        }
-      ],
-      "recovery": {
-        "research_status": "RESEARCHED_NO_PUBLIC_EVIDENCE",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-10-30",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
-        "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
-        "source_count": 4,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
-      },
-      "hazard_name": "Yangtze-basin heat wave and drought (2022)"
-    },
-    {
-      "event_id": "cn-2022-08-17-chongqing-industrial-power-curbs",
-      "date": "2022-08-17",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "CN-CQ",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": "Chongqing municipal government and State Grid Chongqing (issuing bodies)",
-      "asset_class": "system_wide",
-      "cause": "natural_hazard",
-      "summary": "The same heat and drought shortfall that hit Sichuan led Chongqing to order listed industrial companies to suspend power consumption to protect household supply. Flag: system_wide.",
-      "effect": "Notice issued 16 Aug by the local government and State Grid Chongqing: industrial companies on a list must suspend power consumption from 00:00 on 17 Aug to 24:00 on 24 Aug 2022 (CnEVPost). On 24 Aug factories were told the cuts would continue until further notice (The Register, 25 Aug). Cheng Shin and Honda reported plant suspensions.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 4,
-      "threshold_basis": "Generation shortfall forced an official industrial power suspension.",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://cnevpost.com/2022/08/17/chongqing-begins-limiting-industrial-power-use-high-temperatures/",
-          "publisher": "CnEVPost",
-          "date": "2022-08-17",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://www.theregister.com/2022/08/25/chinas_chongqing_orders_factory_extends/",
-          "publisher": "The Register",
-          "date": "2022-08-25",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        }
-      ],
-      "recovery": {
-        "research_status": "RESEARCHED_NO_PUBLIC_EVIDENCE",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-10-30",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
-        "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
-        "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
-      },
-      "hazard_name": "Yangtze-basin heat wave and drought (2022)"
     },
     {
       "event_id": "cn-2022-09-10-yunnan-aluminium-power-cuts",
@@ -216,11 +87,11 @@
       "regions_affected": [],
       "facility_name": null,
       "facility_name_local": null,
-      "operator": "Yunnan Power Grid (directive via Dali Power Supply Bureau, per AlCircle)",
+      "operator": null,
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Low rainfall cut Yunnan's hydropower, which supplies about 75-80% of the province's electricity. Electrolytic aluminium smelters were ordered to cut power use from 10 Sept 2022, and the cut was deepened from about 15 Sept. Flag: system_wide.",
-      "effect": "Caixin (10 Sept): smelters ordered to cut electricity use by 10% over five days. Caixin (15 Sept): ordered to cut power use by 15-30%, which industry insiders estimated would idle 0.8-1.6 Mt/yr of aluminium capacity. Reuters (Feb 2023) says Yunnan producers cut output by 1.1 Mt between September and October 2022.",
+      "summary": "A drought and lower-than-average rainfall cut Yunnan's hydropower generation. Electrolytic aluminium smelters were ordered to cut power use from 10 Sept 2022, and the cut was deepened from 15 Sept.",
+      "effect": "Caixin (10 Sept): smelters ordered to gradually reduce electricity use by 10% over five days starting Saturday (10 Sept). Caixin (15 Sept): the provincial government instructed firms to cut power use by 15-30% from Thursday (15 Sept), which industry insiders said would slash 800,000 t to 1.6 Mt of aluminium production capacity.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 4,
       "threshold_basis": "Hydropower generation shortfall forced official industrial power curbs.",
@@ -255,17 +126,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -282,11 +158,11 @@
       "operator": "Panjin Haoye Chemical Co Ltd (independent refiner)",
       "asset_class": "refinery",
       "cause": "technical",
-      "summary": "On 15 Jan 2023 an explosion and fire hit the alkylation unit area of an independent refinery in Liaoning during maintenance work. The official investigation found 13 dead and 35 injured and classed it as a major production-safety liability accident (not sabotage or a natural hazard).",
-      "effect": "Reuters (16 Jan, citing trade sources and consultancy JLC): Panjin Haoye 'has shut down its entire oil refinery and petrochemical complex'. The site 'may be closed for months'. It ran at about 110,000 bpd in December 2022.",
+      "summary": "On 15 Jan 2023 an explosion and fire hit an independent refinery in Liaoning during maintenance work. Initial reports (16 Jan) gave 2 dead, 12 missing and 34 injured. Cause: technical (not sabotage or a natural hazard).",
+      "effect": "Reuters (16 Jan, citing trade sources and consultancy JLC): Panjin Haoye 'has shut down its entire oil refinery and petrochemical complex'. It ran at about 110,000 bpd in December 2022.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
-      "threshold_basis": "Whole refinery shut after an explosion, with crude throughput reported. The lead's question was whether this counts as energy infrastructure or as chemical-only: it is a crude refinery (130,000 bpd), so clause 1 applies.",
+      "threshold_basis": "Whole refinery shut after an explosion, with crude refining capacity and throughput reported (crude refinery of 130,000 bpd, clause 1).",
       "capacity_affected": {
         "value": 130000,
         "unit": "barrels/day crude refining capacity",
@@ -318,17 +194,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -340,13 +221,13 @@
       "region_code": "CN-NM",
       "geography_precision": "admin1",
       "regions_affected": [],
-      "facility_name": "Inner Mongolia Alxa Xinjing Coal Industry Co open-pit coal mine (Alxa League)",
+      "facility_name": "Inner Mongolia Alxa Xinjing Coal Industry Co open-pit coal mine",
       "facility_name_local": "内蒙古阿拉善新井煤业有限公司露天煤矿",
       "operator": "Inner Mongolia Alxa Xinjing Coal Industry Co Ltd",
       "asset_class": "coal_mine",
       "cause": "technical",
-      "summary": "A catastrophic slope collapse at an open-pit coal mine in Alxa League killed 53 and injured 6. The State Council investigation classed it as a production-safety liability accident. It triggered inspections of every open-pit mine in Inner Mongolia and nationwide safety rectification orders.",
-      "effect": "Cailian Press (23 Feb): all local coal mines (Alxa Left Banner) halted production for hazard checks. Reuters: Inner Mongolia ordered inspections at all open-pit mines. Reuters via Kitco (9 May, citing a 24 Apr document it could not independently verify): 32 open-pit mines with 26.55 Mt of capacity halted, and 23.55 Mt of planned expansions paused. Bloomberg headline (9 May): 'China Halts 50 Million Tons of Coal Output After Deadly Accident'. That figure appears to be the two numbers combined, so it mixes operating and planned capacity.",
+      "summary": "A catastrophic slope collapse at an open-pit coal mine in Inner Mongolia killed 53 and injured 6. The State Council-approved investigation classed it as a particularly serious production-safety liability accident and recommended a special nationwide campaign to find and fix major mine-safety hazards.",
+      "effect": "Cailian Press (23 Feb): all local coal mines halted production for hazard checks. Reuters via Kitco (9 May, citing a 24 Apr document it could not independently verify, and Mysteel): 32 open-pit mines in Inner Mongolia with 26.55 Mt of capacity halted, and 23.55 Mt of planned expansions paused.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 6,
       "threshold_basis": "Coal-mine disaster followed by reported mine halts with stated capacity.",
@@ -397,17 +278,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 4,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 3,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -424,8 +310,8 @@
       "operator": null,
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "With the hydropower shortage continuing, Yunnan ordered electrolytic aluminium producers to cut power use further, extending the curbs imposed in September 2022. Flag: system_wide.",
-      "effect": "Reuters (20 Feb 2023, citing Shanghai Securities News): producers told to bring power use to about 40-42% from the September level. The wording is ambiguous between 'to' and 'by', so the figure is kept as quoted. Mysteel estimated the expanded rationing (about 1 GW) would cut about 740,000 t/yr of capacity. AlCircle (Jun 2023, citing an industry researcher): cumulative cuts reduced capacity by 1.65 Mt.",
+      "summary": "With the hydropower shortage continuing, Yunnan ordered electrolytic aluminium producers to cut power use further, extending the curbs imposed in September 2022.",
+      "effect": "Reuters (20 Feb 2023, citing Shanghai Securities News): producers told to bring power use to about 40-42% from the September level. Mysteel estimated the expanded rationing (about 1 GW) would cut about 740,000 t/yr of capacity. AlCircle (Jun 2023, citing an industry researcher): cumulative cuts reduced capacity by 1.65 Mt.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 4,
       "threshold_basis": "Hydropower generation shortfall forced official industrial power curbs.",
@@ -460,17 +346,22 @@
         "url": "https://www.alcircle.com/news/yunnan-to-improve-power-supply-to-aluminium-smelters-in-the-province-chinese-experts-95216"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -487,8 +378,8 @@
       "operator": null,
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Typhoon Doksuri (杜苏芮) made landfall on the Jinjiang coast of Quanzhou on the morning of 28 July 2023, destroying power lines. asset_class system_wide is a flagged fallback: the outage was spread across the distribution network and no single asset class fits.",
-      "effect": "'more than 500,000 homes lost power' in Quanzhou, per the government's official WeChat account (reported 28 July). A search-index excerpt gave 500,658 households cut off as of 13:30 on 28 July, but its originating page was not read.",
+      "summary": "Typhoon Doksuri (杜苏芮) swept into southeastern Fujian on 28 July 2023; video showed power lines sparking and bursting into flames, and residents reported power cuts.",
+      "effect": "'more than 500,000 homes lost power', per the government's official WeChat account (Reuters via Asharq Al-Awsat, 28 July). The article does not state the figure's geographic scope explicitly.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Grid event causing loss of supply to more than 500,000 households, per an official city government account.",
@@ -511,17 +402,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Typhoon Doksuri (2023)"
     },
@@ -538,7 +434,7 @@
       "operator": "Hainan Power Grid (China Southern Power Grid)",
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Super Typhoon Yagi (摩羯) made landfall at Wenchang, Hainan, at 16:20 on 6 Sept 2024. About a third of the province's electricity customers lost power. asset_class system_wide is a flagged fallback: the outage was spread across the distribution network and no single asset class fits.",
+      "summary": "Super Typhoon Yagi (摩羯) made landfall in Hainan at 16:20 on 6 Sept 2024. About a third of the province's electricity customers lost power.",
       "effect": "Official grid summary (The Paper, government account): 1.68 million customers affected, and customers who lost power made up one-third of the province's total.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
@@ -574,17 +470,22 @@
         "url": "https://www.thepaper.cn/newsDetail_forward_28901729"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Typhoon Yagi (2024)"
     },
@@ -601,8 +502,8 @@
       "operator": "Guangdong Power Grid (China Southern Power Grid)",
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Typhoon Yagi made its second landfall in Xuwen County, Zhanjiang, after crossing Hainan. Xuwen and Leizhou were the hardest-hit areas. asset_class system_wide is a flagged fallback: the outage was spread across the distribution network and no single asset class fits.",
-      "effect": "Xinhua (12 Sept): power had been restored to more than 1 million households affected by Yagi in Guangdong, which implies outages above 1 million. Search-index excerpts of Yangcheng Evening News gave 552,000 affected as of 06:00 on 7 Sept and 780,000 as of 16:00 on 8 Sept; those pages were not read directly.",
+      "summary": "Super Typhoon Yagi made landfall in Hainan and Guangdong.",
+      "effect": "Xinhua (12 Sept), citing the Guangdong power grid company: as of 8 p.m. on 12 Sept 'power had been restored to more than 1 million households affected by Yagi' in Guangdong.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Loss of supply to more than 1 million households, per Xinhua.",
@@ -625,17 +526,22 @@
         "url": "https://thestar.com.my/news/world/2024/09/13/china039s-typhoon-hit-regions-see-return-of-normal-life-work"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Typhoon Yagi (2024)"
     },
@@ -652,7 +558,7 @@
       "operator": "Guangdong Power Grid (China Southern Power Grid)",
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Typhoon Wipha (韦帕) made landfall at Taishan, Jiangmen, on 20 July 2025, causing outages across six major Guangdong cities. asset_class system_wide is a flagged fallback: the outage was spread across the distribution network and no single asset class fits.",
+      "summary": "Typhoon Wipha (韦帕) made landfall on the Guangdong coast on 20 July 2025, causing outages across six major Guangdong cities.",
       "effect": "Xinhua: 245,000 customers (24.5万户) lost power; more than 90% were restored by 08:00 on 21 July.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
@@ -684,21 +590,26 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "service_restored",
         "date": "2025-07-22",
-        "evidence": "截至22日17时，两省电网经全力抢修，已全面恢复供电 (Guangdong and Fujian grids fully restored by 17:00 on 22 July). The last Zhanjiang area was restored at 21:56 on 21 July.",
+        "evidence": "截至22日17时，两省电网经全力抢修，已全面恢复供电 (Guangdong and Fujian grids fully restored by 17:00 on 22 July).",
         "url": "https://china.huanqiu.com/article/4NbLslgdcga"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": "Typhoon Wipha (2025)"
     },
@@ -710,20 +621,20 @@
       "region_code": "CN-FJ",
       "geography_precision": "admin1",
       "regions_affected": [],
-      "facility_name": "Sinochem Quanzhou refinery, No.1 crude unit",
+      "facility_name": "Sinochem refinery",
       "facility_name_local": null,
       "operator": "Sinochem",
       "asset_class": "refinery",
       "cause": "unknown",
-      "summary": "A fire at the No.1 crude unit of Sinochem's Quanzhou refinery injured seven, per state media citing the industrial park. Reported 'on Thursday' in a 14 Nov 2025 article, so the date of 13 Nov is inferred.",
-      "effect": "Seven trade sources: Sinochem shut the 240,000-bpd No.1 crude unit (of a 300,000-bpd refinery) after the fire.",
+      "summary": "A fire at a Sinochem refinery in Fujian injured seven, per state media.",
+      "effect": "Seven trade sources: Sinochem shut a crude unit of about 240,000 bpd (refinery about 300,000 bpd) after the fire.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
       "threshold_basis": "Major refinery unit shut after a fire, with capacity reported.",
       "capacity_affected": {
         "value": 240000,
         "unit": "barrels/day (crude unit capacity)",
-        "source_says": "No.1 crude unit ... 240,000 bpd; refinery 300,000 bpd"
+        "source_says": "About 240,000 bpd crude unit capacity; refinery about 300,000 bpd."
       },
       "sources": [
         {
@@ -743,17 +654,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -770,7 +686,7 @@
       "operator": "Shanxi Tongzhou Coal & Coke Group (山西通洲集团)",
       "asset_class": "coal_mine",
       "cause": "technical",
-      "summary": "A gas explosion at 19:29 on 22 May 2026 killed 82 and left 2 missing, China's deadliest mine disaster in about 17 years. The operator's four mines were ordered to halt, and blanket safety inspections swept Shanxi's coal sector.",
+      "summary": "A gas explosion at 19:29 on 22 May 2026 at the Liushenyu coal mine in Shanxi killed 82 and left 2 missing. The operator's four mines were ordered to halt, and widespread safety inspections across Shanxi suspended mining capacity.",
       "effect": "Xinhua: 责令山西通洲集团下属四座煤矿全部停产整顿 (all four of the group's mines ordered to halt for rectification). Sxcoal citing NBS: Shanxi raw coal output in June 2026 was 78.01 Mt, down 31.5% y/y, attributed to the explosion and the resulting suspensions. Reuters: national June output fell 9.7% y/y, the steepest drop since 2016. Xinhua (Oct 2026): Shanxi output fell more than 30% y/y in each month from June to August.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 6,
@@ -812,90 +728,40 @@
           "language": "zh",
           "source_role": "media",
           "opened": null
+        },
+        {
+          "url": "https://tradingeconomics.com/china/coal-production-yoy/news/567053",
+          "publisher": "Trading Economics",
+          "date": "2026-07-15",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
         }
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
         "kind": "partial_restart",
         "date": "2026-09-30",
-        "evidence": "Xinhua (21 Oct 2026): Shanxi September raw coal output was 78.826 Mt, a four-month high; more than 200 mines had completed rectification and resumed production. In mid-September NDRC, NEA and the National Mine Safety Administration urged a safe return to full production. Return to pre-accident y/y output levels was not reported. The date is month-end of September, the month the output figure covers.",
+        "evidence": "Xinhua (21 Oct 2026): Shanxi September raw coal output was 78.826 Mt, a four-month high; more than 200 mines had completed rectification and resumed production. In mid-September NDRC, NEA and the National Mine Safety Administration issued a notice urging coal provinces and companies to advance resumption and reach design output safely. Return to pre-accident y/y output levels was not reported. The date is month-end of September, the month the output figure covers.",
         "url": "https://www.news.cn/local/20261021/9809659061f64a40ba325dd7c4cbd6b8/c.html"
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
-        "source_count": 4,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "cn-2026-07-typhoons-bavi-mesak-hongxia-outages",
-      "date": "2026-07-01",
-      "date_precision": "month",
-      "date_end": null,
-      "region_code": null,
-      "geography_precision": "country",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": null,
-      "asset_class": "system_wide",
-      "cause": "natural_hazard",
-      "summary": "NEA aggregate: from July 2026, Typhoons Bavi (巴威, landfall Yuhuan, Zhejiang, 11 July), Mesak (美莎克) and Hongxia (红霞), plus convective storms, cut power in Zhejiang, Guangxi, Guangdong and elsewhere. There is no per-province breakdown, so this is country-precision. asset_class system_wide is a flagged fallback: the outage was spread across the distribution network and no single asset class fits.",
-      "effect": "NEA press conference (30 July 2026): 累计造成800余万户(仅台风616余万)用户停电, i.e. more than 8 million customers lost power cumulatively, about 6.16 million of them from the typhoons. In Zhejiang, 81% of customers who lost power to Bavi were restored within 4 hours.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 5,
-      "threshold_basis": "Loss of supply to more than 6 million customers from typhoons, per the National Energy Administration.",
-      "capacity_affected": {
-        "value": 6160000,
-        "unit": "customers (户) cut off by typhoons (cumulative, multi-province)",
-        "source_says": "累计造成800余万户(仅台风616余万)用户停电"
-      },
-      "sources": [
-        {
-          "url": "https://www.rmzxw.com.cn/c/2026-07-30/3955014.shtml",
-          "publisher": "人民政协网 (China News Service report of NEA press conference)",
-          "date": "2026-07-30",
-          "language": "zh",
-          "source_role": "official",
-          "opened": null
-        },
-        {
-          "url": "https://cn.chinadaily.com.cn/a/202607/30/WS6a6aea6ea310d709c2fc08a6.html",
-          "publisher": "中国日报网 (CCTV News copy)",
-          "date": "2026-07-30",
-          "language": "zh",
-          "source_role": "media",
-          "opened": null
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
+        "source_count": 5,
+        "sources_opened_by_reviewer": 4,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept",
+          "taxonomy": "accept"
         }
-      ],
-      "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
-        "date": "2026-07-30",
-        "evidence": "NEA, 30 July 2026: 受灾用户现已全部恢复供电 (all affected customers have been restored). This is the date of the statement, not the date the last customer was restored.",
-        "url": "https://www.rmzxw.com.cn/c/2026-07-30/3955014.shtml"
-      },
-      "review": {
-        "reviewed_at": "2026-10-30",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
-        "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
-        "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
       },
       "hazard_name": null
     },

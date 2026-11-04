@@ -36,6 +36,100 @@
         "accepted": 1,
         "insufficient_evidence": 1
       }
+    },
+    {
+      "date": "2026-11-03",
+      "by": "iteration-17 first systematic pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-03"
+      ],
+      "scope": "inclusion clauses 1-7 as written; lanes and exact queries declared before searching (docs/countries/SA_SYSTEMATIC_SWEEP.md); every published record reviewed blind by three independent roles and confirmed on its final text",
+      "source_families": [
+        "Ministry of Energy statements as carried by SPA (spa.gov.sa; moenergy.gov.sa), reached through Saudi outlets republishin",
+        "Saudi Aramco disclosures: Tadawul announcements; aramco.com news and annual-report incident statements",
+        "GASTAT and JODI production releases (production effects explicitly attributed to a disruption)",
+        "OPEC Monthly Oil Market Report archive",
+        "International and regional reporting (Reuters, Bloomberg, AP, S&P Global, Argus, as carried by open outlets), via search"
+      ],
+      "categories": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "lanes": [
+        {
+          "lane": "SA1",
+          "source_family": "Ministry of Energy statements as carried by SPA (spa.gov.sa; moenergy.gov.sa), reached through Saudi outlets republishing them",
+          "registry": [
+            "Ministry of Energy statements (Saudi Press Agency)"
+          ],
+          "status": "partial",
+          "reason": "SPA and the ministry site could not be enumerated directly (SPA renders by script; moenergy.gov.sa did not respond), so the lane depends on search; four English year-queries were not run under the 15-search cap; the 2022 Arabic query was run unfiltered and the first attempt was cut off (counted).",
+          "covered_through": "2026-11-03"
+        },
+        {
+          "lane": "SA2",
+          "source_family": "Saudi Aramco disclosures: Tadawul announcements; aramco.com news and annual-report incident statements",
+          "registry": [
+            "Aramco Annual Report",
+            "Aramco Tadawul announcements"
+          ],
+          "status": "partial",
+          "reason": "Both queries were run (search covers all years), but the Tadawul announcement list refused automated access (403) and aramco.com's news list rendered only its latest item, so the declared universe was not enumerated; the 2022-2025 annual reports were not read.",
+          "covered_through": "2026-11-03"
+        },
+        {
+          "lane": "SA3",
+          "source_family": "GASTAT and JODI production releases (production effects explicitly attributed to a disruption)",
+          "registry": [
+            "JODI Oil",
+            "GASTAT, SEC, EIA, OPEC"
+          ],
+          "status": "partial",
+          "reason": "JODI's universe carries no attribution text by design, so it can never supply an attributed production effect; GASTAT's energy release listing was not reached. Not searched across the window.",
+          "covered_through": "2022-01-01"
+        },
+        {
+          "lane": "SA4",
+          "source_family": "OPEC Monthly Oil Market Report archive",
+          "registry": [
+            "OPEC Monthly Oil Market Report"
+          ],
+          "status": "partial",
+          "reason": "The MOMR archive refused automated access (HTTP 402 on both the legacy and current addresses). No issue was read.",
+          "covered_through": "2022-01-01"
+        },
+        {
+          "lane": "SA5",
+          "source_family": "International and regional reporting (Reuters, Bloomberg, AP, S&P Global, Argus, as carried by open outlets), via search",
+          "registry": [
+            "International news agencies and energy press (Reuters, Bloomberg, AP, S&P Global, Argus)"
+          ],
+          "status": "partial",
+          "reason": "6 of the plan's 15 SA5 queries were run before the 15-search personal cap; 2023 and 2024 had no query; several outlets refused (402/login wall).",
+          "covered_through": "2026-11-03"
+        }
+      ],
+      "status": "partial",
+      "status_reason": "0 of 5 lanes complete; the others are partial for the reasons stated per lane",
+      "outcome": {
+        "candidates": 30,
+        "accepted": 0,
+        "rejected": 2,
+        "duplicate": 18,
+        "held": 6,
+        "out_of_scope": 4
+      },
+      "plan": {
+        "document": "docs/countries/SA_SYSTEMATIC_SWEEP.md",
+        "commit": "a7f3a36"
+      }
     }
   ]
 }

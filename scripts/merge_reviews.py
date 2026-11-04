@@ -53,7 +53,7 @@ def merge(prefix):
         by_role[role] = {x["event_id"]: x for x in doc["records"]}
     out = []
     for rec in packet:
-        eid = rec["event_id"]
+        eid = rec.get("event_id") or rec["candidate_id"]   # a new record has no event id yet
         missing = [r for r in ROLES if eid not in by_role[r]]
         if missing:
             raise SystemExit(f"{prefix}: {eid} has no review from role(s) {missing}")

@@ -130,6 +130,16 @@
         "us-2026-10-09-hurricane-isaias-outages"
       ],
       "hazard": "Hurricane Isaias (2026)"
+    },
+    {
+      "episode_id": "us-2024-08-hurricane-debby",
+      "name": "Hurricane Debby, August 2024",
+      "basis": "named_hazard",
+      "hazard": "Hurricane Debby (2024)",
+      "event_ids": [
+        "us-2024-08-05-hurricane-debby-florida-outages",
+        "us-2024-08-08-tropical-storm-debby-north-carolina-outages"
+      ]
     }
   ]
 }

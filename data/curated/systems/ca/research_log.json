@@ -146,6 +146,133 @@
         "duplicate": 16,
         "out_of_scope": 0
       }
+    },
+    {
+      "date": "2026-11-03",
+      "by": "iteration-17 lane completion",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-03"
+      ],
+      "scope": "inclusion clauses 1-7 as written; lanes and exact queries declared before searching (docs/countries/CA_LANE_COMPLETION_17.md); every published record reviewed blind by three independent roles and confirmed on its final text",
+      "source_families": [
+        "Public Safety Canada, Canadian Disaster Database: the Open Government extract (newest edition) and the legacy CDD search",
+        "NERC State of Reliability reports and NERC event-analysis reports naming a Canadian entity",
+        "Operator grid records: AESO EEA/Grid Alert history file and Annual Market Statistics; IESO news-release archive and emer",
+        "Environment and Climate Change Canada top-ten weather stories (2022-2025 editions), with a utility peak sought for each ",
+        "CER pipeline-incident comprehensive CSV (newest edition, served Last-Modified 2026-11-01, open.canada.ca metadata modifi",
+        "Declared query set (plan A.1) over refineries, upgraders and gas plants, each query run once per year 2022-2026; opened ",
+        "Declared query set (plan A.1): wildfire/weather production shut-ins with a stated volume in Alberta, BC, Saskatchewan; o",
+        "Per-terminal query set (plan A.1) for LNG Canada, Westridge, Canaport, RIPET, Pembina Prince Rupert, Whiffen Head; opera"
+      ],
+      "categories": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "lanes": [
+        {
+          "lane": "CG1",
+          "source_family": "Public Safety Canada, Canadian Disaster Database: the Open Government extract (newest edition) and the legacy CDD search interface",
+          "registry": [
+            "Public Safety Canada, Canadian Disaster Database"
+          ],
+          "status": "partial",
+          "reason": "The source has published nothing after 2022-12-22. The newest edition is the one iteration 16 enumerated; 2023-2026 is absent from the source, not unsearched.",
+          "covered_through": "2022-12-22"
+        },
+        {
+          "lane": "CG2",
+          "source_family": "NERC State of Reliability reports and NERC event-analysis reports naming a Canadian entity",
+          "registry": [
+            "NERC State of Reliability and event analyses"
+          ],
+          "status": "partial",
+          "reason": "Every published SOR and event report was covered, but no SOR covering 2026 exists yet; covered_through is the end of the latest operating year NERC has reported.",
+          "covered_through": "2025-12-31"
+        },
+        {
+          "lane": "CG3",
+          "source_family": "Operator grid records: AESO EEA/Grid Alert history file and Annual Market Statistics; IESO news-release archive and emergency notice feeds; Hydro-Québec press-r",
+          "registry": [
+            "NRCan facility layers; AESO, IESO, Hydro-Québec"
+          ],
+          "status": "partial",
+          "reason": "AESO is enumerated completely through 2025-12-31 from its own records, but it has published no list for 2026 (its live feeds are empty and keep no archive); 2026 rests on one search that found nothing. IESO publishes no archive of its emergency declarations (the notice archive keeps 90 days), so IESO coverage rests on searches. Hydro-Québec's archive is complete as a list of releases but HQ did no",
+          "covered_through": "2025-12-31"
+        },
+        {
+          "lane": "CH1",
+          "source_family": "Environment and Climate Change Canada top-ten weather stories (2022-2025 editions), with a utility peak sought for each held story",
+          "registry": [
+            "Environment and Climate Change Canada, top ten weather stories"
+          ],
+          "status": "partial",
+          "reason": "No 2026 edition exists, so January-November 2026 is outside this source; two holds remain without a utility peak; and two iteration-16 rejections rest on ECCC wording rather than a utility figure.",
+          "covered_through": "2025-12-31"
+        },
+        {
+          "lane": "CP1",
+          "source_family": "CER pipeline-incident comprehensive CSV (newest edition, served Last-Modified 2026-11-01, open.canada.ca metadata modified 2026-11-02; latest reported date in f",
+          "registry": [
+            "Canada Energy Regulator open data",
+            "Transportation Safety Board pipeline investigations"
+          ],
+          "status": "partial",
+          "reason": "CER file enumerated across the window to its latest reported date (2026-10-22) and every screened row dispositioned (this pass re-emits the 10 interruption-flag rows; the other 41 keep their iteration-16 dispositions, unchanged). Partial because the TSB half was refused (HTTP 403), the CER file stops at 2026-10-22, and no public-report check of the interruption rows was possible within the lane (n",
+          "covered_through": "2026-10-22"
+        },
+        {
+          "lane": "CR1",
+          "source_family": "Declared query set (plan A.1) over refineries, upgraders and gas plants, each query run once per year 2022-2026; opened pages from the results.",
+          "registry": [
+            "Canadian refinery, upgrader and gas-plant reporting (operators, regulators)"
+          ],
+          "status": "partial",
+          "reason": "All 15 declared queries run (every year 2022-2026). Partial by construction (plan A.1: no census source; a declared query set is complete only if the owner accepts it), and because several result pages refused fetch (moosejawtoday, oilandgas360, energynow, Biofuels Digest) and some results were undated archive items.",
+          "covered_through": "2026-11-03"
+        },
+        {
+          "lane": "CU1",
+          "source_family": "Declared query set (plan A.1): wildfire/weather production shut-ins with a stated volume in Alberta, BC, Saskatchewan; opened pages from the results. No AER or ",
+          "registry": [
+            "Alberta and BC wildfire and shut-in reporting (AER, provincial governments, operators)",
+            "Statistics Canada tables (web API)"
+          ],
+          "status": "partial",
+          "reason": "Five of ten declared queries run (2022 both, 2026 both, 2024 one); 2023 and 2025 not searched; no AER/provincial/operator enumeration; partial by construction in any case (no census source).",
+          "covered_through": "2026-06-01"
+        },
+        {
+          "lane": "CL1",
+          "source_family": "Per-terminal query set (plan A.1) for LNG Canada, Westridge, Canaport, RIPET, Pembina Prince Rupert, Whiffen Head; operator news pages by direct fetch.",
+          "registry": [
+            "Canadian export terminal reporting (operators)"
+          ],
+          "status": "partial",
+          "reason": "Not executed: the personal search cap was spent on CR1 and CU1 in the instructed order, and the one direct fetch (LNG Canada news) was refused.",
+          "covered_through": null
+        }
+      ],
+      "status": "partial",
+      "status_reason": "0 of 8 lanes complete; the others are partial for the reasons stated per lane",
+      "outcome": {
+        "candidates": 56,
+        "accepted": 6,
+        "rejected": 12,
+        "duplicate": 11,
+        "held": 27,
+        "out_of_scope": 0
+      },
+      "plan": {
+        "document": "docs/countries/CA_LANE_COMPLETION_17.md",
+        "commit": "a7f3a36"
+      }
     }
   ]
 }

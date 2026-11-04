@@ -14,8 +14,8 @@
       "operator": "Yanbu Aramco Sinopec Refining Co. (Aramco / Sinopec JV)",
       "asset_class": "refinery",
       "cause": "kinetic_strike",
-      "summary": "The Saudi energy ministry said an attack on YASREF facilities led to a temporary reduction in the refinery's production. It was the only site in the 20 March 2022 wave for which an output effect was officially stated.",
-      "effect": "Ministry: the attack \"led to a temporary reduction in the refinery's production, which will be compensated for from the inventory.\" No volume or duration given.",
+      "summary": "The Saudi energy ministry said an attack on YASREF facilities led to a temporary reduction in the refinery's production.",
+      "effect": "Ministry: the attack led to a temporary reduction in the refinery's production. No volume or duration given.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
       "threshold_basis": "Clause 1: official statement of a reduction in refinery throughput following an attack.",
@@ -50,21 +50,26 @@
         "research_status": "RESEARCHED_NO_PUBLIC_EVIDENCE",
         "kind": null,
         "date": "2022-03-20",
-        "evidence": "Ministry said the reduction \"will be compensated for from the inventory\". This is a supply-continuity statement, not evidence of a refinery restart; no restart date or return-to-normal statement was found.",
-        "url": "https://www.timesofisrael.com/houthi-drone-attack-causes-temporary-reduction-in-saudi-oil-output/"
+        "evidence": null,
+        "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 3,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -105,17 +110,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "confirmed",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -140,7 +150,7 @@
       "capacity_affected": {
         "value": 550000,
         "unit": "bbl/d",
-        "source_says": "Bloomberg/World Oil: the 550,000 b/d refinery was shut (full shutdown, so nameplate = affected throughput)."
+        "source_says": "Bloomberg/World Oil: the 550,000 b/d refinery was shut."
       },
       "sources": [
         {
@@ -176,17 +186,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 3,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 3,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -203,8 +218,8 @@
       "operator": "Saudi Aramco",
       "asset_class": "oil_terminal",
       "cause": "kinetic_strike",
-      "summary": "Crude oil loadings at Yanbu were halted.",
-      "effect": "Crude loadings stopped (Reuters, two sources).",
+      "summary": "Oil loadings at Yanbu port were halted during a reported attack; the sources do not report the port itself being struck.",
+      "effect": "Oil loadings stopped (Reuters, two sources).",
       "inclusion_basis": "reported_effect",
       "criterion_met": 2,
       "threshold_basis": "Clause 2: reported suspension of crude export loadings.",
@@ -227,17 +242,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 1,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -254,11 +274,11 @@
       "operator": "SATORP (Aramco / TotalEnergies JV)",
       "asset_class": "refinery",
       "cause": "kinetic_strike",
-      "summary": "TotalEnergies said incidents on the night of 7-8 April damaged units at SATORP and the refinery was shut as a safety precaution.",
+      "summary": "TotalEnergies said incidents on the night of 7-8 April caused damage at the SATORP refinery and the refinery was shut as a precaution while the damage was assessed.",
       "effect": "Refinery shut from 8 April 2026 (TotalEnergies).",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
-      "threshold_basis": "Clause 1: operator-confirmed refinery shutdown and sustained throughput cut.",
+      "threshold_basis": "Clause 1: operator-confirmed refinery shutdown after attacks.",
       "capacity_affected": null,
       "sources": [
         {
@@ -286,17 +306,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -314,14 +339,14 @@
       "asset_class": "upstream_production",
       "cause": "kinetic_strike",
       "summary": "The energy ministry said an attack on the Khurais facility cut production by about 300,000 b/d.",
-      "effect": "Production reduced by about 300,000 b/d (ministry: \"تأثر إنتاج حقل خريص بنحو 300 ألف برميل يومياً\").",
+      "effect": "Production reduced by about 300,000 b/d (ministry: \"أدى إلى انخفاض إنتاجه بمقدار 300 ألف برميل يوميًا من طاقته الإنتاجية\").",
       "inclusion_basis": "reported_effect",
       "criterion_met": 7,
       "threshold_basis": "Clause 7: official statement of production curtailed by a stated material volume.",
       "capacity_affected": {
         "value": 300000,
         "unit": "bbl/d",
-        "source_says": "Energy ministry source via SPA, 9 Apr 2026: Khurais output affected by about 300,000 b/d."
+        "source_says": "Energy ministry source via SPA, 9 Apr 2026: an earlier attack on Khurais reduced its output by 300,000 b/d of its production capacity."
       },
       "sources": [
         {
@@ -347,14 +372,6 @@
           "language": "en",
           "source_role": "media",
           "opened": null
-        },
-        {
-          "url": "https://www.okaz.com.sa/economy/saudi/2243786",
-          "publisher": "Okaz (republishing SPA)",
-          "date": "2026-04-12",
-          "language": "ar",
-          "source_role": "official",
-          "opened": null
         }
       ],
       "recovery": {
@@ -365,17 +382,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
-        "source_count": 4,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
+        "source_count": 3,
+        "sources_opened_by_reviewer": 4,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -436,88 +458,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "confirmed",
         "source_count": 3,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "sa-2026-04-east-west-pipeline-throughput-cut",
-      "date": "2026-04-01",
-      "date_precision": "month",
-      "date_end": null,
-      "region_code": null,
-      "geography_precision": "country",
-      "regions_affected": [],
-      "facility_name": "East-West crude pipeline",
-      "facility_name_local": "خط أنابيب شرق - غرب",
-      "operator": "Saudi Aramco",
-      "asset_class": "pipeline_oil",
-      "cause": "kinetic_strike",
-      "summary": "The energy ministry said attacks on the East-West crude pipeline cut its pumped throughput by about 700,000 b/d.",
-      "effect": "Pipeline throughput reduced by about 700,000 b/d (ministry: \"فقدان نحو 700 ألف برميل يومياً من طاقة الضخ\").",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 3,
-      "threshold_basis": "Clause 3 (partial): official statement of a material throughput cut on a crude trunk pipeline; not a full shutdown.",
-      "capacity_affected": {
-        "value": 700000,
-        "unit": "bbl/d",
-        "source_says": "Energy ministry source via SPA, 9 Apr 2026: about 700,000 b/d of pumping capacity lost."
-      },
-      "sources": [
-        {
-          "url": "https://www.aleqt.com/الطاقة/توقف-العمليات-التشغيلية-في-عدد-من-منشآت-الطاقة-السعودية-8573",
-          "publisher": "Al-Eqtisadiah (republishing SPA)",
-          "date": "2026-04-09",
-          "language": "ar",
-          "source_role": "official",
-          "opened": null
-        },
-        {
-          "url": "https://www.thenationalnews.com/business/energy/2026/04/09/saudi-output-capacity-cut-by-600000-barrels-a-day-due-to-iran-war",
-          "publisher": "The National",
-          "date": "2026-04-09",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://www.al-monitor.com/originals/2026/04/attacks-cut-saudi-oil-output-and-east-west-pipeline-flow-state-news-agency-says",
-          "publisher": "Al-Monitor (Reuters)",
-          "date": "2026-04-09",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
+        "sources_opened_by_reviewer": 3,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept",
+          "taxonomy": "accept"
         }
-      ],
-      "recovery": {
-        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-10-30",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
-        "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
-        "source_count": 3,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
       },
       "hazard_name": null
     },
@@ -566,17 +522,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "confirmed",
         "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     },
@@ -587,7 +548,10 @@
       "date_end": null,
       "region_code": null,
       "geography_precision": "country",
-      "regions_affected": [],
+      "regions_affected": [
+        "SA-01",
+        "SA-03"
+      ],
       "facility_name": "East-West crude pipeline",
       "facility_name_local": "خط أنابيب شرق - غرب",
       "operator": "Saudi Aramco",
@@ -607,14 +571,6 @@
           "language": "en",
           "source_role": "media",
           "opened": null
-        },
-        {
-          "url": "https://aljazeera.com/news/2026/9/12/saudi-arabia-shuts-critical-oil-pipeline-after-drone-attack-what-happened",
-          "publisher": "Al Jazeera",
-          "date": "2026-09-12",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
         }
       ],
       "recovery": {
@@ -625,68 +581,22 @@
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-11-03",
         "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
+        "review_status": "blind_reviewed",
         "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
-        "source_count": 2,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "sa-2026-09-yanbu-loadings-suspended",
-      "date": "2026-09-01",
-      "date_precision": "month",
-      "date_end": null,
-      "region_code": "SA-03",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": "Yanbu crude export port",
-      "facility_name_local": "ينبع",
-      "operator": "Saudi Aramco",
-      "asset_class": "oil_terminal",
-      "cause": "kinetic_strike",
-      "summary": "Shipping sources said crude loadings at Yanbu were suspended in mid-September 2026.",
-      "effect": "Crude export loadings suspended (Reuters shipping sources, reported 15 Sep; Aramco declined comment).",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 2,
-      "threshold_basis": "Clause 2: reported suspension of crude export loadings.",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://boereport.com/2026/09/15/oil-loadings-suspended-at-saudis-red-sea-port-of-yanbu-shipping-sources-say/",
-          "publisher": "BOE Report (Reuters)",
-          "date": "2026-09-15",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        }
-      ],
-      "recovery": {
-        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-10-30",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "legacy_single_review",
-        "primary_review_complete": true,
-        "independent_review_complete": false,
-        "reviewer_count": 1,
-        "disposition": null,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": null,
-        "process": "Single-pass open-source research lane; centrally reviewed against the inclusion threshold, source rules and scope scan. Claims were not independently re-verified beyond the cited sources.",
-        "source_access": "not recorded by the research lane"
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
       },
       "hazard_name": null
     }
