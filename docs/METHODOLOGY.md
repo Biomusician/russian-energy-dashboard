@@ -506,10 +506,56 @@ None of this changes a number. It changes what a historical number is allowed to
   measure. A fresh OSM fetch changed the geometry and left the ESDI and every sector value
   identical. Each build records the Overpass base timestamp and a hash per input
   (`snapshot.context_geometry_inputs`).
-- **Country records need two reviews** ([REVIEW_GOVERNANCE.md](REVIEW_GOVERNANCE.md)), and a
+- **Country records need independent review** ([REVIEW_GOVERNANCE.md](REVIEW_GOVERNANCE.md)), and a
   record under an active attack campaign publishes the event but not the facility's status
-  ([CURRENT_EVENT_PUBLICATION_POLICY.md](CURRENT_EVENT_PUBLICATION_POLICY.md)). The theatre's
-  own campaign is recorded but not yet under that policy; that is an owner decision.
+  ([CURRENT_EVENT_PUBLICATION_POLICY.md](CURRENT_EVENT_PUBLICATION_POLICY.md)). Since iteration
+  17 the theatre's own campaign is under a policy of its own (§12).
 - **Non-conflict recovery** stays observed-only, with sourced estimates labelled as estimates.
   Options for a model are evaluated, not deployed, in
   [NONCONFLICT_RECOVERY_OPTIONS.md](NONCONFLICT_RECOVERY_OPTIONS.md).
+
+## 12. Campaign publication policy, review and output isolation (iteration 17)
+
+**The theatre's recovery evidence waits until it is history.** While the theatre's campaign is
+active (`data/curated/systems/conflict_campaigns.json`), a recovery record for one of its
+incidents is used, for display, for scoring and for the build ledger alike, only when:
+
+1. its evidence date (the observed restoration or partial-restart date; for a record with
+   neither, the incident date) is at least `campaign_publication.evidence_embargo_days` old
+   (60, in `methodology/scoring.json`); **and**
+2. if it carries a repair estimate, the incident date plus the estimate's upper bound has passed.
+
+A record with no date at all is never released. Until release the incident is scored on the
+modelled class horizon (§5, rule 6), which **overstates exposure** for the embargo period; at 60
+days the largest effect at any tested date is +0.48 points, and nothing today. An effect report
+dated within 7 days of the strike is occurrence and is published at once; a later one is held
+like recovery evidence. A current build refuses to run while an embargoed record is in the
+curated files, because the repository is published too.
+
+What is published instead: occurrence at administrative-region level as before; the modelled
+exposure; the rule and the **counts** withheld (`snapshot.campaign_policy`), never the ids; and,
+on every campaign disruption without released evidence, "Current facility status withheld during
+active campaign; historical recovery evidence may be published later." The note appears on all
+such disruptions, not only where a record was withheld, so that its presence reveals nothing.
+Evidence for D, the options considered, and the leakage audits:
+[OPERATIONAL_STATUS_DELAY_OPTIONS.md](OPERATIONAL_STATUS_DELAY_OPTIONS.md).
+
+**Review is blind and three-role.** A country record is published as `blind_reviewed` only after
+an evidence reviewer, a safety reviewer and a taxonomy reviewer, none seeing the researcher's
+reasoning or each other, all accept it, and all confirm the reconciled text. Any reject rejects;
+any hold, duplicate or owner question holds. There is no majority vote. The 94 records
+published in iteration 14 on a single review were put through it; the grandfather list is now
+empty. [REVIEW_GOVERNANCE.md](REVIEW_GOVERNANCE.md) §7.
+
+**Outputs are isolated by build mode** (`pipeline/outputs.py`). Only a `current` build (as-of
+today) may write the production payload, mirror it to the web bundle, write CURRENT_STATE or
+extend the production ledger. A `reconstruction` needs an explicit output root outside both; a
+`fixture` writes only to test directories. What the dashboard served on a past day is extracted
+from git by `scripts/extract_published.py`, which runs no scoring code.
+
+**First seen is taken from the as-published history**, never inferred from an event date:
+`present_before_tracking` for a record already in the first reliable production build (no date
+is claimed), or the date of the first deployed build that carried it.
+
+None of these changes a current number. The pinned-source reconstruction reference
+(`--as-of 2026-08-28`) moves from 16.16 to 16.48 because of the embargo.

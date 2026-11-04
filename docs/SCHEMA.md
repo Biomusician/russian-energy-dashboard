@@ -538,3 +538,38 @@ Vercel production deployments from GitHub's public deployments API, written by
 `scripts/capture_deployments.py`: `note`, `repo`, `captured_at` and `deployments[]`. Each
 deployment has `deployment_id`, `sha`, `created_at`, `creator`, `environment` and `state`; a
 state may be null until it is fetched.
+
+## Iteration 17 additions
+
+### Theatre
+
+- `methodology/scoring.json` → `campaign_publication.evidence_embargo_days` (60).
+- `snapshot.build_mode`: `current` | `reconstruction` | `fixture`. The committed payload is
+  always `current`.
+- `snapshot.campaign_policy`: `{applied, campaign_id, evidence_embargo_days, rule,
+  withheld_records, withheld_effects}`. Counts only; the ids of withheld records are never
+  emitted.
+- `RecoveryState.publication_note` (per live disruption): the withheld-status sentence, on every
+  campaign disruption with no released evidence; absent otherwise.
+- `history_series.json`: `asset_names` (id → inventory or incident name) and
+  `unresolved_asset_ids` (ids with no name anywhere). `data_quality.json` →
+  `unresolved_asset_labels: {ids, note}`. The UI shows a derived label or "Unknown asset", never
+  a raw id.
+- Lifecycle episodes: `first_seen` is null or `{status, build_date, commit}`, where `status` is
+  `present_before_tracking` (no date claimed) or `first_served`. Field
+  `dashboard_first_seen_build` is `available: true`.
+- `production_history.json` → `first_seen`: incident id → `{status, served_from, sha}`.
+
+### Country systems
+
+- `events[].review.review_status` adds `blind_reviewed`, which requires `reviewer_count` 4
+  (researcher plus three roles) and `roles: {evidence, safety, taxonomy}`, each `ACCEPT` or
+  `ACCEPT_WITH_CORRECTION`. Reasoning is never published.
+- `system.json` → `review_summary.blind_reviewed` (count).
+- `research_log.json` → `passes[].lanes[].covered_through`: the last date the lane's universe was
+  searched to. A lane is `complete` only if this is the end of the pass window; the build fails a
+  "complete" lane that ends early.
+- `system.json` → `source_health`: `{events, citations, publishers, by_role, by_language,
+  opened: {opened, not_opened, not_recorded}, dated, single_source_events,
+  events_with_first_party_source, first_party_roles, note}`. Inside one country only; never in
+  the manifest.
