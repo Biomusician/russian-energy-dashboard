@@ -28,8 +28,9 @@ The theatre is now under an active-campaign policy of its own
   campaign disruption without released evidence carries the withheld-status note, so the note
   reveals nothing. A current build refuses to run with an embargoed row in the curated files.
 - **Delay stress test** (D = 0, 7, 14, 30, 45, 60, 90 at three dates): at 60 days the largest
-  index effect at any tested date is +0.48 (2026-08-28: 16.00 → 16.48) and nothing today. 60 is
-  the knee: it covers about half of re-strike intervals (median 67 days).
+  index effect at any tested date is +0.48 (2026-08-28: 16.00 → 16.48) and nothing today. 60 is a
+  judgement, not a knee in the data: it covers about half of re-strike intervals (median 67 days)
+  at the same index cost as 45, and 90 would cover 59%.
 - **Moved to a local hold:** three open-horizon repair estimates and one forward effect estimate.
   ESDI unchanged at 7.8.
 - **Safety review of what the theatre already published.** Removed from curated text: unit

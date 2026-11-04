@@ -1,15 +1,15 @@
 {
   "schema_version": 2,
-  "build_time": "2026-11-04T01:20:17+00:00",
+  "build_time": "2026-11-04T02:39:22+00:00",
   "files": [
     {
       "name": "assets.json",
-      "bytes": 628304,
+      "bytes": 628271,
       "optional": false
     },
     {
       "name": "build_changes.json",
-      "bytes": 5899,
+      "bytes": 6376,
       "optional": false
     },
     {
@@ -29,7 +29,7 @@
     },
     {
       "name": "incidents.json",
-      "bytes": 184249,
+      "bytes": 181128,
       "optional": false
     },
     {
@@ -49,22 +49,22 @@
     },
     {
       "name": "pipeline_registry.json",
-      "bytes": 333708,
+      "bytes": 333320,
       "optional": false
     },
     {
       "name": "production_history.json",
-      "bytes": 67926,
+      "bytes": 69641,
       "optional": false
     },
     {
       "name": "recovery_lifecycle.json",
-      "bytes": 109766,
+      "bytes": 109793,
       "optional": false
     },
     {
       "name": "refinery_inventory.json",
-      "bytes": 12504,
+      "bytes": 12445,
       "optional": false
     },
     {
@@ -74,7 +74,7 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 288058,
+      "bytes": 286587,
       "optional": false
     },
     {

@@ -558,4 +558,5 @@ from git by `scripts/extract_published.py`, which runs no scoring code.
 is claimed), or the date of the first deployed build that carried it.
 
 None of these changes a current number. The pinned-source reconstruction reference
-(`--as-of 2026-08-28`) moves from 16.16 to 16.48 because of the embargo.
+(`--as-of 2026-08-28`) moves from 16.16 to 16.48: +0.48 from the embargo, −0.16 from the
+iteration's other curated changes.

@@ -33,7 +33,7 @@
 
 ## Strategic effects (source-backed, observational)
 - **National/macro datapoints**: 8
-- **Per-incident effects**: 17 across 15 incidents
+- **Per-incident effects**: 14 across 14 incidents
 
 ## Tests
-- **Python test functions** (`tests/test_pipeline.py`): 467 (pytest reports more cases — some functions are parametrized)
+- **Python test functions** (`tests/test_pipeline.py`): 479 (pytest reports more cases — some functions are parametrized)

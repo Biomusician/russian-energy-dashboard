@@ -24,12 +24,14 @@ would announce the day the evidence arrived.
 
 Release rule, per recovery record of a campaign incident:
 
-- **evidence date** = the latest of the observed restoration date and the partial-restart date;
-  for a record with neither, the incident date. The publication date of the source is not
-  curated, so this is a floor, not the publication date;
+- **evidence date** = the latest of the observed restoration date, the partial-restart date and
+  `evidence_as_of` (the date the cited source reports the state as of, where it gives no restart
+  date). A forecast with none of these uses the incident date, because its estimate horizon
+  decides its release. Where no source date is curated this is a floor, not the publication date;
 - **released** when the evidence date is at least D days old **and**, if the record carries a
   repair estimate, the incident date plus the estimate's upper bound has passed;
-- a record with no date at all is never released (fail closed).
+- an observed status (a restart or restoration) with no date of any kind is never released,
+  and nor is an effect with no date (fail closed; the final red team found both failing open).
 
 An effect report is treated the same way, except that one reported **within 7 days of the strike
 is occurrence** and is published at once (the same window as the country systems' late-citation
@@ -67,10 +69,13 @@ ESDI under each embargo, with the same code and corpus, at three dates
 | 0 | 16.00 (0 withheld) | 8.89 (0) | 7.80 (0) |
 | 7 | 16.00 (0) | 8.89 (0) | 7.80 (0) |
 | 14 | 16.11 (2) | 8.89 (0) | 7.80 (0) |
-| 30 | 16.11 (2) | 8.89 (0) | 7.80 (0) |
-| 45 | 16.48 (4) | 8.96 (2) | 7.80 (0) |
-| **60** | **16.48 (5)** | **8.96 (2)** | **7.80 (0)** |
-| 90 | 16.48 (7) | 9.18 (5) | 7.86 (2) |
+| 30 | 16.11 (3) | 8.89 (0) | 7.80 (0) |
+| 45 | 16.48 (5) | 8.96 (2) | 7.80 (0) |
+| **60** | **16.48 (6)** | **8.96 (2)** | **7.80 (0)** |
+| 90 | 16.48 (7) | 9.18 (6) | 7.86 (2) |
+
+Withheld counts were re-measured after the final red team dated one status record
+(`evidence_as_of`); the index values did not change.
 
 An embargo raises the index slightly, because withheld restorations are scored on the modelled
 horizon until they are released, which overstates exposure for that period. At 60 days the cost
@@ -89,8 +94,8 @@ revision on 2026-07-01, so the earliest tested date is 2026-08-28.
 | 7 | 13% | 0 | Publishes most status inside the window when it is still useful to a targeter |
 | 14 | 19% | +0.11 | As above |
 | 30 | 31% | +0.11 | Better; still publishes status for most quick re-strikes |
-| 45 | 44% | +0.48 | Near the knee |
-| **60** | **48%** | **+0.48** | **Adopted: the knee of both curves; no current number changes** |
+| 45 | 44% | +0.48 | Same index cost as 60, slightly less protection |
+| **60** | **48%** | **+0.48** | **Adopted, as a judgement: no current number changes, and the cost is the same as at 45** |
 | 90 | 59% | +0.48 (more records held for longer) | More protection at a rising cost, and the delay starts to hide restorations a reader needs to make sense of the index |
 
 ## 5. What is published instead

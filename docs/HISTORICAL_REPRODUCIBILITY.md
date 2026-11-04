@@ -44,9 +44,11 @@ more useful question for analysis, and never the question "what did readers see 
 **The pinned-source reconstruction reference.** `--mode reconstruction --as-of 2026-08-28
 --output-root data/reconstruction/2026-08-28` is the project's standing
 reconstruction reference for decomposing a change without time decay. At iteration 15 it gave
-**ESDI 16.16**, byte-stable across reruns. At iteration 17 it gives **16.48**: the theatre's
-campaign embargo (`docs/OPERATIONAL_STATUS_DELAY_OPTIONS.md`) withholds five restorations that
-were under 60 days old on 2026-08-28, and three open-horizon repair estimates left the curated file. It is a type-A value. It is not "frozen history" and
+**ESDI 16.16**, byte-stable across reruns. At iteration 17 it gives **16.48**. With no embargo
+(D = 0) the same corpus gives 16.00, so the theatre's campaign embargo
+(`docs/OPERATIONAL_STATUS_DELAY_OPTIONS.md`), which withholds six recovery records under 60 days
+old on 2026-08-28, adds +0.48, and the iteration's other curated changes (three open-horizon
+estimates held locally, corrected text) account for −0.16. It is a type-A value. It is not "frozen history" and
 not "as published": it moves, by design, whenever code or curated data change. Its earlier
 values (18.50, then 16.8) also drifted with Wikipedia edits; pinning removed that drift only.
 
@@ -153,7 +155,7 @@ Iteration 17 is the clearest case so far:
   for every date.
 - **The theatre's embargo.** Recovery evidence younger than 60 days on the reconstruction date is
   withheld exactly as in a current build, so the pinned 2026-08-28 reference moved from 16.16 to
-  16.48. Three open-horizon repair estimates also left the curated file and are held locally
+  16.48 (+0.48 from the embargo, −0.16 from other curated changes). Three open-horizon repair estimates also left the curated file and are held locally
   until their horizons close.
 
 git is the audit trail for all of it: `git log -p -- data/curated/` shows every record added,

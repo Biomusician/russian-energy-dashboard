@@ -8184,14 +8184,14 @@ def test_a_reconstruction_writes_inside_the_repo_only_under_data_reconstruction(
     assert ok["mirror_web"] is False
 
 
-@pytest.mark.skipif(subprocess.run(["git", "-C", str(ROOT), "cat-file", "-e", "4656234"],
+@pytest.mark.skipif(subprocess.run(["git", "-C", str(GIT_ROOT), "cat-file", "-e", "4656234"],
                                    capture_output=True).returncode != 0,
                     reason="git history with the 2026-11-03 bot refresh not available")
 def test_bot_refresh_commits_enter_the_as_published_history():
     """Lane F: '--author=dataset-refresh[bot]' is a regex whose '[bot]' matches nothing, so every
     unattended refresh after the last ledger capture was missing from the history."""
     from pipeline import production_history as P
-    shas = [s for s, _ in P._bot_commits_after(ROOT, "2026-11-01T00:00:00Z")]
+    shas = [s for s, _ in P._bot_commits_after(GIT_ROOT, "2026-11-01T00:00:00Z")]
     assert any(s.startswith("4656234") for s in shas), shas
 
 
@@ -8227,3 +8227,32 @@ def test_the_review_outcome_rule_has_no_majority_and_never_guesses_acceptance():
         mr.outcome({"A": A, "B": "ACCEPT_WITH_CORRECTIONS", "C": A})    # a misspelling is not a pass
     with pytest.raises(ValueError):
         mr.outcome({"A": A, "B": A})                                   # a missing role is not a pass
+
+
+def test_undated_campaign_evidence_fails_closed():
+    """Lanes C and G: an observed status with no date fell back to the incident date and was
+    released on the day it was reported; an undated effect was treated as 'reported at the time'.
+    Both are now never released during a campaign. A forecast still uses its horizon."""
+    from pipeline import recovery as R
+    assert R.release_date({"recovery_status": "substantially_restored"}, "2026-06-01", 60) is None
+    assert R.release_date({"recovery_status": "partial_restart", "evidence_as_of": "2026-07-31"}, "2026-06-01", 60) \
+        == R._date("2026-09-29")
+    est = {"recovery_status": "impaired", "estimate_upper_days": 180}
+    assert R.release_date(est, "2026-06-01", 60) == R._date("2026-11-28")
+    assert R.effect_release_date({"as_of_date": ""}, "2026-06-01", 60) is None
+    assert R.effect_release_date({"as_of_date": "2026-06-03"}, "2026-06-01", 60) == R._date("2026-06-03")
+
+
+def test_a_source_title_never_carries_distance_defence_or_criticality_wording():
+    """Lane A: range-to-target data reached the payload through citation titles."""
+    from pipeline.fetch_wikipedia import safe_title
+    for bad in ("Ukraine hits refinery 870 Miles Into Russia", "Drones strike 1,300 km deep",
+                "A 3,000 Km Drone Strike", "2,500 km from the border", "'blinded' Russian air defenses",
+                "Key Russian oil hub burns", "Russia's fourth-largest refinery", "anti-drone nets did not save it"):
+        assert safe_title(bad) is None, bad
+    for ok in ("Drone strike on Volgograd refinery", "Fire at Ryazan plant", None):
+        assert safe_title(ok) == ok
+    snap_incidents = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
+    rows = snap_incidents["incidents"] if isinstance(snap_incidents, dict) else snap_incidents
+    titles = [s.get("title") for r in rows for s in (r.get("sources") or []) if s.get("title")]
+    assert not [t for t in titles if safe_title(t) is None]
