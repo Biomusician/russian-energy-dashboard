@@ -341,6 +341,38 @@ test.describe("provenance and coverage (iteration 16)", () => {
     expect(app.errors).toEqual([]);
   });
 
+  test("a missing Canada payload, a corrupt US payload and an invalid research log are each contained", async ({ app, page }) => {
+    app.allowConsoleError(/status of 404|malformed payload|Unexpected token|JSON/);
+    await page.route("**/data/systems/ca/system.json", (route) => route.fulfill({ status: 404, body: "" }));
+    await page.route("**/data/systems/us/events.json", (route) => route.fulfill({ status: 200, contentType: "application/json", body: "{\"events\": [tru" }));
+    await page.route("**/data/systems/in/system.json", async (route) => {
+      const res = await route.fetch();
+      const body = await res.json();
+      body.research_log = { passes: "corrupt" };
+      await route.fulfill({ response: res, json: body });
+    });
+    for (const id of ["ca", "us", "in"]) {
+      await page.goto(`/?sys=${id}`);
+      await expect(page.getByRole("alert")).toContainText("could not be loaded");
+    }
+    await page.getByRole("combobox", { name: "Monitored system" }).selectOption("cn");
+    await expect(page.getByRole("heading", { name: "China", level: 1 })).toBeVisible();
+    await page.getByRole("combobox", { name: "Monitored system" }).selectOption("ru");
+    await app.mapIdle();
+    await expect(page.locator(".ribbon")).toContainText("ESDI");
+  });
+
+  test("a missing as-published history leaves the dashboard and the reconstruction working", async ({ app, page }) => {
+    app.allowConsoleError(/status of 404/);
+    await page.route("**/data/production_history.json", (route) => route.fulfill({ status: 404, body: "" }));
+    await app.open();
+    await app.button(/compare dates/i).click();
+    await expect(page.getByRole("group", { name: "Which history" })).toBeVisible();
+    await expect(page.locator(".comparison")).toBeVisible();
+    await page.getByRole("combobox", { name: "Monitored system" }).selectOption("us");
+    await expect(page.getByRole("heading", { name: "United States", level: 1 })).toBeVisible();
+  });
+
   test("a broken events file is contained to its system", async ({ app, page }) => {
     app.allowConsoleError(/status of 500/);
     await page.route("**/data/systems/sa/events.json", (route) => route.fulfill({ status: 500, body: "" }));

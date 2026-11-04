@@ -292,7 +292,30 @@ export async function loadCountry(entry: ManifestSystem, signal: AbortSignal): P
   if (system.system_id !== entry.id) {
     throw new Error(`${entry.root}/system.json describes ${system.system_id}, not ${entry.id}`);
   }
+  const bad = shapeProblems(system, events);
+  if (bad.length) throw new Error(`${entry.root}: malformed payload (${bad.join(", ")})`);
   return { system, events: events.events, episodes: events.episodes ?? [], regions };
+}
+
+/** The parts of a country payload the view reads without a guard. A malformed one is refused at
+ *  load, so it fails as "this system could not be loaded" and the others stay usable, instead
+ *  of throwing during render and taking the whole dashboard down (iteration 17, §65). */
+export function shapeProblems(system: unknown, events: unknown): string[] {
+  const s = (system ?? {}) as Record<string, unknown>;
+  const e = (events ?? {}) as Record<string, unknown>;
+  const obj = (x: unknown) => typeof x === "object" && x !== null && !Array.isArray(x);
+  const out: string[] = [];
+  for (const k of ["sectors", "sources", "research_gaps", "onboarding_gate", "audit_docs"]) {
+    if (!Array.isArray(s[k])) out.push(`${k} is not a list`);
+  }
+  for (const k of ["event_summary", "review_summary", "publication_policy", "research_freshness",
+                   "geography", "profile", "taxonomy", "stale_policies"]) {
+    if (!obj(s[k])) out.push(`${k} is missing`);
+  }
+  const log = s.research_log as Record<string, unknown> | undefined;
+  if (!obj(log) || !Array.isArray(log!.passes)) out.push("research_log.passes is not a list");
+  if (!Array.isArray(e.events)) out.push("events is not a list");
+  return out;
 }
 
 export async function loadWorld(signal: AbortSignal): Promise<GeoJSON.FeatureCollection> {
