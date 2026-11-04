@@ -7948,3 +7948,32 @@ def test_first_seen_is_the_first_served_build_and_never_a_fabricated_date():
     before = [v for v in fs.values() if v["status"] == "present_before_tracking"]
     assert before and all(v["served_from"] is None and v["sha"] is None for v in before)
     assert {v["status"] for v in fs.values()} <= {"first_served", "present_before_tracking"}
+
+
+# --- iteration 17: per-country source health (§44) -------------------------------------------
+
+def test_source_health_keeps_not_recorded_apart_from_not_opened():
+    from pipeline import build_systems as B
+    ev = [{"sources": [{"publisher": "A", "source_role": "media", "language": "en", "opened": None, "date": None},
+                       {"publisher": "B", "source_role": "regulator", "language": "fr", "opened": False, "date": "2024-01-02"}]},
+          {"sources": [{"publisher": "A", "source_role": "media", "language": "en", "opened": True, "date": None}]}]
+    h = B.source_health(ev)
+    assert h["citations"] == 3 and h["publishers"] == 2 and h["events"] == 2
+    assert h["opened"] == {"opened": 1, "not_opened": 1, "not_recorded": 1}
+    assert h["single_source_events"] == 1 and h["events_with_first_party_source"] == 1
+    assert h["dated"] == 1 and h["by_language"] == {"en": 2, "fr": 1}
+    assert B.source_health([])["citations"] == 0
+
+
+@needs_systems
+def test_source_health_matches_the_published_events_and_stays_out_of_the_manifest():
+    from pipeline import systems
+    for sid in systems.COUNTRY_SYSTEMS:
+        p = _sys_payload(sid, "system.json")
+        ev = _sys_payload(sid, "events.json")["events"]
+        h = p["source_health"]
+        assert h["events"] == len(ev) == p["event_summary"]["recorded_events"], sid
+        assert h["citations"] == sum(len(e["sources"]) for e in ev), sid
+        assert sum(h["opened"].values()) == h["citations"], sid
+    for s in _manifest()["systems"]:
+        assert "source_health" not in set(_walk_keys(s)) and "citations" not in set(_walk_keys(s)), s["id"]

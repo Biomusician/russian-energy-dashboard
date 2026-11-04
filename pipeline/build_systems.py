@@ -282,6 +282,46 @@ COMPARABILITY_STATEMENT = (
 )
 
 
+# Roles whose author is the body that ran, regulated or measured the system, as against a
+# publisher reporting on it. Used only to describe a country's citations (iteration 17, source
+# health); it never decides whether an event is included.
+FIRST_PARTY_ROLES = ("official", "government", "regulator", "operator", "dataset")
+
+
+def source_health(events):
+    """Describe the citations behind a country's published events, inside that country only.
+
+    Counts, not judgements: how many citations, from how many publishers, in which roles and
+    languages, how many carry their own date, and whether the research lane recorded opening
+    them. "Not recorded" is kept apart from "not opened": most lanes before iteration 16 never
+    said. Nothing here is comparable across countries, and no count enters a number.
+    """
+    cites = [s for e in events for s in e["sources"]]
+    roles, langs = {}, {}
+    for s in cites:
+        roles[s["source_role"]] = roles.get(s["source_role"], 0) + 1
+        langs[s["language"]] = langs.get(s["language"], 0) + 1
+    return {
+        "events": len(events),
+        "citations": len(cites),
+        "publishers": len({s["publisher"] for s in cites}),
+        "by_role": dict(sorted(roles.items())),
+        "by_language": dict(sorted(langs.items())),
+        "opened": {"opened": sum(1 for s in cites if s.get("opened") is True),
+                   "not_opened": sum(1 for s in cites if s.get("opened") is False),
+                   "not_recorded": sum(1 for s in cites if s.get("opened") is None)},
+        "dated": sum(1 for s in cites if s.get("date")),
+        "single_source_events": sum(1 for e in events if len(e["sources"]) == 1),
+        "events_with_first_party_source": sum(
+            1 for e in events if any(s["source_role"] in FIRST_PARTY_ROLES for s in e["sources"])),
+        "first_party_roles": list(FIRST_PARTY_ROLES),
+        "note": ("Describes the citations of the published events in this country. Not opened and "
+                 "not recorded are different: a lane that did not record whether it opened a "
+                 "source is not evidence that it did not. Nothing here is comparable across "
+                 "countries and nothing here enters a number."),
+    }
+
+
 def load_admin1():
     fetch(ADMIN1_URL, "ne_10m_admin_1.geojson", max_age_hours=24 * 30)
     return read_json(RAW / "ne_10m_admin_1.geojson")
@@ -860,6 +900,7 @@ def build_system(system_id, admin1, admin0, as_of):
                      "causes": {k: cause_labels[k] for k in used_causes}},
         "profile": profile,
         "sources": doc["sources"],
+        "source_health": source_health(events),
         "research_gaps": doc["research_gaps"],
         # The build runs daily; the event record does not. Separate dates, so "as of" never
         # implies the corpus was re-checked today (iteration-14 red team).

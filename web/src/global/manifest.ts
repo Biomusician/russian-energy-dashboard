@@ -123,6 +123,8 @@ export interface CountrySystem {
     release_rule: { id: string; status: string; text: string; release_after_end_days: number } | null;
   };
   episode_bases: Record<string, string>;
+  /** Citations of the published events, described inside this country only (iteration 17). */
+  source_health?: SourceHealth;
   research_gaps: string[];
   audit_docs: string[];
   record_reviewed: string | null;
@@ -144,6 +146,21 @@ export interface SourceEntry {
   content_vintage: string | null;
 }
 
+/** Counts only. "not_recorded" is not "not_opened". Never compared across countries. */
+export interface SourceHealth {
+  events: number;
+  citations: number;
+  publishers: number;
+  by_role: Record<string, number>;
+  by_language: Record<string, number>;
+  opened: { opened: number; not_opened: number; not_recorded: number };
+  dated: number;
+  single_source_events: number;
+  events_with_first_party_source: number;
+  first_party_roles: string[];
+  note: string;
+}
+
 export interface ResearchPass {
   date: string;
   by: string;
@@ -153,7 +170,8 @@ export interface ResearchPass {
   status: "complete" | "partial";
   status_reason?: string;
   source_families?: string[];
-  lanes?: { lane: string; source_family?: string; status: "complete" | "partial"; reason?: string }[];
+  lanes?: { lane: string; source_family?: string; status: "complete" | "partial"; reason?: string;
+            covered_through?: string | null }[];
   outcome: Record<string, number>;
 }
 

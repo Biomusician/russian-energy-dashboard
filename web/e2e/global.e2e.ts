@@ -238,9 +238,11 @@ test.describe("provenance and coverage (iteration 16)", () => {
     await expect(status).toContainText("One does not imply the other");
     await app.button("Sources & data quality").click();
     await expect(page.locator(".research-coverage")).toContainText(label);
-    // A systematic pass lists its lanes, each with its own status.
-    const pass = sys.research_log.passes.find((x: { kind: string }) => x.kind === "systematic");
-    await expect(page.locator(".lane-list li")).toHaveCount(pass.lanes.length);
+    // Every systematic pass lists its lanes, each with its own status (two passes since iteration 17).
+    const lanes = sys.research_log.passes.filter((x: { kind: string }) => x.kind === "systematic")
+      .reduce((n: number, x: { lanes?: unknown[] }) => n + (x.lanes?.length ?? 0), 0);
+    expect(lanes).toBeGreaterThan(0);
+    await expect(page.locator(".research-log .lane-list li")).toHaveCount(lanes);
   });
 
   test("a country never searched systematically says so, whatever its sources' freshness", async ({ app, page }) => {
@@ -297,6 +299,48 @@ test.describe("provenance and coverage (iteration 16)", () => {
     await app.button("Sources & data quality").click();
     const independent = (sys.review_summary.blind_reviewed ?? 0) + sys.review_summary.dual_reviewed;
     await expect(page.locator(".review-summary")).toContainText(`${independent} of ${events.length} events`);
+  });
+
+  test("source health counts the published citations; the browser lists publishers alphabetically", async ({ app, page }) => {
+    await app.open("?sys=ca");
+    const sys = await countryPayload(page, "ca", "system.json");
+    const events = (await countryPayload(page, "ca", "events.json")).events;
+    const cites = events.reduce((n: number, e: { sources: unknown[] }) => n + e.sources.length, 0);
+    await app.button("Sources & data quality").click();
+    await expect(page.locator(".source-health")).toContainText(`${cites} citations from ${sys.source_health.publishers} publishers`);
+    await expect(page.locator(".source-health")).toContainText(`${sys.source_health.opened.not_recorded} not recorded`);
+    const rows = page.locator(".source-browser-table tbody tr");
+    await expect(rows).toHaveCount(sys.source_health.publishers);
+    const names = await rows.locator("td:first-child").evaluateAll((tds) => tds.map((td) => td.childNodes[0].textContent ?? ""));
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
+    await page.getByRole("combobox", { name: "Filter sources by role" }).selectOption("regulator");
+    expect(await rows.count()).toBeLessThan(sys.source_health.publishers);
+    await rows.first().getByRole("button").click();
+    await expect(rows.first().locator("a").first()).toHaveAttribute("rel", /noopener/);
+    expect(app.errors).toEqual([]);
+  });
+
+  test("a payload from before source health still renders its sources panel", async ({ app, page }) => {
+    await page.route("**/data/systems/in/system.json", async (route) => {
+      const res = await route.fetch();
+      const body = await res.json();
+      delete body.source_health;
+      await route.fulfill({ response: res, json: body });
+    });
+    await app.open("?sys=in");
+    await app.button("Sources & data quality").click();
+    await expect(page.locator(".source-health")).toHaveCount(0);
+    await expect(page.locator(".source-browser-table tbody tr").first()).toBeVisible();
+    expect(app.errors).toEqual([]);
+  });
+
+  test("a broken events file is contained to its system", async ({ app, page }) => {
+    app.allowConsoleError(/status of 500/);
+    await page.route("**/data/systems/sa/events.json", (route) => route.fulfill({ status: 500, body: "" }));
+    await page.goto("/?sys=sa");
+    await expect(page.getByRole("alert")).toContainText("could not be loaded");
+    await page.getByRole("combobox", { name: "Monitored system" }).selectOption("us");
+    await expect(page.getByRole("heading", { name: "United States", level: 1 })).toBeVisible();
   });
 
   test("recovery is defined where it is shown", async ({ app, page }) => {

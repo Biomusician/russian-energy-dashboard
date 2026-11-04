@@ -5,7 +5,7 @@ import SystemSwitcher from "./SystemSwitcher";
 import {
   ENVIRONMENT_LABEL, READINESS_LABEL, RECOVERY_KIND_LABEL, RECOVERY_LABEL, RESEARCH_COMPLETENESS_LABEL,
   REVIEW_STATUS_LABEL, SECTOR_STATE_LABEL, labelFor, type CountrySystem, type SourceEntry, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type Episode,
-  type ManifestSystem,
+  type ManifestSystem, type SourceHealth,
 } from "./manifest";
 import { navigate } from "./router";
 import { composeCountryFrame, countryFilename } from "./countryExport";
@@ -536,6 +536,8 @@ function SourcesPanel({ bundle }: { bundle: CountryBundle }) {
       </table>
       <p className="small dim">Re-check limits are display policy: they never decide whether an event
         is included and never enter a number.</p>
+      {s.source_health && <SourceHealthBlock h={s.source_health} />}
+      <SourceBrowser events={bundle.events} />
       <h3 className="eyebrow">Research coverage: how far the event search got</h3>
       <p className="small research-coverage">
         <strong>{RESEARCH_COMPLETENESS_LABEL[s.research_freshness.completeness]}.</strong>{" "}
@@ -557,7 +559,7 @@ function SourcesPanel({ bundle }: { bundle: CountryBundle }) {
                 {p.status_reason && <div className="dim">{p.status_reason}</div>}
                 {p.lanes && p.lanes.length > 0 && (
                   <ul className="dim lane-list">{p.lanes.map((l) => (
-                    <li key={l.lane}>{l.lane}{l.source_family ? ` (${l.source_family})` : ""}: {l.status}{l.reason ? ` (${l.reason})` : ""}</li>
+                    <li key={l.lane}>{l.lane}{l.source_family ? ` (${l.source_family})` : ""}: {l.status}{l.reason ? ` (${l.reason})` : ""}{l.covered_through ? `; searched through ${fmtDate(l.covered_through)}` : ""}</li>
                   ))}</ul>
                 )}</td>
               <td className="small">{Object.entries(p.outcome).map(([k, n]) => `${k.replace(/_/g, " ")} ${n}`).join(" · ")}</td>
@@ -588,6 +590,95 @@ function SourcesPanel({ bundle }: { bundle: CountryBundle }) {
         review was required.</p>
       <p className="small dim">{s.review_summary.note}
         {unrecorded > 0 && ` For ${unrecorded} of ${bundle.events.length} events the research lane did not record whether it read the cited sources.`}</p>
+    </div>
+  );
+}
+
+const ROLE_TEXT: Record<string, string> = {
+  official: "official body", government: "government", regulator: "regulator", operator: "operator",
+  dataset: "dataset", media: "news media", industry: "industry press",
+};
+
+/** What the citations behind this country's events are, inside this country only. */
+function SourceHealthBlock({ h }: { h: SourceHealth }) {
+  const roles = Object.entries(h.by_role).map(([k, n]) => `${labelFor(ROLE_TEXT, k)} ${n}`).join(" · ");
+  const langs = Object.entries(h.by_language).map(([k, n]) => `${k} ${n}`).join(" · ");
+  return (
+    <div className="source-health">
+      <h3 className="eyebrow">Source health: the citations behind the events</h3>
+      <ul className="small">
+        <li>{h.citations} citations from {h.publishers} publishers, across {h.events} events.</li>
+        <li>By role: {roles}.</li>
+        <li>{h.events_with_first_party_source} of {h.events} events cite at least one first-party
+          source (the operator, a regulator, a government body or a dataset); {h.single_source_events} rest
+          on a single citation.</li>
+        <li>Opened by the researcher: {h.opened.opened} recorded opened, {h.opened.not_opened} recorded
+          not opened, {h.opened.not_recorded} not recorded.</li>
+        <li>{h.dated} of {h.citations} citations carry their own publication date. Languages: {langs}.</li>
+      </ul>
+      <p className="small dim">{h.note}</p>
+    </div>
+  );
+}
+
+/** Browse the citations by publisher. Display only: filters what is listed, never what is counted. */
+function SourceBrowser({ events }: { events: CountryEvent[] }) {
+  const [role, setRole] = useState("all");
+  const [open, setOpen] = useState<string | null>(null);
+  const rows = useMemo(() => {
+    const by = new Map<string, { publisher: string; roles: Set<string>; langs: Set<string>;
+                                 events: CountryEvent[]; urls: Set<string> }>();
+    for (const e of events) {
+      for (const src of e.sources) {
+        const key = src.publisher || "(publisher not recorded)";
+        const r = by.get(key) ?? { publisher: key, roles: new Set(), langs: new Set(), events: [], urls: new Set() };
+        if (src.source_role) r.roles.add(src.source_role);
+        if (src.language) r.langs.add(src.language);
+        if (!r.events.includes(e)) r.events.push(e);
+        r.urls.add(src.url);
+        by.set(key, r);
+      }
+    }
+    // Alphabetical, never by count: a list ordered by how often a publisher is cited would read
+    // as a ranking of sources.
+    return [...by.values()].sort((a, b) => a.publisher.localeCompare(b.publisher));
+  }, [events]);
+  const allRoles = [...new Set(rows.flatMap((r) => [...r.roles]))].sort();
+  const shown = role === "all" ? rows : rows.filter((r) => r.roles.has(role));
+  return (
+    <div className="source-browser">
+      <h3 className="eyebrow">Source browser</h3>
+      <label className="small">Role{" "}
+        <select value={role} onChange={(ev) => { setRole(ev.target.value); setOpen(null); }} aria-label="Filter sources by role">
+          <option value="all">all roles</option>
+          {allRoles.map((r) => <option key={r} value={r}>{labelFor(ROLE_TEXT, r)}</option>)}
+        </select>
+      </label>
+      <span className="small dim"> {shown.length} of {rows.length} publishers, alphabetical</span>
+      <table className="sector-table source-browser-table">
+        <thead><tr><th>Publisher</th><th>Role</th><th>Events citing it</th></tr></thead>
+        <tbody>
+          {shown.map((r) => (
+            <tr key={r.publisher}>
+              <td className="small">{r.publisher}
+                {r.langs.size > 0 && <span className="dim"> ({[...r.langs].join(", ")})</span>}</td>
+              <td className="small dim">{[...r.roles].map((x) => labelFor(ROLE_TEXT, x)).join(", ")}</td>
+              <td className="small">
+                <button type="button" className="linklike" aria-expanded={open === r.publisher}
+                  onClick={() => setOpen(open === r.publisher ? null : r.publisher)}>
+                  {r.events.length} event{r.events.length === 1 ? "" : "s"}
+                </button>
+                {open === r.publisher && (
+                  <ul className="dim lane-list">
+                    {r.events.map((e) => <li key={e.event_id}>{fmtDate(e.date)}: {e.summary}</li>)}
+                    {[...r.urls].map((u) => <li key={u}><a href={u} target="_blank" rel="noopener noreferrer">{u}</a></li>)}
+                  </ul>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
