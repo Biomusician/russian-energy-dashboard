@@ -216,7 +216,29 @@ Measured on the release candidate:
 
 ## 15. Production
 
-*Filled in after deploy (§19).*
+Pushed `4656234..ee682db` on 2026-11-04 at about 02:45 UTC, after a fetch showed `origin/main`
+unmoved. GitHub's deployment record for Production names `ee682db` (created 02:46:43 UTC); the
+new payload was being served within a minute.
+
+- **Browser suite against production** (`E2E_BASE_URL=https://russian-energy-dashboard.vercel.app`):
+  **102 passed, 1 skipped**.
+- **Post-deploy checks** (fetched from production):
+  - build `current`, as of 2026-11-03, built 02:39 UTC; Russia ESDI **7.8**;
+  - US 139 records, Canada 26; corpus 195; research lanes complete **0 of 35**; US and Canada
+    research `partial`;
+  - campaign policy applied, D = 60, 0 withheld today; all 8 Saudi 2026 records withheld; no
+    campaign record carries an end date; the change ledger names no withheld facility;
+  - as-published history: 85 entries, the last the 2026-11-03 bot refresh (ESDI 7.8), so "as
+    published on 3 Nov" now matches the build;
+  - no console errors.
+- **Timings** (real Chromium, production): home DOMContentLoaded about 200 ms; opening the US
+  page about 0.5 s (its payload fetch); other countries render from the manifest at once and their
+  events follow on fetch; the compare workspace opens in about 60 ms. Map-idle times could not be
+  measured: the browser pane was hidden, which throttles rendering, so no figure is given.
+- **Next refresh** (§85): not observed; the first unattended run on this architecture is at 05:20
+  UTC. It was simulated in a clean worktree as 2026-11-04 (§13) before the release, and the
+  final-red-team fixes were not re-simulated; the gated suite they would run passed locally
+  (486 passed).
 
 ## 16. Methodology decisions still needed
 
