@@ -33,3 +33,37 @@ resumption. Observed or sourced estimate only.
 ### A.4 Budget, resilience, review
 
 As `US_LANE_PASS_18.md` A.3.
+
+## Part B — execution (written after the pass, 2026-11-10)
+
+**This pass did not finish.** A shared limit of 200 web searches per turn was reached about two-thirds of the way through. Direct page requests still worked. The limit was not worked around, and every lane it stopped says so. A new turn is needed to run the remaining queries: `scripts/research_tools.py next in`.
+
+| Lane | Execution | Source window | Covered through | Queries | Languages run |
+|---|---|---|---|---|---|
+| IN1 | partial | inaccessible | not reached | 6 of 6 | en |
+| IN2 | not_started; stopped by search limit | inaccessible | not reached | 0 of 5 | none |
+| IN3 | partial; stopped by search limit | inaccessible | 2026-07-31 | 0 of 10 | en |
+| IN4 | partial; stopped by search limit | rolling_archive_gap | not reached | 0 of 5 | en |
+| IN5 | partial | current_through_end_date | 2026-11-09 | 3 of 3 | en |
+| IN6 | partial; stopped by search limit | no_census_exists | not reached | 16 of 34 | en, hi |
+| IN7 | not_started | inaccessible | not reached | 0 of 10 | none |
+
+Candidates 52: accepted after blind review 2, rejected 18, duplicate 8, held 24, out of scope 0.
+
+**Grid-India alternatives (brief §44).** Three passes, the same result: all six Grid-India and regional dispatch hosts refused the connection. No alternative can serve as a census. CEA publishes no event listing, and its 2025-26 annual report carries no grid-disturbance count. The five Regional Power Committees publish downstream discussion papers, but were unreachable or refused. Their papers would be a discovery aid at most, and they count MW of load loss while clause 5 is stated in customers. No proxy is recommended, and no MW-to-customer equivalent was invented.
+
+**Fuel-supply cause (brief §47): not added.** After reading, only one record per country is actually attributed to fuel shortage, both from 2022, so it does not yet recur as a category. What a cause definition would have to settle is listed in `docs/ITERATION_18_REVIEW.md` §15. Those records stay held.
+
+**Official enumeration.** 54 MoPNG monthly production reports read: the only source reached that attributes refinery changes to causes, at month level, and it stops doing so after June 2024. PNGRB listings read at title level: no incident stream exists.
+
+**Corpus audit.** One record held (a refinery fire during commissioning, where no opened source states processing halted). Summaries corrected where a source's clause was misread.
+
+### Limitations, per lane
+
+- **IN1**: The Grid-India/RLDC universe is unread for the whole window 2022-01-01 to 2026-11-10: all six hosts refused the connection for the third pass running. No RPC, parliamentary or ministry document was opened either (refused, HTTP 403 or script-only), so no event-level alternative was read.
+- **IN2**: Nothing in this lane was read. Every PIB endpoint tried (listing, RSS, a release page) and the Ministry of Power site returned HTTP 403 to ordinary fetches, and the five declared queries were refused by the shared search budget. The whole universe, 2022-01-01 to 2026-11-10, remains unsearched.
+- **IN3**: Unread: PIB-MoPNG releases (403); the MoPNG Monthly Cabinet Summaries (44 listed, February 2021 to September 2024, image-only scans; 1 fetched, none read); PPAC's report archive (300+ entries listed, 1 monthly report read); MoPNG What's New pages 2-6 of 6. Monthly Production Reports for October 2022 and July 2024 are missing from the ministry's listing. None of the ten declared queries ran: the search limit was reached.
+- **IN4**: Unread: Ministry of Coal releases before 13 November 2025; 31 of 35 in-window Monthly Summaries (none is published after February 2025, and October to December 2023 are missing from the listing); Coal India annual reports and subsidiary reports (script-only listing); the ministry's Accident Portal page; PIB. The DGMS, which holds mine-accident records, is outside this lane's named sources. None of the five declared queries ran: the search limit was reached.
+- **IN5**: Listings were read at TITLE level only (480 notices, 75 press releases, 54 case studies, 21 incident analyses, 9 reports); just 4 PNGRB PDFs were opened, so an incident mentioned only inside a document body is unseen. Not read: PNGRB annual reports (not found on the site), the orders/complaints-disputes listing (146 feed items), the monthly data-bank NGPL MIS reports, the 2026 Statistical Booklet, 38 of 40 anonymised case studies, and the Oct 2026 High-Level Expert Committee report on pipeline supply security (deliberately not opened: its subject is network resilience, which the scope boundary forbids collecting).
+- **IN6**: Only 16 of 34 declared queries ran (all 10 year queries in English and Hindi, and the Uttar Pradesh, Maharashtra and Tamil Nadu pairs) before the session's shared search limit stopped the pass; the Karnataka, Delhi, Bihar, Jharkhand, Punjab, Haryana, Rajasthan, West Bengal and Assam pairs and both follow-ups did not run. No SLDC or discom notice was opened: Maharashtra SLDC report addresses returned 404, its report lists are script-only, its 2025 disturbance compendium exceeds the fetch size limit, and the Delhi SLDC site refused the connection, so every opened source is press.
+- **IN7**: None of the five credited outlets was searched or read: the search tool refuses all five domains to its user agent, and that refusal was not worked around. The lane universe is therefore entirely unread for 2022-01-01 to 2026-11-10; the unrestricted discovery run earns no lane credit and left one declared string (refinery 2026) unrun.

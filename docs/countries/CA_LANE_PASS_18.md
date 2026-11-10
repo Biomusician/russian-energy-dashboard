@@ -33,3 +33,35 @@ auto-publish. Wildfire near a site is not a production interruption.
 ### A.4 Budget, resilience, review
 
 As `US_LANE_PASS_18.md` A.3.
+
+## Part B — execution (written after the pass, 2026-11-10)
+
+**This pass did not finish.** A shared limit of 200 web searches per turn was reached about two-thirds of the way through. Direct page requests still worked. The limit was not worked around, and every lane it stopped says so. A new turn is needed to run the remaining queries: `scripts/research_tools.py next ca`.
+
+| Lane | Execution | Source window | Covered through | Queries | Languages run |
+|---|---|---|---|---|---|
+| CG1 | enumerated_complete (carried) | publisher_not_yet_released | 2022-12-22 | 0 of 0 | en |
+| CG2 | enumerated_complete (carried) | publisher_not_yet_released | 2025-12-31 | 0 of 0 | en |
+| CG3 | partial; stopped by search limit | rolling_archive_gap | 2025-12-31 | 0 of 3 | en, fr |
+| CH1 | partial | publisher_not_yet_released | 2025-12-31 | none declared | en, fr |
+| CP1 | partial | inaccessible | 2026-10-22 | 0 of 0 | en |
+| CR1 | partial; stopped by search limit | no_census_exists | 2026-11-03 | 15 of 16 | en |
+| CU1 | partial | no_census_exists | 2026-06-01 | 9 of 10 | en |
+| CL1 | partial | no_census_exists | not reached | 22 of 33 | en |
+
+Candidates 28: accepted after blind review 3, rejected 5, duplicate 3, held 17, out of scope 0.
+
+**Corpus audit.** One record held (no opened source named the region for the emergency declaration). Recovery kinds corrected where the source gave a near-complete figure. Generation-loss and storm records now state their sources without an implied peak.
+
+**Terminals.** Bare terminal tokens do not work as search strings; a re-run should use full facility names. One Nova Scotia terminal has no qualifying event found.
+
+### Limitations, per lane
+
+- **CG1**: Carried forward. The publisher has issued no edition after the 2022 extract, so 2023-2026 is absent from the source, not unsearched. The xlsx was not re-downloaded (the site firewall refused a scripted client in iteration 17; not retried), so 'no newer edition' rests on the dataset page's resource list and modified date.
+- **CG2**: Carried forward. No State of Reliability covering 2026 operations exists yet, and no event report on a 2026 event naming a Canadian entity has been published; the documents were not re-read this pass because the listings are unchanged.
+- **CG3**: None of the three declared 2026 queries ran (shared search budget exhausted before this agent's first search). Unread: AESO July-November 2026 (MSA Q3 report not yet released), IESO before 2026-08-08 (rolling 90-day archive, no ordinary-access history), IESO and Hydro-Québec annual reports, and the Régie de l'énergie filing behind Hydro-Québec's 2025 distribution report, which may list major events.
+- **CH1**: No 2026 ECCC edition exists, so 2026 is outside the census source; 2026 coverage is three utility archives read in part, and no search ran. A 2026 storm at a utility not read, or one the utility issued no release for, would not be found.
+- **CP1**: The TSB half is an index, not a reading: report bodies and the occurrence dataset are served only from tsb.gc.ca (HTTP 403 on every address tried), and it is unknown whether the portal lists every TSB pipeline investigation. The CER file has not been refreshed since 2026-11-01 and stops at 2026-10-22.
+- **CR1**: Fifteen of 16 declared queries ran, through 2026-11-03. The 2026 re-check declared for this pass did not run because the search limit was reached.
+- **CU1**: One declared query (2025, second string) was never run and the 2026 re-run did not happen, so search coverage of June-November 2026 rests on three fetched pages, not on queries. The authority and operator half is thin: AER's media centre was read only for May-November 2026 (3 of about 45 listing pages; 2022-2025 unread), BC Energy Regulator page 1 of 53 only, Saskatchewan's news search returned nothing relevant and was not enumerated, and Suncor (403) and Cenovus (script-only) release archives could not be read. BC and Saskatchewan shut-ins were not searched in substance: both declared strings name Alberta or the oil sands.
+- **CL1**: Pembina Prince Rupert had one general (variant) query and no year queries; Whiffen Head 2022 and 2023 were not run; RIPET and Canaport year queries ran as written but the bare tokens matched unrelated subjects, so those years are run-but-uninformative rather than searched in substance.

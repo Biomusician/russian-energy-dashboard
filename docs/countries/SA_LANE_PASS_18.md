@@ -29,3 +29,31 @@ in the local queue. Every published Saudi record is read end to end by a safety 
 ### A.3 Budget, resilience, review
 
 As `US_LANE_PASS_18.md` A.3.
+
+## Part B — execution (written after the pass, 2026-11-10)
+
+**This pass did not finish.** A shared limit of 200 web searches per turn was reached about two-thirds of the way through. Direct page requests still worked. The limit was not worked around, and every lane it stopped says so. A new turn is needed to run the remaining queries: `scripts/research_tools.py next sa`.
+
+| Lane | Execution | Source window | Covered through | Queries | Languages run |
+|---|---|---|---|---|---|
+| SA1 | not_started; stopped by search limit | inaccessible | not reached | 0 of 10 | none |
+| SA2 | partial; stopped by search limit | inaccessible | 2025-12-31 | 0 of 2 | en |
+| SA3 | partial | current_through_end_date | not reached | 0 of 0 | en |
+| SA4 | not_started | inaccessible | not reached | 0 of 0 | none |
+| SA5 | partial; stopped by search limit | no_census_exists | not reached | 10 of 25 | ar, en |
+
+Candidates 13: accepted after blind review 0, rejected 6, duplicate 1, held 3, out of scope 3.
+
+**Campaign safety (brief §49-55).** Occurrence only. Restart, operating rate, repair progress and current outage status were deliberately not collected, including Aramco's 2026 interim reports. The Arabic status check was added this pass. Citations that named status, weapon-independent throughput or a later date were moved back to the local queue.
+
+**Result.** No new event passed. Two lanes could not start: every SPA, ministry and OPEC route refused access, and the declared queries were stopped by the search limit. Annual reports for FY2022-25 were read in English, and GASTAT releases do not attribute changes to a disruption.
+
+**Corpus audit.** Five records' text or citations tightened. No record's recovery status is published while the campaign is recorded as active.
+
+### Limitations, per lane
+
+- **SA1**: Nothing was searched or read in this pass: all ten declared queries were refused by the shared search limit (five attempted, none performed), and SPA (HTTP 403) and the ministry site (no response) refused ordinary access once each. The four English year queries for 2022-2025 have still never been run in any pass.
+- **SA2**: The Tadawul announcement list refused access (HTTP 403) and was not read; neither declared query ran (shared search limit); the Arabic annual reports were not read (English editions only). Aramco's 2026 interim reports and results releases were deliberately not opened: they are outside the declared 2022-2025 annual-report universe and would carry current operating information during the active campaign.
+- **SA3**: Only two monthly IPI release PDFs were read in full (March and April 2026, English), so no continuous span is covered and covered_through is null. The 2022-2025 monthly releases, the Arabic editions and GASTAT's petroleum-and-gas statistics were not read, and the search listing did not show a complete 2022-2025 series on the pages opened. JODI's Saudi metadata page was not reached.
+- **SA4**: All three official OPEC addresses tried (current page, the MOMR download host, the legacy publications page) refused automated access with HTTP 402. No issue was read and no workaround was attempted; the lane needs a person to open the PDFs in a browser.
+- **SA5**: Only the 2022 and 2023 query combinations ran (10 of 25, both languages); the shared session search limit refused the 2024 set and prevented 2025 and 2026 entirely, and no follow-up search ran.

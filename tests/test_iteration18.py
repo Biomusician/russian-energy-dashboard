@@ -263,6 +263,23 @@ def test_a_new_reviewed_event_leaves_national_context_alone(tmp_path, monkeypatc
 
 # --- the emitted artifacts ---------------------------------------------------------------------------
 
+@needs_ne
+@pytest.mark.parametrize("as_of", ["2022-01-01", "2023-06-30", "2024-02-29", "2026-04-09", "2026-11-10"])
+def test_a_country_view_at_any_date_holds_nothing_from_after_it(as_of, tmp_path, monkeypatch):
+    """Temporal fuzz: event dates, counts and map placement must agree at any as-of (brief §145)."""
+    from pipeline import outputs
+    monkeypatch.setitem(outputs._target, "root", tmp_path)
+    a1, a0 = B.load_admin1(), B.load_admin0()
+    for sid in systems.COUNTRY_SYSTEMS:
+        summary = B.build_system(sid, a1, a0, as_of)["event_summary"]
+        ev = json.loads((tmp_path / "systems" / sid / "events.json").read_text(encoding="utf-8"))["events"]
+        assert all(e["date"][:10] <= as_of for e in ev), sid
+        assert summary["recorded_events"] == len(ev), sid
+        regions = json.loads((tmp_path / "systems" / sid / "regions.geojson").read_text(encoding="utf-8"))
+        placed = sum(f["properties"]["recorded_events"] or 0 for f in regions["features"])
+        assert placed == sum(1 for e in ev if e["region_code"]), sid
+
+
 @needs_payload
 def test_the_new_artifacts_are_declared_and_mirrored():
     for name in ("global/energy_context.json", "global/data_quality.json", "global/recent_evidence.json"):

@@ -93,7 +93,8 @@ def _split_helene(d):
 
 
 def _median_on_small_n(d):
-    r = next(x for x in d["recovery_by_class"]["rows"] if x["n"] < 3)
+    r = d["recovery_by_class"]["rows"][0]
+    r["n"] = 2
     r["median_days"] = 1
 
 

@@ -22,7 +22,7 @@ outside Russia: **Canada, China, India, Saudi Arabia and the United States**. Ea
 precision, an explicit evidence state for every sector, and sourced energy-system context, and
 **no index**: the theatre's weights and recovery model were built for a strike campaign and do
 not transfer ([docs/GLOBAL_METHODOLOGY.md](docs/GLOBAL_METHODOLOGY.md)). Systems are never ranked
-or compared on counts or scores. Since iteration 17 every country record has passed an
+or compared on counts or scores. Since iteration 18 the home page also shows national energy statistics for every country from one source and one year. That is context only: a country with national figures is not thereby monitored for disruptions. Since iteration 17 every country record has passed an
 independent review, new ones a blind review by three roles (evidence, safety, taxonomy); and
 during an active attack campaign a struck facility's current status is withheld, for the theatre
 until its recovery evidence is 60 days old ([docs/REVIEW_GOVERNANCE.md](docs/REVIEW_GOVERNANCE.md),

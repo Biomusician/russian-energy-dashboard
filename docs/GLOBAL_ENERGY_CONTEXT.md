@@ -11,7 +11,7 @@ registry (`pipeline/systems.py`) is the only thing that says a country is monito
 | Unit | Country. Nothing finer exists in this layer and none may be added |
 | Source | U.S. EIA International Energy Statistics, bulk file `INTL.zip` |
 | Year | One comparison year for every country and every metric; the file states it |
-| Used for | The world map's context modes, the context card, the national table, the country page's national block, the CSV export |
+| Used for | The world map's context modes, the context card, the national table, the country page's national block, the PNG exports |
 | Never used for | Scoring, weighting, event inclusion, ranking of disruptions, or any statement about a facility |
 
 Hard rules, each tested in `tests/test_iteration18.py`:
@@ -28,8 +28,7 @@ Hard rules, each tested in `tests/test_iteration18.py`:
   held apart under `newer` and labelled with its year.
 - Colour ramp is its own sequential scale, unlike the disruption palette: a large producer must not
   look like a damaged one.
-- Rows sort by name. There is no sort by production on the table's default, no "top producers"
-  label and no position number.
+- Rows sort by name. The table can be sorted on the reader's own request, and the world profile lists the six largest producers alphabetically. No position number is shown. **The sort is an owner question** (`docs/ITERATION_18_REVIEW.md` §15): these are national aggregates, not assets, but a descending sort is a ranking.
 
 ## Metrics
 
@@ -72,13 +71,15 @@ letting them colour the map. Choosing the year is an analyst decision recorded i
 
 Against the Our World in Data file, which draws on other primary compilers, for the comparison year:
 
-- Primary energy consumption: median ratio about 1.02. The outliers are hydro-heavy countries
-  (Norway, Sweden, Switzerland, Austria), explained by the substitution method the two sources use.
-- Electricity generation: median ratio 1.000 across 128 countries.
+- Primary energy consumption: median ratio about 1.02. Most outliers are hydro-heavy countries
+  (Norway, Sweden, Switzerland, Austria), explained by the substitution method the two sources use;
+  a few (Estonia, Turkmenistan, Kazakhstan) are not and remain unexplained.
+- Electricity generation: median ratio about 1.000.
 - Gas and coal agree up to the expected energy-content conversion, with a few outliers (Poland,
   Syria and Venezuela on gas). Coal in mass against coal in energy has a legitimate spread.
-- Total liquids against OWID's oil showed India at about 0.41 and similar outliers, which is the
-  processing-gain effect and the reason the map uses crude.
+- Total liquids runs ahead of crude for refining importers. That is the processing-gain effect and
+  the reason the map uses crude. The producer-or-consumer oil label still counts all liquids, and the
+  card says so.
 
 Internal: the sum of countries is 0.99999 of EIA's world total production.
 
@@ -95,3 +96,10 @@ does not change from this page; see `docs/GLOBAL_COUNTRY_SELECTION.md`.
 
 EIA updates the file on a rolling basis. A new comparison year is a deliberate change, not a
 refresh. Nothing about this layer runs in the daily workflow.
+
+## Known limits
+
+- Some Natural Earth units have no EIA row (Somaliland, Northern Cyprus) and show "no data".
+- EIA does not state whether its Ukraine or Russia totals include Crimea. Crimea's hover therefore
+  shows Ukraine's national figure, labelled as national.
+- The electricity split has no "other" row, so shares can sum below 100%.

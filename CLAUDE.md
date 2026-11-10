@@ -42,6 +42,11 @@ The area of interest is locked in `AOI_FEDERAL_DISTRICTS` (`pipeline/config.py`)
 Far Eastern FD is defined but not enabled; adding it there turns it on with no refactor.
 Do not reintroduce the ambiguous "SFD" abbreviation — a test forbids it.
 
+**Since iteration 18 the world map shows national energy context for every country**
+(`docs/GLOBAL_ENERGY_CONTEXT.md`). It is context, never monitoring: one source, one year, national
+only. Context never enters analytics, a context-only country never carries an incident field, and
+lane states have two dimensions (`docs/GLOBAL_METHODOLOGY.md`, "Research coverage vocabulary").
+
 Read [docs/METHODOLOGY.md](docs/METHODOLOGY.md) before changing anything that produces a
 number. For the current figures read [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md), which
 the build regenerates; for where the project actually is, read

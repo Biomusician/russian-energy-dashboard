@@ -98,6 +98,52 @@ test.describe("world energy context", () => {
     await expect(page.getByRole("region", { name: `${row.name}: national energy context` })).toHaveCount(0);
   });
 
+  test("Ukraine's card does not inherit Crimea's note, and Crimea stays described as occupied", async ({ app, page }) => {
+    await app.open("");
+    await openCard(page, "Ukraine");
+    const card = page.getByRole("region", { name: /Ukraine: national energy context/ });
+    await expect(card).toBeVisible();
+    await expect(card).not.toContainText(/Monitored as a separate unit/);
+    await expect(page.locator(".map-legend-mini")).toContainText(/Crimea is Ukrainian, occupied/);
+  });
+
+  test("an alias finds a country and a monitored country says so", async ({ app, page }) => {
+    await app.open("");
+    await page.getByRole("searchbox", { name: SEARCH }).fill("USA");
+    await expect(page.locator(".search-hits")).toContainText("United States");
+    await expect(page.locator(".search-hits")).toContainText("Monitored system");
+    await page.getByRole("searchbox", { name: SEARCH }).fill("UK");
+    await expect(page.locator(".search-hits li").first()).toContainText("United Kingdom");
+  });
+
+  test("the world profile names the largest producers without a position", async ({ app, page }) => {
+    await app.open("");
+    const profile = page.locator(".world-profile");
+    await expect(profile).toContainText(/Six largest producers in 2024, alphabetically:/);
+    await expect(profile).toContainText("Size says nothing about disruption");
+    await expect(profile).not.toContainText(/#1|No\. ?1|first place/);
+  });
+
+  test("a country page answers the reader's questions without opening a tab", async ({ app, page }) => {
+    await app.open("?sys=sa");
+    await expect(page.getByText(/recovery statuses\s+are withheld while an attack campaign is active/)).toBeVisible();
+    await app.open("?sys=cn");
+    const ribbon = page.locator(".research-status");
+    await expect(ribbon).toContainText(/source groups finished/);
+    await expect(ribbon).toContainText(/research period/);
+  });
+
+  test("events can be filtered, and a region can be chosen without the map", async ({ app, page }) => {
+    await app.open("?sys=us");
+    await page.getByLabel("Filter events by year").selectOption("2024");
+    const items = page.locator(".event-list .event-item");
+    await expect(items.first()).toBeVisible();
+    for (const t of await items.locator(".event-head .mono").allInnerTexts()) expect(t).toContain("2024");
+    await page.getByLabel("Filter events by year").selectOption("");
+    await page.getByLabel(/Choose a state/i).selectOption({ label: "Texas" });
+    await expect(page.locator(".events-panel h2").first()).toHaveText("Texas");
+  });
+
   test("the national table is alphabetical by default and has no disruption column", async ({ app, page }) => {
     await app.open("");
     await page.getByText(/National figures table/).click();

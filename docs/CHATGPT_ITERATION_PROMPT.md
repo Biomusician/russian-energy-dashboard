@@ -1,4 +1,4 @@
-# Prompt for iterating with ChatGPT (current as of iteration 17)
+# Prompt for iterating with ChatGPT (current as of iteration 18)
 
 Paste everything below the line into ChatGPT. It is self-contained and asks for output you can
 hand straight back to a coding agent. It deliberately carries **no live numbers**: those are in
@@ -14,7 +14,7 @@ energy infrastructure, aggregated to first-level administrative region**. Its ma
 calibrated honesty about what is and is not known, with a good map attached. I want help
 deciding what to do next, not help writing code.
 
-## What exists (iteration 17)
+## What exists (iteration 18)
 
 **Six monitored systems.**
 

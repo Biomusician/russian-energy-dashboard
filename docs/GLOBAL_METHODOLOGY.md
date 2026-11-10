@@ -26,7 +26,7 @@ The governing rules this document is held to, verbatim from the project:
 
 ---
 
-## Canonical policy summary (current as of iteration 17)
+## Canonical policy summary (current as of iteration 18)
 
 **This section is the one place the country-system rules are stated together.** The analysis
 below (§0-§9) is dated 2026-10-30 and kept as written; where a later iteration decided
@@ -848,3 +848,34 @@ External (checked for this document; each country lane should confirm the curren
   BSEE shut-in statistics, NRC reactor status, NBS, NEA/CEC, PPAC, CEA, Grid-India, CER,
   StatCan, provincial regulators) are from general knowledge of what these bodies publish and
   are marked for confirmation by the country lanes.
+
+## Research coverage vocabulary (iteration 18)
+
+Every lane has two independent dimensions, enforced by `build_systems.lane_problems`:
+
+- **`execution`**, what the analyst did: `not_started`, `partial`, `declared_search_complete` (a
+  declared query set, run in full), `enumerated_complete` (every published item in a census or report
+  archive enumerated).
+- **`source_window`**, what the source allows: `current_through_end_date`,
+  `publisher_not_yet_released`, `inaccessible`, `no_census_exists`, `rolling_archive_gap`, `unknown`.
+
+Rules: a declared query set is never `enumerated_complete`; a source that refused access is never
+searched; a bilingual lane is not complete on one language; a lane stopped by the pass's own search
+allowance carries `stopped_by: search_limit` and cannot be complete. `universe_kind` is `census`,
+`report_archive` or `declared_query_set`. Readers are told a state computed from these
+(`lane_summary_state`), never a percentage.
+
+## Recovery coverage policy (iteration 18)
+
+Non-conflict records carry the observed report, or a sourced estimate labelled as an estimate, and
+nothing is modelled: an event with no report says so and never ages out as recovered. Four separate
+answers are reported per country: observed, estimate, researched with no public evidence, not yet
+researched. Withheld campaign status is a fifth, apart.
+
+A kind of `service_restored` or `full_restart` needs the source to state completion. A percentage,
+"most customers", one utility of several, or a regulator filing's end-of-event entry is partial.
+
+The cross-country statistic (`recovery_by_class`) uses completed kinds only, drops dates that are
+only the date of a report, and shows a group only if at least two countries contribute: a row from
+one country identifies it. Fewer than three cases are listed, three or four give a range, five or
+more a median.

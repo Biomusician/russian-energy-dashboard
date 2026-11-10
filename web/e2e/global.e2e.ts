@@ -218,7 +218,7 @@ test.describe("episodes and source freshness (iteration 15)", () => {
     await expect(page.locator(".source-table")).toContainText("Publishes:");
     await app.button("Research coverage").click();
     await expect(page.locator(".research-log tbody tr")).toHaveCount(sys.research_log.passes.length);
-    await expect(page.locator(".research-log")).toContainText("targeted search (never complete by design)");
+    await expect(page.locator(".research-log")).toContainText("targeted search");
   });
 
   test("a source past its limit is flagged on the reader's clock, not the build's", async ({ app, page }) => {
@@ -247,11 +247,10 @@ test.describe("provenance and coverage (iteration 16)", () => {
     await app.button("Sources & data quality").click();
     await expect(page.locator(".research-coverage")).toContainText(label);
     await app.button("Research coverage").click();
-    // Every systematic pass lists its lanes, each with its own status (two passes since iteration 17).
-    const lanes = sys.research_log.passes.filter((x: { kind: string }) => x.kind === "systematic")
-      .reduce((n: number, x: { lanes?: unknown[] }) => n + (x.lanes?.length ?? 0), 0);
-    expect(lanes).toBeGreaterThan(0);
-    await expect(page.locator(".research-log .lane-list li")).toHaveCount(lanes);
+    // The newest systematic pass lists its lanes, each with its two dimensions.
+    const newest = sys.research_log.passes.filter((x: { kind: string }) => x.kind === "systematic").at(-1);
+    expect(newest.lanes.length).toBeGreaterThan(0);
+    await expect(page.locator(".lane-table tbody tr")).toHaveCount(newest.lanes.length);
   });
 
   test("a country never searched systematically says so, whatever its sources' freshness", async ({ app, page }) => {

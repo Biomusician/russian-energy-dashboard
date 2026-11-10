@@ -594,3 +594,23 @@ state may be null until it is fetched.
 
 - Marker `needs_raw_cache`: tests that need the gitignored `data/raw` source cache. CI skips them;
   the refresh gate deselects them; run them locally.
+
+## Iteration 18 additions
+
+### Global
+
+- `global/energy_context.json`: `{schema_version, kind, statement, not_scoring, source, comparison_year, comparison_year_reason, balance_band, map_metrics, metrics, coverage, world, countries[]}`. A country row is `{a3, name, on_map, system_id, values, newer, roles}`; `values` entries are numbers or null. Never an incident field. See `docs/GLOBAL_ENERGY_CONTEXT.md`.
+- `global/data_quality.json`: `{note, context_vintage, systems[], recovery_by_class}`. Process and vintage only; no count per country.
+- `global/recent_evidence.json`: `{order, scope, episodes[]}`, newest first, campaign members with `effect: null` and `withheld: true`.
+- `manifest.corpus`: `research_lane_states` (keyed by state, never by country), `records_reported_fully_back`.
+
+### Country `system.json`
+
+- `recovery_coverage`: fixed keys, see GLOBAL_METHODOLOGY.
+- `source_families`: a set of family labels, not a score.
+- `citation_quality`: `{citations, with_publication_date, languages, event_date_precision, link_check, link_check_date, link_check_note}`. Inside a country only.
+- `research_freshness`: adds `lane_states`, `first_systematic_pass`.
+
+### Research log lanes (`research_log.json`, newest pass)
+
+`execution`, `source_window`, `universe_kind`, `covered_through`, `languages_required`, `languages_executed`, `queries_declared`, `queries_run`, `items_enumerated`, `items_in_universe`, `limitation`, `finding`, `carried_forward`, `stopped_by`. Text is published: it never names a held record.

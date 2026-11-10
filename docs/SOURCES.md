@@ -356,3 +356,11 @@ record. Nothing is redistributed: events are restated in our own words, with lin
 
 **Outage aggregators** such as PowerOutage.us are not used as evidence on their own. A figure
 that rests only on an aggregator is held (REVIEW_GOVERNANCE.md §6).
+
+## 11. National energy context (iteration 18)
+
+U.S. EIA International Energy Statistics, bulk file `INTL.zip`, public domain with credit, retrieved by hand into `data/raw/global/` (gitignored). Only national aggregates are committed, in `data/curated/global_context/energy_context.json`. Decisions on other sources, and validation against Our World in Data: [GLOBAL_ENERGY_CONTEXT.md](GLOBAL_ENERGY_CONTEXT.md).
+
+## 12. Link health (iteration 18)
+
+`scripts/check_source_links.py` visits each published citation once and writes `data/curated/systems/source_link_health.json`: counts per country and any publication date the page states about itself. A refusal is recorded as a refusal, not a dead link. Run by hand, never in the daily workflow.

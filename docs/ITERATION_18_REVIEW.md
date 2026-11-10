@@ -1,8 +1,5 @@
 # Iteration 18 review — the rest-of-world picture
 
-*In progress. Sections are filled in as work completes; a section that still says "pending" is not
-done.*
-
 ## 0. Checkpoint (2026-11-10, before any research)
 
 ### 0.1 Baseline
@@ -58,7 +55,7 @@ done.*
 | SA SA5 | partial | no_census_exists | 6 of 15 |
 
 Totals: 4 enumerated through the latest publication (G1, H2, CG1, CG2), 3 declared query sets run
-(R1, C1, CR1), 20 partial, 8 not started... the counts are recomputed by the build from
+(R1, C1, CR1), 20 partial, 8 not started; the counts are recomputed by the build from
 `research_log.json` once the new pass is logged.
 
 ### 0.3 Research workers
@@ -118,6 +115,125 @@ evidence (chronological, filterable). `global/data_quality.json` carries lane st
 Plans committed; workers launched; coverage model and global context built while they run; imports
 after blind review; corpus, recovery and episode audits; UX; tests and mutations; red teams; release.
 
-## Sections pending
+## 1. What this pass did and did not do
 
-1-17 are written at the end of the run.
+**The research pass did not finish.** A shared limit of 200 web searches per turn was reached about
+two-thirds of the way through. Direct page requests still worked. The limit was not worked around.
+Every lane it stopped carries `stopped_by: search_limit` and says so in its limitation. A new turn is
+needed to run the rest: `scripts/research_tools.py next [cc]`.
+
+Everything else in the brief was done or is listed in §16 as not done.
+
+## 2. National energy context
+
+One source (U.S. EIA `INTL.zip`, release 2026-10-16), one comparison year (2024), 219 countries and
+territories, 22 series. Map modes: total production, crude, gas, coal, electricity, largest fuel,
+producer or consumer. Separate doc: [GLOBAL_ENERGY_CONTEXT.md](GLOBAL_ENERGY_CONTEXT.md).
+
+The map's fill is a national figure; monitoring is a separate thick outline, named in the legend. A
+context-only country's card says "Not systematically monitored for disruptions" and shows no count.
+Selecting a context-only country fetches nothing else.
+
+Omitted: LNG and refining capacity. EIA has no such series and no open national source was verified.
+
+The red team (§12) found rounding had created false zeros, so values now keep significant digits.
+
+## 3. Coverage model
+
+Two dimensions per lane; see GLOBAL_METHODOLOGY "Research coverage vocabulary". No percentage. Old
+passes keep the status they were logged with.
+
+## 4. Lane results, by country
+
+Full per-lane tables are in Part B of each `docs/countries/<CC>_LANE_PASS_18.md`.
+
+- **United States.** LNG 3 of 9 terminals; PHMSA's incident files still refused, the enforcement listing was enumerated instead; NHC's Arthur report read; no DOE report in the window.
+- **Canada.** Terminals and upstream searched; bare terminal tokens do not work as search strings; TSB refused.
+- **China.** Chinese-language sources ran in three lanes; NBS 53 of 53 releases, no attribution to any disruption; NEA's accident bulletins stop in 2021; notice archives unreachable.
+- **India.** Every Grid-India and regional dispatch host refused for the third pass; no census alternative exists; MoPNG monthly reports stop attributing causes after June 2024; PNGRB has no incident stream.
+- **Saudi Arabia.** Occurrence only. Two lanes could not start. No new event passed.
+
+## 5. New and changed records
+
+Seven new records, each through blind three-role review and a confirmation round: Osage pipeline, Whiffen Head, a British Columbia generation loss, British Columbia windstorms, Sichuan industrial power halt, Numaligarh refinery fire, Gauna-Bawana gas pipeline. Three more reached review and are held for owner rulings (§15).
+
+Five published records were held after a corpus audit, because a clause was not met or no opened source supported the placement. Two Yunnan records' episode dissolved. One US record left a named-storm episode, because its only citation names no storm.
+
+| Country | Records before | Records now |
+|---|---|---|
+| Canada | 26 | 28 |
+| China | 11 | 10 |
+| India | 10 | 11 |
+| Saudi Arabia | 9 | 9 |
+| United States | 139 | 139 |
+
+Those are inside-country facts; they are not a comparison.
+
+## 6. Recovery
+
+32 updates after a two-role review (evidence, safety), one proposal not applied (the source was behind a registration wall), two rejected and recorded as no public evidence. OE-417 entries are partial with a caveat. The formal policy is in GLOBAL_METHODOLOGY. The cross-country statistic now has one row, by design: completed kinds, a sourced date, at least two countries.
+
+## 7. Data quality
+
+Link check of every published citation, once: counts per country on the country page. A refusal is not a dead link. Publication dates only from what a page states about itself. No date was inferred from an address or a retrieval date.
+
+## 8. Product
+
+Home in three levels (world, monitored systems, recent evidence), world context, country page Research tab, event filters by year and type, a region list as a keyboard route to the map, source browser filters.
+
+## 9. Safety
+
+A red team found that held records' names had reached research-log prose. `write_research_pass.py` now removes them, and a test checks that no queue id appears in any served string. Status wording now reads URL slugs and more Arabic forms and checks more fields. Theatre notes were generalised from component to plant level. Citation addresses stating strike distance were reduced to the publisher's home page, with the record's sources otherwise unchanged. Public documents no longer describe a covered record's status.
+
+National context is country-level and cannot reach analytics: `test_no_analytic_module_can_reach_national_context`, plus a build-level test that changing the source changes no disruption figure.
+
+**Residual.** A withheld record's feed entry carries its episode id, which contains the facility's name. The name is already public on that record, so nothing new is disclosed, and the feed's withholding is of effect, not identity.
+
+## 10. Tests
+
+At the release commit: Python 613 passed, 2 skipped; frontend unit 254 passed; typecheck clean; Playwright 131 passed, 1 skipped (29 of them in the new context suite, across the viewport sizes in the brief); mutation campaign 56 of 56 caught, up from 36. A temporal fuzz test builds every country at five dates, and a repeat build changes only `build_time` and `publication_freshness`.
+
+## 11. Performance
+
+| Artifact | Before (gz) | After (gz) |
+|---|---|---|
+| manifest | 1,706 B | 1,822 B |
+| energy_context (new, lazy) | none | 19,583 B |
+| data_quality (new, lazy) | none | 9,312 B |
+| recent_evidence (new, lazy) | none | 4,306 B |
+| US system.json | 10,537 B | 13,173 B |
+
+The JS entry grew from 68.37 kB to 76.61 kB gzipped; the country view from 9.26 kB to 11.25 kB. MapLibre is unchanged. Energy context and the data-quality panels load only after the page shell.
+
+## 12. Red teams (subagents; findings fixed unless listed in §15)
+
+Context, licence and data basis; research status, recovery and cross-country; first-time user; final safety and test architecture. Largest changes that came from them: the Far East and Ukraine card errors, false zeros, a recovery statistic that used partial reports and identified countries, CR1 and R1 corrected to partial, held-record leak.
+
+## 13. First-time-user tasks
+
+Browser tests cover the search, card, world-profile, ribbon, filter and region-list answers. The rest were read from the page source after the fixes, and are not separately tested: which are monitored (lead paragraph and outlines), is Australia monitored (search, plain card), largest producers (world profile, alphabetically), what year (selector and legend), major US disruptions (filters), how complete US research (Research tab), why China is thinner (reporting environment in the ribbon), can I compare counts (no, stated on both pages), India's latest state (ribbon), which Saudi statuses are withheld (ribbon count, Research tab).
+
+## 14. Corrections carried in this file
+
+The checkpoint in §0 lists starting states. It is left as written.
+
+## 15. Owner questions
+
+Threshold questions: MW load loss under clause 5; clause 4 generation loss with no load shed; single-mine halts with capacity but no lost volume; no-load-shed grid declarations under clause 5; CER's interruption flag under clause 3; month-level refinery shortfall with a stated cause; a transmission feeder to a city gate, and any PHMSA "transmission" line, as a trunk (Columbia SM-116 is held on this); residents versus customers; supply-driven run cuts; hours-long terminal suspensions; a refinery fire during commissioning (HRRL); the 12 earlier owner rulings.
+
+Publication questions: a citation address that names a city (RIPET, Maharashtra substation, both held); weapon type in theatre notes (32 notes); whether a descending sort of the national table is acceptable; a login-walled lede counted as opened; the Saudi release rule, still "proposed".
+
+**Fuel-supply cause: not proposed.** A definition would need: a trigger of explicit attribution by an operator, ministry or wire; an effect of rotating outages or forced curtailment, not low stocks; exclusions for hydro, demand-only deficits, price and contract cases; whether fuel quality counts; whether imported-supply interruption counts; a rule for disputed attribution; a date and geography convention.
+
+Known and unchanged: `pipeline_registry.json` carries an observed physical status on pipelines from one date in August 2026; `pipeline/recovery.py` `withheld_records` counts curated rows only and is therefore 0.
+
+## 16. Not done
+
+- The search queries in every lane marked `stopped_by: search_limit`.
+- 37 US, 4 Canadian, 1 Chinese and 2 Indian records still say recovery not yet researched.
+- Lazy loading of the source browser's data beyond the panels listed in §11.
+- A screen reader was not run. Contrast was computed, not measured on a device.
+
+## 17. Wave-2 readiness: CONDITIONAL
+
+Not ready to add a country. Coverage semantics are fixed and the world layer works, but the search-limited lanes have not run, India and Saudi depth has improved only at the level of source findings, and owner-held threshold questions have grown.
