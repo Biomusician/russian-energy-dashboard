@@ -104,7 +104,9 @@ test.describe("world energy context", () => {
     const table = page.locator(".national-table");
     await expect(table).toBeVisible();
     const first = await table.locator("tbody tr td:first-child").allInnerTexts();
-    expect(first).toEqual([...first].sort((a, b) => a.localeCompare(b)));
+    // The pipeline's order: NFKD, case-folded, by code point.
+    const key = (s: string) => s.normalize("NFKD").toLowerCase();
+    expect(first).toEqual([...first].sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0)));
     await expect(table.locator("thead")).not.toContainText(/incident|event|disruption|rank|score/i);
   });
 

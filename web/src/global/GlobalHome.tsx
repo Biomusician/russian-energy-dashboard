@@ -62,7 +62,7 @@ export default function GlobalHome() {
         )}
 
         <p className="home-lead">
-          Five countries, plus the Russia, Belarus &amp; Crimea theatre, are systematically monitored for
+          Five countries, plus the Russia, Belarus &amp; Crimea area, are systematically monitored for
           qualifying disruptions. Other countries are shown only for national energy context: an
           unmonitored country has no disruption record here, which is not the same as no disruptions.
         </p>
@@ -102,9 +102,9 @@ export default function GlobalHome() {
               {manifest.corpus.records} reported disruptions in {manifest.corpus.episodes} episodes;{" "}
               {manifest.corpus.independently_reviewed} independently reviewed ({manifest.corpus.blind_reviewed} blind
               by three reviewers). {manifest.corpus.records_with_observed_recovery} with a cited report that the
-              facility or service came back; {manifest.corpus.records_with_recovery_estimate_only} with only an
-              estimate. {manifest.corpus.registry_sources} registry sources. Research process across{" "}
-              {manifest.corpus.research_lanes} lanes: {laneChips(manifest.corpus.research_lane_states ?? {})}.
+              facility or service came back at least in part ({manifest.corpus.records_reported_fully_back} of them
+              fully); {manifest.corpus.records_with_recovery_estimate_only} with only an estimate. {manifest.corpus.registry_sources} registry sources. Research process across{" "}
+              {manifest.corpus.research_lanes} source groups: {laneChips(manifest.corpus.research_lane_states ?? {})}.
             </p>
             <p className="small dim">{manifest.corpus.note}</p>
           </section>
@@ -135,7 +135,7 @@ function SystemCard({ s, manifest }: { s: ManifestSystem; manifest: Manifest }) 
       <div className="small dim" title={manifest.reporting_environments[s.reporting_environment]}>
         Reporting: {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}
       </div>
-      <div className="small dim">Data as of {fmtDate(s.as_of)}</div>
+      <div className="small dim">Site rebuilt {fmtDate(s.as_of)}</div>
       <button className="ghost" onClick={() => navigate(s.id)}>Open {s.name}</button>
     </article>
   );

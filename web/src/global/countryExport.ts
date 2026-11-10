@@ -69,7 +69,7 @@ export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, 
   c.fillText("What was reported and found, not a rate of disruption. Counts reflect this country's " +
              "reporting rules; not comparable across countries; never ranked.", pad, H - Math.round(34 * s));
   const nat = national?.row
-    ? `National energy production ${fmtValue(national.row.values.total_production, national.ctx.metrics.total_production.unit)} (${national.ctx.comparison_year}, EIA) is context only. `
+    ? `National energy production ${fmtValue(national.row.values.total_production, national.ctx.metrics.total_production.unit)} (${national.ctx.comparison_year}, ${national.ctx.source.name}) is context only. `
     : "";
   c.fillText(`${nat}Energy Disruption Monitor · open sources · boundaries: Natural Earth (line of actual control)`,
              pad, H - Math.round(14 * s));

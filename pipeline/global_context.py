@@ -118,8 +118,8 @@ def validate(doc, today=None):
             elif v > PLAUSIBLE_MAX[CANONICAL_UNITS[m]]:
                 problems.append(f"{a3}.{m}: {v} is implausible in {CANONICAL_UNITS[m]} (unit error?)")
         for m, n in (c.get("newer") or {}).items():
-            if not (isinstance(n.get("year"), int) and year is not None and year < n["year"] <= today.year):
-                problems.append(f"{a3}.newer.{m}: year {n.get('year')!r} is not after the comparison year")
+            if not (isinstance(n.get("year"), int) and year is not None and year < n["year"] < today.year):
+                problems.append(f"{a3}.newer.{m}: year {n.get('year')!r} is not a finished year after the comparison year")
         r = c.get("roles") or {}
         if r.get("overall") not in ROLES or any(x not in ROLES for x in (r.get("by_commodity") or {}).values()):
             problems.append(f"{a3}: unknown role")

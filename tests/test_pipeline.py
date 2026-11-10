@@ -7330,10 +7330,12 @@ def test_no_served_record_under_an_active_campaign_shows_facility_status():
                 covered += 1
                 assert e["recovery"]["research_status"] == B.WITHHELD, e["event_id"]
                 assert e["publication"] and e["publication"]["withheld"] == ["recovery", "status_citations"]
-                texts = [e["summary"], e["effect"], (e["capacity_affected"] or {}).get("source_says")]
-                texts += [s["url"] for s in e["sources"]]
+                assert not e.get("date_end"), e["event_id"]
+                texts = [e["summary"], e["effect"], e["threshold_basis"], e["facility_name"], e["operator"], e["hazard_name"],
+                         (e["capacity_affected"] or {}).get("source_says")]
+                texts += [s["url"] for s in e["sources"]] + [s.get("publisher") for s in e["sources"]]
                 for text in texts:
-                    assert not B.STATUS_WORDING.search(text or ""), (e["event_id"], text)
+                    assert not B.status_wording(text), (e["event_id"], text)
                 assert e["sources"], e["event_id"]
                 assert not any(B.late_citation(e, s) for s in e["sources"]), e["event_id"]
             else:
@@ -7890,7 +7892,8 @@ def test_theatre_text_holds_the_same_abstraction_rules_as_the_countries():
     banned = _re.compile(
         r"\b(?:CDU|AVT|ELOU|AT)-\d|\bunit (?:No\.? ?)?\d|\bunits? \d+ and \d+|three of its four|"
         r"\b(?:largest|biggest|key node|main node|critical|sole)\b|power-bridge|energy bridge|"
-        r"repairs? (?:could|would|will) take|hard to replace|\d+ of \d+ tanks", _re.I)
+        r"repairs? (?:could|would|will) take|hard to replace|\d+ of \d+ tanks|"
+        r"switchgear|boiler unit|auxiliary transformer|motor-fuel unit|\btwo units\b", _re.I)
     hits = []
     for name, cols in (("incidents.csv", ("notes",)), ("effects.csv", ("value_text",)),
                        ("recovery.csv", ("what_source_establishes", "estimate_basis")),

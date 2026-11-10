@@ -22,6 +22,10 @@ import { fmtDate } from "../data";
 const MONITORED_FALLBACK = "#1e5560";
 const OCCUPIED = "#5b4a1e";
 const OTHER = "#141c25";
+// Names people type that are not in a country's name.
+const SEARCH_ALIASES: Record<string, string> = {
+  us: "united states", usa: "united states", uk: "united kingdom", uae: "united arab emirates",
+};
 
 function Figure({ label, value }: { label: string; value: string }) {
   return <div className="ctx-fig"><span className="dim">{label}</span><span className="mono">{value}</span></div>;
@@ -61,7 +65,7 @@ export function NationalFigures({ row, ctx }: { row: ContextRow; ctx: EnergyCont
       )}
       {row.roles.overall && (
         <div className="small">{ROLE_LABEL[row.roles.overall]}
-          {roles.length > 0 && <span className="dim"> ({roles.map(([k, r]) => `${k}: ${String(r).replace("net_", "").replace("about_", "")}`).join(", ")})</span>}
+          {roles.length > 0 && <span className="dim"> ({roles.map(([k, r]) => `${k}: ${String(r).replace("net_", "").replace("about_", "")}`).join(", ")}; oil here counts all liquids, including refinery gain)</span>}
         </div>
       )}
     </>
@@ -79,25 +83,38 @@ function SourceLine({ ctx }: { ctx: EnergyContext }) {
 
 function ContextCard({ row, ctx, note, onClose }: { row: ContextRow; ctx: EnergyContext; note?: string | null; onClose: () => void }) {
   const closeRef = useRef<HTMLButtonElement | null>(null);
-  useEffect(() => { closeRef.current?.focus(); }, [row.a3]);
+  const opener = useRef<Element | null>(null);
+  useEffect(() => {
+    opener.current = document.activeElement;
+    closeRef.current?.focus();
+  }, [row.a3]);
+  const close = () => { onClose(); (opener.current as HTMLElement | null)?.focus?.(); };
+  // Part of a monitored country lies outside its monitored area (eastern Russia). Saying "not
+  // searched" there would be false for the country and is not what the map means.
+  const partial = !!row.system_id;
   return (
     <aside className="context-card panel" role="region" aria-label={`${row.name}: national energy context`}
-      onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}>
+      onKeyDown={(e) => { if (e.key === "Escape") close(); }}>
       <div className="section-head">
         <h3>{row.name}</h3>
-        <button ref={closeRef} className="ghost" onClick={onClose} aria-label={`Close ${row.name}`}>Close</button>
+        <button ref={closeRef} className="ghost" onClick={close} aria-label={`Close ${row.name}`}>Close</button>
       </div>
-      <div className="badge context-only-badge">Not systematically monitored for disruptions</div>
+      <div className="badge context-only-badge">{partial ? "This area is outside the monitored part of the country" : "Not systematically monitored for disruptions"}</div>
       <NationalFigures row={row} ctx={ctx} />
       {note && <p className="small dim">{note}</p>}
-      <p className="small dim">National energy statistics only. This site has no disruption record for {row.name}:
-        it was not searched, so nothing can be said here about what has or has not happened there.</p>
+      {partial ? (
+        <p className="small dim">National energy statistics for the whole country. Events are recorded only for the monitored
+          area. <button className="linklike" onClick={() => navigate(row.system_id as string)}>Open the monitored area</button></p>
+      ) : (
+        <p className="small dim">National energy statistics only. This site has no disruption record for {row.name}:
+          it was not searched, so nothing can be said here about what has or has not happened there.</p>
+      )}
       <SourceLine ctx={ctx} />
     </aside>
   );
 }
 
-function NationalTable({ ctx }: { ctx: EnergyContext }) {
+function NationalTable({ ctx, partly, onContext }: { ctx: EnergyContext; partly: Set<string>; onContext: (a3: string) => void }) {
   const [sort, setSort] = useState<string | null>(null);
   const cols = ctx.map_metrics;
   const rows = useMemo(() => {
@@ -126,8 +143,10 @@ function NationalTable({ ctx }: { ctx: EnergyContext }) {
         <tbody>
           {rows.map((r) => (
             <tr key={r.a3}>
-              <td>{r.name}</td>
-              <td className="small dim">{r.system_id ? "Monitored" : "Context only"}</td>
+              <td>
+                <button className="linklike" onClick={() => { if (r.system_id) navigate(r.system_id); else onContext(r.a3); }}>{r.name}</button>
+              </td>
+              <td className="small dim">{partly.has(r.a3) ? "Partly monitored" : r.system_id ? "Monitored" : "Context only"}</td>
               {cols.map((c) => <td key={c} className="mono small">{fmtValue(r.values[c], ctx.metrics[c].unit).replace(/ .*$/, (s) => (s === " data" ? " data" : ""))}</td>)}
             </tr>
           ))}
@@ -142,7 +161,10 @@ function CountrySearch({ ctx, onContext }: { ctx: EnergyContext; onContext: (a3:
   const hits = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (s.length < 2) return [];
-    return ctx.countries.filter((r) => r.name.toLowerCase().includes(s)).slice(0, 8);
+    const alias = SEARCH_ALIASES[s];
+    const match = (r: ContextRow) => r.name.toLowerCase().includes(s) || r.a3.toLowerCase() === s;
+    const named = alias ? ctx.countries.filter((r) => r.name.toLowerCase() === alias) : [];
+    return [...named, ...ctx.countries.filter((r) => match(r) && !named.includes(r))].slice(0, 8);
   }, [q, ctx]);
   return (
     <div className="country-search">
@@ -191,10 +213,22 @@ export default function WorldContext({ world, worldError, manifest }: {
   const noteOf = useMemo(() => {
     const out = new Map<string, string>();
     for (const f of world?.features ?? []) {
-      const p = f.properties as { a3?: string; note?: string | null } | null;
-      if (p?.a3 && p.note && !out.has(p.a3)) out.set(p.a3, p.note);
+      const p = f.properties as { a3?: string; note?: string | null; status?: string } | null;
+      // Crimea's feature carries a3 UKR. Its note is about Crimea and must not reach Ukraine's card.
+      if (p?.a3 && p.note && p.status !== "occupied" && !out.has(p.a3)) out.set(p.a3, p.note);
     }
     return out;
+  }, [world]);
+  // A country drawn both with and without a system id is monitored in part.
+  const partly = useMemo(() => {
+    const monitored = new Set<string>();
+    const not = new Set<string>();
+    for (const f of world?.features ?? []) {
+      const p = f.properties as { a3?: string; system_id?: string | null; status?: string } | null;
+      if (!p?.a3 || p.status === "occupied") continue;
+      (p.system_id ? monitored : not).add(p.a3);
+    }
+    return new Set([...monitored].filter((a) => not.has(a)));
   }, [world]);
 
   // Without the context file the map falls back to showing only where is monitored.
@@ -262,15 +296,19 @@ export default function WorldContext({ world, worldError, manifest }: {
             }}
             onHover={(p) => {
               if (!p) { setHover(null); return; }
-              const name = String(p.name ?? p.a3);
               const row = byA3.get(String(p.a3));
               const value = mode ? mode.describe(row) : "";
-              setHover(`${name}${value ? `: ${value}` : ""} · ${p.system_id ? "monitored, select to open" : "context only, not monitored"}`);
+              // The figure belongs to the country; Crimea has no national figure of its own.
+              const occupied = p.status === "occupied";
+              const name = occupied ? `${row?.name ?? "Ukraine"} (national figure)` : String(p.name ?? p.a3);
+              const where = p.system_id ? (occupied ? "Crimea: monitored within the Russia theatre, select to open" : "monitored, select to open")
+                : row?.system_id ? "outside the monitored area" : "context only, not monitored";
+              setHover(`${name}${value ? `: ${value}` : ""} · ${where}`);
             }}
             ariaLabel={mode
-              ? `World map coloured by ${mode.title}. Monitored systems have a thick outline. Use the table or search below for a keyboard route.`
+              ? `World map coloured by ${mode.title}. Monitored systems have a thick outline. For a keyboard route use the search box, or the national figures table in the world profile.`
               : "World map. Monitored systems are highlighted; select one to open it."}
-            attribution="Boundaries: Natural Earth (public domain). Crimea is drawn as Ukrainian territory under Russian occupation."
+            attribution="Energy data: U.S. EIA International Energy Statistics. Boundaries: Natural Earth (public domain), line of actual control. Crimea is drawn as Ukrainian territory under Russian occupation."
             onMap={(m) => { mapRef.current = m; }}
           />
         ) : (
@@ -293,17 +331,20 @@ export default function WorldContext({ world, worldError, manifest }: {
       )}
       {exportMsg && <p className="small" role="status">{exportMsg}</p>}
       {card && ctx && <ContextCard row={card} ctx={ctx} note={noteOf.get(card.a3)} onClose={() => setCardA3(null)} />}
-      {ctx && <WorldProfile ctx={ctx} />}
+      {ctx && <WorldProfile ctx={ctx} partly={partly} onContext={setCardA3} />}
     </section>
   );
 }
 
-function WorldProfile({ ctx }: { ctx: EnergyContext }) {
+function WorldProfile({ ctx, partly, onContext }: { ctx: EnergyContext; partly: Set<string>; onContext: (a3: string) => void }) {
   const w = ctx.world.values;
   const total = w.total_production;
   const monitored = ctx.countries.filter((r) => r.system_id).reduce((a, r) => a + (r.values.total_production ?? 0), 0);
   const fake: ContextRow = { a3: "WLD", name: "World", on_map: false, system_id: null, values: w, newer: {}, roles: { overall: null, by_commodity: {} } };
   const shares = mixShares(fake);
+  // Alphabetical, so the answer to "who produces the most" carries no position.
+  const largest = [...ctx.countries].sort((a, b) => (b.values.total_production ?? 0) - (a.values.total_production ?? 0))
+    .slice(0, 6).map((r) => r.name).sort((a, b) => a.localeCompare(b));
   return (
     <div className="panel global-note world-profile">
       <div className="eyebrow">World energy profile, {ctx.comparison_year}</div>
@@ -312,9 +353,10 @@ function WorldProfile({ ctx }: { ctx: EnergyContext }) {
         {shares.map((s) => `${s.label} ${Math.round(s.share * 100)}%`).join(" · ")}.
         {total ? ` The countries containing the six monitored systems produced ${Math.round((monitored / total) * 100)}% of it; the map shows the rest for context only.` : ""}
       </p>
+      <p className="small">Six largest producers in {ctx.comparison_year}, alphabetically: {largest.join(", ")}. Size says nothing about disruption.</p>
       <details>
         <summary className="small">National figures table ({ctx.countries.length} countries and territories)</summary>
-        <NationalTable ctx={ctx} />
+        <NationalTable ctx={ctx} partly={partly} onContext={onContext} />
       </details>
       <SourceLine ctx={ctx} />
       <p className="small dim">{ctx.not_scoring}</p>

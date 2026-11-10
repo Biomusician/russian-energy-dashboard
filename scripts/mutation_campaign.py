@@ -138,7 +138,7 @@ MUTATIONS = [
     # Added after the iteration-16 safety review: status leaked through citation addresses.
     ("active-campaign status citation published (import)",
      [("scripts/import_candidates.py", _text(
-         '        ev["sources"] = [s for s in ev["sources"] if not build_systems.STATUS_WORDING.search(s["url"] or "")\n'
+         '        ev["sources"] = [s for s in ev["sources"] if not build_systems.status_wording(s["url"])\n'
          '                         and not build_systems.late_citation(ev, s)]\n',
          ""))],
      "writes_the_withheld_marker"),
@@ -272,9 +272,9 @@ MUTATIONS = [
      "arabic_status_wording"),
     ("a Saudi restart is published on a campaign record",
      [("data/processed/systems/sa/events.json", _text("Refinery shut on 8 April 2026 (TotalEnergies).",
-                                                      "Refinery shut on 8 April 2026 and restarted in May (TotalEnergies).")),
+                                                      "Refinery shut on 8 April 2026 and restarted (TEST PLACEHOLDER, not a fact).")),
       ("web/public/data/systems/sa/events.json", _text("Refinery shut on 8 April 2026 (TotalEnergies).",
-                                                       "Refinery shut on 8 April 2026 and restarted in May (TotalEnergies)."))],
+                                                       "Refinery shut on 8 April 2026 and restarted (TEST PLACEHOLDER, not a fact)."))],
      "no_served_record_under_an_active_campaign"),
     ("a country's raw event count enters the cross-country file",
      [("web/public/data/global/data_quality.json", _artifact(lambda d: d["systems"][0].__setitem__("recorded_events", 7)))],
@@ -286,8 +286,8 @@ MUTATIONS = [
      [("web/src/global/WorldContext.tsx", _text("if (sid) navigate(sid);", "navigate(String(p?.a3).toLowerCase());"))],
      "context_country_can_never_open_a_dossier"),
     ("a unit conversion is dropped",
-     [("scripts/build_global_context.py", _text("values[mid] = None if v is None else round(v * mult, ROUND[unit])",
-                                                "values[mid] = None if v is None else round(v, ROUND[unit])"))],
+     [("scripts/build_global_context.py", _text("values[mid] = None if v is None else rnd(v * mult, unit)",
+                                                "values[mid] = None if v is None else rnd(v, unit)"))],
      "unit_conversion_and_no_fallback"),
     ("a missing comparison year quietly borrows the year before",
      [("scripts/build_global_context.py", _text("v = by_year.get(COMPARISON_YEAR)\n",

@@ -311,7 +311,7 @@
       ],
       "scope": "inclusion clauses 1-7 as written; lanes and queries declared before searching (docs/countries/US_LANE_PASS_18.md); every published record reviewed blind by three independent roles and confirmed on its final text",
       "status": "partial",
-      "status_reason": "4 of 9 lanes executed as far as declared; the rest are stated per lane",
+      "status_reason": "1 of 9 lanes executed as far as declared; the rest are stated per lane",
       "outcome": {
         "candidates": 29,
         "accepted": 1,
@@ -347,7 +347,7 @@
           "items_in_universe": 1786,
           "finding": "DOE publishes OE-417 rows only as annual summaries; the 2026 rows may not appear until 2027.",
           "limitation": "DOE has published no 2026 OE-417 file as of 2026-11-10 (the three 2026 file names return the portal's HTML shell; server Last-Modified is still 2026-10-08), so 2026-01-01 to 2026-11-10 cannot be enumerated from this source. The execution value restates iteration 17's finding in the two-dimension vocabulary (every published row read; the gap is the publisher's); it is not new coverage, and the 2025 file was verified by size and date header, not re-read.",
-          "carried_forward": false
+          "carried_forward": true
         },
         {
           "lane": "G2",
@@ -393,7 +393,7 @@
           "items_enumerated": 0,
           "items_in_universe": 0,
           "finding": "DOE has published no public situation report for any 2025 or 2026 event, including Isaias 2026; the listing is not a record of DOE responses.",
-          "limitation": "No DOE situation report was released 2026-10-31 to 2026-11-10: the hurricane hub's newest series is still Milton (2024), the extreme-weather hub lists only February 2021, and the CESER news listing shows one item in the window (7 Nov 2026, renewal of two Puerto Rico 202(c) orders: a territory, an order and no reported outage; not a candidate). Marked partial, not enumerated_complete, only because iteration 16 listed but did not open every report of the Ian, Helene and Fiona series; nothing from this pass is unread.",
+          "limitation": "Marked partial, not enumerated_complete, only because iteration 16 listed but did not open every report of the Ian, Helene and Fiona series; nothing from this pass is unread.",
           "carried_forward": false
         },
         {
@@ -416,7 +416,7 @@
           "queries_run": null,
           "items_enumerated": 79,
           "items_in_universe": 79,
-          "finding": "The Arthur report documents rain, flooding and tornado damage in Texas, Louisiana and the Southeast but gives no outage count, shut-in volume or facility effect, so it yields no candidate. The execution value restates iteration 17's result in the two-dimension vocabulary.",
+          "finding": "The execution value restates iteration 17's result in the two-dimension vocabulary.",
           "limitation": "NHC has not published reports for Atlantic Dolly, Edouard, Fay, Gonzalo, Hanna, Isaias and Josephine, nor for eastern-Pacific Douglas, Elida, Fausto, Karina, Lowell, Marie and the storms after Norbert. Of the four US-affecting storms that were unpublished on 2026-11-03, one (Arthur) is now out; Edouard, Isaias and Lowell are still unpublished. Josephine (21-22 Oct 2026) was not assessed for US effects because no search could be run.",
           "carried_forward": false
         },
@@ -484,9 +484,10 @@
           ],
           "queries_declared": 90,
           "queries_run": 30,
-          "finding": "Cameron, 2022-2026: the ten queries returned planned maintenance (2022, 2024, 2025, 2026) and one January 2024 freeze cargo cancellation with no reported train shutdown. One unverified lead remains: a search summary, with no attributable page, said all three Cameron trains shut unexpectedly on 2025-10-27; it is held, not accepted. Cove Point, 2022-2026: every plant shutdown the 10 queries surfaced is the scheduled autumn maintenance outage (excluded as planned), each year. The only unplanned items are a 14 June 2022 trip recorded in a PHMSA order with no stated effect, and a July 2023 feed gas reduction downstream of the Columbia Line VB rupture already in the corpus. A 2025 PHMSA proposed safety order on minor leaks states no shutdown. Result snippets from RBN and PipeRiv were not opened; RBN weekly reports are subscriber content.",
+          "finding": "Cameron, 2022-2026: the ten queries returned planned maintenance (2022, 2024, 2025, 2026) and one January 2024 freeze cargo cancellation with no reported train shutdown. Cove Point, 2022-2026: every plant shutdown the 10 queries surfaced is the scheduled autumn maintenance outage (excluded as planned), each year. The only unplanned items are a 14 June 2022 trip recorded in a PHMSA order with no stated effect, and a July 2023 feed gas reduction downstream of the Columbia Line VB rupture already in the corpus. A 2025 PHMSA proposed safety order on minor leaks states no shutdown. Result snippets from RBN and PipeRiv were not opened; RBN weekly reports are subscriber content.",
           "limitation": "Three of nine terminals were searched (Sabine Pass, Cameron, Cove Point); twelve queries for terminals not yet operating in the window were not applicable. The rest were not run because the search limit was reached.",
-          "carried_forward": false
+          "carried_forward": false,
+          "stopped_by": "search_limit"
         },
         {
           "lane": "R1",
@@ -495,7 +496,7 @@
             "US Chemical Safety Board investigations; refinery and gas-processing reporting"
           ],
           "universe_kind": "declared_query_set",
-          "execution": "declared_search_complete",
+          "execution": "partial",
           "source_window": "no_census_exists",
           "covered_through": "2026-11-03",
           "languages_required": [
@@ -504,10 +505,11 @@
           "languages_executed": [
             "en"
           ],
-          "queries_declared": 15,
+          "queries_declared": 16,
           "queries_run": 15,
-          "limitation": "The declared set ran through 2026-11-03. An additional 2026 re-check query could not be run in this pass.",
-          "carried_forward": false
+          "limitation": "Fifteen of 16 declared queries ran, through 2026-11-03. The 2026 re-check declared for this pass did not run because the search limit was reached.",
+          "carried_forward": false,
+          "stopped_by": "search_limit"
         },
         {
           "lane": "C1",
@@ -528,7 +530,7 @@
           "queries_declared": 10,
           "queries_run": 10,
           "limitation": "Carried from iteration 17 with no new work: 10 of 10 declared queries, which is a completed query set and not a census. Nothing covers 2026-11-04 to 2026-11-10, and MSHA's mine data retrieval system, the enumerable source for this class, has still not been downloaded or parsed. The execution value is the two-dimension name for iteration 17's '10 of 10'; it is not new coverage.",
-          "carried_forward": false
+          "carried_forward": true
         }
       ]
     }

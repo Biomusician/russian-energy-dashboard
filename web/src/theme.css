@@ -1944,7 +1944,9 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
 .simple-map { width: 100%; height: 100%; min-height: 260px; background: #05070a; }
 .simple-map.placeholder { display: grid; place-items: center; color: var(--text-faint); }
 .global-map-wrap { height: min(52vh, 520px); min-height: 260px; display: flex; flex-direction: column; }
-.global-map-wrap .simple-map { flex: 1; }
+/* A map wider than this shows only a band of latitudes: the world's width fills the frame and the
+   south falls off the bottom. Capping the width keeps Australia and southern Africa on the map. */
+.global-map-wrap .simple-map { flex: 1; width: 100%; max-width: calc(min(52vh, 520px) * 1.75); margin: 0 auto; }
 .map-legend-mini { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 6px 2px; font-size: 11px; color: var(--text-dim); align-items: center; }
 .map-legend-mini i { display: inline-block; width: 11px; height: 11px; margin-right: 4px; vertical-align: -1px; border: 1px solid var(--line); }
 

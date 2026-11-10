@@ -116,6 +116,7 @@ export function DataQualityPanel() {
               && daysBetween(x.last_checked, today) > x.stale_after_days);
             const blocked = s.lanes.filter((l) => l.state === "blocked_by_source");
             const waiting = s.lanes.filter((l) => l.source_window === "publisher_not_yet_released");
+            const stopped = s.lanes.filter((l) => l.state === "stopped_by_search_limit");
             const partial = s.lanes.filter((l) => l.state === "partially_searched" || l.state === "not_started");
             return (
               <details key={s.system_id} className="dq-system">
@@ -127,7 +128,7 @@ export function DataQualityPanel() {
                   Source families cited: {Object.values(s.source_families).join(", ") || "none"}.
                   Newest systematic pass {fmtDate(s.last_systematic_pass)}; first {fmtDate(s.first_systematic_pass)}.
                   {" "}{late.length ? `${late.length} listed sources are past their re-check limit.` : "No listed source is past its re-check limit."}</p>
-                {[["Blocked by the source", blocked], ["Publisher has not yet released the rest", waiting], ["Partly searched or not started", partial]].map(([title, ls]) => (
+                {[["Blocked by the source", blocked], ["Stopped when the search allowance ran out", stopped], ["Publisher has not yet released the rest", waiting], ["Partly searched or not started", partial]].map(([title, ls]) => (
                   (ls as typeof blocked).length > 0 && (
                     <div key={title as string}>
                       <div className="eyebrow">{title as string}</div>

@@ -156,7 +156,8 @@ def test_the_committed_context_is_valid():
     (lambda d: d["countries"][0]["roles"].__setitem__("overall", "chokepoint"), "unknown role"),
     (lambda d: d["countries"][0].__setitem__("rank", 1), "forbidden field"),
     (lambda d: d["countries"][0].__setitem__("incident_count", 0), "forbidden field"),
-    (lambda d: d["countries"][0]["newer"].__setitem__("oil_production", {"year": 2023, "value": 1}), "not after the comparison year"),
+    (lambda d: d["countries"][0]["newer"].__setitem__("oil_production", {"year": 2023, "value": 1}), "not a finished year"),
+    (lambda d: d["countries"][0]["newer"].__setitem__("oil_production", {"year": 2026, "value": 1}), "not a finished year"),
     (lambda d: d["countries"].append(copy.deepcopy(d["countries"][0])), "duplicate country"),
     (lambda d: d["countries"].clear(), "no countries"),
 ])
@@ -253,12 +254,11 @@ def test_a_new_reviewed_event_leaves_national_context_alone(tmp_path, monkeypatc
     from pipeline import outputs
     monkeypatch.setitem(outputs._target, "root", tmp_path)
     (tmp_path / "x").mkdir()
-    a = G.build({"type": "FeatureCollection", "features": []}, today=TODAY)
-    # The context builder takes no event input at all.
+    # The context builder takes no event input and its source never names one.
     import inspect
     assert set(inspect.signature(G.build).parameters) == {"world", "admin0", "today"}
-    b = G.build({"type": "FeatureCollection", "features": []}, today=TODAY)
-    assert a == b
+    src = inspect.getsource(G)
+    assert "events.json" not in src and "load_events" not in src and "research_log" not in src
 
 
 # --- the emitted artifacts ---------------------------------------------------------------------------
@@ -333,8 +333,10 @@ def test_the_manifest_gained_no_figure_per_country():
 @needs_payload
 def test_data_quality_holds_no_disruption_count_per_country():
     d = _json("global/data_quality.json")
-    keys = set(G._walk(d["systems"]))
-    assert not keys & {"records", "events", "episodes", "recorded_events", "rank", "score", "quality_score"}
+    keys = {k.lower() for k in G._walk(d["systems"])}
+    assert not [k for k in keys if any(p in k for p in ("record", "event", "episode", "count", "rank", "score"))], keys
+    # A research finding is prose that can carry a tally; it stays on the country page.
+    assert "finding" not in keys
     assert [s["name"] for s in d["systems"]] == sorted(s["name"] for s in d["systems"])
     assert set(G._walk(d["recovery_by_class"])).isdisjoint({"system_id", "country"})
 
@@ -365,13 +367,22 @@ def test_recent_evidence_is_chronological_safe_and_unranked():
 def test_a_campaign_record_shows_no_effect_in_the_recent_list():
     d = _json("global/recent_evidence.json")
     ev = {e["event_id"]: e for e in _json("systems/sa/events.json")["events"]}
-    campaign_regions = 0
+    withheld = {eid for eid, e in ev.items() if e.get("publication")}
+    assert withheld
+    shown = 0
     for ep in d["episodes"]:
+        if ep["system_id"] != "sa":
+            continue
+        pool = [e for e in ev.values() if e["episode_id"] == ep["episode_id"]]
         for m in ep["members"]:
-            if m["withheld"]:
-                campaign_regions += 1
-                assert m["effect"] is None
-    assert campaign_regions == sum(1 for e in ev.values() if e.get("publication")) or campaign_regions > 0
+            # The expected state comes from the record, not from the feed's own flag.
+            source = next(e for e in pool if e["date"] == m["date"])
+            must = source["event_id"] in withheld
+            assert bool(m["withheld"]) == must, ep["episode_id"]
+            if must:
+                shown += 1
+                assert m["effect"] is None, ep["episode_id"]
+    assert shown > 0
 
 
 @needs_payload
@@ -383,6 +394,9 @@ def test_recovery_coverage_adds_up_and_names_no_facility(sid):
                                 "not_researched", "withheld_active_campaign"))
     assert total == p["event_summary"]["recorded_events"]
     assert set(rc["unresearched_by_class"]) <= set(p["taxonomy"]["asset_classes"])
+    # Fixed keys: a facility could only enter through a field that is not on this list.
+    assert set(rc) == {"observed", "estimate", "other_statement", "researched_no_public_evidence", "not_researched",
+                       "withheld_active_campaign", "unresearched_by_class", "policy"}
     assert "modelled" not in json.dumps(rc).replace("Nothing is modelled", "")
 
 
@@ -405,9 +419,61 @@ def test_every_record_reviewed_in_this_pass_was_blind_reviewed():
 
 @needs_payload
 def test_a_month_precision_record_keeps_its_precision_in_the_feed():
+    events = {sid: _json(f"systems/{sid}/events.json")["events"] for sid in systems.COUNTRY_SYSTEMS}
     for ep in _json("global/recent_evidence.json")["episodes"]:
+        pool = [e for e in events[ep["system_id"]] if e["episode_id"] == ep["episode_id"]]
         for m in ep["members"]:
-            assert m["date_precision"] in ("day", "month", "range"), ep["episode_id"]
+            assert m["date_precision"] == next(e for e in pool if e["date"] == m["date"])["date_precision"], ep["episode_id"]
+
+
+@needs_payload
+@pytest.mark.parametrize("sid", systems.COUNTRY_SYSTEMS)
+def test_citation_quality_carries_no_address_and_is_inside_one_country(sid):
+    cq = _json(f"systems/{sid}/system.json")["citation_quality"]
+    assert "http" not in json.dumps(cq)
+    assert cq["with_publication_date"] <= cq["citations"]
+    assert "citation_quality" not in json.dumps(_json("global/manifest.json"))
+    assert "citation_quality" not in json.dumps(_json("global/data_quality.json"))
+
+
+@pytest.mark.parametrize("phrase", [
+    "repair work began", "https://x.example/refinery-back-online", "https://x.example/still-shut",
+    "https://x.example/running-at-70", "re-started", "\u0627\u0633\u062a\u0623\u0646\u0641\u062a \u0627\u0644\u0639\u0645\u0644",
+    "https://x.example/%D8%A7%D8%B3%D8%AA%D8%A6%D9%86%D8%A7%D9%81",
+])
+def test_status_wording_reads_addresses_and_forms_a_status_check_used_to_miss(phrase):
+    assert B.status_wording(phrase), phrase
+
+
+QUEUE = ROOT / "data" / "candidates"
+
+
+@needs_payload
+@pytest.mark.skipif(not (QUEUE / "us.json").exists(), reason="the local queue is not in CI")
+def test_no_unpublished_record_is_named_in_any_served_string():
+    """Iteration 18 red team: a held record's name reached the payload through research-log prose."""
+    served = "\n".join(p.read_text(encoding="utf-8") for p in WEB.rglob("*.json") if p.stat().st_size < 3_000_000).lower()
+    published, names, ids = set(), set(), set()
+    for sid in systems.COUNTRY_SYSTEMS:
+        for e in _json(f"systems/{sid}/events.json")["events"]:
+            published.add(e["event_id"])
+            names.add((e.get("facility_name") or "").lower())
+    leaked = []
+    for sid in systems.COUNTRY_SYSTEMS:
+        for r in json.loads((QUEUE / f"{sid}.json").read_text(encoding="utf-8")):
+            cid = r.get("candidate_id") or ""
+            if cid and cid not in published and len(cid) > 12 and cid in served:
+                leaked.append(cid)
+    assert not leaked, leaked[:10]
+
+
+@needs_payload
+def test_a_research_log_says_counts_and_process_never_held_material():
+    for sid in systems.COUNTRY_SYSTEMS:
+        newest = _json(f"systems/{sid}/system.json")["research_log"]["passes"][-1]
+        for lane in newest.get("lanes") or []:
+            for field in ("limitation", "finding"):
+                assert not re.search(r"\bheld\b|\.md\b", lane.get(field) or "", re.I), (sid, lane["lane"], field)
 
 
 @needs_payload
@@ -451,7 +517,7 @@ def test_a_context_country_can_never_open_a_dossier():
     for c in calls:
         if "import" in c:
             continue
-        assert re.search(r"if \((r\.system_id|sid)\) navigate\((r\.system_id|sid)\)", c), c
+        assert re.search(r"if \((r\.system_id|sid)\) navigate\((r\.system_id|sid)\)|navigate\(row\.system_id as string\)", c), c
     assert "events.json" not in src
 
 

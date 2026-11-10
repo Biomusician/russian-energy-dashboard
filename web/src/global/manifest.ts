@@ -36,6 +36,7 @@ export interface CorpusTotals {
   registry_sources: number;
   records_with_observed_recovery: number;
   records_with_recovery_estimate_only: number;
+  records_reported_fully_back: number;
   research_lanes_complete: number;
   research_lane_states?: Record<string, number>;
   research_lanes: number;
@@ -436,7 +437,7 @@ export async function loadWorld(signal: AbortSignal): Promise<GeoJSON.FeatureCol
 export const READINESS_LABEL: Record<Readiness, string> = {
   INDEX_READY: "Index published",
   EXPERIMENTAL: "Experimental",
-  CONTEXT_ONLY: "Context and reported events only",
+  CONTEXT_ONLY: "Reported events, no index",
   INSUFFICIENT_EVIDENCE: "Insufficient evidence",
 };
 
@@ -478,20 +479,21 @@ export const RESEARCH_COMPLETENESS_LABEL: Record<string, string> = {
 
 /** What a lane's two dimensions mean to a reader. Computed by the build; never typed per lane. */
 export const LANE_STATE_LABEL: Record<string, string> = {
-  universe_searched: "Declared source universe searched",
+  universe_searched: "All listed sources searched",
   current_through_latest_release: "Searched through the publisher's latest release",
-  declared_query_set_run: "Declared query set run (not a census)",
+  declared_query_set_run: "Planned searches run (not exhaustive)",
   partially_searched: "Partly searched",
   blocked_by_source: "Blocked by the source",
+  stopped_by_search_limit: "Stopped when the search allowance ran out",
   not_started: "Not started",
-  legacy: "Logged before iteration 18",
+  legacy: "Logged under the earlier format",
 };
 
 export const LANE_EXECUTION_LABEL: Record<string, string> = {
   not_started: "Not started",
   partial: "Partly executed",
   declared_search_complete: "Every declared query run",
-  enumerated_complete: "Every published item read",
+  enumerated_complete: "Published items enumerated (see limitation)",
 };
 
 export const LANE_WINDOW_LABEL: Record<string, string> = {

@@ -23,6 +23,7 @@ describe("fmtValue", () => {
     expect(fmtValue(null, "quadrillion Btu")).toBe("no data");
     expect(fmtValue(undefined, "quadrillion Btu")).toBe("no data");
     expect(fmtValue(0, "quadrillion Btu")).toBe("0 quad Btu");
+    expect(fmtValue(0.000129, "quadrillion Btu")).toBe("0.00013 quad Btu");
   });
   it("prints the unit", () => {
     expect(fmtValue(1234.4, "million tonnes")).toBe("1,234 Mt");

@@ -20,6 +20,7 @@ import hashlib
 import json
 import sys
 import zipfile
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -100,6 +101,13 @@ def role(prod, cons):
     return "about_balanced"
 
 
+def rnd(x, unit):
+    """Round to the unit's precision, but never down to an invented zero: Benin's 0.000129 quad is
+    small, not nothing, and "zero" is drawn and read differently from a small value."""
+    r = round(x, ROUND[unit])
+    return r if r or not x else float(f"{x:.3g}")
+
+
 def row_for(series, code):
     values, newer = {}, {}
     for mid, (s, unit_tag, mult, unit, *_rest) in METRICS.items():
@@ -111,10 +119,11 @@ def row_for(series, code):
         # level; it is treated as not available rather than drawn as a value.\r
         by_year = {int(y): (None if number(v) is None or v < 0 else v) for y, v in d["data"]}
         v = by_year.get(COMPARISON_YEAR)
-        values[mid] = None if v is None else round(v * mult, ROUND[unit])
-        later = sorted(y for y, x in by_year.items() if y > COMPARISON_YEAR and x is not None)
+        values[mid] = None if v is None else rnd(v * mult, unit)
+        # The current year is unfinished: a part-year figure is not a value for that year.
+        later = sorted(y for y, x in by_year.items() if COMPARISON_YEAR < y < date.today().year and x is not None)
         if later:
-            newer[mid] = {"year": later[-1], "value": round(by_year[later[-1]] * mult, ROUND[unit])}
+            newer[mid] = {"year": later[-1], "value": rnd(by_year[later[-1]] * mult, unit)}
     return values, newer
 
 

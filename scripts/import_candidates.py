@@ -263,7 +263,7 @@ def to_event(system_id, r, grandfathered=frozenset(), campaigns=None):
         # that status in the source list, and a capacity note quoting a post-restart operating rate
         # publishes it in our words. Both stay in the queue with the rest of the status evidence,
         # so the release rule restores them without re-research (iteration 16, safety red team).
-        ev["sources"] = [s for s in ev["sources"] if not build_systems.STATUS_WORDING.search(s["url"] or "")
+        ev["sources"] = [s for s in ev["sources"] if not build_systems.status_wording(s["url"])
                          and not build_systems.late_citation(ev, s)]
         ev["review"]["source_count"] = len(ev["sources"])
         # A reviewer-opened count above the published count would say a further source exists and
@@ -271,7 +271,7 @@ def to_event(system_id, r, grandfathered=frozenset(), campaigns=None):
         if ev["review"].get("sources_opened_by_reviewer") is not None:
             ev["review"]["sources_opened_by_reviewer"] = min(ev["review"]["sources_opened_by_reviewer"], len(ev["sources"]))
         cap = ev["capacity_affected"] or {}
-        if build_systems.STATUS_WORDING.search(cap.get("source_says") or ""):
+        if build_systems.status_wording(cap.get("source_says")):
             ev["capacity_affected"] = None
     return ev
 

@@ -59,7 +59,7 @@ export function composeContextFrame(map: HTMLCanvasElement, ctx: EnergyContext, 
   c.font = `${Math.round(13 * s)}px ${SANS}`;
   c.fillText(`Monitored for disruptions: ${monitored.join(", ")}. Other countries are context only: no disruption record, not zero disruptions.`,
              pad, H - Math.round(34 * s));
-  c.fillText("Energy production is context, never a measure of disruption, importance or exposure. Energy Disruption Monitor · boundaries: Natural Earth",
+  c.fillText("Energy production is context, never a measure of disruption, importance or exposure. Energy Disruption Monitor · boundaries: Natural Earth (line of actual control); Crimea drawn as Ukrainian, occupied",
              pad, H - Math.round(14 * s));
   return out;
 }

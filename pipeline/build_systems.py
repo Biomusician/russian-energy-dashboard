@@ -23,6 +23,7 @@ WHAT IT DELIBERATELY DOES NOT DO.
 
 import datetime as dt
 import re
+from urllib.parse import unquote
 
 from pipeline import geo, global_context, systems
 from pipeline.config import ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, RAW, SECTORS
@@ -111,7 +112,7 @@ UNIVERSE_KINDS = ("census", "report_archive", "declared_query_set")
 RESEARCH_LANE_KEYS_V2 = ("lane", "source_family", "registry", "universe_kind", "execution", "source_window",
                          "covered_through", "languages_required", "languages_executed", "queries_declared",
                          "queries_run", "items_enumerated", "items_in_universe", "limitation", "finding",
-                         "carried_forward")
+                         "carried_forward", "stopped_by")
 # The window every country system covers. A systematic pass that starts later is a top-up: it can
 # never make the whole record "complete" (iteration 16, research red team).
 COVERAGE_START = "2022-01-01"
@@ -256,6 +257,10 @@ def lane_problems(lane, window):
         qd, qr = lane.get("queries_declared"), lane.get("queries_run")
         if not (isinstance(qd, int) and qd > 0 and isinstance(qr, int) and qr >= qd):
             out.append(f"lane {name!r}: declared_search_complete needs every declared query run ({qr} of {qd})")
+    if lane.get("stopped_by") not in (None, "search_limit"):
+        out.append(f"lane {name!r}: stopped_by {lane.get('stopped_by')!r} is not a known reason")
+    if lane.get("stopped_by") and ex in ("enumerated_complete", "declared_search_complete"):
+        out.append(f"lane {name!r}: stopped early, so it cannot be complete")
     if win == "inaccessible" and ex in ("enumerated_complete", "declared_search_complete"):
         out.append(f"lane {name!r}: a source that refused access was not searched")
     if ex == "not_started" and (lane.get("queries_run") or lane.get("items_enumerated")):
@@ -287,6 +292,9 @@ def lane_summary_state(lane):
     if "execution" not in lane:
         return "legacy"
     ex, win = lane["execution"], lane["source_window"]
+    # Our own search allowance ran out: not the publisher's doing, and the queries can still be run.
+    if lane.get("stopped_by") == "search_limit":
+        return "stopped_by_search_limit"
     if ex == "not_started":
         return "blocked_by_source" if win == "inaccessible" else "not_started"
     if win == "inaccessible":
@@ -298,7 +306,7 @@ def lane_summary_state(lane):
     return "partially_searched"
 
 
-LANE_SUMMARY_STATES = ("universe_searched", "current_through_latest_release", "declared_query_set_run",
+LANE_SUMMARY_STATES = ("stopped_by_search_limit", "universe_searched", "current_through_latest_release", "declared_query_set_run",
                        "partially_searched", "blocked_by_source", "not_started", "legacy")
 
 
@@ -382,11 +390,17 @@ STATUS_WORDING = re.compile(
     r"restart|resum|reopen|back (online|in service)|returned to|recover(ed|y)|restor|"
     r"still (shut|offline|halted|closed|down)|remain(s|ed)? (shut|offline|halted|closed)|"
     r"operating at|running at|operat(ing|ion) at \d|postpon|planned restart|"
-    r"not (yet )?resumed|had not resumed|knock-on|cancel|expected|extended|"
+    r"not (yet )?resumed|had not resumed|knock-on|cancel|expected|extended|repair|re started|"
     # Arabic: restart, resumption, repair, return to service. The English-only check let Arabic
     # addresses through unread (iteration 18, Saudi safety audit).
-    r"استئناف|إعادة (ال)?تشغيل|إصلاح|عودة (ال)?إنتاج|عاد إلى العمل",
+    r"استئناف|استأنف|[إا]عادة (ال)?تشغيل|[إا]صلاح|عودة (ال)?إنتاج|عاد إلى العمل",
     re.I)
+
+
+def status_wording(text):
+    """The match in `text`, reading an address's slug as words and decoding percent-escapes, so
+    "back-online" and an encoded Arabic path are read like the prose they are."""
+    return STATUS_WORDING.search(unquote(text or "").replace("-", " ").replace("_", " "))
 
 
 # Exact UI wording (GLOBAL_METHODOLOGY §6.4), carried in the payload so every surface says the
@@ -730,14 +744,17 @@ def apply_publication_policy(system_id, events, campaigns):
                             "an end date, which says when the facility's outage ended")
         texts = [("summary", e.get("summary")), ("effect", e.get("effect")),
                  ("threshold basis", e.get("threshold_basis")),
-                 ("capacity note", (e.get("capacity_affected") or {}).get("source_says"))]
+                 ("capacity note", (e.get("capacity_affected") or {}).get("source_says")),
+                 ("facility name", e.get("facility_name")), ("operator", e.get("operator")),
+                 ("hazard name", e.get("hazard_name"))]
         texts += [("citation", s.get("url")) for s in e["sources"]]
+        texts += [("publisher", s.get("publisher")) for s in e["sources"]]
         for src in e["sources"]:
             if late_citation(e, src):
                 problems.append(f"{e['event_id']}: citation dated {src.get('date')} is more than "
                                 f"{LATE_CITATION_DAYS} days after the event under an active campaign")
         for field, text in texts:
-            m = STATUS_WORDING.search(text or "")
+            m = status_wording(text)
             if m:
                 problems.append(f"{e['event_id']}: {field} reports current status ({m.group(0)!r}) "
                                 "under an active campaign")
@@ -1238,6 +1255,8 @@ def corpus_totals(country_payloads):
         "records_with_observed_recovery": tot(lambda p: sum(
             n for k, n in p["event_summary"]["recovery_kinds"].items() if k in OBSERVED_RECOVERY_KINDS)),
         "records_with_recovery_estimate_only": tot(lambda p: p["event_summary"]["recovery_kinds"].get("estimate", 0)),
+        "records_reported_fully_back": tot(lambda p: sum(
+            p["event_summary"]["recovery_kinds"].get(k, 0) for k in COMPLETED_RECOVERY_KINDS)),
         "research_lanes_complete": lanes_done,
         "research_lane_states": dict(sorted(states.items())),
         "research_lanes": lanes_all,
@@ -1340,23 +1359,38 @@ def recent_evidence(all_events):
     }
 
 
+COMPLETED_RECOVERY_KINDS = ("full_restart", "service_restored")
+REPORT_DATE_ONLY = re.compile(r"report date|article date|announcement date|publication date", re.I)
+
+
 def recovery_by_class(all_events):
-    """Observed recovery durations by class and kind, five countries together. No per-country
-    figure exists here: a country recovery ranking would be a comparison the data cannot support."""
-    cases = {}
+    """Days to a report of completed recovery, by class and kind, across at least two countries.
+
+    Completed kinds only: a partial report's date is when someone wrote down that restoration was
+    under way, so a duration from it says nothing about how long recovery took. Dates that are only
+    the date of a report are left out for the same reason. A class seen in one country is not
+    emitted, because a row drawn from one country identifies that country, and a recovery figure by
+    country is the comparison the data cannot support (iteration 18, analytic red team)."""
+    cases, systems_in = {}, {}
     labels = {**ASSET_CLASSES, **TAXONOMY_EXTENSIONS["asset_classes"]}
-    for _, events, _ in all_events.values():
+    for sid, (_, events, _) in all_events.items():
         for e in events:
             r = e["recovery"]
-            if r["research_status"] != "EVIDENCE_FOUND" or r["kind"] not in OBSERVED_RECOVERY_KINDS or not r["date"]:
+            if r["research_status"] != "EVIDENCE_FOUND" or r["kind"] not in COMPLETED_RECOVERY_KINDS or not r["date"]:
                 continue
-            if e["date_precision"] != "day":
+            if e["date_precision"] != "day" or REPORT_DATE_ONLY.search(r.get("evidence") or ""):
                 continue
             d = _days(e["date"], r["date"])
             if d >= 0:
-                cases.setdefault((e["asset_class"], r["kind"]), []).append(d)
+                key = (e["asset_class"], r["kind"])
+                cases.setdefault(key, []).append(d)
+                systems_in.setdefault(key, set()).add(sid)
     out = []
+    withheld = 0
     for (cls, kind), days in sorted(cases.items()):
+        if len(systems_in[(cls, kind)]) < 2:
+            withheld += 1
+            continue
         days = sorted(days)
         row = {"class": cls, "class_label": labels.get(cls, cls), "kind": kind, "n": len(days)}
         if len(days) < RECOVERY_RANGE_MIN_N:
@@ -1367,9 +1401,11 @@ def recovery_by_class(all_events):
                 mid = len(days) // 2
                 row["median_days"] = days[mid] if len(days) % 2 else (days[mid - 1] + days[mid]) / 2
         out.append(row)
-    return {"rows": out, "note": ("Days from the event to the reported recovery, for records where a dated report exists. "
-                                  "Fewer than three cases are listed, three or four give a range, five or more a median. "
-                                  "These describe what was reported and are not a forecast or a country comparison.")}
+    return {"rows": out, "single_country_groups_not_shown": withheld,
+            "note": ("Days from the event to a dated report that recovery was complete. Partial restorations and dates that "
+                     "are only the date of a report are left out, as is any group seen in just one country. Fewer than three "
+                     "cases are listed, three or four give a range, five or more a median. These describe what was reported "
+                     "and are not a forecast or a country comparison.")}
 
 
 def data_quality(country_payloads, all_events, context):
@@ -1386,7 +1422,7 @@ def data_quality(country_payloads, all_events, context):
         lanes = []
         for l in (newest or {}).get("lanes") or []:
             lanes.append({k: l.get(k) for k in ("lane", "source_family", "execution", "source_window", "covered_through",
-                                                "languages_required", "languages_executed", "limitation", "finding")}
+                                                "languages_required", "languages_executed", "limitation")}
                          | {"state": lane_summary_state(l)})
         used = [s for s in p["sources"] if _in_use(s)]
         rows.append({

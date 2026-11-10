@@ -346,13 +346,13 @@
    "eia_code": "ASM",
    "name": "American Samoa",
    "values": {
-    "total_production": 0.0,
+    "total_production": 1.95e-05,
     "total_consumption": 0.008,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 1.95e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 3.9,
@@ -441,7 +441,7 @@
    "name": "Antarctica",
    "values": {
     "total_production": 0,
-    "total_consumption": 0.0,
+    "total_consumption": 0.000173,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
@@ -474,7 +474,7 @@
     }
    },
    "roles": {
-    "overall": null,
+    "overall": "net_consumer",
     "by_commodity": {
      "oil": "net_consumer",
      "gas": null,
@@ -487,13 +487,13 @@
    "eia_code": "ATG",
    "name": "Antigua and Barbuda",
    "values": {
-    "total_production": 0.0,
+    "total_production": 8.95e-05,
     "total_consumption": 0.011,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 8.95e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 5.0,
@@ -536,7 +536,7 @@
    "values": {
     "total_production": 3.841,
     "total_consumption": 3.566,
-    "prod_coal": 0.0,
+    "prod_coal": 5.12e-05,
     "prod_gas": 1.726,
     "prod_oil": 1.719,
     "prod_nuclear": 0.122,
@@ -546,7 +546,7 @@
     "oil_consumption": 734.6,
     "gas_production": 46.78,
     "gas_consumption": 46.64,
-    "coal_production": 0.0,
+    "coal_production": 0.002,
     "coal_consumption": 1.05,
     "electricity_generation": 147.47,
     "elec_coal": 0.61,
@@ -583,7 +583,7 @@
    "values": {
     "total_production": 0.041,
     "total_consumption": 0.17,
-    "prod_coal": 0.0,
+    "prod_coal": 6.77e-07,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0.031,
@@ -593,7 +593,7 @@
     "oil_consumption": 18.8,
     "gas_production": 0,
     "gas_consumption": 2.66,
-    "coal_production": 0.0,
+    "coal_production": 6e-05,
     "coal_consumption": 0.03,
     "electricity_generation": 9.03,
     "elec_coal": 0,
@@ -601,7 +601,7 @@
     "elec_oil": 0,
     "elec_nuclear": 2.63,
     "elec_hydro": 2,
-    "elec_wind": 0.0,
+    "elec_wind": 0.00217,
     "elec_solar": 0.88
    },
    "newer": {
@@ -830,7 +830,7 @@
     "prod_gas": 0.708,
     "prod_oil": 0.39,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 0.000367,
     "oil_production": 187.0,
     "crude_production": 173.9,
     "oil_consumption": 70.2,
@@ -841,7 +841,7 @@
     "electricity_generation": 37.96,
     "elec_coal": 0,
     "elec_gas": 37.85,
-    "elec_oil": 0.0,
+    "elec_oil": 0.002,
     "elec_nuclear": 0,
     "elec_hydro": 0,
     "elec_wind": 0.01,
@@ -921,14 +921,14 @@
     "total_production": 0.003,
     "total_consumption": 0.023,
     "prod_coal": 0,
-    "prod_gas": 0.0,
+    "prod_gas": 0.000138,
     "prod_oil": 0.002,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 0.000354,
     "oil_production": 1.0,
     "crude_production": 1,
     "oil_consumption": 10.5,
-    "gas_production": 0.0,
+    "gas_production": 0.00373,
     "gas_consumption": 0.02,
     "coal_production": 0.0,
     "coal_consumption": 0.0,
@@ -1079,7 +1079,7 @@
     "coal_consumption": 0.0,
     "electricity_generation": 0.47,
     "elec_coal": 0,
-    "elec_gas": 0.0,
+    "elec_gas": 0.000652,
     "elec_oil": 0.06,
     "elec_nuclear": 0,
     "elec_hydro": 0.24,
@@ -1110,13 +1110,13 @@
    "eia_code": "BEN",
    "name": "Benin",
    "values": {
-    "total_production": 0.0,
+    "total_production": 0.000129,
     "total_consumption": 0.107,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 0.000129,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 47.2,
@@ -1129,7 +1129,7 @@
     "elec_gas": 0.73,
     "elec_oil": 0.24,
     "elec_nuclear": 0,
-    "elec_hydro": 0.0,
+    "elec_hydro": 6e-05,
     "elec_wind": 0,
     "elec_solar": 0.04
    },
@@ -1157,13 +1157,13 @@
    "eia_code": "BMU",
    "name": "Bermuda",
    "values": {
-    "total_production": 0.0,
+    "total_production": 5.67e-05,
     "total_consumption": 0.008,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 5.67e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 3.8,
@@ -1221,10 +1221,10 @@
     "electricity_generation": 11.0,
     "elec_coal": 0,
     "elec_gas": 0,
-    "elec_oil": 0.0,
+    "elec_oil": 4.2e-06,
     "elec_nuclear": 0,
     "elec_hydro": 11,
-    "elec_wind": 0.0,
+    "elec_wind": 0.001,
     "elec_solar": 0
    },
    "newer": {
@@ -1351,7 +1351,7 @@
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 2.34e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 22.6,
@@ -1439,13 +1439,13 @@
    "eia_code": "VGB",
    "name": "British Virgin Islands",
    "values": {
-    "total_production": 0.0,
+    "total_production": 1.36e-05,
     "total_consumption": 0.003,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 1.36e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 1.3,
@@ -1459,8 +1459,8 @@
     "elec_oil": 0.17,
     "elec_nuclear": 0,
     "elec_hydro": 0,
-    "elec_wind": 0.0,
-    "elec_solar": 0.0
+    "elec_wind": 0.002,
+    "elec_solar": 0.002
    },
    "newer": {
     "oil_production": {
@@ -1492,7 +1492,7 @@
     "prod_gas": 0.388,
     "prod_oil": 0.216,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 1.95e-05,
     "oil_production": 102.7,
     "crude_production": 94.3,
     "oil_consumption": 16.3,
@@ -1536,7 +1536,7 @@
     "total_production": 0.341,
     "total_consumption": 0.65,
     "prod_coal": 0.099,
-    "prod_gas": 0.0,
+    "prod_gas": 0.00033,
     "prod_oil": 0.002,
     "prod_nuclear": 0.174,
     "prod_renewables": 0.066,
@@ -1695,7 +1695,7 @@
     "elec_nuclear": 0,
     "elec_hydro": 0.36,
     "elec_wind": 0,
-    "elec_solar": 0.0
+    "elec_solar": 0.00228
    },
    "newer": {
     "oil_production": {
@@ -1770,7 +1770,7 @@
    "values": {
     "total_production": 0.027,
     "total_consumption": 0.299,
-    "prod_coal": 0.0,
+    "prod_coal": 0.000325,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
@@ -1788,7 +1788,7 @@
     "elec_oil": 0.44,
     "elec_nuclear": 0,
     "elec_hydro": 7,
-    "elec_wind": 0.0,
+    "elec_wind": 0.0003,
     "elec_solar": 0.92
    },
    "newer": {
@@ -1913,13 +1913,13 @@
    "eia_code": "CYM",
    "name": "Cayman Islands",
    "values": {
-    "total_production": 0.0,
+    "total_production": 8.9e-05,
     "total_consumption": 0.012,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 8.9e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 5.8,
@@ -1933,7 +1933,7 @@
     "elec_oil": 0.68,
     "elec_nuclear": 0,
     "elec_hydro": 0,
-    "elec_wind": 0.0,
+    "elec_wind": 0.001,
     "elec_solar": 0.03
    },
    "newer": {
@@ -1960,13 +1960,13 @@
    "eia_code": "CAF",
    "name": "Central African Republic",
    "values": {
-    "total_production": 0.0,
+    "total_production": 0.000481,
     "total_consumption": 0.006,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 0.000481,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 2.9,
@@ -1977,7 +1977,7 @@
     "electricity_generation": 0.14,
     "elec_coal": 0,
     "elec_gas": 0,
-    "elec_oil": 0.0,
+    "elec_oil": 0.00111,
     "elec_nuclear": 0,
     "elec_hydro": 0.14,
     "elec_wind": 0,
@@ -2013,7 +2013,7 @@
     "prod_gas": 0,
     "prod_oil": 0.291,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 0.000133,
     "oil_production": 127.3,
     "crude_production": 127.3,
     "oil_consumption": 13.3,
@@ -2028,7 +2028,7 @@
     "elec_nuclear": 0,
     "elec_hydro": 0,
     "elec_wind": 0.01,
-    "elec_solar": 0.0
+    "elec_solar": 0.00342
    },
    "newer": {
     "oil_production": {
@@ -2056,7 +2056,7 @@
    "values": {
     "total_production": 0.3,
     "total_consumption": 1.354,
-    "prod_coal": 0.0,
+    "prod_coal": 0.000493,
     "prod_gas": 0.041,
     "prod_oil": 0.021,
     "prod_nuclear": 0,
@@ -2310,7 +2310,7 @@
     "electricity_generation": 15.92,
     "elec_coal": 0,
     "elec_gas": 0,
-    "elec_oil": 0.0,
+    "elec_oil": 0.004,
     "elec_nuclear": 0,
     "elec_hydro": 13.4,
     "elec_wind": 0,
@@ -2340,13 +2340,13 @@
    "eia_code": "COK",
    "name": "Cook Islands",
    "values": {
-    "total_production": 0.0,
+    "total_production": 6.19e-05,
     "total_consumption": 0.002,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 6.19e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 0.8,
@@ -2400,7 +2400,7 @@
     "gas_production": 0,
     "gas_consumption": 0,
     "coal_production": 0.0,
-    "coal_consumption": 0.0,
+    "coal_consumption": 0.000278,
     "electricity_generation": 11.01,
     "elec_coal": 0,
     "elec_gas": 0,
@@ -2425,7 +2425,7 @@
     "by_commodity": {
      "oil": "net_consumer",
      "gas": null,
-     "coal": null
+     "coal": "net_consumer"
     }
    }
   },
@@ -2541,7 +2541,7 @@
     "gas_production": 0.97,
     "gas_consumption": 0.97,
     "coal_production": 0.0,
-    "coal_consumption": 0.0,
+    "coal_consumption": 0.00024,
     "electricity_generation": 19.44,
     "elec_coal": 0,
     "elec_gas": 2.65,
@@ -2566,7 +2566,7 @@
     "by_commodity": {
      "oil": "net_consumer",
      "gas": "about_balanced",
-     "coal": null
+     "coal": "net_consumer"
     }
    }
   },
@@ -2724,13 +2724,13 @@
    "eia_code": "DJI",
    "name": "Djibouti",
    "values": {
-    "total_production": 0.0,
+    "total_production": 0.000242,
     "total_consumption": 0.012,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 0.000242,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 4.8,
@@ -2745,7 +2745,7 @@
     "elec_nuclear": 0,
     "elec_hydro": 0,
     "elec_wind": 0.07,
-    "elec_solar": 0.0
+    "elec_solar": 0.00114
    },
    "newer": {
     "oil_production": {
@@ -2771,13 +2771,13 @@
    "eia_code": "DMA",
    "name": "Dominica",
    "values": {
-    "total_production": 0.0,
+    "total_production": 8.19e-05,
     "total_consumption": 0.003,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 8.19e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 1.2,
@@ -2791,7 +2791,7 @@
     "elec_oil": 0.13,
     "elec_nuclear": 0,
     "elec_hydro": 0.02,
-    "elec_wind": 0.0,
+    "elec_wind": 0.001,
     "elec_solar": 0
    },
    "newer": {
@@ -2966,7 +2966,7 @@
     "prod_oil": 0,
     "prod_nuclear": 0,
     "prod_renewables": 0.026,
-    "oil_production": 0.0,
+    "oil_production": 0.003,
     "crude_production": 0,
     "oil_consumption": 60.3,
     "gas_production": 0,
@@ -2975,7 +2975,7 @@
     "coal_consumption": 0.0,
     "electricity_generation": 6.77,
     "elec_coal": 0,
-    "elec_gas": 0.0,
+    "elec_gas": 0.001,
     "elec_oil": 0.7,
     "elec_nuclear": 0,
     "elec_hydro": 2.01,
@@ -2985,7 +2985,7 @@
    "newer": {
     "oil_production": {
      "year": 2025,
-     "value": 0.0
+     "value": 0.003
     },
     "crude_production": {
      "year": 2025,
@@ -3053,13 +3053,13 @@
    "eia_code": "ERI",
    "name": "Eritrea",
    "values": {
-    "total_production": 0.0,
+    "total_production": 0.000186,
     "total_consumption": 0.011,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 0.000186,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 4.9,
@@ -3073,7 +3073,7 @@
     "elec_oil": 0.4,
     "elec_nuclear": 0,
     "elec_hydro": 0,
-    "elec_wind": 0.0,
+    "elec_wind": 0.001,
     "elec_solar": 0.05
    },
    "newer": {
@@ -3113,9 +3113,9 @@
     "gas_production": 0,
     "gas_consumption": 0.35,
     "coal_production": 0.0,
-    "coal_consumption": 0.0,
+    "coal_consumption": 0.00327,
     "electricity_generation": 5.34,
-    "elec_coal": 0.0,
+    "elec_coal": 0.0011,
     "elec_gas": 0.02,
     "elec_oil": 1.23,
     "elec_nuclear": 0,
@@ -3142,7 +3142,7 @@
     "by_commodity": {
      "oil": "net_consumer",
      "gas": "net_consumer",
-     "coal": null
+     "coal": "net_consumer"
     }
    }
   },
@@ -3215,7 +3215,7 @@
     "electricity_generation": 16.64,
     "elec_coal": 0,
     "elec_gas": 0,
-    "elec_oil": 0.0,
+    "elec_oil": 0.00248,
     "elec_nuclear": 0,
     "elec_hydro": 16,
     "elec_wind": 0.56,
@@ -3245,13 +3245,13 @@
    "eia_code": "FLK",
    "name": "Falkland Islands",
    "values": {
-    "total_production": 0.0,
+    "total_production": 1.71e-05,
     "total_consumption": 0.002,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 1.71e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 0.8,
@@ -3352,14 +3352,14 @@
     "gas_production": 0,
     "gas_consumption": 0,
     "coal_production": 0.0,
-    "coal_consumption": 0.0,
+    "coal_consumption": 1.02e-07,
     "electricity_generation": 1.15,
     "elec_coal": 0,
     "elec_gas": 0,
     "elec_oil": 0.42,
     "elec_nuclear": 0,
     "elec_hydro": 0.6,
-    "elec_wind": 0.0,
+    "elec_wind": 0.0026,
     "elec_solar": 0.01
    },
    "newer": {
@@ -3377,7 +3377,7 @@
     "by_commodity": {
      "oil": "net_consumer",
      "gas": null,
-     "coal": null
+     "coal": "net_consumer"
     }
    }
   },
@@ -3555,7 +3555,7 @@
     "elec_oil": 0.47,
     "elec_nuclear": 0,
     "elec_hydro": 0.19,
-    "elec_wind": 0.0,
+    "elec_wind": 0.0001,
     "elec_solar": 0.06
    },
    "newer": {
@@ -3603,7 +3603,7 @@
     "elec_nuclear": 0,
     "elec_hydro": 0.91,
     "elec_wind": 0,
-    "elec_solar": 0.0
+    "elec_solar": 0.00114
    },
    "newer": {
     "oil_production": {
@@ -3629,13 +3629,13 @@
    "eia_code": "GMB",
    "name": "Gambia, The",
    "values": {
-    "total_production": 0.0,
+    "total_production": 1.85e-05,
     "total_consumption": 0.008,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 1.85e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 3.6,
@@ -3649,8 +3649,8 @@
     "elec_oil": 0.51,
     "elec_nuclear": 0,
     "elec_hydro": 0,
-    "elec_wind": 0.0,
-    "elec_solar": 0.0
+    "elec_wind": 0.002,
+    "elec_solar": 0.00342
    },
    "newer": {
     "oil_production": {
@@ -3679,7 +3679,7 @@
     "total_production": 0.042,
     "total_consumption": 0.244,
     "prod_coal": 0.003,
-    "prod_gas": 0.0,
+    "prod_gas": 0.000344,
     "prod_oil": 0.001,
     "prod_nuclear": 0,
     "prod_renewables": 0.038,
@@ -3871,14 +3871,14 @@
     "total_production": 0.131,
     "total_consumption": 1.029,
     "prod_coal": 0.033,
-    "prod_gas": 0.0,
+    "prod_gas": 0.000103,
     "prod_oil": 0.003,
     "prod_nuclear": 0,
     "prod_renewables": 0.095,
     "oil_production": 14.3,
     "crude_production": 1.5,
     "oil_consumption": 309.4,
-    "gas_production": 0.0,
+    "gas_production": 0.00199,
     "gas_consumption": 6.07,
     "coal_production": 6.32,
     "coal_consumption": 6.7,
@@ -3940,7 +3940,7 @@
     "elec_nuclear": 0,
     "elec_hydro": 0.47,
     "elec_wind": 0,
-    "elec_solar": 0.0
+    "elec_solar": 0.00114
    },
    "newer": {
     "oil_production": {
@@ -3966,13 +3966,13 @@
    "eia_code": "GRD",
    "name": "Grenada",
    "values": {
-    "total_production": 0.0,
+    "total_production": 1.62e-05,
     "total_consumption": 0.006,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 1.62e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 2.8,
@@ -3986,8 +3986,8 @@
     "elec_oil": 0.24,
     "elec_nuclear": 0,
     "elec_hydro": 0,
-    "elec_wind": 0.0,
-    "elec_solar": 0.0
+    "elec_wind": 0.0002,
+    "elec_solar": 0.00456
    },
    "newer": {
     "oil_production": {
@@ -4080,7 +4080,7 @@
     "elec_oil": 1.7,
     "elec_nuclear": 0,
     "elec_hydro": 0,
-    "elec_wind": 0.0,
+    "elec_wind": 0.001,
     "elec_solar": 0.16
    },
    "newer": {
@@ -4201,13 +4201,13 @@
    "eia_code": "GNB",
    "name": "Guinea-Bissau",
    "values": {
-    "total_production": 0.0,
+    "total_production": 1.17e-05,
     "total_consumption": 0.005,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 1.17e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 2.4,
@@ -4222,7 +4222,7 @@
     "elec_nuclear": 0,
     "elec_hydro": 0,
     "elec_wind": 0,
-    "elec_solar": 0.0
+    "elec_solar": 0.00342
    },
    "newer": {
     "oil_production": {
@@ -4248,18 +4248,18 @@
    "eia_code": "GUY",
    "name": "Guyana",
    "values": {
-    "total_production": 0.0,
+    "total_production": 0.000276,
     "total_consumption": 0.056,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 0.000276,
     "oil_production": 617.3,
     "crude_production": 617.3,
     "oil_consumption": 26.8,
     "gas_production": 0,
-    "gas_consumption": 0.0,
+    "gas_consumption": 0.00191,
     "coal_production": 0.0,
     "coal_consumption": 0.0,
     "electricity_generation": 1.39,
@@ -4267,8 +4267,8 @@
     "elec_gas": 0.01,
     "elec_oil": 1.33,
     "elec_nuclear": 0,
-    "elec_hydro": 0.0,
-    "elec_wind": 0.0,
+    "elec_hydro": 0.004,
+    "elec_wind": 0.0004,
     "elec_solar": 0.02
    },
    "newer": {
@@ -4285,7 +4285,7 @@
     "overall": "net_consumer",
     "by_commodity": {
      "oil": "net_producer",
-     "gas": null,
+     "gas": "net_consumer",
      "coal": null
     }
    }
@@ -4306,7 +4306,7 @@
     "crude_production": 0,
     "oil_consumption": 11.7,
     "gas_production": 0,
-    "gas_consumption": 0.0,
+    "gas_consumption": 0.00218,
     "coal_production": 0.0,
     "coal_consumption": 0.0,
     "electricity_generation": 0.86,
@@ -4316,7 +4316,7 @@
     "elec_nuclear": 0,
     "elec_hydro": 0.16,
     "elec_wind": 0,
-    "elec_solar": 0.0
+    "elec_solar": 0.00456
    },
    "newer": {
     "oil_production": {
@@ -4332,7 +4332,7 @@
     "overall": "net_consumer",
     "by_commodity": {
      "oil": "net_consumer",
-     "gas": null,
+     "gas": "net_consumer",
      "coal": null
     }
    }
@@ -4349,7 +4349,7 @@
     "prod_oil": 0,
     "prod_nuclear": 0,
     "prod_renewables": 0.028,
-    "oil_production": 0.0,
+    "oil_production": 0.02,
     "crude_production": 0,
     "oil_consumption": 80.9,
     "gas_production": 0,
@@ -4368,7 +4368,7 @@
    "newer": {
     "oil_production": {
      "year": 2025,
-     "value": 0.0
+     "value": 0.02
     },
     "crude_production": {
      "year": 2025,
@@ -4409,7 +4409,7 @@
     "elec_oil": 0.45,
     "elec_nuclear": 0,
     "elec_hydro": 0,
-    "elec_wind": 0.0,
+    "elec_wind": 0.00113,
     "elec_solar": 0.23
    },
    "newer": {
@@ -4504,7 +4504,7 @@
     "electricity_generation": 19.06,
     "elec_coal": 0,
     "elec_gas": 0,
-    "elec_oil": 0.0,
+    "elec_oil": 0.0042,
     "elec_nuclear": 0,
     "elec_hydro": 13.46,
     "elec_wind": 0.01,
@@ -4796,7 +4796,7 @@
     "elec_gas": 56.88,
     "elec_oil": 0.21,
     "elec_nuclear": 0,
-    "elec_hydro": 0.0,
+    "elec_hydro": 0.0002,
     "elec_wind": 0,
     "elec_solar": 7.94
    },
@@ -4981,11 +4981,11 @@
     "total_consumption": 0.367,
     "prod_coal": 0,
     "prod_gas": 0.007,
-    "prod_oil": 0.0,
+    "prod_oil": 4.36e-05,
     "prod_nuclear": 0,
     "prod_renewables": 0.019,
     "oil_production": 0.3,
-    "crude_production": 0.0,
+    "crude_production": 0.02,
     "oil_consumption": 100.7,
     "gas_production": 0.23,
     "gas_consumption": 4.88,
@@ -5007,7 +5007,7 @@
     },
     "crude_production": {
      "year": 2025,
-     "value": 0.0
+     "value": 0.02
     }
    },
    "roles": {
@@ -5118,13 +5118,13 @@
    "eia_code": "KIR",
    "name": "Kiribati",
    "values": {
-    "total_production": 0.0,
+    "total_production": 2.34e-05,
     "total_consumption": 0.001,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 2.34e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 0.6,
@@ -5361,7 +5361,7 @@
     "electricity_generation": 5.91,
     "elec_coal": 0,
     "elec_gas": 1.68,
-    "elec_oil": 0.0,
+    "elec_oil": 0.000916,
     "elec_nuclear": 0,
     "elec_hydro": 3.19,
     "elec_wind": 0.27,
@@ -5442,13 +5442,13 @@
    "eia_code": "LSO",
    "name": "Lesotho",
    "values": {
-    "total_production": 0.0,
+    "total_production": 8.53e-06,
     "total_consumption": 0.013,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 8.53e-06,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 5.7,
@@ -5456,14 +5456,14 @@
     "gas_consumption": 0,
     "coal_production": 0.0,
     "coal_consumption": 0.0,
-    "electricity_generation": 0.0,
+    "electricity_generation": 0.00371,
     "elec_coal": 0,
     "elec_gas": 0,
-    "elec_oil": 0.0,
+    "elec_oil": 0.000604,
     "elec_nuclear": 0,
-    "elec_hydro": 0.0,
+    "elec_hydro": 0.000604,
     "elec_wind": 0,
-    "elec_solar": 0.0
+    "elec_solar": 0.000689
    },
    "newer": {
     "oil_production": {
@@ -5542,7 +5542,7 @@
     "prod_gas": 0.447,
     "prod_oil": 2.491,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 3.89e-05,
     "oil_production": 1182.2,
     "crude_production": 1163.3,
     "oil_consumption": 222.8,
@@ -5752,7 +5752,7 @@
     "elec_oil": 0.9,
     "elec_nuclear": 0,
     "elec_hydro": 0.9,
-    "elec_wind": 0.0,
+    "elec_wind": 0.00047,
     "elec_solar": 0.1
    },
    "newer": {
@@ -5873,13 +5873,13 @@
    "eia_code": "MDV",
    "name": "Maldives",
    "values": {
-    "total_production": 0.0,
+    "total_production": 0.000223,
     "total_consumption": 0.026,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 0.000223,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 12.8,
@@ -5893,7 +5893,7 @@
     "elec_oil": 0.79,
     "elec_nuclear": 0,
     "elec_hydro": 0,
-    "elec_wind": 0.0,
+    "elec_wind": 0.002,
     "elec_solar": 0.06
    },
    "newer": {
@@ -5987,7 +5987,7 @@
     "elec_oil": 0.01,
     "elec_nuclear": 0,
     "elec_hydro": 0,
-    "elec_wind": 0.0,
+    "elec_wind": 0.00058,
     "elec_solar": 0.31
    },
    "newer": {
@@ -6381,13 +6381,13 @@
    "eia_code": "MSR",
    "name": "Montserrat",
    "values": {
-    "total_production": 0.0,
+    "total_production": 7.78e-06,
     "total_consumption": 0.001,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 7.78e-06,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 0.3,
@@ -6402,7 +6402,7 @@
     "elec_nuclear": 0,
     "elec_hydro": 0,
     "elec_wind": 0,
-    "elec_solar": 0.0
+    "elec_solar": 0.00228
    },
    "newer": {
     "oil_production": {
@@ -6432,11 +6432,11 @@
     "total_consumption": 0.939,
     "prod_coal": 0,
     "prod_gas": 0.002,
-    "prod_oil": 0.0,
+    "prod_oil": 5.25e-05,
     "prod_nuclear": 0,
     "prod_renewables": 0.036,
-    "oil_production": 0.0,
-    "crude_production": 0.0,
+    "oil_production": 0.025,
+    "crude_production": 0.025,
     "oil_consumption": 321.5,
     "gas_production": 0.04,
     "gas_consumption": 0.93,
@@ -6454,11 +6454,11 @@
    "newer": {
     "oil_production": {
      "year": 2025,
-     "value": 0.0
+     "value": 0.025
     },
     "crude_production": {
      "year": 2025,
-     "value": 0.0
+     "value": 0.025
     }
    },
    "roles": {
@@ -6569,13 +6569,13 @@
    "eia_code": "NRU",
    "name": "Nauru",
    "values": {
-    "total_production": 0.0,
+    "total_production": 1.95e-05,
     "total_consumption": 0.001,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 1.95e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 0.6,
@@ -6618,7 +6618,7 @@
    "values": {
     "total_production": 0.038,
     "total_consumption": 0.18,
-    "prod_coal": 0.0,
+    "prod_coal": 6.83e-05,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
@@ -6628,12 +6628,12 @@
     "oil_consumption": 60.7,
     "gas_production": 0,
     "gas_consumption": 0,
-    "coal_production": 0.0,
+    "coal_production": 0.00287,
     "coal_consumption": 1.38,
     "electricity_generation": 11.12,
     "elec_coal": 0,
     "elec_gas": 0,
-    "elec_oil": 0.0,
+    "elec_oil": 3.3e-05,
     "elec_nuclear": 0,
     "elec_hydro": 11,
     "elec_wind": 0.01,
@@ -6861,7 +6861,7 @@
     "prod_gas": 0.001,
     "prod_oil": 0.066,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 9.34e-05,
     "oil_production": 31.0,
     "crude_production": 30.6,
     "oil_consumption": 20.2,
@@ -6950,7 +6950,7 @@
    "name": "Niue",
    "values": {
     "total_production": 0,
-    "total_consumption": 0.0,
+    "total_consumption": 0.000117,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
@@ -6963,10 +6963,10 @@
     "gas_consumption": 0,
     "coal_production": 0.0,
     "coal_consumption": 0.0,
-    "electricity_generation": 0.0,
+    "electricity_generation": 0.0034,
     "elec_coal": 0,
     "elec_gas": 0,
-    "elec_oil": 0.0,
+    "elec_oil": 0.0034,
     "elec_nuclear": 0,
     "elec_hydro": 0,
     "elec_wind": 0,
@@ -6983,7 +6983,7 @@
     }
    },
    "roles": {
-    "overall": null,
+    "overall": "net_consumer",
     "by_commodity": {
      "oil": "net_consumer",
      "gas": null,
@@ -7016,7 +7016,7 @@
     "elec_oil": 0.7,
     "elec_nuclear": 0,
     "elec_hydro": 17,
-    "elec_wind": 0.0,
+    "elec_wind": 0.0004,
     "elec_solar": 0.17
    },
    "newer": {
@@ -7427,15 +7427,15 @@
     "gas_production": 0,
     "gas_consumption": 0,
     "coal_production": 0.0,
-    "coal_consumption": 0.0,
+    "coal_consumption": 0.000519,
     "electricity_generation": 53.24,
     "elec_coal": 0,
     "elec_gas": 0,
-    "elec_oil": 0.0,
+    "elec_oil": 0.0011,
     "elec_nuclear": 0,
     "elec_hydro": 53,
     "elec_wind": 0,
-    "elec_solar": 0.0
+    "elec_solar": 0.00114
    },
    "newer": {
     "oil_production": {
@@ -7452,7 +7452,7 @@
     "by_commodity": {
      "oil": "net_consumer",
      "gas": null,
-     "coal": null
+     "coal": "net_consumer"
     }
    }
   },
@@ -7619,7 +7619,7 @@
     "gas_production": 0,
     "gas_consumption": 3.59,
     "coal_production": 0.0,
-    "coal_consumption": 0.0,
+    "coal_consumption": 0.00216,
     "electricity_generation": 45.78,
     "elec_coal": 0,
     "elec_gas": 5.63,
@@ -7648,7 +7648,7 @@
     "by_commodity": {
      "oil": "net_consumer",
      "gas": "net_consumer",
-     "coal": null
+     "coal": "net_consumer"
     }
    }
   },
@@ -7940,7 +7940,7 @@
    "name": "Saint Helena",
    "values": {
     "total_production": 0,
-    "total_consumption": 0.0,
+    "total_consumption": 0.000151,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
@@ -7973,7 +7973,7 @@
     }
    },
    "roles": {
-    "overall": null,
+    "overall": "net_consumer",
     "by_commodity": {
      "oil": "net_consumer",
      "gas": null,
@@ -7986,13 +7986,13 @@
    "eia_code": "KNA",
    "name": "Saint Kitts and Nevis",
    "values": {
-    "total_production": 0.0,
+    "total_production": 3.99e-05,
     "total_consumption": 0.004,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 3.99e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 1.9,
@@ -8033,13 +8033,13 @@
    "eia_code": "LCA",
    "name": "Saint Lucia",
    "values": {
-    "total_production": 0.0,
+    "total_production": 3.11e-05,
     "total_consumption": 0.009,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 3.11e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 4.4,
@@ -8127,13 +8127,13 @@
    "eia_code": "VCT",
    "name": "Saint Vincent/Grenadines",
    "values": {
-    "total_production": 0.0,
+    "total_production": 7.26e-05,
     "total_consumption": 0.004,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 7.26e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 1.9,
@@ -8148,7 +8148,7 @@
     "elec_nuclear": 0,
     "elec_hydro": 0.02,
     "elec_wind": 0,
-    "elec_solar": 0.0
+    "elec_solar": 0.00228
    },
    "newer": {
     "oil_production": {
@@ -8174,13 +8174,13 @@
    "eia_code": "WSM",
    "name": "Samoa",
    "values": {
-    "total_production": 0.0,
+    "total_production": 0.000284,
     "total_consumption": 0.005,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 0.000284,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 2.3,
@@ -8194,7 +8194,7 @@
     "elec_oil": 0.1,
     "elec_nuclear": 0,
     "elec_hydro": 0.03,
-    "elec_wind": 0.0,
+    "elec_wind": 0.00013,
     "elec_solar": 0.03
    },
    "newer": {
@@ -8221,13 +8221,13 @@
    "eia_code": "STP",
    "name": "Sao Tome and Principe",
    "values": {
-    "total_production": 0.0,
+    "total_production": 2.05e-05,
     "total_consumption": 0.003,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 2.05e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 1.2,
@@ -8409,13 +8409,13 @@
    "eia_code": "SYC",
    "name": "Seychelles",
    "values": {
-    "total_production": 0.0,
+    "total_production": 0.000329,
     "total_consumption": 0.014,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 0.000329,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 6.5,
@@ -8523,7 +8523,7 @@
     "elec_oil": 0.18,
     "elec_nuclear": 0,
     "elec_hydro": 0,
-    "elec_wind": 0.0,
+    "elec_wind": 0.00035,
     "elec_solar": 1.33
    },
    "newer": {
@@ -8554,11 +8554,11 @@
     "total_consumption": 0.664,
     "prod_coal": 0,
     "prod_gas": 0.001,
-    "prod_oil": 0.0,
+    "prod_oil": 5.59e-05,
     "prod_nuclear": 0.22,
     "prod_renewables": 0.041,
     "oil_production": 9.8,
-    "crude_production": 0.0,
+    "crude_production": 0.0246,
     "oil_consumption": 82.2,
     "gas_production": 0.04,
     "gas_consumption": 4.43,
@@ -8570,7 +8570,7 @@
     "elec_oil": 0.3,
     "elec_nuclear": 18.39,
     "elec_hydro": 4.37,
-    "elec_wind": 0.0,
+    "elec_wind": 0.004,
     "elec_solar": 0.69
    },
    "newer": {
@@ -8580,7 +8580,7 @@
     },
     "crude_production": {
      "year": 2025,
-     "value": 0.0
+     "value": 0.0186
     },
     "oil_consumption": {
      "year": 2025,
@@ -8604,14 +8604,14 @@
     "total_production": 0.106,
     "total_consumption": 0.234,
     "prod_coal": 0.024,
-    "prod_gas": 0.0,
+    "prod_gas": 0.000126,
     "prod_oil": 0,
     "prod_nuclear": 0.056,
     "prod_renewables": 0.026,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 50.1,
-    "gas_production": 0.0,
+    "gas_production": 0.00335,
     "gas_consumption": 0.9,
     "coal_production": 2.17,
     "coal_consumption": 2.67,
@@ -8652,13 +8652,13 @@
    "eia_code": "SLB",
    "name": "Solomon Islands",
    "values": {
-    "total_production": 0.0,
+    "total_production": 6.19e-05,
     "total_consumption": 0.005,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 6.19e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 2.2,
@@ -8671,7 +8671,7 @@
     "elec_gas": 0,
     "elec_oil": 0.1,
     "elec_nuclear": 0,
-    "elec_hydro": 0.0,
+    "elec_hydro": 0.001,
     "elec_wind": 0,
     "elec_solar": 0.01
    },
@@ -8699,13 +8699,13 @@
    "eia_code": "SOM",
    "name": "Somalia",
    "values": {
-    "total_production": 0.0,
+    "total_production": 0.000278,
     "total_consumption": 0.023,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 0.000278,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 11.2,
@@ -8850,7 +8850,7 @@
     "prod_gas": 0,
     "prod_oil": 0.147,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 2.77e-05,
     "oil_production": 78.9,
     "crude_production": 78.9,
     "oil_consumption": 11.9,
@@ -8895,11 +8895,11 @@
     "total_consumption": 4.976,
     "prod_coal": 0,
     "prod_gas": 0.001,
-    "prod_oil": 0.0,
+    "prod_oil": 2.58e-05,
     "prod_nuclear": 0.518,
     "prod_renewables": 0.636,
     "oil_production": 76.9,
-    "crude_production": 0.0,
+    "crude_production": 0.0122,
     "oil_consumption": 1313.8,
     "gas_production": 0.03,
     "gas_consumption": 27.9,
@@ -8921,7 +8921,7 @@
     },
     "crude_production": {
      "year": 2025,
-     "value": 0.0
+     "value": 0.0265
     },
     "oil_consumption": {
      "year": 2025,
@@ -9035,7 +9035,7 @@
     "total_production": 0.034,
     "total_consumption": 0.034,
     "prod_coal": 0,
-    "prod_gas": 0.0,
+    "prod_gas": 0.000262,
     "prod_oil": 0.03,
     "prod_nuclear": 0,
     "prod_renewables": 0.003,
@@ -9201,7 +9201,7 @@
     "elec_oil": 11,
     "elec_nuclear": 0,
     "elec_hydro": 0.75,
-    "elec_wind": 0.0,
+    "elec_wind": 0.001,
     "elec_solar": 0.1
    },
    "newer": {
@@ -9296,7 +9296,7 @@
     "elec_nuclear": 0,
     "elec_hydro": 21,
     "elec_wind": 0,
-    "elec_solar": 0.0
+    "elec_solar": 0.00114
    },
    "newer": {
     "oil_production": {
@@ -9342,7 +9342,7 @@
     "elec_oil": 0.38,
     "elec_nuclear": 0,
     "elec_hydro": 2.8,
-    "elec_wind": 0.0,
+    "elec_wind": 0.004,
     "elec_solar": 0.04
    },
    "newer": {
@@ -9416,13 +9416,13 @@
    "eia_code": "BHS",
    "name": "The Bahamas",
    "values": {
-    "total_production": 0.0,
+    "total_production": 7.35e-05,
     "total_consumption": 0.047,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 7.35e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 22.4,
@@ -9436,7 +9436,7 @@
     "elec_oil": 2.23,
     "elec_nuclear": 0,
     "elec_hydro": 0,
-    "elec_wind": 0.0,
+    "elec_wind": 0.001,
     "elec_solar": 0.02
    },
    "newer": {
@@ -9469,7 +9469,7 @@
     "prod_gas": 0,
     "prod_oil": 0.004,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 3.89e-06,
     "oil_production": 2,
     "crude_production": 2,
     "oil_consumption": 4.6,
@@ -9484,7 +9484,7 @@
     "elec_nuclear": 0,
     "elec_hydro": 0,
     "elec_wind": 0,
-    "elec_solar": 0.0
+    "elec_solar": 0.00114
    },
    "newer": {
     "oil_production": {
@@ -9527,7 +9527,7 @@
     "electricity_generation": 0.71,
     "elec_coal": 0,
     "elec_gas": 0.5,
-    "elec_oil": 0.0,
+    "elec_oil": 0.003,
     "elec_nuclear": 0,
     "elec_hydro": 0.08,
     "elec_wind": 0,
@@ -9557,13 +9557,13 @@
    "eia_code": "TON",
    "name": "Tonga",
    "values": {
-    "total_production": 0.0,
+    "total_production": 3.07e-05,
     "total_consumption": 0.003,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 3.07e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 1.5,
@@ -9577,7 +9577,7 @@
     "elec_oil": 0.07,
     "elec_nuclear": 0,
     "elec_hydro": 0,
-    "elec_wind": 0.0,
+    "elec_wind": 0.001,
     "elec_solar": 0.01
    },
    "newer": {
@@ -9610,7 +9610,7 @@
     "prod_gas": 0.933,
     "prod_oil": 0.137,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 2.34e-05,
     "oil_production": 71.6,
     "crude_production": 50.7,
     "oil_consumption": 27.0,
@@ -9755,7 +9755,7 @@
     "prod_gas": 2.869,
     "prod_oil": 0.478,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 2.05e-05,
     "oil_production": 274.7,
     "crude_production": 190.7,
     "oil_consumption": 146.3,
@@ -9796,13 +9796,13 @@
    "eia_code": "TCA",
    "name": "Turks and Caicos Islands",
    "values": {
-    "total_production": 0.0,
+    "total_production": 1.95e-05,
     "total_consumption": 0.007,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 1.95e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 3.2,
@@ -9881,13 +9881,13 @@
    "eia_code": "VIR",
    "name": "U.S. Virgin Islands",
    "values": {
-    "total_production": 0.0,
+    "total_production": 6.14e-05,
     "total_consumption": 0.034,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 6.14e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 16.4,
@@ -10238,7 +10238,7 @@
     "elec_oil": 2,
     "elec_nuclear": 0,
     "elec_hydro": 8,
-    "elec_wind": 0.0,
+    "elec_wind": 0.0016,
     "elec_solar": 0.51
    },
    "newer": {
@@ -10265,13 +10265,13 @@
    "eia_code": "VUT",
    "name": "Vanuatu",
    "values": {
-    "total_production": 0.0,
+    "total_production": 6.91e-05,
     "total_consumption": 0.005,
     "prod_coal": 0,
     "prod_gas": 0,
     "prod_oil": 0,
     "prod_nuclear": 0,
-    "prod_renewables": 0.0,
+    "prod_renewables": 6.91e-05,
     "oil_production": 0,
     "crude_production": 0,
     "oil_consumption": 2.2,
@@ -10285,7 +10285,7 @@
     "elec_oil": 0.06,
     "elec_nuclear": 0,
     "elec_hydro": 0.01,
-    "elec_wind": 0.0,
+    "elec_wind": 0.004,
     "elec_solar": 0.01
    },
    "newer": {
@@ -10456,7 +10456,7 @@
     "total_production": 0.034,
     "total_consumption": 0.21,
     "prod_coal": 0,
-    "prod_gas": 0.0,
+    "prod_gas": 0.000397,
     "prod_oil": 0.031,
     "prod_nuclear": 0,
     "prod_renewables": 0.002,

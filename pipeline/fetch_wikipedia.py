@@ -22,6 +22,7 @@ reporting of Ukrainian responsibility, not independent confirmation.
 """
 
 import re
+from urllib.parse import urlsplit
 
 from pipeline import ids, wikirev
 from pipeline import wikitext as W
@@ -79,6 +80,12 @@ def parse_citation(ref_src, named_refs):
         if not bare:
             return None
         found = bare.group(1).strip()
+    if _DISTANCE_IN_ADDRESS.search(found):
+        # The record keeps the citation, so what the index reads is unchanged; only the part of the
+        # address that states range goes. The reader is sent to the publisher, with no headline.
+        parts = urlsplit(found)
+        return {"url": f"{parts.scheme}://{parts.netloc}/", "title": None,
+                "publisher": _clean_field(_WORK.search(body)), "date": _clean_field(_DATE.search(body))}
     return {
         "url": found,
         "title": safe_title(_clean_field(_TITLE.search(body))),
@@ -100,6 +107,11 @@ _UNSAFE_TITLE = re.compile(
     r"|\b(?:largest|biggest|key|main|only|major|critical|vital|strategic|hub|top|"
     r"(?:second|third|fourth|fifth)-largest)\b",
     re.I)
+
+
+# The same rule for an address: "...-1-500-kilometers-from-border" publishes range. The citation is
+# reduced to the publisher's home page (iteration 18, final safety red team).
+_DISTANCE_IN_ADDRESS = re.compile(r"\d[\d,.-]*[-_ ]?(?:km|kilomet\w*|miles?)(?=[-_/.]|$)", re.I)
 
 
 def safe_title(title):

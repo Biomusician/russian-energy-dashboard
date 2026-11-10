@@ -16,7 +16,7 @@ Live figures are in [CURRENT_STATE.md](CURRENT_STATE.md). Figures below are date
 |---|---|---|
 | 2.1 Depth before Wave 2 | No country added. | — |
 | 2.2 Dual review | The import gate and the build refuse a country record without an independent review that opened a source, unless its id is in the frozen grandfather list (94 ids, may only shrink). | [REVIEW_GOVERNANCE.md](REVIEW_GOVERNANCE.md) |
-| 2.3 Retroactive review of the 12 iteration-15 records | 3 confirmed, 9 corrected, 0 held, 0 removed. Aggregate published; no per-facility negative narratives. Jazan was later held at publication by the campaign citation rule (§4), which is not a review finding. | REVIEW_GOVERNANCE §5 |
+| 2.3 Retroactive review of the 12 iteration-15 records | 3 confirmed, 9 corrected, 0 held, 0 removed. Aggregate published; no per-facility negative narratives. One record was later held at publication by the campaign citation rule (§4), which is not a review finding. | REVIEW_GOVERNANCE §5 |
 | 2.4 Active kinetic campaigns | Saudi 2026 campaign: the event is published, the facility's status is not. Release rule A (ended + 30 days) is proposed. The theatre is recorded but not applied: owner decision. | [CURRENT_EVENT_PUBLICATION_POLICY.md](CURRENT_EVENT_PUBLICATION_POLICY.md) |
 | 2.5 One statement is not one episode | `single_statement` retired. The Saudi April five are separate episodes. Bases are named hazard, explicit common event, coordinated wave or explicit continuation, each with evidence; otherwise singleton. | GLOBAL_METHODOLOGY §5.3 |
 | 2.6 Source freshness ≠ research completeness | Gate items 7A and 7B; two separate badges on every country page. | GLOBAL_METHODOLOGY §7.2 |
@@ -60,7 +60,7 @@ All 12 iteration-15 records were reviewed independently, against their sources:
   - two recovery claims that overstated their sources were fixed;
   - one date was wrong;
   - attributions fixed and sources added;
-  - Jazan's status detail removed.
+  - one record's status detail removed.
 
 Two iteration-15 episodes were dissolved, because no source called their records one event:
 Ontario/Quebec July 2026, and Saudi April 2026.
@@ -74,10 +74,10 @@ Ontario/Quebec July 2026, and Saudi April 2026.
   - citations published more than 7 days after the event;
   - capacity notes quoting operating rates;
   - one co-located record by name (the Juaymah LPG halt), whose recovery note had traced a
-    struck site's outage for seven months.
+    struck site's outage.
 
   Ten records are covered.
-- **Jazan is held.** Its only citation's address states facility status. It returns when an
+- **One record is held.** Its only citation's address states facility status. It returns when an
   independent source for the shutdown is found, or when the campaign ends.
 
 ## 5. US systematic sweep

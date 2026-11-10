@@ -194,9 +194,16 @@ export default function CountryView({ id }: { id: string }) {
             reporting environment: {labelFor(ENVIRONMENT_LABEL, sys.reporting_environment)}.
             {" "}{sys.event_summary.note}
           </div>
+          <div className="small dim">{sys.reporting_environment_text}</div>
           <div className="small dim">
             Event record reviewed {fmtDate(sys.record_reviewed)} · site rebuilt {fmtDate(sys.as_of)}
           </div>
+          {(sys.recovery_coverage?.withheld_active_campaign ?? 0) > 0 && (
+            <div className="small">
+              {sys.recovery_coverage?.withheld_active_campaign} of {sys.event_summary.recorded_events} recovery statuses
+              are withheld while an attack campaign is active. See the Research coverage tab.
+            </div>
+          )}
         </div>
         <ResearchStatus sys={sys} />
       </section>
@@ -216,6 +223,17 @@ export default function CountryView({ id }: { id: string }) {
             attribution="Boundaries: Natural Earth (public domain), line of actual control. Events: cited public reporting."
             onMap={(m) => { mapRef.current = m; }}
           />
+          <label className="small region-select">Show one {sys.geography.unit_label}{" "}
+            <select aria-label={`Choose a ${sys.geography.unit_label}`} value={validRegion ?? ""}
+              onChange={(e) => { setRegion(e.target.value || null); setTab("events"); }}>
+              <option value="">All</option>
+              {bundle.regions.features
+                .map((f) => f.properties as { code?: string; name?: string } | null)
+                .filter((p): p is { code: string; name: string } => !!p?.code && !!p?.name)
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((p) => <option key={p.code} value={p.code}>{p.name}</option>)}
+            </select>
+          </label>
           <div className="map-legend-mini">
             <span className="eyebrow">Qualifying events recorded per {sys.geography.unit_label}</span>
             <span><i style={{ background: NO_EVENTS }} /> none recorded</span>
@@ -296,8 +314,8 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
           </ul>
         )}
         {rf.last_systematic_pass && rf.coverage_window && (
-          <span className="dim"> · {fmtDate(rf.coverage_window[0])} – {fmtDate(rf.coverage_window[1])},
-            searched {fmtDate(rf.last_systematic_pass)}{overdue ? " (due again)" : ""}</span>
+          <span className="dim"> · research period {fmtDate(rf.coverage_window[0])} – {fmtDate(rf.coverage_window[1])};
+            last worked on {fmtDate(rf.last_systematic_pass)}; {rf.lanes_complete} of {rf.lanes_declared} source groups finished{overdue ? " (due again)" : ""}</span>
         )}
       </div>
       <div className="small">
@@ -334,6 +352,8 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
   regionStatus: string | null; onClear: () => void; bundle: CountryBundle;
 }) {
   const unit = bundle.system.geography.unit_label;
+  const [year, setYear] = useState("");
+  const [cls, setCls] = useState("");
   if (region && regionName) {
     const placed = events.filter((e) => e.region_code === region);
     // A multi-region event that names this region is listed here too, never counted here: the
@@ -379,6 +399,31 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
   return (
     <div className="events-panel">
       <h2>All reported events</h2>
+      <div className="event-filters small">
+        <label>Year{" "}
+          <select aria-label="Filter events by year" value={year} onChange={(e) => setYear(e.target.value)}>
+            <option value="">All</option>
+            {[...new Set(events.map((e) => e.date.slice(0, 4)))].sort().reverse().map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </label>{" "}
+        <label>Type{" "}
+          <select aria-label="Filter events by infrastructure type" value={cls} onChange={(e) => setCls(e.target.value)}>
+            <option value="">All</option>
+            {[...new Set(events.map((e) => e.asset_class))].sort().map((c) => (
+              <option key={c} value={c}>{labelFor(bundle.system.taxonomy.asset_classes, c)}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <p className="small dim">A record is a publicly reported event that meets the inclusion rule (Why no score tab): it is what was reported and found, not everything that happened.</p>
+      {(year || cls) && (
+        <ol className="event-list">
+          {[...events].filter((e) => (!year || e.date.startsWith(year)) && (!cls || e.asset_class === cls))
+            .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+            .map((e) => <EventItem key={e.event_id} e={e} bundle={bundle} />)}
+        </ol>
+      )}
+      {!year && !cls && (<>
       <p className="small dim">{events.length} records in {bundle.episodes.length} episodes. An episode
         is one named hazard or one event a source explicitly identifies as common: a storm that cut
         power in four states is one episode of four records. Incidents merely reported in the same
@@ -411,6 +456,7 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
           </ol>
         </>
       )}
+      </>)}
     </div>
   );
 }
@@ -572,7 +618,7 @@ function ResearchPanel({ bundle }: { bundle: CountryBundle }) {
       {languages.length > 0 && <p className="small">Languages required by the lanes: {languages.join(", ")}.
         {" "}{v2.filter((l) => (l.languages_required ?? []).some((x) => !(l.languages_executed ?? []).includes(x))).map((l) => l.lane).join(", ") || "None"} did not run in every required language.</p>}
       <table className="sector-table lane-table">
-        <thead><tr><th>Lane</th><th>What the analyst did</th><th>What the source allows</th><th>Searched through</th></tr></thead>
+        <thead><tr><th>Lane</th><th>What the analyst did</th><th>What the source allows</th><th>Furthest date reached</th></tr></thead>
         <tbody>
           {v2.map((l) => (
             <tr key={l.lane}>
@@ -849,7 +895,7 @@ function MethodPanel({ bundle }: { bundle: CountryBundle }) {
       <p className="small dim">{s.no_index_reason}</p>
       <p className="small">Reporting environment — {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}:
         {" "}{s.reporting_environment_text}</p>
-      <h3 className="eyebrow">Onboarding gate</h3>
+      <h3 className="eyebrow">Publication checklist</h3>
       <p className="small dim">
         {unmet > 0
           ? `Shown as a research preview: ${unmet} of ${s.onboarding_gate.length} items of the onboarding gate are not met or only partly met.`

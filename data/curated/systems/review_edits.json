@@ -2999,9 +2999,9 @@
       "field": "recovery",
       "set": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2022-06-05",
-        "evidence": "DOE OE-417 annual summary: the filer's restoration entry is 20:12 on 5 June 2022, the same day the event began at 15:20.",
+        "evidence": "DOE OE-417 annual summary: the filer's restoration entry is 20:12 on 5 June 2022, the same day the event began at 15:20. This is the filer's entry for the end of the reportable event, not a statement that every customer was back.",
         "url": "https://doe417.pnnl.gov/summaries/2022_Annual_Summary.xls"
       },
       "reason": "Iteration 18. Two-role recovery review (evidence source read; safety text check)."
@@ -3011,9 +3011,9 @@
       "field": "recovery",
       "set": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2022-06-10",
-        "evidence": "DOE OE-417 annual summary: the filer's restoration entry is 21:30 on 10 June 2022, about an hour after the event began at 20:27.",
+        "evidence": "DOE OE-417 annual summary: the filer's restoration entry is 21:30 on 10 June 2022, about an hour after the event began at 20:27. This is the filer's entry for the end of the reportable event, not a statement that every customer was back.",
         "url": "https://doe417.pnnl.gov/summaries/2022_Annual_Summary.xls"
       },
       "reason": "Iteration 18. Two-role recovery review (evidence source read; safety text check)."
@@ -3131,9 +3131,9 @@
       "field": "recovery",
       "set": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2024-09-06",
-        "evidence": "DOE OE-417 annual summary: the filer's restoration entry is 5:29 p.m. on 6 Sep 2024, about an hour and a half after the event began at 4:02 p.m.",
+        "evidence": "DOE OE-417 annual summary: the filer's restoration entry is 5:29 p.m. on 6 Sep 2024, about an hour and a half after the event began at 4:02 p.m. This is the filer's entry for the end of the reportable event, not a statement that every customer was back.",
         "url": "https://doe417.pnnl.gov/summaries/2024_Annual_Summary.xlsx"
       },
       "reason": "Iteration 18. Two-role recovery review (evidence source read; safety text check)."
@@ -3535,6 +3535,12 @@
       "field": "summary",
       "set": "On 22 January 2025 a tanker struck the wharf at the Whiffen Head transshipment terminal in Newfoundland and Labrador, and the operator suspended all operations at the facility pending inspection.",
       "reason": "Confirmation round, role A: words that rested on a citation dropped in reconciliation are replaced by the wording of the two citations kept."
+    },
+    {
+      "event_id": "sa-2022-03-20-yasref-yanbu",
+      "field": "recovery.date",
+      "set": null,
+      "reason": "Iteration 18, recovery red team: a date with no evidence behind it."
     }
   ]
 }

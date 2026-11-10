@@ -196,7 +196,7 @@
           "queries_declared": 6,
           "queries_run": 6,
           "items_enumerated": 0,
-          "finding": "CEA publishes no grid-disturbance event listing or count: its Annual Report 2025-26 has none and its division pages carry only the procedure. That procedure places the register and the categorisation with the RLDCs; RPC papers are a downstream discussion copy, per region, at station level, and count MW not customers. No proxy is recommended; see IN1_ALTERNATIVES.md.",
+          "finding": "CEA publishes no grid-disturbance event listing or count: its Annual Report 2025-26 has none and its division pages carry only the procedure. That procedure places the register and the categorisation with the RLDCs; RPC papers are a downstream discussion copy, per region, at station level, and count MW not customers.",
           "limitation": "The Grid-India/RLDC universe is unread for the whole window 2022-01-01 to 2026-11-10: all six hosts refused the connection for the third pass running. No RPC, parliamentary or ministry document was opened either (refused, HTTP 403 or script-only), so no event-level alternative was read.",
           "carried_forward": false
         },
@@ -219,7 +219,8 @@
           "items_enumerated": 0,
           "finding": "PIB refuses automated ordinary access outright (three distinct endpoints, including its RSS feed). This lane cannot be enumerated by fetch; it needs a person in a browser or a different legitimately published mirror.",
           "limitation": "Nothing in this lane was read. Every PIB endpoint tried (listing, RSS, a release page) and the Ministry of Power site returned HTTP 403 to ordinary fetches, and the five declared queries were refused by the shared search budget. The whole universe, 2022-01-01 to 2026-11-10, remains unsearched.",
-          "carried_forward": false
+          "carried_forward": false,
+          "stopped_by": "search_limit"
         },
         {
           "lane": "IN3",
@@ -230,7 +231,7 @@
           ],
           "universe_kind": "report_archive",
           "execution": "partial",
-          "source_window": "publisher_not_yet_released",
+          "source_window": "inaccessible",
           "covered_through": "2026-07-31",
           "languages_required": [
             "en"
@@ -243,8 +244,9 @@
           "items_enumerated": 54,
           "items_in_universe": 58,
           "finding": "The MoPNG Monthly Production Report is the only source reached in this lane that attributes refinery throughput changes to causes, and only at month level with no event dates. It stopped doing so: the last refinery-wise reason appears in the June 2024 report; from August 2024 to July 2026 the reports give no refinery reasons even when throughput is below target (October 2024, CPSE refineries 6.70% under target; April 2026, private and JV refineries 17.34% under target; both unexplained). It also passes over some shortfalls: the December 2023 report shows CPCL 14.57% below the prior year with no reason given. PPAC's monthly report is aggregate and gives no causes. MoPNG What's New (page 1 of 6) is regulatory notices only. Upstream sections still give causes through July 2026, without volumes.",
-          "limitation": "Unread: PIB-MoPNG releases (403); the MoPNG Monthly Cabinet Summaries (44 listed, February 2021 to September 2024, image-only scans; 1 fetched, none read); PPAC's report archive (300+ entries listed, 1 monthly report read); MoPNG What's New pages 2-6 of 6. Monthly Production Reports for October 2022 and July 2024 are missing from the ministry's listing.",
-          "carried_forward": false
+          "limitation": "Unread: PIB-MoPNG releases (403); the MoPNG Monthly Cabinet Summaries (44 listed, February 2021 to September 2024, image-only scans; 1 fetched, none read); PPAC's report archive (300+ entries listed, 1 monthly report read); MoPNG What's New pages 2-6 of 6. Monthly Production Reports for October 2022 and July 2024 are missing from the ministry's listing. None of the ten declared queries ran: the search limit was reached.",
+          "carried_forward": false,
+          "stopped_by": "search_limit"
         },
         {
           "lane": "IN4",
@@ -267,8 +269,9 @@
           "queries_run": 0,
           "items_enumerated": 145,
           "finding": "None of the official coal sources reached names an individual mine event. Coal India's press releases are output and offtake announcements; the Monthly Summary for the Cabinet has a fixed format (production, dispatch, auctions, drilling, NLC performance) with no incident or cause section; the annual-report safety chapters give aggregate accident statistics and safety programmes, not dated events or production suspensions; the ministry's Safety Statistics page covers NLCIL only, to November 2022. An empty result here says these sources do not report such events, not that none occurred.",
-          "limitation": "Unread: Ministry of Coal releases before 13 November 2025; 31 of 35 in-window Monthly Summaries (none is published after February 2025, and October to December 2023 are missing from the listing); Coal India annual reports and subsidiary reports (script-only listing); the ministry's Accident Portal page; PIB. The DGMS, which holds mine-accident records, is outside this lane's named sources.",
-          "carried_forward": false
+          "limitation": "Unread: Ministry of Coal releases before 13 November 2025; 31 of 35 in-window Monthly Summaries (none is published after February 2025, and October to December 2023 are missing from the listing); Coal India annual reports and subsidiary reports (script-only listing); the ministry's Accident Portal page; PIB. The DGMS, which holds mine-accident records, is outside this lane's named sources. None of the five declared queries ran: the search limit was reached.",
+          "carried_forward": false,
+          "stopped_by": "search_limit"
         },
         {
           "lane": "IN5",
@@ -289,7 +292,7 @@
           "queries_declared": 3,
           "queries_run": 3,
           "items_enumerated": 639,
-          "finding": "PNGRB does not publish an incident or emergency notice stream. Its public notices over 2022-2026 are regulatory consultations and authorisations; none announces a pipeline shutdown or force majeure on a line (the 2024 'Force Majeure' notices are claim formats for city-gas licence obligations). Named investigation reports stop at March 2022 (latest incident covered: Dec 2021). From 2025 it publishes anonymised 'Case Studies on Major Incidents' with no date, place or operator (2 of 40 opened, both anonymised; one title prints the date as xx.xx.xxxx), unusable for records. The one dated, named incident list found is Annexure-A of the 6 March 2026 press release: five pipeline incidents between 10 Aug and 30 Nov 2025. The listing pages are script-populated; whether reading the publisher's own data files counts as an alternative endpoint or as working around a script-only page is for the lead to rule (if the latter, this lane is not_started/inaccessible and the five candidates rest on the directly fetched press-release PDF, which the declared search could also have surfaced).",
+          "finding": "PNGRB does not publish an incident or emergency notice stream. Its public notices over 2022-2026 are regulatory consultations and authorisations; none announces a pipeline shutdown or force majeure on a line (the 2024 'Force Majeure' notices are claim formats for city-gas licence obligations). Named investigation reports stop at March 2022 (latest incident covered: Dec 2021). From 2025 it publishes anonymised 'Case Studies on Major Incidents' with no date, place or operator (2 of 40 opened, both anonymised; one title prints the date as xx.xx.xxxx), unusable for records. The one dated, named incident list found is Annexure-A of the 6 March 2026 press release: five pipeline incidents between 10 Aug and 30 Nov 2025.",
           "limitation": "Listings were read at TITLE level only (480 notices, 75 press releases, 54 case studies, 21 incident analyses, 9 reports); just 4 PNGRB PDFs were opened, so an incident mentioned only inside a document body is unseen. Not read: PNGRB annual reports (not found on the site), the orders/complaints-disputes listing (146 feed items), the monthly data-bank NGPL MIS reports, the 2026 Statistical Booklet, 38 of 40 anonymised case studies, and the Oct 2026 High-Level Expert Committee report on pipeline supply security (deliberately not opened: its subject is network resilience, which the scope boundary forbids collecting).",
           "carried_forward": false
         },
@@ -315,7 +318,8 @@
           "queries_run": 16,
           "finding": "The Hindi query form with a year and no place name returns mostly foreign grid failures (Bangladesh, Pakistan, Nigeria) and little about India; with a state name it returns hours-of-supply complaints. Press reports of load shedding almost never give a customer count; where a figure exists it is an MW deficit or an MW of load shed. Supply-shortfall causes recur in this lane: coal (Maharashtra April 2022, Uttar Pradesh September 2026), low hydro storage and purchased power (Kerala September 2026) and low wind output (Tamil Nadu September 2026). 'examined' counts the result links returned by the 16 searches.",
           "limitation": "Only 16 of 34 declared queries ran (all 10 year queries in English and Hindi, and the Uttar Pradesh, Maharashtra and Tamil Nadu pairs) before the session's shared search limit stopped the pass; the Karnataka, Delhi, Bihar, Jharkhand, Punjab, Haryana, Rajasthan, West Bengal and Assam pairs and both follow-ups did not run. No SLDC or discom notice was opened: Maharashtra SLDC report addresses returned 404, its report lists are script-only, its 2025 disturbance compendium exceeds the fetch size limit, and the Delhi SLDC site refused the connection, so every opened source is press.",
-          "carried_forward": false
+          "carried_forward": false,
+          "stopped_by": "search_limit"
         },
         {
           "lane": "IN7",
@@ -333,7 +337,7 @@
           "languages_executed": [],
           "queries_declared": 10,
           "queries_run": 0,
-          "finding": "Fuel-supply shortfall as a stated outage cause, counts only, no cause added. Pages opened and in window that concern power supply: 2 (BigMint 2026-05-04; Down To Earth 2026-04-30); pages among them stating a fuel-supply shortfall as the cause of an outage: 0 (BigMint attributes Chandrapur to tube leakage and mentions coal supply only as a recommendation; Down To Earth attributes outage capacity largely to maintenance). Unopened search-result snippets asserting a fuel-supply cause: 3 (April 2022, CEA figure of 7,295 MW of coal plant under outage for fuel shortage, S&P page HTTP 403; June 2026 Maharashtra load shedding linked to coal constraints/quality, page HTTP 403, already a held record; 2026 gas-shortage report on deferred maintenance, not opened). One opened page asserting about 12 GW shut for want of coal and gas is dated 2018 and is outside the window. So the category recurs in headlines for 2022 and 2026 but this lane read no in-window page that states it; the evidence here is snippet-level and must not be counted as read. Separately: the lane as declared cannot be executed with this search tool at all; the lead must decide whether IN7 is re-scoped to reachable outlets or recorded as inaccessible.",
+          "finding": "Fuel-supply shortfall as a stated outage cause, counts only, no cause added. Pages opened and in window that concern power supply: 2 (BigMint 2026-05-04; Down To Earth 2026-04-30); pages among them stating a fuel-supply shortfall as the cause of an outage: 0 (BigMint attributes Chandrapur to tube leakage and mentions coal supply only as a recommendation; Down To Earth attributes outage capacity largely to maintenance). One opened page asserting about 12 GW shut for want of coal and gas is dated 2018 and is outside the window. So the category recurs in headlines for 2022 and 2026 but this lane read no in-window page that states it; the evidence here is snippet-level and must not be counted as read.",
           "limitation": "None of the five credited outlets was searched or read: the search tool refuses all five domains to its user agent, and that refusal was not worked around. The lane universe is therefore entirely unread for 2022-01-01 to 2026-11-10; the unrestricted discovery run earns no lane credit and left one declared string (refinery 2026) unrun.",
           "carried_forward": false
         }

@@ -41,8 +41,8 @@ A record is covered when its system has a campaign recorded as `active` with `po
 true`, its cause is `kinetic_strike` or `sabotage`, and it is dated on or after the campaign's
 `member_rule.from`. A record is also covered if it is named in `member_rule.also_covers`, with a
 reason. This catches a record at a struck site whose own cause is not kinetic: its status is
-the site's status. The first such record is the February 2026 Juaymah LPG halt. Its recovery
-note traced the outage for seven months, and the site was struck in April. For a covered
+the site's status. The first such record is the February 2026 Juaymah LPG halt. A later
+attack was reported at the same site, so its status is the site's status. For a covered
 record:
 
 - `scripts/import_candidates.py` writes the withheld marker in place of the recovery block, drops
@@ -66,10 +66,10 @@ served payload found status in places the summary check did not look:
 
 - six citations' addresses, across five records, announced restarts, resumptions or recovery
   plans; they were moved back to the queue;
-- one capacity note quoted SATORP's post-restart operating rate; it was emptied;
+- one capacity note quoted a later operating rate; it was emptied;
 - one effect line said loadings stopped "briefly"; it was reworded through a review edit.
 
-The tenth record, the July 2026 Jazan refinery shutdown, is **held**. Its only citation's
+The tenth record is **held**. Its only citation's
 address states facility status, and no other public source has been opened yet. It returns
 when one is found, or when the campaign ends. The 2022 Yanbu record is outside the 2026 campaign and is unchanged.
 

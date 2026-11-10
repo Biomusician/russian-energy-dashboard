@@ -83,13 +83,17 @@ export const UNIT_SHORT: Record<string, string> = {
 /** A value in its unit, or "no data". Zero stays zero: it is the source's own figure. */
 export function fmtValue(v: number | null | undefined, unit: string): string {
   if (v == null) return "no data";
+  // A very small figure keeps its significant digits rather than printing as a false zero.
+  if (v !== 0 && Math.abs(v) < 0.01) return `${Number(v.toPrecision(2))} ${UNIT_SHORT[unit] ?? unit}`;
   const digits = v !== 0 && Math.abs(v) < 10 ? 2 : v !== 0 && Math.abs(v) < 100 ? 1 : 0;
   return `${v.toLocaleString("en-GB", { maximumFractionDigits: digits })} ${UNIT_SHORT[unit] ?? unit}`;
 }
 
-export const NO_DATA = "#0c1016";
-export const ZERO = "#1a2230";
-const RAMP = ["#22324e", "#27517a", "#2a7596", "#3c9aa5", "#69bea6", "#a9dba4", "#ecf4ad"];
+// Grey for "no data" and near-black for a reported zero, so neither can pass for the other or for
+// the lowest class at a glance.
+export const NO_DATA = "#5a5e66";
+export const ZERO = "#10161f";
+const RAMP = ["#2a4466", "#27517a", "#2a7596", "#3c9aa5", "#69bea6", "#a9dba4", "#ecf4ad"];
 
 export const MIX_FUELS: [string, string, string][] = [
   ["prod_coal", "Coal", "#8d8373"],
@@ -192,10 +196,14 @@ export function mixMode(ctx: EnergyContext): MapMode {
   const color = Object.fromEntries(MIX_FUELS.map(([id, , c]) => [id, c]));
   const name = Object.fromEntries(MIX_FUELS.map(([id, n]) => [id, n]));
   return {
-    id: "mix", title: `Largest source in energy production — ${ctx.comparison_year}`, unitNote: "share of total primary energy production",
+    id: "mix", title: `Largest source in energy production — ${ctx.comparison_year}`, unitNote: "category: the largest fuel by energy content",
     legend: [{ color: NO_DATA, label: "no data or no production" }, ...MIX_FUELS.map(([, label, c]) => ({ color: c, label }))],
     fill: matchFill((r) => { const f = dominantFuel(r); return f ? color[f] : NO_DATA; }, ctx.countries),
-    describe: (r) => { const f = r && dominantFuel(r); return f ? `largest source: ${name[f].toLowerCase()}` : "no data"; },
+    describe: (r) => {
+      if (r?.values.total_production === 0) return "no production reported";
+      const f = r && dominantFuel(r);
+      return f ? `largest source: ${name[f].toLowerCase()}` : "no data";
+    },
   };
 }
 

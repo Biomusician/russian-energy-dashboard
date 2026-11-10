@@ -15,6 +15,7 @@ when two researchers shared a lane.
 """
 import glob
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -96,23 +97,56 @@ CARRIED = {
     "SA4": ("not_started", "inaccessible", None, None, 0, "The OPEC report archive refused access."),
     "SA5": ("partial", "no_census_exists", "2026-11-03", 15, 6, "Six of 15 queries ran."),
 }
+# A published log says what was done, never what is being held or who found it: a research log is
+# not a route for an unpublished record's name to reach a payload. Sentences about held or
+# unaccepted material, and pointers at local files, stay in the local log.
+PRIVATE_SENTENCE = re.compile(r"\b(held|hold|candidates?|leads?|accepted|unverified|jeddah|riyadh)\b|\.md\b", re.I)
+
+
+def unpublished_names(cc):
+    """Facility names in the local queue that no published record uses."""
+    queue = read(ROOT / "data" / "candidates" / f"{cc}.json")
+    events = read(SYS / cc / "events.json")["events"]
+    published = {e["event_id"] for e in events}
+    public = {(e.get("facility_name") or "").lower() for e in events}
+    names = {(r.get("facility_name") or "").strip().lower() for r in queue if r.get("candidate_id") not in published}
+    return {n for n in names if len(n) >= 8 and n not in public}
+
+
+def public_text(text, names):
+    if not text:
+        return text
+    kept = [s for s in re.split(r"(?<=[.!?])\s+", text)
+            if not PRIVATE_SENTENCE.search(s) and not any(n in s.lower() for n in names)]
+    return " ".join(kept) or None
+
+
+# Text that shows the search allowance, not the source, stopped a lane.
+SEARCH_LIMIT = re.compile(r"search limit|search budget|search cap|cap reached|cap was reached", re.I)
+
 # Lanes where the worker's own state would misstate the record. Each keeps what iteration 17 already
 # established and says why. None of these raises a lane above what was actually executed.
 OVERRIDES = {
     # Re-checked this pass and unchanged; the universe was enumerated in iteration 17. The worker
     # wrote "partial" because it did not re-enumerate, which would have read as a regression.
-    "CG1": {"execution": "enumerated_complete", "source_window": "publisher_not_yet_released"},
-    "CG2": {"execution": "enumerated_complete", "source_window": "publisher_not_yet_released"},
-    # The declared set ran in full; a further 2026 re-check query was refused by the search limit.
-    "CR1": {"execution": "declared_search_complete", "queries_declared": 15, "queries_run": 15,
-            "covered_through": "2026-11-03",
-            "limitation": "The declared set ran through 2026-11-03. An additional 2026 re-check query could not be run in this pass."},
-    "R1": {"execution": "declared_search_complete", "queries_declared": 15, "queries_run": 15,
-           "covered_through": "2026-11-03",
-           "limitation": "The declared set ran through 2026-11-03. An additional 2026 re-check query could not be run in this pass."},
+    "CG1": {"execution": "enumerated_complete", "source_window": "publisher_not_yet_released", "carried_forward": True},
+    "CG2": {"execution": "enumerated_complete", "source_window": "publisher_not_yet_released", "carried_forward": True},
+    "G1": {"carried_forward": True},
+    "C1": {"carried_forward": True},
+    # The plan declared a 2026 re-check on top of the iteration-17 set, and it did not run, so the
+    # lane did not reach what this pass declared.
+    "CR1": {"execution": "partial", "queries_declared": 16, "queries_run": 15, "covered_through": "2026-11-03", "stopped_by": "search_limit",
+            "limitation": "Fifteen of 16 declared queries ran, through 2026-11-03. The 2026 re-check declared for this pass did not run because the search limit was reached."},
+    "R1": {"execution": "partial", "queries_declared": 16, "queries_run": 15, "covered_through": "2026-11-03", "stopped_by": "search_limit",
+           "limitation": "Fifteen of 16 declared queries ran, through 2026-11-03. The 2026 re-check declared for this pass did not run because the search limit was reached."},
+    "IN3": {"source_window": "inaccessible", "stopped_by": "search_limit",
+            "limitation_suffix": "None of the ten declared queries ran: the search limit was reached."},
+    "IN4": {"stopped_by": "search_limit",
+            "limitation_suffix": "None of the five declared queries ran: the search limit was reached."},
     # Two workers each logged their own terminals, so the merge summed a shared total. Nine
     # terminals at ten queries is 90; Sabine ran earlier, Cameron and Cove Point ran here.
     "L1": {"queries_declared": 90, "queries_run": 30, "execution": "partial", "source_window": "no_census_exists",
+           "stopped_by": "search_limit",
            "limitation": "Three of nine terminals were searched (Sabine Pass, Cameron, Cove Point); twelve queries for "
                          "terminals not yet operating in the window were not applicable. The rest were not run because the search limit was reached."},
 }
@@ -164,14 +198,24 @@ def pass_for(cc):
     log = read(path)
     previous = [p for p in log["passes"] if p["kind"] == "systematic" and p["date"] != PASS_DATE][-1]
     logs = logs_for(cc)
+    names = unpublished_names(cc)
     lanes = []
     for old in previous["lanes"]:
         lid = old["lane"]
         kind = KINDS[cc][lid]
         if lid in logs:
             body = merged(lid, logs[lid], kind)
-            body.update(OVERRIDES.get(lid, {}))
             body["carried_forward"] = False
+            over = dict(OVERRIDES.get(lid, {}))
+            suffix = over.pop("limitation_suffix", None)
+            body.update(over)
+            if suffix:
+                body["limitation"] = f"{body.get('limitation') or ''} {suffix}".strip()
+            if body["execution"] in ("not_started", "partial") and SEARCH_LIMIT.search(body.get("limitation") or ""):
+                body["stopped_by"] = "search_limit"
+            body["limitation"] = public_text(body.get("limitation"), names)
+            if body.get("finding"):
+                body["finding"] = public_text(body["finding"], names)
         else:
             ex, win, ct, qd, qr, limit = CARRIED[lid]
             body = {"universe_kind": kind[0], "execution": ex, "source_window": win, "covered_through": ct,
@@ -192,7 +236,8 @@ def pass_for(cc):
         key = {"accept": "accepted", "reject": "rejected"}.get(d, d)
         if key in outcome:
             outcome[key] += 1
-    done = sum(1 for x in lanes if x["execution"] in ("enumerated_complete", "declared_search_complete"))
+    # A lane carried from an earlier pass is not work this pass did.
+    done = sum(1 for x in lanes if x["execution"] in ("enumerated_complete", "declared_search_complete") and not x["carried_forward"])
     entry = {
         "date": PASS_DATE, "by": PASS_BY, "kind": "systematic", "window": ["2022-01-01", PASS_DATE],
         "scope": (f"inclusion clauses 1-7 as written; lanes and queries declared before searching "

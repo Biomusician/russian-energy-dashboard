@@ -42,7 +42,7 @@ test.describe("global home", () => {
     // Totals for the five countries together, once, outside every card (iteration 17).
     const totals = page.getByRole("region", { name: "Country record, all five together" });
     await expect(totals).toContainText(`${m.corpus.records} reported disruptions in ${m.corpus.episodes} episodes`);
-    await expect(totals).toContainText(`${m.corpus.research_lanes} lanes`);
+    await expect(totals).toContainText(`${m.corpus.research_lanes} source groups`);
     for (const s of m.systems) {
       await expect(page.getByRole("article", { name: s.name })).not.toContainText(String(m.corpus.records));
     }
@@ -216,6 +216,7 @@ test.describe("episodes and source freshness (iteration 15)", () => {
     const sys = await countryPayload(page, "cn", "system.json");
     await expect(page.locator(".source-table tbody tr")).toHaveCount(sys.sources.length);
     await expect(page.locator(".source-table")).toContainText("Publishes:");
+    await app.button("Research coverage").click();
     await expect(page.locator(".research-log tbody tr")).toHaveCount(sys.research_log.passes.length);
     await expect(page.locator(".research-log")).toContainText("targeted search (never complete by design)");
   });
@@ -239,12 +240,13 @@ test.describe("provenance and coverage (iteration 16)", () => {
     const sys = await countryPayload(page, "us", "system.json");
     const status = page.getByLabel("Research status");
     // The US has had a systematic sweep; whether it completed is the payload's claim, read here.
-    const label = { complete: "Systematic search complete", partial: "Systematic search partial",
+    const label = { complete: "Systematic search complete", partial: "Systematic search under way",
                     never_systematic: "Targeted searches only" }[sys.research_freshness.completeness as string]!;
     await expect(status).toContainText(label);
     await expect(status).toContainText("One does not imply the other");
     await app.button("Sources & data quality").click();
     await expect(page.locator(".research-coverage")).toContainText(label);
+    await app.button("Research coverage").click();
     // Every systematic pass lists its lanes, each with its own status (two passes since iteration 17).
     const lanes = sys.research_log.passes.filter((x: { kind: string }) => x.kind === "systematic")
       .reduce((n: number, x: { lanes?: unknown[] }) => n + (x.lanes?.length ?? 0), 0);
