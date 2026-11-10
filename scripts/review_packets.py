@@ -10,7 +10,7 @@ removed: the researcher's disposition and reason, earlier reviews, primary-revie
 lane that surfaced it. `blind()` is the one place that decides what a reviewer may see, and a test
 holds it to that.
 
-Packets are written to the local, gitignored queue (`data/candidates/review17/`): they name
+Packets are written to the local, gitignored queue (`data/candidates/review18/`): they name
 records that may never be published.
 """
 import json
@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from pipeline import systems  # noqa: E402
 
-OUT = ROOT / "data" / "candidates" / "review17"
+OUT = ROOT / "data" / "candidates" / "review18"
 CURATED = ROOT / "data" / "curated" / "systems"
 
 # What a blind reviewer may see: the claim, its place and time, its sources.

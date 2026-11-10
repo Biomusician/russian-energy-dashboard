@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import SimpleMap from "./SimpleMap";
 import SystemSwitcher from "./SystemSwitcher";
+import WorldContext from "./WorldContext";
+import { DataQualityPanel, RecentEvidencePanel, laneChips } from "./GlobalPanels";
 import {
   ENVIRONMENT_LABEL, READINESS_LABEL, labelFor, loadManifest, loadWorld,
   type Manifest, type ManifestSystem,
@@ -10,17 +11,15 @@ import { fmtDate, fmtNum } from "../data";
 
 /** The global home (iteration 14).
  *
- *  WHAT IT REFUSES TO SHOW. No event counts, no scores side by side, no ordering by any figure.
- *  Six systems with six reporting environments cannot be compared on disruption, and a page of
- *  cards with a number on each is read as a league table whatever the caption says
- *  (GLOBAL_METHODOLOGY §6). Each card says what that system's evidence supports and nothing a
- *  reader could rank. Every monitored system is drawn in the same colour: the map shows WHERE is
- *  monitored, not how much happened there.
+ *  WHAT IT REFUSES TO SHOW. No event counts per system, no scores side by side, no ordering by
+ *  any disruption figure. Six systems with six reporting environments cannot be compared on
+ *  disruption, and a page of cards with a number on each is read as a league table whatever the
+ *  caption says (GLOBAL_METHODOLOGY §6).
+ *
+ *  THREE LEVELS (iteration 18), kept apart: the world's national energy picture (context only),
+ *  the six monitored systems, and recent evidence inside them. National energy data never mixes
+ *  with disruption data on one scale.
  */
-
-const MONITORED = "#1e5560";
-const OCCUPIED = "#5b4a1e";
-const OTHER = "#141c25";
 
 export default function GlobalHome() {
   const [manifest, setManifest] = useState<Manifest | null>(null);
@@ -62,33 +61,20 @@ export default function GlobalHome() {
           </p>
         )}
 
-        <section className="global-map-wrap" aria-label="Monitored systems map">
-          {world ? (
-            <SimpleMap
-              data={world}
-              bounds={[-170, -50, 179, 78]}
-              idProp="system_id"
-              fill={["case",
-                ["==", ["get", "status"], "occupied"], OCCUPIED,
-                ["!=", ["get", "system_id"], null], MONITORED,
-                OTHER]}
-              pickable={(p) => !!p.system_id}
-              onPick={(id) => id && navigate(id)}
-              ariaLabel="World map. Monitored systems are highlighted; select one to open it."
-              attribution="Boundaries: Natural Earth (public domain). Crimea is drawn as Ukrainian territory under Russian occupation."
-            />
-          ) : (
-            <div className="simple-map placeholder">{error ? "Map unavailable" : "Loading map…"}</div>
-          )}
-          <div className="map-legend-mini">
-            <span><i style={{ background: MONITORED }} /> monitored system (same colour for all — not a measure)</span>
-            <span><i style={{ background: OCCUPIED }} /> Crimea: Ukrainian, occupied; monitored within the Russia theatre</span>
-          </div>
-        </section>
+        <p className="home-lead">
+          Five countries, plus the Russia, Belarus &amp; Crimea theatre, are systematically monitored for
+          qualifying disruptions. Other countries are shown only for national energy context: an
+          unmonitored country has no disruption record here, which is not the same as no disruptions.
+        </p>
 
+        <WorldContext world={world} worldError={error} manifest={manifest} />
+
+        <h2 className="level-head">Monitored systems</h2>
         <section aria-label="Monitored systems" className="sys-cards">
           {manifest?.systems.map((s) => <SystemCard key={s.id} s={s} manifest={manifest} />)}
         </section>
+
+        <RecentEvidencePanel />
 
         {manifest && (
           <section className="panel global-note">
@@ -108,6 +94,7 @@ export default function GlobalHome() {
             </p>
           </section>
         )}
+        <DataQualityPanel />
         {manifest?.corpus && (
           <section className="panel global-note corpus-totals" aria-label="Country record, all five together">
             <h2 className="eyebrow">The country record so far, all five countries together</h2>
@@ -116,8 +103,8 @@ export default function GlobalHome() {
               {manifest.corpus.independently_reviewed} independently reviewed ({manifest.corpus.blind_reviewed} blind
               by three reviewers). {manifest.corpus.records_with_observed_recovery} with a cited report that the
               facility or service came back; {manifest.corpus.records_with_recovery_estimate_only} with only an
-              estimate. {manifest.corpus.registry_sources} registry sources. Research lanes
-              complete: {manifest.corpus.research_lanes_complete} of {manifest.corpus.research_lanes}.
+              estimate. {manifest.corpus.registry_sources} registry sources. Research process across{" "}
+              {manifest.corpus.research_lanes} lanes: {laneChips(manifest.corpus.research_lane_states ?? {})}.
             </p>
             <p className="small dim">{manifest.corpus.note}</p>
           </section>

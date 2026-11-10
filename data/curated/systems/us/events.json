@@ -36,7 +36,7 @@
         {
           "url": "https://en.wikipedia.org/wiki/Freeport_LNG",
           "publisher": "Wikipedia",
-          "date": null,
+          "date": "2022-07-29",
           "language": "en",
           "source_role": "media",
           "opened": true
@@ -239,11 +239,7 @@
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Grid-operator EEA 3 declaration (clause 5 names EEA3 explicitly).",
-      "capacity_affected": {
-        "value": 51426,
-        "unit": "MW",
-        "source_says": "EIA: all-time demand high of 51,426 MW at 4:55 p.m. on 6 Sep 2022"
-      },
+      "capacity_affected": null,
       "sources": [
         {
           "url": "https://www.eia.gov/todayinenergy/detail.php?id=54039",
@@ -258,7 +254,7 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "no_supply_lost",
         "date": null,
-        "evidence": "Not applicable: no customer supply was lost (EIA: appeals and demand response used 'to avoid rolling blackouts'). Nothing to restore.",
+        "evidence": "EIA describes appeals and demand response aimed at avoiding rolling blackouts; it does not state whether any customer supply was lost.",
         "url": "https://www.eia.gov/todayinenergy/detail.php?id=54039"
       },
       "review": {
@@ -316,7 +312,7 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2022-10-04",
         "evidence": "Partial: about 394,000 Florida outages remained on the afternoon of 4 Oct 2022, down 85% from peak; Florida public power utilities restored 99.99% of customers able to take service within six days.",
         "url": "https://www.publicpower.org/periodical/article/outages-post-hurricane-ian-down-less-500000-florida"
@@ -508,7 +504,7 @@
         {
           "url": "https://www.local3news.com/local-news/update-tva-releases-internal-report-after-rolling-holiday-blackouts/article_c10bfd92-876d-11ed-96bb-5f6ec7f8bbe1.html",
           "publisher": "Local 3 News",
-          "date": null,
+          "date": "2023-05-05",
           "language": "en",
           "source_role": "media",
           "opened": true
@@ -557,7 +553,7 @@
       "operator": "Duke Energy (Carolinas and Progress)",
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Duke Energy imposed rolling blackouts in the Carolinas on Christmas Eve during Winter Storm Elliott after losing about 1,300 MW of generating capability.",
+      "summary": "Duke Energy imposed rolling blackouts in the Carolinas on Christmas Eve 2022 after losing about 1,300 MW of generating capability.",
       "effect": "About 500,000 customers across the Carolinas had service interrupted.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 4,
@@ -579,9 +575,9 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "estimate",
         "date": "2022-12-24",
-        "evidence": "WECT reported power restored by about 4:30 p.m. on 24 Dec.",
+        "evidence": "WECT reported that power for some customers was not expected back until about 4:30 p.m. on 24 Dec (a forecast; actual restoration is not confirmed).",
         "url": "https://www.wect.com/2023/01/03/duke-energy-reveals-timeline-events-leading-up-rolling-blackouts-christmas-eve"
       },
       "review": {
@@ -602,7 +598,7 @@
           "taxonomy": "accept"
         }
       },
-      "hazard_name": "Winter Storm Elliott (2022)"
+      "hazard_name": null
     },
     {
       "event_id": "us-2022-12-23-pjm-forced-outages-elliott",
@@ -782,7 +778,7 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2023-02-27",
         "evidence": "Partial: by 27 Feb DTE said more than 600,000 of its customers had been restored; DTE and Consumers together still reported more than 140,000 without power that afternoon, partly from a new storm the same day.",
         "url": "https://www.pbs.org/newshour/nation/5-days-after-severe-ice-storm-some-in-michigan-still-lack-power"
@@ -910,7 +906,7 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2023-09-01",
         "evidence": "Partial and public-power only: FMEA said on 1 Sep that Florida public power utilities had essentially restored all customers within 48 hours (>99.99%). No opened source gives investor-owned utility restoration completion.",
         "url": "https://www.publicpower.org/periodical/article/public-power-utilities-fla-wrap-power-restoration-efforts-wake-hurricane"
@@ -1098,7 +1094,7 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2024-07-17",
         "evidence": "More than 98% of impacted customers restored by 17 Jul 2024.",
         "url": "https://www.tdworld.com/disaster-response/news/55127087/centerpoint-energy-restores-power-to-more-than-98-of-impacted-customers"
@@ -1333,11 +1329,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2024-10-07",
+        "evidence": "DOE Situation Report 11: 53,185 South Carolina customers still out at 10 a.m. EDT on 7 Oct 2024, 96% restored from the storm peak; Report 14 (11 Oct) had dropped the state from its table with fewer than 10,000 out. No completion statement.",
+        "url": "https://www.energy.gov/sites/default/files/2024-10/Hurricane%20Helene%20Situation%20Report%2011.pdf"
       },
       "review": {
         "reviewed_at": "2026-11-03",
@@ -1393,11 +1389,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2024-10-15",
+        "evidence": "DOE Situation Report 15: 10,009 Georgia customers still out at 12:30 p.m. EDT on 15 Oct 2024, 99% restored from the storm peak; the report says timelines for complete restoration or rebuild in some areas were still to be determined.",
+        "url": "https://www.energy.gov/sites/default/files/2024-10/Hurricane%20Helene%20Situation%20Report%2015.pdf"
       },
       "review": {
         "reviewed_at": "2026-11-03",
@@ -1453,11 +1449,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2024-10-15",
+        "evidence": "DOE Situation Report 15: 13,104 North Carolina customers still out at 12:30 p.m. EDT on 15 Oct 2024, 99% restored from the storm peak; the report says timelines for complete restoration or rebuild in some areas were still to be determined.",
+        "url": "https://www.energy.gov/sites/default/files/2024-10/Hurricane%20Helene%20Situation%20Report%2015.pdf"
       },
       "review": {
         "reviewed_at": "2026-11-03",
@@ -1513,11 +1509,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2024-10-04",
+        "evidence": "DOE Situation Report 8: 10,103 Florida customers still out at 10 a.m. EDT on 4 Oct 2024, 99.2% restored from the storm peak (near-complete, not total). DOE Report 11 (7 Oct) lists Florida among the states removed from its table with less than 10,000 customers out. No completion statement.",
+        "url": "https://www.energy.gov/sites/default/files/2024-10/Hurricane%20Helene%20Situation%20Report%208.pdf"
       },
       "review": {
         "reviewed_at": "2026-11-03",
@@ -1634,7 +1630,7 @@
         {
           "url": "https://en.wikipedia.org/wiki/November_2024_Northeast_Pacific_bomb_cyclone",
           "publisher": "Wikipedia",
-          "date": null,
+          "date": "2024-11-18",
           "language": "en",
           "source_role": "media",
           "opened": true
@@ -1642,7 +1638,7 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2024-11-25",
         "evidence": "By 25 Nov a county utility had restored 99% of its customers; a larger utility still had customers without service on 23 Nov.",
         "url": "https://en.wikipedia.org/wiki/November_2024_Northeast_Pacific_bomb_cyclone"
@@ -1709,11 +1705,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restart",
+        "date": "2025-04-16",
+        "evidence": "Operator incident update of 16 April 2025 says the Keystone system had been restarted, with regulator approval under the corrective action order and at reduced operating pressures; the update confirms the restart by that date without stating the exact day (a restart on 14 April had been planned).",
+        "url": "https://www.southbow.com/incident-response/"
       },
       "review": {
         "reviewed_at": "2026-11-03",
@@ -1809,7 +1805,7 @@
       "asset_class": "system_wide",
       "cause": "natural_hazard",
       "summary": "The 23-27 January 2026 winter storm (Winter Storm Fern) brought ice and snow that caused large outages in Mississippi.",
-      "effect": "Peak outages in Mississippi: almost 300,000 customers.",
+      "effect": "Almost 300,000 customers lost power in Mississippi.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "More than 100,000 customers without supply.",
@@ -1949,7 +1945,7 @@
         {
           "url": "https://en.wikipedia.org/wiki/October_2025_El_Segundo_fire",
           "publisher": "Wikipedia",
-          "date": null,
+          "date": "2025-10-03",
           "language": "en",
           "source_role": "media",
           "opened": true
@@ -2125,7 +2121,7 @@
       "asset_class": "system_wide",
       "cause": "natural_hazard",
       "summary": "Hurricane Isaias made landfall near Destin, Florida, on the evening of 9 October 2026 as a Category 2 storm and weakened as it moved inland through Alabama.",
-      "effect": "About 900,000 customers lost power across Florida, Alabama and Georgia at the peak; about 140,000 were still without power on 12 October.",
+      "effect": "Roughly 900,000 customers without power on 10 October (IndexBox); about 140,000 still out on 12 October.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Grid outages affecting far more than 100,000 customers across three states.",
@@ -2330,11 +2326,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "Not researched.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "service_restored",
+        "date": "2022-06-05",
+        "evidence": "DOE OE-417 annual summary: the filer's restoration entry is 20:12 on 5 June 2022, the same day the event began at 15:20.",
+        "url": "https://doe417.pnnl.gov/summaries/2022_Annual_Summary.xls"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -2385,11 +2381,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "Not researched.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "service_restored",
+        "date": "2022-06-10",
+        "evidence": "DOE OE-417 annual summary: the filer's restoration entry is 21:30 on 10 June 2022, about an hour after the event began at 20:27.",
+        "url": "https://doe417.pnnl.gov/summaries/2022_Annual_Summary.xls"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -2456,11 +2452,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "OE-417 gives restoration as Unknown; not researched further.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "service_restored",
+        "date": "2022-06-15",
+        "evidence": "NERC event report: load shed on 14 June was gradually restored until all of it was back that night, and the load shed again on 15 June was restored on the night of 15 June; no load was shed on 16 June.",
+        "url": "https://www.nerc.com/globalassets/our-work/reports/event-reports/aep_summer_2022_event.pdf"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -2519,11 +2515,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "Not researched.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2022-09-01",
+        "evidence": "DOE OE-417 annual summary: one Michigan filing for this storm (197,740 customers) gives a restoration entry of 09:00 on 1 Sep 2022; the second filing gives none, so this covers only part of the outage.",
+        "url": "https://doe417.pnnl.gov/summaries/2022_Annual_Summary.xls"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -2582,11 +2578,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "Not researched.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2022-11-08",
+        "evidence": "DOE OE-417 annual summary: one Michigan filing for this storm (158,450 customers) gives a restoration entry of 07:00 on 8 Nov 2022; a second filing gives none. This is the filer's entry for the end of the reportable event, not a statement that every customer was back.",
+        "url": "https://doe417.pnnl.gov/summaries/2022_Annual_Summary.xls"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -2713,11 +2709,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "Not researched.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2023-01-01",
+        "evidence": "DOE OE-417 annual summary: a California filing (161,000 customers) gives a restoration entry of 06:00 on 1 Jan 2023. Treated as partial: the entry marks the end of the reportable event as filed, about eight hours after a six-figure outage count, and no completion statement was found.",
+        "url": "https://doe417.pnnl.gov/summaries/2022_Annual_Summary.xls"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -2751,7 +2747,7 @@
       "effect": "At one point during the storm nearly 350,000 SMUD customers were without electricity.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
-      "threshold_basis": "Grid event affecting at least 100,000 customers: nearly 350,000 out at one time in California (one utility).",
+      "threshold_basis": "Grid event affecting at least 100,000 customers: reports range from 185,434 (OE-417) to nearly 350,000 (CapRadio); simultaneous peak unconfirmed.",
       "capacity_affected": {
         "value": 350000,
         "unit": "customers",
@@ -2776,11 +2772,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "Not researched.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2023-01-08",
+        "evidence": "DOE OE-417 annual summary: a California filing (185,434 customers) gives a restoration entry of 21:00 on 8 Jan 2023. Treated as partial: the entry marks the end of the reportable event as filed, and no completion statement was found.",
+        "url": "https://doe417.pnnl.gov/summaries/2023_Annual_Summary.xls"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -2839,11 +2835,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "Not researched.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2023-03-04",
+        "evidence": "DOE OE-417 annual summary: a Texas filing (470,000 customers) gives a restoration entry of 23:00 on 4 March 2023. This is the filer's entry for the end of the reportable event, not a statement that every customer was back.",
+        "url": "https://doe417.pnnl.gov/summaries/2023_Annual_Summary.xls"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -2965,11 +2961,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "Not researched.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2023-03-05",
+        "evidence": "DOE OE-417 annual summary: the Michigan filing (200,000 customers) gives a restoration entry of 12:01 on 5 March 2023. This is the filer's entry for the end of the reportable event, not a statement that every customer was back.",
+        "url": "https://doe417.pnnl.gov/summaries/2023_Annual_Summary.xls"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -3107,11 +3103,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "Not researched.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2023-07-25",
+        "evidence": "DOE OE-417 annual summary: a Tennessee filing (216,000 customers) gives a restoration entry of 14:00 on 25 July 2023, a week after the event began. This is the filer's entry, not a utility completion statement.",
+        "url": "https://doe417.pnnl.gov/summaries/2023_Annual_Summary.xls"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -3409,11 +3405,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "Not researched.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2024-04-28",
+        "evidence": "DOE OE-417 annual summary: one of the three firm-load-shed filings for this area that evening (156 MW, begun 7:43 p.m.) gives a restoration entry of 9:41 p.m. on 28 April 2024; the other two (begun 7:26 p.m. and 7:43 p.m.) list restoration as N/A, so this covers only one filing.",
+        "url": "https://doe417.pnnl.gov/summaries/2024_Annual_Summary.xlsx"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -3716,11 +3712,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "Not researched.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "service_restored",
+        "date": "2024-09-06",
+        "evidence": "DOE OE-417 annual summary: the filer's restoration entry is 5:29 p.m. on 6 Sep 2024, about an hour and a half after the event began at 4:02 p.m.",
+        "url": "https://doe417.pnnl.gov/summaries/2024_Annual_Summary.xlsx"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -3779,11 +3775,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "Not researched; OE-417 restoration field is N/A.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2025-03-05",
+        "evidence": "By 5 March 2025, the report date, an article on Oncor's storm response gave a peak of more than 335,000 outages, about 80,000 customers restored and crews still working on the remaining 255,000; no restoration timeline was given. The page does not say whether these figures cover Oncor only or the whole storm footprint.",
+        "url": "https://www.tdworld.com/electric-utility-operations/news/55272546/oncor-responds-to-severe-storm-outages-with-assessment-and-restoration-efforts"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -4342,10 +4338,10 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
+        "research_status": "RESEARCHED_NO_PUBLIC_EVIDENCE",
         "kind": null,
         "date": null,
-        "evidence": "",
+        "evidence": "DOE situation updates give a shut-in snapshot on 28 September 2022 and later updates stop reporting offshore shut-ins. Silence is not a report of restart, and no restart report was found.",
         "url": null
       },
       "review": {
@@ -4472,11 +4468,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "DOE Update 5 gives only a combined Florida-Georgia figure (146,000 remaining on 1 Sep 2023); no Georgia-specific restoration figure was found.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2023-09-01",
+        "evidence": "DOE Update 5: 146,000 outages remained across Florida and Georgia combined at 3 p.m. EDT on 1 Sep 2023, down from a region-wide peak of 500,000 on 30 Aug. The report gives no Georgia-only figure and no completion statement.",
+        "url": "https://www.energy.gov/sites/default/files/2023-09/TLP-CLEAR_DOE%20Situation%20Report_Idalia_5_clean.pdf"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -5060,7 +5056,7 @@
         {
           "url": "https://en.wikipedia.org/wiki/January_13%E2%80%9316,_2024_North_American_winter_storm",
           "publisher": "Wikipedia",
-          "date": null,
+          "date": "2024-01-16",
           "language": "en",
           "source_role": "media",
           "opened": true
@@ -5312,7 +5308,7 @@
       "asset_class": "system_wide",
       "cause": "natural_hazard",
       "summary": "Hurricane Lala brushed the Island of Hawaii in mid-August 2026, and its winds caused large power outages across the state.",
-      "effect": "More than 220,000 customers were without power at one time before the morning of 16 Aug 2026 (state officials, via Reuters); 183,123 were still out statewide at 3:30 p.m. HST on 16 Aug (PowerOutage.us, via Reuters).",
+      "effect": "More than 220,000 customers without power on one island before the morning of 16 Aug (state officials, via Reuters); no statewide peak reported.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Clause 5: more than 220,000 customers out at one time in Hawaii (state officials).",
@@ -6733,7 +6729,7 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "full_restart",
+        "kind": "partial_restart",
         "date": "2024-11-04",
         "evidence": "Company reported Trains 1-3 back online on 4 Nov 2024.",
         "url": "https://pgjonline.com/news/2024/november/freeport-lng-reports-temporary-shutdown-at-texas-facility-due-to-power-fluctuation"
@@ -7193,7 +7189,7 @@
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
         "kind": "estimate",
-        "date": "2023-03-01",
+        "date": null,
         "evidence": "Estimate: Suncor expected the refinery to be offline until late March 2023.",
         "url": "https://globalnews.ca/news/9377194/suncor-extreme-weather-fire-shutdown-colorado-refinery/amp"
       },
@@ -8047,57 +8043,6 @@
       "hazard_name": null
     },
     {
-      "event_id": "us-2023-01-05-shoemaker-mine-fire",
-      "date": "2023-01-05",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "US-WV",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": "Shoemaker Mine",
-      "facility_name_local": null,
-      "operator": null,
-      "asset_class": "coal_mine",
-      "cause": "unknown",
-      "summary": "A fire led MSHA to order the Shoemaker coal mine in West Virginia closed and miners removed while the cause was investigated.",
-      "effect": "Mine temporarily shut by MSHA order; no production figure.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 6,
-      "threshold_basis": "Clause 6: coal mine shut by a fire.",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://wvmetronews.com/2023/01/07/marshall-county-mine-idled-by-fire/",
-          "publisher": "WV MetroNews",
-          "date": "2023-01-07",
-          "language": "en",
-          "source_role": "media",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "",
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-10-31",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "dual_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 2,
-        "disposition": "confirmed",
-        "source_count": 1,
-        "sources_opened_by_reviewer": 1,
-        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
-        "source_access": "at least one source read"
-      },
-      "hazard_name": null
-    },
-    {
       "event_id": "us-2023-06-23-north-antelope-rochelle-tornado",
       "date": "2023-06-23",
       "date_precision": "day",
@@ -8178,11 +8123,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "estimate",
         "date": null,
-        "evidence": "",
-        "url": null
+        "evidence": "Only an estimate found: in a Thursday statement reported on 30 March 2024 the operator said that, subject to conditions, it fully expected to resume production in the coming days; the article says the company does not know when production will resume. The same article reports a mine engineer's letter to MSHA saying production would cease after the current longwall panel and the mine would be sealed, and the company saying it would keep evaluating continued operation. No confirmed restart was found.",
+        "url": "https://www.observer-reporter.com/news/local-news/2024/mar/30/cumberland-mine-owner-says-methane-gas-caused-it-to-idle-operations/"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -8357,6 +8302,70 @@
           "evidence": "accept_with_correction",
           "safety": "accept_with_correction",
           "taxonomy": "accept"
+        }
+      },
+      "hazard_name": null
+    },
+    {
+      "event_id": "us-2022-07-08-osage-pipeline-oklahoma-rupture",
+      "date": "2022-07-08",
+      "date_precision": "day",
+      "date_end": "2022-07-17",
+      "region_code": "US-OK",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": "Osage Pipeline",
+      "facility_name_local": null,
+      "operator": "Osage Pipe Line Company, LLC",
+      "asset_class": "pipeline_oil",
+      "cause": "technical",
+      "summary": "The Osage Pipeline, a crude oil line running from Oklahoma to Kansas, failed in Oklahoma on 8 July 2022 and released crude oil; the operator shut the line down.",
+      "effect": "PHMSA reports the line was shut down on 8 July 2022, and that it resumed operation on 17 July 2022 under a 20% pressure reduction. The operator's incident report gives the restart as 18 July 2022.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 3,
+      "threshold_basis": "Clause 3: trunk crude oil pipeline shut down after a failure, per PHMSA's notice of proposed safety order.",
+      "capacity_affected": null,
+      "sources": [
+        {
+          "url": "https://primis.phmsa.dot.gov/enforcement-documents/42022055NOPSO/42022055NOPSO_Notice%20of%20Proposed%20Safety%20Order_08122022_(22-248385)_text.pdf",
+          "publisher": "PHMSA Office of Pipeline Safety",
+          "date": "2022-08-12",
+          "language": "en",
+          "source_role": "regulator",
+          "opened": true
+        },
+        {
+          "url": "https://portal.phmsa.dot.gov/PDFGenerator/getPublicReport/ODES_HazLiquid.pdf?rptid=Ny8l4t1b9EYDMEPDHLtHhA%3D%3D",
+          "publisher": "PHMSA (operator incident report)",
+          "date": null,
+          "language": "en",
+          "source_role": "regulator",
+          "opened": false
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restart",
+        "date": "2022-07-17",
+        "evidence": "PHMSA's notice says the pipeline resumed operation on 17 July 2022 under a 20% pressure reduction; the operator's final incident report gives the restart as 18 July 2022. A restart under a pressure restriction is recorded as a partial restart, not full reconstitution.",
+        "url": "https://primis.phmsa.dot.gov/enforcement-documents/42022055NOPSO/42022055NOPSO_Notice%20of%20Proposed%20Safety%20Order_08122022_(22-248385)_text.pdf"
+      },
+      "review": {
+        "reviewed_at": "2026-11-10",
+        "threshold_version": "2026-10-30.1",
+        "review_status": "blind_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
+        "source_count": 2,
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept_with_correction"
         }
       },
       "hazard_name": null

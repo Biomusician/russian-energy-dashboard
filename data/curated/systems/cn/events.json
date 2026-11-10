@@ -53,7 +53,7 @@
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
         "kind": "partial_restart",
-        "date": "2022-08-12",
+        "date": null,
         "evidence": "Sinopec 'has partially restarted operations' at the 320,000-bpd Shanghai refinery (QCintel headline and lead). Full restart date not found.",
         "url": "https://www.qcintel.com/article/sinopec-s-shanghai-refinery-partially-resumes-after-june-fire-report-7831.html"
       },
@@ -78,11 +78,11 @@
       "hazard_name": null
     },
     {
-      "event_id": "cn-2022-09-10-yunnan-aluminium-power-cuts",
-      "date": "2022-09-10",
+      "event_id": "cn-2022-08-15-sichuan-industrial-power-halt",
+      "date": "2022-08-15",
       "date_precision": "day",
       "date_end": null,
-      "region_code": "CN-YN",
+      "region_code": "CN-SC",
       "geography_precision": "admin1",
       "regions_affected": [],
       "facility_name": null,
@@ -90,57 +90,81 @@
       "operator": null,
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "A drought and lower-than-average rainfall cut Yunnan's hydropower generation. Electrolytic aluminium smelters were ordered to cut power use from 10 Sept 2022, and the cut was deepened from 15 Sept.",
-      "effect": "Caixin (10 Sept): smelters ordered to gradually reduce electricity use by 10% over five days starting Saturday (10 Sept). Caixin (15 Sept): the provincial government instructed firms to cut power use by 15-30% from Thursday (15 Sept), which industry insiders said would slash 800,000 t to 1.6 Mt of aluminium production capacity.",
+      "summary": "During a prolonged heatwave and drought that cut hydropower output, Sichuan's industry department and State Grid Sichuan jointly issued an emergency notice on 14 Aug 2022 ordering all industrial power users on the orderly-power-use list in 19 of the province's 21 prefecture-level units to halt production from 15 to 20 Aug, safety loads excepted.",
+      "effect": "Order text (The Paper, Jiemian): full production halt for all listed industrial users, including white-listed priority firms, 00:00 15 Aug to 24:00 20 Aug. AP (17 Aug): factories shut or cut output; timed power cuts of 2.5 to 3 hours were reported in one city. CGTN (18 Aug) described a provincial notice to some high-capacity enterprises, with a production halt from 14 to 20 Aug and about 7 million kW released for residential use. Jiemian: one listed chemicals firm expected about 35,000 t less urea. Al Jazeera (22 Aug): power rationing in southwestern China to continue until at least 25 Aug, according to local media and factories.",
       "inclusion_basis": "reported_effect",
-      "criterion_met": 4,
-      "threshold_basis": "Hydropower generation shortfall forced official industrial power curbs.",
+      "criterion_met": 5,
+      "threshold_basis": "Clause 5: grid-operator emergency notice (State Grid Sichuan, jointly with the provincial department) ordering an industrial load shed in 19 of the province's 21 prefecture-level units; also clause 4, a generation shortfall with timed cuts reported in one city.",
       "capacity_affected": {
-        "value": 1.6,
-        "unit": "million tonnes/year aluminium smelting capacity (upper estimate)",
-        "source_says": "expected to cut 800,000 to 1.6 million tons of aluminum production capacity, according to industry insiders (Caixin)"
+        "value": 19,
+        "unit": "prefecture-level units under an ordered full industrial production halt",
+        "source_says": "实施生产全停（保安负荷除外）"
       },
       "sources": [
         {
-          "url": "https://www.caixinglobal.com/2022-09-10/yunnan-aluminum-smelters-ordered-to-cut-electricity-use-by-10-amid-power-crunch-101938580.html",
-          "publisher": "Caixin Global",
-          "date": "2022-09-10",
+          "url": "https://www.thepaper.cn/newsDetail_forward_19461853",
+          "publisher": "澎湃新闻 (The Paper)",
+          "date": "2022-08-15",
+          "language": "zh",
+          "source_role": "media",
+          "opened": null
+        },
+        {
+          "url": "https://www.jiemian.com/article/7913737.html",
+          "publisher": "界面新闻 (Jiemian)",
+          "date": "2022-08-15",
+          "language": "zh",
+          "source_role": "media",
+          "opened": null
+        },
+        {
+          "url": "https://spectrumlocalnews.com/nys/buffalo/ap-top-news/2022/08/17/chinese-factories-close-as-drought-hurts-hydropower",
+          "publisher": "Associated Press (via Spectrum News)",
+          "date": "2022-08-17",
           "language": "en",
           "source_role": "media",
           "opened": null
         },
         {
-          "url": "https://www.caixinglobal.com/2022-09-15/yunnan-orders-aluminum-smelters-to-cut-power-use-again-101940389.html",
-          "publisher": "Caixin Global",
-          "date": "2022-09-15",
+          "url": "https://news.cgtn.com/news/2022-08-18/China-rations-power-amid-record-high-heat-wave-1cBeTnLWmYw/share_amp.html",
+          "publisher": "CGTN",
+          "date": "2022-08-18",
+          "language": "en",
+          "source_role": "media",
+          "opened": null
+        },
+        {
+          "url": "https://www.aljazeera.com/economy/2022/8/22/chinas-southwest-extends-power-curbs-amid-scorching-weather",
+          "publisher": "Al Jazeera",
+          "date": "2022-08-22",
           "language": "en",
           "source_role": "media",
           "opened": null
         }
       ],
       "recovery": {
-        "research_status": "RESEARCHED_NO_PUBLIC_EVIDENCE",
+        "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
         "evidence": null,
         "url": null
       },
       "review": {
-        "reviewed_at": "2026-11-03",
+        "reviewed_at": "2026-11-10",
         "threshold_version": "2026-10-30.1",
         "review_status": "blind_reviewed",
         "primary_review_complete": true,
         "independent_review_complete": true,
         "reviewer_count": 4,
         "disposition": "corrected",
-        "source_count": 2,
-        "sources_opened_by_reviewer": 2,
+        "source_count": 5,
+        "sources_opened_by_reviewer": 5,
         "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
         "source_access": "not recorded by the research lane",
         "roles": {
           "evidence": "accept_with_correction",
           "safety": "accept_with_correction",
-          "taxonomy": "accept"
+          "taxonomy": "accept_with_correction"
         }
       },
       "hazard_name": null
@@ -230,7 +254,7 @@
       "effect": "Cailian Press (23 Feb): all local coal mines halted production for hazard checks. Reuters via Kitco (9 May, citing a 24 Apr document it could not independently verify, and Mysteel): 32 open-pit mines in Inner Mongolia with 26.55 Mt of capacity halted, and 23.55 Mt of planned expansions paused.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 6,
-      "threshold_basis": "Coal-mine disaster followed by reported mine halts with stated capacity.",
+      "threshold_basis": "Coal-mine disaster followed by reported mine halts with stated capacity. No output reduction was reported; the capacity figure rests on a document Reuters could not verify.",
       "capacity_affected": {
         "value": 26.55,
         "unit": "million tonnes/year coal production capacity halted (32 open-pit mines)",
@@ -298,74 +322,6 @@
       "hazard_name": null
     },
     {
-      "event_id": "cn-2023-02-20-yunnan-aluminium-power-cuts-deepened",
-      "date": "2023-02-20",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "CN-YN",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": null,
-      "asset_class": "system_wide",
-      "cause": "natural_hazard",
-      "summary": "With the hydropower shortage continuing, Yunnan ordered electrolytic aluminium producers to cut power use further, extending the curbs imposed in September 2022.",
-      "effect": "Reuters (20 Feb 2023, citing Shanghai Securities News): producers told to bring power use to about 40-42% from the September level. Mysteel estimated the expanded rationing (about 1 GW) would cut about 740,000 t/yr of capacity. AlCircle (Jun 2023, citing an industry researcher): cumulative cuts reduced capacity by 1.65 Mt.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 4,
-      "threshold_basis": "Hydropower generation shortfall forced official industrial power curbs.",
-      "capacity_affected": {
-        "value": 740000,
-        "unit": "tonnes/year electrolytic aluminium capacity (this round)",
-        "source_says": "expanded rationing, about 1 million kilowatts, would cut annual capacity by about 740,000 tonnes (Mysteel, via Reuters)"
-      },
-      "sources": [
-        {
-          "url": "https://www.kitco.com/news/off-the-wire/2023-02-20/chinaaposs-yunnan-asks-aluminium-producers-further-cut-power-usage",
-          "publisher": "Kitco (Reuters)",
-          "date": "2023-02-20",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://www.alcircle.com/news/yunnan-to-improve-power-supply-to-aluminium-smelters-in-the-province-chinese-experts-95216",
-          "publisher": "AlCircle",
-          "date": "2023-06-14",
-          "language": "en",
-          "source_role": "industry",
-          "opened": null
-        }
-      ],
-      "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "estimate",
-        "date": "2023-06-13",
-        "evidence": "AlCircle (14 Jun 2023, relaying a 13 Jun international media report): smelters were reportedly allowed to recover 20% of paused capacity, with restarts expected in late June and further resumption depending on power supply; a smelter employee said the grid had verbally told them to prepare to restart. This is an expectation and an instruction, not an observed restart volume.",
-        "url": "https://www.alcircle.com/news/yunnan-to-improve-power-supply-to-aluminium-smelters-in-the-province-chinese-experts-95216"
-      },
-      "review": {
-        "reviewed_at": "2026-11-03",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 2,
-        "sources_opened_by_reviewer": 2,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "not recorded by the research lane",
-        "roles": {
-          "evidence": "accept",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
-    },
-    {
       "event_id": "cn-2023-07-28-typhoon-doksuri-quanzhou-outage",
       "date": "2023-07-28",
       "date_precision": "day",
@@ -425,7 +381,7 @@
       "event_id": "cn-2024-09-06-typhoon-yagi-hainan-outage",
       "date": "2024-09-06",
       "date_precision": "day",
-      "date_end": "2024-09-26",
+      "date_end": null,
       "region_code": "CN-HI",
       "geography_precision": "admin1",
       "regions_affected": [],
@@ -464,7 +420,7 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2024-09-26",
         "evidence": "截至9月26日，海南全省受影响的168万户中99.8%已恢复正常供电 (by 26 Sept, 99.8% of the 1.68M affected customers had normal supply restored). The grid aimed for full restoration before 1 Oct. This is service restoration, not physical reconstruction of the network.",
         "url": "https://www.thepaper.cn/newsDetail_forward_28901729"
@@ -520,9 +476,9 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2024-09-12",
-        "evidence": "Xinhua: 'power had been restored to more than 1 million households affected by Yagi' as of 20:00 on 12 Sept. No statement of 100% restoration was found.",
+        "evidence": "Xinhua: as of 20:00 on 12 Sept 2024, 'power had been restored to more than 1 million households affected by Yagi' in Guangdong. The page does not state that all affected customers were reconnected.",
         "url": "https://thestar.com.my/news/world/2024/09/13/china039s-typhoon-hit-regions-see-return-of-normal-life-work"
       },
       "review": {
@@ -739,11 +695,11 @@
         }
       ],
       "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "partial_restart",
-        "date": "2026-09-30",
-        "evidence": "Xinhua (21 Oct 2026): Shanxi September raw coal output was 78.826 Mt, a four-month high; more than 200 mines had completed rectification and resumed production. In mid-September NDRC, NEA and the National Mine Safety Administration issued a notice urging coal provinces and companies to advance resumption and reach design output safely. Return to pre-accident y/y output levels was not reported. The date is month-end of September, the month the output figure covers.",
-        "url": "https://www.news.cn/local/20261021/9809659061f64a40ba325dd7c4cbd6b8/c.html"
+        "research_status": "RESEARCHED_NO_PUBLIC_EVIDENCE",
+        "kind": null,
+        "date": null,
+        "evidence": "A province-wide report of mines resuming after rectification was read; it does not mention the accident mine or its operator. No restart report for this mine was found.",
+        "url": null
       },
       "review": {
         "reviewed_at": "2026-11-03",

@@ -28,6 +28,9 @@ export interface SimpleMapProps {
   onPick?: (id: string | null, props: Record<string, unknown> | null) => void;
   /** A filter on which features may be picked (e.g. only monitored countries). */
   pickable?: (props: Record<string, unknown>) => boolean;
+  /** Features drawn with a thick outline: a mark independent of fill colour. */
+  outlineFilter?: maplibregl.ExpressionSpecification;
+  onHover?: (props: Record<string, unknown> | null) => void;
   ariaLabel: string;
   attribution: string;
   onMap?: (m: maplibregl.Map | null) => void;
@@ -72,6 +75,10 @@ export default function SimpleMap(props: SimpleMapProps) {
       m.addLayer({ id: "sel", type: "line", source: "polys",
                    filter: ["==", ["get", latest.current.idProp], latest.current.selected ?? "\u0000"],
                    paint: { "line-color": "#2ad4ee", "line-width": 2 } });
+      if (latest.current.outlineFilter) {
+        m.addLayer({ id: "outline", type: "line", source: "polys", filter: latest.current.outlineFilter,
+                     paint: { "line-color": "#f4f7fb", "line-width": 2 } });
+      }
       latest.current.onMap?.(m);
     });
 
@@ -86,8 +93,9 @@ export default function SimpleMap(props: SimpleMapProps) {
       const p = e.features?.[0]?.properties as Record<string, unknown> | undefined;
       const ok = !!p && (!latest.current.pickable || latest.current.pickable(p));
       m.getCanvas().style.cursor = ok ? "pointer" : "";
+      latest.current.onHover?.(p ?? null);
     });
-    m.on("mouseleave", "fill", () => { m.getCanvas().style.cursor = ""; });
+    m.on("mouseleave", "fill", () => { m.getCanvas().style.cursor = ""; latest.current.onHover?.(null); });
 
     return () => {
       latest.current.onMap?.(null);
@@ -103,6 +111,13 @@ export default function SimpleMap(props: SimpleMapProps) {
     if (!m || !m.getLayer("sel")) return;
     m.setFilter("sel", ["==", ["get", props.idProp], props.selected ?? "\u0000"]);
   }, [props.selected, props.idProp]);
+
+  // The colour may change after load (a metric selector); the map is not recreated for it.
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !m.getLayer("fill")) return;
+    m.setPaintProperty("fill", "fill-color", props.fill as maplibregl.ExpressionSpecification);
+  }, [props.fill]);
 
   return <div ref={box} className="simple-map" role="region" aria-label={props.ariaLabel} />;
 }

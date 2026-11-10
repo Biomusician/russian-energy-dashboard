@@ -42,7 +42,7 @@ test.describe("global home", () => {
     // Totals for the five countries together, once, outside every card (iteration 17).
     const totals = page.getByRole("region", { name: "Country record, all five together" });
     await expect(totals).toContainText(`${m.corpus.records} reported disruptions in ${m.corpus.episodes} episodes`);
-    await expect(totals).toContainText(`${m.corpus.research_lanes_complete} of ${m.corpus.research_lanes}`);
+    await expect(totals).toContainText(`${m.corpus.research_lanes} lanes`);
     for (const s of m.systems) {
       await expect(page.getByRole("article", { name: s.name })).not.toContainText(String(m.corpus.records));
     }

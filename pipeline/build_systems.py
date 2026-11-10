@@ -24,7 +24,7 @@ WHAT IT DELIBERATELY DOES NOT DO.
 import datetime as dt
 import re
 
-from pipeline import geo, systems
+from pipeline import geo, global_context, systems
 from pipeline.config import ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, RAW, SECTORS
 from pipeline import outputs
 from pipeline.util import fetch, log, read_json, write_json
@@ -99,6 +99,19 @@ RESEARCH_KINDS = ("systematic", "targeted")
 RESEARCH_OUTCOME_KEYS = ("candidates", "records", "accepted", "insufficient_evidence", "rejected",
                          "duplicate", "out_of_scope", "held")
 RESEARCH_LANE_KEYS = ("lane", "source_family", "registry", "status", "reason", "covered_through")
+# Iteration 18: two independent dimensions replace the binary lane status (GLOBAL_METHODOLOGY,
+# "Research coverage vocabulary"). EXECUTION is what the analyst did; SOURCE WINDOW is what the
+# publisher has made available. "The publisher has not released 2026" and "we ran 2 of 90 searches"
+# were both "partial", and read the same. Earlier passes keep the status they were logged with:
+# re-describing them would be moving the goalposts.
+EXECUTION_STATES = ("not_started", "partial", "declared_search_complete", "enumerated_complete")
+SOURCE_WINDOW_STATES = ("current_through_end_date", "publisher_not_yet_released", "inaccessible",
+                        "no_census_exists", "rolling_archive_gap", "unknown")
+UNIVERSE_KINDS = ("census", "report_archive", "declared_query_set")
+RESEARCH_LANE_KEYS_V2 = ("lane", "source_family", "registry", "universe_kind", "execution", "source_window",
+                         "covered_through", "languages_required", "languages_executed", "queries_declared",
+                         "queries_run", "items_enumerated", "items_in_universe", "limitation", "finding",
+                         "carried_forward")
 # The window every country system covers. A systematic pass that starts later is a top-up: it can
 # never make the whole record "complete" (iteration 16, research red team).
 COVERAGE_START = "2022-01-01"
@@ -162,7 +175,9 @@ def validate_sources(system_id, doc, research_log):
             problems.append(f"{tag}: outcome values must be integer counts")
         lanes = p.get("lanes") or []
         for lane in lanes:
-            if set(lane) - set(RESEARCH_LANE_KEYS) or lane.get("status") not in RESEARCH_STATUSES:
+            if "execution" in lane:
+                problems.extend(f"{tag}: {x}" for x in lane_problems(lane, p.get("window")))
+            elif set(lane) - set(RESEARCH_LANE_KEYS) or lane.get("status") not in RESEARCH_STATUSES:
                 problems.append(f"{tag}: lane {lane.get('lane')!r} must hold only "
                                 f"{RESEARCH_LANE_KEYS} with a status in {RESEARCH_STATUSES}")
         if p.get("kind") == "systematic":
@@ -175,7 +190,7 @@ def validate_sources(system_id, doc, research_log):
                 problems.append(f"{tag}: a systematic pass names its plan document and commit")
             registry = {x["name"] for x in doc["sources"] if _in_use(x)}
             for lane in lanes:
-                if lane.get("status") == "partial" and not lane.get("reason"):
+                if "status" in lane and lane.get("status") == "partial" and not lane.get("reason"):
                     problems.append(f"{tag}: lane {lane.get('lane')!r} is partial without a reason")
                 # The lane completion contract (iteration 17): a lane says how far its universe was
                 # searched. Complete means searched to the end of the pass window; a source that
@@ -196,12 +211,95 @@ def validate_sources(system_id, doc, research_log):
                                     f"one not in use: {sorted(set(names) - registry)}")
             # Complete is a process claim: every declared lane executed. One skipped lane and the
             # pass is partial, however quiet the other lanes were.
-            if p.get("status") == "complete" and any(lane.get("status") != "complete" for lane in lanes):
+            if p.get("status") == "complete" and not all(_lane_done(lane) for lane in lanes):
                 problems.append(f"{tag}: complete, but a declared lane is not")
         elif p.get("status") == "complete":
             problems.append(f"{tag}: only a systematic pass can be complete")
     if problems:
         raise ValueError(f"system {system_id} sources: " + "; ".join(problems))
+
+
+def lane_problems(lane, window):
+    """The two-dimension lane contract (iteration 18). Each rule stops a lane reading as more
+    finished than it is: a query set is never a census, a blocked source is never searched, an
+    English-only run of a bilingual lane is never declared complete."""
+    name = lane.get("lane")
+    out = []
+    if set(lane) - set(RESEARCH_LANE_KEYS_V2):
+        out.append(f"lane {name!r} carries unexpected fields {sorted(set(lane) - set(RESEARCH_LANE_KEYS_V2))}")
+    ex, win, kind = lane.get("execution"), lane.get("source_window"), lane.get("universe_kind")
+    if ex not in EXECUTION_STATES:
+        out.append(f"lane {name!r}: execution {ex!r} is not one of {EXECUTION_STATES}")
+    if win not in SOURCE_WINDOW_STATES:
+        out.append(f"lane {name!r}: source_window {win!r} is not one of {SOURCE_WINDOW_STATES}")
+    if kind not in UNIVERSE_KINDS:
+        out.append(f"lane {name!r}: universe_kind {kind!r} is not one of {UNIVERSE_KINDS}")
+    required, executed = set(lane.get("languages_required") or []), set(lane.get("languages_executed") or [])
+    if not required:
+        out.append(f"lane {name!r} names no required language")
+    ran_all_languages = required <= executed
+    ct, end = lane.get("covered_through"), (window or [None, None])[1]
+    if ex == "enumerated_complete":
+        if kind == "declared_query_set":
+            out.append(f"lane {name!r}: a declared query set can never be enumerated_complete")
+        if win not in ("current_through_end_date", "publisher_not_yet_released"):
+            out.append(f"lane {name!r}: enumerated_complete with source_window {win!r}")
+        if not ran_all_languages:
+            out.append(f"lane {name!r}: enumerated_complete without its required languages")
+    if ex == "declared_search_complete":
+        if kind != "declared_query_set":
+            out.append(f"lane {name!r}: only a declared query set can be declared_search_complete")
+        if win != "no_census_exists":
+            out.append(f"lane {name!r}: a declared query set has no census, so its window is no_census_exists")
+        if not ran_all_languages:
+            out.append(f"lane {name!r}: declared_search_complete without its required languages")
+        qd, qr = lane.get("queries_declared"), lane.get("queries_run")
+        if not (isinstance(qd, int) and qd > 0 and isinstance(qr, int) and qr >= qd):
+            out.append(f"lane {name!r}: declared_search_complete needs every declared query run ({qr} of {qd})")
+    if win == "inaccessible" and ex in ("enumerated_complete", "declared_search_complete"):
+        out.append(f"lane {name!r}: a source that refused access was not searched")
+    if ex == "not_started" and (lane.get("queries_run") or lane.get("items_enumerated")):
+        out.append(f"lane {name!r}: not_started but records work done")
+    if ex in ("not_started", "partial") or win != "current_through_end_date":
+        if not lane.get("limitation"):
+            out.append(f"lane {name!r} states no limitation")
+    if ct is not None and end and ct > end:
+        out.append(f"lane {name!r}: covered_through {ct} is after the window end")
+    if win == "current_through_end_date" and ex == "enumerated_complete" and ct != end:
+        out.append(f"lane {name!r}: current through the end date but covered_through is {ct}")
+    if win == "publisher_not_yet_released" and (ct is None or (end and ct >= end)):
+        out.append(f"lane {name!r}: publisher_not_yet_released needs a covered_through before the window end")
+    return out
+
+
+def _lane_done(lane):
+    """Every declared lane executed as far as the public evidence permits. Blocked or unknown
+    sources do not qualify, whatever the analyst did."""
+    if "execution" in lane:
+        return (lane["execution"] in ("enumerated_complete", "declared_search_complete")
+                and lane["source_window"] not in ("inaccessible", "unknown"))
+    return lane.get("status") == "complete"
+
+
+# The state a reader is told, computed from the two dimensions, never stored or typed. Order
+# matters: a blocked source reads as blocked however much of the rest was done.
+def lane_summary_state(lane):
+    if "execution" not in lane:
+        return "legacy"
+    ex, win = lane["execution"], lane["source_window"]
+    if ex == "not_started":
+        return "blocked_by_source" if win == "inaccessible" else "not_started"
+    if win == "inaccessible":
+        return "blocked_by_source"
+    if ex == "enumerated_complete":
+        return "current_through_latest_release" if win == "publisher_not_yet_released" else "universe_searched"
+    if ex == "declared_search_complete":
+        return "declared_query_set_run"
+    return "partially_searched"
+
+
+LANE_SUMMARY_STATES = ("universe_searched", "current_through_latest_release", "declared_query_set_run",
+                       "partially_searched", "blocked_by_source", "not_started", "legacy")
 
 
 def research_freshness(research_log, kind="systematic"):
@@ -215,12 +313,17 @@ def research_freshness(research_log, kind="systematic"):
     due = None
     completeness = "never_systematic"
     lanes = []
+    summary = {}
     if last:
         due = (dt.date.fromisoformat(last["date"]) + dt.timedelta(days=RESEARCH_CADENCE_DAYS)).isoformat()
         lanes = last.get("lanes") or []
         # A complete top-up over a later window does not complete the record from 2022.
         covers = last["window"][0] <= COVERAGE_START
         completeness = "complete" if last["status"] == "complete" and covers else "partial"
+        summary = {}
+        for lane in lanes:
+            s = lane_summary_state(lane)
+            summary[s] = summary.get(s, 0) + 1
         # A partial pass does not reset the clock: its unfinished lanes are owed now (analytics
         # red team: every country read "next due" a year out with 0 of N lanes complete).
         if completeness != "complete":
@@ -230,14 +333,19 @@ def research_freshness(research_log, kind="systematic"):
         "coverage_window": last["window"] if last else None,
         "covers_full_window": bool(last) and last["window"][0] <= COVERAGE_START,
         "lanes_declared": len(lanes),
-        "lanes_complete": sum(1 for x in lanes if x.get("status") == "complete"),
+        "lanes_complete": sum(1 for x in lanes if _lane_done(x)),
+        # Not a percentage, on purpose: a lane waiting on a publisher and a lane that ran 2 of 90
+        # searches must not add up to one number.
+        "lane_states": summary,
+        "first_systematic_pass": min((p["date"] for p in systematic), default=None),
         "completeness": completeness,
         "research_cadence_days": RESEARCH_CADENCE_DAYS,
         "next_due": due,
         "note": ("Research coverage describes the event search, not the sources: a country's sources "
-                 "can all be current while its search is incomplete, and a complete search can rest "
-                 "on a source whose own data is old. Complete means every declared source lane was "
-                 "executed over the window, not that nothing else happened."),
+                 "can all be current while its search is unfinished, and a finished search can rest "
+                 "on a source whose own data is old. A fully executed search procedure is not "
+                 "complete knowledge: it means the declared sources were searched, not that nothing "
+                 "else happened."),
     }
 
 
@@ -274,7 +382,10 @@ STATUS_WORDING = re.compile(
     r"restart|resum|reopen|back (online|in service)|returned to|recover(ed|y)|restor|"
     r"still (shut|offline|halted|closed|down)|remain(s|ed)? (shut|offline|halted|closed)|"
     r"operating at|running at|operat(ing|ion) at \d|postpon|planned restart|"
-    r"not (yet )?resumed|had not resumed|knock-on|cancel|expected|extended",
+    r"not (yet )?resumed|had not resumed|knock-on|cancel|expected|extended|"
+    # Arabic: restart, resumption, repair, return to service. The English-only check let Arabic
+    # addresses through unread (iteration 18, Saudi safety audit).
+    r"استئناف|إعادة (ال)?تشغيل|إصلاح|عودة (ال)?إنتاج|عاد إلى العمل",
     re.I)
 
 
@@ -335,6 +446,90 @@ def source_health(events):
                  "source is not evidence that it did not. Nothing here is comparable across "
                  "countries and nothing here enters a number."),
     }
+
+
+# Normalised source roles for reporting-environment transparency (iteration 18). A role a lane
+# wrote maps to one family; an unmapped role stays visible as "other" rather than being guessed.
+SOURCE_FAMILY_OF_ROLE = {"government": "government_news", "official": "government_news", "regulator": "regulator",
+                         "operator": "company_operator", "dataset": "structured_dataset",
+                         "industry": "specialist_media", "aggregator": "specialist_media",
+                         "statistics": "national_statistics", "system_operator": "system_operator"}
+SOURCE_FAMILY_LABEL = {"national_statistics": "National statistics", "regulator": "Regulator",
+                       "system_operator": "System operator", "company_operator": "Company or operator",
+                       "government_news": "Government or government news", "structured_dataset": "Structured dataset",
+                       "international_media": "International media", "national_media": "National media",
+                       "specialist_media": "Specialist media", "other": "Other"}
+INTERNATIONAL_PUBLISHERS = ("reuters", "bloomberg", "associated press", "ap news", "afp", "bbc", "financial times",
+                            "al jazeera", "wall street journal", "new york times", "guardian", "cnn")
+
+
+def _source_family(s):
+    role = s.get("source_role")
+    if role == "media":
+        pub = (s.get("publisher") or "").lower()
+        return "international_media" if any(p in pub for p in INTERNATIONAL_PUBLISHERS) else "national_media"
+    return SOURCE_FAMILY_OF_ROLE.get(role, "other")
+
+
+def source_families(doc, events):
+    """Which families of source appear behind this country's events. A set, not a score."""
+    present = sorted({_source_family(s) for e in events for s in e["sources"]})
+    return {"present": present, "labels": {k: SOURCE_FAMILY_LABEL[k] for k in present},
+            "note": "Which kinds of source the published events cite. Shows the reporting environment; it is not a quality score."}
+
+
+def citation_quality(system_id, events):
+    """How the citations behind one country's events stand. Inside a country only: never summed,
+    never set beside another's, and deliberately not reduced to one number. A dated publication
+    is the date the record's researcher or the page itself states; it is never inferred from an
+    address or a retrieval date."""
+    cites = [s for e in events for s in e["sources"]]
+    languages, precision = {}, {}
+    for s in cites:
+        lang = s.get("language") or "not recorded"
+        languages[lang] = languages.get(lang, 0) + 1
+    for e in events:
+        precision[e["date_precision"]] = precision.get(e["date_precision"], 0) + 1
+    health = read_json(LINK_HEALTH) if LINK_HEALTH.exists() else {}
+    return {
+        "citations": len(cites),
+        "with_publication_date": sum(1 for s in cites if s.get("date")),
+        "languages": dict(sorted(languages.items())),
+        "event_date_precision": dict(sorted(precision.items())),
+        "link_check": (health.get("by_system") or {}).get(system_id),
+        "link_check_date": health.get("checked"),
+        "link_check_note": health.get("note"),
+    }
+
+
+def recovery_coverage(events):
+    """Four separate answers, and the withheld state apart from them (iteration 18). No modelled
+    fallback exists: an event with no report says so, and never ages out as recovered."""
+    out = {"observed": 0, "estimate": 0, "other_statement": 0, "researched_no_public_evidence": 0,
+           "not_researched": 0, "withheld_active_campaign": 0}
+    by_class = {}
+    for e in events:
+        r = e["recovery"]
+        if r["research_status"] == WITHHELD:
+            k = "withheld_active_campaign"
+        elif r["research_status"] == "NOT_YET_RESEARCHED":
+            k = "not_researched"
+        elif r["research_status"] == "RESEARCHED_NO_PUBLIC_EVIDENCE":
+            k = "researched_no_public_evidence"
+        elif r["kind"] in OBSERVED_RECOVERY_KINDS:
+            k = "observed"
+        elif r["kind"] == "estimate":
+            k = "estimate"
+        else:
+            k = "other_statement"
+        out[k] += 1
+        if k == "not_researched":
+            by_class[e["asset_class"]] = by_class.get(e["asset_class"], 0) + 1
+    # Aggregated research priorities only: named facilities never appear in a queue on the site.
+    out["unresearched_by_class"] = dict(sorted(by_class.items()))
+    out["policy"] = ("Observed recovery, or a sourced estimate labelled as an estimate. Nothing is modelled, and an "
+                     "event never ages out as recovered.")
+    return out
 
 
 def load_admin1():
@@ -455,6 +650,9 @@ def review_problems(e, grandfathered):
         if r.get("disposition") not in REVIEW_DISPOSITIONS:
             out.append(f"{eid}: review disposition {r.get('disposition')!r} is not one of {REVIEW_DISPOSITIONS}")
     return out
+
+
+LINK_HEALTH = SYSTEMS_CURATED / "source_link_health.json"
 
 
 def load_campaigns():
@@ -937,6 +1135,9 @@ def build_system(system_id, admin1, admin0, as_of):
         "review_freshness_days": doc.get("review_freshness_days", 120),
         "research_log": research_log,
         "research_freshness": research_freshness(research_log),
+        "recovery_coverage": recovery_coverage(events),
+        "source_families": source_families(doc, events),
+        "citation_quality": citation_quality(system_id, events),
         "stale_policies": STALE_POLICIES,
         "onboarding_gate": onboarding_gate(doc, events, profile, research_log),
         "audit_docs": doc["audit_docs"],
@@ -999,7 +1200,8 @@ def build_world(admin1, admin0):
                           "status": "occupied" if crimea else "normal",
                           "note": ("Internationally recognised as Ukraine; occupied by Russia. "
                                    "Monitored as a separate unit within the theatre.")
-                          if crimea else None},
+                          if crimea else (None if p.get("name") in theatre_names else
+                                          "Part of Russia outside the monitored area. National figures cover the whole country.")},
                       "geometry": geo.round_coords(g, 2)})
     return {"type": "FeatureCollection", "features": feats}
 
@@ -1011,12 +1213,16 @@ def corpus_totals(country_payloads):
     list here would be a ranking. Lanes are counted from each country's newest systematic pass.
     """
     lanes_done = lanes_all = 0
+    states = {}
     for p in country_payloads.values():
         passes = [x for x in p["research_log"]["passes"] if x["kind"] == "systematic"]
         if passes:
             newest = max(passes, key=lambda x: x["date"])
             lanes_all += len(newest.get("lanes") or [])
-            lanes_done += sum(1 for l in newest.get("lanes") or [] if l["status"] == "complete")
+            lanes_done += sum(1 for l in newest.get("lanes") or [] if _lane_done(l))
+            for l in newest.get("lanes") or []:
+                s = lane_summary_state(l)
+                states[s] = states.get(s, 0) + 1
     tot = lambda f: sum(f(p) for p in country_payloads.values())  # noqa: E731
     return {
         "countries": len(country_payloads),
@@ -1033,6 +1239,7 @@ def corpus_totals(country_payloads):
             n for k, n in p["event_summary"]["recovery_kinds"].items() if k in OBSERVED_RECOVERY_KINDS)),
         "records_with_recovery_estimate_only": tot(lambda p: p["event_summary"]["recovery_kinds"].get("estimate", 0)),
         "research_lanes_complete": lanes_done,
+        "research_lane_states": dict(sorted(states.items())),
         "research_lanes": lanes_all,
         "note": ("Totals for the five country systems together. Counts what was reported, found and "
                  "reviewed, not what occurred; reporting environments differ, so no share of these "
@@ -1080,12 +1287,146 @@ def build_manifest(country_payloads, theatre_snapshot, build_time):
     }
 
 
+# --- the two cross-system artifacts of iteration 18 ------------------------------------------------
+
+RECENT_EPISODES = 40
+RECOVERY_MEDIAN_MIN_N = 5     # a prominent summary needs at least this many cases
+RECOVERY_RANGE_MIN_N = 3      # below this, cases are listed and no statistic is computed
+
+
+def _days(a, b):
+    return (dt.date.fromisoformat(b) - dt.date.fromisoformat(a)).days
+
+
+def recent_evidence(all_events):
+    """The most recent qualifying episodes across the five countries, newest first.
+
+    A chronological list and nothing else: no severity sort, no impact order, no count per
+    country. An active campaign's record names its region, class and date, and carries no effect
+    text at all, so this cannot become a running tally of what an attack campaign achieved. The
+    theatre is not included: its record has its own page and embargo.
+    """
+    labels = {**ASSET_CLASSES, **TAXONOMY_EXTENSIONS["asset_classes"]}
+    causes = {**DISRUPTION_CAUSES, **TAXONOMY_EXTENSIONS["causes"]}
+    items = []
+    for sid, (name, events, episodes) in all_events.items():
+        by_id = {e["event_id"]: e for e in events}
+        for ep in episodes:
+            members = [by_id[x] for x in ep["event_ids"] if x in by_id]
+            if not members:
+                continue
+            first = members[0]
+            rows = [{"date": m["date"], "date_precision": m["date_precision"],
+                     "region": m.get("region_name") or ("Multiple regions" if m["regions_affected"] else "National"),
+                     "effect": None if m.get("publication") else m.get("effect"),
+                     "withheld": bool(m.get("publication"))} for m in members]
+            items.append({
+                "system_id": sid, "country": name, "episode_id": ep["episode_id"],
+                "episode_name": ep["name"] if ep["records"] > 1 else None, "basis": ep["basis"],
+                "records": ep["records"], "first_date": ep["first_date"], "last_date": ep["last_date"],
+                "date_precision": first["date_precision"],
+                "classes": sorted({labels.get(m["asset_class"], m["asset_class"]) for m in members}),
+                "causes": sorted({causes.get(m["cause"], m["cause"]) for m in members}),
+                "members": rows[:8], "more_members": max(0, len(rows) - 8),
+            })
+    items.sort(key=lambda x: (x["last_date"], x["system_id"], x["episode_id"]), reverse=True)
+    return {
+        "order": "newest first; never by size or severity",
+        "scope": "The five country systems. Qualifying records only, grouped by episode. Precision is first-level region.",
+        "note": ("What was publicly reported, found and reviewed: counts here are not rates of disruption and "
+                 "are not comparable between countries. Events can date back to 2022, but systematic research "
+                 "for these systems began in 2026, so older records were found later, not monitored as they happened."),
+        "episodes": items[:RECENT_EPISODES],
+    }
+
+
+def recovery_by_class(all_events):
+    """Observed recovery durations by class and kind, five countries together. No per-country
+    figure exists here: a country recovery ranking would be a comparison the data cannot support."""
+    cases = {}
+    labels = {**ASSET_CLASSES, **TAXONOMY_EXTENSIONS["asset_classes"]}
+    for _, events, _ in all_events.values():
+        for e in events:
+            r = e["recovery"]
+            if r["research_status"] != "EVIDENCE_FOUND" or r["kind"] not in OBSERVED_RECOVERY_KINDS or not r["date"]:
+                continue
+            if e["date_precision"] != "day":
+                continue
+            d = _days(e["date"], r["date"])
+            if d >= 0:
+                cases.setdefault((e["asset_class"], r["kind"]), []).append(d)
+    out = []
+    for (cls, kind), days in sorted(cases.items()):
+        days = sorted(days)
+        row = {"class": cls, "class_label": labels.get(cls, cls), "kind": kind, "n": len(days)}
+        if len(days) < RECOVERY_RANGE_MIN_N:
+            row["cases_days"] = days
+        else:
+            row["range_days"] = [days[0], days[-1]]
+            if len(days) >= RECOVERY_MEDIAN_MIN_N:
+                mid = len(days) // 2
+                row["median_days"] = days[mid] if len(days) % 2 else (days[mid - 1] + days[mid]) / 2
+        out.append(row)
+    return {"rows": out, "note": ("Days from the event to the reported recovery, for records where a dated report exists. "
+                                  "Fewer than three cases are listed, three or four give a range, five or more a median. "
+                                  "These describe what was reported and are not a forecast or a country comparison.")}
+
+
+def data_quality(country_payloads, all_events, context):
+    """Research process and data vintage across the systems, in fixed alphabetical order.
+
+    Research-process status may sit side by side; disruption counts may not. So this file holds
+    lane states and source dates and no event, record or episode count per country.
+    """
+    rows = []
+    for sid in systems.COUNTRY_SYSTEMS:
+        p = country_payloads[sid]
+        passes = [x for x in p["research_log"]["passes"] if x["kind"] == "systematic"]
+        newest = max(passes, key=lambda x: x["date"]) if passes else None
+        lanes = []
+        for l in (newest or {}).get("lanes") or []:
+            lanes.append({k: l.get(k) for k in ("lane", "source_family", "execution", "source_window", "covered_through",
+                                                "languages_required", "languages_executed", "limitation", "finding")}
+                         | {"state": lane_summary_state(l)})
+        used = [s for s in p["sources"] if _in_use(s)]
+        rows.append({
+            "system_id": sid, "name": p["name"],
+            "reporting_environment": p["reporting_environment"],
+            "last_systematic_pass": newest["date"] if newest else None,
+            "first_systematic_pass": p["research_freshness"]["first_systematic_pass"],
+            "lane_states": p["research_freshness"]["lane_states"],
+            "lanes": lanes,
+            "source_families": p["source_families"]["labels"],
+            "sources_checked": [{"name": s["name"], "last_checked": s.get("last_checked"),
+                                 "stale_after_days": s.get("stale_after_days")} for s in used],
+        })
+    return {
+        "note": ("Process and vintage only. No disruption count, score or rank appears here, because reporting "
+                 "environments differ too much for those to be compared between countries."),
+        "context_vintage": {"source": context["source"]["name"], "url": context["source"]["url"],
+                            "release": context["source"]["release"], "retrieved": context["source"]["retrieved"],
+                            "comparison_year": context["comparison_year"], "update_cadence": context["source"]["update_cadence"],
+                            "countries": len(context["countries"]),
+                            "note": "National energy statistics. Separate from how recently each country's incident record was researched."},
+        "systems": rows,
+        "recovery_by_class": recovery_by_class(all_events),
+    }
+
+
 def build(theatre_snapshot):
     as_of = theatre_snapshot["as_of"]
     admin1, admin0 = load_admin1(), load_admin0()
     payloads = {sid: build_system(sid, admin1, admin0, as_of) for sid in systems.COUNTRY_SYSTEMS}
     (outputs.processed() / "global").mkdir(parents=True, exist_ok=True)
-    write_json(outputs.processed() / "global" / "world.geojson", build_world(admin1, admin0))
+    world = build_world(admin1, admin0)
+    write_json(outputs.processed() / "global" / "world.geojson", world)
+    context = global_context.build(world, admin0)
+    all_events = {}
+    for sid in systems.COUNTRY_SYSTEMS:
+        ev = read_json(outputs.processed() / systems.root(sid) / "events.json")
+        all_events[sid] = (payloads[sid]["name"], ev["events"], ev["episodes"])
+    write_json(outputs.processed() / "global" / "recent_evidence.json", recent_evidence(all_events))
+    write_json(outputs.processed() / "global" / "data_quality.json", data_quality(payloads, all_events, context))
     build_time = theatre_snapshot.get("build_time") or dt.datetime.now(dt.timezone.utc).isoformat()
     write_json(outputs.processed() / "global" / "manifest.json",
                build_manifest(payloads, theatre_snapshot, build_time), indent=2)

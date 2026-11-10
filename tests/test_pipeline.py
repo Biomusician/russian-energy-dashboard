@@ -8045,16 +8045,19 @@ def test_the_corpus_totals_are_sums_and_never_per_country():
     assert c["records_with_observed_recovery"] == sum(
         1 for e in events if e["recovery"]["kind"] in ("full_restart", "partial_restart", "service_restored", "partial_restoration"))
     assert c["records_with_recovery_estimate_only"] == sum(1 for e in events if e["recovery"]["kind"] == "estimate")
+    from pipeline.build_systems import LANE_SUMMARY_STATES as build_lane_states, _lane_done
     done = total = 0
     for p in pay.values():
         sysm = [x for x in p["research_log"]["passes"] if x["kind"] == "systematic"]
         newest = max(sysm, key=lambda x: x["date"])
         total += len(newest["lanes"])
-        done += sum(1 for lane in newest["lanes"] if lane["status"] == "complete" and lane.get("covered_through") == newest["window"][1])
+        done += sum(1 for lane in newest["lanes"] if _lane_done(lane))
     assert (c["research_lanes_complete"], c["research_lanes"]) == (done, total)
     assert "records_with_status_withheld" not in c
     # Scalars only: a dict or list keyed by country would be a league table.
-    assert all(isinstance(v, (int, str)) for v in c.values()), c
+    # research_lane_states is keyed by lane state, never by country.
+    assert all(isinstance(v, (int, str)) for k, v in c.items() if k != "research_lane_states"), c
+    assert set(c["research_lane_states"]) <= set(build_lane_states), c["research_lane_states"]
     assert not (set(c) & {s for s in systems.COUNTRY_SYSTEMS})
 
 

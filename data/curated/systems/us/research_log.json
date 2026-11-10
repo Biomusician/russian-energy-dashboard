@@ -300,6 +300,237 @@
         "document": "docs/countries/US_LANE_COMPLETION_17.md",
         "commit": "a7f3a36"
       }
+    },
+    {
+      "date": "2026-11-10",
+      "by": "iteration-18 research pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-10"
+      ],
+      "scope": "inclusion clauses 1-7 as written; lanes and queries declared before searching (docs/countries/US_LANE_PASS_18.md); every published record reviewed blind by three independent roles and confirmed on its final text",
+      "status": "partial",
+      "status_reason": "4 of 9 lanes executed as far as declared; the rest are stated per lane",
+      "outcome": {
+        "candidates": 29,
+        "accepted": 1,
+        "rejected": 18,
+        "duplicate": 1,
+        "held": 6,
+        "out_of_scope": 3
+      },
+      "plan": {
+        "document": "docs/countries/US_LANE_PASS_18.md",
+        "commit": "1a793d5"
+      },
+      "lanes": [
+        {
+          "lane": "G1",
+          "source_family": "DOE Form OE-417 electric emergency incident and disturbance annual summaries, doe417.pnnl.gov/summaries (the DOE-417 portal's 'Annual Summaries Archives').",
+          "registry": [
+            "DOE OE-417 electric disturbance reports and annual summaries"
+          ],
+          "universe_kind": "census",
+          "execution": "enumerated_complete",
+          "source_window": "publisher_not_yet_released",
+          "covered_through": "2025-12-31",
+          "languages_required": [
+            "en"
+          ],
+          "languages_executed": [
+            "en"
+          ],
+          "queries_declared": null,
+          "queries_run": null,
+          "items_enumerated": 1786,
+          "items_in_universe": 1786,
+          "finding": "DOE publishes OE-417 rows only as annual summaries; the 2026 rows may not appear until 2027.",
+          "limitation": "DOE has published no 2026 OE-417 file as of 2026-11-10 (the three 2026 file names return the portal's HTML shell; server Last-Modified is still 2026-10-08), so 2026-01-01 to 2026-11-10 cannot be enumerated from this source. The execution value restates iteration 17's finding in the two-dimension vocabulary (every published row read; the gap is the publisher's); it is not new coverage, and the 2025 file was verified by size and date header, not re-read.",
+          "carried_forward": false
+        },
+        {
+          "lane": "G2",
+          "source_family": "NERC event-analysis reports page and NERC State of Reliability (SOR) page, nerc.com; FERC/NERC joint inquiry and review reports (ferc.gov major-event pages).",
+          "registry": [
+            "NERC State of Reliability and event analyses; FERC inquiries"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "inaccessible",
+          "covered_through": "2025-12-31",
+          "languages_required": [
+            "en"
+          ],
+          "languages_executed": [
+            "en"
+          ],
+          "queries_declared": null,
+          "queries_run": null,
+          "items_enumerated": 14,
+          "finding": "NERC's listing pages render their document lists from links present in the page source; a text-only reader returns an empty page, so the list must be read from the source.",
+          "limitation": "ferc.gov refused access again (HTTP 403), so FERC's own major-event pages, including any review of the 2026 winter storms, remain unread. NERC has published nothing since 2026-11-03, no event-analysis report on a 2026 event, and no State of Reliability report covering 2026.",
+          "carried_forward": false
+        },
+        {
+          "lane": "H1",
+          "source_family": "DOE CESER emergency situation reports",
+          "registry": [
+            "DOE CESER emergency situation reports"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "current_through_end_date",
+          "covered_through": "2026-11-10",
+          "languages_required": [
+            "en"
+          ],
+          "languages_executed": [
+            "en"
+          ],
+          "queries_declared": null,
+          "queries_run": null,
+          "items_enumerated": 0,
+          "items_in_universe": 0,
+          "finding": "DOE has published no public situation report for any 2025 or 2026 event, including Isaias 2026; the listing is not a record of DOE responses.",
+          "limitation": "No DOE situation report was released 2026-10-31 to 2026-11-10: the hurricane hub's newest series is still Milton (2024), the extreme-weather hub lists only February 2021, and the CESER news listing shows one item in the window (7 Nov 2026, renewal of two Puerto Rico 202(c) orders: a territory, an order and no reported outage; not a candidate). Marked partial, not enumerated_complete, only because iteration 16 listed but did not open every report of the Ian, Helene and Fiona series; nothing from this pass is unread.",
+          "carried_forward": false
+        },
+        {
+          "lane": "H2",
+          "source_family": "NOAA National Hurricane Center Tropical Cyclone Reports (TCRs), read from NHC's own season indexes for the Atlantic and eastern Pacific basins, 2022-2026.",
+          "registry": [
+            "NOAA National Hurricane Center summaries and Tropical Cyclone Reports"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "enumerated_complete",
+          "source_window": "publisher_not_yet_released",
+          "covered_through": "2026-08-26",
+          "languages_required": [
+            "en"
+          ],
+          "languages_executed": [
+            "en"
+          ],
+          "queries_declared": null,
+          "queries_run": null,
+          "items_enumerated": 79,
+          "items_in_universe": 79,
+          "finding": "The Arthur report documents rain, flooding and tornado damage in Texas, Louisiana and the Southeast but gives no outage count, shut-in volume or facility effect, so it yields no candidate. The execution value restates iteration 17's result in the two-dimension vocabulary.",
+          "limitation": "NHC has not published reports for Atlantic Dolly, Edouard, Fay, Gonzalo, Hanna, Isaias and Josephine, nor for eastern-Pacific Douglas, Elida, Fausto, Karina, Lowell, Marie and the storms after Norbert. Of the four US-affecting storms that were unpublished on 2026-11-03, one (Arthur) is now out; Edouard, Isaias and Lowell are still unpublished. Josephine (21-22 Oct 2026) was not assessed for US effects because no search could be run.",
+          "carried_forward": false
+        },
+        {
+          "lane": "U1",
+          "source_family": "BSEE Gulf storm shut-in statistics releases (bsee.gov newsroom); EIA Today in Energy articles on weather-driven production shut-ins and freeze-offs (eia.gov/tod",
+          "registry": [
+            "BSEE storm shut-in releases; EIA Today in Energy",
+            "EIA Refinery Capacity Report; EIA-860M; Monthly Energy Review"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "inaccessible",
+          "covered_through": null,
+          "languages_required": [
+            "en"
+          ],
+          "languages_executed": [
+            "en"
+          ],
+          "queries_declared": null,
+          "queries_run": null,
+          "finding": "BSEE's Data Center (data.bsee.gov) answers ordinary requests where the newsroom does not, but it holds no storm statistics. Deriving shut-ins from its monthly production series would be an inference, not a reported effect, and was not attempted.",
+          "limitation": "BSEE's newsroom refused access for the third pass running, so its storm shut-in releases are unenumerated; a release for a smaller storm (Alberto 2024; Arthur, Bertha, Edouard, Josephine 2026) could be missing. The public alternatives opened give no new shut-in event since 2026-11-03 and cannot show that BSEE issued none.",
+          "carried_forward": false
+        },
+        {
+          "lane": "P1",
+          "source_family": "PHMSA pipeline enforcement raw data file (all Corrective Action Order cases)",
+          "registry": [
+            "PHMSA incident data and corrective action orders"
+          ],
+          "universe_kind": "census",
+          "execution": "partial",
+          "source_window": "inaccessible",
+          "covered_through": "2026-11-03",
+          "languages_required": [
+            "en"
+          ],
+          "languages_executed": [
+            "en"
+          ],
+          "queries_declared": null,
+          "queries_run": null,
+          "items_enumerated": 30,
+          "finding": "PHMSA publishes no incident CSV, API or bulk file outside phmsa.dot.gov that is reachable by ordinary access. The primis enforcement site does publish an incident-linked case list, and it surfaced trunk-line shutdowns handled by safety order rather than corrective action order, a class the corrective-action-order census cannot see.",
+          "limitation": "The incident data files, the only complete list of reportable pipeline incidents, are still unread: phmsa.dot.gov refuses the landing pages and the zip, and DOT's open-data portal only links back to them. A trunk-line shutdown that drew neither a corrective action order nor any other enforcement case is therefore invisible to this lane.",
+          "carried_forward": false
+        },
+        {
+          "lane": "L1",
+          "source_family": "Per-terminal web query for unplanned LNG export terminal shutdowns",
+          "registry": [
+            "US LNG terminal reporting (operators, EIA, FERC)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "no_census_exists",
+          "covered_through": null,
+          "languages_required": [
+            "en"
+          ],
+          "languages_executed": [
+            "en"
+          ],
+          "queries_declared": 90,
+          "queries_run": 30,
+          "finding": "Cameron, 2022-2026: the ten queries returned planned maintenance (2022, 2024, 2025, 2026) and one January 2024 freeze cargo cancellation with no reported train shutdown. One unverified lead remains: a search summary, with no attributable page, said all three Cameron trains shut unexpectedly on 2025-10-27; it is held, not accepted. Cove Point, 2022-2026: every plant shutdown the 10 queries surfaced is the scheduled autumn maintenance outage (excluded as planned), each year. The only unplanned items are a 14 June 2022 trip recorded in a PHMSA order with no stated effect, and a July 2023 feed gas reduction downstream of the Columbia Line VB rupture already in the corpus. A 2025 PHMSA proposed safety order on minor leaks states no shutdown. Result snippets from RBN and PipeRiv were not opened; RBN weekly reports are subscriber content.",
+          "limitation": "Three of nine terminals were searched (Sabine Pass, Cameron, Cove Point); twelve queries for terminals not yet operating in the window were not applicable. The rest were not run because the search limit was reached.",
+          "carried_forward": false
+        },
+        {
+          "lane": "R1",
+          "source_family": "CSB investigations list; year-by-year structured web query (refinery and gas-processing shutdowns)",
+          "registry": [
+            "US Chemical Safety Board investigations; refinery and gas-processing reporting"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "declared_search_complete",
+          "source_window": "no_census_exists",
+          "covered_through": "2026-11-03",
+          "languages_required": [
+            "en"
+          ],
+          "languages_executed": [
+            "en"
+          ],
+          "queries_declared": 15,
+          "queries_run": 15,
+          "limitation": "The declared set ran through 2026-11-03. An additional 2026 re-check query could not be run in this pass.",
+          "carried_forward": false
+        },
+        {
+          "lane": "C1",
+          "source_family": "Year-by-year structured web query for US coal-mine events that cut supply (MSHA and EIA where surfaced)",
+          "registry": [
+            "MSHA and EIA coal reporting"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "declared_search_complete",
+          "source_window": "no_census_exists",
+          "covered_through": "2026-11-03",
+          "languages_required": [
+            "en"
+          ],
+          "languages_executed": [
+            "en"
+          ],
+          "queries_declared": 10,
+          "queries_run": 10,
+          "limitation": "Carried from iteration 17 with no new work: 10 of 10 declared queries, which is a completed query set and not a census. Nothing covers 2026-11-04 to 2026-11-10, and MSHA's mine data retrieval system, the enumerable source for this class, has still not been downloaded or parsed. The execution value is the two-dimension name for iteration 17's '10 of 10'; it is not new coverage.",
+          "carried_forward": false
+        }
+      ]
     }
   ]
 }

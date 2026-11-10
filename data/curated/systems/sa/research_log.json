@@ -130,6 +130,148 @@
         "document": "docs/countries/SA_SYSTEMATIC_SWEEP.md",
         "commit": "a7f3a36"
       }
+    },
+    {
+      "date": "2026-11-10",
+      "by": "iteration-18 research pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-10"
+      ],
+      "scope": "inclusion clauses 1-7 as written; lanes and queries declared before searching (docs/countries/SA_LANE_PASS_18.md); every published record reviewed blind by three independent roles and confirmed on its final text",
+      "status": "partial",
+      "status_reason": "0 of 5 lanes executed as far as declared; the rest are stated per lane",
+      "outcome": {
+        "candidates": 13,
+        "accepted": 0,
+        "rejected": 6,
+        "duplicate": 1,
+        "held": 3,
+        "out_of_scope": 3
+      },
+      "plan": {
+        "document": "docs/countries/SA_LANE_PASS_18.md",
+        "commit": "1a793d5"
+      },
+      "lanes": [
+        {
+          "lane": "SA1",
+          "source_family": "Ministry of Energy statements as carried by SPA (spa.gov.sa; moenergy.gov.sa), reached through Saudi outlets republishing them",
+          "registry": [
+            "Ministry of Energy statements (Saudi Press Agency)"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "not_started",
+          "source_window": "inaccessible",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [],
+          "queries_declared": 10,
+          "queries_run": 0,
+          "items_enumerated": 0,
+          "finding": "SPA search and index pages returned HTTP 403 to ordinary access in this pass, so whether they are script-rendered could not be observed (iteration 17 saw a script-rendered shell at the same search address). No circumvention was attempted.",
+          "limitation": "Nothing was searched or read in this pass: all ten declared queries were refused by the shared search limit (five attempted, none performed), and SPA (HTTP 403) and the ministry site (no response) refused ordinary access once each. The four English year queries for 2022-2025 have still never been run in any pass.",
+          "carried_forward": false
+        },
+        {
+          "lane": "SA2",
+          "source_family": "Saudi Aramco disclosures: Tadawul announcements; aramco.com news and annual-report incident statements",
+          "registry": [
+            "Aramco Annual Report",
+            "Aramco Tadawul announcements"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "inaccessible",
+          "covered_through": "2025-12-31",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "en"
+          ],
+          "queries_declared": 2,
+          "queries_run": 0,
+          "items_enumerated": 4,
+          "finding": "All four annual reports (FY2022-FY2025) were read in English. Their only in-window incident-occurrence statement is one risk-factor sentence, repeated each year: a storage facility in Jeddah was attacked in March 2022, with no effect stated. The FY2022 report's committee section also mentions a security-related incident at the North Jeddah Bulk Plant, undated and without effect. No report mentions the March 2022 YASREF event already in the corpus, or any fire, unplanned shutdown, force majeure or production shut-in in 2022-2025. The other dated incidents named are outside the window (2019, 2021). The FY2025 report's events-after-the-reporting-period note lists only financing and a share repurchase. Aramco annual reports are therefore not an incident source for this window.",
+          "limitation": "The Tadawul announcement list refused access (HTTP 403) and was not read; neither declared query ran (shared search limit); the Arabic annual reports were not read (English editions only). Aramco's 2026 interim reports and results releases were deliberately not opened: they are outside the declared 2022-2025 annual-report universe and would carry current operating information during the active campaign.",
+          "carried_forward": false
+        },
+        {
+          "lane": "SA3",
+          "source_family": "GASTAT and JODI production releases (production effects explicitly attributed to a disruption)",
+          "registry": [
+            "JODI Oil",
+            "GASTAT, SEC, EIA, OPEC"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "current_through_end_date",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "en"
+          ],
+          "queries_declared": 0,
+          "queries_run": 0,
+          "items_enumerated": 2,
+          "finding": "GASTAT does not attribute production changes to a disruption in the releases read. The monthly IPI release is a short bulletin of index movements: it says the index moved 'affected by the decline in mining and quarrying activity' and names the manufacturing sub-activities that moved, but gives no cause for the mining or refining movement (no incident, attack, outage or policy reason) in the two campaign-period months read. JODI-Oil publishes a numeric database with definitions, a manual and availability footnotes only; the pages opened carry no narrative attribution. A numeric series with no attribution cannot produce an incident, so this lane yields context at most and no candidate.",
+          "limitation": "Only two monthly IPI release PDFs were read in full (March and April 2026, English), so no continuous span is covered and covered_through is null. The 2022-2025 monthly releases, the Arabic editions and GASTAT's petroleum-and-gas statistics were not read, and the search listing did not show a complete 2022-2025 series on the pages opened. JODI's Saudi metadata page was not reached.",
+          "carried_forward": false
+        },
+        {
+          "lane": "SA4",
+          "source_family": "OPEC Monthly Oil Market Report archive",
+          "registry": [
+            "OPEC Monthly Oil Market Report"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "not_started",
+          "source_window": "inaccessible",
+          "covered_through": null,
+          "languages_required": [
+            "en"
+          ],
+          "languages_executed": [],
+          "queries_declared": 0,
+          "queries_run": 0,
+          "items_enumerated": 0,
+          "limitation": "All three official OPEC addresses tried (current page, the MOMR download host, the legacy publications page) refused automated access with HTTP 402. No issue was read and no workaround was attempted; the lane needs a person to open the PDFs in a browser.",
+          "carried_forward": false
+        },
+        {
+          "lane": "SA5",
+          "source_family": "International and regional reporting (Reuters, Bloomberg, AP, S&P Global, Argus, as carried by open outlets), via search",
+          "registry": [
+            "International news agencies and energy press (Reuters, Bloomberg, AP, S&P Global, Argus)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "no_census_exists",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 25,
+          "queries_run": 10,
+          "finding": "No new qualifying event for 2022-2023. English and Arabic refinery and attack queries for those years return the March 2022 attacks (only YASREF, already in the corpus, has a reported effect; the Riyadh refinery statement expressly reports none) and 2026 campaign events already in the corpus; nothing dated 2023. Saudi outage reporting found gives regulator actions and causes but customer counts are absent, and one figure is in residents, so clause 5 could not be shown met. 'examined' is an approximate count of result items across the 10 searches. One search result (a Wikipedia mirror of the 2022 Jeddah article) carried embedded text addressed to the reader's software; it was ignored and the page was not opened.",
+          "limitation": "Only the 2022 and 2023 query combinations ran (10 of 25, both languages); the shared session search limit refused the 2024 set and prevented 2025 and 2026 entirely, and no follow-up search ran. The three held outage candidates (July 2024, January 2025, December 2025) surfaced incidentally from the 2022-2023 queries and each lacks a customer or MW figure that a named follow-up search might supply.",
+          "carried_forward": false
+        }
+      ]
     }
   ]
 }

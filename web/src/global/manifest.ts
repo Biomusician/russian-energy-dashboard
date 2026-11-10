@@ -37,6 +37,7 @@ export interface CorpusTotals {
   records_with_observed_recovery: number;
   records_with_recovery_estimate_only: number;
   research_lanes_complete: number;
+  research_lane_states?: Record<string, number>;
   research_lanes: number;
   note: string;
 }
@@ -116,6 +117,9 @@ export interface CountrySystem {
   };
   sources: SourceEntry[];
   research_log: { note: string; passes: ResearchPass[] };
+  recovery_coverage?: RecoveryCoverage;
+  source_families?: { present: string[]; labels: Record<string, string>; note: string };
+  citation_quality?: CitationQuality;
   /** The event SEARCH's coverage. Independent of source freshness: never derived from it. */
   research_freshness: {
     last_systematic_pass: string | null;
@@ -126,6 +130,9 @@ export interface CountrySystem {
     covers_full_window?: boolean;
     lanes_declared?: number;
     lanes_complete?: number;
+    /** Iteration 18: lane counts by reader-facing state. Never collapsed into a percentage. */
+    lane_states?: Record<string, number>;
+    first_systematic_pass?: string | null;
     research_cadence_days: number;
     next_due: string | null;
     note: string;
@@ -187,9 +194,87 @@ export interface ResearchPass {
   status: "complete" | "partial";
   status_reason?: string;
   source_families?: string[];
-  lanes?: { lane: string; source_family?: string; status: "complete" | "partial"; reason?: string;
-            covered_through?: string | null }[];
+  lanes?: ResearchLane[];
   outcome: Record<string, number>;
+}
+
+/** A lane of a systematic pass. Passes before iteration 18 carry `status`; since then `execution`
+ *  (what the analyst did) and `source_window` (what the publisher has made available). */
+export interface ResearchLane {
+  lane: string;
+  source_family?: string;
+  status?: "complete" | "partial";
+  reason?: string;
+  covered_through?: string | null;
+  universe_kind?: string;
+  execution?: string;
+  source_window?: string;
+  languages_required?: string[];
+  languages_executed?: string[];
+  queries_declared?: number | null;
+  queries_run?: number | null;
+  items_enumerated?: number | null;
+  items_in_universe?: number | null;
+  limitation?: string | null;
+  finding?: string | null;
+  carried_forward?: boolean;
+}
+
+export interface CitationQuality {
+  citations: number;
+  with_publication_date: number;
+  languages: Record<string, number>;
+  event_date_precision: Record<string, number>;
+  link_check: { reachable: number; redirected: number; blocked: number; dead: number; error: number } | null;
+  link_check_date: string | null;
+  link_check_note: string | null;
+}
+
+export interface RecoveryCoverage {
+  observed: number;
+  estimate: number;
+  other_statement: number;
+  researched_no_public_evidence: number;
+  not_researched: number;
+  withheld_active_campaign: number;
+  unresearched_by_class: Record<string, number>;
+  policy: string;
+}
+
+export interface RecentEpisode {
+  system_id: string;
+  country: string;
+  episode_id: string;
+  episode_name: string | null;
+  basis: string;
+  records: number;
+  first_date: string;
+  last_date: string;
+  date_precision: string;
+  classes: string[];
+  causes: string[];
+  members: { date: string; date_precision: string; region: string; effect: string | null; withheld: boolean }[];
+  more_members: number;
+}
+
+export interface RecentEvidence { order: string; scope: string; note: string; episodes: RecentEpisode[] }
+
+export interface DataQualityLane {
+  lane: string; source_family?: string; execution?: string; source_window?: string; covered_through?: string | null;
+  languages_required?: string[]; languages_executed?: string[]; limitation?: string | null; finding?: string | null;
+  state: string;
+}
+
+export interface DataQuality {
+  note: string;
+  context_vintage: { source: string; url: string; release: string; retrieved: string; comparison_year: number;
+                     update_cadence: string; countries: number; note: string };
+  systems: { system_id: string; name: string; reporting_environment: string; last_systematic_pass: string | null;
+             first_systematic_pass: string | null; lane_states: Record<string, number>; lanes: DataQualityLane[];
+             source_families: Record<string, string>;
+             sources_checked: { name: string; last_checked: string | null; stale_after_days: number | null }[] }[];
+  recovery_by_class: { note: string; rows: { class: string; class_label: string; kind: string; n: number;
+                                             cases_days?: number[]; range_days?: [number, number]; median_days?: number }[] };
 }
 
 /** One named hazard or one explicitly common event. A record no episode names is a singleton. */
@@ -334,6 +419,14 @@ export function shapeProblems(system: unknown, events: unknown, regions?: unknow
   return out;
 }
 
+export function loadRecentEvidence(): Promise<RecentEvidence> {
+  return getJson<RecentEvidence>("global/recent_evidence.json", new AbortController().signal);
+}
+
+export function loadDataQuality(): Promise<DataQuality> {
+  return getJson<DataQuality>("global/data_quality.json", new AbortController().signal);
+}
+
 export async function loadWorld(signal: AbortSignal): Promise<GeoJSON.FeatureCollection> {
   return getJson<GeoJSON.FeatureCollection>("global/world.geojson", signal);
 }
@@ -378,9 +471,36 @@ export const REVIEW_STATUS_LABEL: Record<string, string> = {
 };
 
 export const RESEARCH_COMPLETENESS_LABEL: Record<string, string> = {
-  complete: "Systematic search complete",
-  partial: "Systematic search partial",
+  complete: "Every declared lane executed",
+  partial: "Systematic search under way",
   never_systematic: "Targeted searches only, no systematic search yet",
+};
+
+/** What a lane's two dimensions mean to a reader. Computed by the build; never typed per lane. */
+export const LANE_STATE_LABEL: Record<string, string> = {
+  universe_searched: "Declared source universe searched",
+  current_through_latest_release: "Searched through the publisher's latest release",
+  declared_query_set_run: "Declared query set run (not a census)",
+  partially_searched: "Partly searched",
+  blocked_by_source: "Blocked by the source",
+  not_started: "Not started",
+  legacy: "Logged before iteration 18",
+};
+
+export const LANE_EXECUTION_LABEL: Record<string, string> = {
+  not_started: "Not started",
+  partial: "Partly executed",
+  declared_search_complete: "Every declared query run",
+  enumerated_complete: "Every published item read",
+};
+
+export const LANE_WINDOW_LABEL: Record<string, string> = {
+  current_through_end_date: "Source current through the window",
+  publisher_not_yet_released: "Publisher has not released the rest",
+  inaccessible: "Source refused or could not be read",
+  no_census_exists: "No census exists for this class",
+  rolling_archive_gap: "Publisher keeps only a recent window",
+  unknown: "Not determined",
 };
 
 /** What KIND of recovery evidence was found. Different claims, never one "recovered". */

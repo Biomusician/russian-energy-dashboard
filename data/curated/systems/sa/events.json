@@ -9,7 +9,7 @@
       "region_code": "SA-03",
       "geography_precision": "admin1",
       "regions_affected": [],
-      "facility_name": "YASREF refinery (Yanbu)",
+      "facility_name": "YASREF refinery",
       "facility_name_local": "مصفاة ياسرف",
       "operator": "Yanbu Aramco Sinopec Refining Co. (Aramco / Sinopec JV)",
       "asset_class": "refinery",
@@ -86,7 +86,7 @@
       "operator": "Saudi Aramco",
       "asset_class": "gas_processing",
       "cause": "unknown",
-      "summary": "Aramco said structural damage at Juaymah on 23 February 2026 halted LPG exports from the site, and declared force majeure on shipments.",
+      "summary": "Aramco said damage at Juaymah on 23 February 2026 halted LPG exports from the site, and declared force majeure on shipments.",
       "effect": "LPG export loadings from Juaymah halted; force majeure declared.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 2,
@@ -142,7 +142,7 @@
       "operator": "Saudi Aramco",
       "asset_class": "refinery",
       "cause": "kinetic_strike",
-      "summary": "Aramco shut the Ras Tanura refinery as a precaution while assessing damage after an attack; a limited fire was reported.",
+      "summary": "Aramco shut the Ras Tanura refinery as a precaution while assessing damage after an attack.",
       "effect": "Refinery shut down (energy ministry statement via state news agency, as reported by Bloomberg): shut \"as a precaution while assessing damage.\"",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
@@ -168,14 +168,6 @@
           "language": "en",
           "source_role": "media",
           "opened": null
-        },
-        {
-          "url": "https://en.wikipedia.org/wiki/2026_Aramco_refinery_attack",
-          "publisher": "Wikipedia",
-          "date": "2026-03-02",
-          "language": "en",
-          "source_role": "dataset",
-          "opened": null
         }
       ],
       "recovery": {
@@ -193,8 +185,8 @@
         "independent_review_complete": true,
         "reviewer_count": 4,
         "disposition": "corrected",
-        "source_count": 3,
-        "sources_opened_by_reviewer": 3,
+        "source_count": 2,
+        "sources_opened_by_reviewer": 2,
         "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
         "source_access": "not recorded by the research lane",
         "roles": {
@@ -218,7 +210,7 @@
       "operator": "Saudi Aramco",
       "asset_class": "oil_terminal",
       "cause": "kinetic_strike",
-      "summary": "Oil loadings at Yanbu port were halted during a reported attack; the sources do not report the port itself being struck.",
+      "summary": "Oil loadings at Yanbu port were halted during a reported attack.",
       "effect": "Oil loadings stopped (Reuters, two sources).",
       "inclusion_basis": "reported_effect",
       "criterion_met": 2,
@@ -269,13 +261,13 @@
       "region_code": "SA-04",
       "geography_precision": "admin1",
       "regions_affected": [],
-      "facility_name": "SATORP refinery (Jubail)",
+      "facility_name": "SATORP refinery",
       "facility_name_local": "ساتورب",
       "operator": "SATORP (Aramco / TotalEnergies JV)",
       "asset_class": "refinery",
       "cause": "kinetic_strike",
       "summary": "TotalEnergies said incidents on the night of 7-8 April caused damage at the SATORP refinery and the refinery was shut as a precaution while the damage was assessed.",
-      "effect": "Refinery shut from 8 April 2026 (TotalEnergies).",
+      "effect": "Refinery shut on 8 April 2026 (TotalEnergies).",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
       "threshold_basis": "Clause 1: operator-confirmed refinery shutdown after attacks.",
@@ -364,14 +356,6 @@
           "language": "en",
           "source_role": "media",
           "opened": null
-        },
-        {
-          "url": "https://www.al-monitor.com/originals/2026/04/attacks-cut-saudi-oil-output-and-east-west-pipeline-flow-state-news-agency-says",
-          "publisher": "Al-Monitor (Reuters)",
-          "date": "2026-04-09",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
         }
       ],
       "recovery": {
@@ -389,8 +373,8 @@
         "independent_review_complete": true,
         "reviewer_count": 4,
         "disposition": "corrected",
-        "source_count": 3,
-        "sources_opened_by_reviewer": 4,
+        "source_count": 2,
+        "sources_opened_by_reviewer": 2,
         "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
         "source_access": "not recorded by the research lane",
         "roles": {
@@ -440,14 +424,6 @@
           "language": "en",
           "source_role": "media",
           "opened": null
-        },
-        {
-          "url": "https://www.al-monitor.com/originals/2026/04/attacks-cut-saudi-oil-output-and-east-west-pipeline-flow-state-news-agency-says",
-          "publisher": "Al-Monitor (Reuters)",
-          "date": "2026-04-09",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
         }
       ],
       "recovery": {
@@ -465,8 +441,8 @@
         "independent_review_complete": true,
         "reviewer_count": 4,
         "disposition": "confirmed",
-        "source_count": 3,
-        "sources_opened_by_reviewer": 3,
+        "source_count": 2,
+        "sources_opened_by_reviewer": 2,
         "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
         "source_access": "not recorded by the research lane",
         "roles": {
@@ -589,7 +565,7 @@
         "reviewer_count": 4,
         "disposition": "corrected",
         "source_count": 1,
-        "sources_opened_by_reviewer": 2,
+        "sources_opened_by_reviewer": 1,
         "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
         "source_access": "not recorded by the research lane",
         "roles": {

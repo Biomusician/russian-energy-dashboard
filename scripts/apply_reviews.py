@@ -3,7 +3,7 @@
     .venv\\Scripts\\python.exe scripts\\apply_reviews.py <final-prefix> [...]
     e.g. scripts\\apply_reviews.py gf_us gf_ca gf_cn gf_in gf_sa new_us new_ca new_in
 
-Reads `data/candidates/review17/<prefix>_final.json` (written by the reconciler, local) and
+Reads `data/candidates/review18/<prefix>_final.json` (written by the reconciler, local) and
 changes the three things the import gate reads -- nothing else:
 
   1. `data/curated/systems/review_edits.json`: one `set` edit per reconciled field, with the
@@ -31,12 +31,12 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-R = ROOT / "data" / "candidates" / "review17"
+R = ROOT / "data" / "candidates" / "review18"
 SYS = ROOT / "data" / "curated" / "systems"
 EDITS = SYS / "review_edits.json"
 GF = SYS / "review_grandfathered.json"
 ROLE_NAME = {"A": "evidence", "B": "safety", "C": "taxonomy"}
-REVIEWED_AT = "2026-11-03"
+REVIEWED_AT = "2026-11-10"
 
 
 def _read(path):
@@ -82,7 +82,7 @@ def apply(prefix, report):
                     continue
                 edits_doc["edits"].append({
                     "event_id": eid, "field": e["field"], "set": e["set"],
-                    "reason": f"Iteration-17 blind review, role(s) {', '.join(e.get('roles') or [])}: {e.get('reason')}",
+                    "reason": f"Blind review, role(s) {', '.join(e.get('roles') or [])}: {e.get('reason')}",
                 })
                 have.add(key)
             q["independent_review"] = {

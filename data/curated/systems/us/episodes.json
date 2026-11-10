@@ -36,8 +36,7 @@
         "us-2022-12-winter-storm-elliott-gas-production",
         "us-2022-12-23-pjm-forced-outages-elliott",
         "us-2022-12-23-tva-rolling-blackouts-elliott",
-        "us-2022-12-23-winter-storm-elliott-maine-outages",
-        "us-2022-12-24-duke-energy-rolling-blackouts-elliott"
+        "us-2022-12-23-winter-storm-elliott-maine-outages"
       ],
       "hazard": "Winter Storm Elliott (2022)"
     },

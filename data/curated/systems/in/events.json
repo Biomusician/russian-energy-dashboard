@@ -40,7 +40,7 @@
         {
           "url": "https://www.tribuneindia.com/news/chandigarh/130-regular-power-staffers-behind-sabotage-in-chandigarh-probe-372862/amp",
           "publisher": "The Tribune",
-          "date": null,
+          "date": "2022-02-25",
           "language": "en",
           "source_role": "media",
           "opened": null
@@ -48,7 +48,7 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2022-02-23",
         "evidence": "Power restored in most parts of the city after 36+ hours (UT Adviser, 23 Feb 2022); employees rejoined work the evening of 23 Feb (some sectors still out that afternoon).",
         "url": "https://scroll.in/latest/1018068/scroll_in"
@@ -86,7 +86,7 @@
       "operator": "Uttar Pradesh Rajya Vidyut Utpadan Nigam (state generator); UPPCL distribution",
       "asset_class": "power_plant_thermal",
       "cause": "labour",
-      "summary": "A 72-hour strike by Uttar Pradesh power-sector employees from about 22:00 on 16 Mar 2023 shut thermal generation and disrupted distribution; official sources said rural outages were about double the urban figure. The strike was called off on 19 Mar 2023 after talks with the state energy minister.",
+      "summary": "A 72-hour strike by Uttar Pradesh power-sector employees from about 22:00 on 16 Mar 2023 shut some thermal generating units and disrupted distribution; official sources said rural outages were about double the urban figure. The strike was called off on 19 Mar 2023 after talks with the state energy minister.",
       "effect": "IANS: ~2,392 MW of generation unavailable by the evening of 18 Mar (~17% of 13,856 MW demand); urban and semi-urban feeders shut affected ~13 lakh households, rural outages said to be about double. The power minister said there was no shortage.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 4,
@@ -162,8 +162,8 @@
       "operator": "Reliance Industries (Sikka); Nayara Energy (Vadinar); Adani Ports (Mundra); Deendayal Port Authority (Kandla)",
       "asset_class": "oil_terminal",
       "cause": "natural_hazard",
-      "summary": "Ahead of Cyclone Biparjoy's landfall in Gujarat (15-16 Jun 2023), Gujarat ports suspended operations, including oil product exports and vessel operations at several ports. A refinery operator said its refinery was not shut but directed vessels not to enter the port limits.",
-      "effect": "Product exports from Sikka halted (Reuters); vessel operations suspended at Vadinar, Mundra, Kandla and Tuna. No refinery shutdown reported.",
+      "summary": "Ahead of Cyclone Biparjoy's landfall in Gujarat (15-16 Jun 2023), Gujarat ports suspended operations, including oil product exports and vessel operations at several ports. Nayara Energy said it was not closing operations at Vadinar port but directed vessels not to enter port limits.",
+      "effect": "Product exports from Sikka halted (Reuters); Adani suspended vessel operations at Mundra and Tuna (Reuters); Gujarat Maritime Board listed Vadinar, Mundra and Kandla as suspended (Bloomberg), while Reuters reported Nayara not closing Vadinar but barring vessel entry. No refinery shutdown reported.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 2,
       "threshold_basis": "Clause 2: energy import/export terminals suspended operations (precautionary, weather-driven). No refinery throughput effect reported, so clause 1 is NOT claimed.",
@@ -196,9 +196,9 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2023-06-19",
-        "evidence": "Reliance resumed vessel operations at Sikka on 19 Jun 2023 (Reuters via ThePrint); Kandla and Pipavav reported resumption around 17 Jun. Vadinar/Mundra resumption dates not separately confirmed.",
+        "evidence": "Reliance had resumed vessel operations at Sikka by 19 Jun 2023, the report date (Reuters via ThePrint); Kandla and Pipavav said they resumed on the preceding Saturday. Vadinar/Mundra resumption dates not separately confirmed.",
         "url": "https://theprint.in/economy/reliance-industries-resumes-vessel-ops-at-indian-port-sources/1632369"
       },
       "review": {
@@ -234,7 +234,7 @@
       "operator": "Paschim Gujarat Vij Company Ltd (PGVCL) and other Gujarat discoms",
       "asset_class": "system_wide",
       "cause": "natural_hazard",
-      "summary": "Cyclone Biparjoy's landfall in Gujarat on 15-16 Jun 2023 damaged distribution infrastructure and cut power across eight districts. Gujarat power companies estimated damage at Rs 1,013 crore.",
+      "summary": "Cyclone Biparjoy's landfall in Gujarat on 15-16 Jun 2023 damaged distribution infrastructure and cut power across Saurashtra-Kutch and parts of North Gujarat. Gujarat power companies estimated damage at Rs 1,013 crore.",
       "effect": "Initially ~4,600 villages without power (Telangana Today); restoration later reported across 3,495 towns and 4,917 villages in eight districts, with 28 villages still pending on 22 Jun.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
@@ -268,7 +268,7 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2023-06-22",
         "evidence": "By 22 Jun 2023 power restored in 3,495 towns and 4,917 villages; 28 villages pending due to waterlogging. Service restoration only.",
         "url": "https://www.nationalheraldindia.com/amp/story/national/cyclone-biparjoy-gujarat-power-companies-suffer-rs-1013-cr-loss"
@@ -412,7 +412,7 @@
         {
           "url": "https://www.waterpowermagazine.com/news/nhpc-restores-teesta-v-hydropower-plant-to-full-510mw-capacity/",
           "publisher": "Water Power Magazine",
-          "date": null,
+          "date": "2026-07-17",
           "language": "en",
           "source_role": "industry",
           "opened": null
@@ -570,7 +570,7 @@
         {
           "url": "https://www.orissapost.com/cyclone-dana-great-danger-signal-number-10-issued-at-3-ports-in-odisha/amp/",
           "publisher": "Orissa Post",
-          "date": null,
+          "date": "2024-10-23",
           "language": "en",
           "source_role": "media",
           "opened": true
@@ -602,82 +602,6 @@
         }
       },
       "hazard_name": "Cyclone Dana (2024)"
-    },
-    {
-      "event_id": "in-2026-04-20-hrrl-barmer-refinery-cdu-fire",
-      "date": "2026-04-20",
-      "date_precision": "day",
-      "date_end": "2026-06-18",
-      "region_code": "IN-RJ",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": "HPCL Rajasthan Refinery",
-      "facility_name_local": null,
-      "operator": "HPCL Rajasthan Refinery Ltd (HPCL-Rajasthan govt JV)",
-      "asset_class": "refinery",
-      "cause": "technical",
-      "summary": "A fire on 20 Apr 2026 at the HPCL Rajasthan refinery, then in commissioning, led HPCL to isolate units of the crude section; the Prime Minister's inauguration the next day was postponed. HPCL attributed the fire to a suspected hydrocarbon leak; no injuries.",
-      "effect": "Crude processing at the refinery halted and commissioning/ramp-up disrupted for ~2 months; about 1.8 million barrels of crude were redirected to other refineries. Kpler: plant not yet contributing to the national product pool, so market supply impact limited.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 1,
-      "threshold_basis": "Clause 1: refinery crude processing halted for about two months, with crude redirected to other refineries. The plant was in commissioning (commercial operation had been indicated for 1 July), so the effect is a commissioning delay, not lost market supply.",
-      "capacity_affected": {
-        "value": 9,
-        "unit": "Mtpa refinery capacity (CDU isolated)",
-        "source_says": "9 million metric tonnes per annum (ThePrint)"
-      },
-      "sources": [
-        {
-          "url": "https://www.indianchemicalnews.com/general/lite/suspected-hydrocarbon-leak-behind-fire-at-hpcl-rajasthan-refinery-no-casualties-30109",
-          "publisher": "Indian Chemical News",
-          "date": "2026-04-22",
-          "language": "en",
-          "source_role": "industry",
-          "opened": null
-        },
-        {
-          "url": "https://theprint.in/economy/fire-that-engulfed-rajasthan-refinery-ahead-of-modi-launch-unlikely-to-hit-fuel-supply-says-kpler/2911401/",
-          "publisher": "ThePrint",
-          "date": "2026-04-22",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://nsearchives.nseindia.com/corporate/HINDPETRO1_21042026114100_Intimation_SE_HRRL_fire_incident_signed.pdf",
-          "publisher": "HPCL (NSE filing)",
-          "date": "2026-04-21",
-          "language": "en",
-          "source_role": "operator",
-          "opened": null
-        }
-      ],
-      "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "partial_restart",
-        "date": "2026-06-18",
-        "evidence": "HPCL announced in a stock-exchange filing on 18 Jun 2026 that the crude unit had restarted (announcement date).",
-        "url": "https://hdfcsky.com/news/hpcls-rajasthan-refinery-restarts-key-crude-unit-after-april-fire"
-      },
-      "review": {
-        "reviewed_at": "2026-11-03",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 3,
-        "sources_opened_by_reviewer": 3,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "not recorded by the research lane",
-        "roles": {
-          "evidence": "accept_with_correction",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
     },
     {
       "event_id": "in-2025-10-28-cyclone-montha-andhra-outage",
@@ -737,6 +661,169 @@
         "source_access": "at least one source read"
       },
       "hazard_name": "Cyclone Montha (2025)"
+    },
+    {
+      "event_id": "in-2023-05-29-numaligarh-refinery-fire",
+      "date": "2023-05-29",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "IN-AS",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": "Numaligarh refinery",
+      "facility_name_local": null,
+      "operator": "Numaligarh Refinery Ltd",
+      "asset_class": "refinery",
+      "cause": "unknown",
+      "summary": "A fire on 29 May 2023 at the Numaligarh refinery in Assam, while the plant was restarting after maintenance. The petroleum ministry's monthly report attributes the refinery's lower crude processing in June and July 2023 to the fire.",
+      "effect": "Crude processed in June 2023 was 8.30 thousand tonnes against a target of 267.00 and 240.56 in June 2022 (ministry monthly report).",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 1,
+      "threshold_basis": "Clause 1: refinery throughput materially cut with the effect reported: 8.30 TMT processed in June 2023 against a 267.00 TMT monthly target, attributed by the ministry to the fire.",
+      "capacity_affected": {
+        "value": 8.3,
+        "unit": "TMT crude processed in June 2023 (target 267.00)",
+        "source_says": "Crude processed lower due to ... Fire"
+      },
+      "sources": [
+        {
+          "url": "https://mopng.gov.in/files/petroleumStatistics/monthlyProduction/mprjune2023.pdf",
+          "publisher": "Ministry of Petroleum and Natural Gas (Economic & Statistics Division)",
+          "date": "2023-07-27",
+          "language": "en",
+          "source_role": "government",
+          "opened": null
+        },
+        {
+          "url": "https://mopng.gov.in/files/petroleumStatistics/monthlyProduction/july2023.pdf",
+          "publisher": "Ministry of Petroleum and Natural Gas (Economic & Statistics Division)",
+          "date": "2023-08-22",
+          "language": "en",
+          "source_role": "government",
+          "opened": null
+        },
+        {
+          "url": "https://mopng.gov.in/files/petroleumStatistics/monthlyProduction/mpraug2023.pdf",
+          "publisher": "Ministry of Petroleum and Natural Gas (Economic & Statistics Division)",
+          "date": "2023-10-06",
+          "language": "en",
+          "source_role": "government",
+          "opened": null
+        },
+        {
+          "url": "https://hydrocarbonprocessing.com/news/2023/05/fire-at-indias-numaligarh-refinery-under-control-company-says",
+          "publisher": "Hydrocarbon Processing (Reuters)",
+          "date": "2023-05-30",
+          "language": "en",
+          "source_role": "media",
+          "opened": null
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restart",
+        "date": null,
+        "evidence": "Ministry monthly report for July 2023: 245.11 TMT processed against a 276.00 TMT target, still attributed to the fire; August 2023: 256.76 TMT against 276.00, attributed to a different cause. Month-level only; no restart date stated.",
+        "url": "https://mopng.gov.in/files/petroleumStatistics/monthlyProduction/july2023.pdf"
+      },
+      "review": {
+        "reviewed_at": "2026-11-10",
+        "threshold_version": "2026-10-30.1",
+        "review_status": "blind_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
+        "source_count": 4,
+        "sources_opened_by_reviewer": 4,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept_with_correction"
+        }
+      },
+      "hazard_name": null
+    },
+    {
+      "event_id": "in-2025-08-16-gauna-bawana-gas-pipeline-leak",
+      "date": "2025-08-16",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": null,
+      "geography_precision": "country",
+      "regions_affected": [
+        "IN-HR",
+        "IN-DL"
+      ],
+      "facility_name": "Gauna-Bawana pipeline",
+      "facility_name_local": null,
+      "operator": "GAIL (India) Limited",
+      "asset_class": "pipeline_gas",
+      "cause": "natural_hazard",
+      "summary": "On 16 August 2025 GAIL reported a gas leak on its Gauna-Bawana pipeline after heavy rain and a shift in a river's course; the affected section was isolated and gas supply through it stopped. The regulator's March 2026 annex lists an incident on a GAIL pipeline on the same date, with supply disrupted in city-gas areas of Haryana and Delhi.",
+      "effect": "PNGRB: supply disrupted to 464 industries, more than 176 commercial customers and 21 CNG stations in Haryana and the National Capital Territory of Delhi.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 3,
+      "threshold_basis": "Clause 3: gas transmission pipeline section isolated and supply stopped (operator statement); regulator reports 464 industries, 176+ commercial customers and 21 CNG stations disrupted.",
+      "capacity_affected": {
+        "value": 464,
+        "unit": "industrial customers",
+        "source_says": "464 industries, more than 176 commercial customers and supply to 21 nos. CNG stations"
+      },
+      "sources": [
+        {
+          "url": "https://gailonline.com/PressRelease_16082025.html",
+          "publisher": "GAIL (India) Limited",
+          "date": "2025-08-16",
+          "language": "en",
+          "source_role": "operator",
+          "opened": true
+        },
+        {
+          "url": "https://www.tribuneindia.com/news/delhi/gas-leak-reported-in-gauna-bawana-pipeline",
+          "publisher": "The Tribune",
+          "date": "2025-08-17",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://pngrb.gov.in/pdf/press-note/20260306_PR.pdf",
+          "publisher": "Petroleum and Natural Gas Regulatory Board",
+          "date": "2026-03-06",
+          "language": "en",
+          "source_role": "regulator",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "NOT_YET_RESEARCHED",
+        "kind": null,
+        "date": null,
+        "evidence": null,
+        "url": null
+      },
+      "review": {
+        "reviewed_at": "2026-11-10",
+        "threshold_version": "2026-10-30.1",
+        "review_status": "blind_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
+        "source_count": 3,
+        "sources_opened_by_reviewer": 3,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
+      },
+      "hazard_name": null
     }
   ]
 }

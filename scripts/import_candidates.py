@@ -85,6 +85,8 @@ SCOPE_SCAN = re.compile(
 TEXT_FIELDS = ("summary", "effect", "threshold_basis", "facility_name", "facility_name_local",
                "operator", "attribution_reported")
 EDITS = ROOT / "data" / "curated" / "systems" / "review_edits.json"
+# Publication dates a cited page states about itself (scripts/check_source_links.py), keyed by URL.
+LINK_HEALTH = ROOT / "data" / "curated" / "systems" / "source_link_health.json"
 DEFAULT_PROCESS = ("Single-pass open-source research lane; centrally reviewed against the "
                    "inclusion threshold, source rules and scope scan. Claims were not "
                    "independently re-verified beyond the cited sources.")
@@ -105,6 +107,10 @@ BLIND_PROCESS = ("Found by a research lane; then reviewed blind by three indepen
                  "status wording; one checked class, cause, hazard name, episode and duplicates. "
                  "Published only because all three accepted it; their corrections were reconciled "
                  "into this text.")
+
+
+PAGE_DATES = (json.loads(LINK_HEALTH.read_text(encoding="utf-8")).get("page_stated_dates", {})
+              if LINK_HEALTH.exists() else {})
 
 
 def _texts(r):
@@ -243,6 +249,10 @@ def to_event(system_id, r, grandfathered=frozenset(), campaigns=None):
         "review": _review_block(r, grandfathered),
         "hazard_name": r.get("hazard_name"),
     }
+    # A date only where the page states one; a researcher's date is never overwritten. Applied
+    # before the campaign filter so a citation found to be late is withheld like any other.
+    for s in ev["sources"]:
+        s["date"] = s.get("date") or PAGE_DATES.get(s["url"])
     # An active campaign's records ship with the withheld marker; the evidence stays in the queue.
     if campaigns and build_systems.campaign_of(ev, system_id, campaigns):
         ev["recovery"] = _withheld_recovery()
@@ -256,6 +266,10 @@ def to_event(system_id, r, grandfathered=frozenset(), campaigns=None):
         ev["sources"] = [s for s in ev["sources"] if not build_systems.STATUS_WORDING.search(s["url"] or "")
                          and not build_systems.late_citation(ev, s)]
         ev["review"]["source_count"] = len(ev["sources"])
+        # A reviewer-opened count above the published count would say a further source exists and
+        # is not shown (iteration 18, Saudi safety audit).
+        if ev["review"].get("sources_opened_by_reviewer") is not None:
+            ev["review"]["sources_opened_by_reviewer"] = min(ev["review"]["sources_opened_by_reviewer"], len(ev["sources"]))
         cap = ev["capacity_affected"] or {}
         if build_systems.STATUS_WORDING.search(cap.get("source_says") or ""):
             ev["capacity_affected"] = None

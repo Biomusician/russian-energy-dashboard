@@ -4,9 +4,11 @@ import SimpleMap from "./SimpleMap";
 import SystemSwitcher from "./SystemSwitcher";
 import {
   ENVIRONMENT_LABEL, READINESS_LABEL, RECOVERY_KIND_LABEL, RECOVERY_LABEL, RESEARCH_COMPLETENESS_LABEL,
-  REVIEW_STATUS_LABEL, SECTOR_STATE_LABEL, labelFor, type CountrySystem, type SourceEntry, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type Episode,
-  type ManifestSystem, type SourceHealth,
+  REVIEW_STATUS_LABEL, SECTOR_STATE_LABEL, LANE_EXECUTION_LABEL, LANE_STATE_LABEL, LANE_WINDOW_LABEL, labelFor, type CountrySystem, type SourceEntry, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type Episode,
+  type ManifestSystem, type ResearchLane, type ResearchPass, type SourceHealth,
 } from "./manifest";
+import { loadContext, rowForSystem, type EnergyContext } from "./context";
+import { NationalFigures } from "./WorldContext";
 import { navigate } from "./router";
 import { composeCountryFrame, countryFilename } from "./countryExport";
 import { DISPUTED, NO_EVENTS, fillFor, scaleFor, type Scale } from "./countryScale";
@@ -25,7 +27,7 @@ import { daysBetween, fmtDate } from "../data";
  *  can never paint over the one just opened.
  */
 
-type Tab = "events" | "sectors" | "context" | "sources" | "method";
+type Tab = "events" | "sectors" | "context" | "research" | "sources" | "method";
 
 function initialRegion(): string | null {
   return new URLSearchParams(window.location.search).get("r");
@@ -48,6 +50,15 @@ export default function CountryView({ id }: { id: string }) {
   const [exporting, setExporting] = useState(false);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const [ctx, setCtx] = useState<EnergyContext | null>(null);
+  const [ctxFailed, setCtxFailed] = useState(false);
+
+  // National context is a separate file: if it fails, the country's own record is untouched.
+  useEffect(() => {
+    let live = true;
+    loadContext().then((c) => { if (live) setCtx(c); }).catch(() => { if (live) setCtxFailed(true); });
+    return () => { live = false; };
+  }, []);
 
   // Load this country, abandoning any load still in flight for the previous one.
   useEffect(() => {
@@ -133,7 +144,7 @@ export default function CountryView({ id }: { id: string }) {
     try {
       const res = await exportMapPng({
         source: m, width: 1600, height: 900, pixelRatio: 1,
-        compose: (c) => composeCountryFrame(c, sys, scale),
+        compose: (c) => composeCountryFrame(c, sys, scale, ctx ? { row: rowForSystem(ctx, sys.system_id), ctx } : null),
       });
       downloadBlob(res.blob, countryFilename(sys));
       setExportMsg(`Exported ${res.width}×${res.height}.`);
@@ -221,7 +232,7 @@ export default function CountryView({ id }: { id: string }) {
 
         <section className="country-side panel" aria-label="Details">
           <div className="tabs" role="group" aria-label="Detail views">
-            {(["events", "sectors", "context", "sources", "method"] as Tab[]).map((t) => (
+            {(["events", "sectors", "context", "research", "sources", "method"] as Tab[]).map((t) => (
               <button key={t} className="ghost" aria-pressed={tab === t} onClick={() => setTab(t)}>
                 {TAB_LABEL[t]}
               </button>
@@ -234,8 +245,9 @@ export default function CountryView({ id }: { id: string }) {
             />
           )}
           {tab === "sectors" && <SectorsPanel bundle={bundle} />}
-          {tab === "context" && <ContextPanel bundle={bundle} />}
-          {tab === "sources" && <SourcesPanel bundle={bundle} />}
+          {tab === "context" && <ContextPanel bundle={bundle} ctx={ctx} ctxFailed={ctxFailed} />}
+          {tab === "research" && <ResearchPanel bundle={bundle} />}
+          {tab === "sources" && <SourcesPanel bundle={bundle} ctx={ctx} />}
           {tab === "method" && <MethodPanel bundle={bundle} />}
           {exportMsg && <p className="small" role="status">{exportMsg}</p>}
         </section>
@@ -248,6 +260,7 @@ const TAB_LABEL: Record<Tab, string> = {
   events: "Reported events",
   sectors: "Sectors",
   context: "Energy context",
+  research: "Research coverage",
   sources: "Sources & data quality",
   method: "Why no score",
 };
@@ -273,10 +286,15 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
       <div className="small">
         <span className={`badge research-${rf.completeness}`}>
           {RESEARCH_COMPLETENESS_LABEL[rf.completeness]}
-          {/* How partial, in the badge itself: "partial" reads the same at 1 of 9 and 8 of 9. */}
-          {rf.completeness !== "never_systematic" && rf.lanes_declared != null &&
-            `: ${rf.lanes_complete} of ${rf.lanes_declared} source lanes searched in full`}
         </span>
+        {/* Separate counts, not "3 of 9": a lane waiting on a publisher and a lane barely begun are not the same shortfall. */}
+        {rf.lane_states && Object.keys(rf.lane_states).length > 0 && (
+          <ul className="lane-state-list">
+            {Object.entries(rf.lane_states).map(([k, n]) => (
+              <li key={k}><span className="mono">{n}</span> {labelFor(LANE_STATE_LABEL, k).toLowerCase()}</li>
+            ))}
+          </ul>
+        )}
         {rf.last_systematic_pass && rf.coverage_window && (
           <span className="dim"> · {fmtDate(rf.coverage_window[0])} – {fmtDate(rf.coverage_window[1])},
             searched {fmtDate(rf.last_systematic_pass)}{overdue ? " (due again)" : ""}</span>
@@ -289,10 +307,9 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
             : `All ${used.length} listed sources re-checked on schedule`}
         </span>
       </div>
-      <div className="small dim">Two separate questions: whether the sources are current, and whether
-        the search for events was systematic. One does not imply the other. A source lane is one
-        family of sources searched end to end (for example, every federal outage report); details
-        under Sources &amp; data quality.</div>
+      <div className="small dim">Two separate questions: whether the sources are current, and how far
+        the search for events got. One does not imply the other. A source lane is one family of sources
+        searched as a unit (for example, every federal outage report); see Research coverage.</div>
     </div>
   );
 }
@@ -480,10 +497,24 @@ function SectorsPanel({ bundle }: { bundle: CountryBundle }) {
   );
 }
 
-function ContextPanel({ bundle }: { bundle: CountryBundle }) {
+function ContextPanel({ bundle, ctx, ctxFailed }: { bundle: CountryBundle; ctx: EnergyContext | null; ctxFailed: boolean }) {
   const p = bundle.system.profile;
+  const row = ctx ? rowForSystem(ctx, bundle.system.system_id) : null;
   return (
     <div>
+      <h2>National energy picture</h2>
+      {ctxFailed && <p className="small warn-text" role="alert">Global energy context unavailable. The rest of this page is not affected.</p>}
+      {row && ctx && (
+        <div className="national-block">
+          <NationalFigures row={row} ctx={ctx} />
+          {Object.keys(row.newer).length > 0 && (
+            <p className="small dim">Newer than the comparison year: {Object.entries(row.newer).filter(([m]) => m === "oil_production" || m === "crude_production").map(([m, n]) => `${ctx.metrics[m].label} ${n.value.toLocaleString("en-GB")} ${ctx.metrics[m].unit}, ${n.year}`).join("; ")}.</p>
+          )}
+          <p className="small dim">{ctx.comparison_year} figures. <a href={ctx.source.url} target="_blank" rel="noreferrer">{ctx.source.name}</a>, release
+            of {fmtDate(ctx.source.release)}. The same source and year as the world map, so these are comparable across countries. They describe the
+            size of the energy system and never weight, rank or qualify an event.</p>
+        </div>
+      )}
       <h2>Energy-system context</h2>
       <p className="small dim">Sourced statistics for reading the events, never a scoring input and
         never a ranking of infrastructure. Bases and vintages differ by row: read the basis before
@@ -511,7 +542,102 @@ function ContextPanel({ bundle }: { bundle: CountryBundle }) {
   );
 }
 
-function SourcesPanel({ bundle }: { bundle: CountryBundle }) {
+function laneDisplay(l: ResearchLane): string {
+  const q = l.queries_declared != null ? `${l.queries_run ?? 0} of ${l.queries_declared} declared queries` : null;
+  const items = l.items_enumerated != null ? `${l.items_enumerated}${l.items_in_universe != null ? ` of ${l.items_in_universe}` : ""} items read` : null;
+  return [q, items].filter(Boolean).join("; ");
+}
+
+/** Known gaps generated from lane states, so this cannot drift from the log. */
+function ResearchPanel({ bundle }: { bundle: CountryBundle }) {
+  const s = bundle.system;
+  const rf = s.research_freshness;
+  const passes = s.research_log.passes.filter((p) => p.kind === "systematic");
+  const newest: ResearchPass | undefined = passes[passes.length - 1];
+  const lanes = newest?.lanes ?? [];
+  const v2 = lanes.filter((l) => l.execution);
+  const rc = s.recovery_coverage;
+  const cq = s.citation_quality;
+  const languages = [...new Set(v2.flatMap((l) => l.languages_required ?? []))].sort();
+  const gaps = v2.filter((l) => l.limitation);
+  return (
+    <div>
+      <h2>Research coverage</h2>
+      <p className="small">Two questions kept apart for every lane: how far the analyst got, and what the publisher has made
+        available. A fully executed procedure is not complete knowledge: events the sources never reported are still missing.</p>
+      <p className="small dim">Events can date back to 2022, but systematic research for this country began
+        {rf.first_systematic_pass ? ` on ${fmtDate(rf.first_systematic_pass)}` : " later"}. Older records were found afterwards, not monitored as they happened.</p>
+      <p className="small">Reporting environment: <strong>{labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}</strong>. {s.reporting_environment_text}</p>
+      {s.source_families && <p className="small">Source families cited: {Object.values(s.source_families.labels).join(", ")}. <span className="dim">{s.source_families.note}</span></p>}
+      {languages.length > 0 && <p className="small">Languages required by the lanes: {languages.join(", ")}.
+        {" "}{v2.filter((l) => (l.languages_required ?? []).some((x) => !(l.languages_executed ?? []).includes(x))).map((l) => l.lane).join(", ") || "None"} did not run in every required language.</p>}
+      <table className="sector-table lane-table">
+        <thead><tr><th>Lane</th><th>What the analyst did</th><th>What the source allows</th><th>Searched through</th></tr></thead>
+        <tbody>
+          {v2.map((l) => (
+            <tr key={l.lane}>
+              <td className="small"><span className="mono">{l.lane}</span><div className="dim">{l.source_family}</div></td>
+              <td className="small">{labelFor(LANE_EXECUTION_LABEL, l.execution ?? "")}<div className="dim">{laneDisplay(l)}</div></td>
+              <td className="small">{labelFor(LANE_WINDOW_LABEL, l.source_window ?? "")}</td>
+              <td className="small">{l.covered_through ? fmtDate(l.covered_through) : "not reached"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <h3 className="eyebrow">Known gaps, from the lanes above</h3>
+      <ul className="small">{gaps.map((l) => <li key={l.lane}><span className="mono">{l.lane}</span>: {l.limitation}</li>)}</ul>
+      {s.research_gaps.length > 0 && (<>
+        <h3 className="eyebrow">Other gaps</h3>
+        <ul className="small">{s.research_gaps.map((g, i) => <li key={i}>{g}</li>)}</ul>
+      </>)}
+      {v2.some((l) => l.finding) && (<>
+        <h3 className="eyebrow">Findings about the sources</h3>
+        <ul className="small">{v2.filter((l) => l.finding).map((l) => <li key={l.lane}><span className="mono">{l.lane}</span>: {l.finding}</li>)}</ul>
+      </>)}
+      {rc && (<>
+        <h3 className="eyebrow">Recovery research</h3>
+        <ul className="small recovery-coverage">
+          <li>Observed report of recovery: {rc.observed}</li>
+          <li>Sourced estimate only: {rc.estimate}</li>
+          {rc.other_statement > 0 && <li>Statement that supply was unaffected or nothing was lost: {rc.other_statement}</li>}
+          <li>Researched, no public evidence: {rc.researched_no_public_evidence}</li>
+          <li>Not yet researched: {rc.not_researched}</li>
+          {rc.withheld_active_campaign > 0 && <li>Status withheld while an attack campaign is active: {rc.withheld_active_campaign}</li>}
+        </ul>
+        {Object.keys(rc.unresearched_by_class).length > 0 && (
+          <p className="small dim">Still to research: {Object.entries(rc.unresearched_by_class).map(([k, n]) => `${n} ${labelFor(s.taxonomy.asset_classes, k).toLowerCase()}`).join(", ")}.</p>
+        )}
+        <p className="small dim">{rc.policy}</p>
+      </>)}
+      {cq && (<>
+        <h3 className="eyebrow">Citations behind the published events</h3>
+        <ul className="small citation-quality">
+          <li>{cq.citations} citations; {cq.with_publication_date} carry a publication date stated by the source.</li>
+          <li>Languages: {Object.entries(cq.languages).map(([k, n]) => `${k} ${n}`).join(", ")}.</li>
+          <li>Event dates: {Object.entries(cq.event_date_precision).map(([k, n]) => `${n} to the ${k}`).join(", ")}.</li>
+          {cq.link_check && <li>Automated link check, {fmtDate(cq.link_check_date ?? "")}: {cq.link_check.reachable} reachable, {cq.link_check.redirected} redirected, {cq.link_check.blocked} refused the check, {cq.link_check.dead} gone, {cq.link_check.error} failed to load.</li>}
+        </ul>
+        {cq.link_check_note && <p className="small dim">{cq.link_check_note}</p>}
+      </>)}
+      <details className="small"><summary>Earlier passes, as they were logged</summary>
+        <table className="sector-table research-log">
+          <thead><tr><th>Pass</th><th>Status then</th><th>Outcome</th></tr></thead>
+          <tbody>
+            {s.research_log.passes.map((p) => (
+              <tr key={`${p.date}-${p.by}`}>
+                <td className="small">{fmtDate(p.date)}<div className="dim">{p.by}</div></td>
+                <td className="small">{p.kind === "targeted" ? "targeted search" : p.status}{p.status_reason && <div className="dim">{p.status_reason}</div>}</td>
+                <td className="small">{Object.entries(p.outcome).map(([k, n]) => `${k.replace(/_/g, " ")} ${n}`).join(" · ")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
+    </div>
+  );
+}
+
+function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyContext | null }) {
   const s = bundle.system;
   const rec = s.event_summary.recovery_research;
   const kinds = Object.entries(s.event_summary.recovery_kinds).filter(([, n]) => n > 0);
@@ -546,36 +672,14 @@ function SourcesPanel({ bundle }: { bundle: CountryBundle }) {
       <p className="small dim">Re-check limits are display policy: they never decide whether an event
         is included and never enter a number.</p>
       {s.source_health && <SourceHealthBlock h={s.source_health} />}
-      <SourceBrowser events={bundle.events} />
-      <h3 className="eyebrow">Research coverage: how far the event search got</h3>
+      <SourceBrowser bundle={bundle} ctx={ctx} />
       <p className="small research-coverage">
         <strong>{RESEARCH_COMPLETENESS_LABEL[s.research_freshness.completeness]}.</strong>{" "}
         {s.research_freshness.last_systematic_pass
-          ? `Last systematic pass ${fmtDate(s.research_freshness.last_systematic_pass)}, over a declared window of ${fmtDate(s.research_freshness.coverage_window?.[0] ?? null)} – ${fmtDate(s.research_freshness.coverage_window?.[1] ?? null)}; ${s.research_freshness.completeness === "complete" ? `next due ${fmtDate(s.research_freshness.next_due)}` : "its unfinished lanes are due now"}.`
+          ? `Last systematic pass ${fmtDate(s.research_freshness.last_systematic_pass)}, over a declared window of ${fmtDate(s.research_freshness.coverage_window?.[0] ?? null)} – ${fmtDate(s.research_freshness.coverage_window?.[1] ?? null)}. Lane by lane under Research coverage.`
           : "Every pass so far was targeted at named gaps and leads."}
       </p>
       <p className="small dim">{s.research_freshness.note}</p>
-      <p className="small dim">{s.research_log.note}</p>
-      <table className="sector-table research-log">
-        <thead><tr><th>Pass</th><th>Window searched</th><th>Status</th><th>Outcome</th></tr></thead>
-        <tbody>
-          {s.research_log.passes.map((p) => (
-            <tr key={`${p.date}-${p.by}`}>
-              <td className="small">{fmtDate(p.date)}<div className="dim">{p.by}</div><div className="dim">{p.kind}</div></td>
-              <td className="small">{fmtDate(p.window[0])} – {fmtDate(p.window[1])}<div className="dim">{p.scope}</div></td>
-              <td className="small"><span className={`badge gate-${p.status === "complete" ? "met" : "partial"}`}>
-                {p.kind === "targeted" ? "targeted search (never complete by design)" : p.status}</span>
-                {p.status_reason && <div className="dim">{p.status_reason}</div>}
-                {p.lanes && p.lanes.length > 0 && (
-                  <ul className="dim lane-list">{p.lanes.map((l) => (
-                    <li key={l.lane}>{l.lane}{l.source_family ? ` (${l.source_family})` : ""}: {l.status}{l.reason ? ` (${l.reason})` : ""}{l.covered_through ? `; searched through ${fmtDate(l.covered_through)}` : ""}</li>
-                  ))}</ul>
-                )}</td>
-              <td className="small">{Object.entries(p.outcome).map(([k, n]) => `${k.replace(/_/g, " ")} ${n}`).join(" · ")}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
       <h3 className="eyebrow">Recovery evidence across the recorded events</h3>
       <p className="small dim recovery-meaning">"Recovery" on these pages means a cited public report
         that a facility or service came back, fully or partly. Nothing is modelled: with no such report
@@ -590,8 +694,6 @@ function SourcesPanel({ bundle }: { bundle: CountryBundle }) {
           <ul className="small">{kinds.map(([k, n]) => <li key={k}>{labelFor(RECOVERY_KIND_LABEL, k)}: {n}</li>)}</ul>
         </>
       )}
-      <h3 className="eyebrow">Known gaps</h3>
-      <ul className="small">{s.research_gaps.map((g, i) => <li key={i}>{g}</li>)}</ul>
       <h3 className="eyebrow">Review</h3>
       <p className="small review-summary">{(s.review_summary.blind_reviewed ?? 0) + s.review_summary.dual_reviewed} of {bundle.events.length} events
         independently reviewed ({s.review_summary.blind_reviewed ?? 0} blind by three reviewers,{" "}
@@ -631,9 +733,39 @@ function SourceHealthBlock({ h }: { h: SourceHealth }) {
 }
 
 /** Browse the citations by publisher. Display only: filters what is listed, never what is counted. */
-function SourceBrowser({ events }: { events: CountryEvent[] }) {
+const SOURCE_KIND_LABEL: Record<string, string> = {
+  incident: "Incident citations",
+  recovery: "Recovery evidence",
+  context: "Energy-system context",
+  global: "National energy context (world map)",
+  registry: "Search registry (what the lanes searched)",
+};
+
+function SourceBrowser({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyContext | null }) {
+  const events = bundle.events;
+  const [kind, setKind] = useState("incident");
   const [role, setRole] = useState("all");
   const [open, setOpen] = useState<string | null>(null);
+  const otherRows = useMemo(() => {
+    if (kind === "recovery") {
+      const by = new Map<string, { label: string; url: string | null; note: string }>();
+      for (const e of events) {
+        if (e.recovery.url) by.set(e.recovery.url, { label: new URL(e.recovery.url).hostname, url: e.recovery.url, note: fmtEventDate(e) + ": " + labelFor(RECOVERY_KIND_LABEL, e.recovery.kind ?? e.recovery.research_status) });
+      }
+      return [...by.values()].sort((a, b) => a.label.localeCompare(b.label));
+    }
+    if (kind === "context") {
+      return bundle.system.profile.metrics.filter((m) => m.source).map((m) => ({ label: String(m.source), url: m.url ?? null, note: m.metric.replace(/_/g, " ") }))
+        .sort((a, b) => a.label.localeCompare(b.label));
+    }
+    if (kind === "global") {
+      return ctx ? [{ label: ctx.source.name, url: ctx.source.url, note: `Release of ${fmtDate(ctx.source.release)}; national aggregates; ${ctx.source.licence}` }] : [];
+    }
+    if (kind === "registry") {
+      return bundle.system.sources.map((x) => ({ label: x.name, url: null, note: x.role })).sort((a, b) => a.label.localeCompare(b.label));
+    }
+    return [];
+  }, [kind, events, bundle, ctx]);
   const rows = useMemo(() => {
     const by = new Map<string, { publisher: string; roles: Set<string>; langs: Set<string>;
                                  events: CountryEvent[]; urls: Set<string> }>();
@@ -657,6 +789,17 @@ function SourceBrowser({ events }: { events: CountryEvent[] }) {
   return (
     <div className="source-browser">
       <h3 className="eyebrow">Source browser</h3>
+      <label className="small">Show{" "}
+        <select value={kind} onChange={(ev) => { setKind(ev.target.value); setOpen(null); }} aria-label="Source type">
+          {Object.entries(SOURCE_KIND_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </select>
+      </label>{" "}
+      {kind !== "incident" ? (
+        <ul className="small lane-list source-other">
+          {otherRows.map((r, i) => <li key={i}>{r.url ? <a href={r.url} target="_blank" rel="noopener noreferrer">{r.label}</a> : r.label} <span className="dim">{r.note}</span></li>)}
+          {otherRows.length === 0 && <li className="dim">Nothing of this type is cited for this country.</li>}
+        </ul>
+      ) : (<>
       <label className="small">Role{" "}
         <select value={role} onChange={(ev) => { setRole(ev.target.value); setOpen(null); }} aria-label="Filter sources by role">
           <option value="all">all roles</option>
@@ -689,6 +832,7 @@ function SourceBrowser({ events }: { events: CountryEvent[] }) {
           ))}
         </tbody>
       </table>
+      </>)}
     </div>
   );
 }

@@ -91,7 +91,9 @@ REQUIRED_WEB_PAYLOADS = (
 # data/processed (mirrored the same way), so the Russia theatre's flat namespace above is
 # untouched. Declared here, like everything else, so the staging check and the tests see them.
 SYSTEM_PAYLOADS = ("system.json", "events.json", "regions.geojson")
-GLOBAL_PAYLOADS = ("global/manifest.json", "global/world.geojson")
+# Iteration 18: national energy context, cross-system research status, and a chronological feed.
+GLOBAL_PAYLOADS = ("global/manifest.json", "global/world.geojson", "global/energy_context.json",
+                   "global/data_quality.json", "global/recent_evidence.json")
 
 
 def system_payload_paths():

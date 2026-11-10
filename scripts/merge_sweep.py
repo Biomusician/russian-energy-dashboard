@@ -1,0 +1,60 @@
+"""Merge one research pass's candidate files into the local queues (iteration 18).
+
+    .venv\\Scripts\\python.exe scripts\\merge_sweep.py
+
+Reads `data/candidates/sweep18/<cc>_*_candidates.json` and adds each record to
+`data/candidates/<cc>.json`. Both are local and gitignored. Publishes nothing: a record still has
+to pass blind review and the import gate.
+
+A candidate whose id already exists replaces the queue record only if that record was never
+accepted by review (a lead the researcher has now resolved). A published record is never touched
+from here. LEAD_HOLDS records the lead's decision to be stricter than a researcher, which the
+governance allows; the reverse is not allowed.
+"""
+import glob
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+CANDIDATES = ROOT / "data" / "candidates"
+PASSING = ("confirmed", "corrected")
+
+LEAD_HOLDS = {
+    "cn-2024-06-15-guangdong-flood-outage":
+        "388,000 is households that experienced outages over about three days, not a stated simultaneous peak: clause 5 needs a peak",
+    "in-2024-09-12-tamil-nadu-chennai-grid-outage":
+        "a MW figure with no customer count; the same question held Mumbai 2022 for the owner",
+}
+
+
+def main():
+    for cc in ("us", "ca", "cn", "in", "sa"):
+        qpath = CANDIDATES / f"{cc}.json"
+        queue = json.loads(qpath.read_text(encoding="utf-8"))
+        index = {r.get("candidate_id"): i for i, r in enumerate(queue)}
+        added = replaced = kept = 0
+        for path in sorted(glob.glob(str(CANDIDATES / "sweep18" / f"{cc}_*_candidates.json"))):
+            for r in json.loads(Path(path).read_text(encoding="utf-8")):
+                cid = r.get("candidate_id")
+                r.setdefault("research_pass", f"iteration-18-{cc}")
+                if cid in LEAD_HOLDS and r.get("suggested_disposition") == "accept":
+                    r["suggested_disposition"] = "held"
+                    r["disposition_reason"] = "lead hold: " + LEAD_HOLDS[cid]
+                if cid in index:
+                    old = queue[index[cid]]
+                    published = (old.get("independent_review") or {}).get("disposition") in PASSING
+                    if published:
+                        kept += 1
+                        continue
+                    queue[index[cid]] = {**r, "supersedes_earlier_candidate": True}
+                    replaced += 1
+                else:
+                    index[cid] = len(queue)
+                    queue.append(r)
+                    added += 1
+        qpath.write_text(json.dumps(queue, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(cc, f"added {added}, replaced unpublished {replaced}, left published alone {kept}, queue {len(queue)}")
+
+
+if __name__ == "__main__":
+    main()

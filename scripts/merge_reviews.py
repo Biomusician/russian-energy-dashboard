@@ -3,7 +3,7 @@
     .venv\\Scripts\\python.exe scripts\\merge_reviews.py <packet-prefix> [<packet-prefix> ...]
     e.g. scripts\\merge_reviews.py gf_us gf_ca gf_cn gf_in gf_sa
 
-Reads `data/candidates/review17/<prefix>_{A,B,C}.json` (local, gitignored) and writes
+Reads `data/candidates/review18/<prefix>_{A,B,C}.json` (local, gitignored) and writes
 `<prefix>_merged.json` beside them. Writes nothing that is published.
 
 THE RULE (docs/REVIEW_GOVERNANCE.md §7). Three roles review blind: A evidence, B safety and
@@ -27,7 +27,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-R = ROOT / "data" / "candidates" / "review17"
+R = ROOT / "data" / "candidates" / "review18"
 ROLES = ("A", "B", "C")
 PASS = ("ACCEPT", "ACCEPT_WITH_CORRECTION")
 NOT_APPLIED_HERE = ("event_id",)   # ids are permanent; renames go to the owner

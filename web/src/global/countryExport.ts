@@ -1,5 +1,6 @@
 import { ENVIRONMENT_LABEL, labelFor, type CountrySystem } from "./manifest";
 import { DISPUTED, NO_EVENTS, type Scale } from "./countryScale";
+import { fmtValue, type ContextRow, type EnergyContext } from "./context";
 
 /** The frame drawn into a country PNG.
  *
@@ -14,7 +15,8 @@ const DIM = "#93a5b3";
 const BAND = "rgba(7, 9, 12, 0.88)";
 const SANS = '"Inter", system-ui, sans-serif';
 
-export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, scale: Scale): HTMLCanvasElement {
+export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, scale: Scale,
+                                    national?: { row: ContextRow | null; ctx: EnergyContext } | null): HTMLCanvasElement {
   const W = map.width;
   const H = map.height;
   const out = document.createElement("canvas");
@@ -66,7 +68,10 @@ export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, 
   c.font = `${Math.round(13 * s)}px ${SANS}`;
   c.fillText("What was reported and found, not a rate of disruption. Counts reflect this country's " +
              "reporting rules; not comparable across countries; never ranked.", pad, H - Math.round(34 * s));
-  c.fillText("Energy Disruption Monitor · open sources · boundaries: Natural Earth (line of actual control)",
+  const nat = national?.row
+    ? `National energy production ${fmtValue(national.row.values.total_production, national.ctx.metrics.total_production.unit)} (${national.ctx.comparison_year}, EIA) is context only. `
+    : "";
+  c.fillText(`${nat}Energy Disruption Monitor · open sources · boundaries: Natural Earth (line of actual control)`,
              pad, H - Math.round(14 * s));
   return out;
 }

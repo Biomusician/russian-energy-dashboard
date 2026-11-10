@@ -15,7 +15,7 @@
       "asset_class": "system_wide",
       "cause": "natural_hazard",
       "summary": "A derecho crossed southern and eastern Ontario on 21 May 2022, bringing down poles and lines across the Hydro One and local-utility networks.",
-      "effect": "About 586,000 customer outages in Ontario at the storm's height (IESO; Wikipedia attributes them to Hydro One); more than 15,000 properties in eastern Ontario were still without power on 30 May.",
+      "effect": "About 586,000 customer outages in Ontario (IESO storm summary, not stated as a simultaneous peak; Wikipedia attributes them to Hydro One); more than 15,000 properties in eastern Ontario were still without power on 30 May.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Loss of supply to >=100,000 customers (586,000 outages in Ontario per IESO briefing).",
@@ -54,8 +54,8 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "partial_restoration",
         "date": null,
-        "evidence": "Partial only: thousands of eastern Ontario customers were still without power on 30 May 2022; no source found giving a date for full restoration.",
-        "url": null
+        "evidence": "Partial only: on 30 May 2022 more than 15,000 Ontario properties were still without power, after nearly 760,000 Hydro One and 172,000 local-utility customers had been restored; no completion date given.",
+        "url": "https://globalnews.ca/news/8879756/thousands-still-without-power-eastern-ontario-may-30"
       },
       "review": {
         "reviewed_at": "2026-11-03",
@@ -171,11 +171,7 @@
       "inclusion_basis": "reported_effect",
       "criterion_met": 2,
       "threshold_basis": "Energy (coal) export terminal operations suspended, stated by the operator.",
-      "capacity_affected": {
-        "value": 3.0,
-        "unit": "Mt (approx. reduction in 2022 throughput guidance; operator attributes it to the strike and to rail underperformance)",
-        "source_says": "cut its 2022 throughput estimate to 24 to 25 million tonnes from 27.5 million"
-      },
+      "capacity_affected": null,
       "sources": [
         {
           "url": "https://biv.com/article/2022/09/strike-action-shuts-down-operations-roberts-banks-westshore-coal-terminal",
@@ -360,9 +356,9 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
-        "date": null,
-        "evidence": "As of 1 January 2023, Hydro-Québec said 11 customers who lost power in the storm still had no electricity.",
+        "kind": "partial_restoration",
+        "date": "2023-01-01",
+        "evidence": "By 1 January 2023, the report date, Hydro-Québec said almost all customers had been reconnected and all primary residences that lost power in the storm were back; 11 customers (10 vacation properties and a sugar shack) remained without electricity (near-complete, not total).",
         "url": "https://globalnews.ca/news/9381376/11-hydro-quebec-customers-who-lost-power-in-winter-storm-yet-to-be-reconnected"
       },
       "review": {
@@ -496,7 +492,7 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2023-07-16",
         "evidence": "By early Sunday 16 July fewer than 2,000 customers remained without power (near-complete, not total).",
         "url": "https://www.noovo.info/nouvelle/les-pannes-de-courant-pratiquement-terminees-au-quebec.html"
@@ -572,7 +568,7 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "no_supply_lost",
         "date": "2024-01-13",
         "evidence": "The AESO ended the Grid Alert at 20:40 on 13 January 2024; no customer load was shed.",
         "url": "https://aeso.ca/aeso/media/aeso-thanks-albertans-for-quick-response-to-call-for-power-conservation/"
@@ -800,7 +796,7 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2024-11-23",
         "evidence": "BC Hydro said on 23 November it had restored power to almost all customers; just over 5,600 remained out (near-complete, not total).",
         "url": "https://globalnews.ca/news/10885380/bc-hydro-power-almost-restored-storm/"
@@ -878,8 +874,8 @@
         "research_status": "EVIDENCE_FOUND",
         "kind": "partial_restoration",
         "date": null,
-        "evidence": "Partial only: about 215,000 customers still affected on the night of 1 April 2025; Hydro One expected some areas to wait until the end of that week. No completion date found.",
-        "url": null
+        "evidence": "Partial only: Hydro One had restored more than 783,000 customers and about 215,000 were still affected at the start of April 2025; repairs in some areas were expected to take until the end of that week (an expectation). No completion date found.",
+        "url": "https://www.cp24.com/news/2025/04/01/power-outages-persist-in-hard-hit-areas-after-ontario-ice-storm/"
       },
       "review": {
         "reviewed_at": "2026-11-03",
@@ -911,7 +907,7 @@
       "regions_affected": [],
       "facility_name": null,
       "facility_name_local": null,
-      "operator": "Cenovus Energy; Canadian Natural Resources; MEG Energy",
+      "operator": "Cenovus Energy; Canadian Natural Resources",
       "asset_class": "upstream_production",
       "cause": "natural_hazard",
       "summary": "Wildfires in northern Alberta in late May 2025 forced Cenovus to shut in Christina Lake and CNRL to shut in Jackfish 1.",
@@ -951,11 +947,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "estimate",
         "date": null,
-        "evidence": null,
-        "url": null
+        "evidence": "Only an estimate found: an article of 3 June 2025 reports Cenovus saying on Sunday that it expected to resume Christina Lake operations in the near term; no restart timing was given for the other shut-in sites. No confirmed restart was found.",
+        "url": "https://insurancejournal.com/news/national/2025/06/03/826136.htm"
       },
       "review": {
         "reviewed_at": "2026-11-03",
@@ -1067,7 +1063,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED"
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2026-03-17",
+        "evidence": "Nearly 255,000 Hydro-Québec customers were still out around noon on 17 March 2026, down from a peak of more than 310,000; the utility said it was very likely not everyone would be reconnected that day (an expectation). No completion statement.",
+        "url": "https://globalnews.ca/news/11734546/strong-winds-leave-thousands-in-the-dark-in-central-canada-maritimes"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -1174,9 +1174,9 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "estimate",
+        "kind": "partial_restoration",
         "date": "2026-07-03",
-        "evidence": "On 3 July about 30,000 Quebec customers were still out and Hydro-Québec expected most areas to be restored by 11 p.m. that day: an expectation, not an observed restoration.",
+        "evidence": "By 3 July 2026, the report date, Hydro-Québec had crews restoring service to about 30,000 Quebec customers, down from nearly 140,000 at the peak of the outages (Environment Canada figure) (observed). Hydro-Québec expected most areas back by 11 p.m.: an expectation, not an observed restoration.",
         "url": "https://www.cp24.com/news/canada/2026/07/03/55000-hydro-clients-in-quebec-ontario-without-power-after-severe-storms/"
       },
       "review": {
@@ -1189,57 +1189,6 @@
         "disposition": "corrected",
         "source_count": 1,
         "sources_opened_by_reviewer": 2,
-        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
-        "source_access": "at least one source read"
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "ca-2023-08-28-alberta-eea3",
-      "date": "2023-08-28",
-      "date_precision": "day",
-      "date_end": "2023-08-29",
-      "region_code": "CA-AB",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": "Alberta Electric System Operator (AESO)",
-      "asset_class": "system_wide",
-      "cause": "natural_hazard",
-      "summary": "Alberta's system operator declared a Level 3 Energy Emergency Alert on 28-29 August 2023 as high demand coincided with reduced imports and low wind output.",
-      "effect": "EEA 3 declared for a reserve shortage; NERC reports no firm load was shed.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 5,
-      "threshold_basis": "Clause 5: grid-operator EEA Level 3 declaration (28-29 Aug 2023).",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://www.nerc.com/globalassets/programs/rapa/pa/nerc_sor_2024_technical_assessment.pdf",
-          "publisher": "NERC",
-          "date": null,
-          "language": "en",
-          "source_role": "regulator",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "NERC states no firm load was shed; the end time of the alert is not given.",
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-10-31",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "dual_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 2,
-        "disposition": "confirmed",
-        "source_count": 1,
-        "sources_opened_by_reviewer": 1,
         "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
       },
@@ -1346,11 +1295,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "Not researched in this lane.",
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2023-04-07",
+        "evidence": "By 7 April 2023, the report date, Hydro One said it was restoring power to more than 316,000 customers after the ice storm, with approximately 46,000 Ontario customers remaining without power; the page does not state the geography of the 316,000 figure. Some were expected to stay out overnight (an expectation). No completion statement found.",
+        "url": "https://hydroone.mediaroom.com/2023-04-07-Hydro-One-receives-assistance-from-utilities-and-contractors-to-restore-power-in-eastern-Ontario"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -1546,7 +1495,7 @@
       ],
       "recovery": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2023-04-25",
         "evidence": "Service largely restored by late afternoon the same day (Noovo).",
         "url": "https://www.noovo.info/nouvelle/panne-majeure-pres-de-500-000-quebecois-prives-delectricite-selon-hydro-quebec.html"
@@ -1584,7 +1533,7 @@
       "operator": "Hydro-Québec",
       "asset_class": "system_wide",
       "cause": "technical",
-      "summary": "An equipment failure on Hydro-Québec's transmission system on the afternoon of 6 July 2023, during hot weather, cut power to customers in southern Quebec.",
+      "summary": "An equipment failure on the afternoon of 6 July 2023, during hot weather, cut power to customers in southern Quebec.",
       "effect": "Noovo reported more than 115,000 Hydro-Québec customers without power at one time; about 200,000 customers were affected over the course of the outage.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
@@ -1605,11 +1554,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2023-07-06",
+        "evidence": "Noovo (updated 8:20 p.m. on 6 July 2023): most of the 200,000 affected customers had power back by the end of the day, and the number affected around 8 p.m. was only 350; the article does not say what area that figure covers. Near-complete, not total; no completion statement.",
+        "url": "https://www.noovo.info/nouvelle/panne-majeure-a-montreal-des-milliers-de-clients-dhydro-quebec-prives-de-courant.html"
       },
       "review": {
         "reviewed_at": "2026-11-03",
@@ -1673,11 +1622,11 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2024-04-04",
+        "evidence": "Partial only: by about 11 p.m. on 4 April 2024 outages were well down from a storm peak of 600,000, but the article gives two different evening figures (more than 60,000 in the body, more than 230,000 in the subtitle); Hydro-Québec said some customers might not be reconnected until the next day (an expectation).",
+        "url": "https://www.noovo.info/nouvelle/la-bordee-de-neige-printaniere-cause-de-nombreuses-pannes-de-courant.html"
       },
       "review": {
         "reviewed_at": "2026-11-03",
@@ -1754,6 +1703,202 @@
         "roles": {
           "evidence": "accept_with_correction",
           "safety": "accept",
+          "taxonomy": "accept"
+        }
+      },
+      "hazard_name": null
+    },
+    {
+      "event_id": "ca-2025-01-22-whiffen-head-terminal-suspension",
+      "date": "2025-01-22",
+      "date_precision": "day",
+      "date_end": "2025-02-13",
+      "region_code": "CA-NL",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": "Whiffen Head transshipment terminal",
+      "facility_name_local": null,
+      "operator": "Newfoundland Transshipment Limited",
+      "asset_class": "oil_terminal",
+      "cause": "technical",
+      "summary": "On 22 January 2025 a tanker struck the wharf at the Whiffen Head transshipment terminal in Newfoundland and Labrador, and the operator suspended all operations at the facility pending inspection.",
+      "effect": "All terminal operations suspended; operations resumed in limited form in mid-February 2025.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 2,
+      "threshold_basis": "Export or import terminal operations suspended: the operator said all operations at the facility were suspended.",
+      "capacity_affected": null,
+      "sources": [
+        {
+          "url": "https://vocm.com/2025/01/24/whiffen-head-operations-suspended-after-tanker-strikes-wharf/",
+          "publisher": "VOCM",
+          "date": "2025-01-24",
+          "language": "en",
+          "source_role": "media",
+          "opened": null
+        },
+        {
+          "url": "https://vocm.com/2025/02/13/newfoundland-transshipment-update/",
+          "publisher": "VOCM",
+          "date": "2025-02-13",
+          "language": "en",
+          "source_role": "media",
+          "opened": null
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restart",
+        "date": "2025-02-13",
+        "evidence": "Partial only: the operator said on 13 Feb 2025 it was safe to resume operations in limited form. The cited sources give no date for full restoration.",
+        "url": "https://vocm.com/2025/02/13/newfoundland-transshipment-update/"
+      },
+      "review": {
+        "reviewed_at": "2026-11-10",
+        "threshold_version": "2026-10-30.1",
+        "review_status": "blind_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
+        "source_count": 2,
+        "sources_opened_by_reviewer": 3,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "not recorded by the research lane",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
+      },
+      "hazard_name": null
+    },
+    {
+      "event_id": "ca-2026-03-08-bc-generation-loss-load-shed",
+      "date": "2026-03-08",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "CA-BC",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": null,
+      "facility_name_local": null,
+      "operator": "BC Hydro",
+      "asset_class": "system_wide",
+      "cause": "unknown",
+      "summary": "A power-system event in British Columbia shortly before 01:00 MST on 8 March 2026 caused a loss of generation, and load was shed in the province.",
+      "effect": "The British Columbia grid lost around 2,600 MW of generation and approximately 900 MW of load was shed, according to Alberta's market monitor.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 4,
+      "threshold_basis": "Generation of about 500 MW or more forced offline with a reported effect: around 2,600 MW lost and about 900 MW of load shed.",
+      "capacity_affected": {
+        "value": 900,
+        "unit": "MW",
+        "source_says": "approximately 900 MW of load was shed in BC"
+      },
+      "sources": [
+        {
+          "url": "https://www.albertamsa.ca/assets/Documents/Wholesale-Market-Report-Q1-2026.pdf",
+          "publisher": "Alberta Market Surveillance Administrator",
+          "date": "2026-05-07",
+          "language": "en",
+          "source_role": "regulator",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "NOT_YET_RESEARCHED"
+      },
+      "review": {
+        "reviewed_at": "2026-11-10",
+        "threshold_version": "2026-10-30.1",
+        "review_status": "blind_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
+        "source_count": 1,
+        "sources_opened_by_reviewer": 4,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
+      },
+      "hazard_name": null
+    },
+    {
+      "event_id": "ca-2026-11-08-windstorms-bc",
+      "date": "2026-11-08",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "CA-BC",
+      "geography_precision": "admin1",
+      "regions_affected": [],
+      "facility_name": null,
+      "facility_name_local": null,
+      "operator": "BC Hydro",
+      "asset_class": "system_wide",
+      "cause": "natural_hazard",
+      "summary": "A series of windstorms crossed British Columbia from Friday 6 November 2026; the second storm peaked early on Sunday 8 November and cut power to BC Hydro customers in the province.",
+      "effect": "Approximately 135,000 BC Hydro customers were without power at the height of the storm at 1 a.m. on Sunday 8 November 2026.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 5,
+      "threshold_basis": "Grid event affecting about 100,000 customers or more: approximately 135,000 customers without power at one time (BC Hydro).",
+      "capacity_affected": {
+        "value": 135000,
+        "unit": "customers",
+        "source_says": "approximately 135,000 customers were without power"
+      },
+      "sources": [
+        {
+          "url": "https://www.bchydro.com/news/press_centre/news_releases/2026/second-damaging-storm-causes-outages-bc-coast.html",
+          "publisher": "BC Hydro",
+          "date": "2026-11-08",
+          "language": "en",
+          "source_role": "operator",
+          "opened": true
+        },
+        {
+          "url": "https://www.bchydro.com/news/press_centre/news_releases/2026/storm-response-continues.html",
+          "publisher": "BC Hydro",
+          "date": "2026-11-07",
+          "language": "en",
+          "source_role": "operator",
+          "opened": true
+        },
+        {
+          "url": "https://www.bchydro.com/news/press_centre/news_releases/2026/power-restored-to-99-per-cent-impacted-by-weekend-storms.html",
+          "publisher": "BC Hydro",
+          "date": "2026-11-09",
+          "language": "en",
+          "source_role": "operator",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "partial_restoration",
+        "date": "2026-11-09",
+        "evidence": "BC Hydro, 9 November: power restored to 99 per cent of customers affected; approximately 6,000 remained without power. Full restoration not yet reported.",
+        "url": "https://www.bchydro.com/news/press_centre/news_releases/2026/power-restored-to-99-per-cent-impacted-by-weekend-storms.html"
+      },
+      "review": {
+        "reviewed_at": "2026-11-10",
+        "threshold_version": "2026-10-30.1",
+        "review_status": "blind_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
+        "source_count": 3,
+        "sources_opened_by_reviewer": 3,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept_with_correction",
           "taxonomy": "accept"
         }
       },

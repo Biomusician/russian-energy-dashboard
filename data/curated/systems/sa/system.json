@@ -37,7 +37,7 @@
       "sector": "oil_logistics",
       "state": "CONTEXT_ONLY",
       "assessed_readiness": "UNSUITABLE",
-      "reason": "The ESDI's refining-base proxy breaks for a crude exporter: one export terminal would exceed 100% of it."
+      "reason": "The ESDI's refining-base proxy does not fit a crude exporter: export volumes are not commensurable with the refining base."
     },
     {
       "sector": "gas",
@@ -143,7 +143,7 @@
     }
   ],
   "research_gaps": [
-    "Non-conflict incidents remain thin: the July 2024 Sharurah outage is reported in residents (over 100,000), not customers, and is held rather than converted.",
+    "Non-conflict incidents remain thin: one 2024 power outage is reported in residents, not customers, and is held rather than converted.",
     "The record is dominated by conflict episodes (March 2022, and 2026). That reflects how Saudi incidents are reported, not the absence of other disruption."
   ],
   "audit_docs": [
