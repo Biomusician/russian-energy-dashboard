@@ -1,0 +1,235 @@
+{
+  "system_id": "om",
+  "reporting_environment": "corporate_disclosure",
+  "reporting_note": "Disruption becomes public mainly through statements by the ministry, the electricity regulator and state companies, carried by the national news agency and the press. No public event register was found, and the regulator's own documents could not be opened, so the coverage of this record cannot be computed.",
+  "geography": {
+    "unit_label": "governorate",
+    "units_expected": 11,
+    "note": "11 governorates, the count in both Natural Earth and the National Centre for Statistics and Information's bulletin (October 2026). Two Natural Earth codes are superseded and are joined by name, not by code. Official electricity production statistics use eight groupings, not these governorates.",
+    "rulings": [
+      {
+        "code": "OM-BA",
+        "status": "note",
+        "note": "Al Batinah North. Natural Earth keeps the code of the former undivided Al Batinah region; the current ISO code is OM-BS. Joined by name."
+      },
+      {
+        "code": "OM-MU",
+        "status": "note",
+        "note": "Musandam is not contiguous with the rest of Oman. It is drawn in two parts; the smaller is the wilayat of Madha, which belongs to this governorate. The area enclosed within Madha (Nahwa) is drawn with the United Arab Emirates."
+      },
+      {
+        "code": "OM-SH",
+        "status": "note",
+        "note": "Ash Sharqiyah South. Natural Earth keeps the code and the Arabic label of the former undivided Ash Sharqiyah region; the current ISO code is OM-SJ. Joined by name."
+      }
+    ],
+    "precision_policy": {
+      "kinetic": "country",
+      "reason": "Oman's governorates are large, but each of its coastal ones holds a single port-industrial area, so a governorate and a class together name the facility. While the 2026 war has no reported end, attacks and sabotage are recorded for the country, with no governorate, facility or operator. Other events are placed by governorate."
+    }
+  },
+  "sectors": [
+    {
+      "sector": "refining",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "No per-refinery capacity table was read: the operators' annual reports were not opened (one file exceeds the fetch limit). National refinery output by product is published monthly. The number of plants is small, so no per-facility table is shown."
+    },
+    {
+      "sector": "electric_generation",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "The single buyer publishes its contracted plants each year, but no dated capacity census has been built and captive generation is outside it. National production is published monthly for eight groupings, not the 11 governorates."
+    },
+    {
+      "sector": "transmission",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "No inventory was read and the event-burden measure does not fit. Line-level and station-level data are out of scope for this country; national totals only."
+    },
+    {
+      "sector": "oil_logistics",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "No public capacity inventory, and building one would centre on export routing, which is out of scope. Export volume is not commensurable with a refining base."
+    },
+    {
+      "sector": "gas",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "A national gas balance and annual LNG production are published; no processing-capacity inventory on one basis was found, and no pipeline layer is built."
+    },
+    {
+      "sector": "coal",
+      "state": "NOT_APPLICABLE",
+      "assessed_readiness": "NOT_APPLICABLE",
+      "reason": "Not applicable: Oman has no coal production and no coal-fired generation (EIA reports zero for both in 2024). The sector does not exist here, which is different from unknown."
+    }
+  ],
+  "sources": [
+    {
+      "name": "National Centre for Statistics and Information, Monthly Statistical Bulletin",
+      "role": "adopted (context)",
+      "licence": "Open data licence of the Sultanate of Oman: re-use with attribution and disclosed modification; stated compatible with CC BY 4.0",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "monthly (about six weeks after the reference month)",
+      "stale_policy": "monthly",
+      "stale_after_days": 120,
+      "source_release": "October 2026 issue",
+      "content_vintage": "monthly to September 2026; 2025 full year (provisional)"
+    },
+    {
+      "name": "Nama Power and Water Procurement: Annual Report and 7-Year Statement",
+      "role": "adopted (facts only)",
+      "licence": "all rights reserved; not redistributed",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "annual",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": "Annual Report 2025; 7-Year Statement 2026-2032 (Issue 20)",
+      "content_vintage": "2025"
+    },
+    {
+      "name": "Oman LNG Annual Report",
+      "role": "adopted (facts only)",
+      "licence": "all rights reserved; not redistributed",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "annual (about mid-year for the prior year)",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": "Outlook 2024 (the 2025 edition is listed but returned no text)",
+      "content_vintage": "2024"
+    },
+    {
+      "name": "JODI Oil; JODI Gas",
+      "role": "adopted (context)",
+      "licence": "terms not published",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "monthly",
+      "stale_policy": "monthly",
+      "stale_after_days": 120,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "OQ group, OQ Exploration and Production, PDO (annual and sustainability reports); EIA; GCC-Stat",
+      "role": "derived facts only",
+      "licence": "varies; company reports all rights reserved",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "varies by publisher; read when an event is researched",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "WRI Global Power Plant Database; EIA country analysis brief (2019); third-party report aggregators",
+      "role": "rejected",
+      "licence": "12 plant rows, newest 2008; brief last updated 2019; aggregator copies of unknown provenance",
+      "last_checked": "2026-11-11",
+      "publication_cadence": null,
+      "stale_policy": null,
+      "stale_after_days": null,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Ministry of Energy and Minerals statements (Oman News Agency)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Authority for Public Services Regulation statements and reports",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven; annual report",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Muscat Stock Exchange company disclosures (OQ Gas Networks, OQ Exploration and Production, listed power companies)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Omani press: Oman Daily, Al-Watan, Al-Shabiba (Arabic); Oman Observer, Times of Oman, Muscat Daily (English)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "International news agencies and energy press (Reuters, S&P Global)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    }
+  ],
+  "research_gaps": [],
+  "audit_docs": [
+    "docs/countries/OM_SOURCE_AUDIT.md",
+    "docs/countries/OM_INDEX_READINESS.md"
+  ],
+  "provenance": "Authored 2026-11-11 (iteration 19) from the source-audit lane's draft, with the lead's precision policy and rulings. Edit by hand; this file is the curated source.",
+  "maturity": "research_preview",
+  "lane_registry": {
+    "OM1": {
+      "source_family": "Ministry of Energy and Minerals statements and the national statistical bulletin, read for disruption-attributed changes",
+      "registry": [
+        "Ministry of Energy and Minerals statements (Oman News Agency)",
+        "National Centre for Statistics and Information, Monthly Statistical Bulletin"
+      ]
+    },
+    "OM2": {
+      "source_family": "OQ group and PDO annual and sustainability reports and company releases",
+      "registry": [
+        "Muscat Stock Exchange company disclosures (OQ Gas Networks, OQ Exploration and Production, listed power companies)",
+        "OQ group, OQ Exploration and Production, PDO (annual and sustainability reports); EIA; GCC-Stat"
+      ]
+    },
+    "OM3": {
+      "source_family": "Oman LNG annual reports, read for material interruptions of production",
+      "registry": [
+        "Oman LNG Annual Report"
+      ]
+    },
+    "OM4": {
+      "source_family": "Power: procurement company reports and the regulator's findings on major interruptions",
+      "registry": [
+        "Nama Power and Water Procurement: Annual Report and 7-Year Statement",
+        "Authority for Public Services Regulation statements and reports"
+      ]
+    },
+    "OM5": {
+      "source_family": "Arabic and English media by year, via search",
+      "registry": [
+        "Omani press: Oman Daily, Al-Watan, Al-Shabiba (Arabic); Oman Observer, Times of Oman, Muscat Daily (English)",
+        "International news agencies and energy press (Reuters, S&P Global)"
+      ]
+    }
+  }
+}

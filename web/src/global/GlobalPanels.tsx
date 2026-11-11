@@ -42,7 +42,7 @@ export function RecentEvidencePanel() {
           <div className="map-control-row">
             <label className="small">Country{" "}
               <select aria-label="Filter recent evidence by country" value={country} onChange={(e) => setCountry(e.target.value)}>
-                <option value="all">all five</option>
+                <option value="all">all countries</option>
                 {countries.map(([id, n]) => <option key={id} value={id}>{n}</option>)}
               </select>
             </label>
@@ -81,8 +81,10 @@ export function RecentEvidencePanel() {
   );
 }
 
+// Every state the build can emit, so no lane vanishes from a summary line (iteration 19: a lane
+// stopped by the search allowance was counted in the total and named nowhere).
 const LANE_ORDER = ["universe_searched", "current_through_latest_release", "declared_query_set_run",
-                    "partially_searched", "blocked_by_source", "not_started"];
+                    "partially_searched", "blocked_by_source", "stopped_by_search_limit", "not_started", "legacy"];
 
 export function laneChips(states: Record<string, number>): string {
   return LANE_ORDER.filter((k) => states[k]).map((k) => `${states[k]} ${labelFor(LANE_STATE_LABEL, k).toLowerCase()}`).join(" · ");
@@ -142,7 +144,7 @@ export function DataQualityPanel() {
             );
           })}
           <details className="dq-system">
-            <summary className="small">Recovery evidence by infrastructure class, five countries together</summary>
+            <summary className="small">Recovery evidence by infrastructure class, monitored countries together</summary>
             <p className="small dim">{data.recovery_by_class.note}</p>
             <table className="sector-table">
               <thead><tr><th>Class</th><th>Reported as</th><th>Cases</th><th>Days to report</th></tr></thead>

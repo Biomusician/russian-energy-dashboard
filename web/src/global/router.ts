@@ -9,6 +9,8 @@
  *    sender saw. A pre-14 link to the theatre's untouched default view was a bare URL; it carried
  *    no state and now opens the home page, one click from the theatre. That is the one cost of
  *    giving the home page the bare URL.
+ *  - `?group=<slug>`      a regional overview (iteration 19), e.g. `?group=gulf`. Validated against
+ *                         the manifest by the view. `sys` wins if both are present.
  *  - a bare URL: the global home.
  *
  *  Nothing here reads a value from the query string as an object key, so `sys=constructor`
@@ -20,7 +22,8 @@ import { useEffect, useState } from "react";
 export type Route =
   | { view: "home" }
   | { view: "theatre" }
-  | { view: "country"; id: string };
+  | { view: "country"; id: string }
+  | { view: "group"; id: string };
 
 // Every key the theatre's URL state has ever written (urlState.ts). Order is irrelevant.
 const THEATRE_KEYS = ["m", "a", "d", "r", "cls", "cau", "con", "ly", "cam", "cmp"];
@@ -30,6 +33,8 @@ export function routeFor(search: string): Route {
   const sys = (p.get("sys") ?? "").trim().toLowerCase();
   if (sys === "ru") return { view: "theatre" };
   if (sys) return { view: "country", id: sys };
+  const group = (p.get("group") ?? "").trim().toLowerCase();
+  if (group) return { view: "group", id: group };
   if (THEATRE_KEYS.some((k) => p.has(k))) return { view: "theatre" };
   return { view: "home" };
 }
@@ -45,6 +50,12 @@ const CHANGE = "edm:locationchange";
 export function navigate(systemId: string | null) {
   const q = hrefFor(systemId);
   window.history.pushState(null, "", q === "?" ? window.location.pathname : `${window.location.pathname}${q}`);
+  window.dispatchEvent(new Event(CHANGE));
+}
+
+/** Open a regional overview, as a new history entry. */
+export function navigateGroup(slug: string) {
+  window.history.pushState(null, "", `${window.location.pathname}?group=${encodeURIComponent(slug)}`);
   window.dispatchEvent(new Event(CHANGE));
 }
 

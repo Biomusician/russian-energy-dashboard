@@ -1,0 +1,205 @@
+{
+  "system_id": "bh",
+  "reporting_environment": "media_only",
+  "reporting_note": "No operator, authority or regulator page reached publishes event-level outage or incident reports. Incidents become public through official statements carried by the state news agency and repeated by the domestic press, so most smaller disruptions will not appear and the coverage of this record cannot be computed. Provisional: to be confirmed after the first research pass.",
+  "geography": {
+    "unit_label": "governorate",
+    "units_expected": 5,
+    "note": "Bahrain has 4 governorates today (Capital, Muharraq, Northern, Southern). Natural Earth draws 5, with their pre-2014 shapes, because it still includes the Central governorate that was abolished in 2014. Every record in this system is published at country level, so no governorate is ever shaded for an event. A blank map means records are not placed, not that nothing happened.",
+    "rulings": [
+      {
+        "code": "BH-13",
+        "status": "note",
+        "note": "Capital governorate, drawn with its pre-2014 extent. The governorate is larger today (38 square km in 2012, 78 in 2015 in the official area series), so a place in today's Capital governorate may lie outside this shape."
+      },
+      {
+        "code": "BH-14",
+        "status": "note",
+        "note": "Southern governorate, drawn as Natural Earth has it, from before the 2014 redivision; whether its extent changed then was not verified. Includes the Hawar Islands as Natural Earth draws them."
+      },
+      {
+        "code": "BH-16",
+        "status": "note",
+        "note": "Central governorate: abolished in 2014, when the governorates were redivided into four (Survey and Land Registration Bureau, Area by Governorate). Drawn because Natural Earth still carries it; never assigned an event and never given an event count. An event that a source locates in this area is recorded at country level, not moved to a neighbouring unit."
+      },
+      {
+        "code": "BH-17",
+        "status": "note",
+        "note": "Northern governorate, drawn as Natural Earth has it, from before the 2014 redivision; whether its extent changed then was not verified."
+      }
+    ],
+    "precision_policy": {
+      "kinetic": "country",
+      "other": "country",
+      "reason": "Bahrain is about 780 square kilometres with a handful of energy facilities, and the map source still draws the five governorates that were replaced by four in 2014. A governorate would either identify the facility or place an event in a shape that no longer exists, so every record is the country's. Attacks and sabotage also carry no facility or operator."
+    }
+  },
+  "sectors": [
+    {
+      "sector": "refining",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "The official refining series describe a single refinery, so a sector score would be one facility's status under another name. Annual national throughput and output are shown as context only."
+    },
+    {
+      "sector": "electric_generation",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "National installed capacity is published (IRENA), but the utility's station list was not read and its series covers public supply only, about half of national generation. With this few stations a governorate share would identify a station."
+    },
+    {
+      "sector": "transmission",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "No inventory was read and none should be built: a substation-level picture of a grid this small is outside the scope boundary."
+    },
+    {
+      "sector": "oil_logistics",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "No public capacity inventory was read, and building one would centre on import and export routing, which is out of scope."
+    },
+    {
+      "sector": "gas",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "National production is published annually and shown as context. Processing sits with a single operating group, so a score would be that group's facility status; LNG and storage are not yet researched."
+    },
+    {
+      "sector": "coal",
+      "state": "NOT_APPLICABLE",
+      "assessed_readiness": "NOT_APPLICABLE",
+      "reason": "Not applicable: IRENA reports coal at 0% of Bahrain's total energy supply (2022) and no coal in power generation. The sector does not exist here, which is different from unknown."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Bahrain Open Data Portal (data.gov.bh): Ministry of Oil and Environment and Electricity and Water Authority annual series",
+      "role": "adopted (context)",
+      "licence": "Bahrain Open Government Data License v1.1 (1 November 2026): copying, adapting and commercial use allowed with the source, the extraction date and the licence statement; transformations must be marked as this project's own",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "annual values; datasets revised during the year",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": "datasets modified 2026-08-06 to 2026-11-11",
+      "content_vintage": "2025"
+    },
+    {
+      "name": "IRENA Energy Profile: Bahrain",
+      "role": "adopted (context)",
+      "licence": "IRENA copyright; terms not read; facts cited, file not redistributed",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "annual",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": "2025-09-22",
+      "content_vintage": "2022-2024"
+    },
+    {
+      "name": "JODI Oil; EWA annual statistics books; EIA country brief (2016); GCC-Stat",
+      "role": "derived facts only",
+      "licence": "varies; no Bahrain value read from any of them yet",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "varies by publisher; read when an event is researched",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Ministry of Oil and Environment website (moo.gov.bh); former operator sites (tatweerpetroleum.com, banagas.com)",
+      "role": "rejected",
+      "licence": "ministry site returns a placeholder page; former operator domains no longer resolve",
+      "last_checked": "2026-11-11",
+      "publication_cadence": null,
+      "stale_policy": null,
+      "stale_after_days": null,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Bapco Energies group and Bapco Refining press releases",
+      "role": "event search (systematic lane)",
+      "licence": "all rights reserved; facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Electricity and Water Authority news (ewa.bh, Arabic and English)",
+      "role": "event search (systematic lane)",
+      "licence": "all rights reserved; the site's terms forbid linking without consent, so statements are cited as carried by the state news agency or press until the owner decides",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Bahrain News Agency (official statements)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link; site refused automated access (HTTP 405)",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Bahraini press (Akhbar Al Khaleej, Al-Ayam, Al-Watan, Gulf Daily News)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "International news agencies and energy press (Reuters, S&P Global)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    }
+  ],
+  "research_gaps": [],
+  "audit_docs": [
+    "docs/countries/BH_SOURCE_AUDIT.md",
+    "docs/countries/BH_INDEX_READINESS.md"
+  ],
+  "provenance": "Authored 2026-11-11 (iteration 19) from the source-audit lane's draft, with the lead's precision policy and rulings. Edit by hand; this file is the curated source.",
+  "maturity": "research_preview",
+  "lane_registry": {
+    "BH1": {
+      "source_family": "Hydrocarbons: Bapco Energies group press releases and ministry statements carried by the state news agency",
+      "registry": [
+        "Bapco Energies group and Bapco Refining press releases",
+        "Bahrain News Agency (official statements)"
+      ]
+    },
+    "BH2": {
+      "source_family": "Electricity: Electricity and Water Authority statements",
+      "registry": [
+        "Electricity and Water Authority news (ewa.bh, Arabic and English)"
+      ]
+    },
+    "BH3": {
+      "source_family": "Arabic and English media by year, via search",
+      "registry": [
+        "Bahraini press (Akhbar Al Khaleej, Al-Ayam, Al-Watan, Gulf Daily News)",
+        "International news agencies and energy press (Reuters, S&P Global)"
+      ]
+    }
+  }
+}

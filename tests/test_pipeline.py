@@ -6516,9 +6516,11 @@ def test_the_manifest_lists_every_registered_system_in_registry_order():
     # Alphabetical by display name, never by any figure (GLOBAL_METHODOLOGY §6.4 rule 4).
     names = [s["name"] for s in m["systems"]]
     assert names == sorted(names)
-    # Exactly five countries, plus the original theatre.
-    assert len(systems.COUNTRY_SYSTEMS) == 5
-    assert {s["id"] for s in m["systems"]} == {"ru", "us", "cn", "sa", "ca", "in"}
+    # The five largest producers (iteration 14), the seven Gulf additions (iteration 19), and the
+    # original theatre. Adding a country is a decision recorded here, never a side effect.
+    assert len(systems.COUNTRY_SYSTEMS) == 12
+    assert {s["id"] for s in m["systems"]} == {"ru", "us", "cn", "sa", "ca", "in",
+                                               "ae", "bh", "iq", "ir", "kw", "om", "qa"}
 
 
 @needs_systems
@@ -6577,9 +6579,11 @@ def test_country_events_are_region_scoped_whitelisted_and_sourced():
     for sid in systems.COUNTRY_SYSTEMS:
         events = _sys_payload(sid, "events.json")["events"]
         codes = {f["properties"]["code"] for f in _sys_payload(sid, "regions.geojson")["features"]}
-        assert events, f"{sid}: no events"
+        if not events:
+            # An empty record is allowed only where the page says research has barely begun.
+            assert _sys_payload(sid, "system.json")["maturity"] == "research_preview", f"{sid}: no events"
         for e in events:
-            assert set(e) == set(B.EVENT_FIELDS), (sid, e["event_id"])
+            assert set(B.EVENT_FIELDS) <= set(e) <= set(B.EVENT_FIELDS) | set(B.OPTIONAL_EVENT_FIELDS), (sid, e["event_id"])
             assert not (set(_walk_keys(e)) & COORD_KEYS), e["event_id"]
             if e["geography_precision"] == "admin1":
                 assert e["region_code"] in codes, e["event_id"]
@@ -6720,7 +6724,7 @@ def test_the_build_refuses_a_country_claiming_a_score_it_does_not_have():
 def test_the_import_gate_holds_what_it_should():
     imp = _import_gate()
     ok = {"US-TX"}
-    good = {"candidate_id": "us-2024-01-01-x", "suggested_disposition": "accept",
+    good = {"candidate_id": "us-2024-01-01-x", "suggested_disposition": "accept", "date": "2024-01-01",
             "admin1_code": "US-TX", "geography_precision": "admin1", "summary": "A plant shut.",
             "sources": [{"url": "https://e.x/a", "opened": True}],
             "primary_review": {"completed": "2026-10-31", "sources_opened": 1},
@@ -7137,7 +7141,8 @@ def test_the_published_research_log_is_counts_only_and_says_where_it_stopped():
     for sid in systems.COUNTRY_SYSTEMS:
         p = _sys_payload(sid, "system.json")
         passes = p["research_log"]["passes"]
-        assert passes, sid
+        if not passes:
+            assert p["maturity"] == "research_preview", sid
         for rp in passes:
             assert all(isinstance(v, int) for v in rp["outcome"].values()), (sid, rp)
         # 7B follows the newest SYSTEMATIC pass, never the source registry and never a targeted
@@ -7205,8 +7210,12 @@ def _ev(eid, **kw):
     return {**base, **kw}
 
 
-def _campaigns(status="active", applied=True):
+def _campaigns(status="active", applied=None):
+    # Since iteration 19 `policy_applied` is the switch, and only an ended campaign may turn it
+    # off (after the release period): an ended campaign here is one whose policy has been lifted.
+    applied = (status != "ended") if applied is None else applied
     return {"campaigns": [{"campaign_id": "x-c", "system_id": "x", "name": "n", "status": status,
+                           "ended": "2026-06-01" if status == "ended" else None,
                            "policy_applied": applied,
                            "member_rule": {"causes": ["kinetic_strike", "sabotage"], "from": "2026-01-01"}}]}
 
@@ -7350,7 +7359,7 @@ def test_every_campaign_states_its_status_and_the_theatre_says_why_the_rule_wait
     c = B.load_campaigns()
     assert c["release_rule"]["status"].startswith("proposed")
     for camp in c["campaigns"]:
-        assert camp["status"] in ("active", "ended") and camp["status_basis"] and camp["status_checked"]
+        assert camp["status"] in ("active", "uncertain", "ended") and camp["status_basis"] and camp["status_checked"]
         if not camp["policy_applied"]:
             assert camp.get("not_applied_reason"), camp["campaign_id"]
     theatre = [x for x in c["campaigns"] if x["system_id"] == "russia_theatre"]
@@ -8052,6 +8061,8 @@ def test_the_corpus_totals_are_sums_and_never_per_country():
     done = total = 0
     for p in pay.values():
         sysm = [x for x in p["research_log"]["passes"] if x["kind"] == "systematic"]
+        if not sysm:        # onboarded, no systematic pass yet: no lane to count
+            continue
         newest = max(sysm, key=lambda x: x["date"])
         total += len(newest["lanes"])
         done += sum(1 for lane in newest["lanes"] if _lane_done(lane))

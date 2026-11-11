@@ -24,6 +24,14 @@ describe("scaleFor", () => {
     }
   });
 
+  it("still draws a country with no record: a step with no stops is not an expression", () => {
+    const f = fillFor(scaleFor([0, 0])) as unknown[];
+    expect(JSON.stringify(f)).not.toContain('"step"');
+    expect(f[0]).toBe("case");
+    expect(f.at(-1)).toBe("#16202a");
+    expect(JSON.stringify(f)).toContain('"#2b2b33"');
+  });
+
   it("draws disputed units apart from zero", () => {
     const f = JSON.stringify(fillFor(scaleFor([3])));
     expect(f).toContain('["==",["get","recorded_events"],null],"#2b2b33"');

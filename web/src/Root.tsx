@@ -7,6 +7,7 @@ import GlobalHome from "./global/GlobalHome";
 // of the manifest (iteration 14).
 const TheatreApp = lazy(() => import("./App"));
 const CountryView = lazy(() => import("./global/CountryView"));
+const GroupView = lazy(() => import("./global/GroupView"));
 
 export default function Root() {
   const route = useRoute();
@@ -16,6 +17,7 @@ export default function Root() {
       {route.view === "theatre" && <TheatreApp />}
       {/* Keyed on the id so switching countries remounts cleanly and aborts the old load. */}
       {route.view === "country" && <CountryView key={route.id} id={route.id} />}
+      {route.view === "group" && <GroupView key={route.id} id={route.id} />}
     </Suspense>
   );
 }

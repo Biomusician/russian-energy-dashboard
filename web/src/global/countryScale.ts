@@ -33,6 +33,12 @@ export function scaleFor(counts: number[]): Scale {
 
 /** The MapLibre fill expression for a scale: null (disputed, unassigned) apart, 0 its own colour. */
 export function fillFor(scale: Scale): unknown[] | string {
+  // A country with no record yet has no class. A `step` with no stops is not a valid expression,
+  // and MapLibre refuses the whole layer: the map drew nothing at all (iteration 19, the first
+  // systems to be published empty).
+  if (scale.thresholds.length === 0) {
+    return ["case", ["==", ["get", "recorded_events"], null], DISPUTED, NO_EVENTS];
+  }
   const step: unknown[] = ["step", ["get", "recorded_events"], NO_EVENTS];
   scale.thresholds.forEach((t, i) => step.push(t, scale.colors[i]));
   return ["case", ["==", ["get", "recorded_events"], null], DISPUTED, step];

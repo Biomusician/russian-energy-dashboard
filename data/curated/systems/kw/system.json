@@ -1,0 +1,203 @@
+{
+  "system_id": "kw",
+  "reporting_environment": "corporate_disclosure",
+  "reporting_note": "The state oil companies and the electricity and water ministry disclose disruption through statements, mostly carried by the state news agency and the daily press. No body publishes an outage register or reliability statistics, the ministry's own news archive is thin before late 2024, and the oil companies' statement listings cannot be enumerated by an ordinary request, so the coverage of this record cannot be computed.",
+  "geography": {
+    "unit_label": "governorate",
+    "units_expected": 6,
+    "note": "Six governorates (muhafazah), which is also what Natural Earth draws (KW-AH, KW-FA, KW-HA, KW-JA, KW-KU, KW-MU). The count of six was not confirmed on an official page this session: the government portal returned HTTP 403 and the statistics bureau's home page does not state it. Attacks and sabotage are recorded at COUNTRY level, with no governorate, facility or operator, because a governorate and a class together would name the facility. Other events are placed by governorate. Offshore events are country level and are never snapped to the nearest coast.",
+    "rulings": [
+      {
+        "code": "KW-AH",
+        "status": "note",
+        "note": "Al Ahmadi as drawn reaches the southern international boundary. Natural Earth draws no separate unit for the Saudi-Kuwaiti Partitioned (Neutral) Zone: it draws the boundary that divides the zone, and the part north of that line lies inside this polygon. An onshore event reported in the zone is placed by the drawn boundary (this unit, or the Saudi system) where the source makes the side clear, and at country level otherwise. Shared onshore and offshore fields are never a unit of analysis. A statement about the map file, not about resource rights or sovereignty."
+      },
+      {
+        "code": "KW-JA",
+        "status": "note",
+        "note": "Al Jahrah is drawn as three separate polygons; all are this unit. Waters and offshore installations lie outside every governorate polygon, and this system makes no statement on maritime boundaries."
+      },
+      {
+        "code": "KW-KU",
+        "status": "note",
+        "note": "The Capital Governorate (Al Asimah, العاصمة), under the code Natural Earth carries. The map file draws it as two separate polygons; both are this unit."
+      }
+    ],
+    "precision_policy": {
+      "kinetic": "country",
+      "reason": "Kuwait's refineries, export terminals and most large power and water plants sit in two or three governorates, so a governorate and a class together name the facility. Attacks and sabotage are recorded for the country, with no governorate, facility or operator. Other events are placed by governorate."
+    }
+  },
+  "sectors": [
+    {
+      "sector": "refining",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "A national capacity total is published in a secondary compilation (EIA, 2023), but the country has very few refineries, so a share of capacity affected would be the status of a named plant. Shown as national context only."
+    },
+    {
+      "sector": "electric_generation",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "A national installed-capacity total is available (EIA, 2024), but the ministry's statistical yearbook, which would give a dated national inventory on one basis, could not be opened: its page shows covers for 2017 to 2019 with no file. No outage reporting exists, the list of plants is short, and attack events resolve to country level. No model for this country's events has been approved (GLOBAL_METHODOLOGY.md §2 and §8.3)."
+    },
+    {
+      "sector": "transmission",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "National aggregates only; the event-burden measure does not fit, and no grid detail is collected."
+    },
+    {
+      "sector": "oil_logistics",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "No inventory is built: it would centre on export terminals and routing, which are out of scope. No recent national crude export figure with clear reuse terms was read; the gap is stated, not filled."
+    },
+    {
+      "sector": "gas",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "National dry gas production, consumption and imports are published (EIA, 2024) and shown as context. Gas processing and gas import are concentrated in very few places, so a share of capacity affected would be the status of particular facilities. No facility capacity is recorded."
+    },
+    {
+      "sector": "coal",
+      "state": "NOT_APPLICABLE",
+      "assessed_readiness": "NOT_APPLICABLE",
+      "reason": "Not applicable: EIA records zero coal production for Kuwait in 2024 and shows no coal in power generation. A small coal consumption is recorded (about 0.003 quadrillion Btu in 2024); its use is not stated and it is not an energy-infrastructure sector here. The sector does not exist, which is different from unknown."
+    }
+  ],
+  "sources": [
+    {
+      "name": "U.S. EIA, International Energy Statistics (bulk file INTL.zip): national production, consumption, trade, generation and capacity series for Kuwait",
+      "role": "adopted (context)",
+      "licence": "public domain (U.S. government work)",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "rolling, per series; annual values",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": "bulk file release 2026-10-16 (local copy); series last updated between 2026-01-27 and 2026-07-02",
+      "content_vintage": "2024-2025"
+    },
+    {
+      "name": "U.S. EIA, Country Analysis Brief: Kuwait",
+      "role": "adopted (context)",
+      "licence": "public domain (U.S. government work)",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "irregular; last updated 2023-07-20",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": "last updated 2023-07-20",
+      "content_vintage": "2021-2023"
+    },
+    {
+      "name": "Ministry of Electricity, Water and Renewable Energy, Statistical Year Book (electrical energy)",
+      "role": "denominator candidates (not yet acquired)",
+      "licence": "all rights reserved (site footer); no terms page found",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "annual; the ministry's page shows covers for 2017, 2018 and 2019 only, with no file",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "KNPC, KOC and KPC annual reports; Central Statistical Bureau, Annual Statistical Abstract; GCC-Stat; JODI; OAPEC",
+      "role": "derived facts only",
+      "licence": "varies; KNPC allows storing and copying without modification, reproduction or commercial use; the Central Statistical Bureau reserves all rights and its data usage policy was not readable; GCC-Stat allows reuse with attribution; JODI and OAPEC reserve rights",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "varies by publisher; read when an event or a context figure is researched",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Kuwait Petroleum Corporation, KNPC, KOC, KIPIC and Ministry of Oil statements; KNPC annual reports 2021-22 to 2025-26",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven; annual reports by fiscal year",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Ministry of Electricity, Water and Renewable Energy news archive (Arabic and English)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Kuwait News Agency (KUNA), Arabic and English: official statements",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Domestic and international press (Al-Qabas, Al-Rai, Al-Anba, Al-Jarida, Arab Times, Kuwait Times, Reuters, S&P Global, Al Jazeera)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "WRI Global Power Plant Database; OSM; pipeline and terminal trackers",
+      "role": "rejected",
+      "licence": "WRI rows are undated; no facility or network geometry is drawn for Kuwait",
+      "last_checked": "2026-11-11",
+      "publication_cadence": null,
+      "stale_policy": null,
+      "stale_after_days": null,
+      "source_release": null,
+      "content_vintage": null
+    }
+  ],
+  "research_gaps": [],
+  "audit_docs": [
+    "docs/countries/KW_SOURCE_AUDIT.md",
+    "docs/countries/KW_INDEX_READINESS.md"
+  ],
+  "provenance": "Authored 2026-11-11 (iteration 19) from the source-audit lane's draft, with the lead's precision policy and rulings. Edit by hand; this file is the curated source.",
+  "maturity": "research_preview",
+  "lane_registry": {
+    "KW1": {
+      "source_family": "Oil sector operators and ministry: statements and the national refining company's annual reports",
+      "registry": [
+        "Kuwait Petroleum Corporation, KNPC, KOC, KIPIC and Ministry of Oil statements; KNPC annual reports 2021-22 to 2025-26"
+      ]
+    },
+    "KW2": {
+      "source_family": "Electricity: the ministry's news archive, Arabic and English",
+      "registry": [
+        "Ministry of Electricity, Water and Renewable Energy news archive (Arabic and English)"
+      ]
+    },
+    "KW3": {
+      "source_family": "Official statements as carried by the state news agency, via search",
+      "registry": [
+        "Kuwait News Agency (KUNA), Arabic and English: official statements"
+      ]
+    },
+    "KW4": {
+      "source_family": "Arabic and English media by year, via search",
+      "registry": [
+        "Domestic and international press (Al-Qabas, Al-Rai, Al-Anba, Al-Jarida, Arab Times, Kuwait Times, Reuters, S&P Global, Al Jazeera)"
+      ]
+    }
+  }
+}

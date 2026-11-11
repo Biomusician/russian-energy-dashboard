@@ -25,7 +25,7 @@ import datetime as dt
 import re
 from urllib.parse import unquote
 
-from pipeline import geo, global_context, systems
+from pipeline import geo, global_context, gulf_context, systems
 from pipeline.config import ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, RAW, SECTORS
 from pipeline import outputs
 from pipeline.util import fetch, log, read_json, write_json
@@ -39,6 +39,24 @@ ADMIN0_URL = ("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/ma
 # ISO 3166-2 changed four Indian codes in November 2023; Natural Earth (last released 2022)
 # still carries the old ones. The events use the current codes, so the geometry is moved to them.
 ISO_CODE_FIXES = {"IN-CT": "IN-CG", "IN-UT": "IN-UK", "IN-OR": "IN-OD", "IN-TG": "IN-TS"}
+# Iran. Natural Earth carries the ISO 3166-2:IR numbering from before the November 2020 revision,
+# in which all but two codes mean a different province today ("IR-07" was Tehran and is now Fars),
+# and it gives Alborz its parent Tehran's code. A code a researcher takes from any current source
+# would land on the wrong province with no error, so the units are moved to today's codes by name
+# (docs/countries/IR_SOURCE_AUDIT.md, geography; checked against an independent listing).
+NAME_CODE_FIXES = {("IRN", name): code for name, code in {
+    "Markazi": "IR-00", "Gilan": "IR-01", "Mazandaran": "IR-02", "East Azarbaijan": "IR-03",
+    "West Azarbaijan": "IR-04", "Kermanshah": "IR-05", "Khuzestan": "IR-06", "Fars": "IR-07",
+    "Kerman": "IR-08", "Razavi Khorasan": "IR-09", "Esfahan": "IR-10", "Sistan and Baluchestan": "IR-11",
+    "Kordestan": "IR-12", "Hamadan": "IR-13", "Chahar Mahall and Bakhtiari": "IR-14", "Lorestan": "IR-15",
+    "Ilam": "IR-16", "Kohgiluyeh and Buyer Ahmad": "IR-17", "Bushehr": "IR-18", "Zanjan": "IR-19",
+    "Semnan": "IR-20", "Yazd": "IR-21", "Hormozgan": "IR-22", "Tehran": "IR-23", "Ardebil": "IR-24",
+    "Qom": "IR-25", "Qazvin": "IR-26", "Golestan": "IR-27", "North Khorasan": "IR-28",
+    "South Khorasan": "IR-29", "Alborz": "IR-30",
+}.items()}
+# A system whose every unit must be renamed: a unit the table misses is an error, not a fallback
+# to the old code, which would be another province's.
+NAME_CODE_COMPLETE = {"IRN": 31}
 
 # Special administrative regions that Natural Earth files as their own admin-0 units. They are
 # part of the China system as single units. Their admin-1 districts are not used.
@@ -74,6 +92,18 @@ EVENT_FIELDS = (
 )
 # No `title`: headlines are the publishers' words, not ours, and the page shows the publisher.
 SOURCE_FIELDS = ("url", "publisher", "date", "language", "source_role", "opened")
+# Iteration 19. A non-English source keeps its title in its own script with an English gloss, and a
+# date converted from another calendar keeps what the source wrote. Emitted only where present.
+OPTIONAL_SOURCE_FIELDS = ("title_original", "title_en")
+OPTIONAL_EVENT_FIELDS = ("source_date_text", "date_calendar", "conversion_basis")
+DATE_CALENDARS = ("gregorian", "solar_hijri", "hijri")
+# What the campaign classification of a system may be (conflict_campaigns.json, system_states).
+CAMPAIGN_STATES = ("ACTIVE_KINETIC_CAMPAIGN", "RECENT_ENDED_CAMPAIGN", "NO_ACTIVE_CAMPAIGN", "UNCERTAIN")
+RESTRICTING_STATES = ("ACTIVE_KINETIC_CAMPAIGN", "RECENT_ENDED_CAMPAIGN", "UNCERTAIN")
+MATURITY = ("monitored", "research_preview")
+# Id of a kinetic record where policy puts such records at country level: date, class, a counter or
+# hash. It names no facility, because an id travels into feeds, ledgers and review files.
+OPAQUE_ID = r"{cc}-\d{{4}}-\d{{2}}(-\d{{2}})?-[a-z-]+-attack-[0-9a-z]{{1,6}}"
 RECOVERY_FIELDS = ("research_status", "kind", "date", "evidence", "url")
 # WITHHELD_ACTIVE_CAMPAIGN is a PUBLICATION state, not a research result: the record belongs to a
 # kinetic campaign that is still active, so its facility-specific recovery status is not published
@@ -393,7 +423,12 @@ STATUS_WORDING = re.compile(
     r"not (yet )?resumed|had not resumed|knock-on|cancel|expected|extended|repair|re started|"
     # Arabic: restart, resumption, repair, return to service. The English-only check let Arabic
     # addresses through unread (iteration 18, Saudi safety audit).
-    r"استئناف|استأنف|[إا]عادة (ال)?تشغيل|[إا]صلاح|عودة (ال)?إنتاج|عاد إلى العمل",
+    r"استئناف|استأنف|[إا]عادة (ال)?تشغيل|[إا]صلاح|عودة (ال)?إنتاج|عاد إلى العمل|"
+    # Persian (iteration 19): restart, resumption, back on the grid, repair, reconstruction, still
+    # stopped. Either yeh is accepted, and the half-space in a compound may be a space or absent,
+    # because agencies and their addresses write all three.
+    r"راه[\u200c ]?انداز[یي] مجدد|از ?سرگ[یي]ر[یي]|از سر گرفته|بازگشت به مدار|به مدار بازگشت|"
+    r"در مدار قرار گرفت|تعم[یي]ر|ترم[یي]م|بازساز[یي]|باز[یي]اب[یي]|همچنان متوقف",
     re.I)
 
 
@@ -558,7 +593,8 @@ def load_admin0():
 
 def _code(props):
     c = props.get("iso_3166_2") or ""
-    return ISO_CODE_FIXES.get(c, c)
+    fixed = NAME_CODE_FIXES.get((props.get("adm0_a3"), props.get("name")))
+    return fixed or ISO_CODE_FIXES.get(c, c)
 
 
 def units(system_id, admin1, admin0):
@@ -580,6 +616,13 @@ def units(system_id, admin1, admin0):
         if a3 in sars:
             code, name = sars[a3]
             out.append((code, name, f["geometry"]))
+    for a3, n in NAME_CODE_COMPLETE.items():
+        if a3 in a3s:
+            mapped = {c for (a, _), c in NAME_CODE_FIXES.items() if a == a3}
+            got = [u[0] for u in out]
+            if sorted(got) != sorted(mapped) or len(got) != n:
+                raise ValueError(f"system {system_id}: units {sorted(set(got) ^ mapped)} are not covered "
+                                 "by the name-to-code table; a renamed or new unit must be added to it")
     return sorted(out, key=lambda u: u[0])
 
 
@@ -610,7 +653,9 @@ def _region_status(code, rulings):
 
 def _event(raw, unit_names):
     ev = {k: raw.get(k) for k in EVENT_FIELDS}
-    ev["sources"] = [{k: s.get(k) for k in SOURCE_FIELDS} for s in raw["sources"]]
+    ev.update({k: raw[k] for k in OPTIONAL_EVENT_FIELDS if raw.get(k)})
+    ev["sources"] = [{**{k: s.get(k) for k in SOURCE_FIELDS},
+                      **{k: s[k] for k in OPTIONAL_SOURCE_FIELDS if s.get(k)}} for s in raw["sources"]]
     ev["recovery"] = {k: (raw.get("recovery") or {}).get(k) for k in RECOVERY_FIELDS}
     ev["region_name"] = unit_names.get(ev["region_code"]) if ev["region_code"] else None
     return ev
@@ -681,13 +726,91 @@ def campaign_of(e, system_id, campaigns):
     safety red team: the Juaymah LPG halt traced a struck facility's outage for seven months)."""
     for c in campaigns.get("campaigns", []):
         rule = c.get("member_rule") or {}
-        if c["system_id"] != system_id or c["status"] != "active" or not c.get("policy_applied"):
+        # `policy_applied` is the switch, not `status`: an uncertain or recently ended campaign
+        # still withholds, and `campaign_problems` refuses to let the switch be turned off early.
+        if c["system_id"] != system_id or not c.get("policy_applied"):
             continue
         named = {x["event_id"] for x in rule.get("also_covers", [])}
         if e["event_id"] in named or (e["cause"] in rule.get("causes", KINETIC_CAUSES)
                                       and e["date"] >= rule.get("from", "")):
             return c
     return None
+
+
+def campaign_problems(campaigns, today=None):
+    """Why the campaign file cannot be trusted to withhold what it should. Fail closed: an active or
+    uncertain campaign always applies the policy, an ended one keeps applying it until the release
+    period has passed, and a system classified as restricted has a campaign that covers it."""
+    today = today or dt.date.today()
+    wait = (campaigns.get("release_rule") or {}).get("release_after_end_days", 30)
+    out = []
+    for c in campaigns.get("campaigns", []):
+        cid = c.get("campaign_id")
+        if c.get("status") not in ("active", "uncertain", "ended"):
+            out.append(f"{cid}: status {c.get('status')!r}")
+        if c.get("status") in ("active", "uncertain") and not c.get("policy_applied"):
+            out.append(f"{cid}: {c.get('status')} but the publication policy is not applied")
+        if c.get("status") == "ended" and not c.get("policy_applied"):
+            ended = c.get("ended")
+            if not ended or (today - dt.date.fromisoformat(ended)).days < wait:
+                out.append(f"{cid}: policy lifted before {wait} days after its recorded end")
+        if c.get("status") == "ended" and not c.get("ended"):
+            out.append(f"{cid}: ended with no end date")
+    states = campaigns.get("system_states") or {}
+    for sid, s in states.items():
+        if s.get("state") not in CAMPAIGN_STATES:
+            out.append(f"system state {sid}: {s.get('state')!r} is not one of {CAMPAIGN_STATES}")
+        if not (s.get("checked") and s.get("basis")):
+            out.append(f"system state {sid}: needs a dated basis")
+        covered = any(c["system_id"] == sid and c.get("policy_applied") for c in campaigns.get("campaigns", []))
+        if s.get("state") in RESTRICTING_STATES and not covered:
+            out.append(f"system state {sid}: {s.get('state')} with no campaign applying the policy")
+    for sid in systems.GROUPS["gulf_littoral"]["members"]:
+        if sid not in states:
+            out.append(f"system {sid}: no campaign classification; a Gulf system must state one")
+    return out
+
+
+def precision_problems(system_id, doc, events):
+    """Admin-1 is a maximum, never an entitlement (iteration 19). Where a system's policy puts
+    kinetic and sabotage events at country level, such a record carries no region, no facility, no
+    operator and an opaque id: in a small state a governorate plus a class already names the plant."""
+    policy = (doc.get("geography") or {}).get("precision_policy") or {}
+    out = []
+    if policy.get("kinetic") not in (None, "admin1", "country"):
+        out.append(f"precision policy kinetic {policy.get('kinetic')!r}")
+    if policy.get("other") not in (None, "admin1", "country"):
+        out.append(f"precision policy other {policy.get('other')!r}")
+    if policy.get("other") == "country" and policy.get("kinetic") != "country":
+        out.append("a system that places no ordinary event in a region cannot place an attack in one")
+    if policy and not policy.get("reason"):
+        out.append("a precision policy states its reason")
+    barred = set(policy.get("no_event_units") or [])
+    for e in events:
+        eid = e["event_id"]
+        if e.get("region_code") in barred or barred & set(e.get("regions_affected") or []):
+            out.append(f"{eid}: placed in a unit that is drawn but never used for events")
+        if policy.get("kinetic") == "country" and e["cause"] in KINETIC_CAUSES:
+            if e["geography_precision"] != "country" or e.get("region_code") or e.get("regions_affected"):
+                out.append(f"{eid}: a kinetic record here is published at country level only")
+            for k in ("facility_name", "facility_name_local", "operator"):
+                if e.get(k):
+                    out.append(f"{eid}: {k} on a kinetic record under a country-level policy")
+            if not re.fullmatch(OPAQUE_ID.format(cc=system_id), eid):
+                out.append(f"{eid}: a kinetic record under a country-level policy needs an opaque id")
+        if policy.get("other") == "country" and (e["geography_precision"] != "country" or e.get("region_code")
+                                                 or e.get("regions_affected")):
+            # The drawn units are not the current ones, or the state is too small for a region to
+            # be an abstraction: every record is the country's.
+            out.append(f"{eid}: every record in this system is published at country level")
+        cal = e.get("date_calendar")
+        if cal and cal not in DATE_CALENDARS:
+            out.append(f"{eid}: unknown calendar {cal!r}")
+        if cal and cal != "gregorian" and not (e.get("source_date_text") and e.get("conversion_basis")):
+            out.append(f"{eid}: a converted date must keep the source's text and the conversion basis")
+    if doc.get("maturity", "monitored") not in MATURITY:
+        out.append(f"maturity {doc.get('maturity')!r}")
+    return out
 
 
 # A citation published long after a covered event is where restart and operating status live, and
@@ -1032,6 +1155,9 @@ def build_system(system_id, admin1, admin0, as_of):
     for e in events:
         e["episode_id"] = episode_of.get(e["event_id"], e["event_id"])
     validate(system_id, doc, events, unit_codes)
+    problems = precision_problems(system_id, doc, events) + campaign_problems(campaigns)
+    if problems:
+        raise ValueError(f"system {system_id}: " + "; ".join(problems))
     apply_publication_policy(system_id, events, campaigns)
     # An event dated after TODAY is a curation error and fails the build. An event dated after
     # the build's --as-of is not: a historical rebuild (the frozen 2026-08-28 regression) must
@@ -1085,6 +1211,11 @@ def build_system(system_id, admin1, admin0, as_of):
         "name": reg["name"],
         "kind": reg["kind"],
         "as_of": as_of,
+        "aliases": list(reg.get("aliases", ())),
+        "regional_groups": list(systems.groups_of(system_id)),
+        # How far along this system's research is. A preview says so on every surface.
+        "maturity": doc.get("maturity", "monitored"),
+        "campaign_state": (campaigns.get("system_states") or {}).get(system_id),
         "evidence_readiness": _readiness(doc),
         # No composite exists for any country system. null, never 0: zero would claim
         # "measured, nothing wrong".
@@ -1285,6 +1416,10 @@ def build_manifest(country_payloads, theatre_snapshot, build_time):
         p = country_payloads[s["id"]]
         entries.append({
             "id": s["id"], "name": s["name"], "kind": s["kind"], "root": systems.root(s["id"]),
+            "aliases": p["aliases"], "regional_groups": p["regional_groups"], "maturity": p["maturity"],
+            # Whether recovery status is being withheld here, as a flag. Never a count.
+            "campaign_restricted": p["publication_policy"]["withheld_records"] > 0
+                                   or (p["campaign_state"] or {}).get("state") in RESTRICTING_STATES,
             "evidence_readiness": p["evidence_readiness"], "index": None, "headline": None,
             "reporting_environment": p["reporting_environment"],
             "as_of": p["as_of"],
@@ -1296,7 +1431,13 @@ def build_manifest(country_payloads, theatre_snapshot, build_time):
         "build_time": build_time,
         # Rule, source and caveat only. The production values stay in the registry and the
         # selection document: a descending list of country figures in the manifest is a ranking.
-        "selection": {k: v for k, v in systems.SELECTION.items() if k != "values"},
+        "selection": {**{k: v for k, v in systems.SELECTION.items() if k != "values"},
+                      "regional_rule": systems.GULF_SELECTION["rule"]},
+        # Members in the registry's alphabetical order. A group is navigation, never a score.
+        "groups": {g: {"label": d["label"], "kind": d["kind"], "note": d["note"],
+                       "slug": d.get("slug"), "context": d.get("context"),
+                       "members": [s["id"] for s in systems.SYSTEMS if s["id"] in d["members"]]}
+                   for g, d in systems.GROUPS.items()},
         "comparability_statement": COMPARABILITY_STATEMENT,
         "reporting_environments": systems.REPORTING_ENVIRONMENTS,
         # Fixed, alphabetical order from the registry. Never sorted by any figure.
@@ -1463,6 +1604,12 @@ def build(theatre_snapshot):
         all_events[sid] = (payloads[sid]["name"], ev["events"], ev["episodes"])
     write_json(outputs.processed() / "global" / "recent_evidence.json", recent_evidence(all_events))
     write_json(outputs.processed() / "global" / "data_quality.json", data_quality(payloads, all_events, context))
+    gulf = gulf_context.build(context, payloads)
+    members = set(systems.GROUPS[gulf_context.GROUP]["members"])
+    # The group's own recent list: the cross-system one holds the newest 40 of every system, which
+    # can leave a region with none.
+    gulf["recent"] = recent_evidence({k: v for k, v in all_events.items() if k in members})
+    write_json(outputs.processed() / gulf_context.OUTPUT, gulf)
     build_time = theatre_snapshot.get("build_time") or dt.datetime.now(dt.timezone.utc).isoformat()
     write_json(outputs.processed() / "global" / "manifest.json",
                build_manifest(payloads, theatre_snapshot, build_time), indent=2)

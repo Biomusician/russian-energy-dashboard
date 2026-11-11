@@ -3,7 +3,7 @@ import type maplibregl from "maplibre-gl";
 import SimpleMap from "./SimpleMap";
 import SystemSwitcher from "./SystemSwitcher";
 import {
-  ENVIRONMENT_LABEL, READINESS_LABEL, RECOVERY_KIND_LABEL, RECOVERY_LABEL, RESEARCH_COMPLETENESS_LABEL,
+  CALENDAR_LABEL, CAMPAIGN_STATE_LABEL, ENVIRONMENT_LABEL, READINESS_LABEL, dirFor, RECOVERY_KIND_LABEL, RECOVERY_LABEL, RESEARCH_COMPLETENESS_LABEL,
   REVIEW_STATUS_LABEL, SECTOR_STATE_LABEL, LANE_EXECUTION_LABEL, LANE_STATE_LABEL, LANE_WINDOW_LABEL, labelFor, type CountrySystem, type SourceEntry, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type Episode,
   type ManifestSystem, type ResearchLane, type ResearchPass, type SourceHealth,
 } from "./manifest";
@@ -188,15 +188,24 @@ export default function CountryView({ id }: { id: string }) {
         </div>
         <div>
           <div className="eyebrow">Recorded</div>
-          <div className="small">
-            <strong>{sys.event_summary.recorded_events}</strong> qualifying events recorded
-            {" "}in <strong>{sys.event_summary.episodes}</strong> episodes ·
-            reporting environment: {labelFor(ENVIRONMENT_LABEL, sys.reporting_environment)}.
-            {" "}{sys.event_summary.note}
-          </div>
+          {sys.event_summary.recorded_events === 0 ? (
+            <div className="small">
+              {/* Never "0 disruptions": nothing found in a search that has barely started is not a finding. */}
+              <strong>No qualifying records in the current reviewed corpus.</strong> That describes this
+              dataset, not {sys.name}: it does not mean nothing happened. Reporting environment:{" "}
+              {labelFor(ENVIRONMENT_LABEL, sys.reporting_environment)}.
+            </div>
+          ) : (
+            <div className="small">
+              <strong>{sys.event_summary.recorded_events}</strong> qualifying events recorded
+              {" "}in <strong>{sys.event_summary.episodes}</strong> episodes ·
+              reporting environment: {labelFor(ENVIRONMENT_LABEL, sys.reporting_environment)}.
+              {" "}{sys.event_summary.note}
+            </div>
+          )}
           <div className="small dim">{sys.reporting_environment_text}</div>
           <div className="small dim">
-            Event record reviewed {fmtDate(sys.record_reviewed)} · site rebuilt {fmtDate(sys.as_of)}
+            {sys.record_reviewed ? `Event record reviewed ${fmtDate(sys.record_reviewed)}` : "No record reviewed yet"} · site rebuilt {fmtDate(sys.as_of)}
           </div>
           {(sys.recovery_coverage?.withheld_active_campaign ?? 0) > 0 && (
             <div className="small">
@@ -209,6 +218,30 @@ export default function CountryView({ id }: { id: string }) {
       </section>
 
       <p className="comparability" role="note">{sys.comparability_statement}</p>
+
+      {(sys.maturity === "research_preview" || sys.campaign_state || sys.geography.precision_policy) && (
+        <section className="panel global-note system-notices" aria-label="How to read this country">
+          {sys.maturity === "research_preview" && (
+            <p className="small">
+              <span className="badge research-partial">Research preview</span>{" "}
+              Research on {sys.name} has started and is far from complete. Sources were searched for a limited
+              time, some could not be read at all, and the Research coverage tab says which. Few records here
+              means few found so far.
+            </p>
+          )}
+          {sys.campaign_state && sys.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && (
+            <p className="small">
+              <span className="badge context-only-badge">{labelFor(CAMPAIGN_STATE_LABEL, sys.campaign_state.state)}</span>{" "}
+              {sys.campaign_state.basis} Checked {fmtDate(sys.campaign_state.checked)}. While that holds, an attack
+              is recorded as having happened, with its date, the kind of infrastructure and the effect reported at
+              the time. Whether a facility has been repaired, restarted or is operating is not published.
+            </p>
+          )}
+          {sys.geography.precision_policy && (
+            <p className="small dim">How precisely events are placed: {sys.geography.precision_policy.reason}</p>
+          )}
+        </section>
+      )}
 
       <div className="country-body">
         <section className="country-map" aria-label="Map">
@@ -241,10 +274,19 @@ export default function CountryView({ id }: { id: string }) {
               <span key={label}><i style={{ background: scale.colors[i] }} />{label}</span>
             ))}
             <span><i style={{ background: DISPUTED }} /> disputed, unassigned</span>
-            <span className="small dim">This country's own range, not a shared scale.
-              {" "}{sys.event_summary.country_level} national or multi-region events are listed but
-              not drawn. What was reported and found — not a rate of disruption, and not comparable
-              with any other country.</span>
+            {sys.event_summary.recorded_events === 0 ? (
+              <span className="small dim">No records yet, so nothing is shaded. An unshaded map is an empty
+                dataset, not a quiet country.</span>
+            ) : (
+              <span className="small dim">This country's own range, not a shared scale.
+                {" "}{sys.event_summary.country_level} national or multi-region events are listed but
+                not drawn. What was reported and found — not a rate of disruption, and not comparable
+                with any other country.</span>
+            )}
+            {sys.geography.precision_policy?.kinetic === "country" && sys.event_summary.recorded_events > 0 && (
+              <span className="small dim">Attacks and sabotage are recorded for the country as a whole here and
+                are never drawn in a {sys.geography.unit_label}.</span>
+            )}
           </div>
         </section>
 
@@ -303,7 +345,7 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
       <div className="eyebrow">Research status</div>
       <div className="small">
         <span className={`badge research-${rf.completeness}`}>
-          {RESEARCH_COMPLETENESS_LABEL[rf.completeness]}
+          {sys.research_log.passes.length === 0 ? "No search has been run yet" : RESEARCH_COMPLETENESS_LABEL[rf.completeness]}
         </span>
         {/* Separate counts, not "3 of 9": a lane waiting on a publisher and a lane barely begun are not the same shortfall. */}
         {rf.lane_states && Object.keys(rf.lane_states).length > 0 && (
@@ -424,7 +466,9 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
         </ol>
       )}
       {!year && !cls && (<>
-      <p className="small dim">{events.length} records in {bundle.episodes.length} episodes. An episode
+      <p className="small dim">{events.length === 0
+        ? "No qualifying records in the current reviewed corpus."
+        : `${events.length} records in ${bundle.episodes.length} episodes.`} An episode
         is one named hazard or one event a source explicitly identifies as common: a storm that cut
         power in four states is one episode of four records. Incidents merely reported in the same
         statement stay separate episodes, and a record linked to no other is an episode of one.</p>
@@ -486,6 +530,12 @@ function EventItem({ e, bundle, inEpisode = false }: { e: CountryEvent; bundle: 
       </div>
       <div className="event-title">{e.facility_name ?? e.region_name ?? bundle.system.name}</div>
       <p className="small">{e.summary}</p>
+      {e.source_date_text && e.date_calendar && e.date_calendar !== "gregorian" && (
+        <p className="small dim">
+          Date in the source: <bdi lang={e.date_calendar === "solar_hijri" ? "fa" : "ar"}>{e.source_date_text}</bdi>{" "}
+          ({labelFor(CALENDAR_LABEL, e.date_calendar)}). {e.conversion_basis}
+        </p>
+      )}
       {e.effect && <p className="small"><span className="dim">Reported effect: </span>{e.effect}</p>}
       {e.regions_affected.length > 0 && (
         <p className="small dim">Regions affected: {e.regions_affected.map((c) => unitName(bundle, c)).join(", ")}</p>
@@ -509,6 +559,14 @@ function EventItem({ e, bundle, inEpisode = false }: { e: CountryEvent; bundle: 
       <p className="small sources">
         {e.sources.map((s, i) => (
           <a key={i} href={s.url} target="_blank" rel="noreferrer">{s.publisher ?? new URL(s.url).hostname}</a>
+        ))}
+        {/* A non-English source keeps its own headline, in its own script and direction, with a gloss. */}
+        {e.sources.filter((s) => s.title_original).map((s, i) => (
+          <span key={`t${i}`} className="source-title">
+            <bdi lang={s.language} dir={dirFor(s.language)}>{s.title_original}</bdi>
+            {s.title_en && <span className="dim"> ({s.title_en})</span>}
+            <span className="dim"> · {s.publisher}</span>
+          </span>
         ))}
         <span className="dim">{e.review.source_access === "not recorded by the research lane"
           ? (e.review.review_status === "legacy_single_review"
@@ -720,10 +778,11 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
       {s.source_health && <SourceHealthBlock h={s.source_health} />}
       <SourceBrowser bundle={bundle} ctx={ctx} />
       <p className="small research-coverage">
-        <strong>{RESEARCH_COMPLETENESS_LABEL[s.research_freshness.completeness]}.</strong>{" "}
+        <strong>{s.research_log.passes.length === 0 ? "No search has been run yet" : RESEARCH_COMPLETENESS_LABEL[s.research_freshness.completeness]}.</strong>{" "}
         {s.research_freshness.last_systematic_pass
           ? `Last systematic pass ${fmtDate(s.research_freshness.last_systematic_pass)}, over a declared window of ${fmtDate(s.research_freshness.coverage_window?.[0] ?? null)} – ${fmtDate(s.research_freshness.coverage_window?.[1] ?? null)}. Lane by lane under Research coverage.`
-          : "Every pass so far was targeted at named gaps and leads."}
+          : s.research_log.passes.length === 0 ? "No research pass has been logged for this country."
+            : "Every pass so far was targeted at named gaps and leads."}
       </p>
       <p className="small dim">{s.research_freshness.note}</p>
       <h3 className="eyebrow">Recovery evidence across the recorded events</h3>

@@ -14,6 +14,7 @@ Packets are written to the local, gitignored queue (`data/candidates/review18/`)
 records that may never be published.
 """
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -21,7 +22,9 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from pipeline import systems  # noqa: E402
 
-OUT = ROOT / "data" / "candidates" / "review18"
+# The local review directory of the current pass. Earlier passes keep theirs (review18); set
+# EDM_REVIEW_DIR to work on one of those.
+OUT = ROOT / "data" / "candidates" / os.environ.get("EDM_REVIEW_DIR", "review19")
 CURATED = ROOT / "data" / "curated" / "systems"
 
 # What a blind reviewer may see: the claim, its place and time, its sources.
@@ -29,8 +32,11 @@ VISIBLE = ("event_id", "candidate_id", "date", "date_precision", "date_end", "re
            "admin1_code", "admin1_name", "geography_precision", "regions_affected",
            "admin1_codes_affected", "facility_name", "facility_name_local", "operator",
            "asset_class", "cause", "hazard_name", "summary", "effect", "criterion_met",
-           "threshold_clause", "threshold_basis", "capacity_affected", "recovery", "episode_id")
-SOURCE_FIELDS = ("url", "publisher", "date", "language", "source_role")
+           "threshold_clause", "threshold_basis", "capacity_affected", "recovery", "episode_id",
+           # Iteration 19: what the source wrote for the date, so a reviewer can redo the conversion.
+           "source_date_text", "date_calendar")
+# The source's own headline and its gloss are part of the claim about a non-English source.
+SOURCE_FIELDS = ("url", "publisher", "date", "language", "source_role", "title_original", "title_en")
 
 
 def blind(record):

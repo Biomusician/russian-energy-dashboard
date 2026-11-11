@@ -93,7 +93,7 @@ REQUIRED_WEB_PAYLOADS = (
 SYSTEM_PAYLOADS = ("system.json", "events.json", "regions.geojson")
 # Iteration 18: national energy context, cross-system research status, and a chronological feed.
 GLOBAL_PAYLOADS = ("global/manifest.json", "global/world.geojson", "global/energy_context.json",
-                   "global/data_quality.json", "global/recent_evidence.json")
+                   "global/data_quality.json", "global/recent_evidence.json", "global/gulf.json")
 
 
 def system_payload_paths():

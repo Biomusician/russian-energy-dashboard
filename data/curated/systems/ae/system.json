@@ -1,0 +1,213 @@
+{
+  "system_id": "ae",
+  "reporting_environment": "corporate_disclosure",
+  "reporting_note": "ADNOC's listed subsidiaries and the utilities disclose through exchange filings and results, framed against financial materiality; ministries and authorities issue statements through the state news agency. No body reached publishes outage notices and there is no event register, so the coverage of this record cannot be computed.",
+  "geography": {
+    "unit_label": "emirate",
+    "units_expected": 9,
+    "note": "Seven emirates (AE-AZ, AE-AJ, AE-DU, AE-FU, AE-RK, AE-SH, AE-UQ) are the analytical units. Natural Earth draws nine units: the seven emirates and two jointly administered areas. Official electricity statistics are reported by four authorities, not by emirate; Ajman, Umm Al Quwain, Ras Al Khaimah and Fujairah are pooled under one. For kinetic or security events the default event geography is country level, because an emirate plus an infrastructure class can identify one facility. Cartographic note: Abu Musa and the Greater and Lesser Tunbs are administered by Iran and claimed by the United Arab Emirates; Natural Earth draws Abu Musa with Iran, and this project keeps Natural Earth's line of actual control, which is an analytic choice, not a statement about sovereignty. The islands are never an analytical unit of this system.",
+    "rulings": [
+      {
+        "code": "AE-X01~",
+        "status": "note",
+        "note": "Jointly administered area as drawn by Natural Earth (its note: joint control between Fujairah and Sharjah). Drawn; never assigned an event. Not an ISO code. The current arrangement was not verified from an official source."
+      },
+      {
+        "code": "AE-X02~",
+        "status": "note",
+        "note": "Jointly administered area as drawn by Natural Earth (its note: joint control between Ajman and neighbouring Oman). Drawn; never assigned an event. Not an ISO code. The current arrangement was not verified from an official source."
+      }
+    ],
+    "precision_policy": {
+      "kinetic": "country",
+      "no_event_units": [
+        "AE-X01~",
+        "AE-X02~"
+      ],
+      "reason": "Five of the seven emirates are small enough that an emirate and an infrastructure class together name one facility, and publishing some emirates but not others would show which. Attacks and sabotage are therefore recorded for the country, with no emirate, facility or operator. The two areas Natural Earth labels Neutral Zone are drawn and never used for a record."
+    }
+  },
+  "sectors": [
+    {
+      "sector": "refining",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "EIA states a national refining total and a count of refineries at one vintage, basis unstated; operator sources refused access. With few plants an emirate figure would identify single facilities, so any future measure would be national only."
+    },
+    {
+      "sector": "electric_generation",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "National capacity and generation are published; no current plant inventory was acquired. Official sub-national totals are by four authorities, not seven emirates. Nuclear generation is carried as one national figure only."
+    },
+    {
+      "sector": "transmission",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "No public inventory; the event-burden measure does not fit, and grid topology is outside scope."
+    },
+    {
+      "sector": "oil_logistics",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "No suitable public inventory, and export routing is outside scope. The ESDI's refining-base proxy does not fit a crude exporter."
+    },
+    {
+      "sector": "gas",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "The UAE processes gas, exports LNG and is a net gas importer (EIA). Company reports exist but were not read for a capacity table; pipelines are outside scope."
+    },
+    {
+      "sector": "coal",
+      "state": "NOT_APPLICABLE",
+      "assessed_readiness": "NOT_APPLICABLE",
+      "reason": "Not applicable: the UAE has no coal production and no coal-fired generation in 2024 (EIA reports zero). Imported coal is used by industry. The sector does not exist here, which is different from unknown."
+    }
+  ],
+  "sources": [
+    {
+      "name": "U.S. EIA International Energy Statistics and country analysis brief",
+      "role": "adopted (context)",
+      "licence": "U.S. government work, public domain; credit requested",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "bulk file rolling; brief irregular (last 2026-07-28)",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "JODI Oil and JODI Gas",
+      "role": "adopted (context)",
+      "licence": "terms not published",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "monthly",
+      "stale_policy": "monthly",
+      "stale_after_days": 120,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Natural Earth admin-1",
+      "role": "adopted (boundaries)",
+      "licence": "public domain",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "occasional releases",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "u.ae federal portal (Ministry figures), Etihad Water and Electricity open data, Abu Dhabi Department of Energy, EWEC, ADNOC Gas reports, GCC-Stat, OPEC",
+      "role": "derived facts only",
+      "licence": "varies; Etihad WE and GCC-Stat permit reuse with attribution, the others reserve rights",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "varies by publisher; read when an event is researched",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Global Energy Monitor power tracker",
+      "role": "denominator candidates (not yet acquired)",
+      "licence": "CC BY 4.0",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "about twice a year",
+      "stale_policy": "semiannual",
+      "stale_after_days": 400,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "WRI Global Power Plant Database; OpenStreetMap; pipeline and terminal trackers",
+      "role": "rejected",
+      "licence": "stale to 2016 with no nuclear; routing and facility geometry are outside scope",
+      "last_checked": "2026-11-11",
+      "publication_cadence": null,
+      "stale_policy": null,
+      "stale_after_days": null,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Ministry of Energy and Infrastructure and federal statements (WAM, Emirates News Agency)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "ADNOC group and listed subsidiaries (ADNOC Gas reports; ADX disclosures)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Electricity and water authorities (EWEC, DEWA, SEWA, Etihad Water and Electricity, Abu Dhabi Department of Energy)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Arabic and English press and news agencies (Al-Ittihad, Al-Khaleej, Al-Bayan, The National, Gulf News, Khaleej Times, Reuters, S&P Global)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    }
+  ],
+  "research_gaps": [],
+  "audit_docs": [
+    "docs/countries/AE_SOURCE_AUDIT.md",
+    "docs/countries/AE_INDEX_READINESS.md"
+  ],
+  "provenance": "Authored 2026-11-11 (iteration 19) from the source-audit lane's draft, with the lead's precision policy and rulings. Edit by hand; this file is the curated source.",
+  "maturity": "research_preview",
+  "lane_registry": {
+    "AE1": {
+      "source_family": "National statements: Ministry of Energy and Infrastructure and federal statements as carried by the state news agency, via search",
+      "registry": [
+        "Ministry of Energy and Infrastructure and federal statements (WAM, Emirates News Agency)"
+      ]
+    },
+    "AE2": {
+      "source_family": "ADNOC group annual and integrated reports, read for incident occurrence",
+      "registry": [
+        "ADNOC group and listed subsidiaries (ADNOC Gas reports; ADX disclosures)"
+      ]
+    },
+    "AE3": {
+      "source_family": "Electricity utilities and regulators: media releases and news listings",
+      "registry": [
+        "Electricity and water authorities (EWEC, DEWA, SEWA, Etihad Water and Electricity, Abu Dhabi Department of Energy)"
+      ]
+    },
+    "AE4": {
+      "source_family": "Arabic and English media by year, via search",
+      "registry": [
+        "Arabic and English press and news agencies (Al-Ittihad, Al-Khaleej, Al-Bayan, The National, Gulf News, Khaleej Times, Reuters, S&P Global)"
+      ]
+    }
+  }
+}

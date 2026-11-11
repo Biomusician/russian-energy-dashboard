@@ -1,0 +1,116 @@
+{
+  "country": "KW",
+  "as_of_note": "Draft compiled 2026-11-11 by the Kuwait source-audit lane (iteration 19). CONTEXT ONLY: never a scoring input. Every value was read in this session, from the local copy of EIA's bulk file (release 2026-10-16) or from EIA's country brief page; vintages are mixed (2023-2025) and stated per row, and must not be combined into one 'current' picture. No value is later than a 2025 annual total, and none describes the state of any facility. All rows are country totals on EIA's definitions: crude includes lease condensate, dry gas is marketed gas less extraction loss, electricity is net. Capacities are installed or nameplate figures and say nothing about operation. No national Kuwaiti statistical source could be opened with readable terms, so none is cited. Crude exports are ABSENT, not zero: EIA's export series stops at 2018 and no other source with clear terms was read. National aggregates only: no facility, plant, terminal or route figure is recorded. See docs/countries/KW_SOURCE_AUDIT.md.",
+  "metrics": [
+    {
+      "metric": "total_energy_production",
+      "value": 6.64,
+      "unit": "quadrillion Btu (primary energy production)",
+      "year": 2024,
+      "basis": "country total; 88.8% petroleum and other liquids (5.90), 11.1% natural gas (0.74), 0.1% nuclear, renewables and other (0.007); coal production zero. Rounded from 6.6406",
+      "source": "U.S. EIA, International Energy Statistics, series INTL.44-1-KWT-QBTU.A with 4415-1, 4413-1, 4419-1 and 4411-1 (bulk file release 2026-10-16; series updated 2026-03-11)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "petroleum_liquids_production",
+      "value": 2805,
+      "unit": "thousand barrels per day",
+      "year": 2025,
+      "basis": "country total, petroleum and other liquids (crude, condensate, natural gas plant liquids and other liquids), so NOT comparable with crude_oil_production. Rounded from 2,804.97",
+      "source": "U.S. EIA, International Energy Statistics, series INTL.53-1-KWT-TBPD.A (bulk file release 2026-10-16; series updated 2026-05-07)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "crude_oil_production",
+      "value": 2584,
+      "unit": "thousand barrels per day",
+      "year": 2025,
+      "basis": "country total, crude oil including lease condensate. Rounded from 2,583.55. How production in the Partitioned Zone is attributed is not stated in the series",
+      "source": "U.S. EIA, International Energy Statistics, series INTL.57-1-KWT-TBPD.A (bulk file release 2026-10-16; series updated 2026-05-07)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "petroleum_consumption",
+      "value": 438,
+      "unit": "thousand barrels per day",
+      "year": 2024,
+      "basis": "country total, petroleum and other liquids consumption. Rounded from 438.02",
+      "source": "U.S. EIA, International Energy Statistics, series INTL.5-2-KWT-TBPD.A (bulk file release 2026-10-16; series updated 2026-07-02)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "refining_capacity",
+      "value": 1415,
+      "unit": "thousand barrels per day",
+      "year": 2023,
+      "basis": "national total of EIA's Table 3, 'Kuwait's oil refining capacity, 2023'; nameplate; a secondary compilation. The brief's text gives 1.2 million b/d as of May 2023 and says the total was expected to reach 1.4 million b/d in the second half of 2023, so the table total includes capacity that was still being brought into service when the brief was written. Per-facility figures are deliberately not reproduced",
+      "source": "U.S. EIA, Country Analysis Brief: Kuwait, Table 3 (last updated 2023-07-20)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/kuwait/"
+    },
+    {
+      "metric": "natural_gas_production",
+      "value": 703.2,
+      "unit": "billion cubic feet",
+      "year": 2024,
+      "basis": "country total, DRY natural gas production (not gross). Rounded from 703.198",
+      "source": "U.S. EIA, International Energy Statistics, series INTL.26-1-KWT-BCF.A (bulk file release 2026-10-16; series updated 2026-01-27)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "natural_gas_consumption",
+      "value": 998.5,
+      "unit": "billion cubic feet",
+      "year": 2024,
+      "basis": "country total, dry natural gas consumption. Rounded from 998.496",
+      "source": "U.S. EIA, International Energy Statistics, series INTL.26-2-KWT-BCF.A (bulk file release 2026-10-16; series updated 2026-01-27)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "natural_gas_imports",
+      "value": 331.8,
+      "unit": "billion cubic feet",
+      "year": 2024,
+      "basis": "country total, dry natural gas imports; the series does not separate LNG from pipeline gas and is not shown under an LNG label. Exports in the same year are zero in the companion series (26-4). Rounded from 331.758",
+      "source": "U.S. EIA, International Energy Statistics, series INTL.26-3-KWT-BCF.A (bulk file release 2026-10-16; series updated 2026-01-27)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "electricity_generation",
+      "value": 92.5,
+      "unit": "billion kilowatthours (net)",
+      "year": 2024,
+      "basis": "country total net generation; fossil fuels 90.4 (97.8%), renewables 2.1. The split of the renewable figure between technologies in the file was not cross-checked against a national source and is not used. Rounded from 92.495",
+      "source": "U.S. EIA, International Energy Statistics, series INTL.2-12-KWT-BKWH.A with 28-12 and 29-12 (bulk file release 2026-10-16; series updated 2026-04-01)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "electricity_consumption",
+      "value": 84.5,
+      "unit": "billion kilowatthours (net)",
+      "year": 2024,
+      "basis": "country total net consumption. Rounded from 84.511",
+      "source": "U.S. EIA, International Energy Statistics, series INTL.2-2-KWT-BKWH.A (bulk file release 2026-10-16; series updated 2026-04-01)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "generating_capacity",
+      "value": 19.4,
+      "unit": "GW (million kilowatts, installed)",
+      "year": 2024,
+      "basis": "country total installed capacity on EIA's basis; installed, not available, capacity. Whether industrial captive generation is included is not yet researched. The ministry's own yearbook figure was not readable this session. Rounded from 19.4214",
+      "source": "U.S. EIA, International Energy Statistics, series INTL.2-7-KWT-MK.A (bulk file release 2026-10-16; series updated 2026-02-24)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    }
+  ],
+  "significance": [
+    "Petroleum and other liquids made up 88.8% of Kuwait's primary energy production in 2024 and natural gas 11.1%; coal production was zero (EIA).",
+    "Kuwait produced 2.58 million barrels per day of crude oil including lease condensate in 2025 (EIA).",
+    "Kuwait consumed 998 billion cubic feet of dry natural gas in 2024, produced 703 and imported 332 (EIA).",
+    "Fossil fuels supplied 97.8% of Kuwait's net electricity generation of 92.5 billion kilowatthours in 2024 (EIA).",
+    "EIA's 2023 country brief gives a national refining capacity total of 1,415 thousand barrels per day."
+  ],
+  "significance_sources": [
+    "https://www.eia.gov/opendata/bulk/INTL.zip",
+    "https://www.eia.gov/international/content/analysis/countries_long/kuwait/"
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "country": "AE",
+  "as_of_note": "Compiled 2026-11-11 by the UAE source-audit lane (iteration 19, Wave A). DRAFT, CONTEXT ONLY: never a scoring input. Every value was read this session from the cited page or from the project's cached copy of EIA's bulk file; vintages differ (2024 to 2026) and are stated per row, and must not be combined into one 'current' picture. National aggregates only: no facility row, and no nuclear figure other than national generation. The ministry, ADNOC, DEWA, the federal statistics centre and OPEC were not machine-readable on this date, so no figure is taken from them directly. See docs/countries/AE_SOURCE_AUDIT.md.",
+  "metrics": [
+    {
+      "metric": "total_energy_production",
+      "value": 11.8,
+      "unit": "quadrillion Btu (primary energy production)",
+      "year": 2024,
+      "basis": "country total; 78% petroleum and other liquids, 19% natural gas, 0% coal (brief, Table 1; bulk series 11.80)",
+      "source": "U.S. EIA, Country Analysis Brief: United Arab Emirates (last updated 2026-07-28)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/United_Arab_Emirates/"
+    },
+    {
+      "metric": "crude_oil_production",
+      "value": 3771,
+      "unit": "thousand barrels per day",
+      "year": 2025,
+      "basis": "country total, crude oil including lease condensate (bulk series; the brief states 3.8 million b/d for 2025). 2024: 3,675",
+      "source": "U.S. EIA, International Energy Statistics, bulk file INTL.zip (project copy downloaded 2026-11-10)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "petroleum_liquids_production",
+      "value": 4339,
+      "unit": "thousand barrels per day",
+      "year": 2025,
+      "basis": "country total, petroleum and other liquids; a wider definition than crude oil including lease condensate, so NOT comparable with crude_oil_production",
+      "source": "U.S. EIA, International Energy Statistics, bulk file INTL.zip (project copy downloaded 2026-11-10)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "natural_gas_production",
+      "value": 2098,
+      "unit": "billion cubic feet (dry natural gas)",
+      "year": 2024,
+      "basis": "country total, dry gas (bulk series). The brief, crediting OPEC, gives an average of about 2.0 Tcf a year for 2015-2024",
+      "source": "U.S. EIA, International Energy Statistics, bulk file INTL.zip (project copy downloaded 2026-11-10)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "natural_gas_consumption",
+      "value": 2535,
+      "unit": "billion cubic feet (dry natural gas)",
+      "year": 2024,
+      "basis": "country total; consumption exceeds production, so the country is a net importer of natural gas",
+      "source": "U.S. EIA, International Energy Statistics, bulk file INTL.zip (project copy downloaded 2026-11-10)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "natural_gas_exports",
+      "value": 286,
+      "unit": "billion cubic feet (dry natural gas)",
+      "year": 2024,
+      "basis": "country total, all natural gas exports; EIA's series is total gas exports, not an LNG-only series",
+      "source": "U.S. EIA, International Energy Statistics, bulk file INTL.zip (project copy downloaded 2026-11-10)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "natural_gas_imports",
+      "value": 771,
+      "unit": "billion cubic feet (dry natural gas)",
+      "year": 2024,
+      "basis": "country total, all natural gas imports",
+      "source": "U.S. EIA, International Energy Statistics, bulk file INTL.zip (project copy downloaded 2026-11-10)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "electricity_generation",
+      "value": 169.0,
+      "unit": "billion kWh (net generation)",
+      "year": 2024,
+      "basis": "country total, net generation (bulk series 169.03). Shares from the brief's Table 1: 71% natural gas, 23% nuclear, 5% renewables and other, 1% petroleum liquids. The brief's table prints the unit as GWh; the bulk series unit is used",
+      "source": "U.S. EIA, International Energy Statistics, bulk file INTL.zip (project copy downloaded 2026-11-10)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "nuclear_generation",
+      "value": 39,
+      "unit": "billion kWh (net generation)",
+      "year": 2024,
+      "basis": "country total, one national figure; nothing below national level is recorded for nuclear",
+      "source": "U.S. EIA, International Energy Statistics, bulk file INTL.zip (project copy downloaded 2026-11-10)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "generating_capacity",
+      "value": 45.53,
+      "unit": "million kW (installed capacity)",
+      "year": 2024,
+      "basis": "country total, installed capacity, all fuels (bulk series). A different source and year: the federal portal states about 48.3 GW for 2026 without naming its source",
+      "source": "U.S. EIA, International Energy Statistics, bulk file INTL.zip (project copy downloaded 2026-11-10)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    },
+    {
+      "metric": "electricity_consumption",
+      "value": 174524,
+      "unit": "GWh",
+      "year": 2025,
+      "basis": "country total as stated by the federal portal, which credits the Ministry of Energy and Infrastructure; consumption, not generation, and a different source and year from the EIA rows",
+      "source": "u.ae federal portal, Electricity page (last updated 2026-09-15)",
+      "url": "https://u.ae/en/information-and-services/environment-and-energy/water-and-energy/electricity"
+    },
+    {
+      "metric": "refining_capacity",
+      "value": 1249,
+      "unit": "thousand barrels per day",
+      "year": 2026,
+      "basis": "country total for five operating refineries as of January 2026, as stated in the brief's text. Gross or net basis and stream-day or calendar-day basis are not stated. Per-facility figures are deliberately not read or reproduced",
+      "source": "U.S. EIA, Country Analysis Brief: United Arab Emirates (last updated 2026-07-28)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/United_Arab_Emirates/"
+    },
+    {
+      "metric": "coal_production",
+      "value": 0,
+      "unit": "thousand short tons",
+      "year": 2024,
+      "basis": "country total; EIA's own zero. Coal consumption is not zero: 3,672 thousand short tons in 2024, all imported, used mainly in industrial processes",
+      "source": "U.S. EIA, International Energy Statistics, bulk file INTL.zip (project copy downloaded 2026-11-10)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
+    }
+  ],
+  "significance": [
+    "Petroleum and other liquids made up 78% of the UAE's primary energy production in 2024 and natural gas 19%, with no coal production (EIA).",
+    "The UAE produced 3.8 million b/d of crude oil and condensate in 2025, and 4.3 million b/d of petroleum and other liquids (EIA).",
+    "In 2024 an estimated 71% of UAE electricity was generated from natural gas, 23% from nuclear and 5% from renewables and other sources (EIA).",
+    "The UAE consumed more natural gas than it produced in 2024 and both imports and exports gas (EIA).",
+    "EIA reports five operating refineries with a combined capacity of 1,249 thousand b/d as of January 2026."
+  ],
+  "significance_sources": [
+    "https://www.eia.gov/international/content/analysis/countries_long/United_Arab_Emirates/",
+    "https://www.eia.gov/opendata/bulk/INTL.zip"
+  ]
+}

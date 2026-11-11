@@ -109,19 +109,28 @@ def test_blocked_or_unknown_sources_do_not_count_as_done():
 
 @pytest.mark.parametrize("sid", systems.COUNTRY_SYSTEMS)
 def test_earlier_passes_keep_the_status_they_were_logged_with(sid):
-    """DO NOT MOVE THE GOALPOSTS. Only the iteration-18 pass uses the new vocabulary."""
+    """DO NOT MOVE THE GOALPOSTS. A pass logged before iteration 18 keeps the binary status it was
+    logged with; a pass from iteration 18 on uses the two-dimension vocabulary. By date, not by
+    position: a system onboarded later has no early pass, and a later pass must not rewrite one."""
     log = json.loads((ROOT / "data" / "curated" / "systems" / sid / "research_log.json").read_text(encoding="utf-8"))
-    sysp = [p for p in log["passes"] if p["kind"] == "systematic"]
-    for p in sysp[:-1]:
-        assert all("execution" not in lane and "status" in lane for lane in p["lanes"]), p["date"]
-    assert all("execution" in lane and "status" not in lane for lane in sysp[-1]["lanes"])
+    for p in (p for p in log["passes"] if p["kind"] == "systematic"):
+        if p["date"] < "2026-11-10":
+            assert all("execution" not in lane and "status" in lane for lane in p["lanes"]), p["date"]
+        else:
+            assert all("execution" in lane and "status" not in lane for lane in p["lanes"]), p["date"]
 
 
 @needs_payload
 @pytest.mark.parametrize("sid", systems.COUNTRY_SYSTEMS)
 def test_the_emitted_lane_states_match_the_log(sid):
     p = _json(f"systems/{sid}/system.json")
-    newest = [x for x in p["research_log"]["passes"] if x["kind"] == "systematic"][-1]
+    systematic = [x for x in p["research_log"]["passes"] if x["kind"] == "systematic"]
+    if not systematic:
+        # Onboarded, not yet searched. Says so; claims no lane.
+        assert p["research_freshness"]["completeness"] == "never_systematic"
+        assert not p["research_freshness"].get("lane_states")
+        return
+    newest = systematic[-1]
     want = {}
     for lane in newest["lanes"]:
         s = B.lane_summary_state(lane)
@@ -477,6 +486,8 @@ def test_no_unpublished_record_is_named_in_any_served_string():
             names.add((e.get("facility_name") or "").lower())
     leaked = []
     for sid in systems.COUNTRY_SYSTEMS:
+        if not (QUEUE / f"{sid}.json").exists():      # onboarded, nothing researched yet
+            continue
         for r in json.loads((QUEUE / f"{sid}.json").read_text(encoding="utf-8")):
             cid = r.get("candidate_id") or ""
             if cid and cid not in published and len(cid) > 12 and cid in served:
@@ -487,7 +498,8 @@ def test_no_unpublished_record_is_named_in_any_served_string():
 @needs_payload
 def test_a_research_log_says_counts_and_process_never_held_material():
     for sid in systems.COUNTRY_SYSTEMS:
-        newest = _json(f"systems/{sid}/system.json")["research_log"]["passes"][-1]
+        passes = _json(f"systems/{sid}/system.json")["research_log"]["passes"]
+        newest = passes[-1] if passes else {}
         for lane in newest.get("lanes") or []:
             for field in ("limitation", "finding"):
                 assert not re.search(r"\bheld\b|\.md\b", lane.get(field) or "", re.I), (sid, lane["lane"], field)

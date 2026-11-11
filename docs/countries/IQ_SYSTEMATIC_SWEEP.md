@@ -1,0 +1,87 @@
+# Iraq — first systematic research pass (iteration 19)
+
+**Part A, the search plan, was written on 2026-11-11 before any search of this pass was run.**
+It was written by the source-audit lane from `IQ_SOURCE_AUDIT.md`, which tested every endpoint
+named below with one ordinary request and ran no incident search.
+
+**Safety first.** This pass records publicly reported, historical disruption, aggregated to
+governorate at most. Kinetic and sabotage events are reported in Iraq inside the window, and
+whether a campaign is recorded as active for this system is decided in
+`data/curated/systems/conflict_campaigns.json`, not here. **Until that is decided, every kinetic or
+sabotage candidate is handled under the strict rule:** occurrence, date and date precision, broad
+infrastructure class, country and (if safe) governorate, and the effect reported within 7 days.
+The pass does **not** collect restart, current operating rate, repair progress, remaining capacity,
+current outage or current facility condition, even where public, in any field. It does not collect
+coordinates, distances, attack method, defences, or which facility is the largest of its kind.
+**Nothing about export routes, alternative-route capacity, port or terminal dependence, vessel
+movements, pipeline routes, grid topology or the status of a named line or interconnector is read
+or written down.** National export totals are context only.
+
+| | |
+|---|---|
+| Window | 2022-01-01 to 2026-11-11 |
+| Geography | the 18 governorates Natural Earth draws; Halabja is placed in As-Sulaymaniyah and the record says so; disputed internal territories are placed by the governorate Natural Earth draws and are not otherwise resolved |
+| Rule | `inclusion_threshold.json` version `2026-10-30.1`, unchanged |
+| Languages | Arabic and English mandatory for IQ2, IQ3 and IQ5; Arabic for IQ1; Kurdish (Sorani) and English for IQ4 |
+| Declared queries | 50 in total (IQ1 2, IQ2 10, IQ3 15, IQ4 13, IQ5 10) |
+
+## Part A — plan (written before searching)
+
+### A.1 Lanes
+
+`Y` stands for each year 2022, 2023, 2024, 2025 and 2026 in turn.
+
+| Lane | Universe kind | Languages | Universe | Endpoint / enumeration | Queries (run exactly) | Clauses |
+|---|---|---|---|---|---|---|
+| IQ1 | report archive | ar (+en) | SOMO monthly export and product statistics, read **only** for an official attribution of a material change to a disruption. A change with no stated cause yields context, never an incident. Breakdowns below the national total are not read | somooil.gov.iq: `/ar/researches`, `/ar/reports`, `/ar/exports/chart`, `/ar/news` (ids to 127). Reachable, but report listings and article bodies were not rendered to an ordinary request; the chart page shows a national monthly total | 2 fallback queries, run only if enumeration fails: `شركة تسويق النفط سومو إيضاح سبب انخفاض الصادرات النفطية`; `SOMO statement Iraq crude exports fell because` | 2, 7 |
+| IQ2 | declared query set | ar+en | Ministry of Oil releases and state oil company statements, as carried by agencies. The ministry's own site is behind a security check, so this is a query set, not an archive | oil.gov.iq, boc.oil.gov.iq, mrc.oil.gov.iq, nrc.oil.gov.iq, nocoil.gov.iq (all: security-check page, not read); ina.iq (HTTP 403, not read); **src.gov.iq `news.aspx` and `news-detail.aspx?id=N` (reachable, dated; enumerate first)** | for each Y: `وزارة النفط العراقية بيان توقف الإنتاج حريق Y`; `Iraq oil ministry statement production halted fire Y` | 1, 2, 3, 7 |
+| IQ3 | declared query set | ar+en | Electricity: Ministry of Electricity statements on dated losses of supply, classified under A.3 into fuel shortage, grid failure, technical outage, load-shedding policy and kinetic disruption, which are never merged | moelc.gov.iq (security-check page, not read); ina.iq (HTTP 403, not read); via search, then the article pages | for each Y: `وزارة الكهرباء العراقية انطفاء تام المنظومة الوطنية Y`; `وزارة الكهرباء العراقية فقدان ميغاواط توقف إمدادات الغاز Y`; `Iraq electricity ministry nationwide blackout grid megawatts lost gas supply Y` | 4, 5 |
+| IQ4 | declared query set | ku+en (+ar) | Kurdistan Region official sources: the regional Ministry of Natural Resources and Ministry of Electricity, and APIKUR (industry association) statements on member production, as carried by media. Statements on commercial terms and export arrangements are not read | gov.krd, moel.gov.krd (HTTP 403, not read); APIKUR's own site (not reached); rudaw.net/sorani, kurdistan24.net/ckb, shafaq.com/ku (reachable) | for each Y: `وەزارەتی کارەبای هەرێمی کوردستان کەمبوونەوەی بەرهەمهێنانی کارەبا Y`; `Kurdistan Region electricity ministry power generation megawatts lost gas supply halted Y`. Once each: `وەزارەتی سامانە سروشتییەکان ڕاگەیەندراو وەستانی بەرهەمهێنان`; `وزارة الثروات الطبيعية إقليم كوردستان بيان توقف الإنتاج`; `APIKUR statement member companies production suspended` | 1, 4, 5, 7 |
+| IQ5 | declared query set | ar+en | Media corroboration: Shafaq News, Rudaw, Kurdistan24, Reuters, AP, S&P Global. A translation or syndicated copy is not a second source | shafaq.com `/en/Economy?page=N` and `/ar/اقتصـاد?page=N` (paged, dated); kurdistan24.net `/en/list/category/36/Economy?page=N` (paged, undated); rudaw.net (articles readable, listings not rendered); reuters.com and apnews.com (refused by the fetch tool); spglobal.com (HTTP 403); iraqoilreport.com (paywall, headlines only) | for each Y: `حريق مصفى أو حقل نفطي في العراق توقف الإنتاج Y`; `Iraq refinery oilfield fire attack production halted Y` | 1-7 |
+
+### A.2 Safety
+
+Event occurrence and the effect reported at the time only. No restart, recovery, operating-rate,
+repair or dependency content is recorded for a kinetic or sabotage candidate, even in the local
+queue's published fields; `recovery` stays `NOT_YET_RESEARCHED`, `date_end` null, and
+`geography_precision` is `country` unless the lead says governorate is safe. A citation published
+more than 7 days after such an event, or whose address or title states facility status, stays in
+the local queue. `facility_name` is filled only when the facility's own name is what the source
+reports as affected.
+
+A cut in imported gas or electricity is recorded as a national supply effect. The line,
+interconnector or route it arrived by is not written down. SOMO's and EIA's breakdowns below the
+national total are not opened for this pass.
+
+### A.3 Electricity classification (IQ3 and IQ4)
+
+Every electricity candidate carries exactly one class at the start of `threshold_basis`:
+
+| Class tag | Meaning | Disposition rule |
+|---|---|---|
+| `[fuel_shortage]` | generation lost because gas or fuel supply fell | candidate if the source gives a date, a cause and a size (megawatts or governorates); `cause` is `unknown` unless the source states why supply fell |
+| `[grid_failure]` | system-wide or multi-governorate collapse of the network | candidate under clause 5 if an operator emergency or a stated scale is reported; `asset_class` `system_wide` |
+| `[technical_outage]` | plant or unit fault, fire or trip | candidate under clause 4 only with a stated size of about 500 MW or more and a stated effect |
+| `[load_shedding_policy]` | scheduled supply hours, seasonal rationing | **always `out_of_scope`**: background, not an event |
+| `[kinetic]` | attack or sabotage | A.2 applies in full |
+
+Megawatts are never converted to customers. A candidate that states neither a customer count, an
+emergency declaration nor a megawatt figure is **held**. A statement that mixes two classes (for
+example a fuel cut followed by a network collapse) becomes two candidates only if the source dates
+both; otherwise one, with the class the source gives as the cause.
+
+### A.4 Dates and languages
+
+Official Iraqi statements are dated in the Gregorian calendar, with Arabic month names in the
+Levantine form (كانون الثاني, شباط, آذار …) or the Egyptian form (يناير, فبراير …). A Hijri date
+shown alongside is kept in `source_date_text` with `date_calendar` `hijri`; a year such as 1447 is
+never read as Gregorian. Kurdish text keeps its original title in Sorani script with language code
+`ku` and an English gloss in a separate field.
+
+### A.5 Budget, resilience, review
+
+At most 50 searches for this country, as declared above; enumeration by direct request comes first
+and costs none. Each lane writes its log after every source family. Refused access (402, 403,
+security-check pages, login walls, script-only listings) is recorded and never worked around.
+Every lane-accepted record goes through blind three-role review (`REVIEW_GOVERNANCE.md` §7) and
+confirmation before import.

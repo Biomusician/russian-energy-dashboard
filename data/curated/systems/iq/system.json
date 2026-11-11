@@ -1,0 +1,226 @@
+{
+  "system_id": "iq",
+  "reporting_environment": "corporate_disclosure",
+  "reporting_note": "The federal oil and electricity ministries, state companies and the Kurdistan Region's ministries issue statements after large events. There is no event register, and official sites refuse automated reading, so statements are read as carried by news agencies and regional media. The coverage of this record cannot be computed.",
+  "geography": {
+    "unit_label": "governorate",
+    "units_expected": 18,
+    "note": "Iraq has 19 governorates in law since 2025, when Halabja became the nineteenth; Natural Earth draws 18, with Halabja inside As-Sulaymaniyah. The Kurdistan Region is a federal region of Iraq that contains governorates (Constitution, Art. 117); it is not a separate unit or system here. Events are placed by the governorate Natural Earth draws, which is an analytic choice, not a statement about the administration of any area.",
+    "rulings": [
+      {
+        "code": "IQ-AR",
+        "status": "note",
+        "note": "A governorate of the Kurdistan Region, a federal region of Iraq. Shown as an Iraqi governorate. Natural Earth spells it Arbil."
+      },
+      {
+        "code": "IQ-DA",
+        "status": "note",
+        "note": "A governorate of the Kurdistan Region, a federal region of Iraq. Shown as an Iraqi governorate. Natural Earth spells it Dihok."
+      },
+      {
+        "code": "IQ-SU",
+        "status": "note",
+        "note": "A governorate of the Kurdistan Region, a federal region of Iraq. Natural Earth draws Halabja governorate (created by a federal law passed on 14 April 2025) inside it. An event reported in Halabja is placed here, and the record says so."
+      },
+      {
+        "code": "IQ-TS",
+        "status": "contains_disputed_area",
+        "note": "Kirkuk governorate, under Natural Earth's code and former name (At-Ta'mim); ISO is reported to list it as IQ-KI. The Constitution (Art. 140) names Kirkuk among territories whose status is to be settled by a process that has not been completed. Events are placed by the boundary Natural Earth draws."
+      }
+    ],
+    "precision_policy": {
+      "kinetic": "admin1",
+      "reason": "Iraq's governorates are large and each holds many facilities, so a governorate is a real abstraction; this is the same precision the Saudi system uses. Recovery, restart and operating status are withheld for every attack record since 2022 under the campaign rule."
+    }
+  },
+  "sectors": [
+    {
+      "sector": "refining",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "Only a national operating total was read (EIA, credited to trade press). No single list covers federal state refineries and the Kurdistan Region's on one basis."
+    },
+    {
+      "sector": "electric_generation",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "No current plant list was read, and installed capacity is not stated in the source used. The federal grid and the Kurdistan Region are reported separately. Shortage is the normal state of the system, so capacity would not measure service."
+    },
+    {
+      "sector": "transmission",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "No regional inventory, and none is sought: grid mapping is out of scope. The event-burden measure does not fit."
+    },
+    {
+      "sector": "oil_logistics",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "No public capacity inventory was read, and building one would centre on export routing, which is out of scope. The ESDI's refining-base proxy does not fit a crude exporter."
+    },
+    {
+      "sector": "gas",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "National production, flaring and import figures only; no processing inventory was read. LNG and gas storage are not yet researched."
+    },
+    {
+      "sector": "coal",
+      "state": "NOT_APPLICABLE",
+      "assessed_readiness": "NOT_APPLICABLE",
+      "reason": "Not applicable: EIA's energy table for Iraq marks coal as not applicable, and no coal plant appears in any source read. The sector does not exist here, which is different from unknown."
+    }
+  ],
+  "sources": [
+    {
+      "name": "U.S. EIA Country Analysis Brief: Iraq",
+      "role": "adopted (context)",
+      "licence": "US public domain; figures EIA credits to third parties carry their terms",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "irregular country analysis (last updated 2025-07-14)",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": "2025-07-14",
+      "content_vintage": "2023-2024"
+    },
+    {
+      "name": "SOMO monthly export statistics",
+      "role": "derived facts only",
+      "licence": "all rights reserved; national total only, cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "monthly",
+      "stale_policy": "monthly",
+      "stale_after_days": 120,
+      "source_release": null,
+      "content_vintage": "January 2026 (the only monthly total readable)"
+    },
+    {
+      "name": "JODI, OPEC, IEA, Energy Institute",
+      "role": "derived facts only",
+      "licence": "JODI terms not published; the others refused automated access and were not read",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "monthly (JODI, OPEC MOMR); annual (OPEC ASB, IEA, Energy Institute)",
+      "stale_policy": "monthly",
+      "stale_after_days": 120,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "GEM Global Integrated Power Tracker",
+      "role": "denominator candidates (not yet acquired)",
+      "licence": "CC BY 4.0 (to confirm on the release file)",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "tracker releases about twice a year",
+      "stale_policy": "semiannual",
+      "stale_after_days": 400,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Ministry of Oil and state oil companies (statements; South Refineries Company news list)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link. Most sites sit behind a security check and are read through agencies",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Ministry of Electricity statements",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link. The site sits behind a security check and is read through agencies",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Kurdistan Regional Government ministries (Natural Resources, Electricity) and APIKUR (industry association)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link. The government portal refused automated access; APIKUR's own site was not reached",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Iraqi News Agency; Shafaq News, Rudaw, Kurdistan24",
+      "role": "event search (systematic lane)",
+      "licence": "all rights reserved; facts only, cited by link. The state agency refused automated access",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "International news agencies and energy press (Reuters, AP, S&P Global, Argus)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Iraq Oil Report; WRI Global Power Plant Database; OSM",
+      "role": "rejected",
+      "licence": "subscription with terms barring reproduction; plant list stale to 2016; no Iraqi pipeline or grid geometry is drawn",
+      "last_checked": "2026-11-11",
+      "publication_cadence": null,
+      "stale_policy": null,
+      "stale_after_days": null,
+      "source_release": null,
+      "content_vintage": null
+    }
+  ],
+  "research_gaps": [],
+  "audit_docs": [
+    "docs/countries/IQ_SOURCE_AUDIT.md",
+    "docs/countries/IQ_INDEX_READINESS.md"
+  ],
+  "provenance": "Authored 2026-11-11 (iteration 19) from the source-audit lane's draft, with the lead's precision policy and rulings. Edit by hand; this file is the curated source.",
+  "maturity": "research_preview",
+  "lane_registry": {
+    "IQ1": {
+      "source_family": "SOMO monthly statistics, read only for a change the publisher attributes to a disruption",
+      "registry": [
+        "SOMO monthly export statistics"
+      ]
+    },
+    "IQ2": {
+      "source_family": "Ministry of Oil and state oil company statements, as carried by agencies",
+      "registry": [
+        "Ministry of Oil and state oil companies (statements; South Refineries Company news list)"
+      ]
+    },
+    "IQ3": {
+      "source_family": "Ministry of Electricity statements on dated losses of supply",
+      "registry": [
+        "Ministry of Electricity statements"
+      ]
+    },
+    "IQ4": {
+      "source_family": "Kurdistan Region official sources and industry-association statements, as carried by media",
+      "registry": [
+        "Kurdistan Regional Government ministries (Natural Resources, Electricity) and APIKUR (industry association)"
+      ]
+    },
+    "IQ5": {
+      "source_family": "Media corroboration: Iraqi, Kurdish and international outlets",
+      "registry": [
+        "Iraqi News Agency; Shafaq News, Rudaw, Kurdistan24",
+        "International news agencies and energy press (Reuters, AP, S&P Global, Argus)"
+      ]
+    }
+  }
+}

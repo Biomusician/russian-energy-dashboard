@@ -23,11 +23,14 @@ the record is held. An id rename is never applied here: ids are permanent refere
 the build ledger, as-published history), so a proposed rename goes to the owner.
 """
 import json
+import os
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-R = ROOT / "data" / "candidates" / "review18"
+# The local review directory of the current pass. Earlier passes keep theirs (review18); set
+# EDM_REVIEW_DIR to work on one of those.
+R = ROOT / "data" / "candidates" / os.environ.get("EDM_REVIEW_DIR", "review19")
 ROLES = ("A", "B", "C")
 PASS = ("ACCEPT", "ACCEPT_WITH_CORRECTION")
 NOT_APPLIED_HERE = ("event_id",)   # ids are permanent; renames go to the owner

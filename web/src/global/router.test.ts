@@ -30,6 +30,23 @@ describe("routeFor", () => {
   });
 });
 
+describe("regional overviews", () => {
+  it("opens a group by its slug", () => {
+    expect(routeFor("?group=gulf")).toEqual({ view: "group", id: "gulf" });
+    expect(routeFor("?group=GULF")).toEqual({ view: "group", id: "gulf" });
+  });
+
+  it("lets a system win over a group, and a group over old theatre parameters", () => {
+    expect(routeFor("?sys=ir&group=gulf")).toEqual({ view: "country", id: "ir" });
+    expect(routeFor("?group=gulf&r=RU-PER")).toEqual({ view: "group", id: "gulf" });
+    expect(routeFor("?group=")).toEqual({ view: "home" });
+  });
+
+  it("passes an unknown slug through to be refused by the view", () => {
+    expect(routeFor("?group=__proto__")).toEqual({ view: "group", id: "__proto__" });
+  });
+});
+
 describe("hrefFor", () => {
   it("builds system links and the home link", () => {
     expect(hrefFor("us")).toBe("?sys=us");

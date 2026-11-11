@@ -1,0 +1,91 @@
+{
+  "country": "OM",
+  "as_of_note": "Compiled 2026-11-11 by the Oman source-audit lane (iteration 19, Wave A). A DRAFT in the local candidate queue. CONTEXT ONLY: never a scoring input. Every value was read from the cited document in this session; vintages differ (2024 and 2025) and are stated per row, and 2025 statistical values are marked provisional by their publisher. Bases differ by source (country totals from the National Centre for Statistics and Information, which credits the Ministry of Energy and Minerals and the Authority for Public Services Regulation; power-system figures from Nama Power and Water Procurement; a company total from Oman LNG) and are labelled on each row. Refining capacity and generating capacity were NOT read this session and are absent, not zero. National totals from the U.S. EIA are served by the global context layer and are not repeated here. No facility rows. See docs/countries/OM_SOURCE_AUDIT.md.",
+  "metrics": [
+    {
+      "metric": "oil_production",
+      "value": 1002.0,
+      "unit": "thousand barrels per day (daily average)",
+      "year": 2025,
+      "basis": "country total as labelled 'Oil Production' (365,754.4 thousand barrels in the year); provisional; the table does not split crude oil and condensate. Table credited to the Ministry of Energy and Minerals",
+      "source": "National Centre for Statistics and Information, Monthly Statistical Bulletin, October 2026, Table 9 (Oil & Gas Sector)",
+      "url": "https://api.ncsi.gov.om/uploads/pdfs/monthly_statistical_bulletin__october_2026_1792489912.pdf"
+    },
+    {
+      "metric": "oil_exports",
+      "value": 307960.9,
+      "unit": "thousand barrels (annual total)",
+      "year": 2025,
+      "basis": "country total as labelled 'Total Exports' in the oil table; provisional. Table credited to the Ministry of Energy and Minerals",
+      "source": "National Centre for Statistics and Information, Monthly Statistical Bulletin, October 2026, Table 9 (Oil & Gas Sector)",
+      "url": "https://api.ncsi.gov.om/uploads/pdfs/monthly_statistical_bulletin__october_2026_1792489912.pdf"
+    },
+    {
+      "metric": "natural_gas_supply",
+      "value": 57055.6,
+      "unit": "million cubic metres (annual total)",
+      "year": 2025,
+      "basis": "country total as labelled 'Imports + Local Production' (associated 12,851.0; non-associated plus imports 44,204.6); provisional. INCLUDES imports, so it is NOT a production figure and is not comparable with EIA's gas production series",
+      "source": "National Centre for Statistics and Information, Monthly Statistical Bulletin, October 2026, Table 9 (Oil & Gas Sector)",
+      "url": "https://api.ncsi.gov.om/uploads/pdfs/monthly_statistical_bulletin__october_2026_1792489912.pdf"
+    },
+    {
+      "metric": "natural_gas_use_power_generation",
+      "value": 15494.3,
+      "unit": "million cubic metres (annual total)",
+      "year": 2025,
+      "basis": "gas used by power generation plants, including plants belonging to oil and gas companies and two named public bodies, per the table's footnote; provisional",
+      "source": "National Centre for Statistics and Information, Monthly Statistical Bulletin, October 2026, Table 9 (Oil & Gas Sector)",
+      "url": "https://api.ncsi.gov.om/uploads/pdfs/monthly_statistical_bulletin__october_2026_1792489912.pdf"
+    },
+    {
+      "metric": "electricity_generation",
+      "value": 50973.5,
+      "unit": "GWh",
+      "year": 2025,
+      "basis": "country total, GROSS production; provisional. The same table gives NET production of 49,532.4 GWh, which by its footnote includes autogenerators and rented diesel units that do not appear in gross production. Table credited to the Authority for Public Services Regulation",
+      "source": "National Centre for Statistics and Information, Monthly Statistical Bulletin, October 2026, Table 21 (Electricity)",
+      "url": "https://api.ncsi.gov.om/uploads/pdfs/monthly_statistical_bulletin__october_2026_1792489912.pdf"
+    },
+    {
+      "metric": "peak_demand_main_system",
+      "value": 7863,
+      "unit": "MW",
+      "year": 2025,
+      "basis": "peak demand of the Main Interconnected System only, net of plant auxiliaries. The Dhofar Power System is reported separately (850 MW in 2025). A demand figure, NOT generating capacity",
+      "source": "Nama Power and Water Procurement, Power 7 Year Statement 2026-2032 (Issue 20)",
+      "url": "https://www.omanpwp.om/storage/files/1/7-year-statement/6af016a6ebea1.pdf"
+    },
+    {
+      "metric": "renewable_share_of_electricity",
+      "value": 9,
+      "unit": "percent of total electricity production",
+      "year": 2025,
+      "basis": "stated as 'around 9%' for solar and wind projects; the publisher's rounded figure, scope as the publisher's procurement",
+      "source": "Nama Power and Water Procurement, Power 7 Year Statement 2026-2032 (Issue 20)",
+      "url": "https://www.omanpwp.om/storage/files/1/7-year-statement/6af016a6ebea1.pdf"
+    },
+    {
+      "metric": "lng_production",
+      "value": 11.98,
+      "unit": "million tonnes",
+      "year": 2024,
+      "basis": "Oman LNG company figure for its complex, printed as '11.98 MTPA produced'; the same report counts Qalhat LNG cargoes with its own. A production figure, NOT a capacity",
+      "source": "Oman LNG, Outlook 2024 (annual report)",
+      "url": "http://omanlng.co.om/Style%20Library/assets/pdf/OLNG%20Annual%20Report%202024_5%20Eng.pdf"
+    }
+  ],
+  "significance": [
+    "Oman produced an average of about 1.0 million barrels of oil per day in 2025 and exported about 308 million barrels in the year, equivalent to about 84% of production (National Centre for Statistics and Information, crediting the Ministry of Energy and Minerals; share computed).",
+    "Power generation used about 27% of Oman's gas supply in 2025 (National Centre for Statistics and Information; share computed from 15,494 of 57,056 million cubic metres).",
+    "Solar and wind projects supplied around 9% of electricity production in 2025, against a stated target of 30% by 2030 (Nama Power and Water Procurement).",
+    "Oman LNG reported LNG production of 11.98 million tonnes in 2024.",
+    "Oman has no coal production and no coal-fired generation (U.S. EIA International Energy Statistics, 2024, as committed in this repository's global context layer)."
+  ],
+  "significance_sources": [
+    "https://api.ncsi.gov.om/uploads/pdfs/monthly_statistical_bulletin__october_2026_1792489912.pdf",
+    "https://www.omanpwp.om/storage/files/1/7-year-statement/6af016a6ebea1.pdf",
+    "http://omanlng.co.om/Style%20Library/assets/pdf/OLNG%20Annual%20Report%202024_5%20Eng.pdf",
+    "https://www.eia.gov/international/data/world"
+  ]
+}

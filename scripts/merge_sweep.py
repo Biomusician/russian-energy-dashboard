@@ -1,8 +1,9 @@
-"""Merge one research pass's candidate files into the local queues (iteration 18).
+"""Merge one research pass's candidate files into the local queues.
 
-    .venv\\Scripts\\python.exe scripts\\merge_sweep.py
+    .venv\\Scripts\\python.exe scripts\\merge_sweep.py                      # iteration 18's pass
+    .venv\\Scripts\\python.exe scripts\\merge_sweep.py gulf19 19 ir iq ...  # <dir> <iteration> <cc ...>
 
-Reads `data/candidates/sweep18/<cc>_*_candidates.json` and adds each record to
+Reads `data/candidates/<dir>/<cc>_*_candidates.json` and adds each record to
 `data/candidates/<cc>.json`. Both are local and gitignored. Publishes nothing: a record still has
 to pass blind review and the import gate.
 
@@ -13,6 +14,7 @@ governance allows; the reverse is not allowed.
 """
 import glob
 import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -27,16 +29,20 @@ LEAD_HOLDS = {
 }
 
 
-def main():
-    for cc in ("us", "ca", "cn", "in", "sa"):
+def main(sweep="sweep18", iteration="18", countries=("us", "ca", "cn", "in", "sa")):
+    for cc in countries:
         qpath = CANDIDATES / f"{cc}.json"
-        queue = json.loads(qpath.read_text(encoding="utf-8"))
+        # A country onboarded in this pass has no queue yet.
+        queue = json.loads(qpath.read_text(encoding="utf-8")) if qpath.exists() else []
         index = {r.get("candidate_id"): i for i, r in enumerate(queue)}
         added = replaced = kept = 0
-        for path in sorted(glob.glob(str(CANDIDATES / "sweep18" / f"{cc}_*_candidates.json"))):
+        for path in sorted(glob.glob(str(CANDIDATES / sweep / f"{cc}_*_candidates.json"))):
             for r in json.loads(Path(path).read_text(encoding="utf-8")):
                 cid = r.get("candidate_id")
-                r.setdefault("research_pass", f"iteration-18-{cc}")
+                # Always this pass's tag: a researcher's own spelling of it would drop the record
+                # from the pass's packets and counts.
+                r["research_pass"] = f"iteration-{iteration}-{cc}"
+                r["found_by"] = Path(path).name.replace("_candidates.json", "")
                 if cid in LEAD_HOLDS and r.get("suggested_disposition") == "accept":
                     r["suggested_disposition"] = "held"
                     r["disposition_reason"] = "lead hold: " + LEAD_HOLDS[cid]
@@ -57,4 +63,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 3:
+        main(sys.argv[1], sys.argv[2], tuple(sys.argv[3:]))
+    else:
+        main()

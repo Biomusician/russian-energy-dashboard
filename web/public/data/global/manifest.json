@@ -1,12 +1,60 @@
 {
   "schema_version": 1,
-  "build_time": "2026-11-11T22:48:40+00:00",
+  "build_time": "2026-11-11T23:36:19+00:00",
   "selection": {
-    "rule": "The five largest total primary energy producers in the world, excluding Russia.",
+    "rule": "The first five country systems are the five largest total primary energy producers in the world, excluding Russia: Canada, China, India, Saudi Arabia and the United States.",
     "source": "U.S. EIA International Energy Statistics, total primary energy production, 2024",
     "source_url": "https://www.eia.gov/international/data/world",
     "unit": "quadrillion Btu",
-    "caveat": "Canada and India differ by about 1% and swap order in the Energy Institute Statistical Review for the same year. The set of five is stable across both sources; the order within it is not, and the dashboard does not display one."
+    "caveat": "Canada and India differ by about 1% and swap order in the Energy Institute Statistical Review for the same year. The set of five is stable across both sources; the order within it is not, and the dashboard does not display one.",
+    "regional_rule": "Seven Gulf states were added in iteration 19 as a geographic expansion alongside Saudi Arabia: Bahrain, Iran, Iraq, Kuwait, Oman, Qatar and the United Arab Emirates. They were not chosen by production size, and no order among them is displayed."
+  },
+  "groups": {
+    "gulf_littoral": {
+      "label": "Gulf",
+      "kind": "geographic",
+      "note": "The eight states on the Gulf. A geographic group, not an organisation: it is not the GCC and not OPEC.",
+      "slug": "gulf",
+      "context": "global/gulf.json",
+      "members": [
+        "bh",
+        "ir",
+        "iq",
+        "kw",
+        "om",
+        "qa",
+        "sa",
+        "ae"
+      ]
+    },
+    "gcc": {
+      "label": "GCC",
+      "kind": "membership",
+      "note": "Members of the Gulf Cooperation Council. Iran and Iraq are not members.",
+      "slug": null,
+      "context": null,
+      "members": [
+        "bh",
+        "kw",
+        "om",
+        "qa",
+        "sa",
+        "ae"
+      ]
+    },
+    "opec": {
+      "label": "OPEC",
+      "kind": "membership",
+      "note": "Monitored systems that are OPEC members today. The United Arab Emirates left on 2026-05-01, as its government announced on 2026-04-28; OPEC's own member page refused access when this was checked, so the list rests on that announcement as reported. Membership is context only; an OPEC production decision is policy, never a disruption record.",
+      "slug": null,
+      "context": null,
+      "members": [
+        "ir",
+        "iq",
+        "kw",
+        "sa"
+      ]
+    }
   },
   "comparability_statement": "Each country is measured on its own terms. Event counts reflect what is publicly reported under that country's reporting rules, not how often disruption happens. A country with fewer recorded events is not shown to be safer, more resilient or less disrupted. Figures are not comparable across countries and are never ranked.",
   "reporting_environments": {
@@ -18,12 +66,12 @@
   },
   "order": "alphabetical by name; never by any figure",
   "corpus": {
-    "countries": 5,
+    "countries": 12,
     "records": 197,
     "episodes": 165,
     "independently_reviewed": 197,
     "blind_reviewed": 85,
-    "registry_sources": 47,
+    "registry_sources": 106,
     "records_with_observed_recovery": 112,
     "records_with_recovery_estimate_only": 15,
     "records_reported_fully_back": 17,
@@ -40,10 +88,46 @@
   },
   "systems": [
     {
+      "id": "bh",
+      "name": "Bahrain",
+      "kind": "country",
+      "root": "systems/bh",
+      "aliases": [
+        "البحرين",
+        "Kingdom of Bahrain"
+      ],
+      "regional_groups": [
+        "gulf_littoral",
+        "gcc"
+      ],
+      "maturity": "research_preview",
+      "campaign_restricted": true,
+      "evidence_readiness": "CONTEXT_ONLY",
+      "index": null,
+      "headline": null,
+      "reporting_environment": "media_only",
+      "as_of": "2026-11-11",
+      "bounds": [
+        50.38,
+        25.58,
+        50.82,
+        26.28
+      ],
+      "files": [
+        "system.json",
+        "events.json",
+        "regions.geojson"
+      ]
+    },
+    {
       "id": "ca",
       "name": "Canada",
       "kind": "country",
       "root": "systems/ca",
+      "aliases": [],
+      "regional_groups": [],
+      "maturity": "monitored",
+      "campaign_restricted": false,
       "evidence_readiness": "CONTEXT_ONLY",
       "index": null,
       "headline": null,
@@ -66,6 +150,10 @@
       "name": "China",
       "kind": "country",
       "root": "systems/cn",
+      "aliases": [],
+      "regional_groups": [],
+      "maturity": "monitored",
+      "campaign_restricted": false,
       "evidence_readiness": "CONTEXT_ONLY",
       "index": null,
       "headline": null,
@@ -88,6 +176,10 @@
       "name": "India",
       "kind": "country",
       "root": "systems/in",
+      "aliases": [],
+      "regional_groups": [],
+      "maturity": "monitored",
+      "campaign_restricted": false,
       "evidence_readiness": "CONTEXT_ONLY",
       "index": null,
       "headline": null,
@@ -98,6 +190,170 @@
         6.75,
         97.36,
         35.5
+      ],
+      "files": [
+        "system.json",
+        "events.json",
+        "regions.geojson"
+      ]
+    },
+    {
+      "id": "ir",
+      "name": "Iran",
+      "kind": "country",
+      "root": "systems/ir",
+      "aliases": [
+        "ایران",
+        "Islamic Republic of Iran",
+        "Persia"
+      ],
+      "regional_groups": [
+        "gulf_littoral",
+        "opec"
+      ],
+      "maturity": "research_preview",
+      "campaign_restricted": true,
+      "evidence_readiness": "CONTEXT_ONLY",
+      "index": null,
+      "headline": null,
+      "reporting_environment": "conflict_restricted",
+      "as_of": "2026-11-11",
+      "bounds": [
+        44.01,
+        25.06,
+        63.32,
+        39.77
+      ],
+      "files": [
+        "system.json",
+        "events.json",
+        "regions.geojson"
+      ]
+    },
+    {
+      "id": "iq",
+      "name": "Iraq",
+      "kind": "country",
+      "root": "systems/iq",
+      "aliases": [
+        "العراق",
+        "عێراق",
+        "Republic of Iraq"
+      ],
+      "regional_groups": [
+        "gulf_littoral",
+        "opec"
+      ],
+      "maturity": "research_preview",
+      "campaign_restricted": true,
+      "evidence_readiness": "CONTEXT_ONLY",
+      "index": null,
+      "headline": null,
+      "reporting_environment": "corporate_disclosure",
+      "as_of": "2026-11-11",
+      "bounds": [
+        38.77,
+        29.06,
+        48.56,
+        37.38
+      ],
+      "files": [
+        "system.json",
+        "events.json",
+        "regions.geojson"
+      ]
+    },
+    {
+      "id": "kw",
+      "name": "Kuwait",
+      "kind": "country",
+      "root": "systems/kw",
+      "aliases": [
+        "الكويت",
+        "State of Kuwait"
+      ],
+      "regional_groups": [
+        "gulf_littoral",
+        "gcc",
+        "opec"
+      ],
+      "maturity": "research_preview",
+      "campaign_restricted": true,
+      "evidence_readiness": "CONTEXT_ONLY",
+      "index": null,
+      "headline": null,
+      "reporting_environment": "corporate_disclosure",
+      "as_of": "2026-11-11",
+      "bounds": [
+        46.53,
+        28.53,
+        48.43,
+        30.1
+      ],
+      "files": [
+        "system.json",
+        "events.json",
+        "regions.geojson"
+      ]
+    },
+    {
+      "id": "om",
+      "name": "Oman",
+      "kind": "country",
+      "root": "systems/om",
+      "aliases": [
+        "عُمان",
+        "عمان",
+        "Sultanate of Oman"
+      ],
+      "regional_groups": [
+        "gulf_littoral",
+        "gcc"
+      ],
+      "maturity": "research_preview",
+      "campaign_restricted": true,
+      "evidence_readiness": "CONTEXT_ONLY",
+      "index": null,
+      "headline": null,
+      "reporting_environment": "corporate_disclosure",
+      "as_of": "2026-11-11",
+      "bounds": [
+        51.98,
+        16.64,
+        59.84,
+        26.39
+      ],
+      "files": [
+        "system.json",
+        "events.json",
+        "regions.geojson"
+      ]
+    },
+    {
+      "id": "qa",
+      "name": "Qatar",
+      "kind": "country",
+      "root": "systems/qa",
+      "aliases": [
+        "قطر",
+        "State of Qatar"
+      ],
+      "regional_groups": [
+        "gulf_littoral",
+        "gcc"
+      ],
+      "maturity": "research_preview",
+      "campaign_restricted": true,
+      "evidence_readiness": "CONTEXT_ONLY",
+      "index": null,
+      "headline": null,
+      "reporting_environment": "corporate_disclosure",
+      "as_of": "2026-11-11",
+      "bounds": [
+        50.75,
+        24.56,
+        51.61,
+        26.16
       ],
       "files": [
         "system.json",
@@ -132,6 +388,18 @@
       "name": "Saudi Arabia",
       "kind": "country",
       "root": "systems/sa",
+      "aliases": [
+        "السعودية",
+        "المملكة العربية السعودية",
+        "KSA"
+      ],
+      "regional_groups": [
+        "gulf_littoral",
+        "gcc",
+        "opec"
+      ],
+      "maturity": "monitored",
+      "campaign_restricted": true,
       "evidence_readiness": "CONTEXT_ONLY",
       "index": null,
       "headline": null,
@@ -150,10 +418,52 @@
       ]
     },
     {
+      "id": "ae",
+      "name": "United Arab Emirates",
+      "kind": "country",
+      "root": "systems/ae",
+      "aliases": [
+        "الإمارات",
+        "الإمارات العربية المتحدة",
+        "UAE",
+        "Emirates"
+      ],
+      "regional_groups": [
+        "gulf_littoral",
+        "gcc"
+      ],
+      "maturity": "research_preview",
+      "campaign_restricted": true,
+      "evidence_readiness": "CONTEXT_ONLY",
+      "index": null,
+      "headline": null,
+      "reporting_environment": "corporate_disclosure",
+      "as_of": "2026-11-11",
+      "bounds": [
+        51.57,
+        22.62,
+        56.38,
+        26.07
+      ],
+      "files": [
+        "system.json",
+        "events.json",
+        "regions.geojson"
+      ]
+    },
+    {
       "id": "us",
       "name": "United States",
       "kind": "country",
       "root": "systems/us",
+      "aliases": [
+        "USA",
+        "US",
+        "United States of America"
+      ],
+      "regional_groups": [],
+      "maturity": "monitored",
+      "campaign_restricted": false,
       "evidence_readiness": "CONTEXT_ONLY",
       "index": null,
       "headline": null,

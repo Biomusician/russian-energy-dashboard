@@ -27,11 +27,14 @@ build. Idempotent: running it twice
 does not duplicate edits.
 """
 import json
+import os
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-R = ROOT / "data" / "candidates" / "review18"
+# The local review directory of the current pass. Earlier passes keep theirs (review18); set
+# EDM_REVIEW_DIR to work on one of those.
+R = ROOT / "data" / "candidates" / os.environ.get("EDM_REVIEW_DIR", "review19")
 SYS = ROOT / "data" / "curated" / "systems"
 EDITS = SYS / "review_edits.json"
 GF = SYS / "review_grandfathered.json"

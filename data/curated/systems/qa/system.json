@@ -1,0 +1,186 @@
+{
+  "system_id": "qa",
+  "reporting_environment": "corporate_disclosure",
+  "reporting_note": "The state energy company, the state electricity and water utility and the ministry disclose disruption through statements, mostly carried by the state news agency. No body publishes an outage register or reliability statistics, so the coverage of this record cannot be computed.",
+  "geography": {
+    "unit_label": "municipality",
+    "units_expected": 7,
+    "note": "Qatar has 8 municipalities today; Natural Earth draws 7, on the arrangement before Al-Shahaniya was separated from Al Rayyan in 2014. Qatar is small and several municipalities hold a single large energy complex, so kinetic or security events default to COUNTRY level. A non-conflict event uses a municipality only where a safety reviewer finds it non-identifying. Offshore events are country level.",
+    "rulings": [
+      {
+        "code": "QA-KH",
+        "status": "note",
+        "note": "Natural Earth names it Al Khawr; the official name is Al Khor and Al Thakhira."
+      },
+      {
+        "code": "QA-MS",
+        "status": "note",
+        "note": "Natural Earth names it Madinat ach Shamal; the official name is Al Shamal."
+      },
+      {
+        "code": "QA-RA",
+        "status": "note",
+        "note": "Drawn on its pre-2014 extent, which includes today's Al-Shahaniya municipality (ISO QA-SH, added 2017). An event placed in Al-Shahaniya is recorded under this unit at most. A statement about the map file, not about Qatar's administrative divisions."
+      }
+    ],
+    "precision_policy": {
+      "kinetic": "country",
+      "reason": "Qatar's gas processing and export, and most of its power and water plants, are concentrated in two industrial cities, so a municipality and a class together name the facility. Attacks and sabotage are recorded for the country, with no municipality, facility or operator. Other events are placed by municipality."
+    }
+  },
+  "sectors": [
+    {
+      "sector": "refining",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "A national capacity total and annual throughput are published, but the country has two refineries, so a share of capacity affected would be the status of a named plant. Shown as national context only."
+    },
+    {
+      "sector": "electric_generation",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "EXPERIMENTAL",
+      "reason": "Denominator ready: the utility publishes contracted generating capacity annually on one basis under an open licence. Not scored: no outage reporting exists, the list of plants is short, and events resolve to country level. No model for this country's events has been approved (GLOBAL_METHODOLOGY.md §2 and §8.3)."
+    },
+    {
+      "sector": "transmission",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "National aggregates only; the event-burden measure does not fit, and no grid detail is collected."
+    },
+    {
+      "sector": "oil_logistics",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "No inventory is built: it would centre on export routing, which is out of scope. National crude export volume is shown as context."
+    },
+    {
+      "sector": "gas",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "National LNG capacity and annual LNG exports are published and shown as context. Liquefaction is concentrated in very few places, so a share of capacity affected would be the status of particular facilities. Train-level capacity is never recorded."
+    },
+    {
+      "sector": "coal",
+      "state": "NOT_APPLICABLE",
+      "assessed_readiness": "NOT_APPLICABLE",
+      "reason": "Not applicable: EIA marks coal production and consumption for Qatar as not applicable and shows no coal in power generation. The sector does not exist here, which is different from unknown."
+    }
+  ],
+  "sources": [
+    {
+      "name": "QatarEnergy datasets, Qatar Open Data Portal (production; exports of LNG, gas, naphtha and crude oil)",
+      "role": "adopted (context)",
+      "licence": "CC BY 4.0, as stated in each dataset's metadata",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "annual (datasets last modified 2026-08-18)",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": "modified 2026-08-18",
+      "content_vintage": "2020-2025"
+    },
+    {
+      "name": "KAHRAMAA datasets, Qatar Open Data Portal (generation, system load, customers, consumption by sector)",
+      "role": "adopted (context)",
+      "licence": "CC BY 4.0, as stated in each dataset's metadata",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "annual; some monthly series",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": "modified between 2026-06-20 and 2026-11-04",
+      "content_vintage": "2019-2025"
+    },
+    {
+      "name": "U.S. EIA, Country Analysis Brief: Qatar",
+      "role": "adopted (context)",
+      "licence": "public domain (U.S. government work)",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "irregular; last updated 2025-10-20",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": "last updated 2025-10-20",
+      "content_vintage": "2023-2025"
+    },
+    {
+      "name": "KAHRAMAA Annual Statistics Report; QatarEnergy and QatarEnergy LNG sustainability reports; National Planning Council (Qatar Monthly Statistics); GECF; JODI; GCC-Stat",
+      "role": "derived facts only",
+      "licence": "varies; KAHRAMAA and the two companies reserve all rights, the National Planning Council requires attribution, GCC-Stat allows reuse with attribution, GECF and JODI state no licence",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "varies by publisher; read when an event or a context figure is researched",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "QatarEnergy LNG news archive; QatarEnergy statements",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "KAHRAMAA and ministry statements (Qatar News Agency, Arabic and English)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Domestic and international press (Al-Raya, Al-Sharq, Al-Watan, The Peninsula, Gulf Times, Al Jazeera, Reuters, S&P Global)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "WRI Global Power Plant Database; OSM; pipeline and terminal trackers",
+      "role": "rejected",
+      "licence": "WRI rows undated with no solar; no facility or network geometry is drawn for Qatar",
+      "last_checked": "2026-11-11",
+      "publication_cadence": null,
+      "stale_policy": null,
+      "stale_after_days": null,
+      "source_release": null,
+      "content_vintage": null
+    }
+  ],
+  "research_gaps": [],
+  "audit_docs": [
+    "docs/countries/QA_SOURCE_AUDIT.md",
+    "docs/countries/QA_INDEX_READINESS.md"
+  ],
+  "provenance": "Authored 2026-11-11 (iteration 19) from the source-audit lane's draft, with the lead's precision policy and rulings. Edit by hand; this file is the curated source.",
+  "maturity": "research_preview",
+  "lane_registry": {
+    "QA1": {
+      "source_family": "QatarEnergy and QatarEnergy LNG: the LNG company's news archive and operator statements",
+      "registry": [
+        "QatarEnergy LNG news archive; QatarEnergy statements"
+      ]
+    },
+    "QA2": {
+      "source_family": "Electricity and water: utility and ministry statements carried by the state news agency",
+      "registry": [
+        "KAHRAMAA and ministry statements (Qatar News Agency, Arabic and English)"
+      ]
+    },
+    "QA3": {
+      "source_family": "Arabic and English media by year, via search",
+      "registry": [
+        "Domestic and international press (Al-Raya, Al-Sharq, Al-Watan, The Peninsula, Gulf Times, Al Jazeera, Reuters, S&P Global)"
+      ]
+    }
+  }
+}

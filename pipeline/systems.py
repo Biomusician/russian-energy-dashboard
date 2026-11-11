@@ -48,17 +48,79 @@ REPORTING_ENVIRONMENTS = {
                            "carry most of the record.",
 }
 
+# `aliases` are names a reader may type, including the country's own-script name. They feed search
+# only: a stable id never depends on a spelling or a transliteration.
 SYSTEMS = (
+    {"id": "bh", "name": "Bahrain", "kind": "country", "admin0_a3": ("BHR",),
+     "aliases": ("البحرين", "Kingdom of Bahrain")},
     {"id": "ca", "name": "Canada", "kind": "country", "admin0_a3": ("CAN",)},
     {"id": "cn", "name": "China", "kind": "country", "admin0_a3": ("CHN", "HKG", "MAC")},
     {"id": "in", "name": "India", "kind": "country", "admin0_a3": ("IND",)},
+    {"id": "ir", "name": "Iran", "kind": "country", "admin0_a3": ("IRN",),
+     "aliases": ("ایران", "Islamic Republic of Iran", "Persia")},
+    {"id": "iq", "name": "Iraq", "kind": "country", "admin0_a3": ("IRQ",),
+     "aliases": ("العراق", "عێراق", "Republic of Iraq")},
+    {"id": "kw", "name": "Kuwait", "kind": "country", "admin0_a3": ("KWT",),
+     "aliases": ("الكويت", "State of Kuwait")},
+    {"id": "om", "name": "Oman", "kind": "country", "admin0_a3": ("OMN",),
+     "aliases": ("عُمان", "عمان", "Sultanate of Oman")},
+    {"id": "qa", "name": "Qatar", "kind": "country", "admin0_a3": ("QAT",),
+     "aliases": ("قطر", "State of Qatar")},
     {"id": "ru", "name": "Russia, Belarus & Crimea", "kind": "theatre",
      "admin0_a3": ("RUS", "BLR"),
      # The theatre's original, unchanged home. Never moved: see the module docstring.
      "root": ""},
-    {"id": "sa", "name": "Saudi Arabia", "kind": "country", "admin0_a3": ("SAU",)},
-    {"id": "us", "name": "United States", "kind": "country", "admin0_a3": ("USA",)},
+    {"id": "sa", "name": "Saudi Arabia", "kind": "country", "admin0_a3": ("SAU",),
+     "aliases": ("السعودية", "المملكة العربية السعودية", "KSA")},
+    {"id": "ae", "name": "United Arab Emirates", "kind": "country", "admin0_a3": ("ARE",),
+     "aliases": ("الإمارات", "الإمارات العربية المتحدة", "UAE", "Emirates")},
+    {"id": "us", "name": "United States", "kind": "country", "admin0_a3": ("USA",),
+     "aliases": ("USA", "US", "United States of America")},
 )
+
+# GROUPS (iteration 19). Four different things that are easy to conflate, kept as separate facts:
+# a geographic group (the Gulf littoral), and two memberships (GCC, OPEC). Iran and Iraq border the
+# Gulf and belong to OPEC but not to the GCC; Bahrain, Qatar and Oman are GCC members outside OPEC.
+# Groups are navigation and context. They never enter a score, and no group has an index.
+GROUPS = {
+    "gulf_littoral": {
+        "label": "Gulf",
+        # A group with a `slug` has a regional overview at ?group=<slug>, fed by `context`.
+        "slug": "gulf",
+        "context": "global/gulf.json",
+        "kind": "geographic",
+        "members": ("bh", "ir", "iq", "kw", "om", "qa", "sa", "ae"),
+        "note": "The eight states on the Gulf. A geographic group, not an organisation: it is not "
+                "the GCC and not OPEC.",
+    },
+    "gcc": {
+        "label": "GCC",
+        "kind": "membership",
+        "members": ("bh", "kw", "om", "qa", "sa", "ae"),
+        "note": "Members of the Gulf Cooperation Council. Iran and Iraq are not members.",
+    },
+    "opec": {
+        "label": "OPEC",
+        "kind": "membership",
+        # The UAE announced its withdrawal on 2026-04-28, effective 2026-05-01 (WAM). The brief for
+        # iteration 19 listed it as a member; the membership published is today's.
+        "members": ("ir", "iq", "kw", "sa"),
+        "as_of": "2026-11-11",
+        "former_members": {"ae": "The United Arab Emirates was an OPEC member until 2026-04-30; the annual "
+                                 "figures shown here are for a year in which it was a member."},
+        "note": "Monitored systems that are OPEC members today. The United Arab Emirates left on "
+                "2026-05-01, as its government announced on 2026-04-28; OPEC's own member page "
+                "refused access when this was checked, so the list rests on that announcement as "
+                "reported. Membership is context only; an OPEC production decision is policy, never "
+                "a disruption record.",
+        "basis": "UAE government announcement of 2026-04-28 (state news agency, widely reported); "
+                 "opec.org returned HTTP 402 on 2026-11-11 and was not read.",
+    },
+}
+
+
+def groups_of(system_id):
+    return tuple(g for g, d in GROUPS.items() if system_id in d["members"])
 
 # The one system whose build is `pipeline.run`'s main body and whose headline is the ESDI.
 THEATRE = "ru"
@@ -66,11 +128,20 @@ THEATRE = "ru"
 # Systems built from curated per-system sources by `pipeline.build_systems`.
 COUNTRY_SYSTEMS = tuple(s["id"] for s in SYSTEMS if s["kind"] == "country")
 
+# Why the Gulf systems (iteration 19): a regional expansion decided by the owner, not by the
+# five-largest rule below. Stated so nobody reads the Gulf systems as "the next largest".
+GULF_SELECTION = {
+    "rule": "Seven Gulf states were added in iteration 19 as a geographic expansion alongside "
+            "Saudi Arabia: Bahrain, Iran, Iraq, Kuwait, Oman, Qatar and the United Arab Emirates. "
+            "They were not chosen by production size, and no order among them is displayed.",
+}
+
 # Why these five: EIA International Energy Statistics, total primary energy production, 2024,
 # ranked over all countries (quadrillion Btu). India and Canada swap places between sources and
 # years, so neither is given a fixed rank anywhere a reader can see it.
 SELECTION = {
-    "rule": "The five largest total primary energy producers in the world, excluding Russia.",
+    "rule": "The first five country systems are the five largest total primary energy producers "
+            "in the world, excluding Russia: Canada, China, India, Saudi Arabia and the United States.",
     "source": "U.S. EIA International Energy Statistics, total primary energy production, 2024",
     "source_url": "https://www.eia.gov/international/data/world",
     "unit": "quadrillion Btu",

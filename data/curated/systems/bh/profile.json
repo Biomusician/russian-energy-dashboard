@@ -1,0 +1,71 @@
+{
+  "country": "BH",
+  "as_of_note": "DRAFT compiled 2026-11-11 by the Bahrain source-audit lane (iteration 19, Wave A). CONTEXT ONLY: never a scoring input. Every value was read from the cited page or file in this session; vintages differ (2022-2025) and are stated per row, so the rows must not be combined into one 'current' picture. Bases differ by source: national totals from IRENA; annual series from the Ministry of Oil and Environment and the Electricity and Water Authority through data.gov.bh, extracted 2026-11-11 under the Bahrain Open Government Data License v1.1; sums and selections are this project's own and are not attributed to the iGA or the publishing entity. No refining or generating capacity by facility is recorded, and no refining or gas series later than 2025 is carried: the refining series describes a single refinery, so a later figure would be one facility's operating level. Crude-import and crude-origin series exist on the portal and are deliberately not carried. See docs/countries/BH_SOURCE_AUDIT.md.",
+  "metrics": [
+    {
+      "metric": "total_energy_supply",
+      "value": 672854,
+      "unit": "terajoules (total energy supply)",
+      "year": 2022,
+      "basis": "country total; gas 89%, oil 11%, coal and others 0%, renewables 0% (713 TJ), no nuclear. Supply, not production",
+      "source": "IRENA, Energy Profile: Bahrain (last updated 2025-09-22)",
+      "url": "https://www.irena.org/-/media/Files/IRENA/Agency/Statistics/Statistical_Profiles/Middle-East/Bahrain_Middle-East_RE_SP.pdf"
+    },
+    {
+      "metric": "natural_gas_production_non_associated",
+      "value": 560481,
+      "unit": "million cubic feet per year",
+      "year": 2025,
+      "basis": "country total, non-associated gas only; 637,774 in 2024. Not comparable with a dry or marketed gas figure from another source",
+      "source": "Ministry of Oil and Environment via data.gov.bh, Non-Associated Gas Production (dataset modified 2026-08-06)",
+      "url": "https://www.data.gov.bh/api/records/1.0/search/?dataset=production-of-natural-gas-million-cubic-feet&rows=20"
+    },
+    {
+      "metric": "natural_gas_production_associated",
+      "value": 305091,
+      "unit": "million cubic feet per year",
+      "year": 2025,
+      "basis": "country total, associated gas only; a separate series from non-associated gas, and whether the two may be added is not stated by the publisher",
+      "source": "Ministry of Oil and Environment via data.gov.bh, Associated Gas Production (dataset modified 2026-08-06)",
+      "url": "https://www.data.gov.bh/api/records/1.0/search/?dataset=10-production-of-associated-gas-v1&rows=20"
+    },
+    {
+      "metric": "electricity_generation",
+      "value": 37523,
+      "unit": "GWh",
+      "year": 2023,
+      "basis": "country total (non-renewable 37,429; renewable 94). About twice the Electricity and Water Authority's own station series for the same year, which covers public supply only",
+      "source": "IRENA, Energy Profile: Bahrain (last updated 2025-09-22)",
+      "url": "https://www.irena.org/-/media/Files/IRENA/Agency/Statistics/Statistical_Profiles/Middle-East/Bahrain_Middle-East_RE_SP.pdf"
+    },
+    {
+      "metric": "electricity_consumption_public_supply",
+      "value": 19391.6,
+      "unit": "GWh",
+      "year": 2025,
+      "basis": "consumption of electricity supplied by the Electricity and Water Authority: domestic 9,384.1; commercial 6,354.0; industrial 3,603.1; agricultural 50.3. Public supply only; NOT comparable with the IRENA national generation figure",
+      "source": "Electricity and Water Authority via data.gov.bh, Electricity consumption in GWH and Sectorial Consumption of Electricity (datasets modified 2026-09-13)",
+      "url": "https://www.data.gov.bh/api/records/1.0/search/?dataset=electricity-consumption-in-mwh-v1&rows=30"
+    },
+    {
+      "metric": "generating_capacity",
+      "value": 9954,
+      "unit": "MW",
+      "year": 2024,
+      "basis": "country total installed capacity as IRENA reports it (non-renewable 9,885; renewable 69). Whether and how it includes generation outside the public utility is not stated on the page",
+      "source": "IRENA, Energy Profile: Bahrain (last updated 2025-09-22)",
+      "url": "https://www.irena.org/-/media/Files/IRENA/Agency/Statistics/Statistical_Profiles/Middle-East/Bahrain_Middle-East_RE_SP.pdf"
+    }
+  ],
+  "significance": [
+    "Natural gas made up 89% of Bahrain's total energy supply in 2022 and oil 11%, with coal at 0% and renewables under 1% (IRENA).",
+    "Almost all electricity is generated from non-renewable sources: 37,429 of 37,523 GWh in 2023 (IRENA).",
+    "Households took 48% of the electricity supplied by the Electricity and Water Authority in 2025, commercial users 33% and industry 19% (shares computed by this project from the authority's published sector figures).",
+    "Bahrain publishes annual national series for crude oil, gas, refining and electricity under an open government data licence (data.gov.bh)."
+  ],
+  "significance_sources": [
+    "https://www.irena.org/-/media/Files/IRENA/Agency/Statistics/Statistical_Profiles/Middle-East/Bahrain_Middle-East_RE_SP.pdf",
+    "https://www.data.gov.bh/api/records/1.0/search/?dataset=sectorial-consumption-of-electricity-v1&rows=6&sort=year",
+    "https://www.nea.gov.bh/Documents/OpenDataLicense.pdf"
+  ]
+}

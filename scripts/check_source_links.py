@@ -19,6 +19,7 @@ datePublished and similar). It is never inferred from a URL or from the retrieva
 """
 import hashlib
 import json
+import os
 import re
 import ssl
 import sys
@@ -29,8 +30,10 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-LOCAL = ROOT / "data" / "candidates" / "review18" / "link_check.json"
+LOCAL = ROOT / "data" / "candidates" / os.environ.get("EDM_REVIEW_DIR", "review19") / "link_check.json"
 PUBLIC = ROOT / "data" / "curated" / "systems" / "source_link_health.json"
+# The systems whose citations this check requests. The seven Gulf systems added in iteration 19 are
+# NOT here: their citations have not been link-checked, and their pages say "not checked".
 SYSTEMS = ("us", "ca", "cn", "in", "sa")
 CHECKED = "2026-11-10"
 PER_HOST_DELAY = 3.0

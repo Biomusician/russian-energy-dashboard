@@ -156,16 +156,20 @@ function NationalTable({ ctx, partly, onContext }: { ctx: EnergyContext; partly:
   );
 }
 
-function CountrySearch({ ctx, onContext }: { ctx: EnergyContext; onContext: (a3: string) => void }) {
+function CountrySearch({ ctx, onContext, aliases }: {
+  ctx: EnergyContext; onContext: (a3: string) => void; aliases: Record<string, string[]>;
+}) {
   const [q, setQ] = useState("");
   const hits = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (s.length < 2) return [];
     const alias = SEARCH_ALIASES[s];
-    const match = (r: ContextRow) => r.name.toLowerCase().includes(s) || r.a3.toLowerCase() === s;
+    // A monitored country is also found by its name in its own script (manifest aliases).
+    const own = (r: ContextRow) => (r.system_id ? aliases[r.system_id] ?? [] : []).some((a) => a.toLowerCase().includes(s));
+    const match = (r: ContextRow) => r.name.toLowerCase().includes(s) || r.a3.toLowerCase() === s || own(r);
     const named = alias ? ctx.countries.filter((r) => r.name.toLowerCase() === alias) : [];
     return [...named, ...ctx.countries.filter((r) => match(r) && !named.includes(r))].slice(0, 8);
-  }, [q, ctx]);
+  }, [q, ctx, aliases]);
   return (
     <div className="country-search">
       <label className="small">Find a country{" "}
@@ -238,6 +242,7 @@ export default function WorldContext({ world, worldError, manifest }: {
     OTHER]) as maplibregl.ExpressionSpecification;
 
   const monitoredNames = manifest?.systems.map((s) => s.name) ?? [];
+  const aliases = useMemo(() => Object.fromEntries((manifest?.systems ?? []).map((s) => [s.id, s.aliases ?? []])), [manifest]);
   const card = cardA3 ? byA3.get(cardA3) : undefined;
 
   const runExport = async () => {
@@ -275,7 +280,7 @@ export default function WorldContext({ world, worldError, manifest }: {
                 {modes.map((m) => <option key={m.id} value={m.id}>{m.title}</option>)}
               </select>
             </label>
-            <CountrySearch ctx={ctx} onContext={setCardA3} />
+            <CountrySearch ctx={ctx} onContext={setCardA3} aliases={aliases} />
           </div>
         </details>
       )}
@@ -351,7 +356,7 @@ function WorldProfile({ ctx, partly, onContext }: { ctx: EnergyContext; partly: 
       <p className="small">
         World production: {fmtValue(total, ctx.metrics.total_production.unit)}.{" "}
         {shares.map((s) => `${s.label} ${Math.round(s.share * 100)}%`).join(" · ")}.
-        {total ? ` The countries containing the six monitored systems produced ${Math.round((monitored / total) * 100)}% of it; the map shows the rest for context only.` : ""}
+        {total ? ` The countries containing the monitored systems produced ${Math.round((monitored / total) * 100)}% of it; the map shows the rest for context only.` : ""}
       </p>
       <p className="small">Six largest producers in {ctx.comparison_year}, alphabetically: {largest.join(", ")}. Size says nothing about disruption.</p>
       <details>

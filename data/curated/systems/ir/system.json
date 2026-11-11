@@ -1,0 +1,228 @@
+{
+  "system_id": "ir",
+  "reporting_environment": "conflict_restricted",
+  "reporting_note": "A war involving attacks on Iranian territory is recorded from 28 February 2026, after an earlier one in June 2025, and each party restricts what is reported about damage. Most Iranian official and agency sites could not be read from outside the country when this was written. For 2022 to mid-2025 the record rests on ministry statements carried by state-supervised news agencies. No body publishes an event register, so the coverage of this record cannot be computed.",
+  "geography": {
+    "unit_label": "province",
+    "units_expected": 31,
+    "note": "31 provinces (ostan), the official count since Alborz was created in 2010. Codes are the current ISO 3166-2 numbering (IR-00 to IR-30). Natural Earth, the map source, still carries the numbering from before November 2020, in which all but two codes meant a different province, so its shapes are moved to the current codes by province name. Boundaries are Natural Earth's default edition, which is an analytic and cartographic choice, not a statement about sovereignty. Offshore installations lie outside every province. Electricity is organised by regional companies, not by these provinces.",
+    "rulings": [
+      {
+        "code": "IR-07",
+        "status": "note",
+        "note": "Fars. Natural Earth carries the numbering from before 2020, in which this code meant Tehran. This system uses the current numbering throughout."
+      },
+      {
+        "code": "IR-22",
+        "status": "contains_disputed_area",
+        "note": "Hormozgan. Natural Earth draws Abu Musa with this province; the Greater and Lesser Tunbs are not drawn at this scale. Iran administers the three islands and the United Arab Emirates claims them. They are drawn as Natural Earth draws them, a cartographic matter and not a statement about sovereignty. The islands are never a unit of analysis and no event is assigned to them."
+      },
+      {
+        "code": "IR-30",
+        "status": "note",
+        "note": "Alborz. Natural Earth gives Alborz the same code as Tehran. It has been a separate province since 2010 and is a separate unit here, under its current ISO code."
+      }
+    ],
+    "precision_policy": {
+      "kinetic": "country",
+      "reason": "Strikes on energy facilities in Iran are being reported now. While that holds, an attack or sabotage record is recorded for the country, with no province, facility or operator: a province and a class would often name the site. Other events (accidents, weather, grid failures) are placed by province."
+    }
+  },
+  "sectors": [
+    {
+      "sector": "refining",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "Only a national total was read (EIA estimate, early 2024), and crude distillation and condensate splitting are quoted on different bases. No per-refinery table was read: the refining company's posted yearbooks stop at 2018-19 and other official sites could not be opened. Not scored."
+    },
+    {
+      "sector": "electric_generation",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "No current plant list or national installed capacity was read: the power holding company's site could not be opened, and the one cached list ends in 2015. The system runs a standing seasonal shortfall, so there is no undisrupted baseline to score against. Not scored."
+    },
+    {
+      "sector": "transmission",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "No regional inventory or event stream; the event-burden measure does not fit, and grid topology is outside what this project collects."
+    },
+    {
+      "sector": "oil_logistics",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "UNSUITABLE",
+      "reason": "The ESDI's refining-base proxy does not fit a crude exporter, and export-route material is outside what this project collects."
+    },
+    {
+      "sector": "gas",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "Natural gas was 55.7% of primary energy production in 2022 (EIA), but only national production and consumption were read. No processing-plant census was read; pipeline routes are outside what this project collects. Whether there is domestic LNG is not yet researched."
+    },
+    {
+      "sector": "coal",
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "Small but not zero: EIA reports coal at 0.3% of primary energy production in 2022 and no coal-fired generation. A mine inventory is not yet researched."
+    }
+  ],
+  "sources": [
+    {
+      "name": "U.S. EIA Country Analysis Brief: Iran",
+      "role": "adopted (context)",
+      "licence": "public domain (U.S. government work)",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "irregular; last updated 2024-10-10",
+      "stale_policy": "annual",
+      "stale_after_days": 400,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "OPEC, GECF, IEA, Statistical Center of Iran",
+      "role": "derived facts only",
+      "licence": "varies; not read (sites refused access or did not load)",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "varies by publisher; read by a person when a figure is needed",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "JODI Oil",
+      "role": "rejected",
+      "licence": "no Iranian submission for any month from August 2018 to August 2026",
+      "last_checked": "2026-11-11",
+      "publication_cadence": null,
+      "stale_policy": null,
+      "stale_after_days": null,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "WRI Global Power Plant Database; OSM",
+      "role": "rejected",
+      "licence": "newest Iranian plant row is 2015; pipeline and grid geometry is not collected",
+      "last_checked": "2026-11-11",
+      "publication_cadence": null,
+      "stale_policy": null,
+      "stale_after_days": null,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Ministry of Petroleum statements (SHANA), NIOC and NIGC",
+      "role": "event search (systematic lane)",
+      "licence": "terms not read (sites refused access); facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "National Iranian Oil Refining and Distribution Company (NIORDC) news and notices",
+      "role": "event search (systematic lane)",
+      "licence": "all rights reserved; facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Ministry of Energy, Tavanir and Iran Grid Management Company statements",
+      "role": "event search (systematic lane)",
+      "licence": "terms not read (sites did not load); facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Iranian news agencies (IRNA, ISNA, Mehr, Tasnim, Fars)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link (Tasnim states CC BY 4.0; the others' terms were not read)",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "International news agencies and energy press (Reuters, AP, AFP, S&P Global)",
+      "role": "event search (systematic lane)",
+      "licence": "facts only; cited by link",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    },
+    {
+      "name": "Persian-language media outside Iran (Iran International, Radio Farda)",
+      "role": "event search (systematic lane)",
+      "licence": "all rights reserved; facts only; cited by link; a second independent source is required",
+      "last_checked": "2026-11-11",
+      "publication_cadence": "event-driven",
+      "stale_policy": "event_driven",
+      "stale_after_days": 180,
+      "source_release": null,
+      "content_vintage": null
+    }
+  ],
+  "research_gaps": [],
+  "audit_docs": [
+    "docs/countries/IR_SOURCE_AUDIT.md",
+    "docs/countries/IR_INDEX_READINESS.md"
+  ],
+  "provenance": "Authored 2026-11-11 (iteration 19) from the source-audit lane's draft, with the lead's precision policy and rulings. Edit by hand; this file is the curated source.",
+  "maturity": "research_preview",
+  "lane_registry": {
+    "IR1": {
+      "source_family": "Oil and gas, official: Ministry of Petroleum statements and its news service, via search",
+      "registry": [
+        "Ministry of Petroleum statements (SHANA), NIOC and NIGC"
+      ]
+    },
+    "IR2": {
+      "source_family": "Refining and processing: the national refining company's news and notices",
+      "registry": [
+        "National Iranian Oil Refining and Distribution Company (NIORDC) news and notices"
+      ]
+    },
+    "IR3": {
+      "source_family": "Electricity, official: Ministry of Energy and grid-operator statements, via search",
+      "registry": [
+        "Ministry of Energy, Tavanir and Iran Grid Management Company statements"
+      ]
+    },
+    "IR4": {
+      "source_family": "Persian-language media, inside and outside Iran",
+      "registry": [
+        "Iranian news agencies (IRNA, ISNA, Mehr, Tasnim, Fars)",
+        "Persian-language media outside Iran (Iran International, Radio Farda)"
+      ]
+    },
+    "IR5": {
+      "source_family": "International corroboration, via search",
+      "registry": [
+        "International news agencies and energy press (Reuters, AP, AFP, S&P Global)"
+      ]
+    },
+    "IR6": {
+      "source_family": "Attack and sabotage events: occurrence, date, class and effect at the time only",
+      "registry": [
+        "Iranian news agencies (IRNA, ISNA, Mehr, Tasnim, Fars)",
+        "International news agencies and energy press (Reuters, AP, AFP, S&P Global)"
+      ]
+    }
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "country": "IR",
+  "as_of_note": "Compiled 2026-11-11 by the Iran source-audit lane. CONTEXT ONLY: never a scoring input. Every value was read on the cited page in this session. All ten come from one source, the U.S. EIA country analysis brief last updated 2024-10-10, so vintages are 2022 to early 2024 and predate the June 2025 and 2026 conflicts: they describe the system before those events and say nothing about its present state. Several are EIA estimates and are labelled so. Iranian official sites (Ministry of Petroleum, Ministry of Energy, Tavanir, Statistical Center of Iran) could not be read on this date, OPEC, IEA and the Energy Institute refused scripted access, and Iran has submitted no JODI-Oil data since July 2018, so no figure is taken from any of them. National installed generating capacity was not read on any page and is deliberately absent. See docs/countries/IR_SOURCE_AUDIT.md.",
+  "metrics": [
+    {
+      "metric": "total_energy_production",
+      "value": 17.6,
+      "unit": "quadrillion Btu (primary energy production)",
+      "year": 2022,
+      "basis": "country total; 55.7% natural gas, 43.4% petroleum and other liquids, 0.4% nuclear, 0.3% coal, 0.3% hydro and other renewables",
+      "source": "U.S. EIA, Country Analysis Brief: Iran, Table 1 (last updated 2024-10-10)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/Iran/"
+    },
+    {
+      "metric": "total_liquids_production",
+      "value": 4.0,
+      "unit": "million barrels per day",
+      "year": 2023,
+      "basis": "country total, petroleum and other liquids: crude oil plus condensate and hydrocarbon gas liquids, so NOT comparable with crude_oil_production",
+      "source": "U.S. EIA, Country Analysis Brief: Iran (last updated 2024-10-10)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/Iran/"
+    },
+    {
+      "metric": "crude_oil_production",
+      "value": 2.9,
+      "unit": "million barrels per day",
+      "year": 2023,
+      "basis": "country total, crude oil only; EIA writes 'almost 2.9 million b/d' of the 4.0 million b/d of liquids",
+      "source": "U.S. EIA, Country Analysis Brief: Iran (last updated 2024-10-10)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/Iran/"
+    },
+    {
+      "metric": "natural_gas_production",
+      "value": 9.4,
+      "unit": "trillion cubic feet (dry natural gas)",
+      "year": 2023,
+      "basis": "country total, dry gas",
+      "source": "U.S. EIA, Country Analysis Brief: Iran (last updated 2024-10-10)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/Iran/"
+    },
+    {
+      "metric": "natural_gas_consumption",
+      "value": 8.9,
+      "unit": "trillion cubic feet",
+      "year": 2023,
+      "basis": "country total; EIA states an average of 8.9 Tcf in 2023",
+      "source": "U.S. EIA, Country Analysis Brief: Iran (last updated 2024-10-10)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/Iran/"
+    },
+    {
+      "metric": "natural_gas_exports",
+      "value": 515,
+      "unit": "billion cubic feet",
+      "year": 2023,
+      "basis": "country total per EIA (681 Bcf in 2022)",
+      "source": "U.S. EIA, Country Analysis Brief: Iran (last updated 2024-10-10)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/Iran/"
+    },
+    {
+      "metric": "electricity_generation",
+      "value": 360.7,
+      "unit": "TWh",
+      "year": 2022,
+      "basis": "country total, net generation: 85.2% natural gas, 8.1% petroleum, 4.4% hydro, 1.7% nuclear, 0.4% other renewables; no coal-fired generation listed",
+      "source": "U.S. EIA, Country Analysis Brief: Iran, Table 1 (last updated 2024-10-10)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/Iran/"
+    },
+    {
+      "metric": "refining_capacity",
+      "value": 2.1,
+      "unit": "million barrels per day",
+      "year": 2024,
+      "basis": "national crude oil distillation capacity at the beginning of 2024, an EIA ESTIMATE. Excludes condensate splitters, which EIA gives separately; Iranian official statements often quote the two together",
+      "source": "U.S. EIA, Country Analysis Brief: Iran (last updated 2024-10-10)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/Iran/"
+    },
+    {
+      "metric": "condensate_splitter_capacity",
+      "value": 0.6,
+      "unit": "million barrels per day",
+      "year": 2024,
+      "basis": "national condensate splitter capacity at the beginning of 2024, as given by EIA beside the crude distillation figure. A different quantity: do NOT add it to refining_capacity without saying so",
+      "source": "U.S. EIA, Country Analysis Brief: Iran (last updated 2024-10-10)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/Iran/"
+    },
+    {
+      "metric": "crude_and_condensate_exports",
+      "value": 1.4,
+      "unit": "million barrels per day",
+      "year": 2023,
+      "basis": "country total, an EIA ESTIMATE ('nearly 1.4 million b/d'). Iran publishes no export series to JODI, so this is a third-party estimate and not a reported figure",
+      "source": "U.S. EIA, Country Analysis Brief: Iran (last updated 2024-10-10)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/Iran/"
+    }
+  ],
+  "significance": [
+    "Natural gas made up 55.7% of Iran's primary energy production in 2022 and petroleum and other liquids 43.4% (EIA).",
+    "Natural gas supplied 67.6% of Iran's primary energy consumption and 85.2% of its electricity generation in 2022 (EIA).",
+    "Iran produced 9.4 trillion cubic feet of dry natural gas in 2023 and consumed 8.9 trillion cubic feet (EIA).",
+    "Iran produced 4.0 million barrels per day of petroleum and other liquids in 2023, of which almost 2.9 million barrels per day was crude oil (EIA).",
+    "EIA estimated Iran's proved natural gas reserves at 1,200 trillion cubic feet as of December 2023."
+  ],
+  "significance_sources": [
+    "https://www.eia.gov/international/content/analysis/countries_long/Iran/"
+  ]
+}

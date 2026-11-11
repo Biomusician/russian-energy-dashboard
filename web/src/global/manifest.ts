@@ -24,6 +24,23 @@ export interface ManifestSystem {
   as_of: string;
   bounds?: [number, number, number, number];
   files: string[];
+  /** Iteration 19. Names in the country's own script, for search. */
+  aliases?: string[];
+  regional_groups?: string[];
+  maturity?: "monitored" | "research_preview";
+  /** Recovery status is withheld here while an attack campaign is active, recent or uncertain. */
+  campaign_restricted?: boolean;
+}
+
+/** A named set of systems: navigation and filtering only, never a scored unit. */
+export interface ManifestGroup {
+  label: string;
+  kind: "geographic" | "membership";
+  note: string;
+  /** Present when the group has its own overview page at `?group=<slug>`. */
+  slug: string | null;
+  context: string | null;
+  members: string[];
 }
 
 /** Totals for the five countries together (iteration 17). Never one figure per country. */
@@ -47,7 +64,8 @@ export interface Manifest {
   schema_version: number;
   build_time: string;
   corpus?: CorpusTotals;
-  selection: { rule: string; source: string; source_url: string; caveat: string };
+  selection: { rule: string; source: string; source_url: string; caveat: string; regional_rule?: string };
+  groups?: Record<string, ManifestGroup>;
   comparability_statement: string;
   reporting_environments: Record<string, string>;
   systems: ManifestSystem[];
@@ -94,7 +112,13 @@ export interface CountrySystem {
     bounds: [number, number, number, number];
     view_bounds: [number, number, number, number];
     rulings: { code: string; status: string; note: string }[];
+    /** Iteration 19: how precisely events are placed here, and why. Admin-1 is a maximum. */
+    precision_policy?: { kinetic?: "country" | "admin1"; other?: "country" | "admin1"; no_event_units?: string[]; reason: string };
   };
+  maturity?: "monitored" | "research_preview";
+  campaign_state?: { state: string; checked: string; basis: string; limitation?: string } | null;
+  aliases?: string[];
+  regional_groups?: string[];
   event_summary: {
     recorded_events: number;
     episodes: number;
@@ -260,6 +284,39 @@ export interface RecentEpisode {
 
 export interface RecentEvidence { order: string; scope: string; note: string; episodes: RecentEpisode[] }
 
+/** One member of a regional overview. National figures and research process; no disruption count. */
+export interface GroupSystem {
+  system_id: string;
+  name: string;
+  a3: string;
+  gcc_member: boolean;
+  opec_member: boolean;
+  maturity: "monitored" | "research_preview";
+  recovery_status_withheld: boolean;
+  values: Record<string, number | null>;
+  role: string | null;
+  last_systematic_pass: string | null;
+  lane_states: Record<string, number>;
+  languages_required: string[];
+  languages_executed: string[];
+  reporting_environment: string;
+}
+
+export interface GroupContext {
+  group: string;
+  label: string;
+  note: string;
+  statement: string;
+  not_built: string;
+  memberships: Record<"gcc" | "opec", { label: string; note: string; members: string[] }>;
+  order: string;
+  sources: Record<string, { name: string; url: string; release: string | null; attribution: string | null }>;
+  metrics: Record<string, { label: string; unit: string; definition: string; year: number; source_id: string }>;
+  systems: GroupSystem[];
+  region: Record<string, { value: number | null; world_share: number | null; reason: string | null }>;
+  recent?: RecentEvidence;
+}
+
 export interface DataQualityLane {
   lane: string; source_family?: string; execution?: string; source_window?: string; covered_through?: string | null;
   languages_required?: string[]; languages_executed?: string[]; limitation?: string | null; finding?: string | null;
@@ -313,7 +370,13 @@ export interface CountryEvent {
   threshold_basis: string | null;
   capacity_affected: { value: number | null; unit?: string; source_says?: string } | null;
   sources: { url: string; publisher?: string; date?: string; language?: string;
-             source_role?: string; opened?: boolean | null }[];
+             source_role?: string; opened?: boolean | null;
+             /** A non-English source's own headline and an English gloss (iteration 19). */
+             title_original?: string; title_en?: string }[];
+  /** Present when the source dated the event in another calendar: what it wrote, and how it was converted. */
+  source_date_text?: string;
+  date_calendar?: "gregorian" | "solar_hijri" | "hijri";
+  conversion_basis?: string;
   recovery: { research_status: string; kind: string | null; date: string | null;
               evidence: string | null; url: string | null };
   review: {
@@ -424,6 +487,19 @@ export function loadRecentEvidence(): Promise<RecentEvidence> {
   return getJson<RecentEvidence>("global/recent_evidence.json", new AbortController().signal);
 }
 
+/** A regional overview's context file, named by the manifest (`groups.<id>.context`). */
+export function loadGroupContext(path: string, signal: AbortSignal): Promise<GroupContext> {
+  return getJson<GroupContext>(path, signal);
+}
+
+/** The group a `?group=` slug names, or null. Own keys only: a slug is reader input. */
+export function groupBySlug(m: Manifest, slug: string): { id: string; group: ManifestGroup } | null {
+  for (const [id, g] of Object.entries(m.groups ?? {})) {
+    if (g.slug && g.slug === slug && g.context) return { id, group: g };
+  }
+  return null;
+}
+
 export function loadDataQuality(): Promise<DataQuality> {
   return getJson<DataQuality>("global/data_quality.json", new AbortController().signal);
 }
@@ -515,6 +591,25 @@ export const RECOVERY_KIND_LABEL: Record<string, string> = {
   supply_unaffected_statement: "Supply-continuity statement — not a facility restart",
   no_supply_lost: "No supply was lost — nothing to restore",
 };
+
+export const CAMPAIGN_STATE_LABEL: Record<string, string> = {
+  ACTIVE_KINETIC_CAMPAIGN: "Attacks on energy facilities are being reported now",
+  RECENT_ENDED_CAMPAIGN: "An attack campaign ended recently",
+  UNCERTAIN: "Attacks were reported this year and no end has been reported",
+  NO_ACTIVE_CAMPAIGN: "No attack campaign is recorded",
+};
+
+export const CALENDAR_LABEL: Record<string, string> = {
+  solar_hijri: "Solar Hijri calendar",
+  hijri: "Hijri calendar",
+  gregorian: "Gregorian calendar",
+};
+
+const RTL = new Set(["ar", "fa", "ku", "ur", "he"]);
+/** Text direction for a language code, so an Arabic or Persian headline is not laid out backwards. */
+export function dirFor(lang: string | undefined): "rtl" | "ltr" {
+  return RTL.has((lang ?? "").slice(0, 2).toLowerCase()) ? "rtl" : "ltr";
+}
 
 export function labelFor(map: Record<string, string>, key: string): string {
   return Object.prototype.hasOwnProperty.call(map, key) ? map[key] : key.replace(/_/g, " ");

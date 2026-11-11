@@ -35,6 +35,7 @@ WHAT REVIEW HERE DOES NOT MEAN. Even dual review is not omniscience: the reviewe
 record against its sources, not the world. Every imported event says how it was reviewed.
 """
 
+import hashlib
 import json
 import re
 import sys
@@ -42,7 +43,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from pipeline import build_systems, ids, systems  # noqa: E402
+from pipeline import build_systems, calendars, ids, systems  # noqa: E402
+from pipeline.fetch_wikipedia import safe_title  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 REVIEW_DATE = "2026-10-30"
@@ -119,10 +121,48 @@ def _texts(r):
     yield json.dumps(r.get("capacity_affected") or {}, ensure_ascii=False)
 
 
-def review(system_id, r, unit_codes, grandfathered=frozenset()):
+def kinetic_country_policy(policy, r):
+    return (policy or {}).get("kinetic") == "country" and r.get("cause") in build_systems.KINETIC_CAUSES
+
+
+def date_problem(r):
+    """A date converted from another calendar must be reproducible from what the source wrote."""
+    cal = r.get("date_calendar") or "gregorian"
+    if cal == "gregorian":
+        year = int(str(r.get("date") or "0")[:4] or 0)
+        if not calendars.GREGORIAN_PLAUSIBLE[0] <= year <= calendars.GREGORIAN_PLAUSIBLE[1]:
+            return f"date {r.get('date')!r} is not a Gregorian date; state the calendar"
+        return None
+    if not r.get("source_date_text"):
+        return f"a {cal} date with no source text to check it against"
+    try:
+        n = calendars.normalize_date(r["source_date_text"], cal)
+    except ValueError as err:
+        return f"date conversion failed: {err}"
+    if n["normalized_date"][:len(r["date"])] != r["date"] and not (
+            cal == "hijri" and r.get("date_precision") == "day" and len(r["date"]) == 10
+            and abs((calendars.dt.date.fromisoformat(n["normalized_date"])
+                     - calendars.dt.date.fromisoformat(r["date"])).days) <= 1):
+        return f"date {r['date']} does not match {r['source_date_text']!r} ({cal}), which is {n['normalized_date']}"
+    return None
+
+
+def review(system_id, r, unit_codes, grandfathered=frozenset(), policy=None):
     """None if the record passes, else the reason it is held."""
     if r.get("suggested_disposition") != "accept":
         return f"disposition {r.get('suggested_disposition')!r}"
+    why = date_problem(r)
+    if why:
+        return why
+    if r.get("admin1_code") in set((policy or {}).get("no_event_units") or []):
+        return f"{r.get('admin1_code')} is drawn but never used for events"
+    if kinetic_country_policy(policy, r):
+        # The record will be published with no facility. Its text must not name one either.
+        names = [n for n in (r.get("facility_name"), r.get("facility_name_local")) if n and len(n) >= 4]
+        text = " ".join(str(r.get(k) or "") for k in ("summary", "effect", "threshold_basis")).lower()
+        named = [n for n in names if n.lower() in text]
+        if named:
+            return "names the facility in its text under a country-level policy for kinetic events"
     srcs = r.get("sources") or []
     if not srcs or not all(s.get("url") for s in srcs):
         return "a source has no URL"
@@ -131,7 +171,9 @@ def review(system_id, r, unit_codes, grandfathered=frozenset()):
     code = r.get("admin1_code")
     if code in OUT_OF_GEOGRAPHY.get(system_id, set()):
         return f"{code} is outside this system's geography this iteration"
-    if r.get("geography_precision") == "admin1" and code not in unit_codes:
+    if kinetic_country_policy(policy, r) or (policy or {}).get("other") == "country":
+        pass    # published at country level whatever the lane wrote; see to_event
+    elif r.get("geography_precision") == "admin1" and code not in unit_codes:
         return f"region {code!r} is not a unit of this system"
     if r.get("geography_precision") not in ("admin1", "country"):
         return f"geography precision {r.get('geography_precision')!r}"
@@ -217,10 +259,42 @@ def _withheld_recovery():
             "evidence": None, "url": None}
 
 
-def to_event(system_id, r, grandfathered=frozenset(), campaigns=None):
+def opaque_id(system_id, r):
+    """An id that names no facility, stable for the life of the record: date, class and four hex
+    digits of the queue id's hash."""
+    # A lane that already wrote an opaque id keeps it, so reviews and edits refer to one name.
+    if re.fullmatch(build_systems.OPAQUE_ID.format(cc=system_id), r["candidate_id"]):
+        return r["candidate_id"]
+    tag = hashlib.sha1(r["candidate_id"].encode("utf-8")).hexdigest()[:4]
+    return f"{system_id}-{r['date']}-{r['asset_class'].replace('_', '-')}-attack-{tag}"
+
+
+def _source(s, with_titles):
+    out = {k: s.get(k) for k in ("url", "publisher", "date", "language", "source_role", "opened")}
+    # A non-English source keeps its own title and a gloss, where the headline is safe to show.
+    if with_titles and (s.get("language") or "en") != "en":
+        for k in ("title_original", "title_en"):
+            t = s.get(k)
+            if t and safe_title(t) and not build_systems.status_wording(t):
+                out[k] = t
+        if "title_en" in out and "title_original" not in out:
+            del out["title_en"]
+    return out
+
+
+def to_event(system_id, r, grandfathered=frozenset(), campaigns=None, policy=None):
+    abstract = kinetic_country_policy(policy, r)
+    if abstract:
+        # Downgraded here, at the gate, so no later step has to remember to (iteration 19).
+        r = {**r, "geography_precision": "country", "admin1_code": None, "admin1_codes_affected": [],
+             "facility_name": None, "facility_name_local": None, "operator": None,
+             "published_id": opaque_id(system_id, r)}
+    elif (policy or {}).get("other") == "country":
+        # A system whose every record is the country's. The facility stays: this is not the attack rule.
+        r = {**r, "geography_precision": "country", "admin1_code": None, "admin1_codes_affected": []}
     precise = r["geography_precision"] == "admin1"
     ev = {
-        "event_id": r["candidate_id"],
+        "event_id": r.get("published_id") or r["candidate_id"],
         "date": r["date"],
         "date_precision": r.get("date_precision") or "day",
         "date_end": r.get("date_end"),
@@ -243,12 +317,14 @@ def to_event(system_id, r, grandfathered=frozenset(), campaigns=None):
         "capacity_affected": r.get("capacity_affected"),
         # Titles are the publishers' headlines, not our words, and the page shows the publisher
         # only; `opened` is null where the lane did not record whether it read the source.
-        "sources": [{k: s.get(k) for k in ("url", "publisher", "date", "language",
-                                            "source_role", "opened")} for s in r["sources"]],
+        "sources": [_source(s, with_titles=not abstract) for s in r["sources"]],
         "recovery": r.get("recovery") or {"research_status": "NOT_YET_RESEARCHED"},
         "review": _review_block(r, grandfathered),
         "hazard_name": r.get("hazard_name"),
     }
+    if (r.get("date_calendar") or "gregorian") != "gregorian":
+        ev.update({"source_date_text": r["source_date_text"], "date_calendar": r["date_calendar"],
+                   "conversion_basis": calendars.normalize_date(r["source_date_text"], r["date_calendar"])["conversion_basis"]})
     # A date only where the page states one; a researcher's date is never overwritten. Applied
     # before the campaign filter so a citation found to be late is withheld like any other.
     for s in ev["sources"]:
@@ -259,6 +335,10 @@ def to_event(system_id, r, grandfathered=frozenset(), campaigns=None):
         # An end date on a struck facility's record says when its outage ended: status by another
         # name (iteration 17, test-architecture red team). It stays in the queue too.
         ev["date_end"] = None
+        # A headline is where a publisher puts the status. Covered records show the publisher only.
+        for s in ev["sources"]:
+            s.pop("title_original", None)
+            s.pop("title_en", None)
         # A citation whose address announces a restart ("…-delays-restart-to-august-30") publishes
         # that status in the source list, and a capacity note quoting a post-restart operating rate
         # publishes it in our words. Both stay in the queue with the rest of the status evidence,
@@ -288,11 +368,13 @@ def run(system_id):
     queue = [apply_edits(r, edits) for r in queue]
     grandfathered = frozenset(json.loads(GRANDFATHERED.read_text(encoding="utf-8"))["event_ids"])
     campaigns = build_systems.load_campaigns()
+    doc = json.loads((ROOT / "data" / "curated" / "systems" / system_id / "system.json").read_text(encoding="utf-8"))
+    policy = doc["geography"].get("precision_policy")
     accepted, held = [], []
     for r in queue:
-        why = review(system_id, r, unit_codes, grandfathered)
+        why = review(system_id, r, unit_codes, grandfathered, policy)
         if why is None:
-            ev = to_event(system_id, r, grandfathered, campaigns)
+            ev = to_event(system_id, r, grandfathered, campaigns, policy)
             if ev["sources"]:
                 accepted.append(ev)
             else:

@@ -150,5 +150,39 @@
     "docs/countries/SA_SOURCE_AUDIT.md",
     "docs/countries/SA_INDEX_READINESS.md"
   ],
-  "provenance": "Authored 2026-10-30 (iteration 14) from the source-audit, readiness and incident lanes' reports. Edit by hand; this file is the curated source."
+  "provenance": "Authored 2026-10-30 (iteration 14) from the source-audit, readiness and incident lanes' reports. Edit by hand; this file is the curated source.",
+  "lane_registry": {
+    "SA1": {
+      "source_family": "Ministry of Energy statements as carried by SPA (spa.gov.sa; moenergy.gov.sa), reached through Saudi outlets republishing them",
+      "registry": [
+        "Ministry of Energy statements (Saudi Press Agency)"
+      ]
+    },
+    "SA2": {
+      "source_family": "Saudi Aramco disclosures: Tadawul announcements; aramco.com news and annual-report incident statements",
+      "registry": [
+        "Aramco Annual Report",
+        "Aramco Tadawul announcements"
+      ]
+    },
+    "SA3": {
+      "source_family": "GASTAT and JODI production releases (production effects explicitly attributed to a disruption)",
+      "registry": [
+        "JODI Oil",
+        "GASTAT, SEC, EIA, OPEC"
+      ]
+    },
+    "SA4": {
+      "source_family": "OPEC Monthly Oil Market Report archive",
+      "registry": [
+        "OPEC Monthly Oil Market Report"
+      ]
+    },
+    "SA5": {
+      "source_family": "International and regional reporting (Reuters, Bloomberg, AP, S&P Global, Argus, as carried by open outlets), via search",
+      "registry": [
+        "International news agencies and energy press (Reuters, Bloomberg, AP, S&P Global, Argus)"
+      ]
+    }
+  }
 }

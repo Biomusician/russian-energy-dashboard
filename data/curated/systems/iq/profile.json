@@ -1,0 +1,78 @@
+{
+  "country": "IQ",
+  "as_of_note": "Compiled 2026-11-11 by the Iraq source-audit lane. CONTEXT ONLY: never a scoring input. Every value was read on the cited page in this session through a text rendering of the page; mixed vintages (2023-2026) are stated per row and must not be combined into one 'current' picture. Bases differ by row: several are EIA estimates, the electricity rows cover Federal Iraq only (the Kurdistan Region is reported separately), and installed generating capacity is NOT stated in the source, so no generating_capacity row is given. OPEC, IEA, Energy Institute and the Iraqi ministries' own sites refused automated access on this date, so no figure is taken from them. No facility row and no export breakdown is recorded. See docs/countries/IQ_SOURCE_AUDIT.md.",
+  "metrics": [
+    {
+      "metric": "total_energy_production",
+      "value": 9.8,
+      "unit": "quadrillion Btu (primary energy production)",
+      "year": 2023,
+      "basis": "country total; 96.0% crude oil and other petroleum liquids, 4.0% natural gas, under 0.1% hydro and solar; coal and nuclear marked not applicable",
+      "source": "U.S. EIA, Country Analysis Brief: Iraq, Table 1 (last updated 2025-07-14)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/iraq/"
+    },
+    {
+      "metric": "crude_oil_production",
+      "value": 4.4,
+      "unit": "million barrels per day",
+      "year": 2024,
+      "basis": "country total, crude oil excluding condensate, annual average as EIA states it. EIA gives 4.5 million b/d for total petroleum liquids 'including the KRG' in the same year; the two are different quantities",
+      "source": "U.S. EIA, Country Analysis Brief: Iraq (last updated 2025-07-14)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/iraq/"
+    },
+    {
+      "metric": "natural_gas_production",
+      "value": 372,
+      "unit": "billion cubic feet",
+      "year": 2023,
+      "basis": "country total as EIA states it (348 Bcf in 2022); the page as read does not say dry or marketed. Same year, per EIA: 625 Bcf flared (World Bank figure), 682 Bcf of dry gas consumed, 310 Bcf imported",
+      "source": "U.S. EIA, Country Analysis Brief: Iraq (last updated 2025-07-14)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/iraq/"
+    },
+    {
+      "metric": "electricity_generation",
+      "value": 150,
+      "unit": "TWh",
+      "year": 2023,
+      "basis": "FEDERAL IRAQ ONLY, EIA estimate (58.2% natural gas, 40.7% crude oil and petroleum, 0.9% hydro, 0.3% other renewables). Not a whole-country total: EIA reports the Kurdistan Region separately, at most 17 TWh in 2024",
+      "source": "U.S. EIA, Country Analysis Brief: Iraq (last updated 2025-07-14)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/iraq/"
+    },
+    {
+      "metric": "available_peak_generation_supply",
+      "value": 25,
+      "unit": "GW",
+      "year": 2024,
+      "basis": "FEDERAL IRAQ ONLY, EIA estimate of available peak supply, against about 48 GW of peak summer demand. This is availability, NOT installed capacity, which the brief does not state; do not relabel it as generating capacity",
+      "source": "U.S. EIA, Country Analysis Brief: Iraq (last updated 2025-07-14)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/iraq/"
+    },
+    {
+      "metric": "refining_capacity",
+      "value": 1.3,
+      "unit": "million barrels per day",
+      "year": 2025,
+      "basis": "country total, OPERATING capacity, approximate ('total operating refining capacity is approximately 1.3 million b/d'); EIA credits Argus Media and Middle East Economic Survey, not an Iraqi official table. Nameplate is not stated. No per-refinery figure is recorded",
+      "source": "U.S. EIA, Country Analysis Brief: Iraq (last updated 2025-07-14)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/iraq/"
+    },
+    {
+      "metric": "crude_exports",
+      "value": 3.2,
+      "unit": "million barrels per day",
+      "year": 2024,
+      "basis": "national total as EIA estimates it ('more than 3.2 million b/d' of seaborne-traded crude, 2024 average, from loading data). An estimate, not SOMO's official statistic. No breakdown is recorded",
+      "source": "U.S. EIA, Country Analysis Brief: Iraq (last updated 2025-07-14)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/iraq/"
+    }
+  ],
+  "significance": [
+    "Crude oil and other petroleum liquids made up 96% of Iraq's primary energy production in 2023 and natural gas 4% (EIA).",
+    "EIA puts Iraq's proved crude oil reserves at 145 billion barrels, the fifth largest in the world on its ranking (EIA, 2025).",
+    "For 2023 EIA reports 372 billion cubic feet of natural gas produced, 625 billion cubic feet flared (a World Bank figure) and 310 billion cubic feet imported; the three figures are on different bases and are not summed (EIA).",
+    "Federal Iraq generated an estimated 150 TWh in 2023, 58% from natural gas and 41% from crude oil and petroleum; EIA estimates available peak supply at about 25 GW in 2024 against about 48 GW of peak summer demand (EIA)."
+  ],
+  "significance_sources": [
+    "https://www.eia.gov/international/content/analysis/countries_long/iraq/"
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "country": "QA",
+  "as_of_note": "Draft compiled 2026-11-11 by the Qatar source-audit lane (iteration 19). CONTEXT ONLY: never a scoring input. Every value was read from the cited page or dataset in this session; vintages are mixed (2023-2025) and stated per row, and must not be combined into one 'current' picture. No value is later than a 2025 annual total, and none describes the state of any facility. Bases differ by source: country totals from EIA; operator totals from QatarEnergy's and KAHRAMAA's datasets on the Qatar Open Data Portal (CC BY 4.0). Capacities are nameplate or contracted figures and say nothing about operation. National aggregates only: no facility, train, plant or route figure is recorded. See docs/countries/QA_SOURCE_AUDIT.md.",
+  "metrics": [
+    {
+      "metric": "total_energy_production",
+      "value": 10.0,
+      "unit": "quadrillion Btu (primary energy production)",
+      "year": 2023,
+      "basis": "country total; 67.5% natural gas, 32.5% crude oil and other petroleum liquids; coal marked not applicable",
+      "source": "U.S. EIA, Country Analysis Brief: Qatar, Table 1 (last updated 2025-10-20)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/qatar/"
+    },
+    {
+      "metric": "petroleum_liquids_production",
+      "value": 1.9,
+      "unit": "million barrels per day",
+      "year": 2024,
+      "basis": "country total, crude oil and other petroleum liquids (includes condensate and natural gas liquids), so NOT comparable with crude_oil_production",
+      "source": "U.S. EIA, Country Analysis Brief: Qatar (last updated 2025-10-20)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/qatar/"
+    },
+    {
+      "metric": "crude_oil_production",
+      "value": 595.1,
+      "unit": "thousand barrels per day",
+      "year": 2025,
+      "basis": "operator's annual figure for 'Crude Oil Production'; crude only, as labelled; rounded from 595.12",
+      "source": "QatarEnergy, 'Qatar Energy Production of Crude Oil, Natural Gas and Refinery Throughput', Qatar Open Data Portal (modified 2026-08-18)",
+      "url": "https://www.data.gov.qa/api/explore/v2.1/catalog/datasets/production-qe-dataset/records"
+    },
+    {
+      "metric": "natural_gas_production",
+      "value": 20.99,
+      "unit": "billion cubic feet per day",
+      "year": 2025,
+      "basis": "operator's annual figure for 'Gross Natural Gas Production'; GROSS, not dry or marketed gas, and 'gross' is not defined in the dataset; rounded from 20.995",
+      "source": "QatarEnergy, 'Qatar Energy Production of Crude Oil, Natural Gas and Refinery Throughput', Qatar Open Data Portal (modified 2026-08-18)",
+      "url": "https://www.data.gov.qa/api/explore/v2.1/catalog/datasets/production-qe-dataset/records"
+    },
+    {
+      "metric": "lng_exports",
+      "value": 79.3,
+      "unit": "million tonnes",
+      "year": 2025,
+      "basis": "operator's 'Total annual LNG quantity exported'; national annual total; rounded from 79.329. The same series gives 77.8 (2020), 78.0 (2021), 78.8 (2022), 78.8 (2023) and 78.7 (2024)",
+      "source": "QatarEnergy, 'Qatar Energy Exports of LNG, Gas, Naphta and Crude Oil', Qatar Open Data Portal (modified 2026-08-18)",
+      "url": "https://www.data.gov.qa/api/explore/v2.1/catalog/datasets/export-qe-dataset/records"
+    },
+    {
+      "metric": "lng_export_capacity",
+      "value": 3.7,
+      "unit": "trillion cubic feet per year",
+      "year": 2024,
+      "basis": "national total NAMEPLATE LNG export capacity at end-2024 per EIA; nameplate, not an operating rate. The operator's website states a company-total production capacity of 77 million tonnes a year (undated statement, read 2026-11-11). Train-level capacity is deliberately not recorded",
+      "source": "U.S. EIA, Country Analysis Brief: Qatar (last updated 2025-10-20)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/qatar/"
+    },
+    {
+      "metric": "natural_gas_exports",
+      "value": 4.4,
+      "unit": "trillion cubic feet",
+      "year": 2024,
+      "basis": "country total, pipeline and LNG together; EIA preliminary estimate (about 3.6 Tcf as LNG, nearly 0.8 Tcf by pipeline)",
+      "source": "U.S. EIA, Country Analysis Brief: Qatar (last updated 2025-10-20)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/qatar/"
+    },
+    {
+      "metric": "pipeline_gas_exports",
+      "value": 1.99,
+      "unit": "billion cubic feet per day",
+      "year": 2025,
+      "basis": "operator's annual daily average of gas exported by pipeline; national total, no route or destination recorded",
+      "source": "QatarEnergy, 'Qatar Energy Exports of LNG, Gas, Naphta and Crude Oil', Qatar Open Data Portal (modified 2026-08-18)",
+      "url": "https://www.data.gov.qa/api/explore/v2.1/catalog/datasets/export-qe-dataset/records"
+    },
+    {
+      "metric": "crude_exports",
+      "value": 530.5,
+      "unit": "thousand barrels per day",
+      "year": 2025,
+      "basis": "operator's annual figure for crude oil exports, onshore and offshore fields together; crude only",
+      "source": "QatarEnergy, 'Qatar Energy Exports of LNG, Gas, Naphta and Crude Oil', Qatar Open Data Portal (modified 2026-08-18)",
+      "url": "https://www.data.gov.qa/api/explore/v2.1/catalog/datasets/export-qe-dataset/records"
+    },
+    {
+      "metric": "refining_capacity",
+      "value": 443,
+      "unit": "thousand barrels per day",
+      "year": 2025,
+      "basis": "national total capacity to process crude oil and condensate (EIA Table 4 total); nameplate; a secondary compilation. Gas-to-liquids capacity is a separate total and is not included. Per-facility figures are deliberately not reproduced",
+      "source": "U.S. EIA, Country Analysis Brief: Qatar, Table 4 (last updated 2025-10-20)",
+      "url": "https://www.eia.gov/international/content/analysis/countries_long/qatar/"
+    },
+    {
+      "metric": "refinery_throughput",
+      "value": 386.2,
+      "unit": "thousand barrels per day",
+      "year": 2025,
+      "basis": "operator's annual figure for 'Refinery Throughput'; national total; whether condensate is included is not stated; rounded from 386.16",
+      "source": "QatarEnergy, 'Qatar Energy Production of Crude Oil, Natural Gas and Refinery Throughput', Qatar Open Data Portal (modified 2026-08-18)",
+      "url": "https://www.data.gov.qa/api/explore/v2.1/catalog/datasets/production-qe-dataset/records"
+    },
+    {
+      "metric": "electricity_generation",
+      "value": 59641,
+      "unit": "GWh",
+      "year": 2025,
+      "basis": "national electricity generated, utility's annual series (58,493 GWh in 2024). EIA's figure for 2023 is 56 TWh net, virtually all from natural gas",
+      "source": "KAHRAMAA, 'Annual Electricity Generation', Qatar Open Data Portal (modified 2026-09-29)",
+      "url": "https://www.data.gov.qa/api/explore/v2.1/catalog/datasets/annual-electricity-generation/records"
+    },
+    {
+      "metric": "peak_electricity_load",
+      "value": 10220,
+      "unit": "MW",
+      "year": 2024,
+      "basis": "maximum system load of the year (recorded in late August); the dataset stops at 2024",
+      "source": "KAHRAMAA, 'Maximum and Minimum System Load (MW)', Qatar Open Data Portal (modified 2026-10-27)",
+      "url": "https://www.data.gov.qa/api/explore/v2.1/catalog/datasets/maximum-and-minimum-system-load-mw/records"
+    },
+    {
+      "metric": "electricity_customers",
+      "value": 520553,
+      "unit": "customers (meters, billed and non-billed)",
+      "year": 2024,
+      "basis": "national count of electricity customers by number of meters",
+      "source": "KAHRAMAA, 'Number of Electricity Customers and Annual Growth Rate', Qatar Open Data Portal (modified 2026-10-28)",
+      "url": "https://www.data.gov.qa/api/explore/v2.1/catalog/datasets/number-of-electricity-customers-and-annual-growth-rate/records"
+    }
+  ],
+  "significance": [
+    "Natural gas made up 67.5% of Qatar's primary energy production in 2023 and crude oil and other petroleum liquids 32.5%; EIA marks coal as not applicable.",
+    "Qatar exported an estimated 4.4 Tcf of natural gas in 2024, about 3.6 Tcf of it as LNG (EIA, preliminary).",
+    "QatarEnergy reports LNG exports of between 77.8 and 79.3 million tonnes in each year from 2020 to 2025.",
+    "In 2023 Qatar generated 56 TWh of net electricity, virtually all from natural gas (EIA)."
+  ],
+  "significance_sources": [
+    "https://www.eia.gov/international/content/analysis/countries_long/qatar/",
+    "https://www.data.gov.qa/api/explore/v2.1/catalog/datasets/export-qe-dataset/records"
+  ]
+}

@@ -6,18 +6,18 @@ import {
   ENVIRONMENT_LABEL, READINESS_LABEL, labelFor, loadManifest, loadWorld,
   type Manifest, type ManifestSystem,
 } from "./manifest";
-import { navigate } from "./router";
+import { navigate, navigateGroup } from "./router";
 import { fmtDate, fmtNum } from "../data";
 
 /** The global home (iteration 14).
  *
  *  WHAT IT REFUSES TO SHOW. No event counts per system, no scores side by side, no ordering by
- *  any disruption figure. Six systems with six reporting environments cannot be compared on
+ *  any disruption figure. Systems with different reporting environments cannot be compared on
  *  disruption, and a page of cards with a number on each is read as a league table whatever the
  *  caption says (GLOBAL_METHODOLOGY §6).
  *
  *  THREE LEVELS (iteration 18), kept apart: the world's national energy picture (context only),
- *  the six monitored systems, and recent evidence inside them. National energy data never mixes
+ *  the monitored systems, and recent evidence inside them. National energy data never mixes
  *  with disruption data on one scale.
  */
 
@@ -25,6 +25,7 @@ export default function GlobalHome() {
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [world, setWorld] = useState<GeoJSON.FeatureCollection | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [groupFilter, setGroupFilter] = useState("all");
 
   useEffect(() => {
     const ctl = new AbortController();
@@ -36,6 +37,12 @@ export default function GlobalHome() {
   }, []);
 
   useEffect(() => { document.title = "Energy Disruption Monitor — overview"; }, []);
+
+  // Counts come from the manifest: the page never states how many countries there are itself.
+  const countries = manifest?.systems.filter((s) => s.kind === "country").length ?? 0;
+  const groups = Object.entries(manifest?.groups ?? {});
+  const filterGroup = groupFilter === "all" ? null : manifest?.groups?.[groupFilter] ?? null;
+  const cards = manifest?.systems.filter((s) => !filterGroup || filterGroup.members.includes(s.id)) ?? [];
 
   return (
     <div className="global-page">
@@ -62,16 +69,30 @@ export default function GlobalHome() {
         )}
 
         <p className="home-lead">
-          Five countries, plus the Russia, Belarus &amp; Crimea area, are systematically monitored for
-          qualifying disruptions. Other countries are shown only for national energy context: an
+          {countries > 0 ? `${countries} countries` : "A set of countries"}, plus the Russia, Belarus &amp; Crimea area, are monitored for
+          qualifying disruptions. Research on some is at an early stage and says so on its card. Other countries are shown only for national energy context: an
           unmonitored country has no disruption record here, which is not the same as no disruptions.
         </p>
 
         <WorldContext world={world} worldError={error} manifest={manifest} />
 
         <h2 className="level-head">Monitored systems</h2>
+        {groups.length > 0 && (
+          <div className="map-control-row">
+            <label className="small">Show{" "}
+              <select aria-label="Filter monitored systems by group" value={groupFilter} onChange={(e) => setGroupFilter(e.target.value)}>
+                <option value="all">all systems</option>
+                {groups.map(([id, g]) => <option key={id} value={id}>{g.label}{g.kind === "membership" ? " members" : " states"}</option>)}
+              </select>
+            </label>
+            {groups.filter(([, g]) => g.slug && g.context).map(([id, g]) => (
+              <button key={id} className="ghost" onClick={() => navigateGroup(g.slug as string)}>Open the {g.label} overview</button>
+            ))}
+            {filterGroup && <span className="small dim">{filterGroup.note}</span>}
+          </div>
+        )}
         <section aria-label="Monitored systems" className="sys-cards">
-          {manifest?.systems.map((s) => <SystemCard key={s.id} s={s} manifest={manifest} />)}
+          {manifest && cards.map((s) => <SystemCard key={s.id} s={s} manifest={manifest} />)}
         </section>
 
         <RecentEvidencePanel />
@@ -85,10 +106,11 @@ export default function GlobalHome() {
                 {manifest.selection.source}
               </a>.
             </p>
+            {manifest.selection.regional_rule && <p>{manifest.selection.regional_rule}</p>}
             <p className="small">{manifest.selection.caveat}</p>
             <p className="small">
               The original Russia, Belarus &amp; Crimea theatre is the only system with an index.
-              The five countries are shown with reported major disruptions and energy-system
+              The countries are shown with reported major disruptions and energy-system
               context: the index's weights and recovery model were built for a strike campaign
               and do not transfer.
             </p>
@@ -96,8 +118,8 @@ export default function GlobalHome() {
         )}
         <DataQualityPanel />
         {manifest?.corpus && (
-          <section className="panel global-note corpus-totals" aria-label="Country record, all five together">
-            <h2 className="eyebrow">The country record so far, all five countries together</h2>
+          <section className="panel global-note corpus-totals" aria-label="Country record, all countries together">
+            <h2 className="eyebrow">The country record so far, all {manifest.corpus.countries} countries together</h2>
             <p className="small">
               {manifest.corpus.records} reported disruptions in {manifest.corpus.episodes} episodes;{" "}
               {manifest.corpus.independently_reviewed} independently reviewed ({manifest.corpus.blind_reviewed} blind
@@ -121,6 +143,11 @@ function SystemCard({ s, manifest }: { s: ManifestSystem; manifest: Manifest }) 
       <div className={`badge readiness-${s.evidence_readiness.toLowerCase()}`}>
         {READINESS_LABEL[s.evidence_readiness]}
       </div>
+      {s.maturity === "research_preview" && (
+        <div className="badge research-partial" title="Research on this country has started and is far from complete. Few records here means few found so far.">
+          Research preview
+        </div>
+      )}
       {s.headline ? (
         <div className="sys-headline">
           <span className="num">{fmtNum(s.headline.value, 1)}</span>{" "}
