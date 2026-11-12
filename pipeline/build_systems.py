@@ -432,6 +432,90 @@ STATUS_WORDING = re.compile(
     re.I)
 
 
+# A production decision, a sanction, planned maintenance and an unexplained fall in a statistic
+# are not physical disruptions (iteration 19). These patterns catch the record that says only
+# that; a record that also names a physical cause (a fire during maintenance) is left to review.
+POLICY_NOT_EVENT = re.compile(
+    r"\bOPEC\+?\b[^.]{0,80}\b(cut|cuts|quota|quotas|curb|curbs|reduction|agreement)\b|"
+    r"\bvoluntary (output |production |supply )?(cut|cuts|reduction)\b|"
+    r"\b(planned|scheduled|routine|annual|periodic) (maintenance|turnaround|overhaul|shutdown|outage)\b|"
+    r"\bturnaround\b|\bsanction(s|ed)?\b|\bembargo\b", re.I)
+UNEXPLAINED_DECLINE = re.compile(
+    r"\b(output|production|exports?|throughput|generation|supply)\b[^.]{0,60}\b(fell|fall|declin\w*|dropp?\w*|lower|down)\b|"
+    r"\b(fell|declin\w*|dropp?\w*)\b[^.]{0,60}\b(output|production|exports?|throughput|generation)\b", re.I)
+PHYSICAL_CAUSE = re.compile(
+    r"\b(fire|blaze|explosion|blast|leak|rupture|spill|strike|struck|attack\w*|drone|missile|rocket|sabotage|"
+    r"storm|cyclone|hurricane|flood\w*|earthquake|heat ?wave|sandstorm|lightning|collapse\w*|trip(ped)?|"
+    r"fault|failure|malfunction|blackout|outage|shortfall|shortage|accident|damage\w*|emergency)\b", re.I)
+# Nuclear: national generation totals and the national mix only. Nothing about a site, a unit, the
+# fuel cycle or enrichment, in any record or profile (iteration 19; the brief does not relax this).
+NUCLEAR_DETAIL = re.compile(
+    r"enrich\w*|centrifuge\w*|fuel cycle|uranium|\breactor\w*|nuclear (site|plant|facility|complex|station|"
+    r"power (plant|station)|unit)s?\b|\b(barakah|natanz|fordow|arak|isfahan nuclear|bushehr nuclear)\b", re.I)
+NUCLEAR_METRICS = ("nuclear_generation",)
+# Shipping, straits and routes are outside this product altogether (iteration 19). A record or a
+# citation address that carries the wording is not published in a system onboarded under this rule.
+ROUTE_WORDING = re.compile(
+    r"hormuz|\bstrait\b|\btankers?\b|choke ?point|shipping (lane|route)s?|\bbypass\w*|export route|"
+    r"\bvessels?\b|\bais\b|هرمز|تنگه|مضيق|ناقلة|ناقلات|نفتکش", re.I)
+
+
+# Size and importance wording, in the three languages the Gulf sources use. Our own text never
+# carries it, and a publisher's headline that does is not shown (iteration 19).
+LOADED_WORDING = re.compile(
+    r"\b(largest|biggest|key|main|major|critical|vital|strategic|sole|only|hub|backbone|lifeline|heart of|"
+    r"most important|world'?s (largest|biggest))\b|"
+    r"أكبر|الأكبر|اكبر|الرئيسي|الرئيسية|الأهم|أهم|الحيوي|الحيوية|الاستراتيجي|الاستراتيجية|"
+    r"بزرگ[\u200c ]?ترین|مهم[\u200c ]?ترین|اصلی[\u200c ]?ترین|راهبردی|حیاتی", re.I)
+
+
+def route_problems(events):
+    out = []
+    for e in events:
+        text = " ".join(str(e.get(k) or "") for k in ("summary", "effect", "threshold_basis", "hazard_name"))
+        text += " " + str((e.get("capacity_affected") or {}).get("source_says") or "")
+        if ROUTE_WORDING.search(text):
+            out.append(f"{e['event_id']}: shipping, strait or route wording in the record")
+        for s in e.get("sources", []):
+            words = unquote(s.get("url") or "").replace("-", " ").replace("_", " ")
+            if ROUTE_WORDING.search(words + " " + str(s.get("title_original") or "") + " " + str(s.get("title_en") or "")):
+                out.append(f"{e['event_id']}: a citation's address or title carries shipping or route wording")
+    return out
+
+
+def not_a_physical_event(e):
+    """Why this record describes no physical disruption, or None. Text rules for the record whose
+    cause nobody identified; a named physical cause always wins."""
+    text = " ".join(str(e.get(k) or "") for k in ("summary", "effect", "threshold_basis"))
+    if e.get("cause") not in ("unknown", "technical") or PHYSICAL_CAUSE.search(text):
+        return None
+    if POLICY_NOT_EVENT.search(text):
+        return "a production decision, sanction or planned maintenance is not a physical disruption"
+    if e.get("cause") == "unknown" and UNEXPLAINED_DECLINE.search(text):
+        return "a decline with no stated physical cause is context, never an incident"
+    return None
+
+
+def nuclear_problems(profile, events):
+    """Anything nuclear beyond a national generation total or a share of the national mix."""
+    out = []
+    for m in (profile or {}).get("metrics", []):
+        name = str(m.get("metric") or "")
+        if "nuclear" in name.lower() and name not in NUCLEAR_METRICS:
+            out.append(f"profile row {name}: only a national nuclear generation total is allowed")
+        for k in ("metric", "basis", "note", "unit"):
+            if NUCLEAR_DETAIL.search(str(m.get(k) or "")):
+                out.append(f"profile row {name}: nuclear site, unit or fuel-cycle detail in {k}")
+    for s in (profile or {}).get("significance", []) or []:
+        if NUCLEAR_DETAIL.search(s):
+            out.append("profile significance: nuclear site, unit or fuel-cycle detail")
+    for e in events:
+        text = " ".join(str(e.get(k) or "") for k in ("summary", "effect", "threshold_basis", "facility_name", "hazard_name"))
+        if NUCLEAR_DETAIL.search(text):
+            out.append(f"{e['event_id']}: a record at or about a nuclear site is not published")
+    return out
+
+
 def status_wording(text):
     """The match in `text`, reading an address's slug as words and decoding percent-escapes, so
     "back-online" and an encoded Arabic path are read like the prose they are."""
@@ -1156,6 +1240,11 @@ def build_system(system_id, admin1, admin0, as_of):
         e["episode_id"] = episode_of.get(e["event_id"], e["event_id"])
     validate(system_id, doc, events, unit_codes)
     problems = precision_problems(system_id, doc, events) + campaign_problems(campaigns)
+    # Text rules new in iteration 19 apply to systems that state a precision policy, i.e. those
+    # onboarded under them. Earlier systems' records were reviewed under the rules of their day.
+    if (doc.get("geography") or {}).get("precision_policy"):
+        problems += nuclear_problems(profile, events) + route_problems(events)
+        problems += [f"{e['event_id']}: {why}" for e in events for why in [not_a_physical_event(e)] if why]
     if problems:
         raise ValueError(f"system {system_id}: " + "; ".join(problems))
     apply_publication_policy(system_id, events, campaigns)

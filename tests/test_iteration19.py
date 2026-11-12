@@ -461,7 +461,7 @@ def test_the_emitted_gulf_payload_holds_national_context_and_nothing_else():
     assert names == sorted(names), "alphabetical, never by a figure"
     for path, key, _ in _walk({k: v for k, v in d.items() if k != "recent"}):
         k = key.lower()
-        assert not any(k == p or (p in k and p not in ("ais", "route")) for p in FORBIDDEN_GULF_KEYS), path
+        assert not any(k == p or (p in k and p != "ais") for p in FORBIDDEN_GULF_KEYS), path
     for s in d["systems"]:
         assert not {"records", "events", "episodes", "count", "withheld_records"} & set(s), s["system_id"]
         assert isinstance(s["recovery_status_withheld"], bool)
@@ -599,6 +599,282 @@ def test_taiwan_and_the_gulf_islands_are_never_analytic_units():
         codes = {r["code"] for r in doc["geography"]["rulings"]}
         assert not any("island" in c.lower() for c in codes)
     assert "TWN" not in systems.system("cn")["admin0_a3"]
+
+
+# --- what is not an event, and what is never recorded ---------------------------------------------
+
+def _rec(summary, cause="unknown", effect=None):
+    return {"event_id": "x", "cause": cause, "summary": summary, "effect": effect, "threshold_basis": None}
+
+
+@pytest.mark.parametrize("summary", [
+    "Crude output was lowered under the OPEC+ agreement on production cuts.",
+    "A voluntary production cut of 500,000 barrels a day took effect.",
+    "The refinery was shut for planned maintenance.",
+    "Exports stopped after sanctions were tightened.",
+    "A scheduled turnaround took the unit out of service.",
+])
+def test_a_policy_decision_or_planned_maintenance_is_not_an_event(summary):
+    assert "not a physical disruption" in B.not_a_physical_event(_rec(summary))
+    assert "not a physical disruption" in B.not_a_physical_event(_rec(summary, cause="technical"))
+
+
+@pytest.mark.parametrize("summary", [
+    "JODI data show crude production fell by 300,000 barrels a day in March.",
+    "Exports declined sharply in the monthly statistics.",
+])
+def test_an_unexplained_decline_in_a_statistic_is_not_an_event(summary):
+    assert "context, never an incident" in B.not_a_physical_event(_rec(summary))
+
+
+@pytest.mark.parametrize("rec", [
+    _rec("A fire during planned maintenance shut the unit."),
+    _rec("Production fell after an explosion at a gas plant."),
+    _rec("Output was cut after a drone attack.", cause="kinetic_strike"),
+    _rec("A storm cut power to 300,000 customers.", cause="natural_hazard"),
+    _rec("Fuel supply shortfall forced 2,000 MW offline, the ministry said."),
+])
+def test_a_named_physical_cause_is_left_to_review(rec):
+    assert B.not_a_physical_event(rec) is None
+
+
+def test_the_import_gate_holds_a_production_cut_and_a_nuclear_site_record():
+    imp = _load("import_candidates")
+    cut = _candidate(cause="unknown", summary="Output was lowered under the OPEC+ agreement on production cuts.",
+                     effect=None, facility_name=None)
+    assert "not a physical disruption" in imp.review("kw", cut, {"KW-AH"}, policy={"kinetic": "country", "reason": "r"})
+    nuc = _candidate(cause="technical", summary="A unit at the nuclear power plant tripped.", effect=None, facility_name=None)
+    assert "nuclear site" in imp.review("ae", nuc, set(), policy={"kinetic": "country", "reason": "r"})
+    ship = _candidate(cause="technical", summary="A tanker fire closed the terminal.", effect=None, facility_name=None)
+    assert "outside this product" in imp.review("om", ship, set(), policy={"kinetic": "country", "reason": "r"})
+
+
+def test_nuclear_content_is_a_national_generation_total_and_nothing_else():
+    ok = {"metrics": [{"metric": "nuclear_generation", "value": 39, "basis": "country total, net generation"}],
+          "significance": ["An estimated 23% of electricity was generated from nuclear in 2024."]}
+    assert B.nuclear_problems(ok, []) == []
+    for bad in ({"metrics": [{"metric": "nuclear_unit_status", "value": 4}]},
+                {"metrics": [{"metric": "generating_capacity", "basis": "includes four reactors"}]},
+                {"metrics": [], "significance": ["Uranium enrichment capacity is context."]}):
+        assert B.nuclear_problems(bad, []), bad
+    ev = {"event_id": "x", "summary": "A drone was reported near the nuclear power plant.", "effect": None,
+          "threshold_basis": None, "facility_name": None, "hazard_name": None}
+    assert any("nuclear site" in p for p in B.nuclear_problems({}, [ev]))
+
+
+def test_route_and_shipping_wording_is_refused_in_text_and_in_citation_addresses():
+    ev = {"event_id": "x", "summary": "A fire was reported at a refinery.", "effect": None, "threshold_basis": None,
+          "hazard_name": None, "capacity_affected": None, "sources": [{"url": "https://example.org/news/refinery-fire"}]}
+    assert B.route_problems([ev]) == []
+    assert B.route_problems([{**ev, "summary": "Exports through the Strait of Hormuz stopped."}])
+    assert B.route_problems([{**ev, "sources": [{"url": "https://example.org/2026/hormuz-will-stay-shut"}]}])
+    assert B.route_problems([{**ev, "sources": [{"url": "https://example.org/a", "title_original": "حريق في ناقلة نفط"}]}])
+    assert B.route_problems([{**ev, "effect": "Tanker loadings were suspended."}])
+
+
+def _full_candidate(**kw):
+    base = _candidate(threshold_clause=1, capacity_affected=None, hazard_name=None,
+                      recovery={"research_status": "NOT_YET_RESEARCHED", "kind": None, "date": None, "evidence": None, "url": None},
+                      independent_review={"completed": "2026-11-11", "disposition": "confirmed", "sources_opened": 1})
+    return {**base, **kw}
+
+
+def test_the_import_gate_downgrades_an_attack_record_to_the_country():
+    """Whatever the lane wrote. The record that leaves the gate has no region, no facility, no
+    operator, no headline, and an id that names nothing."""
+    imp = _load("import_candidates")
+    ev = imp.to_event("kw", _full_candidate(candidate_id="kw-2026-03-12-example-refinery-strike"), policy=POLICY)
+    assert ev["geography_precision"] == "country" and ev["region_code"] is None and ev["regions_affected"] == []
+    assert ev["facility_name"] is None and ev["facility_name_local"] is None and ev["operator"] is None
+    assert re.fullmatch(B.OPAQUE_ID.format(cc="kw"), ev["event_id"])
+    assert all("title_original" not in s and "title_en" not in s for s in ev["sources"])
+    assert B.precision_problems("kw", {"geography": {"precision_policy": POLICY}}, [ev]) == []
+
+
+def test_the_import_gate_leaves_an_accident_in_its_region_with_its_headline():
+    imp = _load("import_candidates")
+    ev = imp.to_event("kw", _full_candidate(candidate_id="kw-2024-08-01-fire", date="2024-08-01", cause="technical"), policy=POLICY)
+    assert ev["geography_precision"] == "admin1" and ev["region_code"] == "KW-AH" and ev["facility_name"] == "Example Refinery"
+    assert ev["sources"][0]["title_original"] == "خبر" and ev["sources"][0]["title_en"] == "News"
+
+
+def test_a_microstate_record_is_the_countrys_whatever_its_cause():
+    imp = _load("import_candidates")
+    policy = {"kinetic": "country", "other": "country", "reason": "r"}
+    ev = imp.to_event("bh", _full_candidate(candidate_id="bh-2024-08-01-fire", date="2024-08-01", cause="technical",
+                                            admin1_code="BH-13"), policy=policy)
+    assert ev["geography_precision"] == "country" and ev["region_code"] is None
+    assert ev["facility_name"] == "Example Refinery", "the attack rule strips the facility; the microstate rule does not"
+
+
+def test_a_status_bearing_headline_is_never_published():
+    imp = _load("import_candidates")
+    src = {"url": "https://example.org/a", "publisher": "P", "date": "2024-08-02", "language": "ar",
+           "source_role": "media", "opened": True, "title_original": "إعادة تشغيل المصفاة بعد الحريق", "title_en": "Refinery restarted after fire"}
+    out = imp._source(src, with_titles=True)
+    assert "title_original" not in out and "title_en" not in out
+    fa = {**src, "language": "fa", "title_original": "بازگشت به مدار نیروگاه", "title_en": "Plant returns to the grid"}
+    assert "title_original" not in imp._source(fa, with_titles=True)
+    ok = {**src, "title_original": "حريق في مصفاة", "title_en": "Fire at a refinery"}
+    assert imp._source(ok, with_titles=True)["title_original"] == "حريق في مصفاة"
+    assert "title_original" not in imp._source(ok, with_titles=False)
+    en = {**src, "language": "en", "title_original": "Fire at a refinery"}
+    assert "title_original" not in imp._source(en, with_titles=True), "an English headline is the publisher's, not shown"
+
+
+def test_a_citation_address_with_route_wording_is_dropped_at_the_gate():
+    imp = _load("import_candidates")
+    r = _full_candidate(candidate_id="kw-2024-08-01-fire", date="2024-08-01", cause="technical")
+    r["sources"] = r["sources"] + [{"url": "https://example.org/2024/tanker-traffic-through-hormuz", "publisher": "X",
+                                    "date": "2024-08-01", "language": "en", "source_role": "media", "opened": True}]
+    ev = imp.to_event("kw", r, policy=POLICY)
+    assert [s["url"] for s in ev["sources"]] == ["https://example.org/a"]
+    assert ev["review"]["source_count"] == 1
+
+
+def test_a_citation_address_that_names_the_struck_facility_is_not_published():
+    """The record has no facility. Its citation list must not hand it back."""
+    imp = _load("import_candidates")
+    r = _full_candidate(candidate_id="kw-2026-03-12-refinery-attack-1", facility_name="Shuaiba Example Refinery",
+                        facility_name_local="مصفاة الشعيبة", admin1_name="Al Ahmadi")
+    clean = r["sources"][0]
+    slug = {**clean, "url": "https://example.org/2026/03/shuaiba-refinery-hit"}
+    arabic = {**clean, "url": "https://example.org/news/%D8%A7%D9%84%D8%B4%D8%B9%D9%8A%D8%A8%D8%A9-%D8%AD%D8%B1%D9%8A%D9%82"}
+    region = {**clean, "url": "https://example.org/news/fire-in-ahmadi-governorate"}
+    r["sources"] = [clean, slug, arabic, region]
+    ev = imp.to_event("kw", r, policy=POLICY)
+    assert [s["url"] for s in ev["sources"]] == ["https://example.org/a"]
+    assert ev["review"]["source_count"] == 1
+    only = {**r, "sources": [slug, region]}
+    assert "only citations name the facility" in imp.review("kw", only, {"KW-AH"}, policy=POLICY)
+    assert imp.review("kw", r, {"KW-AH"}, policy=POLICY) is None or "citations" not in imp.review("kw", r, {"KW-AH"}, policy=POLICY)
+
+
+def test_generic_words_and_the_countrys_own_name_do_not_count_as_naming_a_facility():
+    imp = _load("import_candidates")
+    r = {"facility_name": "Kuwait National Petroleum Company refinery", "facility_name_local": None, "admin1_name": None}
+    assert imp.name_tokens(r) == set()
+    assert not imp.names_the_place("https://example.org/kuwait-refinery-fire", imp.name_tokens(r))
+    assert imp.name_tokens({"facility_name": "Ras Laffan Industrial City"}) == {"laffan"}
+
+
+@pytest.mark.parametrize("title", ["Attack on the country's largest refinery", "Key gas hub hit", "هجوم على أكبر مصفاة",
+                                   "حمله به بزرگ‌ترین پالایشگاه", "The only LNG terminal is hit"])
+def test_a_headline_that_weighs_a_facility_is_not_shown(title):
+    imp = _load("import_candidates")
+    src = {"url": "https://example.org/a", "publisher": "P", "date": "2024-08-02", "language": "ar",
+           "source_role": "media", "opened": True, "title_original": title, "title_en": "gloss"}
+    assert "title_original" not in imp._source(src, with_titles=True)
+
+
+# --- research-pass honesty -----------------------------------------------------------------------
+
+def _body(**kw):
+    base = {"universe_kind": "declared_query_set", "execution": "declared_search_complete", "source_window": "no_census_exists",
+            "covered_through": "2026-11-11", "languages_required": ["fa", "en"], "languages_executed": ["fa", "en"],
+            "queries_declared": 10, "queries_run": 10, "limitation": "No census exists."}
+    return {**base, **kw}
+
+
+def test_the_pass_writer_never_calls_a_lane_complete_that_missed_a_language_or_a_query():
+    w = _load("write_gulf_pass")
+    assert w.honest(_body(), False)["execution"] == "declared_search_complete"
+    assert w.honest(_body(languages_executed=["en"]), False)["execution"] == "partial"      # English only, Persian required
+    assert w.honest(_body(languages_required=["ar", "en"], languages_executed=["ar"]), False)["execution"] == "partial"
+    short = w.honest(_body(queries_run=4), True)
+    assert short["execution"] == "partial" and short["stopped_by"] == "search_limit"
+    blocked = w.honest(_body(universe_kind="report_archive", execution="enumerated_complete", source_window="inaccessible"), False)
+    assert blocked["execution"] == "partial"
+    assert w.honest(_body(execution="enumerated_complete"), False)["execution"] == "partial", "a query set is never a census"
+    idle = w.honest(_body(execution="not_started", queries_run=3), False)
+    assert "queries_run" not in idle and idle["languages_executed"] == []
+
+
+@pytest.mark.parametrize("required,executed", [(["fa"], ["en"]), (["ar", "en"], ["ar"]), (["ar", "en"], ["en"]), (["ku", "en"], ["en"])])
+def test_a_lane_run_in_fewer_languages_than_required_cannot_be_complete(required, executed):
+    lane = {"lane": "X1", "source_family": "f", "registry": ["A"], "universe_kind": "declared_query_set",
+            "execution": "declared_search_complete", "source_window": "no_census_exists", "covered_through": "2026-11-11",
+            "languages_required": required, "languages_executed": executed, "queries_declared": 5, "queries_run": 5,
+            "limitation": "no census"}
+    assert any("required languages" in p for p in B.lane_problems(lane, ["2022-01-01", "2026-11-11"]))
+
+
+def test_the_pass_writer_takes_names_and_status_out_of_published_lane_text():
+    w = _load("write_gulf_pass")
+    out = w.public_text("Example Refinery was read. The unit restarted in May. Nothing else found.", ["Example Refinery"])
+    assert "Example Refinery" not in out and "restart" not in out.lower() and "Nothing else found." in out
+
+
+# --- frontend contracts read from source -----------------------------------------------------------
+
+def test_views_are_keyed_on_their_route_so_one_country_never_shows_anothers_data():
+    root = (ROOT / "web" / "src" / "Root.tsx").read_text(encoding="utf-8")
+    assert "<CountryView key={route.id} id={route.id} />" in root
+    assert "<GroupView key={route.id} id={route.id} />" in root
+    manifest = (ROOT / "web" / "src" / "global" / "manifest.ts").read_text(encoding="utf-8")
+    assert "system.system_id !== entry.id" in manifest, "a payload for another system is refused at load"
+
+
+def test_the_frontend_holds_no_list_of_gulf_countries():
+    """The manifest says which systems and groups exist. A country list in a component would go
+    stale the day a system is added, and silently."""
+    for path in (ROOT / "web" / "src" / "global").glob("*.ts*"):
+        if path.name.endswith(".test.ts"):
+            continue
+        text = path.read_text(encoding="utf-8")
+        assert not re.search(r"""["'](ir|iq|kw|bh|qa|om)["']\s*,\s*["'](ir|iq|kw|bh|qa|om|ae|sa)["']""", text), path.name
+        for name in ("Bahrain", "Kuwait", "Qatar", "Oman", "Iraq"):
+            assert name not in text, (path.name, name)
+
+
+def test_the_gulf_view_states_what_it_is_not_and_never_says_zero_disruptions():
+    text = (ROOT / "web" / "src" / "global" / "GroupView.tsx").read_text(encoding="utf-8")
+    assert "No qualifying records in the current reviewed corpus" in text
+    assert "0 disruptions" not in text and "no disruptions" not in text.lower()
+    country = (ROOT / "web" / "src" / "global" / "CountryView.tsx").read_text(encoding="utf-8")
+    assert "No qualifying records in the current reviewed corpus" in country
+    assert "Research preview" in country and "CAMPAIGN_STATE_LABEL" in country
+
+
+@needs_payload
+def test_the_gulf_recent_list_is_in_event_date_order_and_says_it_is_a_backfill():
+    recent = _json("global/gulf.json")["recent"]
+    dates = [ep["last_date"] for ep in recent["episodes"]]
+    assert dates == sorted(dates, reverse=True), "newest event first; never by date added, size or country"
+    view = (ROOT / "web" / "src" / "global" / "GroupView.tsx").read_text(encoding="utf-8")
+    assert "historical" in view and "backfill" in view and "not a deteriorating region" in view
+
+
+@needs_payload
+def test_no_gulf_payload_carries_shipping_route_or_nuclear_site_material():
+    for sid in NEW:
+        events = _json(f"systems/{sid}/events.json")["events"]
+        system = _json(f"systems/{sid}/system.json")
+        assert B.route_problems(events) == [], sid
+        assert B.nuclear_problems(system["profile"], events) == [], sid
+        assert [e["event_id"] for e in events if B.not_a_physical_event(e)] == [], sid
+    gulf = json.dumps({k: v for k, v in _json("global/gulf.json").items() if k != "recent"}, ensure_ascii=False).lower()
+    for word in ("tanker", "vessel", "chokepoint", "export route"):
+        assert word not in gulf.replace("no route, strait, shipping or tanker information", ""), word
+
+
+@needs_payload
+def test_every_gulf_event_has_a_source_and_a_blind_review():
+    for sid in NEW:
+        for e in _json(f"systems/{sid}/events.json")["events"]:
+            assert e["sources"] and all(s["url"].startswith("http") for s in e["sources"]), e["event_id"]
+            assert e["review"]["review_status"] == "blind_reviewed", e["event_id"]
+            assert not any("ewa.bh" in s["url"] or "km.qa" in s["url"] for s in e["sources"]), e["event_id"]
+
+
+@needs_payload
+def test_a_system_with_no_record_says_so_and_claims_no_search_it_did_not_run():
+    for sid in NEW:
+        s = _json(f"systems/{sid}/system.json")
+        if s["event_summary"]["recorded_events"] == 0:
+            assert s["maturity"] == "research_preview", sid
+        if not s["research_log"]["passes"]:
+            assert s["research_freshness"]["completeness"] == "never_systematic", sid
 
 
 # --- onboarding tool -----------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-"""Mutation campaign for the governance and safety rules of iterations 16 to 18.
+"""Mutation campaign for the governance and safety rules of iterations 16 to 19.
 
     .venv\\Scripts\\python.exe scripts\\mutation_campaign.py
 
@@ -312,6 +312,264 @@ MUTATIONS = [
 ]
 
 
+# --- iteration 19: the Gulf expansion ------------------------------------------------------------
+
+GULF_NEW = ("ae", "bh", "iq", "ir", "kw", "om", "qa")
+KINETIC = ("kinetic_strike", "sabotage")
+
+
+def _gulf_payload(pred, order=("ir", "kw", "qa", "ae", "bh", "om", "iq")):
+    """The first new Gulf system whose served events hold a record matching `pred`. The mutation is
+    aimed at a real record, so it stays meaningful whichever countries the research populated."""
+    for sid in order:
+        path = ROOT / "web" / "public" / "data" / "systems" / sid / "events.json"
+        if path.exists() and any(pred(e) for e in json.loads(path.read_text(encoding="utf-8"))["events"]):
+            return sid
+    return order[0]
+
+
+def _covered(e):
+    return e["cause"] in KINETIC and (e.get("publication") or {}).get("rule") == "active_campaign_current_status_withheld"
+
+
+def _on_event(pred, fn):
+    def edit(d):
+        fn(next(e for e in d["events"] if pred(e)))
+    return edit
+
+
+def _both(sid, name, mutate):
+    return [(f"data/processed/systems/{sid}/{name}", mutate), (f"web/public/data/systems/{sid}/{name}", mutate)]
+
+
+def _restart_in_effect(e):
+    e["effect"] = "A fire was reported and the unit has since restarted (TEST PLACEHOLDER, not a fact)."
+
+
+def _province_on_attack(e):
+    e["geography_precision"] = "admin1"
+    e["region_code"] = "XX-00"
+
+
+def _status_in_url(e):
+    e["sources"][0]["url"] = e["sources"][0]["url"].rstrip("/") + "/facility-restart-announced"
+
+
+def _no_sources(e):
+    e["sources"] = []
+
+
+def _nuclear_row(d):
+    d["profile"]["metrics"].append({"metric": "nuclear_unit_status", "value": 4, "unit": "units", "year": 2026,
+                                    "source": "TEST PLACEHOLDER", "url": "https://example.org"})
+
+
+def _gulf_by_size(d):
+    d["systems"].sort(key=lambda s: -(s["values"].get("total_production") or 0))
+
+
+def _zero_index(d):
+    s = next(x for x in d["systems"] if x["id"] == "ir")
+    s["index"] = {"id": "esdi", "name": "ESDI"}
+    s["headline"] = {"value": 0, "as_of": "2026-11-11", "label": "ESDI", "meaning": "TEST PLACEHOLDER"}
+
+
+def _merge_two_attacks(d):
+    a = [e for e in d["events"] if e["cause"] in KINETIC][:2]
+    a[1]["episode_id"] = a[0]["episode_id"]
+
+
+GULF = "web/public/data/global/gulf.json"
+SID_COVERED = _gulf_payload(_covered)
+SID_ATTACK = _gulf_payload(lambda e: e["cause"] in KINETIC and e["geography_precision"] == "country", ("ir", "kw", "qa", "ae", "bh", "om"))
+SID_ANY = _gulf_payload(lambda e: True)
+
+GULF_MUTATIONS = [
+    # 1-5: campaign and precision
+    ("an Iranian or Gulf attack record carries restart wording",
+     _both(SID_COVERED, "events.json", _artifact(_on_event(_covered, _restart_in_effect))),
+     "no_served_record_under_an_active_campaign"),
+    ("an attack record is placed in a province where the policy says country",
+     _both(SID_ATTACK, "events.json", _artifact(_on_event(lambda e: e["cause"] in KINETIC, _province_on_attack))),
+     "emitted_kinetic_records_obey"),
+    ("Bahrain's records may be placed in a governorate",
+     [("data/curated/systems/bh/system.json", _artifact(lambda d: d["geography"]["precision_policy"].__setitem__("other", "admin1")))],
+     "bahrain_places_no_record"),
+    ("the import gate stops downgrading attack records (Qatar, Kuwait, UAE)",
+     [("scripts/import_candidates.py", _text(
+         'return (policy or {}).get("kinetic") == "country" and r.get("cause") in build_systems.KINETIC_CAUSES',
+         "return False"))],
+     "downgrades_an_attack_record or kinetic_country_policy_is_by_cause"),
+    ("a small state's precision policy is relaxed to admin-1 for attacks",
+     [("data/curated/systems/qa/system.json", _artifact(lambda d: d["geography"]["precision_policy"].__setitem__("kinetic", "admin1")))],
+     "small_gulf_states_never_place"),
+    # 6-8: groups and context
+    ("the Gulf group loses Iraq",
+     [("pipeline/systems.py", _text('"members": ("bh", "ir", "iq", "kw", "om", "qa", "sa", "ae"),',
+                                    '"members": ("bh", "ir", "kw", "om", "qa", "sa", "ae"),'))],
+     "gulf_group_is_exactly"),
+    ("the GCC gains Iran",
+     [("pipeline/systems.py", _text('"members": ("bh", "kw", "om", "qa", "sa", "ae"),',
+                                    '"members": ("bh", "ir", "kw", "om", "qa", "sa", "ae"),'))],
+     "gcc_is_exactly"),
+    ("OPEC still lists the UAE",
+     [("pipeline/systems.py", _text('"members": ("ir", "iq", "kw", "sa"),', '"members": ("ir", "iq", "kw", "sa", "ae"),'))],
+     "opec_membership_is_todays"),
+    ("national production reaches a scoring module",
+     [("pipeline/build_index.py", _prepend("from pipeline import gulf_context  # noqa: F401\n"))],
+     "no_analytic_module_imports_the_gulf_context"),
+    # 9-12: what is not an event
+    ("an OPEC production cut becomes an incident",
+     [("pipeline/build_systems.py", _text(
+         'r"\\bOPEC\\+?\\b[^.]{0,80}\\b(cut|cuts|quota|quotas|curb|curbs|reduction|agreement)\\b|"', 'r"zzzOPECzzz|"'))],
+     "policy_decision_or_planned_maintenance"),
+    ("an unexplained decline in a statistic becomes an incident",
+     [("pipeline/build_systems.py", _text(
+         '    if e.get("cause") == "unknown" and UNEXPLAINED_DECLINE.search(text):', "    if False:"))],
+     "unexplained_decline"),
+    ("planned maintenance becomes an event",
+     [("pipeline/build_systems.py", _text(
+         'r"\\b(planned|scheduled|routine|annual|periodic) (maintenance|turnaround|overhaul|shutdown|outage)\\b|"', 'r"zzzMAINTzzz|"'))],
+     "policy_decision_or_planned_maintenance"),
+    ("a sanction becomes a physical outage",
+     [("pipeline/build_systems.py", _text('r"\\bturnaround\\b|\\bsanction(s|ed)?\\b|\\bembargo\\b", re.I)',
+                                          'r"\\bturnaround\\b|\\bembargo\\b", re.I)'))],
+     "policy_decision_or_planned_maintenance"),
+    # 13-16: languages, calendars, numerals
+    ("an English-only run of a Persian-required lane is written as complete",
+     [("scripts/write_gulf_pass.py", _text(
+         'missing_lang = not set(body["languages_required"]) <= set(body["languages_executed"])', "missing_lang = False"))],
+     "pass_writer_never_calls"),
+    ("a lane run in one of two required languages validates as complete",
+     [("pipeline/build_systems.py", _text("    ran_all_languages = required <= executed\n",
+                                          "    ran_all_languages = bool(required & executed)\n"))],
+     "fewer_languages_than_required"),
+    ("a Solar Hijri year is read as Gregorian",
+     [("pipeline/calendars.py", _text("GREGORIAN_PLAUSIBLE = (1900, 2100)", "GREGORIAN_PLAUSIBLE = (1000, 2100)"))],
+     "1404_is_never_read or misread_calendar"),
+    ("the Solar Hijri conversion is a day out",
+     [("pipeline/calendars.py", _text("_ANCHOR_YEAR, _ANCHOR_DATE = 1400, dt.date(2021, 3, 21)",
+                                      "_ANCHOR_YEAR, _ANCHOR_DATE = 1400, dt.date(2021, 3, 22)"))],
+     "solar_hijri_dates_convert_exactly"),
+    ("the Solar Hijri conversion is a year out",
+     [("pipeline/calendars.py", _text("_ANCHOR_YEAR, _ANCHOR_DATE = 1400, dt.date(2021, 3, 21)",
+                                      "_ANCHOR_YEAR, _ANCHOR_DATE = 1401, dt.date(2021, 3, 21)"))],
+     "solar_hijri_dates_convert_exactly"),
+    ("Persian digits are not normalised",
+     [("pipeline/calendars.py", _text("**{chr(0x06F0 + i): str(i) for i in range(10)}}", "}"))],
+     "persian_and_arabic_digits"),
+    ("an ambiguous number is guessed",
+     [("pipeline/calendars.py", _text('r"[+-]?(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?"', 'r"[+-]?[\\d,]+(\\.\\d+)?"'))],
+     "ambiguous_number"),
+    ("a Hijri conversion claims to be exact",
+     [("pipeline/calendars.py", _text("tabular", "astronomical"))],
+     "hijri_conversion_says"),
+    # 17-19: nulls, sources, citations
+    ("a missing national value is summed as zero",
+     [("pipeline/gulf_context.py", _text("    vals = list(values_by_member.values())\n",
+                                         "    vals = [v or 0 for v in values_by_member.values()]\n"))],
+     "partial_regional_sum"),
+    ("a Gulf record is published with no source",
+     _both(SID_ANY, "events.json", _artifact(_on_event(lambda e: True, _no_sources))),
+     "every_gulf_event_has_a_source"),
+    ("a campaign record's citation address announces a restart",
+     _both(SID_COVERED, "events.json", _artifact(_on_event(_covered, _status_in_url))),
+     "no_served_record_under_an_active_campaign"),
+    # 20-25: episodes, context file
+    ("a regional context metric loses its year",
+     [(GULF, _artifact(lambda d: d["metrics"][next(iter(d["metrics"]))].__setitem__("year", None)))],
+     "gulf_null_is_null"),
+    ("nuclear detail beyond the national mix enters a profile",
+     _both("ae", "system.json", _artifact(_nuclear_row)),
+     "shipping_route_or_nuclear"),
+    ("national context gains an export-route share",
+     [(GULF, _artifact(lambda d: d["systems"][0].__setitem__("export_route_share", 0.4)))],
+     "emitted_gulf_payload_holds_national_context"),
+    ("the Gulf overview is ordered by a figure",
+     [(GULF, _artifact(_gulf_by_size))],
+     "emitted_gulf_payload_holds_national_context"),
+    ("tanker-flow data appears in the regional file",
+     [(GULF, _artifact(lambda d: d["metrics"].__setitem__("tanker_flows", {"label": "x", "unit": "x", "year": 2026, "source_id": "x"})))],
+     "emitted_gulf_payload_holds_national_context"),
+    ("a per-country incident count enters the regional file",
+     [(GULF, _artifact(lambda d: d["systems"][0].__setitem__("records", 12)))],
+     "emitted_gulf_payload_holds_national_context"),
+    # 26-30: titles, identity, backfill, switching, zero
+    ("an unsafe publisher headline is rendered",
+     [("scripts/import_candidates.py", _text(
+         "if t and safe_title(t) and not build_systems.status_wording(t) and not build_systems.LOADED_WORDING.search(t):",
+         "if t:"))],
+     "status_bearing_headline or headline_that_weighs"),
+    ("a withheld facility comes back through the citation list",
+     [("scripts/import_candidates.py", _text(
+         'r = {**r, "sources": [s for s in r["sources"] if not names_the_place(s.get("url"), tokens)],',
+         'r = {**r, "sources": list(r["sources"]),'))],
+     "citation_address_that_names"),
+    ("a record that names its facility in text passes the gate",
+     [("scripts/import_candidates.py", _text("        named = [n for n in names if n.lower() in text]\n", "        named = []\n"))],
+     "holds_a_record_that_names_its_facility"),
+    ("a historical backfill reads as a deteriorating region",
+     [("web/src/global/GroupView.tsx", _text("a long list is a larger dataset, not a deteriorating region.", "the list is growing."))],
+     "gulf_recent_list_is_in_event_date_order"),
+    ("the Gulf recent list is reordered",
+     [(GULF, _artifact(lambda d: d["recent"]["episodes"].reverse()))],
+     "gulf_recent_list_is_in_event_date_order"),
+    ("switching country can show the previous country's data",
+     [("web/src/Root.tsx", _text("<CountryView key={route.id} id={route.id} />", "<CountryView id={route.id} />"))],
+     "views_are_keyed"),
+    ("a new system gets a default index of zero",
+     [("web/public/data/global/manifest.json", _artifact(_zero_index))],
+     "manifest_carries_groups_and_no_rankable"),
+    # further guards on the scaffold itself
+    ("an uncertain campaign stops restricting",
+     [("pipeline/build_systems.py", _text(
+         'RESTRICTING_STATES = ("ACTIVE_KINETIC_CAMPAIGN", "RECENT_ENDED_CAMPAIGN", "UNCERTAIN")',
+         'RESTRICTING_STATES = ("ACTIVE_KINETIC_CAMPAIGN", "RECENT_ENDED_CAMPAIGN")'))],
+     "uncertain_restricts or restricted_state_needs"),
+    ("an open campaign can switch its policy off",
+     [("pipeline/build_systems.py", _text(
+         '        if c.get("status") in ("active", "uncertain") and not c.get("policy_applied"):', "        if False:"))],
+     "open_campaign_cannot_switch"),
+    ("a policy is lifted the day a campaign ends",
+     [("pipeline/build_systems.py", _text("            if not ended or (today - dt.date.fromisoformat(ended)).days < wait:",
+                                          "            if not ended:"))],
+     "ended_campaign_keeps_its_policy"),
+    ("a Gulf system with no campaign classification builds",
+     [("pipeline/build_systems.py", _text('    for sid in systems.GROUPS["gulf_littoral"]["members"]:\n        if sid not in states:',
+                                          '    for sid in ():\n        if sid not in states:'))],
+     "no_classification_fails"),
+    ("Iran's provinces fall back to the old numbering",
+     [("pipeline/build_systems.py", _text('"West Azarbaijan": "IR-04", "Kermanshah": "IR-05", "Khuzestan": "IR-06", "Fars": "IR-07",',
+                                          '"West Azarbaijan": "IR-04", "Kermanshah": "IR-05", "Khuzestan": "IR-06", "Fars": "IR-14",'))],
+     "irans_provinces"),
+    ("Persian restart wording passes the status check",
+     [("pipeline/build_systems.py", _text('    r"راه[\\u200c ]?انداز[یي] مجدد|از ?سرگ[یي]ر[یي]|از سر گرفته|',
+                                          '    r"zzzz|'))],
+     "status_wording_is_caught"),
+    ("route wording in a citation address is published",
+     [("pipeline/build_systems.py", _text("        for s in e.get(\"sources\", []):\n            words = unquote(s.get(\"url\") or \"\")",
+                                          "        for s in []:\n            words = unquote(s.get(\"url\") or \"\")"))],
+     "route_and_shipping_wording or citation_address_with_route"),
+    ("a nuclear-site record is published",
+     [("pipeline/build_systems.py", _text('            out.append(f"{e[\'event_id\']}: a record at or about a nuclear site is not published")', "            pass"))],
+     "nuclear_content_is_a_national"),
+    ("the frontend gains a hardcoded list of Gulf countries",
+     [("web/src/global/GroupView.tsx", _prepend('const GULF_IDS = ["ir", "iq", "kw", "sa"];\n'))],
+     "frontend_holds_no_list"),
+    ("an empty country reads as zero disruptions",
+     [("web/src/global/GroupView.tsx", _text("No qualifying records in the current reviewed corpus for this region.",
+                                             "0 disruptions in this region."))],
+     "gulf_view_states_what_it_is_not"),
+    ("onboarding accepts a draft with loaded wording",
+     [("scripts/onboard_system.py", _text("    if bad:\n        problems.append(f\"loaded wording", "    if False:\n        problems.append(f\"loaded wording"))],
+     "onboarding_refuses"),
+    ("a membership becomes a page of its own",
+     [("pipeline/systems.py", _text('        "label": "GCC",\n', '        "label": "GCC",\n        "slug": "gcc",\n        "context": "global/gulf.json",\n'))],
+     "manifest_carries_groups" ),
+]
+
+MUTATIONS += GULF_MUTATIONS
+
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
     for d in COPY_DIRS:
@@ -327,7 +585,7 @@ def _sandbox():
 def _run(box, k):
     env = {**os.environ, "EDM_GIT_ROOT": str(ROOT), "PYTHONIOENCODING": "utf-8"}
     r = subprocess.run([PY, "-m", "pytest", "-q", "-o", "addopts=", "-p", "no:cacheprovider",
-                        "tests/test_pipeline.py", "tests/test_iteration18.py", "-k", k], cwd=box, capture_output=True, text=True,
+                        "tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py", "-k", k], cwd=box, capture_output=True, text=True,
                        encoding="utf-8", env=env)
     tail = (r.stdout.strip().splitlines() or [""])[-1]
     return r.returncode, tail

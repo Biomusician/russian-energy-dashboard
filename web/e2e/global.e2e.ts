@@ -39,8 +39,8 @@ test.describe("global home", () => {
     }
     const px = await app.mapPixels();
     expect(px.distinct).toBeGreaterThan(8);
-    // Totals for the five countries together, once, outside every card (iteration 17).
-    const totals = page.getByRole("region", { name: "Country record, all five together" });
+    // Totals for the countries together, once, outside every card (iteration 17).
+    const totals = page.getByRole("region", { name: "Country record, all countries together" });
     await expect(totals).toContainText(`${m.corpus.records} reported disruptions in ${m.corpus.episodes} episodes`);
     await expect(totals).toContainText(`${m.corpus.research_lanes} source groups`);
     for (const s of m.systems) {
@@ -180,7 +180,8 @@ test.describe("country systems", () => {
     await expect(page.getByRole("heading", { name: "Canada", level: 1 })).toBeVisible();
     await app.mapIdle();
     await page.getByRole("combobox", { name: "Monitored system" }).selectOption("");
-    await expect(page.getByRole("article")).toHaveCount(6);
+    const m = await manifest(page);
+    await expect(page.getByRole("article")).toHaveCount(m.systems.length);
   });
 });
 

@@ -62,10 +62,10 @@ def priority(e):
     return 6
 
 
-def _write(name, records, note):
+def _write(name, records, note, extra=None):
     OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / f"{name}.json"
-    path.write_text(json.dumps({"packet": name, "note": note, "records": records},
+    path.write_text(json.dumps({"packet": name, "note": note, **(extra or {}), "records": records},
                                ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"{path.relative_to(ROOT)}: {len(records)} records")
 
@@ -82,7 +82,26 @@ def grandfathered():
 def queue(sid, research_pass):
     q = json.loads((ROOT / "data" / "candidates" / f"{sid}.json").read_text(encoding="utf-8"))
     mine = [r for r in q if r.get("research_pass") == research_pass and r.get("suggested_disposition") == "accept"]
-    _write(f"new_{sid}", [blind(r) for r in mine], f"Lane-accepted candidates of {research_pass}.")
+    _write(f"new_{sid}", [blind(r) for r in mine], f"Lane-accepted candidates of {research_pass}.",
+           {"system_policy": system_policy(sid)})
+
+
+def system_policy(sid):
+    """What a reviewer must hold this country's records to: the rules, never a conclusion about
+    any record. A safety reviewer cannot check "no facility in an attack record" without knowing
+    that this is a country where attacks are published at country level."""
+    doc = json.loads((CURATED / sid / "system.json").read_text(encoding="utf-8"))
+    campaigns = json.loads((CURATED / "conflict_campaigns.json").read_text(encoding="utf-8"))
+    covering = [c for c in campaigns["campaigns"] if c["system_id"] == sid and c.get("policy_applied")]
+    policy = (doc.get("geography") or {}).get("precision_policy") or {}
+    return {
+        "kinetic": policy.get("kinetic", "admin1"),
+        "other": policy.get("other", "admin1"),
+        "no_event_units": policy.get("no_event_units", []),
+        "campaign_state": (campaigns.get("system_states") or {}).get(sid, {}).get("state"),
+        "recovery_withheld_for_attack_records_from": min((c["member_rule"]["from"] for c in covering), default=None),
+        "unit_label": doc["geography"]["unit_label"],
+    }
 
 
 if __name__ == "__main__":

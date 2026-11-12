@@ -26,7 +26,10 @@ GROUP = "gulf_littoral"
 BASE_METRICS = ("total_production", "crude_production", "gas_production", "electricity_generation")
 FORBIDDEN_KEY_PARTS = ("rank", "score", "vulnerab", "critical", "target", "importance", "severity", "route",
                        "strait", "hormuz", "bypass", "chokepoint", "tanker", "facility", "dependen", "incident",
-                       "lat", "lon", "coord")
+                       "lat", "lon", "coord",
+                       # A regional context file carries no direction of travel either: a count
+                       # that grew because records were backfilled is not a region getting worse.
+                       "trend", "delta", "worsen", "deteriorat", "change_since", "new_since")
 
 
 def _walk(x):
