@@ -64,8 +64,7 @@
             "en"
           ],
           "languages_executed": [
-            "ar",
-            "en (2022 only)"
+            "ar"
           ],
           "queries_declared": 10,
           "queries_run": 6,

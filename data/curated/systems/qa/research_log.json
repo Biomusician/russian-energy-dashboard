@@ -100,7 +100,7 @@
           "queries_run": 7,
           "items_enumerated": 192,
           "finding": "The Arabic fire queries returned only English-language reports of the June explosion; Arabic reporting of it was not reached. Domestic Qatari outlets (QNA, Al-Raya, Al-Sharq, Al-Watan) appeared in results only as a QNA statement carried by Gulf Times and as QNA listing pages; international and regional outlets supplied the rest.",
-          "limitation": "Seven of twenty declared strings were run, all Arabic; no English string and no 2026-tagged string was run, so the lane is partial in both language and year. The search engine ignored the year in every string and returned 2026 material each time, so the 2022-2025 strings say little about 2022-2025: finding nothing for those years is the result of seven queries and one newspaper category, not evidence that nothing happened. The Peninsula's Energy category is a thin, mostly oil-price listing (about 40 items a year) and carried none of the 2026 events, which the paper files elsewhere. Every article was read through a summarising fetch tool, not as raw text.",
+          "limitation": "Seven of twenty declared strings were run, all Arabic; no English string and no 2026-tagged string was run, so the lane is partial in both language and year. The search engine ignored the year in every string and returned 2026 material each time, so the 2022-2025 strings say little about 2022-2025: finding nothing for those years is the result of seven queries and one newspaper category, not evidence that nothing happened. Every article was read through a summarising fetch tool, not as raw text.",
           "stopped_by": "search_limit",
           "carried_forward": false
         }

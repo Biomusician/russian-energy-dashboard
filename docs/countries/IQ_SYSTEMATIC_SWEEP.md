@@ -93,7 +93,7 @@ confirmation before import.
 | Lane | Execution | Source window | Covered through | Queries | Items read | Languages required | Languages run |
 |---|---|---|---|---|---|---|---|
 | IQ1 | partial; stopped by search limit | inaccessible | not reached | 1 of 2 | 7 | ar | ar |
-| IQ2 | partial; stopped by search limit | no_census_exists | not reached | 6 of 10 | 21 | ar, en | ar, en (2022 only) |
+| IQ2 | partial; stopped by search limit | no_census_exists | not reached | 6 of 10 | 21 | ar, en | ar |
 | IQ3 | partial; stopped by search limit | inaccessible | not reached | 7 of 15 | - | ar, en | ar |
 | IQ4 | partial; stopped by search limit | no_census_exists | 2026-11-11 | 5 of 13 | - | en, ku | en, ku |
 | IQ5 | partial; stopped by search limit | no_census_exists | 2026-11-11 | 5 of 10 | - | ar, en | ar, en |

@@ -156,7 +156,7 @@
           "queries_run": 7,
           "items_enumerated": 64,
           "finding": "Storm reports give duration and pole counts, not customers. Local distribution cuts surface through a trade site quoting the distribution company's social-media statements. A discovery page gives counts and claims for later months;",
-          "limitation": "Seven of twenty declared queries ran, all Arabic; no English query ran, so the lane is partial in language as well as in count. The year token barely filters: every power query returned the same 2022 and mid-2026 pages, and the fire strings returned no Omani refinery or gas-plant incident at all, so 2023 and 2024 are years in which the queries found nothing, not years shown to be quiet. Nothing was accepted: the best-evidenced non-conflict event lacks a published figure, and the 2026 records lack either an opened source or a clause-meeting effect.",
+          "limitation": "Seven of twenty declared queries ran, all Arabic; no English query ran, so the lane is partial in language as well as in count. The year token barely filters: every power query returned the same 2022 and mid-2026 pages, and the fire strings returned no Omani refinery or gas-plant incident at all, so 2023 and 2024 are years in which the queries found nothing, not years shown to be quiet.",
           "stopped_by": "search_limit",
           "carried_forward": false
         }

@@ -41,7 +41,7 @@ source was recorded as blocked and not approached another way.
 |---|---|---|---|
 | Bahrain | ar, en | ar, en | BH1, BH3 |
 | Iran | en, fa | en, fa | none |
-| Iraq | ar, en, ku | ar, en, en (2022 only), ku | IQ2, IQ3 |
+| Iraq | ar, en, ku | ar, en, ku | IQ2, IQ3 |
 | Kuwait | ar, en | ar, en | KW3, KW4 |
 | Oman | ar, en | ar, en | OM2, OM3, OM5 |
 | Qatar | ar, en | ar, en | QA3 |

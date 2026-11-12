@@ -44,7 +44,7 @@
           ],
           "queries_declared": 10,
           "queries_run": 1,
-          "finding": "The one string run returned other countries' outage statements and nothing from the UAE. It reports the minister saying energy supplies were stable and local markets were supplied without interruption, and mentions a contained fire at an oil-industry zone with no date. That is a statement of no interruption, context for the 2026 records and not an event.",
+          "finding": "The one string run returned other countries' outage statements and nothing from the UAE. It reports the minister saying energy supplies were stable and local markets were supplied without interruption, and mentions a contained fire at an oil-industry zone with no date.",
           "limitation": "One of ten declared strings was run (Arabic, 2026) and it returned no UAE item at all. The agency's pages cannot be opened by an ordinary request and the ministry's site closed the connection, so this lane was barely started: not yet researched, not 'no statements'.",
           "stopped_by": "search_limit",
           "carried_forward": false

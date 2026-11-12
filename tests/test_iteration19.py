@@ -888,6 +888,7 @@ def test_a_lane_note_publishes_no_attack_narrative_and_no_dated_event_of_the_cam
     assert out == ("Seven of twelve declared queries ran. The listing refused access (HTTP 403). "
                    "No refinery fire in 2023 was returned, which is a property of the results.")
     assert w.process_only("Attacks dominate the results.") == w.WITHHELD_NOTE
+    assert w.process_only("Every string returned the same few 2023-2026 events. The 2026 records lack an opened source.") == w.WITHHELD_NOTE
     assert w.public_text("A drone attack was reported in March 2026.", []) == w.WITHHELD_NOTE
 
 
@@ -909,6 +910,32 @@ def test_the_published_research_log_of_a_gulf_system_carries_no_conflict_narrati
             continue
         for lane in p["lanes"]:
             assert not w.CONFLICT_NARRATIVE.search((lane.get("finding") or "") + " " + (lane.get("limitation") or "")), (cc, lane["lane"])
+
+
+def test_no_served_note_states_a_number_of_country_systems():
+    """Notes said 'the five country systems' beside a count of twelve. A number of systems is
+    read from the manifest or not stated."""
+    manifest = json.loads((WEB / "global/manifest.json").read_text(encoding="utf-8"))
+    gulf = json.loads((WEB / "global/gulf.json").read_text(encoding="utf-8"))
+    recent = json.loads((WEB / "global/recent_evidence.json").read_text(encoding="utf-8"))
+    quality = json.loads((WEB / "global/data_quality.json").read_text(encoding="utf-8"))
+    # Not the selection rule: "the first five country systems" is a dated fact about how the first
+    # five were chosen, and stays true.
+    notes = {"manifest.corpus.note": manifest["corpus"]["note"], "recent.scope": recent["scope"], "recent.note": recent["note"],
+             "gulf.recent.scope": gulf["recent"]["scope"], "gulf.recent.note": gulf["recent"]["note"],
+             "data_quality.note": quality["note"]}
+    for where, text in notes.items():
+        assert not re.search(r"\b(five|six|seven|eight|twelve|\d+) (country systems|countries|systems)\b", text, re.I), where
+    # The Gulf statement gives its own count, which must be the number of members it lists.
+    assert f"the {len(gulf['systems'])} Gulf systems" in gulf["statement"]
+
+
+def test_a_qualified_language_entry_does_not_count_as_a_language_run():
+    w = _load("write_gulf_pass")
+    entries = [{"execution": "partial", "source_window": "no_census_exists", "covered_through": None,
+                "languages_executed": ["ar", "en (2022 only)"]}]
+    body, _ = w.merged(entries, "declared_query_set", ["ar", "en"])
+    assert body["languages_executed"] == ["ar"]
 
 
 # --- research-pass honesty -----------------------------------------------------------------------

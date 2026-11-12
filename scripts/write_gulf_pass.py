@@ -105,7 +105,12 @@ CONFLICT_NARRATIVE = re.compile(
     r"attack|strike|struck|kinetic|sabotage|drone|missile|rocket|\bwar\b|wartime|hostil|force majeure|debris|"
     r"tall(y|ies)|acled|cyber|intercept|nuclear|campaign|هجوم|حمله", re.I)
 MONTHS = "January|February|March|April|May|June|July|August|September|October|November|December"
-CURRENT_YEAR_EVENT = re.compile(rf"\b({MONTHS}) 2026\b|\b2026-\d\d(-\d\d)?\b|\b\d{{1,2}} ({MONTHS})\b(?! 20(1\d|2[0-5]))", re.I)
+# "the 2026 records lack ..." and "the same few 2023-2026 events" are talk about individual
+# unreviewed reports of the campaign year too, and beside a panel that promises no event count
+# they read as one (found by the data-quality browser test).
+CURRENT_YEAR_EVENT = re.compile(
+    rf"\b({MONTHS}) 2026\b|\b2026-\d\d(-\d\d)?\b|\b\d{{1,2}} ({MONTHS})\b(?! 20(1\d|2[0-5]))"
+    rf"|\b2026 (events?|records?|reports?|incidents?|episodes?|candidates?)\b", re.I)
 # Nor does a note speak of held material, a document, or a question put to the lead: those are
 # the queue's business (the iteration-18 rule, which the first Gulf notes also broke).
 QUEUE_TALK = re.compile(r"\bheld\b|\.md\b|\blead'?s?\b|lead_decisions|\bruling\b", re.I)
@@ -141,8 +146,10 @@ def merged(entries, kind, langs):
     ex = min((e["execution"] for e in entries), key=ORDER.index)
     win = min((e.get("source_window") or "unknown" for e in entries), key=WINDOWS.index)
     ct = [e.get("covered_through") for e in entries]
-    executed = sorted(set.intersection(*[set(e.get("languages_executed") or []) for e in entries]) & set(langs)
-                      | (set.intersection(*[set(e.get("languages_executed") or []) for e in entries]) - set(langs)))
+    # A qualified entry ("en (2022 only)") is a language the lane did NOT fully run: only a bare
+    # code counts, so the lane is listed among those short of a required language.
+    ran = [{x for x in (e.get("languages_executed") or []) if re.fullmatch(r"[a-z]{2}", x)} for e in entries]
+    executed = sorted(set.intersection(*ran))
     out = {"universe_kind": kind, "execution": ex, "source_window": win,
            "covered_through": None if any(c is None for c in ct) else min(ct),
            "languages_required": langs, "languages_executed": executed}

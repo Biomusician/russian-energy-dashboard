@@ -1507,7 +1507,7 @@ def corpus_totals(country_payloads):
         "research_lanes_complete": lanes_done,
         "research_lane_states": dict(sorted(states.items())),
         "research_lanes": lanes_all,
-        "note": ("Totals for the five country systems together. Counts what was reported, found and "
+        "note": ("Totals for the country systems together. Counts what was reported, found and "
                  "reviewed, not what occurred; reporting environments differ, so no share of these "
                  "totals belongs to any one country in a comparable way. The theatre is not included."),
     }

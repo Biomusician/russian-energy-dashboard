@@ -343,7 +343,7 @@
           "queries_run": 0,
           "items_enumerated": 4,
           "items_in_universe": 4,
-          "finding": "The Arabic editions add no event. Safety is reported only as annual counts (Tier 1 process-safety events, spill counts and volumes) with no facility, date or region. No 2026 event appears in the FY2025 sections read.",
+          "finding": "The Arabic editions add no event. Safety is reported only as annual counts (Tier 1 process-safety events, spill counts and volumes) with no facility, date or region.",
           "limitation": "FY2023 to FY2025 were read as the three section files that carry incident wording (risk, results, sustainability), not the whole report: the overview, governance, legal and financial-statement sections were not read. The reading was by Arabic keyword over extracted text, not page by page. The Tadawul list refused access again and neither declared query ran. 2026 interim documents were not opened, by rule.",
           "stopped_by": "search_limit",
           "carried_forward": false

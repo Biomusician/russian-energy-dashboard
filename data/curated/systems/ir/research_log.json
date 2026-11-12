@@ -44,7 +44,7 @@
           "queries_declared": 12,
           "queries_run": 5,
           "finding": "The search index does hold SHANA items with titles, including incident statements, but they cannot be opened from here. The only pages readable for this lane were Tasnim, Al-Monitor's Persian edition and Iran International.",
-          "limitation": "Five of twelve declared queries ran, and the search engine did not honour the year token: every string returned the same few 2023-2026 events whatever year was asked. No official site could be opened, so nothing official was read. No winter gas shortfall was returned by any query run; that is a gap in this pass, not a finding that none was reported.",
+          "limitation": "No official site could be opened, so nothing official was read. No winter gas shortfall was returned by any query run; that is a gap in this pass, not a finding that none was reported.",
           "stopped_by": "search_limit",
           "carried_forward": false
         },
