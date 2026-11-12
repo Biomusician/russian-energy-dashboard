@@ -60,9 +60,9 @@
     },
     {
       "sector": "coal",
-      "state": "NOT_APPLICABLE",
-      "assessed_readiness": "NOT_APPLICABLE",
-      "reason": "Not applicable: the UAE has no coal production and no coal-fired generation in 2024 (EIA reports zero). Imported coal is used by industry. The sector does not exist here, which is different from unknown."
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "No coal production and no coal-fired generation in 2024 (EIA reports zero for both). Coal imports are recorded and their use was not researched, so this is not marked as not applicable."
     }
   ],
   "sources": [

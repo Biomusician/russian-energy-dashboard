@@ -201,8 +201,7 @@ Access tests were made on 2026-11-11 with one ordinary request each, plus the re
   addresses `/Media/News/Article/ArticleID/N/slug`. **Enumerable.**
 - **Cadence:** irregular; about ten items between December 2024 and November 2026.
 - **Terms:** "© 2026 QatarEnergy LNG". No terms page found.
-- **Fields never read:** the site's Operations pages describe individual trains, the terminal and
-  the industrial city. They are not opened. See §4.
+- **Fields never read:** pages that describe individual facilities. They are not opened. See §4.
 - **Decision: adopt as the enumeration universe of lane QA1.**
 
 ### 2.5 QatarEnergy LNG — sustainability reports
@@ -243,8 +242,8 @@ Access tests were made on 2026-11-11 with one ordinary request each, plus the re
 - **Cadence:** annual; the 2023 edition's file is dated October 2024.
 - **Terms:** the site terms in §2.6 apply; the report states its purpose is to inform "government
   institutions, investors, the academe and the general public".
-- **Fields never read:** ET1 and WT1 (contracted capacity per producer and plant), ET11
-  (substations), WT20–WT24 (storage per reservoir and tank). See §4.
+- **Fields never read:** tables of capacity per producer and plant, of substations, and of
+  storage per reservoir and tank. See §4.
 - **Decision: derived facts only** — national totals, cited by link. Where the same figure exists
   on the open-data portal under CC BY, the portal is the source of record.
 
@@ -449,12 +448,11 @@ From any source, public or not:
   bypass or "alternative route" material, including ministerial remarks on it;
 - which facility is described as largest, key, critical or sole;
 - coordinates, distances, ranges, weapon or attack-method detail, air or site defences;
-- pipeline routes, landfalls and interconnector status; grid topology — KAHRAMAA's substation table
-  (ET11), cable and line datasets beyond a national total, and consumption **by zone number**;
-- per-producer and per-plant contracted capacity (KAHRAMAA ET1 and WT1 and the portal's
-  *Contracted Capacities by IWPPs*) in any output file: a list exists; it is not copied;
-- water storage by reservoir, tank or tower (WT20–WT24 and the portal's reservoir dataset);
-- the Operations pages of the LNG operator's site.
+- pipeline routes, landfalls and interconnector status; grid topology, including any substation
+  table, cable and line datasets beyond a national total, and consumption by zone;
+- per-producer and per-plant contracted capacity in any output file;
+- water storage by reservoir, tank or tower;
+- pages on an operator's site that describe individual facilities.
 
 For a kinetic or sabotage record from 2026-01-01: occurrence, date, broad class and the effect
 reported within 7 days only. Nothing later, and no page whose address or title states later status.

@@ -11,8 +11,8 @@ local logs in `data/candidates/gulf19/<cc>_*_lanes.json`.
 WHAT IT REFUSES TO DO. A lane is never upgraded here: where two researchers shared a lane the
 weaker execution is kept; a lane no researcher logged is `not_started`; a lane searched in fewer
 languages than its plan required is `partial`; a lane with a query left unrun is `partial` and says
-whether the search allowance stopped it. Counts and process facts only: per-record narratives and
-the names of unpublished facilities stay in the local queue.
+whether the search allowance stopped it. Counts and fixed sentences only: none of a researcher's
+own prose is published, so per-record narratives and names stay in the local queue.
 """
 import glob
 import json
@@ -80,66 +80,58 @@ def logs_for(cc):
     return out
 
 
-def unpublished_names(cc):
-    """Facility and operator names in the queue that are not on a published record. A limitation
-    that names one would publish what review held back."""
-    qpath = ROOT / "data" / "candidates" / f"{cc}.json"
-    if not qpath.exists():
-        return []
-    published = json.dumps(read(SYS / cc / "events.json"), ensure_ascii=False).lower()
-    names = set()
-    for r in read(qpath):
-        for k in ("facility_name", "facility_name_local", "operator"):
-            n = r.get(k)
-            if n and len(n) >= 5 and n.lower() not in published:
-                names.add(n)
-    return sorted(names, key=len, reverse=True)
+# A lane note is the researcher's own prose about what the search turned up. It was never reviewed,
+# and for these systems most of what a search turns up is reports of attacks. Two filters that
+# removed sentences by word list each let paraphrase through ("a contained fire at an oil-industry
+# zone", "the June explosion", "supplies were stable"): beside a record published without its
+# place, such a sentence gives the place type and the later status back (release safety red team,
+# iteration 19). So no researcher prose is published for a Gulf lane at all. The note is read only
+# to choose among the fixed sentences below; its numbers travel in the lane's own count fields.
+NOTE_REFUSED = "At least one source in this lane refused automated access and was not worked around."
+NOTE_SCRIPT = "At least one official listing is built by script in the browser and could not be read."
+NOTE_SIZE = "At least one document was too large for the fetch tool or timed out."
+NOTE_YEAR = ("The search tool gave little weight to year terms, so earlier years were reached mainly through "
+             "publishers' own listings.")
+NOTE_RELAYED = "Official statements were read as carried by other publishers, not on the issuing body's own site."
+NOTE_PART_LISTING = "The listings that could be read were read in part: by title, or for their newest pages only."
+NOTE_UNREAD = "Some declared documents were not read."
+NOTE_LANGUAGE = "Not run in every language its plan requires."
+NOTE_UNRUN = "Not every declared query was run."
+NOTE_ALLOWANCE = "The shared search allowance ran out before every declared query was run."
+NOTE_UNASSIGNED = "No researcher was assigned to this lane in this pass."
+NOTE_DEFAULT = "Not run as far as declared in this pass."
+NOTE_NO_CENSUS = ("No complete public list of events exists for this lane, so a search that finds nothing is not a year "
+                  "shown to be quiet.")
+LANE_NOTES = (NOTE_UNASSIGNED, NOTE_ALLOWANCE, NOTE_UNRUN, NOTE_LANGUAGE, NOTE_REFUSED, NOTE_SCRIPT, NOTE_SIZE, NOTE_YEAR,
+              NOTE_RELAYED, NOTE_PART_LISTING, NOTE_UNREAD, NOTE_NO_CENSUS, NOTE_DEFAULT)
+NOTE_SIGNS = (
+    (NOTE_REFUSED, re.compile(r"\b(40[123]|429)\b|refus|blocked|bot challenge|captcha|access denied|login wall|paywall", re.I)),
+    (NOTE_SCRIPT, re.compile(r"script", re.I)),
+    (NOTE_SIZE, re.compile(r"fetch (size|limit)|size limit|too large|exceeds?\b|100,000 characters|\d MB\b|timed out", re.I)),
+    (NOTE_YEAR, re.compile(r"year (token|term)|honou?r the year|whatever year", re.I)),
+    (NOTE_RELAYED, re.compile(r"relay|as carried|press cop|syndicat|republish|search-result summar", re.I)),
+    (NOTE_PART_LISTING, re.compile(r"page 1\b|only the newest|newest days|not paged|by title|titles only|not enumerated|incomplete", re.I)),
+    (NOTE_UNREAD, re.compile(r"(was|were) not (read|located|opened)|no reachable address|could not be read", re.I)),
+)
 
 
-# A lane note is the researcher's own prose about what the search turned up. It was never
-# reviewed, and for these systems most of what a search turns up is reports of attacks. A sentence
-# that mentions one, a tally, or any dated event of the current campaign year is not published:
-# together those sentences are a list of strikes by date and class that no reviewer accepted
-# (found by reading the notes before release, iteration 19).
-CONFLICT_NARRATIVE = re.compile(
-    r"attack|strike|struck|kinetic|sabotage|drone|missile|rocket|\bwar\b|wartime|hostil|force majeure|debris|"
-    r"tall(y|ies)|acled|cyber|intercept|nuclear|campaign|هجوم|حمله", re.I)
-MONTHS = "January|February|March|April|May|June|July|August|September|October|November|December"
-# "the 2026 records lack ..." and "the same few 2023-2026 events" are talk about individual
-# unreviewed reports of the campaign year too, and beside a panel that promises no event count
-# they read as one (found by the data-quality browser test).
-CURRENT_YEAR_EVENT = re.compile(
-    rf"\b({MONTHS}) 2026\b|\b2026-\d\d(-\d\d)?\b|\b\d{{1,2}} ({MONTHS})\b(?! 20(1\d|2[0-5]))"
-    rf"|\b2026 (events?|records?|reports?|incidents?|episodes?|candidates?)\b", re.I)
-# Nor does a note speak of held material, a document, or a question put to the lead: those are
-# the queue's business (the iteration-18 rule, which the first Gulf notes also broke).
-QUEUE_TALK = re.compile(r"\bheld\b|\.md\b|\blead'?s?\b|lead_decisions|\bruling\b", re.I)
-WITHHELD_NOTE = "What the search returned about individual reports stays in the local review queue."
-
-
-def process_only(text):
-    """`text` with every sentence about attacks or about a dated event of 2026 taken out."""
-    if not text:
-        return text
-    kept = [s for s in re.split(r"(?<=[.])\s+", text)
-            if not CONFLICT_NARRATIVE.search(s) and not CURRENT_YEAR_EVENT.search(s) and not QUEUE_TALK.search(s)]
-    # A sentence cut at a semicolon by the clause that followed it ends cleanly.
-    return re.sub(r"[;:,]\s*$", ".", " ".join(kept).strip()) or WITHHELD_NOTE
-
-
-def public_text(text, names):
-    """`text` with unpublished names, status wording and conflict narrative taken out."""
-    if not text:
-        return text
-    text = process_only(text)
-    for n in names:
-        text = re.sub(re.escape(n), "a facility", text, flags=re.I)
-    if build_systems.status_wording(text):
-        # A sentence that leaned on a removed one ("it was not opened...") is a fragment: drop it too.
-        sentences = [s for s in re.split(r"(?<=[.;])\s+", text)
-                     if not build_systems.status_wording(s) and not s[:1].islower()]
-        text = " ".join(sentences) or "See the plan document; the researcher's note is kept in the local queue."
-    return text.strip()
+def fixed_notes(raw, body, stopped):
+    """The lane's published limitation: fixed sentences only, in a fixed order."""
+    if body["execution"] == "not_started" and not raw:
+        return NOTE_UNASSIGNED
+    out = []
+    qd, qr = body.get("queries_declared"), body.get("queries_run")
+    short = isinstance(qd, int) and qd > 0 and (qr or 0) < qd
+    if stopped or body.get("stopped_by") == "search_limit":
+        out.append(NOTE_ALLOWANCE)
+    elif short:
+        out.append(NOTE_UNRUN)
+    if not set(body["languages_required"]) <= set(body["languages_executed"]):
+        out.append(NOTE_LANGUAGE)
+    out += [note for note, sign in NOTE_SIGNS if sign.search(raw or "")]
+    if body["source_window"] == "no_census_exists":
+        out.append(NOTE_NO_CENSUS)
+    return " ".join(out) or NOTE_DEFAULT
 
 
 def merged(entries, kind, langs):
@@ -159,15 +151,17 @@ def merged(entries, kind, langs):
             # Two researchers on one lane share its declared set: the declared count is the plan's,
             # not their sum.
             out[field] = max(vals) if field == "queries_declared" else sum(vals)
-    finding = " ".join(e["finding"] for e in entries if e.get("finding"))
-    if finding:
-        out["finding"] = finding
-    out["limitation"] = " ".join(e["limitation"] for e in entries if e.get("limitation")) or None
+    # Items read against a universe counted in other units ("73 of 3": 73 items on 3 listings) is
+    # not a fraction. The universe is kept only where it can be one.
+    if isinstance(out.get("items_in_universe"), int) and out.get("items_enumerated", 0) > out["items_in_universe"]:
+        del out["items_in_universe"]
+    # The researchers' own prose, read to choose the fixed notes and never published.
+    raw = " ".join(str(e.get(k)) for e in entries for k in ("limitation", "finding", "universe_note") if e.get(k))
     stopped = any(e.get("stopped_by") == "search_limit" for e in entries)
-    return out, stopped
+    return out, stopped, raw
 
 
-def honest(body, stopped):
+def honest(body, stopped, raw=""):
     """Lower a lane to what its own numbers support. Never raises one."""
     qd, qr = body.get("queries_declared"), body.get("queries_run")
     kind, ex = body["universe_kind"], body["execution"]
@@ -189,30 +183,25 @@ def honest(body, stopped):
         body.pop("items_enumerated", None)
         body["languages_executed"] = []
         body["covered_through"] = None
-    if ex in ("not_started", "partial") and (stopped or (short and SEARCH_LIMIT.search(body.get("limitation") or ""))):
+    if ex in ("not_started", "partial") and (stopped or (short and SEARCH_LIMIT.search(raw or ""))):
         body["stopped_by"] = "search_limit"
-    if ex in ("not_started", "partial") or body["source_window"] != "current_through_end_date":
-        body["limitation"] = body.get("limitation") or "Not run in this pass."
     return body
 
 
 def pass_for(cc, commit):
     path = SYS / cc / "research_log.json"
     log = read(path)
-    logs, reg, names = logs_for(cc), registry_for(cc), unpublished_names(cc)
+    logs, reg = logs_for(cc), registry_for(cc)
     lanes = []
     for lid, kind, langs in plan_lanes(cc, commit):
         family, registry = reg[lid]["source_family"], reg[lid]["registry"]
         if lid in logs:
-            body, stopped = merged(logs[lid], kind, langs)
+            body, stopped, raw = merged(logs[lid], kind, langs)
         else:
-            body, stopped = {"universe_kind": kind, "execution": "not_started", "source_window": "unknown",
-                             "covered_through": None, "languages_required": langs, "languages_executed": [],
-                             "limitation": "No researcher was assigned to this lane in this pass."}, False
-        body = honest(body, stopped)
-        body["limitation"] = public_text(body.get("limitation"), names)
-        if body.get("finding"):
-            body["finding"] = public_text(body["finding"], names)
+            body, stopped, raw = {"universe_kind": kind, "execution": "not_started", "source_window": "unknown",
+                                  "covered_through": None, "languages_required": langs, "languages_executed": []}, False, ""
+        body = honest(body, stopped, raw)
+        body["limitation"] = fixed_notes(raw, body, stopped)
         body["carried_forward"] = False
         lanes.append({"lane": lid, "source_family": family, "registry": registry, **body})
     outcome = {k: 0 for k in OUTCOMES}

@@ -2,148 +2,6 @@
   "system_id": "iq",
   "events": [
     {
-      "event_id": "iq-2022-02-25-nasiriyah-production-suspended-protests",
-      "date": "2022-02-25",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "IQ-DQ",
-      "geography_precision": "admin1",
-      "regions_affected": [
-        "IQ-DQ"
-      ],
-      "facility_name": "Nasiriyah field (Nasiriyah gas separation station)",
-      "facility_name_local": "محطة عزل غاز الناصرية",
-      "operator": "Dhi Qar Oil Company",
-      "asset_class": "upstream_production",
-      "cause": "labour",
-      "summary": "Dhi Qar Oil Company said it suspended oil and gas production operations at Nasiriyah after protests and sit-ins closed the site and staff could not enter.",
-      "effect": "The company's statement said the closure would stop production of 80,000 barrels of crude a day (Dhi Qar Oil Company, carried by Shafaq News, 25 February 2022).",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 7,
-      "threshold_basis": "Clause 7: production shut in at a reported volume. The operator's statement gives 80,000 barrels a day stopped ('إيقاف إنتاج وتصدير 80 ألف برميل من النفط الخام يومياً').",
-      "capacity_affected": {
-        "value": 80000,
-        "unit": "barrels per day",
-        "source_says": "إيقاف إنتاج وتصدير 80 ألف برميل من النفط الخام يومياً"
-      },
-      "sources": [
-        {
-          "url": "https://shafaq.com/ar/اقتصـاد/شركة-ذي-قار-تعلق-عمليات-انتاج-النفط-والغاز-في-المحافظة",
-          "publisher": "Shafaq News",
-          "date": "2022-02-25",
-          "language": "ar",
-          "source_role": "media",
-          "opened": true,
-          "title_original": "شركة ذي قار تعلق عمليات انتاج النفط والغاز في المحافظة",
-          "title_en": "Dhi Qar company suspends oil and gas production operations in the governorate"
-        },
-        {
-          "url": "https://english.aawsat.com/home/article/3502046/iraq-shuts-down-two-oil-fields-half-million-bpd-capacity?page=1",
-          "publisher": "Asharq Al-Awsat (citing Bloomberg)",
-          "date": "2022-02-28",
-          "language": "en",
-          "source_role": "media",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-11-11",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 2,
-        "sources_opened_by_reviewer": 2,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "at least one source read",
-        "roles": {
-          "evidence": "accept",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept_with_correction"
-        }
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "iq-2025-01-24-rumaila-fire-production-cut",
-      "date": "2025-01-24",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "IQ-BA",
-      "geography_precision": "admin1",
-      "regions_affected": [
-        "IQ-BA"
-      ],
-      "facility_name": "Rumaila field (North Rumaila)",
-      "facility_name_local": "حقل الرميلة",
-      "operator": "Basra Oil Company",
-      "asset_class": "upstream_production",
-      "cause": "technical",
-      "summary": "A fire broke out at the Rumaila field in Basra governorate on 24 January 2025. Basra Oil Company gave technical reasons not yet clarified.",
-      "effect": "A SOMO official said output fell temporarily by 300,000 barrels a day as a result of the fire (Attaqa report of 27 January 2025, as carried by Kurdistan24); an Iraqi oil official gave Bloomberg the same figure. Sources cited by Reuters said field operations were not affected; other unnamed sources put the halted volume at about 120,000 barrels a day.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 7,
-      "threshold_basis": "Clause 7: production shut in at a reported volume. A state marketer official is quoted: 'انخفض مؤقتًا بمقدار 300 ألف برميل يوميًا نتيجة الحريق' (fell temporarily by 300 thousand barrels a day as a result of the fire).",
-      "capacity_affected": {
-        "value": 300000,
-        "unit": "barrels per day",
-        "source_says": "انخفض مؤقتًا بمقدار 300 ألف برميل يوميًا نتيجة الحريق"
-      },
-      "sources": [
-        {
-          "url": "https://globalenergynetwork.net/news-item/fire-shuts-in-300000-bpd-of-oil-production-at-iraqs-giant-oilfield/",
-          "publisher": "Global Energy Network (citing Bloomberg and Reuters)",
-          "date": "2025-01-28",
-          "language": "en",
-          "source_role": "aggregator",
-          "opened": true
-        },
-        {
-          "url": "https://www.kurdistan24.net/ar/story/821916",
-          "publisher": "Kurdistan24 (copy of the Attaqa report of 27 January)",
-          "date": "2025-01-28",
-          "language": "ar",
-          "source_role": "media",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-11-11",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 2,
-        "sources_opened_by_reviewer": 2,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "at least one source read",
-        "roles": {
-          "evidence": "accept",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
-    },
-    {
       "event_id": "iq-2025-12-08-west-qurna-2-production-halt-leak",
       "date": "2025-12-08",
       "date_precision": "day",
@@ -159,7 +17,7 @@
       "asset_class": "upstream_production",
       "cause": "technical",
       "summary": "Production at the West Qurna 2 field in Basra governorate was halted on 8 December 2025 after a reported leak, according to oil ministry and Basra Oil Company sources.",
-      "effect": "Two sources, one at the oil ministry and one at Basra Oil Company, told Rudaw that production at the field, which was producing roughly 480,000 barrels a day, was halted (Rudaw, 8 December 2025); Attaqa reported the same halt and volume the same day and said the ministry did not answer a request for comment. The same Rudaw report relayed Reuters, citing two Iraqi energy officials, that output was restored after a brief outage.",
+      "effect": "Two sources, one at the oil ministry and one at Basra Oil Company, told Rudaw that production at the field, which was producing roughly 480,000 barrels a day, was halted (Rudaw, 8 December 2025); Attaqa reported the same halt and volume the same day and said the ministry did not answer a request for comment.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 7,
       "threshold_basis": "Clause 7: production shut in at a reported volume, about 480,000 barrels a day ('تعطّل ضخّ ما يقارب 480 ألف برميل يوميًا').",
@@ -216,202 +74,6 @@
       "hazard_name": null
     },
     {
-      "event_id": "iq-2023-05-21-imported-gas-reduction-generation-loss",
-      "date": "2023-05-21",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": null,
-      "geography_precision": "country",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": null,
-      "asset_class": "system_wide",
-      "cause": "unknown",
-      "summary": "Fuel supply shortfall: on 21 May 2023 the Ministry of Electricity announced that a reduction in imported gas to the southern region had cut national generation by about 1,000 MW; it relayed the supplier's explanation of technical reasons.",
-      "effect": "Ministry of Electricity, as carried by Attaqa: generation short by about 1,000 MW of system output, with loads reduced at gas-fired stations in the south and the middle Euphrates.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 4,
-      "threshold_basis": "Clause 4 (generation shortfall): dated ministry statement (21 May 2023), stated cause (reduced imported gas) and stated size, \"نقص إنتاج الطاقة بنحو 1000 ميغاواط من إنتاج المنظومة\".",
-      "capacity_affected": {
-        "value": 1000,
-        "unit": "MW",
-        "source_says": "نقص إنتاج الطاقة بنحو 1000 ميغاواط من إنتاج المنظومة"
-      },
-      "sources": [
-        {
-          "url": "https://attaqa.net/?p=274117",
-          "publisher": "Attaqa (منصة الطاقة)",
-          "date": "2023-05-21",
-          "language": "ar",
-          "source_role": "media",
-          "opened": true,
-          "title_original": "قطاع الكهرباء في العراق يواجه أزمة جديدة بسبب الغاز الإيراني",
-          "title_en": "Iraq's electricity sector faces a new crisis because of Iranian gas"
-        }
-      ],
-      "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-11-11",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 1,
-        "sources_opened_by_reviewer": 1,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "at least one source read",
-        "roles": {
-          "evidence": "accept",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "iq-2025-05-imported-gas-drop-generation-loss",
-      "date": "2025-05",
-      "date_precision": "month",
-      "date_end": null,
-      "region_code": null,
-      "geography_precision": "country",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": null,
-      "asset_class": "system_wide",
-      "cause": "unknown",
-      "summary": "Fuel supply shortfall: in May 2025 the director of the Ministry of Electricity's fuel directorate said the country had lost about 3,500 MW of electricity after a sudden drop in imported gas; an informed source told Attaqa that no reason had been officially communicated.",
-      "effect": "Ministry of Electricity fuel directorate, as carried by Attaqa: about 3,500 MW lost nationally.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 4,
-      "threshold_basis": "Clause 4 (generation shortfall): ministry official's statement reported 22 May 2025, stated cause (sudden drop in imported gas) and stated size, \"البلاد فقدت نحو 3 آلاف و500 ميغاواط من الكهرباء\". The source gives the month, not the day of onset.",
-      "capacity_affected": {
-        "value": 3500,
-        "unit": "MW",
-        "source_says": "البلاد فقدت نحو 3 آلاف و500 ميغاواط من الكهرباء"
-      },
-      "sources": [
-        {
-          "url": "https://attaqa.net/2025/05/22/%d8%aa%d8%a3%d9%83%d9%8a%d8%af%d9%8b%d8%a7-%d9%84%d9%80%d8%a7%d9%84%d8%b7%d8%a7%d9%82%d8%a9-%d8%a5%d9%86%d8%aa%d8%a7%d8%ac-%d8%a7%d9%84%d9%83%d9%87%d8%b1%d8%a8%d8%a7%d8%a1-%d9%81%d9%8a-%d8%a7/",
-          "publisher": "Attaqa (منصة الطاقة)",
-          "date": "2025-05-22",
-          "language": "ar",
-          "source_role": "media",
-          "opened": true,
-          "title_original": "تأكيدًا لـ\"الطاقة\".. إنتاج الكهرباء في العراق يفقد 3500 ميغاواط",
-          "title_en": "Confirming \"Attaqa\": Iraq's electricity output loses 3,500 megawatts"
-        }
-      ],
-      "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-11-11",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 1,
-        "sources_opened_by_reviewer": 1,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "at least one source read",
-        "roles": {
-          "evidence": "accept_with_correction",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "iq-2025-07-01-imported-gas-drop-generation-loss",
-      "date": "2025-07-01",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": null,
-      "geography_precision": "country",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": null,
-      "asset_class": "system_wide",
-      "cause": "unknown",
-      "summary": "Fuel supply shortfall: on 1 July 2025 the Ministry of Electricity said a large, sudden fall in imported gas had cost about 3,800 MW of generating capacity, with several gas-fired stations stopped.",
-      "effect": "Ministry of Electricity fuel directorate, as carried by Banker (citing the state news agency) and Attaqa: about 3,800 MW of generating capacity lost from the national grid; the ministry said it was arranging alternative fuel.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 4,
-      "threshold_basis": "Clause 4 (generation shortfall): dated ministry statement (1 July 2025), stated cause (sudden fall in imported gas) and stated size, \"فقدان نحو 3800 ميجاوات من القدرة التوليدية\".",
-      "capacity_affected": {
-        "value": 3800,
-        "unit": "MW",
-        "source_says": "فقدان نحو 3800 ميجاوات من القدرة التوليدية نتيجة تراجع كبير ومفاجئ في كميات الغاز المستورد"
-      },
-      "sources": [
-        {
-          "url": "https://www.banker.news/105643",
-          "publisher": "Banker (بانكير)",
-          "date": "2025-07-01",
-          "language": "ar",
-          "source_role": "media",
-          "opened": true,
-          "title_original": "أزمة كهرباء تضرب العراق مع تراجع إمدادات الغاز من إيران",
-          "title_en": "An electricity crisis hits Iraq as gas supplies from Iran fall"
-        },
-        {
-          "url": "https://attaqa.net/2025/07/01/%d8%aa%d8%b5%d8%af%d9%8a%d9%82%d9%8b%d8%a7-%d9%84%d8%aa%d9%88%d9%82%d8%b9%d8%a7%d8%aa-%d8%a7%d9%84%d8%b7%d8%a7%d9%82%d8%a9-%d8%b4%d8%a8%d9%83%d8%a9-%d8%a7%d9%84%d9%83%d9%87%d8%b1%d8%a8%d8%a7/",
-          "publisher": "Attaqa (منصة الطاقة)",
-          "date": "2025-07-01",
-          "language": "ar",
-          "source_role": "media",
-          "opened": true,
-          "title_original": "تصديقًا لتوقعات \"الطاقة\".. شبكة الكهرباء في العراق تفقد 15% من سعتها",
-          "title_en": "Bearing out \"Attaqa\" forecasts: Iraq's electricity grid loses 15% of its capacity"
-        }
-      ],
-      "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-11-11",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 2,
-        "sources_opened_by_reviewer": 2,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "at least one source read",
-        "roles": {
-          "evidence": "accept",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
-    },
-    {
       "event_id": "iq-2025-08-11-national-grid-collapse",
       "date": "2025-08-11",
       "date_precision": "day",
@@ -450,8 +112,7 @@
           "date": "2025-08-11",
           "language": "ar",
           "source_role": "media",
-          "opened": true,
-          "title_original": "الكهرباء: بدء إعادة الطاقة بشكل تدريجي"
+          "opened": true
         },
         {
           "url": "https://asharq.com/reports/148156/العراق-بدء-عودة-الكهرباء-تدريجيا/",
@@ -459,8 +120,7 @@
           "date": "2025-08-11",
           "language": "ar",
           "source_role": "media",
-          "opened": true,
-          "title_original": "العراق.. بدء عودة الكهرباء تدريجياً واستعادتها بالكامل خلال ساعات"
+          "opened": true
         },
         {
           "url": "https://arabi21.com/story/1700070/انقطاع-الكهرباء-في-وسط-وجنوب-العراق-بعد-توقف-محطة-توليد",
@@ -585,8 +245,8 @@
       "operator": null,
       "asset_class": "system_wide",
       "cause": "unknown",
-      "summary": "Fuel supply shortfall followed by a national collapse: on 4 March 2026 the Ministry of Electricity said the national grid had gone into total blackout in all governorates, and attributed it to a sudden drop in gas supply to generation in Al-Basrah governorate, which it called a technical incident. It did not say why the gas supply fell.",
-      "effect": "Ministry of Electricity, as carried by Attaqa and Banker: the system blacked out completely across all governorates. No megawatt figure is recorded.",
+      "summary": "National grid collapse: on 4 March 2026 the Ministry of Electricity said the national grid had gone into total blackout in all governorates. As carried by Attaqa, it attributed the blackout to a sudden drop in gas supply to generation, which it called a technical incident, and did not say why the gas supply fell.",
+      "effect": "Ministry of Electricity, as carried by Attaqa and Banker: the system blacked out completely across all governorates.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Clause 5 (grid event, stated scale): the ministry said the system \"انطفأت بشكل تام في عموم محافظات العراق\" (went completely dark across all governorates).",

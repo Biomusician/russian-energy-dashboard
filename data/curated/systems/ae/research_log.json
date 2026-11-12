@@ -14,10 +14,10 @@
       "status_reason": "0 of 4 lanes executed as far as declared; the rest are stated per lane",
       "outcome": {
         "candidates": 21,
-        "accepted": 1,
+        "accepted": 0,
         "rejected": 2,
         "duplicate": 1,
-        "held": 14,
+        "held": 15,
         "out_of_scope": 3
       },
       "plan": {
@@ -44,9 +44,8 @@
           ],
           "queries_declared": 10,
           "queries_run": 1,
-          "finding": "The one string run returned other countries' outage statements and nothing from the UAE. It reports the minister saying energy supplies were stable and local markets were supplied without interruption, and mentions a contained fire at an oil-industry zone with no date.",
-          "limitation": "One of ten declared strings was run (Arabic, 2026) and it returned no UAE item at all. The agency's pages cannot be opened by an ordinary request and the ministry's site closed the connection, so this lane was barely started: not yet researched, not 'no statements'.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. Not run in every language its plan requires.",
           "carried_forward": false
         },
         {
@@ -70,10 +69,8 @@
           "queries_declared": 4,
           "queries_run": 1,
           "items_enumerated": 73,
-          "items_in_universe": 3,
-          "finding": "Each year states a plant reliability figure and the 2023 report states zero Tier 1 loss-of-containment events; these are annual averages, not event records, and none is recorded. Company annual reporting is framed around reliability and financial results and does not publish incident notices. The announcement listings reachable hold corporate, results and partnership items only. A source giving no incident is not evidence that none occurred.",
-          "limitation": "The reports cover one listed gas subsidiary, for 2023 to 2025 only: it listed in 2023, so there is no annual report for 2022, and the group's refining and upstream companies publish nothing this lane could reach (the group site and the exchange both refused access). The reports were read by keyword search over extracted text in both languages, not cover to cover. Three of the four declared queries did not run because of the search cap, including both English ones.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. At least one source in this lane refused automated access and was not worked around.",
           "carried_forward": false
         },
         {
@@ -97,10 +94,8 @@
           "queries_declared": 4,
           "queries_run": 2,
           "items_enumerated": 269,
-          "items_in_universe": 151,
-          "finding": "These bodies publish procurement, projects, partnerships and awards on these pages; outage statements go out through the state news agency, whose pages cannot be opened by an ordinary request. For the April 2024 storm, press copies of authority statements were read for two emirates. A federal ministries' statement of 24 April 2024 refers to outages in limited areas with no emirate and no count. A search summary also mentioned a fault-report figure for a third utility on 19 April 2024; no page for it was identified, so nothing is recorded. Preparedness notices (October 2023, May 2024) are not events.",
-          "limitation": "The three readable utility listings were enumerated in full by title, but one of them has a three-year hole (2022 to early 2025) and another is a 13-item page, not an archive; the Dubai authority, the Abu Dhabi regulator's news page, the Dubai exchange and one listed utility could not be read at all. Two of four declared queries did not run because of the search cap, so the general outage queries in both languages are untested: by search, this lane looked for the April 2024 storm and nothing else.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. Official statements were read as carried by other publishers, not on the issuing body's own site. The listings that could be read were read in part: by title, or for their newest pages only. Some declared documents were not read.",
           "carried_forward": false
         },
         {
@@ -123,9 +118,8 @@
           ],
           "queries_declared": 18,
           "queries_run": 8,
-          "finding": "For 2022 to 2025 the only non-conflict item found was a 2023 gas-supply fault with a power cut in one emirate. Emarat Al Youm (emaratalyoum.com), a domestic Arabic daily not in the audit, was readable by an ordinary request, as were attaqa.net, al-monitor.com, meed.com, arabnews.com and aljazeera.com.",
-          "limitation": "Ten of 18 declared strings were not run, eight of them English, so this is a partial query set and never a census. Several contemporaneous reports refused access, so some effects rest on one opened source.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. At least one source in this lane refused automated access and was not worked around. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
           "carried_forward": false
         }
       ]

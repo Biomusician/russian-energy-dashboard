@@ -1,6 +1,6 @@
 # Energy Disruption Monitor — project instructions
 
-<!-- current-iteration: 18 -->
+<!-- current-iteration: 19 -->
 
 Project-level rules. These override `~/.claude/CLAUDE.md` where they conflict.
 
@@ -37,6 +37,26 @@ Rules that follow from it, all tested:
 - **Every scope rule applies to every country.** Same safety gates, recursing into the subtrees.
   Disputed territory follows the Crimea style: Natural Earth's line of actual control, rulings
   stated as sovereignty-neutral analytic choices. Taiwan is not part of the China system.
+
+**Since iteration 19 there are thirteen systems: seven more country systems cover the Gulf
+littoral** (Bahrain, Iran, Iraq, Kuwait, Oman, Qatar, United Arab Emirates; Saudi Arabia retained),
+with a regional overview at `?group=gulf` (`docs/GULF_ARCHITECTURE.md`,
+`docs/GULF_ENERGY_CONTEXT.md`). Every rule above applies to them. Rules added for them, all tested:
+
+- **The Gulf is a regional energy picture, not a target set.** National totals are context, never
+  importance. No Gulf index, no facility layer, and nothing about routes, straits, shipping,
+  tankers, export-route dependence or bypass capacity.
+- **Admin-1 is a maximum, not an entitlement.** `geography.precision_policy` states where each
+  system places a record. In the seven new systems an attack or sabotage record is the country's:
+  no region, facility, operator or headline, an opaque id, and no citation whose address names
+  the place, the operator or the method. The gate and the build both refuse otherwise.
+- **Every Gulf system is under the campaign policy**; `UNCERTAIN` counts as active. Restart,
+  repair, operating rate and remaining capacity of an attacked facility are neither researched
+  nor published.
+- **A research note is not a reviewed record.** Lane notes publish process facts only;
+  `scripts/write_gulf_pass.py` removes the rest.
+- **GCC and OPEC are membership fields**, never shorthand for the eight. Nothing nuclear beyond a
+  national generation total.
 
 The area of interest is locked in `AOI_FEDERAL_DISTRICTS` (`pipeline/config.py`). The
 Far Eastern FD is defined but not enabled; adding it there turns it on with no refactor.

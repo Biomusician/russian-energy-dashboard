@@ -364,3 +364,44 @@ U.S. EIA International Energy Statistics, bulk file `INTL.zip`, public domain wi
 ## 12. Link health (iteration 18)
 
 `scripts/check_source_links.py` visits each published citation once and writes `data/curated/systems/source_link_health.json`: counts per country and any publication date the page states about itself. A refusal is recorded as a refusal, not a dead link. Run by hand, never in the daily workflow.
+
+## 13. Gulf systems (iteration 19)
+
+Eight systems: Bahrain, Iran, Iraq, Kuwait, Oman, Qatar, Saudi Arabia, United Arab Emirates. Each
+has a source audit in `docs/countries/<CC>_SOURCE_AUDIT.md` and a search plan and execution record
+in `docs/countries/<CC>_SYSTEMATIC_SWEEP.md` (Saudi Arabia: `SA_LANE_PASS_19.md`). Nothing is
+redistributed: events are restated in our own words with links, and no article text is stored.
+
+**Regional context: one source adopted.**
+
+| Source | Verdict | Why |
+|---|---|---|
+| U.S. EIA International Energy Statistics, bulk file | **adopted** | public domain; all eight; the four national totals in `global/gulf.json` |
+| OPEC Annual Statistical Bulletin and member page | **blocked** | HTTP 402 on every host tried; terms unread; nothing committed |
+| Energy Institute Statistical Review | **blocked** | HTTP 403; terms unread |
+| IRENA statistics | **blocked** | HTTP 403; terms unread |
+| JODI Oil and Gas | **not committed** | reachable; website terms reserve all rights and state no data licence |
+| GECF Annual Statistical Bulletin | **not committed** | copyright page is placeholder text; the file exceeds what the fetch tool reads |
+| GCC Interconnection Authority annual report | **not committed** | terms forbid reproduction; and nothing line-level is in scope |
+| OAPEC Annual Statistical Report | **not committed** | all rights reserved |
+| GCC-Stat | **not used** | reuse allowed with attribution, but covers six of the eight and its API refused (HTTP 429) |
+
+So refining capacity, LNG exports and current crude exports have no committable common source and
+are not shown. The EIA crude-export series ends in 2018 and is not shown either.
+
+**Events.** Public reporting by ministries, national oil and power companies, state news agencies,
+wires and newspapers, in Arabic, Persian, Kurdish and English. Most official archives could not be
+read from here (script-only pages, refusals, files over the fetch size); each is recorded as
+blocked in its country's execution record and none was worked around. A syndicated copy or a
+translation is not a second source.
+
+**Never cited.** Two national utilities forbid linking in their terms of use. Their pages were not
+cited and are not named in any published record.
+
+**Never read, whatever the source publishes.** Facility coordinates; shipping, strait, tanker and
+route material; export-route and bypass capacity; interconnector line status and transfer limits;
+nuclear fuel-cycle and site status; current repair, restart and operating status of a struck
+facility; anything describing defences or how an attack was carried out.
+
+**Not link-checked.** `scripts/check_source_links.py` was not run on the Gulf citations in
+iteration 19.

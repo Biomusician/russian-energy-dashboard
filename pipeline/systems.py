@@ -97,6 +97,8 @@ GROUPS = {
         "label": "GCC",
         "kind": "membership",
         "members": ("bh", "kw", "om", "qa", "sa", "ae"),
+        "as_of": "2026-11-11",
+        "basis": "The six founding members of 1981. No change of membership is reported.",
         "note": "Members of the Gulf Cooperation Council. Iran and Iraq are not members.",
     },
     "opec": {

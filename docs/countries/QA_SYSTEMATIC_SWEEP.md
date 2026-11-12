@@ -79,20 +79,20 @@ second. The lane log is written after each lane. Blind three-role review before 
 
 **This pass did not finish.** 0 of 3 lanes ran as far as declared; 3 were stopped by the shared limit of 200 web searches per turn, which was not worked around. Each lane states below what did not run. A blocked source (HTTP 402 or 403, login wall, script-only page) was recorded as blocked and left.
 
-| Lane | Execution | Source window | Covered through | Queries | Items read | Languages required | Languages run |
+| Lane | Execution | Source window | Covered through | Queries | Items listed or read | Languages required | Languages run |
 |---|---|---|---|---|---|---|---|
 | QA1 | partial; stopped by search limit | current_through_end_date | 2026-11-11 | 2 of 4 | 45 of 45 | ar, en | ar, en |
 | QA2 | partial; stopped by search limit | no_census_exists | 2026-11-11 | 3 of 6 | 107 of 107 | ar, en | ar, en |
 | QA3 | partial; stopped by search limit | no_census_exists | 2026-11-10 | 7 of 20 | 192 | ar, en | ar |
 
-Candidates 12: accepted after blind review 1, rejected 4, duplicate 1, held 6, out of scope 0. Published records in this system after the pass: 1.
+Candidates 12: accepted after blind review 0, rejected 4, duplicate 1, held 7, out of scope 0. Published records in this system after the pass: 0.
 
-**Result.** One attack record is published at country level. A second is with the owner: its only capacity statement is a share of national export capacity, which the safety rule keeps out of every field, and without it the record states damage only. The utility's site forbids linking and was never cited. The safety reviewer noted that this class in this country is one site.
+**Result.** No record from this pass is published. 7 candidates are held: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The utility's terms forbid linking, so it was never cited.
 
 **Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
 
 ### Limitations, per lane
 
-- **QA1**: The two force-majeure queries did not run (search cap). The operator's own newsroom is script-only, so its statements were seen only as press copies and search-result summaries. a facility's own sustainability reports (31-91 MB) and the LNG company's 2024 and 2025 reports were not read.
-- **QA2**: Three of six declared queries did not run (search cap), including both water-and-power queries, so no power-and-water plant outage was searched for at all. A query set is not a census of outages. The news agency could not be enumerated and none of its Qatar items surfaced in the results.
-- **QA3**: Seven of twenty declared strings were run, all Arabic; no English string and no 2026-tagged string was run, so the lane is partial in both language and year. The search engine ignored the year in every string and returned 2026 material each time, so the 2022-2025 strings say little about 2022-2025: finding nothing for those years is the result of seven queries and one newspaper category, not evidence that nothing happened. Every article was read through a summarising fetch tool, not as raw text.
+- **QA1**: The shared search allowance ran out before every declared query was run. At least one official listing is built by script in the browser and could not be read. At least one document was too large for the fetch tool or timed out. Official statements were read as carried by other publishers, not on the issuing body's own site. Some declared documents were not read.
+- **QA2**: The shared search allowance ran out before every declared query was run. Official statements were read as carried by other publishers, not on the issuing body's own site. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.
+- **QA3**: The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.

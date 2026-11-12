@@ -15,12 +15,24 @@
       "status": "uncertain",
       "ended": null,
       "status_checked": "2026-11-11",
-      "status_basis": "Energy facilities in the UAE were reported attacked from March to May 2026. No attack on one was found for August to November 2026, but no end is reported and the wider war is described as ongoing in November 2026. Uncertain is treated as active.",
+      "status_basis": "Attacks on energy facilities in the UAE were reported in 2026. No end to the wider war is reported, so the classification is uncertain, and uncertain is treated as active.",
       "status_sources": [
-        "https://www.newarab.com/news/mapping-attacks-gulf-us-iran-ceasefire",
-        "https://acleddata.com/report/gulfs-critical-infrastructure-presents-lasting-vulnerability-iran-exploit",
-        "https://www.aljazeera.com/news/2026/8/30/mapping-the-iran-wars-strikes-on-gulf-energy-and-what-comes-next-for-oil",
-        "https://www.aljazeera.com/news/2026/11/2/iran-pushing-accelerated-plan-for-ceasefire-talks-with-us"
+        {
+          "publisher": "The New Arab",
+          "published": null
+        },
+        {
+          "publisher": "ACLED",
+          "published": null
+        },
+        {
+          "publisher": "Al Jazeera",
+          "published": "2026-08-30"
+        },
+        {
+          "publisher": "Al Jazeera",
+          "published": "2026-11-02"
+        }
       ],
       "member_rule": {
         "causes": [
@@ -38,10 +50,16 @@
       "status": "uncertain",
       "ended": null,
       "status_checked": "2026-11-11",
-      "status_basis": "Energy facilities in Bahrain were reported attacked in March and April 2026. No attack on one was found for August to November 2026, but no end is reported and the wider war is described as ongoing in November 2026. Uncertain is treated as active.",
+      "status_basis": "Attacks on energy facilities in Bahrain were reported in 2026. No end to the wider war is reported, so the classification is uncertain, and uncertain is treated as active.",
       "status_sources": [
-        "https://acleddata.com/report/gulfs-critical-infrastructure-presents-lasting-vulnerability-iran-exploit",
-        "https://www.aljazeera.com/news/2026/11/2/iran-pushing-accelerated-plan-for-ceasefire-talks-with-us"
+        {
+          "publisher": "ACLED",
+          "published": null
+        },
+        {
+          "publisher": "Al Jazeera",
+          "published": "2026-11-02"
+        }
       ],
       "member_rule": {
         "causes": [
@@ -59,10 +77,16 @@
       "status": "active",
       "ended": null,
       "status_checked": "2026-11-11",
-      "status_basis": "Attacks on gas and oil fields in the Kurdistan Region are reported from 2022 onward, the most recent on 2026-11-08; attacks on oil fields in the south and north were reported in March and April 2026. No end is reported.",
+      "status_basis": "Attacks on energy facilities in Iraq are reported from 2022 onward, including in 2026. No end is reported.",
       "status_sources": [
-        "https://www.aljazeera.com/news/2025/11/27/gasfield-in-northern-iraq-hit-by-drone-attack-reports",
-        "https://www.aljazeera.com/news/2026/8/30/mapping-the-iran-wars-strikes-on-gulf-energy-and-what-comes-next-for-oil"
+        {
+          "publisher": "Al Jazeera",
+          "published": "2025-11-27"
+        },
+        {
+          "publisher": "Al Jazeera",
+          "published": "2026-08-30"
+        }
       ],
       "member_rule": {
         "causes": [
@@ -70,7 +94,7 @@
           "sabotage"
         ],
         "from": "2022-01-01",
-        "from_basis": "Starts at the window start, not at 2026: the series at the same sites runs from 2022 and one was reported attacked again in November 2026."
+        "from_basis": "Starts at the window start, not at 2026: attacks are reported throughout the window."
       },
       "policy_applied": true
     },
@@ -81,10 +105,16 @@
       "status": "active",
       "ended": null,
       "status_checked": "2026-11-11",
-      "status_basis": "Energy facilities in Iran were reported struck in March and April 2026, the war is described as ongoing in November 2026 and no ceasefire is in force.",
+      "status_basis": "Strikes on energy facilities in Iran were reported in 2025 and in 2026. No ceasefire or end is reported.",
       "status_sources": [
-        "https://en.wikipedia.org/wiki/2026_Iran_war",
-        "https://www.aljazeera.com/news/2026/11/2/iran-pushing-accelerated-plan-for-ceasefire-talks-with-us"
+        {
+          "publisher": "Wikipedia",
+          "published": null
+        },
+        {
+          "publisher": "Al Jazeera",
+          "published": "2026-11-02"
+        }
       ],
       "member_rule": {
         "causes": [
@@ -92,7 +122,7 @@
           "sabotage"
         ],
         "from": "2025-06-01",
-        "from_basis": "Starts at the June 2025 strikes, not at 2026: sites struck in 2025 were reported struck again in 2026, so a 2025 record's recovery would be a 2026 target's status. A conservative choice; the 2025 war itself ended on 2025-06-24."
+        "from_basis": "Starts at June 2025, not at 2026: a conservative choice, so that no recovery of a 2025 record is published while the 2026 campaign is active. The 2025 war itself ended on 2025-06-24."
       },
       "policy_applied": true
     },
@@ -103,11 +133,20 @@
       "status": "uncertain",
       "ended": null,
       "status_checked": "2026-11-11",
-      "status_basis": "Energy facilities in Kuwait were reported attacked repeatedly in March and April 2026 and once more in July 2026. No attack on one was found for August to November 2026, but no end is reported and the wider war is described as ongoing in November 2026. Uncertain is treated as active.",
+      "status_basis": "Attacks on energy facilities in Kuwait were reported in 2026. No end to the wider war is reported, so the classification is uncertain, and uncertain is treated as active.",
       "status_sources": [
-        "https://www.newarab.com/news/mapping-attacks-gulf-us-iran-ceasefire",
-        "https://acleddata.com/report/gulfs-critical-infrastructure-presents-lasting-vulnerability-iran-exploit",
-        "https://www.aljazeera.com/news/2026/11/2/iran-pushing-accelerated-plan-for-ceasefire-talks-with-us"
+        {
+          "publisher": "The New Arab",
+          "published": null
+        },
+        {
+          "publisher": "ACLED",
+          "published": null
+        },
+        {
+          "publisher": "Al Jazeera",
+          "published": "2026-11-02"
+        }
       ],
       "member_rule": {
         "causes": [
@@ -125,10 +164,16 @@
       "status": "uncertain",
       "ended": null,
       "status_checked": "2026-11-11",
-      "status_basis": "Two attacks on fuel storage in Oman were reported in March 2026 and none since. That is thin for a campaign, but the war they belong to has no reported end, so the classification stays uncertain and uncertain is treated as active.",
+      "status_basis": "Attacks on energy facilities in Oman were reported in 2026. No end to the wider war is reported, so the classification is uncertain, and uncertain is treated as active.",
       "status_sources": [
-        "https://acleddata.com/report/gulfs-critical-infrastructure-presents-lasting-vulnerability-iran-exploit",
-        "https://www.aljazeera.com/news/2026/8/30/mapping-the-iran-wars-strikes-on-gulf-energy-and-what-comes-next-for-oil"
+        {
+          "publisher": "ACLED",
+          "published": null
+        },
+        {
+          "publisher": "Al Jazeera",
+          "published": "2026-08-30"
+        }
       ],
       "member_rule": {
         "causes": [
@@ -146,11 +191,20 @@
       "status": "uncertain",
       "ended": null,
       "status_checked": "2026-11-11",
-      "status_basis": "Gas facilities in Qatar were reported attacked in March 2026. No attack on an energy facility was found for April to November 2026, but no end is reported and the wider war is described as ongoing in November 2026. Uncertain is treated as active.",
+      "status_basis": "Attacks on energy facilities in Qatar were reported in 2026. No end to the wider war is reported, so the classification is uncertain, and uncertain is treated as active.",
       "status_sources": [
-        "https://www.aljazeera.com/news/2026/8/30/mapping-the-iran-wars-strikes-on-gulf-energy-and-what-comes-next-for-oil",
-        "https://acleddata.com/report/gulfs-critical-infrastructure-presents-lasting-vulnerability-iran-exploit",
-        "https://www.newarab.com/news/mapping-attacks-gulf-us-iran-ceasefire"
+        {
+          "publisher": "Al Jazeera",
+          "published": "2026-08-30"
+        },
+        {
+          "publisher": "ACLED",
+          "published": null
+        },
+        {
+          "publisher": "The New Arab",
+          "published": null
+        }
       ],
       "member_rule": {
         "causes": [
@@ -168,7 +222,7 @@
       "status": "active",
       "ended": null,
       "status_checked": "2026-11-11",
-      "status_basis": "Attacks on Saudi energy facilities were reported from March to July 2026, and attacks on oil facilities were reported again in October 2026. No ceasefire or end is reported (status check of 2026-11-11).",
+      "status_basis": "Attacks on energy facilities in Saudi Arabia were reported in 2026. No ceasefire or end is reported.",
       "member_rule": {
         "causes": [
           "kinetic_strike",
@@ -178,16 +232,28 @@
         "also_covers": [
           {
             "event_id": "sa-2026-02-23-juaymah-lpg-export-halt",
-            "reason": "Its own cause is unknown, but the site is a 2026 strike target (sa-2026-04-juaymah-processing-fires): its export status is that facility's status."
+            "reason": "Its own cause is unknown. It is covered with the campaign's record at the same facility."
           }
         ]
       },
       "policy_applied": true,
       "status_sources": [
-        "https://www.newarab.com/news/mapping-attacks-gulf-us-iran-ceasefire",
-        "https://acleddata.com/report/gulfs-critical-infrastructure-presents-lasting-vulnerability-iran-exploit",
-        "https://www.aljazeera.com/news/2026/10/17/saudi-led-coalition-intercepts-drones-as-egypt-weighs-sending-help",
-        "https://foreignpolicy.com/2026/10/30/iran-war-gulf-energy-infrastructure/"
+        {
+          "publisher": "The New Arab",
+          "published": null
+        },
+        {
+          "publisher": "ACLED",
+          "published": null
+        },
+        {
+          "publisher": "Al Jazeera",
+          "published": "2026-10-17"
+        },
+        {
+          "publisher": "Foreign Policy",
+          "published": "2026-10-30"
+        }
       ]
     },
     {
@@ -218,58 +284,58 @@
     "ae": {
       "state": "UNCERTAIN",
       "checked": "2026-11-11",
-      "basis": "Energy facilities in the UAE were reported attacked from March to May 2026. No attack on one was found for August to November 2026, but no end is reported and the wider war is described as ongoing in November 2026. Uncertain is treated as active.",
+      "basis": "Attacks on energy facilities in the UAE were reported in 2026. No end to the wider war is reported, so the classification is uncertain, and uncertain is treated as active.",
       "campaign_id": "ae-2026-attacks-on-energy-facilities",
-      "limitation": "One status search per system, in English, on 2026-11-11. 'Nothing found' after July 2026 means the declared queries returned no dated report, not that no attack occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
     },
     "bh": {
       "state": "UNCERTAIN",
       "checked": "2026-11-11",
-      "basis": "Energy facilities in Bahrain were reported attacked in March and April 2026. No attack on one was found for August to November 2026, but no end is reported and the wider war is described as ongoing in November 2026. Uncertain is treated as active.",
+      "basis": "Attacks on energy facilities in Bahrain were reported in 2026. No end to the wider war is reported, so the classification is uncertain, and uncertain is treated as active.",
       "campaign_id": "bh-2026-attacks-on-energy-facilities",
-      "limitation": "One status search per system, in English, on 2026-11-11. 'Nothing found' after July 2026 means the declared queries returned no dated report, not that no attack occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
     },
     "iq": {
       "state": "ACTIVE_KINETIC_CAMPAIGN",
       "checked": "2026-11-11",
-      "basis": "Attacks on gas and oil fields in the Kurdistan Region are reported from 2022 onward, the most recent on 2026-11-08; attacks on oil fields in the south and north were reported in March and April 2026. No end is reported.",
+      "basis": "Attacks on energy facilities in Iraq are reported from 2022 onward, including in 2026. No end is reported.",
       "campaign_id": "iq-2022-attacks-on-energy-facilities",
-      "limitation": "One status search per system, in English, on 2026-11-11. 'Nothing found' after July 2026 means the declared queries returned no dated report, not that no attack occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
     },
     "ir": {
       "state": "ACTIVE_KINETIC_CAMPAIGN",
       "checked": "2026-11-11",
-      "basis": "Energy facilities in Iran were reported struck in March and April 2026, the war is described as ongoing in November 2026 and no ceasefire is in force.",
+      "basis": "Strikes on energy facilities in Iran were reported in 2025 and in 2026. No ceasefire or end is reported.",
       "campaign_id": "ir-2025-2026-strikes-on-energy-facilities",
-      "limitation": "One status search per system, in English, on 2026-11-11. 'Nothing found' after July 2026 means the declared queries returned no dated report, not that no attack occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
     },
     "kw": {
       "state": "UNCERTAIN",
       "checked": "2026-11-11",
-      "basis": "Energy facilities in Kuwait were reported attacked repeatedly in March and April 2026 and once more in July 2026. No attack on one was found for August to November 2026, but no end is reported and the wider war is described as ongoing in November 2026. Uncertain is treated as active.",
+      "basis": "Attacks on energy facilities in Kuwait were reported in 2026. No end to the wider war is reported, so the classification is uncertain, and uncertain is treated as active.",
       "campaign_id": "kw-2026-attacks-on-energy-facilities",
-      "limitation": "One status search per system, in English, on 2026-11-11. 'Nothing found' after July 2026 means the declared queries returned no dated report, not that no attack occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
     },
     "om": {
       "state": "UNCERTAIN",
       "checked": "2026-11-11",
-      "basis": "Two attacks on fuel storage in Oman were reported in March 2026 and none since. That is thin for a campaign, but the war they belong to has no reported end, so the classification stays uncertain and uncertain is treated as active.",
+      "basis": "Attacks on energy facilities in Oman were reported in 2026. No end to the wider war is reported, so the classification is uncertain, and uncertain is treated as active.",
       "campaign_id": "om-2026-attacks-on-energy-facilities",
-      "limitation": "One status search per system, in English, on 2026-11-11. 'Nothing found' after July 2026 means the declared queries returned no dated report, not that no attack occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
     },
     "qa": {
       "state": "UNCERTAIN",
       "checked": "2026-11-11",
-      "basis": "Gas facilities in Qatar were reported attacked in March 2026. No attack on an energy facility was found for April to November 2026, but no end is reported and the wider war is described as ongoing in November 2026. Uncertain is treated as active.",
+      "basis": "Attacks on energy facilities in Qatar were reported in 2026. No end to the wider war is reported, so the classification is uncertain, and uncertain is treated as active.",
       "campaign_id": "qa-2026-attacks-on-energy-facilities",
-      "limitation": "One status search per system, in English, on 2026-11-11. 'Nothing found' after July 2026 means the declared queries returned no dated report, not that no attack occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
     },
     "sa": {
       "state": "ACTIVE_KINETIC_CAMPAIGN",
       "checked": "2026-11-11",
-      "basis": "Attacks on Saudi energy facilities were reported from March to July 2026, and attacks on oil facilities were reported again in October 2026. No ceasefire or end is reported (status check of 2026-11-11).",
+      "basis": "Attacks on energy facilities in Saudi Arabia were reported in 2026. No ceasefire or end is reported.",
       "campaign_id": "sa-2026-attacks-on-energy-facilities",
-      "limitation": "One status search per system, in English, on 2026-11-11. 'Nothing found' after July 2026 means the declared queries returned no dated report, not that no attack occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
     }
   }
 }

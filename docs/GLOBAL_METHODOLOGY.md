@@ -42,7 +42,7 @@ is stale.
 | **Active campaigns** | Country: the event is published, the facility's restart, recovery or operating status is not, while the campaign is active (release: campaign ended plus 30 days, proposed). Theatre: occurrence and modelled exposure as before; recovery evidence is used only once 60 days old and past any estimate horizon; counts withheld are published, ids never. | `data/curated/systems/conflict_campaigns.json`; [CURRENT_EVENT_PUBLICATION_POLICY.md](CURRENT_EVENT_PUBLICATION_POLICY.md); [OPERATIONAL_STATUS_DELAY_OPTIONS.md](OPERATIONAL_STATUS_DELAY_OPTIONS.md) | `build_systems.apply_publication_policy`; `recovery.apply_campaign_embargo`; the current build refuses embargoed curated rows |
 | **Country readiness** | No country has a score. `index` and `headline` are null with a reason; a sector state claiming a value fails the build. A country is shown at all only through the onboarding gate (§7.2), with research completeness (by lane, with `covered_through`) and source freshness stated as separate badges. | §7 below; [COUNTRY_ONBOARDING.md](COUNTRY_ONBOARDING.md) | `build_systems.onboarding_gate`; publication-gate tests |
 | **Recovery semantics** | Observed only. A cited report of a restart or restoration, labelled by kind (full or partial restart, service or partial restoration, estimate, "no supply lost"); no modelled decay or fallback horizon for any country. An estimate is labelled an estimate. Any recovery statistic lists the cases when there are fewer than three. | [NONCONFLICT_RECOVERY_OPTIONS.md](NONCONFLICT_RECOVERY_OPTIONS.md) | `RECOVERY_KINDS` in `build_systems`; import gate |
-| **Comparison** | Never rank systems or compare counts or scores across them. Systems are listed alphabetically; the manifest carries only totals for the five countries together. | §6 below | manifest tests |
+| **Comparison** | Never rank systems or compare counts or scores across them. Systems are listed alphabetically; the manifest carries only totals for the country systems together. | §6 below | manifest tests |
 
 ---
 
@@ -806,6 +806,28 @@ Each of these would change what a published number means, or create a new publis
 12. **A capacity-unavailable *observation* for India (§4.1).** A new construct, distinct from
     exposure, that this project has so far declined to produce anywhere.
 13. **Disputed-territory scope rules (§7.2.1)** for India and China.
+
+**Added by the Gulf pass (iteration 19).** Twenty-two questions, each holding the records or the
+feature it names; nothing was deployed. The full list, with the systems affected, is
+[ITERATION_19_REVIEW.md](ITERATION_19_REVIEW.md) §27. By kind:
+
+14. **What counts as a record**: a scheduled season of load shedding; an attack with no effect
+    reported within seven days; a force-majeure declaration with no stated shutdown; "emergency
+    plans activated" as a clause-5 declaration; a reported flow disruption with no stated shutdown;
+    a stated megawatt loss with no reported rotating outage; official extent with no customer
+    count; counts of substations or calls in place of customers; damage to a plant already halted.
+15. **Exclusions**: production shut in because an export route was closed; an importer's shortfall
+    behind a supplier's stated maintenance; the maintenance exclusion against an unplanned
+    shortfall in a maintenance season.
+16. **Safety abstraction**: a non-attack record at a site that has attack records; one facility of
+    a class in a country; an effect figure that can identify a site; a share of national capacity
+    as the only threshold basis; bringing Saudi Arabia's older attack records under the
+    country-level rule; release rule A, still proposed.
+17. **Vocabulary**: classes for a fuel depot, a petrochemical plant, a power-and-water plant and a
+    gas-to-liquids plant; causes for a precautionary shutdown during hostilities, a protest or
+    blockade, and demand above available generation; a blackout with an official technical cause
+    and separately reported sabotage.
+18. **Research method**: walking a utility's numbered pages where its listing cannot be read.
 
 ---
 

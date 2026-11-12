@@ -1,6 +1,6 @@
 {
   "country": "AE",
-  "as_of_note": "Compiled 2026-11-11 by the UAE source-audit lane (iteration 19, Wave A). DRAFT, CONTEXT ONLY: never a scoring input. Every value was read this session from the cited page or from the project's cached copy of EIA's bulk file; vintages differ (2024 to 2026) and are stated per row, and must not be combined into one 'current' picture. National aggregates only: no facility row, and no nuclear figure other than national generation. The ministry, ADNOC, DEWA, the federal statistics centre and OPEC were not machine-readable on this date, so no figure is taken from them directly. See docs/countries/AE_SOURCE_AUDIT.md.",
+  "as_of_note": "Compiled 2026-11-11 by the UAE source-audit lane (iteration 19, Wave A). CONTEXT ONLY: never a scoring input. Every value was read this session from the cited page or from the project's cached copy of EIA's bulk file; vintages differ (2024 to 2026) and are stated per row, and must not be combined into one 'current' picture. National aggregates only: no facility row, and no nuclear figure other than national generation. The ministry, ADNOC, DEWA, the federal statistics centre and OPEC were not machine-readable on this date, so no figure is taken from them directly. See docs/countries/AE_SOURCE_AUDIT.md.",
   "metrics": [
     {
       "metric": "total_energy_production",
@@ -88,7 +88,7 @@
       "value": 45.53,
       "unit": "million kW (installed capacity)",
       "year": 2024,
-      "basis": "country total, installed capacity, all fuels (bulk series). A different source and year: the federal portal states about 48.3 GW for 2026 without naming its source",
+      "basis": "country total, installed capacity, all fuels (bulk series)",
       "source": "U.S. EIA, International Energy Statistics, bulk file INTL.zip (project copy downloaded 2026-11-10)",
       "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
     },

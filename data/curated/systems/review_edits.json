@@ -149,13 +149,13 @@
       "event_id": "sa-2022-03-20-yasref-yanbu",
       "field": "recovery.research_status",
       "set": "RESEARCHED_NO_PUBLIC_EVIDENCE",
-      "reason": "The evidence is a supply-continuity statement, not recovery of the facility (red team)."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2022-03-20-yasref-yanbu",
       "field": "recovery.kind",
       "set": null,
-      "reason": "As above."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "us-2022-09-06-caiso-eea3-heat",
@@ -185,7 +185,7 @@
       "event_id": "sa-2026-04-khurais-production-cut",
       "field": "recovery.research_status",
       "set": "NOT_YET_RESEARCHED",
-      "reason": "Completion was not checked (budget exhausted); the April statement shows restoration under way, not absent."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "ca-2022-05-21-derecho-ontario",
@@ -274,29 +274,14 @@
     {
       "event_id": "sa-2026-03-19-yanbu-loadings-halt",
       "field": "summary",
-      "replace": [
-        "were briefly halted",
-        "were halted"
-      ],
-      "reason": "Active-campaign publication policy (iteration 16): 'briefly' states how soon loadings resumed, which is facility status; the Bloomberg citation that said so is held in the queue."
+      "set": "Oil loadings at Yanbu port were halted during a reported attack.",
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2026-03-19-yanbu-loadings-halt",
       "field": "effect",
-      "replace": [
-        "Crude loadings stopped briefly (Reuters, two sources; Bloomberg: 'briefly halted').",
-        "Crude loadings stopped (Reuters, two sources)."
-      ],
-      "reason": "As above."
-    },
-    {
-      "event_id": "sa-2026-03-19-yanbu-loadings-halt",
-      "field": "summary",
-      "replace": [
-        " after an incident at the SAMREF refinery",
-        ""
-      ],
-      "reason": "Dependency between facilities is not published, campaign or not (CURRENT_EVENT_PUBLICATION_POLICY §2; safety red team, iteration 16)."
+      "set": "Oil loadings stopped (Reuters, two sources).",
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "ca-2024-07-16-toronto-flood-transmission-station",
@@ -1914,31 +1899,19 @@
       "event_id": "sa-2026-03-02-ras-tanura-refinery-shutdown",
       "field": "capacity_affected.source_says",
       "set": "Bloomberg/World Oil: the 550,000 b/d refinery was shut.",
-      "reason": "Iteration-17 blind review, role(s) B: B: dropped the analyst working ('full shutdown, so nameplate = affected throughput'); value and unit unchanged."
-    },
-    {
-      "event_id": "sa-2026-03-19-yanbu-loadings-halt",
-      "field": "summary",
-      "set": "Oil loadings at Yanbu port were halted during a reported attack; the sources do not report the port itself being struck.",
-      "reason": "Iteration-17 blind review, role(s) A: A: 'oil' not 'crude' (source wording); states the halt in sequence with the reported interception rather than implying a strike on the port. Replaces the text left after the iteration-16 replace edits. Lead edit at import: the reconciled text named the weapon and its interception, which the scope scan forbids (defence and attack-method detail); the role-A point, a halt rather than a strike on the port, is kept."
-    },
-    {
-      "event_id": "sa-2026-03-19-yanbu-loadings-halt",
-      "field": "effect",
-      "set": "Oil loadings stopped (Reuters, two sources).",
-      "reason": "Iteration-17 blind review, role(s) A: A: 'oil loadings' is the source wording; 'crude' is not in the opened source."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2026-04-khurais-production-cut",
       "field": "effect",
-      "set": "Production reduced by about 300,000 b/d (ministry: \"أدى إلى انخفاض إنتاجه بمقدار 300 ألف برميل يوميًا من طاقته الإنتاجية\").",
-      "reason": "Iteration-17 blind review, role(s) A: A: quote replaced with the 9 Apr event-time SPA wording; the old quote came from the 12 Apr follow-up status statement."
+      "set": "Production capacity reduced by about 300,000 b/d (ministry: \"أدى إلى انخفاض إنتاجه بمقدار 300 ألف برميل يوميًا من طاقته الإنتاجية\").",
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2026-04-khurais-production-cut",
       "field": "capacity_affected.source_says",
       "set": "Energy ministry source via SPA, 9 Apr 2026: an earlier attack on Khurais reduced its output by 300,000 b/d of its production capacity.",
-      "reason": "Iteration-17 blind review, role(s) A: A: matches the 9 Apr source wording; value and unit unchanged."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2026-04-khurais-production-cut",
@@ -1947,41 +1920,33 @@
         {
           "url": "https://www.aleqt.com/الطاقة/توقف-العمليات-التشغيلية-في-عدد-من-منشآت-الطاقة-السعودية-8573",
           "publisher": "Al-Eqtisadiah (republishing SPA)",
-          "title": "توقف العمليات التشغيلية في عدد من منشآت الطاقة السعودية",
           "date": "2026-04-09",
           "language": "ar",
-          "source_role": "official"
+          "source_role": "official",
+          "opened": null
         },
         {
           "url": "https://www.thenationalnews.com/business/energy/2026/04/09/saudi-output-capacity-cut-by-600000-barrels-a-day-due-to-iran-war",
           "publisher": "The National",
-          "title": "Saudi output capacity cut by 600,000 barrels a day due to Iran war",
           "date": "2026-04-09",
           "language": "en",
-          "source_role": "media"
-        },
-        {
-          "url": "https://www.al-monitor.com/originals/2026/04/attacks-cut-saudi-oil-output-and-east-west-pipeline-flow-state-news-agency-says",
-          "publisher": "Al-Monitor (Reuters)",
-          "title": "Attacks cut Saudi oil output and East-West pipeline flow, state news agency says",
-          "date": "2026-04-09",
-          "language": "en",
-          "source_role": "media"
+          "source_role": "media",
+          "opened": null
         }
       ],
-      "reason": "Iteration-17 blind review, role(s) A, B: A and B agree: remove the 12 Apr Okaz citation (A: its content is facility status; B: opaque address, cannot be read for status). Whole object removed; the three 9 Apr citations remain."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2026-04-08-satorp-jubail-shutdown",
       "field": "summary",
       "set": "TotalEnergies said incidents on the night of 7-8 April caused damage at the SATORP refinery and the refinery was shut as a precaution while the damage was assessed.",
-      "reason": "Iteration-17 blind review, role(s) A: A: operator wording ('as a precaution while the damage was assessed'); drops 'safety' and the plural 'units damaged' component detail."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2026-04-08-satorp-jubail-shutdown",
       "field": "threshold_basis",
       "set": "Clause 1: operator-confirmed refinery shutdown after attacks.",
-      "reason": "Iteration-17 blind review, role(s) A, B: A and B both remove 'sustained throughput cut' (unsupported; implies continuing state). A's text kept because it contains B's removal and adds nothing B's rules bar."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2026-09-11-east-west-pipeline-shutdown",
@@ -1990,7 +1955,7 @@
         "SA-01",
         "SA-03"
       ],
-      "reason": "Iteration-17 blind review, role(s) A: A: both opened sources (including The National, which remains cited) place the attacks in the Riyadh and Madinah regions; admin-1 only. Published as regions_affected; region_code and geography_precision unchanged."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2026-09-11-east-west-pipeline-shutdown",
@@ -2005,31 +1970,31 @@
           "source_role": "media"
         }
       ],
-      "reason": "Iteration-17 blind review, role(s) B: B: Al Jazeera address carries 'critical' framing; whole object removed. The National (11 Sep) is the one remaining citation. The two queue-only citations dated 16 and 24 Sep (recovery/resumption wording in the address, the second also more than 7 days late; already withheld from the payload by the campaign rule) are left out of this value so the edit itself carries no status-bearing address."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2022-03-20-yasref-yanbu",
       "field": "summary",
       "set": "The Saudi energy ministry said an attack on YASREF facilities led to a temporary reduction in the refinery's production.",
-      "reason": "Iteration-17 blind review, role(s) B: B: drops the 'only site in the 20 March 2022 wave' cross-site comparison."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2022-03-20-yasref-yanbu",
       "field": "effect",
       "set": "Ministry: the attack led to a temporary reduction in the refinery's production. No volume or duration given.",
-      "reason": "Iteration-17 blind review, role(s) B: B: drops the inventory-compensation clause (supply-buffer information)."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2022-03-20-yasref-yanbu",
       "field": "recovery.evidence",
       "set": null,
-      "reason": "Iteration-17 blind review, role(s) B: B: no restart/status or inventory-cover content on a kinetic record."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2022-03-20-yasref-yanbu",
       "field": "recovery.url",
       "set": null,
-      "reason": "Iteration-17 blind review, role(s) B: B: as above; the recovery block carries no status content."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "us-2022-11-10-hurricane-nicole-florida-outages",
@@ -2415,37 +2380,25 @@
       "event_id": "sa-2026-04-khurais-production-cut",
       "field": "summary",
       "set": "The energy ministry reported on 9 April 2026 that an earlier attack on the Khurais facility cut its production capacity by about 300,000 b/d. The attack date was not given and may precede April.",
-      "reason": "Final red team, lane B (iteration 17): the source reports a loss of production capacity, and gives no attack date (SPA: 'recently'; Bloomberg: some incidents appear to predate 7 April)."
-    },
-    {
-      "event_id": "sa-2026-04-khurais-production-cut",
-      "field": "effect",
-      "replace": [
-        "Production reduced by about 300,000 b/d",
-        "Production capacity reduced by about 300,000 b/d"
-      ],
-      "reason": "Final red team, lane B (iteration 17): the source says production capacity."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2026-04-manifa-production-cut",
       "field": "summary",
       "set": "The energy ministry reported on 9 April 2026 that an attack on the Manifa facility cut its production capacity by about 300,000 b/d. The attack date was not given and may precede April.",
-      "reason": "Final red team, lane B (iteration 17): the source reports a loss of production capacity, and gives no attack date."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2026-04-manifa-production-cut",
       "field": "effect",
-      "replace": [
-        "Production reduced by about 300,000 b/d",
-        "Production capacity reduced by about 300,000 b/d"
-      ],
-      "reason": "Final red team, lane B (iteration 17): the source says production capacity."
+      "set": "Production capacity reduced by about 300,000 b/d (ministry).",
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2026-04-juaymah-processing-fires",
       "field": "summary",
       "set": "The energy ministry reported on 9 April 2026 that fires at the Juaymah processing facilities affected LPG and NGL exports. The date of the fires was not given and may precede April.",
-      "reason": "Final red team, lane B (iteration 17): the source gives no date for the fires."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "cn-2023-02-20-yunnan-aluminium-power-cuts-deepened",
@@ -2814,30 +2767,7 @@
           "opened": null
         }
       ],
-      "reason": "Corpus audit (iteration 18). Safety audit: unversioned encyclopedia page: its text can state later status."
-    },
-    {
-      "event_id": "sa-2026-04-khurais-production-cut",
-      "field": "sources",
-      "set": [
-        {
-          "url": "https://www.aleqt.com/الطاقة/توقف-العمليات-التشغيلية-في-عدد-من-منشآت-الطاقة-السعودية-8573",
-          "publisher": "Al-Eqtisadiah (republishing SPA)",
-          "date": "2026-04-09",
-          "language": "ar",
-          "source_role": "official",
-          "opened": null
-        },
-        {
-          "url": "https://www.thenationalnews.com/business/energy/2026/04/09/saudi-output-capacity-cut-by-600000-barrels-a-day-due-to-iran-war",
-          "publisher": "The National",
-          "date": "2026-04-09",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        }
-      ],
-      "reason": "Corpus audit (iteration 18). Safety audit: the citation reports pipeline throughput during an active campaign."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2026-04-manifa-production-cut",
@@ -2860,25 +2790,19 @@
           "opened": null
         }
       ],
-      "reason": "Corpus audit (iteration 18). Safety audit: the citation reports pipeline throughput during an active campaign."
-    },
-    {
-      "event_id": "sa-2026-03-19-yanbu-loadings-halt",
-      "field": "summary",
-      "set": "Oil loadings at Yanbu port were halted during a reported attack.",
-      "reason": "Corpus audit (iteration 18). Safety audit: said which part of the port was or was not struck."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2026-04-08-satorp-jubail-shutdown",
       "field": "effect",
       "set": "Refinery shut on 8 April 2026 (TotalEnergies).",
-      "reason": "Corpus audit (iteration 18). Safety audit: 'from' implies a continuing current status."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2026-04-08-satorp-jubail-shutdown",
       "field": "facility_name",
       "set": "SATORP refinery",
-      "reason": "Corpus audit (iteration 18). Safety audit: the district name is finer than first-level region."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "us-2022-12-24-duke-energy-rolling-blackouts-elliott",
@@ -2908,19 +2832,19 @@
       "event_id": "sa-2026-03-02-ras-tanura-refinery-shutdown",
       "field": "summary",
       "set": "Aramco shut the Ras Tanura refinery as a precaution while assessing damage after an attack.",
-      "reason": "Corpus audit (iteration 18). Safety audit: an extent-of-damage descriptor adds nothing the record needs."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2026-02-23-juaymah-lpg-export-halt",
       "field": "summary",
       "set": "Aramco said damage at Juaymah on 23 February 2026 halted LPG exports from the site, and declared force majeure on shipments.",
-      "reason": "Corpus audit (iteration 18). Safety audit: removes a damage-type adjective."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "sa-2022-03-20-yasref-yanbu",
       "field": "facility_name",
       "set": "YASREF refinery",
-      "reason": "Corpus audit (iteration 18). Safety audit: the parenthetical city adds nothing to the operator's own name."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "cn-2024-09-06-typhoon-yagi-guangdong-outage",
@@ -3540,97 +3464,19 @@
       "event_id": "sa-2022-03-20-yasref-yanbu",
       "field": "recovery.date",
       "set": null,
-      "reason": "Iteration 18, recovery red team: a date with no evidence behind it."
-    },
-    {
-      "event_id": "ae-2026-03-14-oil-terminal-attack-1",
-      "field": "summary",
-      "set": "A fire broke out in the United Arab Emirates on 14 March 2026 during an attack; some oil-loading operations at an oil terminal were reported suspended.",
-      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "ae-2026-03-14-oil-terminal-attack-1",
-      "field": "sources",
-      "set": [
-        {
-          "url": "https://attaqa.net/?p=587846",
-          "publisher": "Attaqa (الطاقة)",
-          "date": "2026-03-14",
-          "language": "ar",
-          "source_role": "media",
-          "opened": true
-        }
-      ],
-      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "ae-2026-03-14-oil-terminal-attack-1",
-      "field": "effect",
-      "set": "Fire with no injuries, confirmed officially; media reports citing informed sources said some oil-loading operations had been suspended (Attaqa, 14 March 2026). The official statement did not say what was affected.",
-      "reason": "Lead ruling, stricter than the roles and confirmed by all three on the final text: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "ae-2026-03-14-oil-terminal-attack-1",
-      "field": "threshold_basis",
-      "set": "Clause 2: terminal operations suspended: media reports citing informed sources said some oil-loading operations had stopped (Attaqa, 14 March 2026). The suspension is partial and is not from the authority's statement.",
-      "reason": "Lead ruling, stricter than the roles and confirmed by all three on the final text: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "iq-2022-02-25-nasiriyah-production-suspended-protests",
-      "field": "summary",
-      "set": "Dhi Qar Oil Company said it suspended oil and gas production operations at Nasiriyah after protests and sit-ins closed the site and staff could not enter.",
-      "reason": "Blind review, role(s) B: B: component-level wording ('its gas separation station') trimmed. A and C made no change to this field."
-    },
-    {
-      "event_id": "iq-2022-02-25-nasiriyah-production-suspended-protests",
-      "field": "cause",
-      "set": "labour",
-      "reason": "Blind review, role(s) C: C: the cause vocabulary spells it 'labour'; 'labor' is not a valid value and would fail the build (lead ruling 7)."
-    },
-    {
-      "event_id": "iq-2025-01-24-rumaila-fire-production-cut",
-      "field": "summary",
-      "set": "A fire broke out at the Rumaila field in Basra governorate on 24 January 2025. Basra Oil Company gave technical reasons not yet clarified.",
-      "reason": "Blind review, role(s) B: B: placement inside the facility ('a crude storage tank at a processing station') removed."
-    },
-    {
-      "event_id": "iq-2025-01-24-rumaila-fire-production-cut",
-      "field": "sources",
-      "set": [
-        {
-          "url": "https://globalenergynetwork.net/news-item/fire-shuts-in-300000-bpd-of-oil-production-at-iraqs-giant-oilfield/",
-          "publisher": "Global Energy Network (citing Bloomberg and Reuters)",
-          "date": "2025-01-28",
-          "language": "en",
-          "source_role": "aggregator",
-          "title_original": "Fire Shuts In 300,000 Bpd of Oil Production at Iraq's Giant Oilfield",
-          "title_en": "Fire Shuts In 300,000 Bpd of Oil Production at Iraq's Giant Oilfield",
-          "opened": true
-        },
-        {
-          "url": "https://www.kurdistan24.net/ar/story/821916",
-          "publisher": "Kurdistan24 (copy of the Attaqa report of 27 January)",
-          "date": "2025-01-28",
-          "language": "ar",
-          "source_role": "media",
-          "title_original": null,
-          "title_en": null,
-          "opened": true
-        }
-      ],
-      "reason": "Blind review, role(s) B: B: two Attaqa objects removed whole (their addresses spell out a size ranking beside a named facility); the Kurdistan24 headline and its gloss set to null (size ranking, bracketed process note). Two citations remain."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "iq-2025-12-08-west-qurna-2-production-halt-leak",
       "field": "summary",
       "set": "Production at the West Qurna 2 field in Basra governorate was halted on 8 December 2025 after a reported leak, according to oil ministry and Basra Oil Company sources.",
-      "reason": "Blind review, role(s) B: B: 'a leak in pipeline infrastructure' (dependency wording about a named facility) reduced to 'a reported leak'."
+      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "iq-2025-12-08-west-qurna-2-production-halt-leak",
       "field": "effect",
-      "set": "Two sources, one at the oil ministry and one at Basra Oil Company, told Rudaw that production at the field, which was producing roughly 480,000 barrels a day, was halted (Rudaw, 8 December 2025); Attaqa reported the same halt and volume the same day and said the ministry did not answer a request for comment. The same Rudaw report relayed Reuters, citing two Iraqi energy officials, that output was restored after a brief outage.",
-      "reason": "Blind review, role(s) A: A: the cited Rudaw page relays that output was restored after a brief outage; without it the effect reads as an open-ended halt. The text carries none of the wording B removed."
+      "set": "Two sources, one at the oil ministry and one at Basra Oil Company, told Rudaw that production at the field, which was producing roughly 480,000 barrels a day, was halted (Rudaw, 8 December 2025); Attaqa reported the same halt and volume the same day and said the ministry did not answer a request for comment.",
+      "reason": "Blind review, role(s) A, and a stricter lead ruling confirmed by all three on the final text: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "iq-2025-12-08-west-qurna-2-production-halt-leak",
@@ -3657,73 +3503,43 @@
           "opened": true
         }
       ],
-      "reason": "Blind review, role(s) B: B: the Rudaw headline ('key ... oil field') and its gloss set to null; the address is opaque and stays. Both citations remain."
-    },
-    {
-      "event_id": "iq-2023-05-21-imported-gas-reduction-generation-loss",
-      "field": "threshold_basis",
-      "set": "Clause 4 (generation shortfall): dated ministry statement (21 May 2023), stated cause (reduced imported gas) and stated size, \"نقص إنتاج الطاقة بنحو 1000 ميغاواط من إنتاج المنظومة\".",
-      "reason": "Blind review, role(s) B: Role B: bracketed lane tag removed (research-process text)."
-    },
-    {
-      "event_id": "iq-2025-05-imported-gas-drop-generation-loss",
-      "field": "summary",
-      "set": "Fuel supply shortfall: in May 2025 the director of the Ministry of Electricity's fuel directorate said the country had lost about 3,500 MW of electricity after a sudden drop in imported gas; an informed source told Attaqa that no reason had been officially communicated.",
-      "reason": "Blind review, role(s) A: A: 'no reason officially communicated' is an unnamed informed source's statement, not the director's. B made no change to this field."
-    },
-    {
-      "event_id": "iq-2025-05-imported-gas-drop-generation-loss",
-      "field": "effect",
-      "set": "Ministry of Electricity fuel directorate, as carried by Attaqa: about 3,500 MW lost nationally.",
-      "reason": "Blind review, role(s) B: B: the official's warning of a larger loss (forward-looking exposure wording) and the bracketed process note removed."
-    },
-    {
-      "event_id": "iq-2025-05-imported-gas-drop-generation-loss",
-      "field": "threshold_basis",
-      "set": "Clause 4 (generation shortfall): ministry official's statement reported 22 May 2025, stated cause (sudden drop in imported gas) and stated size, \"البلاد فقدت نحو 3 آلاف و500 ميغاواط من الكهرباء\". The source gives the month, not the day of onset.",
-      "reason": "Blind review, role(s) B: Role B: bracketed lane tag removed (research-process text)."
-    },
-    {
-      "event_id": "iq-2025-07-01-imported-gas-drop-generation-loss",
-      "field": "threshold_basis",
-      "set": "Clause 4 (generation shortfall): dated ministry statement (1 July 2025), stated cause (sudden fall in imported gas) and stated size, \"فقدان نحو 3800 ميجاوات من القدرة التوليدية\".",
-      "reason": "Blind review, role(s) B: Role B: bracketed lane tag removed (research-process text)."
+      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "iq-2025-08-11-national-grid-collapse",
       "field": "summary",
       "set": "On the afternoon of 11 August 2025 the national grid collapsed during extreme heat: the Ministry of Electricity said the system lost more than 6,000 MW at once under high loads, generating units tripped and the system went into total blackout across the centre and south.",
-      "reason": "Blind review, role(s) B: B: 'an emergency separation of transmission lines' (line-level wording) removed; the stated loss and the blackout kept."
+      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "iq-2025-08-11-national-grid-collapse",
       "field": "recovery.evidence",
       "set": "Ministry statement on the evening of 11 August 2025: power was being returned gradually, with full service expected within hours (the full return is the ministry's forecast). No opened source states completion.",
-      "reason": "Blind review, role(s) B: B: research-process text about a page that refused access removed."
+      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "iq-2025-08-11-national-grid-collapse",
       "field": "threshold_basis",
       "set": "Clause 5 (grid event; operator emergency and stated scale): the ministry reported \"خسارة الشبكة أكثر من 6 آلاف ميغاواط بشكل مفاجئ وعرضي\", a total blackout, and that it was working \"بحالة الطوارئ الكاملة\". No customer count is stated and megawatts are not converted to customers.",
-      "reason": "Blind review, role(s) B: Role B: bracketed lane tag removed (research-process text)."
+      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "iq-2025-12-23-imported-gas-halt-generation-loss",
       "field": "threshold_basis",
       "set": "Clause 4 (generation shortfall): dated ministry statement (23 December 2025), stated cause (complete halt of imported gas) and stated size, \"ما بين 4 آلاف و4500 ميغاواط من الكهرباء المنتجة\".",
-      "reason": "Blind review, role(s) B: Role B: bracketed lane tag removed (research-process text)."
+      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "iq-2026-03-04-national-grid-total-blackout",
       "field": "summary",
-      "set": "Fuel supply shortfall followed by a national collapse: on 4 March 2026 the Ministry of Electricity said the national grid had gone into total blackout in all governorates, and attributed it to a sudden drop in gas supply to generation in Al-Basrah governorate, which it called a technical incident. It did not say why the gas supply fell.",
-      "reason": "Blind review, role(s) B: B: 'a gas-fired power station' (one station whose loss blacked out the country) replaced by 'generation in Al-Basrah governorate'."
+      "set": "National grid collapse: on 4 March 2026 the Ministry of Electricity said the national grid had gone into total blackout in all governorates. As carried by Attaqa, it attributed the blackout to a sudden drop in gas supply to generation, which it called a technical incident, and did not say why the gas supply fell.",
+      "reason": "Blind review, role(s) B, and a stricter lead ruling confirmed by all three on the final text: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "iq-2026-03-04-national-grid-total-blackout",
       "field": "threshold_basis",
       "set": "Clause 5 (grid event, stated scale): the ministry said the system \"انطفأت بشكل تام في عموم محافظات العراق\" (went completely dark across all governorates).",
-      "reason": "Blind review, role(s) B: B: lane tag and the research-process sentence ('so this is one record, not two') removed."
+      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "iq-2026-03-04-national-grid-total-blackout",
@@ -3750,7 +3566,7 @@
           "opened": true
         }
       ],
-      "reason": "Blind review, role(s) B: B: the Shafaq object removed whole (its address names the single station and the failure there); the Attaqa headline and its gloss set to null (they name the station), its opaque address stays. Two citations remain."
+      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "iq-2026-03-14-refinery-attack-1",
@@ -3762,19 +3578,19 @@
       "event_id": "kw-2025-04-09-programmed-power-cuts-demand-above-generation",
       "field": "summary",
       "set": "Programmed (rotating) power cuts were carried out in Kuwait on 9 April 2025, reaching parts of some residential, agricultural and industrial areas, when electrical load ran well above the same day a year earlier. The electricity ministry later said the load rise of 9 and 10 April 2025 required a programme of programmed cuts.",
-      "reason": "Blind review, role(s) A: A: 'above what the system could supply' is in neither opened page, and the areas described are those of 9 April only; the ministry's two-day statement is given as the ministry's."
+      "reason": "Blind review, role(s) A: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "kw-2025-04-09-programmed-power-cuts-demand-above-generation",
       "field": "effect",
       "set": "The electricity ministry stated on 13 April 2025 that loads on 9 and 10 April 2025 were about 21% and 17.3% above the same period of the previous year, 'which required implementing a programme of programmed cuts'. The press reported that on 9 April the ministry cut power to parts of some residential, agricultural and industrial areas, eight residential areas being named, under what the ministry called an emergency plan for peak loads.",
-      "reason": "Blind review, role(s) B: B: removes 'with load at about 12,400 MW' (the load at which cuts began: a reserve-margin statement). The year-on-year percentages stay."
+      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "kw-2025-04-09-programmed-power-cuts-demand-above-generation",
       "field": "threshold_basis",
       "set": "Clause 4, second limb (a generation shortfall that forced rotating outages): the ministry's own page says the load rise of 9-10 April 2025 'required implementing a programme of programmed cuts', and a newspaper names eight residential areas cut on 9 April. Neither source uses the words generation shortfall, and no megawatts-shed figure is given.",
-      "reason": "Blind review, role(s) A: A: says that 'generation shortfall' is the reading of the sources and not their words; 'counts eight' becomes 'names eight'."
+      "reason": "Blind review, role(s) A: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "kw-2024-06-19-programmed-power-cuts-generation-shortfall",
@@ -3831,7 +3647,7 @@
           "opened": true
         }
       ],
-      "reason": "Blind review, role(s) B: B: the Arabic headline of the Al-Jarida 21 June citation names a residential district, a place finer than governorate; the citation stays as publisher, date and address. Lead ruling 2: both title fields set to null on a non-attack record (the import gate drops an English gloss that has no original beside it in any case)."
+      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "kw-2024-08-18-power-cuts-gas-supply-fault",
@@ -3844,37 +3660,37 @@
         "KW-KU",
         "KW-MU"
       ],
-      "reason": "Blind review, role(s) A: A: the nine agricultural and industrial areas of the ministry's 19 August statement include one in the Capital governorate, and the record runs to 19 August; KW-KU added."
+      "reason": "Blind review, role(s) A: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "kw-2024-08-18-power-cuts-gas-supply-fault",
       "field": "summary",
       "set": "A fuel supply shortfall on 17 August 2024, which the electricity ministry described as a fault in fuel (gas) supplies, reduced generation in Kuwait, and the ministry cut power to parts of a number of residential areas on 18 August 2024; programmed cuts in agricultural and industrial areas were still being applied on 19 August.",
-      "reason": "Blind review, role(s) A, B, C: A: the fault is dated 17 August, the day before the statement, and the cuts 18 August. B: 'took several generating units at two power plants out of service' becomes 'reduced generation' (no plant count, no one-fault-two-plants dependency statement). C: carries the words 'fuel supply shortfall' with the ministry's own wording beside the label; the 'several' C corrected is gone with the clause B removed."
+      "reason": "Blind review, role(s) A, B, C: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "kw-2024-08-18-power-cuts-gas-supply-fault",
       "field": "effect",
       "set": "The electricity ministry, in a statement carried by the state news agency on 18 August 2024, attributed the cuts to 'a fault in fuel (gas) supplies' that took generating units out of service, and said the cuts were made to keep the grid stable. On 19 August the ministry said cuts in nine agricultural and industrial areas were applied in turn because of the gas supply problem.",
-      "reason": "Blind review, role(s) B: B: removes 'at two plants'."
+      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "kw-2024-08-18-power-cuts-gas-supply-fault",
       "field": "threshold_basis",
       "set": "Clause 4 (a generation shortfall that forced rotating outages): generating units went out after a fuel supply fault and the ministry cut residential areas, then agricultural and industrial areas one after another, on dated days. No megawatt figure is given.",
-      "reason": "Blind review, role(s) A, B: A: the source's word is 'one after another', not 'in rotation'. B: removes 'at two plants'."
+      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "kw-2024-09-10-programmed-power-cuts-unit-outages",
       "field": "summary",
       "set": "Programmed power cuts returned in Kuwait on 10 September 2024: the electricity ministry cut power to parts of 11 residential areas, and to some non-residential areas, after two generating units went out of service unexpectedly while load was near its record.",
-      "reason": "Blind review, role(s) B: B: removes 'at two power plants'."
+      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "kw-2024-09-10-programmed-power-cuts-unit-outages",
       "field": "effect",
       "set": "The electricity ministry announced on 10 September 2024 that it was cutting power to parts of 11 residential areas; the press reported an emergency outage of two generating units, 390 MW together according to an unnamed ministry source.",
-      "reason": "Blind review, role(s) B: B: removes 'with load at about 17,100 MW' (megawatts lost stated against the load at the time is the reserve margin)."
+      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "kw-2024-09-10-programmed-power-cuts-unit-outages",
@@ -3901,7 +3717,7 @@
           "opened": true
         }
       ],
-      "reason": "Blind review, role(s) B: B: the Al-Jarida headline repeats the 17,100 MW load figure removed from the effect; B left strip-or-accept to the owner and lead ruling 2 decides it: both title fields set to null, the citation stays."
+      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "kw-2026-03-20-refinery-attack-1",
@@ -3940,19 +3756,19 @@
       "event_id": "om-2022-09-05-main-grid-partial-blackout",
       "field": "summary",
       "set": "On 5 September 2022 a fault in the transmission network, which the regulator attributed to technical causes, led to a partial blackout in Oman. Supply was lost in Muscat governorate and in parts of Al Batinah South, Ash Sharqiyah North, Ash Sharqiyah South and Ad Dakhliyah; one report also names parts of Al Batinah North.",
-      "reason": "Blind review, role(s) A, B, C: A: 'main interconnected system' is in no opened source. B: the system name and 'main' framing removed. C: the cause is attributed to the regulator, not asserted."
+      "reason": "Blind review, role(s) A, B, C: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "om-2022-09-05-main-grid-partial-blackout",
       "field": "effect",
       "set": "Power was lost from early afternoon. The Authority for Public Services Regulation confirmed a partial blackout across Muscat and parts of four other governorates (The National and Al Bayan, 5 September 2022, both carrying the regulator's statement). Oman Observer reported commercial and industrial activity disrupted for between six and twelve hours and, citing the regulator's data, described the outage as the \"most serious in a decade\". Schools in affected areas were closed the next day.",
-      "reason": "Blind review, role(s) A, B: A: the start time is the papers' reporting, and six to twelve hours is disrupted activity, not supply lost. B: the superlative is kept only as the publisher's own quoted words; role A's note confirms the phrase is the opened article's headline."
+      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "om-2022-09-05-main-grid-partial-blackout",
       "field": "threshold_basis",
       "set": "Clause 5: loss of supply at one time across Muscat governorate and parts of four other governorates, as stated by the regulator (extent-based; no customer count published). One report names a fifth, and Oman Observer reported disruption of six to twelve hours. The cited sources give no number of customers or megawatts, and none is estimated here.",
-      "reason": "Blind review, role(s) A, B, C: C: the precedent wording. A: no 'whole of', four others with a fifth from one report, the hours are Oman Observer's and describe disruption. B: no severity ranking, no system name, no research-process wording."
+      "reason": "Blind review, role(s) A, B, C: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "om-2022-09-05-main-grid-partial-blackout",
@@ -3964,58 +3780,25 @@
         "OM-SH",
         "OM-DA"
       ],
-      "reason": "Blind review, role(s) A: A, confirmed by the lead: only the five governorates the regulator's statement names; OM-BA rests on one sentence in a newspaper's own voice."
+      "reason": "Blind review, role(s) A: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "om-2022-09-05-main-grid-partial-blackout",
       "field": "recovery.evidence",
       "set": "The Authority for Public Services Regulation said electricity had been restored in all affected areas as of 2 am on Tuesday 6 September 2022 (Oman Observer).",
-      "reason": "Blind review, role(s) A: A: the sentence about a later report in The National is in no opened source."
-    },
-    {
-      "event_id": "qa-2026-03-02-lng-terminal-attack-1",
-      "field": "summary",
-      "set": "Energy facilities in Qatar were attacked on 2 March 2026. The operator announced the same day that production of LNG and related products had stopped because of the attack.",
-      "reason": "Blind review, role(s) C: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "qa-2026-03-02-lng-terminal-attack-1",
-      "field": "sources",
-      "set": [
-        {
-          "url": "https://www.ajnet.me/news/2026/3/2/عاجل-رويترز-تصاعد-سحب-الدخان-من-محيط",
-          "publisher": "Al Jazeera (Arabic)",
-          "date": "2026-03-02",
-          "language": "ar",
-          "source_role": "media",
-          "opened": true
-        }
-      ],
-      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "qa-2026-03-02-lng-terminal-attack-1",
-      "field": "effect",
-      "set": "Production of LNG and related products stopped, as announced by the operator on 2 March 2026 (reported by Al Jazeera Arabic).",
-      "reason": "Lead ruling, stricter than the roles and confirmed by all three on the final text: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "iq-2025-01-24-rumaila-fire-production-cut",
-      "field": "effect",
-      "set": "A SOMO official said output fell temporarily by 300,000 barrels a day as a result of the fire (Attaqa report of 27 January 2025, as carried by Kurdistan24); an Iraqi oil official gave Bloomberg the same figure. Sources cited by Reuters said field operations were not affected; other unnamed sources put the halted volume at about 120,000 barrels a day.",
-      "reason": "Lead ruling, stricter than the roles and confirmed by all three on the final text: removes or re-attributes a statement that rested on a page no longer cited; checked by role A against the pages still cited"
+      "reason": "Blind review, role(s) A: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "iq-2025-08-11-national-grid-collapse",
       "field": "effect",
       "set": "Ministry of Electricity, as carried by Asharq News and Arabi21: the grid lost more than 6,000 MW suddenly and accidentally, leading to a complete blackout; the ministry said it was working under full emergency footing. Media and local sources reported loss of power in Basra, Maysan, Dhi Qar, Wasit, Baghdad, Diyala, Anbar and Kirkuk.",
-      "reason": "Lead ruling, stricter than the roles and confirmed by all three on the final text: removes or re-attributes a statement that rested on a page no longer cited; checked by role A against the pages still cited"
+      "reason": "Lead ruling, stricter than the roles and confirmed by all three on the final text: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "iq-2026-03-04-national-grid-total-blackout",
       "field": "effect",
-      "set": "Ministry of Electricity, as carried by Attaqa and Banker: the system blacked out completely across all governorates. No megawatt figure is recorded.",
-      "reason": "Lead ruling, stricter than the roles and confirmed by all three on the final text: removes or re-attributes a statement that rested on a page no longer cited; checked by role A against the pages still cited"
+      "set": "Ministry of Electricity, as carried by Attaqa and Banker: the system blacked out completely across all governorates.",
+      "reason": "Lead ruling, stricter than the roles and confirmed by all three on the final text: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "iq-2026-03-14-refinery-attack-1",
@@ -4027,7 +3810,7 @@
       "event_id": "om-2022-09-05-main-grid-partial-blackout",
       "field": "recovery.research_status",
       "set": "EVIDENCE_FOUND",
-      "reason": "Vocabulary only: the research lane wrote 'RESEARCHED', which is not a status. The record cites a regulator's statement of restoration, confirmed by all three roles, and the term for that is EVIDENCE_FOUND. No text changed."
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     }
   ]
 }

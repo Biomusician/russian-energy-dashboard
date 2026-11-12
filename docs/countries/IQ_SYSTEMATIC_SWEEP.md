@@ -90,7 +90,7 @@ confirmation before import.
 
 **This pass did not finish.** 0 of 5 lanes ran as far as declared; 5 were stopped by the shared limit of 200 web searches per turn, which was not worked around. Each lane states below what did not run. A blocked source (HTTP 402 or 403, login wall, script-only page) was recorded as blocked and left.
 
-| Lane | Execution | Source window | Covered through | Queries | Items read | Languages required | Languages run |
+| Lane | Execution | Source window | Covered through | Queries | Items listed or read | Languages required | Languages run |
 |---|---|---|---|---|---|---|---|
 | IQ1 | partial; stopped by search limit | inaccessible | not reached | 1 of 2 | 7 | ar | ar |
 | IQ2 | partial; stopped by search limit | no_census_exists | not reached | 6 of 10 | 21 | ar, en | ar |
@@ -98,16 +98,16 @@ confirmation before import.
 | IQ4 | partial; stopped by search limit | no_census_exists | 2026-11-11 | 5 of 13 | - | en, ku | en, ku |
 | IQ5 | partial; stopped by search limit | no_census_exists | 2026-11-11 | 5 of 10 | - | ar, en | ar, en |
 
-Candidates 69: accepted after blind review 10, rejected 15, duplicate 1, held 38, out of scope 5. Published records in this system after the pass: 10.
+Candidates 69: accepted after blind review 5, rejected 15, duplicate 1, held 43, out of scope 5. Published records in this system after the pass: 5.
 
-**Result.** Published: two national-grid collapses and four fuel-supply shortfalls with a ministry-stated size, three production shut-ins at a stated volume, and one attack record at country level. Held: three attack records whose every citation names the place in its address; a fourth referred to the owner with them, because the safety reviewer judged that the set reads as a tally on one site and that the megawatt effect is itself an identifier; non-attack records at or about a site that has attack records (owner); a blackout whose reported cause may include sabotage (owner); two shortfalls whose stated reason is a supplier's maintenance (owner); one attack record with a named shutdown and no volume. The Kurdish-language and media lanes ran about half their declared queries.
+**Result.** 5 records from this pass are published. 43 candidates are held: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The Kurdish-language and media lanes ran about half their declared queries.
 
 **Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
 
 ### Limitations, per lane
 
-- **IQ1**: The monthly report archive and every news body are script-rendered, so no report was read and the archive was not enumerated. One of two fallback queries ran; the English one was left unrun to keep the cap for IQ2.
-- **IQ2**: Six of ten declared queries ran: Arabic for all five years, English for 2022 only, so English is partial. Official sites stayed unread, so every record is a media copy of a statement or of unnamed officials. One Arabic business outlet that recurred in the results refused every request.
-- **IQ3**: Seven of fifteen declared queries ran and none in English, so this lane is partial and its silence proves nothing. The gas-loss string did not run for 2022, 2024 or 2026; the 2022 and 2024 blackout searches returned no dated collapse, which is a search result, not a finding that none occurred. Station fires and unit faults with a stated loss were not found by these strings and remain not yet researched. Official pages could not be read, so every record rests on media copies of ministry statements, and six of the ten accepted records have one opened source.
-- **IQ4**: Official regional sites refuse automated reading, so every statement was read as carried by media, mostly in English; Sorani text was read for four items. Five of 13 declared queries ran (2022, 2023 and the Sorani string for 2024) before the cap; the 2025 and 2026 strings and the three once-only strings did not run, so 2025-2026 rests on one outlet's tag listings, which are an editor's selection, not an archive. A tag or a year with no item is not evidence of no event.
-- **IQ5**: Shafaq's section listings run to more than a thousand pages each and were read only at page 1; discovery was through tag listings, which are incomplete, and the Arabic listing was not paged. Kurdistan24's Economy listing exposes 5 undated pages (about 80 recent items). Five of 10 declared queries ran (2022, 2023 and the Arabic string for 2024). Reuters and AP were read only in syndicated copies. Federal-Iraq events were recorded only where met in passing; lanes IQ2 and IQ3 own them.
+- **IQ1**: The shared search allowance ran out before every declared query was run. At least one official listing is built by script in the browser and could not be read. The listings that could be read were read in part: by title, or for their newest pages only. Some declared documents were not read.
+- **IQ2**: The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. At least one source in this lane refused automated access and was not worked around. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.
+- **IQ3**: The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. Some declared documents were not read.
+- **IQ4**: The shared search allowance ran out before every declared query was run. At least one source in this lane refused automated access and was not worked around. Official statements were read as carried by other publishers, not on the issuing body's own site. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.
+- **IQ5**: The shared search allowance ran out before every declared query was run. Official statements were read as carried by other publishers, not on the issuing body's own site. The listings that could be read were read in part: by title, or for their newest pages only. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.

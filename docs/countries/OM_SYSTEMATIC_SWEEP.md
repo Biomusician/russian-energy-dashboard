@@ -68,7 +68,7 @@ language is `partial`. Every lane-accepted record goes through blind three-role 
 
 **This pass did not finish.** 0 of 5 lanes ran as far as declared; 5 were stopped by the shared limit of 200 web searches per turn, which was not worked around. Each lane states below what did not run. A blocked source (HTTP 402 or 403, login wall, script-only page) was recorded as blocked and left.
 
-| Lane | Execution | Source window | Covered through | Queries | Items read | Languages required | Languages run |
+| Lane | Execution | Source window | Covered through | Queries | Items listed or read | Languages required | Languages run |
 |---|---|---|---|---|---|---|---|
 | OM1 | partial; stopped by search limit | current_through_end_date | not reached | 0 of 2 | 4 of 58 | ar, en | ar, en |
 | OM2 | partial; stopped by search limit | current_through_end_date | 2025-12-31 | 0 of 2 | 5 of 14 | ar, en | en |
@@ -78,14 +78,14 @@ language is `partial`. Every lane-accepted record goes through blind three-role 
 
 Candidates 14: accepted after blind review 1, rejected 3, duplicate 0, held 7, out of scope 3. Published records in this system after the pass: 1.
 
-**Result.** One grid event is published, accepted under clause 5 on stated extent with no customer count (see the correction note in OM_SOURCE_AUDIT.md). Ministry, regulator and operator publication pages were mostly script-only or larger than the fetch tool reads; the annual reports that were read carry no outage narrative.
+**Result.** 1 record from this pass is published. 7 candidates are held: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The published record is accepted under clause 5 on stated extent with no customer count (see the correction note in OM_SOURCE_AUDIT.md). Ministry, regulator and operator publication pages were mostly script-only or larger than the fetch tool reads.
 
 **Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
 
 ### Limitations, per lane
 
-- **OM1**: The listing at ncsi.gov.om/publications?page=N is static but mixes all publication types at six per page with no working type filter, so the other issues were not located.
-- **OM2**: Five of fourteen reports were read. Nine were not: four are over the fetch size limit, one timed out twice, two have links that resolve to cover images, and the two OQEP annual reports have no reachable address. The exchange's disclosure history and the gas-network company's investor pages remain unread.
-- **OM3**: Two of four editions were read, both in English. The 2022 edition is over the size limit in both languages and the 2025 edition returns no body text. Cargo, vessel and delivery passages were not recorded.
-- **OM4**: Three of four declared queries were run, the cap; the English cyclone query was not. Two of four annual reports are over the fetch size limit and one 7-Year Statement issue is not listed. The regulator's site is unreadable, so whether it publishes investigation reports or interruption statistics is still not established; its statements were read only as the press carried them. No transmission-company document was read. The interconnection and reinforcement passages of the 7-Year Statements and all per-plant rows were not recorded.
-- **OM5**: Seven of twenty declared queries ran, all Arabic; no English query ran, so the lane is partial in language as well as in count. The year token barely filters: every power query returned the same 2022 and mid-2026 pages, and the fire strings returned no Omani refinery or gas-plant incident at all, so 2023 and 2024 are years in which the queries found nothing, not years shown to be quiet.
+- **OM1**: The shared search allowance ran out before every declared query was run. Some declared documents were not read.
+- **OM2**: The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. At least one document was too large for the fetch tool or timed out. The listings that could be read were read in part: by title, or for their newest pages only. Some declared documents were not read.
+- **OM3**: The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. At least one document was too large for the fetch tool or timed out.
+- **OM4**: The shared search allowance ran out before every declared query was run. At least one document was too large for the fetch tool or timed out.
+- **OM5**: The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. The search tool gave little weight to year terms, so earlier years were reached mainly through publishers' own listings. Official statements were read as carried by other publishers, not on the issuing body's own site. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.

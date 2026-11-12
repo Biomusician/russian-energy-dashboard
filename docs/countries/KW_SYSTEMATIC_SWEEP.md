@@ -74,7 +74,7 @@ listing first; then run queries in the order KW4 (2026 back to 2022, Arabic firs
 
 **This pass did not finish.** 0 of 4 lanes ran as far as declared; 3 were stopped by the shared limit of 200 web searches per turn, which was not worked around. Each lane states below what did not run. A blocked source (HTTP 402 or 403, login wall, script-only page) was recorded as blocked and left.
 
-| Lane | Execution | Source window | Covered through | Queries | Items read | Languages required | Languages run |
+| Lane | Execution | Source window | Covered through | Queries | Items listed or read | Languages required | Languages run |
 |---|---|---|---|---|---|---|---|
 | KW1 | partial | rolling_archive_gap | 2026-03-31 | 2 of 2 | 4 of 5 | ar, en | ar, en |
 | KW2 | partial; stopped by search limit | rolling_archive_gap | 2026-11-05 | 2 of 4 | 655 of 655 | ar, en | ar, en |
@@ -83,13 +83,13 @@ listing first; then run queries in the order KW4 (2026 back to 2022, Arabic firs
 
 Candidates 48: accepted after blind review 5, rejected 12, duplicate 11, held 18, out of scope 2. Published records in this system after the pass: 5.
 
-**Result.** Published: four dated episodes of programmed power cuts announced by the ministry, and one attack record at country level. Held for the owner: a programmed cut that coincided with periodic maintenance; two attack records whose only qualifying statement is that emergency plans were activated. The ministry's Arabic and English listings were enumerated in full for the window.
+**Result.** 5 records from this pass are published. 18 candidates are held: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The ministry's Arabic and English listings were read by title for the window.
 
 **Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
 
 ### Limitations, per lane
 
-- **KW1**: The report listing has four of the five fiscal years 2021-22 to 2025-26; 2023-24 is not published there. No operator statement list can be enumerated. The sixth search of the cap was spent on this lane's English query rather than on KW2's first English query, because KW2 had an enumerable archive and this lane had none.
-- **KW2**: Every title on both listings was read (all four pager pages are in the one static page; the page was fetched with an ordinary request and parsed locally, because the fetch tool stops at 100,000 characters). The archive is thin before 2024 (the English list has no 2022 item), so it is not a census of ministry statements. Languages: the archive was enumerated in Arabic and English, but only the two Arabic queries were run; the two English queries were not, so the lane is partial. The Arabic queries and seven day-pages of Al-Jarida's dated archive (first page of each day only) found nothing for 2022 or 2023.
-- **KW3**: Two of four declared queries were run, both Arabic; the English pair was not, so the lane is partial. No KUNA page was opened: every KUNA statement was read in a press or sister-agency copy, which is the same source.
-- **KW4**: 2025 returned no oil-sector item at all, which is a property of the two queries that ran, not a finding about 2025.
+- **KW1**: Not run as far as declared in this pass.
+- **KW2**: The shared search allowance ran out before every declared query was run. At least one document was too large for the fetch tool or timed out.
+- **KW3**: The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.
+- **KW4**: The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. The listings that could be read were read in part: by title, or for their newest pages only. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.

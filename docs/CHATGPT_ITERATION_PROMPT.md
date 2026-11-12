@@ -1,4 +1,4 @@
-# Prompt for iterating with ChatGPT (current as of iteration 18)
+# Prompt for iterating with ChatGPT (current as of iteration 19)
 
 Paste everything below the line into ChatGPT. It is self-contained and asks for output you can
 hand straight back to a coding agent. It deliberately carries **no live numbers**: those are in
@@ -14,9 +14,9 @@ energy infrastructure, aggregated to first-level administrative region**. Its ma
 calibrated honesty about what is and is not known, with a good map attached. I want help
 deciding what to do next, not help writing code.
 
-## What exists (iteration 18)
+## What exists (iteration 19)
 
-**Six monitored systems.**
+**Thirteen monitored systems.**
 
 1. **The theatre**: Belarus, western Russia and the Siberian Federal District, with Crimea as a
    separately identified occupied unit (internationally Ukrainian) that contributes to the
@@ -30,9 +30,17 @@ deciding what to do next, not help writing code.
    the ESDI's weights, decay and transmission measure do not transfer, so `index` is null with a
    stated reason. Systems are never ranked or compared by count.
 
-**Wave 2** (Indonesia, Iran, Australia or others) has **not** started, deliberately. Iteration
-17's rule was to add no country until the existing six are governed, reproducible, reviewable
-and operationally mature; its own readiness answer is in `docs/ITERATION_17_REVIEW.md`.
+3. **Seven Gulf country systems** (iteration 19): Bahrain, Iran, Iraq, Kuwait, Oman, Qatar,
+   United Arab Emirates, shown with Saudi Arabia in a regional overview. Research previews: one
+   multilingual pass, no lane run as far as declared, two systems with no published record. In
+   these seven an attack is recorded for the country as a whole, with no region, facility,
+   operator or headline, and nothing about its later status. The overview shows four national
+   totals from one source and one year. There is no Gulf index and nothing about routes,
+   shipping or individual facilities.
+
+No further country is planned. `docs/ITERATION_19_REVIEW.md` §27 lists 22 rule questions that
+hold more candidate records than any search limit does, and §28 recommends answering them and
+finishing the declared searches before adding anything.
 
 **Stack.** Python 3.13 stdlib-only ETL → static JSON → Vite + React + TypeScript + MapLibre →
 Vercel static hosting. No database, server, API key or basemap; zero external runtime requests.
@@ -89,7 +97,14 @@ A GitHub Action rebuilds daily and commits the payload.
 5. **Same-model review.** Independent in process, weak in diversity.
 6. **Held records wait on the owner.** A set of country records is held on rule questions
    (citation addresses naming a city, grid alerts without load shed, partial pipeline cuts,
-   peaks versus totals). They are listed in `docs/ITERATION_17_REVIEW.md`.
+   peaks versus totals). They are listed in `docs/ITERATION_17_REVIEW.md`, and the Gulf pass added
+   22 more in `docs/ITERATION_19_REVIEW.md` §27.
+7. **The Gulf record is thin and uneven.** Most official archives could not be read by an
+   automated client, the search tool gives little weight to year terms, and the safety rules hold
+   an attack record whenever every supporting page names the place in its address. Gulf
+   citations have not been link-checked.
+8. **A published citation can name what the record does not.** Abstraction applies to the record
+   and to the link's address, not to the public page behind it.
 
 ## Hard constraints (non-negotiable)
 
@@ -104,4 +119,4 @@ observation; keep unknown, not applicable and not yet researched distinct.
 Given the above, propose the next iteration as a prioritised list (at most eight items), each
 with: the problem it fixes, why now, what "done" looks like in testable terms, and the main risk.
 Flag any item that would need an owner decision rather than engineering. Tell me plainly if you
-think Wave 2 should start, and what would have to be true first.
+think another country should be added, and what would have to be true first.

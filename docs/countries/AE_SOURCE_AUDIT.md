@@ -443,8 +443,7 @@ For every UAE source, in every lane:
 - tanker, cargo-tracking, shipping-route, export-route, bypass or strait-transit material;
 - pipeline route detail, grid topology, interconnector status;
 - anything about the nuclear power site beyond the national generation figure: no unit status,
-  no outage, no capacity, no site detail. A reported 2026 incident near that site is not
-  researched or recorded (campaign-status lane note);
+  no outage, no capacity, no site detail;
 - facility rows with capacities in any table.
 
 ---

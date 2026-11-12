@@ -167,10 +167,20 @@ def place_tokens(r, policy):
     return name_tokens(r) | set((policy or {}).get("unit_words") or [])
 
 
+def short_link(url):
+    """A publisher's redirecting short link ("/?p=587846"): no path, only a query. The address a
+    reader lands on is a different string, with the headline in it, and the gate never read it
+    (release safety red team, iteration 19)."""
+    rest = (url or "").split("://", 1)[-1].partition("/")[2]
+    path, _, query = rest.partition("?")
+    return bool(query) and not re.search(r"[^\W\d_]{3,}", unquote(path))
+
+
 def unpublishable_address(url, tokens):
     """A citation that cannot stand beside a record published without its place: its address names
-    the place or the operator, or says how the attack was carried out."""
-    return names_the_place(url, tokens) or build_systems.method_in_address(url)
+    the place or the operator, says how the attack was carried out, or is a short link whose
+    destination address was never read."""
+    return names_the_place(url, tokens) or build_systems.method_in_address(url) or short_link(url)
 
 
 def names_the_place(url, tokens):
@@ -367,8 +377,11 @@ def _source(s, with_titles):
             t = s.get(k)
             if t and safe_title(t) and not build_systems.status_wording(t) and not build_systems.LOADED_WORDING.search(t):
                 out[k] = t
-        if "title_en" in out and "title_original" not in out:
-            del out["title_en"]
+        # Both or neither: a headline whose gloss was refused (status or loaded wording) says the
+        # same thing in its own language, where the wording rule reads less well.
+        if not ("title_en" in out and "title_original" in out):
+            out.pop("title_en", None)
+            out.pop("title_original", None)
     return out
 
 

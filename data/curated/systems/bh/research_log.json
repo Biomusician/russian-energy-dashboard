@@ -46,9 +46,8 @@
           "queries_declared": 5,
           "queries_run": 0,
           "items_enumerated": 8,
-          "finding": "The eight press releases readable are corporate: visits, awards, a safe-hours record, a project inauguration, a trading partnership and an emergency-preparedness meeting. None is an operational incident notice.",
-          "limitation": "Only the first page of the refining company's English press-release listing could be read: 8 items dated 2024-06-02 to 2025-07-31; the total number of items is not shown and later pages are script-driven. The group's media centre (English and Arabic) and the state news agency refused automated access, so no Arabic listing was read and nothing from 2022-2023 or from 2026 was enumerated. The lane's five declared queries were not run: the task assigned the whole search allowance to BH3. This is a count of items read, not a census.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. At least one source in this lane refused automated access and was not worked around. At least one official listing is built by script in the browser and could not be read.",
           "carried_forward": false
         },
         {
@@ -73,9 +72,8 @@
           "queries_run": 0,
           "items_enumerated": 148,
           "items_in_universe": 148,
-          "finding": "The authority's news listing carries tariff and billing-service notices, inaugurations, tenders, agreements, visits and commemorations. In 148 titles there is no statement of a major outage, a generation interruption or a grid emergency; the one item touching works on the network is the completion of planned maintenance, which is excluded. An absence of outage items here is therefore not evidence that no outage occurred.",
-          "limitation": "Both listings were read in full by title and date (Arabic 79 of 79, English 69 of 69); no title concerned a supply interruption, so no item was opened. The listings begin in February 2024, so 2022 and 2023 cannot be enumerated here and rest on the lane's four declared queries, which were not run: the task assigned the whole search allowance to BH3.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. The listings that could be read were read in part: by title, or for their newest pages only.",
           "carried_forward": false
         },
         {
@@ -98,9 +96,8 @@
           ],
           "queries_declared": 15,
           "queries_run": 9,
-          "finding": "No dated refinery fire, production stoppage or outage in Bahrain in 2022, 2023, 2024 or 2025 was returned by the Arabic strings; a 2023 item concerned record demand, and a 2026 item concerned billing disconnections. Several results were not opened because their headline or address concerns later facility status or damage assessment.",
-          "limitation": "A query set, never a census: 9 of 15 declared queries ran, all Arabic, so the lane was searched in one of its two required languages and the 2026 outage query did not run. Fifteen result pages were requested and thirteen read. Domestic Arabic papers were not reached (two are refused, the readable one has no search); every page read is foreign or English-language press carrying an official Bahraini statement. This is a count of records found.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. At least one source in this lane refused automated access and was not worked around. Some declared documents were not read. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
           "carried_forward": false
         }
       ]

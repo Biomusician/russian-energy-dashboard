@@ -1,7 +1,7 @@
 {
   "system_id": "bh",
   "reporting_environment": "media_only",
-  "reporting_note": "No operator, authority or regulator page reached publishes event-level outage or incident reports. Incidents become public through official statements carried by the state news agency and repeated by the domestic press, so most smaller disruptions will not appear and the coverage of this record cannot be computed. Provisional: to be confirmed after the first research pass.",
+  "reporting_note": "No operator, authority or regulator page reached publishes event-level outage or incident reports. Incidents become public through official statements carried by the state news agency and repeated by the domestic press, so most smaller disruptions will not appear and the coverage of this record cannot be computed.",
   "geography": {
     "unit_label": "governorate",
     "units_expected": 5,

@@ -37,10 +37,17 @@ export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, 
   c.font = `${Math.round(16 * s)}px ${SANS}`;
   // The count never travels without the reporting environment that produced it (§6.4).
   const env = labelFor(ENVIRONMENT_LABEL, sys.reporting_environment).toLowerCase();
+  // An empty record is never "0 qualifying events ... reviewed null": the picture travels without
+  // the page, so it carries the page's own sentence (release methodology red team, iteration 19).
+  const passes = sys.research_log.passes.filter((p) => p.kind === "systematic");
+  const held = passes[passes.length - 1]?.outcome?.held ?? 0;
   c.fillText(
-    `No index. ${sys.event_summary.recorded_events} qualifying events in ${sys.event_summary.episodes} episodes ` +
-    `(reporting: ${env}); ` +
-    `${sys.event_summary.country_level} national or multi-region events not drawn. Record reviewed ${sys.record_reviewed}.`,
+    sys.event_summary.recorded_events === 0
+      ? `No index. No qualifying records in the current reviewed corpus (reporting: ${env}). ` +
+        `That describes this dataset, not ${sys.name}` + (held > 0 ? `; ${held} candidate records are held back and not shown.` : ".")
+      : `No index. ${sys.event_summary.recorded_events} qualifying events in ${sys.event_summary.episodes} episodes ` +
+        `(reporting: ${env}); ` +
+        `national or multi-region events not drawn: ${sys.event_summary.country_level}. Record reviewed ${sys.record_reviewed}.`,
     pad, Math.round(74 * s));
 
   // Colour key: this country's own classes, so the picture cannot be read on another's scale.

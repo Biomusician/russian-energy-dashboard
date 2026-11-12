@@ -316,9 +316,8 @@
           ],
           "languages_executed": [],
           "queries_declared": 10,
-          "finding": "No finding: the lane has still not been searched in any pass.",
-          "limitation": "Nothing was read: both official endpoints refused ordinary access once more, and the seven-search cap of this pass was spent on SA5, which comes before SA1 in the declared order. All ten declared queries remain not run; the four English year queries for 2022-2025 have still never run in any pass.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. At least one source in this lane refused automated access and was not worked around.",
           "carried_forward": false
         },
         {
@@ -343,9 +342,8 @@
           "queries_run": 0,
           "items_enumerated": 4,
           "items_in_universe": 4,
-          "finding": "The Arabic editions add no event. Safety is reported only as annual counts (Tier 1 process-safety events, spill counts and volumes) with no facility, date or region.",
-          "limitation": "FY2023 to FY2025 were read as the three section files that carry incident wording (risk, results, sustainability), not the whole report: the overview, governance, legal and financial-statement sections were not read. The reading was by Arabic keyword over extracted text, not page by page. The Tadawul list refused access again and neither declared query ran. 2026 interim documents were not opened, by rule.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. At least one source in this lane refused automated access and was not worked around. Some declared documents were not read.",
           "carried_forward": false
         },
         {
@@ -371,8 +369,7 @@
           "queries_run": 0,
           "items_enumerated": 24,
           "items_in_universe": 48,
-          "finding": "No release attributes a change to a disruption. The mining sub-index is explained each month only by 'the level of oil production in the Kingdom' with the monthly figure; refining and electricity movements are stated without a cause. A numeric series with no attribution yields context, never an incident: no candidate.",
-          "limitation": "Only 2024 and 2025 are covered. The publisher's own listing (71 items, read in full) jumps from January 2024 back to 2020 and earlier: the 24 releases for 2022 and 2023 are not listed and were not read. The 2026 releases are outside the declared universe and were not opened.",
+          "limitation": "Some declared documents were not read.",
           "carried_forward": false
         },
         {
@@ -390,8 +387,7 @@
           ],
           "languages_executed": [],
           "queries_declared": 0,
-          "finding": "No finding: source not read.",
-          "limitation": "The endpoint refused automated access again (HTTP 402). No issue was read and no workaround was attempted; the lane needs a person to open the monthly PDFs in a browser.",
+          "limitation": "Not run in every language its plan requires. At least one source in this lane refused automated access and was not worked around.",
           "carried_forward": false
         },
         {
@@ -414,9 +410,8 @@
           ],
           "queries_declared": 15,
           "queries_run": 7,
-          "finding": "No new event meets a clause. The outage queries return only neighbourhood, village or single-site cuts and the three regional outages already in the queue; opened Arabic sources add the time and root cause for two of them but still no customer or megawatt figure. No refinery fire in 2025 was returned at all.",
-          "limitation": "Seven of fifteen declared queries ran, in the declared order, before the cap: all five for 2026 and the two Arabic ones for 2025. The three English queries for 2025 and all five for 2024 did not run, so 2025 was searched in Arabic only and 2024 not at all. A query set is not a census. Several Saudi news pages refused access, so most sub-threshold outage items rest on search summaries.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. At least one source in this lane refused automated access and was not worked around. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
           "carried_forward": false
         }
       ]

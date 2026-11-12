@@ -52,7 +52,7 @@ substituted. The output file is written after each lane. Blind three-role review
 
 **This pass did not finish.** 0 of 5 lanes ran as far as declared; 3 were stopped by the shared limit of 200 web searches per turn, which was not worked around. Each lane states below what did not run. A blocked source (HTTP 402 or 403, login wall, script-only page) was recorded as blocked and left.
 
-| Lane | Execution | Source window | Covered through | Queries | Items read | Languages required | Languages run |
+| Lane | Execution | Source window | Covered through | Queries | Items listed or read | Languages required | Languages run |
 |---|---|---|---|---|---|---|---|
 | SA1 | not_started; stopped by search limit | inaccessible | not reached | 0 of 10 | - | ar, en | none |
 | SA2 | partial; stopped by search limit | current_through_end_date | 2025-12-31 | 0 of 2 | 4 of 4 | ar, en | ar |
@@ -62,14 +62,14 @@ substituted. The output file is written after each lane. Blind three-role review
 
 Candidates 30: accepted after blind review 0, rejected 9, duplicate 14, held 6, out of scope 1. Published records in this system after the pass: 9.
 
-**Result.** No new record. Thirty candidates: fourteen were already in the corpus or the queue, six are held (2026 claims with no stated effect), nine rejected, one out of scope. The Arabic annual reports and all 2024-2025 monthly statistical releases were read and attribute no change to a disruption. SPA, the ministry site, Tadawul and OPEC refused access again.
+**Result.** No record from this pass is published. 6 candidates are held: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The sections of the Arabic annual reports that carry incident wording, and the 2024-2025 monthly statistical releases, were read by keyword and attribute no change to a disruption. Four official sources refused access again.
 
 **Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
 
 ### Limitations, per lane
 
-- **SA1**: Nothing was read: both official endpoints refused ordinary access once more, and the seven-search cap of this pass was spent on SA5, which comes before SA1 in the declared order. All ten declared queries remain not run; the four English year queries for 2022-2025 have still never run in any pass.
-- **SA2**: FY2023 to FY2025 were read as the three section files that carry incident wording (risk, results, sustainability), not the whole report: the overview, governance, legal and financial-statement sections were not read. The reading was by Arabic keyword over extracted text, not page by page. The Tadawul list refused access again and neither declared query ran. 2026 interim documents were not opened, by rule.
-- **SA3**: Only 2024 and 2025 are covered. The publisher's own listing (71 items, read in full) jumps from January 2024 back to 2020 and earlier: the 24 releases for 2022 and 2023 are not listed and were not read. The 2026 releases are outside the declared universe and were not opened.
-- **SA4**: The endpoint refused automated access again (HTTP 402). No issue was read and no workaround was attempted; the lane needs a person to open the monthly PDFs in a browser.
-- **SA5**: Seven of fifteen declared queries ran, in the declared order, before the cap: all five for 2026 and the two Arabic ones for 2025. The three English queries for 2025 and all five for 2024 did not run, so 2025 was searched in Arabic only and 2024 not at all. A query set is not a census. Several Saudi news pages refused access, so most sub-threshold outage items rest on search summaries.
+- **SA1**: The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. At least one source in this lane refused automated access and was not worked around.
+- **SA2**: The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. At least one source in this lane refused automated access and was not worked around. Some declared documents were not read.
+- **SA3**: Some declared documents were not read.
+- **SA4**: Not run in every language its plan requires. At least one source in this lane refused automated access and was not worked around.
+- **SA5**: The shared search allowance ran out before every declared query was run. At least one source in this lane refused automated access and was not worked around. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.

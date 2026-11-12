@@ -132,10 +132,15 @@ def build(context, country_payloads):
         "statement": (f"National energy statistics for the {len(members)} Gulf systems, for context. A figure here "
                       "is a country's annual total. It says nothing about any facility, and it is never "
                       "used to weigh, rank or score a disruption."),
-        "not_built": ("This view has no route, strait, shipping or tanker information, no facility layer "
-                      "and no measure of dependence or importance, by design."),
+        "not_built": ("This view has no route, strait, shipping or tanker information and no facility layer, "
+                      "and it does not measure how much anything depends on a facility, a route or a country, "
+                      "by design. The share of the world total is a descriptive annual figure for the group."),
+        # Who is in each group, by name, so a reader need not assemble the list from the table.
+        "member_names": [s["name"] for s in members],
         "memberships": {g: {"label": systems.GROUPS[g]["label"], "note": systems.GROUPS[g]["note"],
-                            "members": [s["id"] for s in members if s["id"] in systems.GROUPS[g]["members"]]}
+                            "members": [s["id"] for s in members if s["id"] in systems.GROUPS[g]["members"]],
+                            "member_names": [s["name"] for s in members if s["id"] in systems.GROUPS[g]["members"]],
+                            "as_of": systems.GROUPS[g].get("as_of"), "basis": systems.GROUPS[g].get("basis")}
                         for g in ("gcc", "opec")},
         "order": "alphabetical by name; never by any figure",
         "sources": sources,

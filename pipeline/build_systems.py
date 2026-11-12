@@ -322,13 +322,15 @@ def lane_summary_state(lane):
     if "execution" not in lane:
         return "legacy"
     ex, win = lane["execution"], lane["source_window"]
-    # Our own search allowance ran out: not the publisher's doing, and the queries can still be run.
-    if lane.get("stopped_by") == "search_limit":
-        return "stopped_by_search_limit"
+    # A lane nobody started, or whose source refused, is not "stopped by the search limit" however
+    # the allowance stood: seven Gulf lanes read that way (release methodology red team).
     if ex == "not_started":
         return "blocked_by_source" if win == "inaccessible" else "not_started"
     if win == "inaccessible":
         return "blocked_by_source"
+    # Our own search allowance ran out: not the publisher's doing, and the queries can still be run.
+    if lane.get("stopped_by") == "search_limit":
+        return "stopped_by_search_limit"
     if ex == "enumerated_complete":
         return "current_through_latest_release" if win == "publisher_not_yet_released" else "universe_searched"
     if ex == "declared_search_complete":
@@ -424,6 +426,9 @@ STATUS_WORDING = re.compile(
     # Arabic: restart, resumption, repair, return to service. The English-only check let Arabic
     # addresses through unread (iteration 18, Saudi safety audit).
     r"استئناف|استأنف|[إا]عادة (ال)?تشغيل|[إا]صلاح|عودة (ال)?إنتاج|عاد إلى العمل|"
+    r"عودة|[إا]عادة|استعاد|تستعيد|يستعيد|عاود|تعاود|يعاود|عادت|يعود|تعود|ترميم|مازال متوقف|ما زال متوقف|لا يزال متوقف|"
+    # Kurdish (Sorani): resumption, repair, return to work.
+    r"دەستپێکردنەوە|دەستیپێکردەوە|چاککردنەوە|چاککرایەوە|گەڕانەوە|گەڕایەوە|"
     # Persian (iteration 19): restart, resumption, back on the grid, repair, reconstruction, still
     # stopped. Either yeh is accepted, and the half-space in a compound may be a space or absent,
     # because agencies and their addresses write all three.
@@ -647,8 +652,9 @@ def citation_quality(system_id, events):
         "languages": dict(sorted(languages.items())),
         "event_date_precision": dict(sorted(precision.items())),
         "link_check": (health.get("by_system") or {}).get(system_id),
-        "link_check_date": health.get("checked"),
-        "link_check_note": health.get("note"),
+        "link_check_date": health.get("checked") if system_id in (health.get("by_system") or {}) else None,
+        "link_check_note": (health.get("note") if system_id in (health.get("by_system") or {})
+                            else "The citations of this system have not been link-checked."),
     }
 
 
@@ -838,6 +844,55 @@ def campaign_of(e, system_id, campaigns):
     return None
 
 
+# A campaign's basis says that attacks are reported and whether an end is. It is printed on the
+# country page, so it may say nothing a record may not: no month or day, no tally or frequency, no
+# class of facility, no part of the country, no method. The first Gulf bases gave a region, a
+# class and a date three days old for a system whose attack records are the country's (release
+# safety and geography red teams, iteration 19).
+CAMPAIGN_TEXT = re.compile(
+    r"\b(January|February|March|April|May|June|July|August|September|October|November|December)\b(?! 2025\b)|"
+    r"\b20\d\d-\d\d-\d\d\b(?<!2025-06-24)|"
+    r"\b(two|three|four|five|six|seven|\d+) (attacks?|strikes?|sites?|facilit\w+)\b|"
+    r"\b(repeatedly|once more|again|none since|most recent|latest|target)\b|"
+    r"\b(refiner\w*|fields?|gasfield|storage|terminals?|pipelines?|plants?|lng|depots?|ports?|gas facilit\w+|oil facilit\w+)\b|"
+    r"\b(north|south|east|west|central)\w*\b|\b(region|governorate|province|emirate)s?\b", re.I)
+
+
+def campaign_text_problems(campaigns, unit_words=None):
+    """Sentences of the campaign file that say more than "attacks are reported". `unit_words` maps
+    a system to the words of its first-level unit names, where the caller has them."""
+    out = []
+
+    def check(where, sid, text):
+        if not text:
+            return
+        m = CAMPAIGN_TEXT.search(text) or METHOD_WORDING.search(text)
+        if m:
+            out.append(f"{where}: {m.group(0)!r} is more than a campaign basis may say")
+        words = set(re.findall(r"[^\W\d_]{4,}", text.lower()))
+        named = words & set((unit_words or {}).get(sid) or [])
+        if named:
+            out.append(f"{where}: names a first-level unit ({sorted(named)[0]})")
+
+    for c in campaigns.get("campaigns", []):
+        sid = c.get("system_id")
+        if sid not in systems.GROUPS["gulf_littoral"]["members"]:
+            continue
+        cid = c.get("campaign_id")
+        check(f"{cid} status_basis", sid, c.get("status_basis"))
+        rule = c.get("member_rule") or {}
+        check(f"{cid} from_basis", sid, rule.get("from_basis"))
+        for extra in rule.get("also_covers") or []:
+            check(f"{cid} also_covers", sid, extra.get("reason"))
+        for s in c.get("status_sources") or []:
+            if not isinstance(s, dict) or set(s) - {"publisher", "published"}:
+                out.append(f"{cid}: a status source is a publisher and a date, never an address")
+    for sid, s in (campaigns.get("system_states") or {}).items():
+        check(f"system state {sid} basis", sid, s.get("basis"))
+        check(f"system state {sid} limitation", sid, s.get("limitation"))
+    return out
+
+
 def campaign_problems(campaigns, today=None):
     """Why the campaign file cannot be trusted to withhold what it should. Fail closed: an active or
     uncertain campaign always applies the policy, an ended one keeps applying it until the release
@@ -869,7 +924,7 @@ def campaign_problems(campaigns, today=None):
     for sid in systems.GROUPS["gulf_littoral"]["members"]:
         if sid not in states:
             out.append(f"system {sid}: no campaign classification; a Gulf system must state one")
-    return out
+    return out + campaign_text_problems(campaigns)
 
 
 def precision_problems(system_id, doc, events):
@@ -887,6 +942,15 @@ def precision_problems(system_id, doc, events):
     if policy and not policy.get("reason"):
         out.append("a precision policy states its reason")
     barred = set(policy.get("no_event_units") or [])
+    # A declared episode has a name and an id written by hand, which pass no text rule: "Drone wave
+    # on the X refinery" would be built and shown beside records that withhold all three words.
+    # Until episode naming for such records has rules of its own, each is its own episode
+    # (test-architecture red team, iteration 19).
+    if policy.get("kinetic") == "country":
+        for e in events:
+            if e.get("cause") in KINETIC_CAUSES and e.get("episode_id") not in (None, e.get("event_id")):
+                out.append(f"{e.get('event_id')}: an attack record published for the country is its own episode; "
+                           "a declared episode's name and id are not gated")
     for e in events:
         eid = e["event_id"]
         if e.get("region_code") in barred or barred & set(e.get("regions_affected") or []):
@@ -1295,6 +1359,8 @@ def build_system(system_id, admin1, admin0, as_of):
             counts[e["region_code"]] = counts.get(e["region_code"], 0) + 1
 
     tol = REGION_TOLERANCE.get(system_id, DEFAULT_TOLERANCE)
+    policy = doc["geography"].get("precision_policy") or {}
+    never = set(policy.get("no_event_units") or [])
     features, kept = [], []
     for code, name, g in us:
         s = geo.simplify_geometry(g, tol)
@@ -1302,13 +1368,17 @@ def build_system(system_id, admin1, admin0, as_of):
             raise ValueError(f"system {system_id}: unit {code} vanished on simplification")
         status, note = _region_status(code, doc["geography"].get("rulings", []))
         kept.append(s)
+        # Whether a record can be placed in this unit at all. Where the system records everything
+        # for the country, or the unit is drawn for reference only, a zero would read as "looked
+        # and found nothing" (release methodology and geography red teams, iteration 19).
+        placed = not (status == "disputed_unassigned" or code in never or policy.get("other") == "country")
         features.append({
             "type": "Feature",
             "properties": {"code": code, "name": name, "status": status, "note": note,
-                           # A disputed, unassigned unit never carries an event count: an
-                           # absence there is "not applicable", not "nothing happened".
-                           "recorded_events": None if status == "disputed_unassigned"
-                           else counts.get(code, 0)},
+                           "records_placed": placed,
+                           # No count where none can apply: an absence there is "not applicable",
+                           # not "nothing happened".
+                           "recorded_events": counts.get(code, 0) if placed else None},
             "geometry": geo.round_coords(s, 3),
         })
 
@@ -1574,7 +1644,7 @@ def _days(a, b):
     return (dt.date.fromisoformat(b) - dt.date.fromisoformat(a)).days
 
 
-def recent_evidence(all_events, scope="The country systems."):
+def recent_evidence(all_events, scope="The country systems.", regional=False):
     """The most recent qualifying episodes across the given country systems, newest first.
 
     A chronological list and nothing else: no severity sort, no impact order, no count per
@@ -1592,8 +1662,12 @@ def recent_evidence(all_events, scope="The country systems."):
             if not members:
                 continue
             first = members[0]
+            # A regional list puts several countries' records in one date order. In it a
+            # campaign-covered record is the country's, whatever its own system records: one
+            # system's finer placement must not be what the list is read for.
             rows = [{"date": m["date"], "date_precision": m["date_precision"],
-                     "region": m.get("region_name") or ("Multiple regions" if m["regions_affected"] else "National"),
+                     "region": "National" if regional and m.get("publication")
+                     else m.get("region_name") or ("Multiple regions" if m["regions_affected"] else "National"),
                      "effect": None if m.get("publication") else m.get("effect"),
                      "withheld": bool(m.get("publication"))} for m in members]
             items.append({
@@ -1606,6 +1680,12 @@ def recent_evidence(all_events, scope="The country systems."):
                 "members": rows[:8], "more_members": max(0, len(rows) - 8),
             })
     items.sort(key=lambda x: (x["last_date"], x["system_id"], x["episode_id"]), reverse=True)
+    items = items[:RECENT_EPISODES]
+    if regional:
+        # Older systems' ids name the facility and the effect ("...-refinery-shutdown"). The
+        # regional payload says it has no facility information, so its rows carry a row key only.
+        for n, item in enumerate(items):
+            item["episode_id"] = f"{item['system_id']}-row-{n + 1:02d}"
     return {
         "order": "newest first; never by size or severity",
         # Never a count of systems typed here: it said "five" for a list of twelve (iteration 19).
@@ -1613,7 +1693,7 @@ def recent_evidence(all_events, scope="The country systems."):
         "note": ("What was publicly reported, found and reviewed: counts here are not rates of disruption and "
                  "are not comparable between countries. Events can date back to 2022, but systematic research "
                  "for these systems began in 2026, so older records were found later, not monitored as they happened."),
-        "episodes": items[:RECENT_EPISODES],
+        "episodes": items,
     }
 
 
@@ -1726,7 +1806,7 @@ def build(theatre_snapshot):
     # The group's own recent list: the cross-system one holds the newest 40 of every system, which
     # can leave a region with none.
     gulf["recent"] = recent_evidence({k: v for k, v in all_events.items() if k in members},
-                                     scope="The Gulf country systems.")
+                                     scope="The Gulf country systems.", regional=True)
     write_json(outputs.processed() / gulf_context.OUTPUT, gulf)
     build_time = theatre_snapshot.get("build_time") or dt.datetime.now(dt.timezone.utc).isoformat()
     write_json(outputs.processed() / "global" / "manifest.json",

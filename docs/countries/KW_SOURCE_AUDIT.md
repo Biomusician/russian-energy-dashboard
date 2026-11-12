@@ -153,8 +153,8 @@ Access tests were made on 2026-11-11 with one ordinary request each, plus the si
 - **Terms as read** (`/en/term-of-use`): the company "Has the full copyrights of all images, videos
   and publications contained in this website" and "allows the storing and copying of these contents
   without modifying or reproducing or using them for commercial purposes." No clause on linking.
-- **Fields never read:** unit-by-unit capacity, throughput by refinery, project status, anything in
-  the 2025-26 report about damage, repair, restart or operating rate (see §4).
+- **Fields never read:** unit-by-unit capacity, throughput by refinery, project status, and any
+  post-event status material (see §4).
 - **Decision: derived facts only.** The reports for fiscal years 2021-22 to 2025-26 are a Wave B
   report-archive universe for lane KW1: read for whether a dated incident is stated, nothing else.
   For the 2025-26 report, only occurrence, date, class and the effect stated at the time of a

@@ -164,9 +164,11 @@ def build(world, admin0=None, today=None):
     payload = {
         "schema_version": doc["schema_version"],
         "kind": "national_energy_context",
-        "statement": ("National energy statistics, shown for context. Five countries and one theatre are "
-                      "systematically monitored for qualifying disruptions; every other country appears "
-                      "here only for national context and has no disruption record on this site."),
+        # No number of systems typed here: it said "five" for twelve (iteration 19). The manifest
+        # lists them.
+        "statement": ("National energy statistics, shown for context. The monitored systems listed on this "
+                      "site are researched for qualifying disruptions; every other country appears here only "
+                      "for national context and has no disruption record on this site."),
         "not_scoring": "These figures never change what counts as a disruption, never weight one and never rank one.",
         "source": src,
         "comparison_year": doc["comparison_year"],

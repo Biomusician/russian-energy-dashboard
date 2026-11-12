@@ -263,10 +263,9 @@ Every Iranian body below is **SOURCE_BLOCKED** for direct reading unless it says
 - **What it is:** the national refining and distribution company.
 - **Language:** Persian, with an English portal (`/en-US/en.niordc/5693/`) that showed no news items.
 - **What it publishes (read):**
-  - a news listing at `/fa-IR/Portal/5121`: 20 items a page, "page 1 of 71" (about 1,400 items),
-    each with a news code and a Solar Hijri date in Persian digits (newest ۱۴۰۵/۰۸/۲۰). Mostly
-    corporate news, speeches, consumption figures and notices. **It also carries items about the
-    condition of infrastructure after attacks. Those items must not be opened or recorded.**
+  - a paged news listing (about 1,400 items), each with a news code and a Solar Hijri date in
+    Persian digits. Mostly corporate news, speeches, consumption figures and notices.
+    **Post-event status items on an operator's site are not opened or recorded.**
   - a notices listing at `/fa-IR/Portal/5120`;
   - statistical yearbooks of energy-product consumption for 1384 to 1396-97 (one PDF a year). The
     newest covers 1397, about 2018-19. Nothing later is posted.
@@ -436,13 +435,13 @@ this session** except Tasnim's footer. They are stated for provenance, not as a 
 
 ### 2.20 Wikipedia compilation articles
 
-- Found by title only through the MediaWiki search API: "Iranian energy crisis" (its lead covers
-  late 2024 to December 2025 and it carries a maintenance notice about machine-written text),
-  "2026 Iran war", "Economic impact of the 2026 Iran war", "2026 Internet blackout in Iran",
-  "Censorship during the 2026 Iran war".
+- Found by title only through the MediaWiki search API: an article on the energy crisis (its
+  lead covers late 2024 to December 2025 and it carries a maintenance notice about
+  machine-written text) and several on the 2026 war.
 - No structured table comparable to the one behind the Russia theatre was looked for or found.
-- **Decision: discovery only.** These articles carry facility status and attack detail. Leads only
-  were read here, for dates and for the reporting environment. Wave B must not mine them.
+- **Decision: discovery only.** These articles carry material this project does not record.
+  Leads only were read here, for dates and for the reporting environment. Wave B must not mine
+  them.
 
 ### 2.21 WRI Global Power Plant Database v1.3 (local cache)
 

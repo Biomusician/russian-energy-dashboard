@@ -61,9 +61,9 @@
     },
     {
       "sector": "coal",
-      "state": "NOT_APPLICABLE",
-      "assessed_readiness": "NOT_APPLICABLE",
-      "reason": "Not applicable: EIA records zero coal production for Kuwait in 2024 and shows no coal in power generation. A small coal consumption is recorded (about 0.003 quadrillion Btu in 2024); its use is not stated and it is not an energy-infrastructure sector here. The sector does not exist, which is different from unknown."
+      "state": "CONTEXT_ONLY",
+      "assessed_readiness": "INCOMPLETE",
+      "reason": "No coal production in 2024 and no coal in power generation (EIA). A small coal consumption is recorded (about 0.003 quadrillion Btu in 2024); its use is not stated and was not researched, so this is not marked as not applicable."
     }
   ],
   "sources": [

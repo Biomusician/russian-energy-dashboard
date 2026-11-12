@@ -1,6 +1,6 @@
 {
   "country": "OM",
-  "as_of_note": "Compiled 2026-11-11 by the Oman source-audit lane (iteration 19, Wave A). A DRAFT in the local candidate queue. CONTEXT ONLY: never a scoring input. Every value was read from the cited document in this session; vintages differ (2024 and 2025) and are stated per row, and 2025 statistical values are marked provisional by their publisher. Bases differ by source (country totals from the National Centre for Statistics and Information, which credits the Ministry of Energy and Minerals and the Authority for Public Services Regulation; power-system figures from Nama Power and Water Procurement; a company total from Oman LNG) and are labelled on each row. Refining capacity and generating capacity were NOT read this session and are absent, not zero. National totals from the U.S. EIA are served by the global context layer and are not repeated here. No facility rows. See docs/countries/OM_SOURCE_AUDIT.md.",
+  "as_of_note": "Compiled 2026-11-11 by the Oman source-audit lane (iteration 19, Wave A). CONTEXT ONLY: never a scoring input. Every value was read from the cited document in this session; vintages differ (2024 and 2025) and are stated per row, and 2025 statistical values are marked provisional by their publisher. Bases differ by source (country totals from the National Centre for Statistics and Information, which credits the Ministry of Energy and Minerals and the Authority for Public Services Regulation; power-system figures from Nama Power and Water Procurement; a company total from Oman LNG) and are labelled on each row. Refining capacity and generating capacity were NOT read this session and are absent, not zero. National totals from the U.S. EIA are served by the global context layer and are not repeated here. No facility rows. See docs/countries/OM_SOURCE_AUDIT.md.",
   "metrics": [
     {
       "metric": "oil_production",
@@ -9,7 +9,7 @@
       "year": 2025,
       "basis": "country total as labelled 'Oil Production' (365,754.4 thousand barrels in the year); provisional; the table does not split crude oil and condensate. Table credited to the Ministry of Energy and Minerals",
       "source": "National Centre for Statistics and Information, Monthly Statistical Bulletin, October 2026, Table 9 (Oil & Gas Sector)",
-      "url": "https://api.ncsi.gov.om/uploads/pdfs/monthly_statistical_bulletin__october_2026_1792489912.pdf"
+      "url": "https://www.ncsi.gov.om/"
     },
     {
       "metric": "oil_exports",
@@ -18,7 +18,7 @@
       "year": 2025,
       "basis": "country total as labelled 'Total Exports' in the oil table; provisional. Table credited to the Ministry of Energy and Minerals",
       "source": "National Centre for Statistics and Information, Monthly Statistical Bulletin, October 2026, Table 9 (Oil & Gas Sector)",
-      "url": "https://api.ncsi.gov.om/uploads/pdfs/monthly_statistical_bulletin__october_2026_1792489912.pdf"
+      "url": "https://www.ncsi.gov.om/"
     },
     {
       "metric": "natural_gas_supply",
@@ -27,7 +27,7 @@
       "year": 2025,
       "basis": "country total as labelled 'Imports + Local Production' (associated 12,851.0; non-associated plus imports 44,204.6); provisional. INCLUDES imports, so it is NOT a production figure and is not comparable with EIA's gas production series",
       "source": "National Centre for Statistics and Information, Monthly Statistical Bulletin, October 2026, Table 9 (Oil & Gas Sector)",
-      "url": "https://api.ncsi.gov.om/uploads/pdfs/monthly_statistical_bulletin__october_2026_1792489912.pdf"
+      "url": "https://www.ncsi.gov.om/"
     },
     {
       "metric": "natural_gas_use_power_generation",
@@ -36,7 +36,7 @@
       "year": 2025,
       "basis": "gas used by power generation plants, including plants belonging to oil and gas companies and two named public bodies, per the table's footnote; provisional",
       "source": "National Centre for Statistics and Information, Monthly Statistical Bulletin, October 2026, Table 9 (Oil & Gas Sector)",
-      "url": "https://api.ncsi.gov.om/uploads/pdfs/monthly_statistical_bulletin__october_2026_1792489912.pdf"
+      "url": "https://www.ncsi.gov.om/"
     },
     {
       "metric": "electricity_generation",
@@ -45,7 +45,7 @@
       "year": 2025,
       "basis": "country total, GROSS production; provisional. The same table gives NET production of 49,532.4 GWh, which by its footnote includes autogenerators and rented diesel units that do not appear in gross production. Table credited to the Authority for Public Services Regulation",
       "source": "National Centre for Statistics and Information, Monthly Statistical Bulletin, October 2026, Table 21 (Electricity)",
-      "url": "https://api.ncsi.gov.om/uploads/pdfs/monthly_statistical_bulletin__october_2026_1792489912.pdf"
+      "url": "https://www.ncsi.gov.om/"
     },
     {
       "metric": "peak_demand_main_system",
@@ -70,7 +70,7 @@
       "value": 11.98,
       "unit": "million tonnes",
       "year": 2024,
-      "basis": "Oman LNG company figure for its complex, printed as '11.98 MTPA produced'; the same report counts Qalhat LNG cargoes with its own. A production figure, NOT a capacity",
+      "basis": "country figure as printed by the national LNG company, '11.98 MTPA produced'. A production figure, NOT a capacity",
       "source": "Oman LNG, Outlook 2024 (annual report)",
       "url": "http://omanlng.co.om/Style%20Library/assets/pdf/OLNG%20Annual%20Report%202024_5%20Eng.pdf"
     }
@@ -83,7 +83,7 @@
     "Oman has no coal production and no coal-fired generation (U.S. EIA International Energy Statistics, 2024, as committed in this repository's global context layer)."
   ],
   "significance_sources": [
-    "https://api.ncsi.gov.om/uploads/pdfs/monthly_statistical_bulletin__october_2026_1792489912.pdf",
+    "https://www.ncsi.gov.om/",
     "https://www.omanpwp.om/storage/files/1/7-year-statement/6af016a6ebea1.pdf",
     "http://omanlng.co.om/Style%20Library/assets/pdf/OLNG%20Annual%20Report%202024_5%20Eng.pdf",
     "https://www.eia.gov/international/data/world"

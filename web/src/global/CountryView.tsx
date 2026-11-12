@@ -129,7 +129,12 @@ export default function CountryView({ id }: { id: string }) {
   const { system: sys, events } = bundle;
   const feature = validRegion ? bundle.regions.features.find((f) => f.properties?.code === validRegion) : null;
   const regionName = feature ? String(feature.properties?.name ?? validRegion) : null;
-  const regionStatus = feature ? String(feature.properties?.status ?? "normal") : null;
+  // "not_placed": the system records everything for the country, or the unit is drawn for
+  // reference only. An empty list there is "not applicable", never "none found".
+  const regionStatus = feature
+    ? (feature.properties?.status === "disputed_unassigned" ? "disputed_unassigned"
+       : feature.properties?.records_placed === false ? "not_placed" : String(feature.properties?.status ?? "normal"))
+    : null;
   // The reader's clock, like the theatre's freshness notice: the record is curated by hand and
   // does not change when the site rebuilds, so the warning must not depend on the build date.
   const reviewAge = sys.record_reviewed
@@ -157,7 +162,7 @@ export default function CountryView({ id }: { id: string }) {
 
   return (
     <div className="global-page country-page">
-      <CountryHeader name={sys.name} id={id}>
+      <CountryHeader name={sys.name} id={id} wholeCountry={sys.geography.precision_policy?.other === "country"}>
         <button className="ghost" onClick={runExport} disabled={exporting}>
           {exporting ? "Rendering…" : "Download PNG"}
         </button>
@@ -207,12 +212,12 @@ export default function CountryView({ id }: { id: string }) {
           )}
           <div className="small dim">{sys.reporting_environment_text}</div>
           <div className="small dim">
-            {sys.record_reviewed ? `Event record reviewed ${fmtDate(sys.record_reviewed)}` : "No record reviewed yet"} · site rebuilt {fmtDate(sys.as_of)}
+            {sys.record_reviewed ? `Event record reviewed ${fmtDate(sys.record_reviewed)}` : "No published record, so no review date"} · site rebuilt {fmtDate(sys.as_of)}
           </div>
           {(sys.recovery_coverage?.withheld_active_campaign ?? 0) > 0 && (
             <div className="small">
-              {sys.recovery_coverage?.withheld_active_campaign} of {sys.event_summary.recorded_events} recovery statuses
-              are withheld while an attack campaign is active. See the Research coverage tab.
+              Recovery status is withheld for {sys.recovery_coverage?.withheld_active_campaign} of {sys.event_summary.recorded_events} records
+              while an attack campaign is active. See the Research coverage tab.
             </div>
           )}
         </div>
@@ -275,14 +280,13 @@ export default function CountryView({ id }: { id: string }) {
             {scale.labels.map((label, i) => (
               <span key={label}><i style={{ background: scale.colors[i] }} />{label}</span>
             ))}
-            <span><i style={{ background: DISPUTED }} /> disputed, unassigned</span>
+            <span><i style={{ background: DISPUTED }} /> no record is placed here (disputed, or recorded for the country as a whole)</span>
             {sys.event_summary.recorded_events === 0 ? (
               <span className="small dim">No records yet, so nothing is shaded. An unshaded map is an empty
                 dataset, not a quiet country.</span>
             ) : (
               <span className="small dim">This country's own range, not a shared scale.
-                {" "}{sys.event_summary.country_level} national or multi-region events are listed but
-                not drawn. What was reported and found — not a rate of disruption, and not comparable
+                {" "}National or multi-region events listed but not drawn: {sys.event_summary.country_level}. What was reported and found — not a rate of disruption, and not comparable
                 with any other country.</span>
             )}
             {sys.geography.precision_policy?.kinetic === "country" && sys.event_summary.recorded_events > 0 && (
@@ -376,12 +380,12 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
   );
 }
 
-function CountryHeader({ name, id, children }: { name: string; id: string; children?: React.ReactNode }) {
+function CountryHeader({ name, id, wholeCountry, children }: { name: string; id: string; wholeCountry?: boolean; children?: React.ReactNode }) {
   return (
     <header className="global-head">
       <div>
         <h1 className="ribbon-title">{name}</h1>
-        <div className="ribbon-sub">Energy Disruption Monitor · reported major disruptions by first-level region</div>
+        <div className="ribbon-sub">Energy Disruption Monitor · reported major disruptions{wholeCountry ? ", recorded for the country as a whole" : " by first-level region"}</div>
       </div>
       <div className="head-actions">
         {children}
@@ -412,6 +416,9 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
         {regionStatus === "disputed_unassigned" ? (
           <p className="small dim">Disputed and not assigned to any system's events: no events are
             recorded here by design. This is "not applicable", not "nothing happened".</p>
+        ) : regionStatus === "not_placed" ? (
+          <p className="small dim">No record is placed in {regionName}: records here are kept for the country as a
+            whole, or this area is drawn for reference only. This is "not applicable", not "nothing happened".</p>
         ) : placed.length === 0 && shared.length === 0 ? (
           <p className="small dim">No qualifying events recorded for {regionName}. That means none
             were found in the sources monitored. It is not evidence that none occurred.</p>
@@ -518,7 +525,7 @@ function HeldLine({ sys }: { sys: CountryBundle["system"] }) {
   return (
     <span className="held-line">
       {" "}The latest research pass looked at {o.candidates} candidate records for this country;{" "}
-      {held > 0 ? `${held} are held in review or wait on a rule decision and are not shown` : "none is held in review"},
+      {held > 0 ? `${held} of them are not shown because a reviewer, the publication rules or an undecided rule question holds them back` : "none is held back"},
       and the rest were rejected, duplicates, out of scope or published. See the Research coverage tab.
     </span>
   );
@@ -667,7 +674,7 @@ function ContextPanel({ bundle, ctx, ctxFailed }: { bundle: CountryBundle; ctx: 
 
 function laneDisplay(l: ResearchLane): string {
   const q = l.queries_declared != null ? `${l.queries_run ?? 0} of ${l.queries_declared} declared queries` : null;
-  const items = l.items_enumerated != null ? `${l.items_enumerated}${l.items_in_universe != null ? ` of ${l.items_in_universe}` : ""} items read` : null;
+  const items = l.items_enumerated != null ? `${l.items_enumerated}${l.items_in_universe != null ? ` of ${l.items_in_universe}` : ""} items listed or read` : null;
   return [q, items].filter(Boolean).join("; ");
 }
 

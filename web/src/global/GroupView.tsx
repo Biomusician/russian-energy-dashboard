@@ -23,7 +23,15 @@ import { fmtDate } from "../data";
 const MEMBER_RAMP = ["#27517a", "#2a7596", "#3c9aa5", "#69bea6", "#a9dba4"];
 const NO_DATA = "#5a5e66";
 const OTHER = "#141c25";
-const GULF_BOUNDS: [number, number, number, number] = [42, 15, 64, 40];
+
+/** The box that holds every member, from the manifest. A typed-in box cropped two members on a
+ *  tall phone, and would be a country list in the frontend by another name. */
+function unionBounds(boxes: [number, number, number, number][]): [number, number, number, number] | null {
+  if (!boxes.length) return null;
+  const pad = 1;
+  return [Math.min(...boxes.map((b) => b[0])) - pad, Math.min(...boxes.map((b) => b[1])) - pad,
+          Math.max(...boxes.map((b) => b[2])) + pad, Math.max(...boxes.map((b) => b[3])) + pad];
+}
 
 function classOf(v: number, max: number): number {
   // Five classes of magnitude down from the group's largest value. Classes, not positions.
@@ -91,6 +99,10 @@ export default function GroupView({ id }: { id: string }) {
   }, [ctx, metricId, subset]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const memberA3 = (ctx?.systems ?? []).map((s) => s.a3);
+  const bounds = useMemo(() => {
+    const ids = new Set((ctx?.systems ?? []).map((s) => s.system_id));
+    return unionBounds((manifest?.systems ?? []).filter((s) => ids.has(s.id) && s.bounds).map((s) => s.bounds!));
+  }, [ctx, manifest]);
   const region = ctx && metricId ? ctx.region[metricId] : null;
   const subsetNote = subset === "gcc" ? ctx?.memberships.gcc.note : subset === "opec" ? ctx?.memberships.opec.note : ctx?.note;
 
@@ -132,10 +144,18 @@ export default function GroupView({ id }: { id: string }) {
             <p>{ctx.statement}</p>
             <p className="small"><strong>Gulf, GCC and OPEC are three different things.</strong></p>
             <ul className="small group-kinds">
-              <li><strong>{ctx.label}.</strong> {ctx.note}</li>
-              <li><strong>{ctx.memberships.gcc.label}.</strong> {ctx.memberships.gcc.note}</li>
-              <li><strong>{ctx.memberships.opec.label}.</strong> {ctx.memberships.opec.note}</li>
+              <li><strong>{ctx.label}{ctx.member_names ? `: ${ctx.member_names.join(", ")}` : ""}.</strong> {ctx.note}</li>
+              <li><strong>{ctx.memberships.gcc.label}{ctx.memberships.gcc.member_names ? `: ${ctx.memberships.gcc.member_names.join(", ")}` : ""}.</strong> {ctx.memberships.gcc.note}
+                {ctx.memberships.gcc.basis && <span className="dim"> {ctx.memberships.gcc.basis}</span>}</li>
+              <li><strong>{ctx.memberships.opec.label}{ctx.memberships.opec.member_names ? `: ${ctx.memberships.opec.member_names.join(", ")}` : ""}.</strong> {ctx.memberships.opec.note}</li>
             </ul>
+            <p className="small"><strong>No country here has an index or a score.</strong> The one index on this site was built
+              for a single attack campaign elsewhere, and its weights and assumptions do not carry over. A missing index is not a zero.</p>
+            <p className="small"><strong>Countries are recorded under two rules.</strong> In the systems added most recently an attack is
+              recorded for the country as a whole, with no region, facility or operator, because in a small or concentrated
+              system a region and a kind of facility together can name one site. A system added earlier still places attacks
+              by region and names the facility; whether to bring its older records under the newer rule is an open decision.
+              Each card below says which rule applies.</p>
             <p className="small dim">{ctx.not_built}</p>
           </section>
         )}
@@ -163,10 +183,10 @@ export default function GroupView({ id }: { id: string }) {
             </div>
             <p className="small dim">{subsetNote}</p>
             <div className="global-map-wrap">
-              {world ? (
+              {world && bounds ? (
                 <SimpleMap
                   data={world}
-                  bounds={GULF_BOUNDS}
+                  bounds={bounds}
                   idProp="a3"
                   fill={fill}
                   outlineFilter={["in", ["get", "a3"], ["literal", memberA3]]}
@@ -181,7 +201,7 @@ export default function GroupView({ id }: { id: string }) {
                   onMap={(mm) => { mapRef.current = mm; }}
                 />
               ) : <div className="simple-map placeholder">Loading map…</div>}
-              <div className="map-hover small mono" aria-live="off">{hover ?? " "}</div>
+              <div className="map-hover-line small mono" aria-live="off">{hover ?? " "}</div>
             </div>
             <div className="map-legend-mini" aria-label="Map legend">
               <span className="legend-title"><strong>{m.label} — {m.year}</strong> <span className="dim">({m.unit}; national totals)</span></span>
@@ -250,8 +270,8 @@ export default function GroupView({ id }: { id: string }) {
               </div>
               {s.maturity === "research_preview" && <div className="badge research-partial">Research preview</div>}
               {s.recovery_status_withheld && (
-                <div className="badge context-only-badge" title="While attacks on energy facilities are still being reported, events are published but restart, repair and operating status are not.">
-                  Recovery status withheld: active or recent attack campaign
+                <div className="badge context-only-badge" title="While attacks on energy facilities are still being reported, or it is uncertain whether they have ended, an attack is published as an event but the facility's later repair, restart or operating status is not.">
+                  Later status of attacked facilities is not published
                 </div>
               )}
               <div className="sys-headline none"><span className="small">No index. Reviewed historical events and context only.</span></div>
@@ -260,7 +280,7 @@ export default function GroupView({ id }: { id: string }) {
                 <div className="small dim">
                   {s.attack_records_placed === "country"
                     ? "Attacks are recorded for the country as a whole, with no region or facility."
-                    : "Attacks are recorded by first-level region, the rule this system was built under before the Gulf rules."}
+                    : "Attacks are recorded by first-level region with the facility named: the earlier rule, under which this system was added."}
                 </div>
               )}
               <div className="small dim">
@@ -293,7 +313,7 @@ export default function GroupView({ id }: { id: string }) {
                   <ul className="lane-list small">
                     {ep.members.map((mm, i) => (
                       <li key={i}><span className="dim">{mm.region}: </span>
-                        {mm.withheld ? <span className="dim">Effect and facility status are not shown here while an attack campaign is active or recent.</span> : (mm.effect ?? <span className="dim">no effect text</span>)}
+                        {mm.withheld ? <span className="dim">Not summarised in this list while an attack campaign is active or recent. The country page gives the effect reported at the time; later status is not published anywhere.</span> : (mm.effect ?? <span className="dim">no effect text</span>)}
                       </li>
                     ))}
                   </ul>

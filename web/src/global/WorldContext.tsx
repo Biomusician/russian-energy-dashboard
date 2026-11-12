@@ -319,7 +319,7 @@ export default function WorldContext({ world, worldError, manifest }: {
         ) : (
           <div className="simple-map placeholder">{worldError ? "Map unavailable" : "Loading map…"}</div>
         )}
-        <div className="map-hover small mono" aria-live="off">{hover ?? " "}</div>
+        <div className="map-hover-line small mono" aria-live="off">{hover ?? " "}</div>
       </div>
       {mode && ctx ? (
         <div className="map-legend-mini" aria-label="Map legend">

@@ -1,6 +1,6 @@
 {
   "country": "QA",
-  "as_of_note": "Draft compiled 2026-11-11 by the Qatar source-audit lane (iteration 19). CONTEXT ONLY: never a scoring input. Every value was read from the cited page or dataset in this session; vintages are mixed (2023-2025) and stated per row, and must not be combined into one 'current' picture. No value is later than a 2025 annual total, and none describes the state of any facility. Bases differ by source: country totals from EIA; operator totals from QatarEnergy's and KAHRAMAA's datasets on the Qatar Open Data Portal (CC BY 4.0). Capacities are nameplate or contracted figures and say nothing about operation. National aggregates only: no facility, train, plant or route figure is recorded. See docs/countries/QA_SOURCE_AUDIT.md.",
+  "as_of_note": "Compiled 2026-11-11 by the Qatar source-audit lane (iteration 19). CONTEXT ONLY: never a scoring input. Every value was read from the cited page or dataset in this session; vintages are mixed (2023-2025) and stated per row, and must not be combined into one 'current' picture. No value is later than a 2025 annual total, and none describes the state of any facility. Bases differ by source: country totals from EIA; operator totals from QatarEnergy's and KAHRAMAA's datasets on the Qatar Open Data Portal (CC BY 4.0). Capacities are nameplate or contracted figures and say nothing about operation. National aggregates only: no facility, train, plant or route figure is recorded. See docs/countries/QA_SOURCE_AUDIT.md.",
   "metrics": [
     {
       "metric": "total_energy_production",
@@ -52,7 +52,7 @@
       "value": 3.7,
       "unit": "trillion cubic feet per year",
       "year": 2024,
-      "basis": "national total NAMEPLATE LNG export capacity at end-2024 per EIA; nameplate, not an operating rate. The operator's website states a company-total production capacity of 77 million tonnes a year (undated statement, read 2026-11-11). Train-level capacity is deliberately not recorded",
+      "basis": "national total NAMEPLATE LNG export capacity at end-2024 per EIA; nameplate, not an operating rate",
       "source": "U.S. EIA, Country Analysis Brief: Qatar (last updated 2025-10-20)",
       "url": "https://www.eia.gov/international/content/analysis/countries_long/qatar/"
     },

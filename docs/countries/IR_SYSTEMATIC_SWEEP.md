@@ -123,7 +123,7 @@ import (`REVIEW_GOVERNANCE.md`); every Iranian record is read end to end by the 
 
 **This pass did not finish.** 0 of 6 lanes ran as far as declared; 6 were stopped by the shared limit of 200 web searches per turn, which was not worked around. Each lane states below what did not run. A blocked source (HTTP 402 or 403, login wall, script-only page) was recorded as blocked and left.
 
-| Lane | Execution | Source window | Covered through | Queries | Items read | Languages required | Languages run |
+| Lane | Execution | Source window | Covered through | Queries | Items listed or read | Languages required | Languages run |
 |---|---|---|---|---|---|---|---|
 | IR1 | partial; stopped by search limit | inaccessible | not reached | 5 of 12 | - | fa | fa |
 | IR2 | partial; stopped by search limit | no_census_exists | not reached | 3 of 6 | 29 | fa | fa |
@@ -134,15 +134,15 @@ import (`REVIEW_GOVERNANCE.md`); every Iranian record is read end to end by the 
 
 Candidates 35: accepted after blind review 0, rejected 11, duplicate 0, held 23, out of scope 1. Published records in this system after the pass: 0.
 
-**Result.** No record is published. Two reached review. A 2024 sabotage record is with the owner: no opened source says the line was shut, which is what clause 3 asks. A 2025 attack record is held: the evidence reviewer rests it on a figure for one plant, which the safety reviewer removes as identifying, and the two could not be reconciled. Most Persian-language official archives were unreachable or script-only. Seasonal load shedding is held for the owner question on scheduled outages. No nuclear site appears in any record or citation.
+**Result.** No record from this pass is published. 23 candidates are held: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. Most Persian-language official archives were unreachable or script-only. Nothing nuclear appears in any record or citation.
 
 **Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
 
 ### Limitations, per lane
 
-- **IR1**: No official site could be opened, so nothing official was read. No winter gas shortfall was returned by any query run; that is a gap in this pass, not a finding that none was reported.
-- **IR2**: Three of six declared queries ran. Every media page with a refinery fire refused access, so no refinery record could be verified and none is proposed for acceptance.
-- **IR3**: No official electricity site could be opened, so nothing was enumerated and no official statement was read on its own page: every Tavanir or ministry statement here is as relayed by Radio Farda or Iran International. Six of twelve declared queries ran; four of those six were restricted to the three hosts that can be opened, which is narrower than the declared query, and the search engine did not separate results by Solar Hijri year (the 1401 and 1402 runs returned mostly 1403 to 1405 items). 2022, 2023 and the first half of 2024 are in effect not searched.
-- **IR4**: The listings that can be read show only the newest days, so the archive for 2022 to 2025 was not enumerated. Two of eight declared queries ran, both restricted to the three hosts that can be opened; the coal-mine and gas-pipeline queries and the 1400, 1401, 1402 and 1405 years did not run. Domestic agencies other than Tasnim were not retried after the audit's refusals.
-- **IR5**: Half the declared queries ran. The wire services cannot be opened directly, so their stories were read where another outlet carried them. Iran International's English home page was read as the only listing available and holds only the newest items;
-- **IR6**: Five of eleven declared queries ran. Iranian agency pages could not be opened, so every Iranian account is read through a wire or a foreign outlet.
+- **IR1**: The shared search allowance ran out before every declared query was run. The search tool gave little weight to year terms, so earlier years were reached mainly through publishers' own listings.
+- **IR2**: The shared search allowance ran out before every declared query was run. At least one source in this lane refused automated access and was not worked around. The listings that could be read were read in part: by title, or for their newest pages only. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.
+- **IR3**: The shared search allowance ran out before every declared query was run. Official statements were read as carried by other publishers, not on the issuing body's own site. Some declared documents were not read.
+- **IR4**: The shared search allowance ran out before every declared query was run. At least one source in this lane refused automated access and was not worked around. The listings that could be read were read in part: by title, or for their newest pages only. Some declared documents were not read. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.
+- **IR5**: The shared search allowance ran out before every declared query was run. The listings that could be read were read in part: by title, or for their newest pages only. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.
+- **IR6**: The shared search allowance ran out before every declared query was run. At least one source in this lane refused automated access and was not worked around. Official statements were read as carried by other publishers, not on the issuing body's own site. Some declared documents were not read. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.

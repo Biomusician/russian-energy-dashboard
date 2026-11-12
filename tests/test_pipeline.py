@@ -6616,6 +6616,10 @@ def test_region_counts_are_the_placed_events_and_disputed_units_carry_none():
             placed = sum(1 for e in events if e["region_code"] == p["code"])
             if p["status"] == "disputed_unassigned":
                 assert p["recorded_events"] is None and placed == 0, p["code"]
+            elif p.get("records_placed") is False:
+                # A unit where this system never places a record (iteration 19): no count applies,
+                # so none is served, and nothing may be placed there.
+                assert p["recorded_events"] is None and placed == 0, (sid, p["code"])
             else:
                 assert p["recorded_events"] == placed, (sid, p["code"])
 

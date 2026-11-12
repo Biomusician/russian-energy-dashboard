@@ -862,6 +862,107 @@ def test_the_committed_review_edits_hand_back_nothing_about_an_abstracted_record
                 assert not B.METHOD_WORDING.search(json.dumps(e["set"], ensure_ascii=False)), e["event_id"]
 
 
+def test_review_edits_of_a_system_under_the_campaign_policy_keep_the_result_and_nothing_else():
+    """An edit's reason, a `replace` pair and a superseded `set` each restated what the edit
+    removed: 'briefly halted', a load figure, the station a blackout was traced to. For a system
+    under the campaign policy the public file keeps one `set` of the final text per field, a
+    label, and nothing for a record that is not published."""
+    ar = _load("apply_reviews")
+    edits = json.loads((CURATED / "review_edits.json").read_text(encoding="utf-8"))["edits"]
+    restricted = ar._restricted()
+    assert set(restricted) >= {"ae", "bh", "iq", "ir", "kw", "om", "qa", "sa"}
+    seen = set()
+    for cc in restricted:
+        published = {e["event_id"] for e in json.loads((CURATED / cc / "events.json").read_text(encoding="utf-8"))["events"]}
+        for e in edits:
+            if e["event_id"].split("-")[0] != cc:
+                continue
+            assert "set" in e and "replace" not in e, e["event_id"]
+            assert e["reason"].endswith(": " + ar.GENERIC_REASON), (e["event_id"], e["reason"])
+            assert re.fullmatch(r"(Blind review, role\(s\) [A-C](, [A-C])*(, and a stricter lead ruling confirmed by all three on the final text)?"
+                                r"|Lead ruling, stricter than the roles and confirmed by all three on the final text|Review correction)",
+                                e["reason"][: -len(": " + ar.GENERIC_REASON)]), e["reason"]
+            assert e["event_id"] in published, f"{e['event_id']}: an edit for a record that is not published"
+            assert (e["event_id"], e["field"]) not in seen, (e["event_id"], e["field"])
+            seen.add((e["event_id"], e["field"]))
+    assert seen, "no edit was checked"
+
+
+def test_collapsing_review_edits_is_a_label_and_the_final_text():
+    ar = _load("apply_reviews")
+    assert ar._who(["Blind review, role(s) B: B: removes 'with load at about 12,400 MW'"]) == "Blind review, role(s) B"
+    assert ar._who(["Blind review, role(s) A, B: x", "Lead ruling, stricter than the roles and confirmed: y"]).startswith(
+        "Blind review, role(s) A, B, and a stricter lead ruling")
+    assert ar._who(["Active-campaign publication policy: 'briefly' states how soon loadings resumed"]) == "Review correction"
+    # Idempotent on its own output.
+    assert ar._who([ar._who(["Blind review, role(s) C: z", "Lead ruling: q"]) + ": " + ar.GENERIC_REASON]) == ar._who(
+        ["Blind review, role(s) C: z", "Lead ruling: q"])
+
+
+def test_a_short_link_is_not_a_citation_for_a_record_published_without_its_place():
+    """`/?p=587846` passed the address rule because it has no words; the address it redirects to
+    carries the headline."""
+    imp = _load("import_candidates")
+    assert imp.short_link("https://example.org/?p=587846")
+    assert not imp.short_link("https://example.org/article/126594")
+    assert not imp.short_link("https://example.org/news/2026/03/a-fire-is-reported?page=1")
+    assert imp.unpublishable_address("https://example.org/?p=587846", set())
+    r = _full_candidate(candidate_id="kw-2026-03-20-refinery-attack-1", cause="kinetic_strike", asset_class="refinery")
+    r["sources"] = [{**r["sources"][0], "url": "https://example.org/?p=587846"}]
+    assert "address" in (imp.review("kw", r, {"KW-AH"}, policy=POLICY) or "")
+
+
+def test_a_headline_is_shown_with_its_gloss_or_not_at_all():
+    imp = _load("import_candidates")
+    s = {"url": "https://example.org/a", "publisher": "P", "language": "ar",
+         "title_original": "الكهرباء: بدء اعادة الطاقة بشكل تدريجي", "title_en": "Electricity: power is being restored gradually"}
+    out = imp._source(s, True)
+    assert "title_en" not in out and "title_original" not in out
+    ok = imp._source({**s, "title_original": "انقطاع الكهرباء", "title_en": "Power cut"}, True)
+    assert ok["title_en"] == "Power cut" and ok["title_original"] == "انقطاع الكهرباء"
+
+
+def test_a_campaign_basis_says_only_that_attacks_are_reported():
+    """Iraq's basis gave a region, two classes and a date three days old; Oman's a tally and a
+    class for records the review had held. Both are printed on the country page."""
+    ok = {"campaigns": [{"campaign_id": "iq-x", "system_id": "iq", "status_basis": "Attacks on energy facilities in Iraq are reported from 2022 onward, including in 2026. No end is reported.",
+                         "member_rule": {"from_basis": "Starts at the window start."},
+                         "status_sources": [{"publisher": "P", "published": "2026-11-02"}]}],
+          "system_states": {"iq": {"basis": "Attacks on energy facilities in Iraq were reported in 2026.", "limitation": "One status search."}}}
+    assert B.campaign_text_problems(ok) == []
+    for bad in ("Attacks on gas and oil fields in the Kurdistan Region are reported, the most recent on 2026-11-08.",
+                "Two attacks on fuel storage in Oman were reported in March 2026 and none since.",
+                "Energy facilities were attacked repeatedly.", "A drone attack was reported in 2026.",
+                "Attacks were reported in the south of the country.", "Attacks were reported in April 2026."):
+        doc = json.loads(json.dumps(ok))
+        doc["system_states"]["iq"]["basis"] = bad
+        assert B.campaign_text_problems(doc), bad
+    doc = json.loads(json.dumps(ok))
+    doc["campaigns"][0]["status_sources"] = ["https://example.org/mapping-attacks"]
+    assert any("never an address" in x for x in B.campaign_text_problems(doc))
+    doc = json.loads(json.dumps(ok))
+    doc["system_states"]["iq"]["basis"] = "Attacks were reported around Basrah in 2026."
+    assert any("first-level unit" in x for x in B.campaign_text_problems(doc, {"iq": ["basrah"]}))
+
+
+@needs_payload
+def test_the_committed_and_served_campaign_bases_name_no_unit_class_tally_or_day():
+    imp = _load("import_candidates")
+    campaigns = B.load_campaigns()
+
+    def units(cc):
+        # The served map carries the same unit names and exists where the raw cache does not.
+        return [(f["properties"]["code"], f["properties"]["name"]) for f in _json(f"systems/{cc}/regions.geojson")["features"]]
+    words = {cc: imp.unit_words(units(cc)) for cc in ("ae", "bh", "iq", "ir", "kw", "om", "qa", "sa")}
+    assert B.campaign_text_problems(campaigns, words) == []
+    for cc in words:
+        served = json.loads((WEB / "systems" / cc / "system.json").read_text(encoding="utf-8"))
+        texts = [served["campaign_state"]["basis"], served["campaign_state"].get("limitation")]
+        texts += [c["status_basis"] for c in served["publication_policy"]["campaigns"]]
+        doc = {"campaigns": [], "system_states": {cc: {"basis": " ".join(x for x in texts if x)}}}
+        assert B.campaign_text_problems(doc, words) == [], cc
+
+
 def test_the_gate_refuses_a_recovery_status_outside_the_vocabulary():
     """A lane wrote 'RESEARCHED'. It passed three reviews and stopped the whole build."""
     imp = _load("import_candidates")
@@ -876,40 +977,56 @@ def test_the_gate_refuses_a_recovery_status_outside_the_vocabulary():
     assert "go together" not in (imp.review("kw", r, {"KW-AH"}, policy=POLICY) or "")
 
 
-def test_a_lane_note_publishes_no_attack_narrative_and_no_dated_event_of_the_campaign_year():
-    """Lane notes are unreviewed prose. Read together before release, the first versions were a
-    list of strikes by date and class, with tallies, that no reviewer had accepted."""
+def test_a_lane_note_publishes_fixed_sentences_and_none_of_the_researchers_prose():
+    """Lane notes are unreviewed prose. The first versions were a list of strikes by date and
+    class; two word-list filters then let paraphrase through ('a contained fire at an oil-industry
+    zone', 'the June explosion', 'supplies were stable')."""
     w = _load("write_gulf_pass")
-    note = ("Seven of twelve declared queries ran. For 2026 the queries surfaced attacks on three dates in March. "
-            "One outlet calls it the third since the war began. A fire at an installation was reported on 2026-11-10. "
-            "A statement dated 18 July gives no figure. The listing refused access (HTTP 403). "
-            "No refinery fire in 2023 was returned, which is a property of the results.")
-    out = w.process_only(note)
-    assert out == ("Seven of twelve declared queries ran. The listing refused access (HTTP 403). "
-                   "No refinery fire in 2023 was returned, which is a property of the results.")
-    assert w.process_only("Attacks dominate the results.") == w.WITHHELD_NOTE
-    assert w.process_only("Every string returned the same few 2023-2026 events. The 2026 records lack an opened source.") == w.WITHHELD_NOTE
-    assert w.public_text("A drone attack was reported in March 2026.", []) == w.WITHHELD_NOTE
+    raw = ("Seven of twelve declared queries ran. For 2026 the queries surfaced attacks on three dates in March. "
+           "It mentions a contained fire at an oil-industry zone, and the minister saying supplies were stable. "
+           "The listing refused access (HTTP 403). The archive is script-rendered. English-language reports of the June explosion.")
+    body = {"execution": "partial", "source_window": "no_census_exists", "queries_declared": 12, "queries_run": 7,
+            "languages_required": ["ar", "en"], "languages_executed": ["ar"]}
+    out = w.fixed_notes(raw, body, False)
+    assert out == " ".join([w.NOTE_UNRUN, w.NOTE_LANGUAGE, w.NOTE_REFUSED, w.NOTE_SCRIPT, w.NOTE_NO_CENSUS])
+    for word in ("fire", "attack", "stable", "explosion", "March", "zone"):
+        assert word not in out
+    assert w.fixed_notes("", {**body, "execution": "not_started"}, False) == w.NOTE_UNASSIGNED
+    assert w.fixed_notes("nothing recognisable", {"execution": "partial", "source_window": "inaccessible",
+                                                  "languages_required": [], "languages_executed": []}, False) == w.NOTE_DEFAULT
+    assert w.fixed_notes("x", body, True).startswith(w.NOTE_ALLOWANCE)
 
 
 @pytest.mark.parametrize("cc", ["ae", "bh", "iq", "ir", "kw", "om", "qa", "sa"])
-def test_the_published_research_log_of_a_gulf_system_carries_no_conflict_narrative(cc):
+def test_the_published_research_log_of_a_gulf_system_carries_fixed_notes_only(cc):
     w = _load("write_gulf_pass")
+    allowed = set(w.LANE_NOTES)
+
+    def check(lanes, where):
+        for lane in lanes:
+            assert "finding" not in lane, (cc, where, lane["lane"])
+            rest = lane.get("limitation") or ""
+            # Longest first: one fixed sentence may begin like another.
+            for note in sorted(allowed, key=len, reverse=True):
+                rest = rest.replace(note, "")
+            assert not rest.strip(), (cc, where, lane["lane"], rest.strip()[:80])
+
     log = json.loads((CURATED / cc / "research_log.json").read_text(encoding="utf-8"))
     newest = [p for p in log["passes"] if p.get("by") == w.PASS_BY]
     assert newest, f"{cc}: the iteration-19 pass is not in the log"
-    for lane in newest[-1]["lanes"]:
-        for k in ("finding", "limitation"):
-            text = lane.get(k) or ""
-            assert not w.CONFLICT_NARRATIVE.search(text), (cc, lane["lane"], k, w.CONFLICT_NARRATIVE.search(text).group(0))
-            assert not w.CURRENT_YEAR_EVENT.search(text), (cc, lane["lane"], k)
-    # And the same holds for what the browser is served.
+    check(newest[-1]["lanes"], "curated")
     served = json.loads((WEB / "systems" / cc / "system.json").read_text(encoding="utf-8"))["research_log"]["passes"]
     for p in served:
-        if p.get("by") != w.PASS_BY:
-            continue
-        for lane in p["lanes"]:
-            assert not w.CONFLICT_NARRATIVE.search((lane.get("finding") or "") + " " + (lane.get("limitation") or "")), (cc, lane["lane"])
+        if p.get("by") == w.PASS_BY:
+            check(p["lanes"], "served")
+
+
+def test_a_lane_nobody_started_is_not_stopped_by_the_search_limit():
+    lane = {"execution": "not_started", "source_window": "unknown", "stopped_by": "search_limit"}
+    assert B.lane_summary_state(lane) == "not_started"
+    assert B.lane_summary_state({**lane, "source_window": "inaccessible"}) == "blocked_by_source"
+    assert B.lane_summary_state({"execution": "partial", "source_window": "inaccessible", "stopped_by": "search_limit"}) == "blocked_by_source"
+    assert B.lane_summary_state({"execution": "partial", "source_window": "no_census_exists", "stopped_by": "search_limit"}) == "stopped_by_search_limit"
 
 
 def test_no_served_note_states_a_number_of_country_systems():
@@ -934,7 +1051,7 @@ def test_a_qualified_language_entry_does_not_count_as_a_language_run():
     w = _load("write_gulf_pass")
     entries = [{"execution": "partial", "source_window": "no_census_exists", "covered_through": None,
                 "languages_executed": ["ar", "en (2022 only)"]}]
-    body, _ = w.merged(entries, "declared_query_set", ["ar", "en"])
+    body, _, _ = w.merged(entries, "declared_query_set", ["ar", "en"])
     assert body["languages_executed"] == ["ar"]
 
 
@@ -970,10 +1087,14 @@ def test_a_lane_run_in_fewer_languages_than_required_cannot_be_complete(required
     assert any("required languages" in p for p in B.lane_problems(lane, ["2022-01-01", "2026-11-11"]))
 
 
-def test_the_pass_writer_takes_names_and_status_out_of_published_lane_text():
+def test_the_pass_writer_publishes_no_name_and_no_status_from_a_lane_note():
+    """Once a filter took names and status sentences out of the note. Now none of the note is
+    published, so neither can be."""
     w = _load("write_gulf_pass")
-    out = w.public_text("Example Refinery was read. The unit restarted in May. Nothing else found.", ["Example Refinery"])
-    assert "Example Refinery" not in out and "restart" not in out.lower() and "Nothing else found." in out
+    body = {"execution": "partial", "source_window": "inaccessible", "languages_required": ["ar"], "languages_executed": ["ar"]}
+    out = w.fixed_notes("Example Refinery was read. The unit restarted in May. Nothing else found.", body, False)
+    assert out == w.NOTE_DEFAULT
+    assert not hasattr(w, "public_text")
 
 
 # --- frontend contracts read from source -----------------------------------------------------------
@@ -1085,3 +1206,282 @@ def test_onboarding_refuses_a_draft_that_is_not_ready(mutate, needle):
     mutate(d, p, dec)
     with pytest.raises(ValueError, match=needle):
         ob.assemble("kw", d, p, dec, {"KW-AH", "KW-JA"})
+
+# --- red team, test architecture: every rule again, on what the browser is served -----------------
+
+RECENT_EPISODE_KEYS = {"system_id", "country", "episode_id", "episode_name", "basis", "records", "first_date",
+                       "last_date", "date_precision", "classes", "causes", "members", "more_members"}
+RECENT_MEMBER_KEYS = {"date", "date_precision", "region", "effect", "withheld"}
+
+
+def _country_policy(system):
+    return (system["geography"].get("precision_policy") or {}).get("kinetic") == "country"
+
+
+@needs_payload
+@pytest.mark.parametrize("rel,members,regional", [("global/gulf.json", GULF, True),
+                                                  ("global/recent_evidence.json", systems.COUNTRY_SYSTEMS, False)])
+def test_a_recent_list_shows_of_each_record_only_what_that_record_may_show(rel, members, regional):
+    """The first test of this list trusted the list's own `withheld` flag. Here what a row may
+    show is worked out from the country's own served record and the campaign register. In the
+    regional list a campaign-covered record is the country's and a row carries a row key, never a
+    country's episode id (older ids name the facility and the effect)."""
+    doc = _json(rel)
+    recent = doc.get("recent") or doc
+    campaigns = _campaigns()
+    expected, withheld_seen, abstracted_seen = [], 0, 0
+    for sid in members:
+        expected += [(ep["last_date"], sid, ep["episode_id"]) for ep in _json(f"systems/{sid}/events.json")["episodes"]]
+    expected.sort(reverse=True)
+    expected = expected[:B.RECENT_EPISODES]
+    assert [(ep["last_date"], ep["system_id"]) for ep in recent["episodes"]] == [(d, s) for d, s, _ in expected]
+    for n, (ep, (_, sid, real_id)) in enumerate(zip(recent["episodes"], expected)):
+        assert set(ep) == RECENT_EPISODE_KEYS, (real_id, sorted(set(ep) ^ RECENT_EPISODE_KEYS))
+        assert ep["episode_id"] == (f"{sid}-row-{n + 1:02d}" if regional else real_id), real_id
+        system, payload = _json(f"systems/{sid}/system.json"), _json(f"systems/{sid}/events.json")
+        by_id = {e["event_id"]: e for e in payload["events"]}
+        served = next(x for x in payload["episodes"] if x["episode_id"] == real_id)
+        pool = [by_id[x] for x in served["event_ids"]]
+        assert ep["country"] == system["name"], real_id
+        assert ep["records"] == len(pool) == len(ep["members"]) + ep["more_members"], real_id
+        assert ep["episode_name"] == (served["name"] if len(pool) > 1 else None), real_id
+        for m, e in zip(ep["members"], pool):
+            assert set(m) == RECENT_MEMBER_KEYS, real_id
+            assert m["date"] == e["date"], e["event_id"]
+            covered = B.campaign_of(e, sid, campaigns) is not None   # from the register, never from the list's flag
+            assert m["withheld"] is covered and bool(e["publication"]) is covered, e["event_id"]
+            assert m["effect"] == (None if covered else e["effect"]), e["event_id"]
+            own = e["region_name"] or ("Multiple regions" if e["regions_affected"] else "National")
+            assert m["region"] == ("National" if regional and covered else own), e["event_id"]
+            withheld_seen += covered
+            if _country_policy(system) and e["cause"] in B.KINETIC_CAUSES:
+                abstracted_seen += 1
+                assert m["region"] == "National", e["event_id"]
+    assert withheld_seen > 0, "no campaign record was in the list: this test proved nothing"
+    if regional:
+        assert abstracted_seen > 0
+        text = json.dumps(recent, ensure_ascii=False).lower()
+        for sid in members:
+            for e in _json(f"systems/{sid}/events.json")["events"]:
+                if B.campaign_of(e, sid, campaigns) is not None:
+                    assert e["event_id"] not in text and (e.get("facility_name") or "\x00").lower() not in text, e["event_id"]
+
+
+def test_an_attack_record_published_for_the_country_is_its_own_episode():
+    """A declared episode's name and id are written by hand and pass no text rule."""
+    system = {"geography": {"precision_policy": {"kinetic": "country", "reason": "r"}}}
+    src = [{"url": "https://example.org/a", "publisher": "P", "date": "2026-03-20"}]
+    events = [_event(event_id=f"kw-2026-03-2{i}-refinery-attack-{i}", date=f"2026-03-2{i}", sources=src, hazard_name=None,
+                     summary="An attack was reported on a refinery in Kuwait.") for i in (0, 1)]
+    for e in events:
+        e["episode_id"] = e["event_id"]
+    assert B.precision_problems("kw", system, events) == []
+    for e in events:
+        e["episode_id"] = "kw-2026-03-named-refinery-drone-wave"
+    assert any("its own episode" in p for p in B.precision_problems("kw", system, events))
+
+
+@needs_payload
+@pytest.mark.parametrize("sid", NEW)
+def test_no_served_attack_record_of_a_new_system_sits_in_a_declared_episode(sid):
+    payload = _json(f"systems/{sid}/events.json")
+    for e in payload["events"]:
+        if e["cause"] in B.KINETIC_CAUSES:
+            assert e["episode_id"] == e["event_id"], e["event_id"]
+    for ep in payload["episodes"]:
+        if any(x for x in payload["events"] if x["event_id"] in ep["event_ids"] and x["cause"] in B.KINETIC_CAUSES):
+            assert ep["basis"] == "singleton" and not ep["name"], ep["episode_id"]
+
+
+@needs_payload
+def test_every_served_headline_is_one_the_import_gate_would_publish_today():
+    """The headline rules (status, weight, English, gloss without original) live in the gate. This
+    re-applies the gate's own function to what was served, and to no fixture."""
+    imp = _load("import_candidates")
+    campaigns = _campaigns()
+    shown = 0
+    for sid in NEW:
+        for e in _json(f"systems/{sid}/events.json")["events"]:
+            for s in e["sources"]:
+                if not (s.get("title_original") or s.get("title_en")):
+                    continue
+                shown += 1
+                gate = imp._source(s, with_titles=True)
+                assert (s.get("title_original"), s.get("title_en")) == (gate.get("title_original"), gate.get("title_en")), e["event_id"]
+                assert B.campaign_of(e, sid, campaigns) is None, f"{e['event_id']}: a headline on a campaign record"
+                assert not B.ROUTE_WORDING.search(f"{s.get('title_original')} {s.get('title_en')}"), e["event_id"]
+    assert shown > 0, "no headline is served: this test proved nothing"
+
+
+@needs_payload
+def test_every_gulf_figure_is_the_national_contexts_own_and_each_share_is_its_arithmetic():
+    """The sum is checked elsewhere against the file's own values. This checks the values, the year
+    and the world share against the inputs they claim to come from."""
+    d, ctx = _json("global/gulf.json"), _json("global/energy_context.json")
+    rows = {r["a3"]: r for r in ctx["countries"]}
+    registry = {s["id"]: s for s in systems.SYSTEMS}
+    assert set(GC.BASE_METRICS) <= set(d["metrics"])
+    assert d["sources"][ctx["source"]["id"]]["release"] == ctx["source"]["release"]
+    for s in d["systems"]:
+        assert (s["name"], s["a3"]) == (registry[s["system_id"]]["name"], registry[s["system_id"]]["admin0_a3"][0])
+        assert {m: s["values"][m] for m in GC.BASE_METRICS} == {m: rows[s["a3"]]["values"].get(m) for m in GC.BASE_METRICS}, s["system_id"]
+    for mid in GC.BASE_METRICS:
+        m, r = d["metrics"][mid], d["region"][mid]
+        assert (m["year"], m["source_id"]) == (ctx["comparison_year"], ctx["source"]["id"]), mid
+        assert (m["label"], m["unit"]) == (ctx["metrics"][mid]["label"], ctx["metrics"][mid]["unit"]), mid
+        vals = [s["values"][mid] for s in d["systems"]]
+        if any(v is None for v in vals):
+            assert r == {"value": None, "world_share": None,
+                         "reason": f"{sum(1 for v in vals if v is None)} of {len(vals)} members have no value"}, mid
+        else:
+            world = ctx["world"]["values"][mid]
+            assert r["value"] == round(sum(vals), 3) and r["reason"] is None, mid
+            assert r["world_share"] == round(sum(vals) / world, 4) and 0 < r["world_share"] <= 1, mid
+
+
+@needs_payload
+def test_every_gulf_card_and_manifest_entry_says_what_that_countrys_own_payload_says():
+    d = _json("global/gulf.json")
+    served_manifest = _json("global/manifest.json")
+    manifest = {s["id"]: s for s in served_manifest["systems"]}
+    for gid, g in served_manifest["groups"].items():
+        # Registry order, which is alphabetical by name: the home page filter lists them as given.
+        assert g["members"] == [s["id"] for s in systems.SYSTEMS if s["id"] in systems.GROUPS[gid]["members"]], gid
+    assert d["memberships"]["gcc"]["members"] == served_manifest["groups"]["gcc"]["members"]
+    assert d["memberships"]["opec"]["members"] == served_manifest["groups"]["opec"]["members"]
+    states = _campaigns()["system_states"]
+    for s in d["systems"]:
+        sid = s["system_id"]
+        p = _json(f"systems/{sid}/system.json")
+        assert p["campaign_state"] == states[sid], f"{sid}: the served classification is not the curated one"
+        restricted = states[sid]["state"] in B.RESTRICTING_STATES or p["publication_policy"]["withheld_records"] > 0
+        assert s["recovery_status_withheld"] is restricted and manifest[sid]["campaign_restricted"] is restricted, sid
+        assert s["maturity"] == p["maturity"] == manifest[sid]["maturity"], sid
+        assert s["attack_records_placed"] == ((p["geography"].get("precision_policy") or {}).get("kinetic") or "admin1"), sid
+        assert s["reporting_environment"] == p["reporting_environment"] == manifest[sid]["reporting_environment"], sid
+        lanes = (p["research_log"]["passes"][-1].get("lanes") or []) if p["research_log"]["passes"] else []
+        assert s["languages_required"] == sorted({x for lane in lanes for x in lane.get("languages_required") or []}), sid
+        assert s["languages_executed"] == sorted({x for lane in lanes for x in lane.get("languages_executed") or []}), sid
+        assert s["last_systematic_pass"] == p["research_freshness"]["last_systematic_pass"], sid
+
+
+@needs_payload
+def test_the_two_copies_of_every_country_and_global_file_are_the_same_bytes():
+    """Half the suite reads data/processed and half reads web/public/data. Only three files were
+    ever compared; the browser gets the second copy."""
+    names = list(artifacts.GLOBAL_PAYLOADS) + list(artifacts.system_payload_paths())
+    assert GC.OUTPUT in names and "systems/ir/system.json" in names
+    different = [n for n in names if (WEB / n).read_bytes() != (ROOT / "data" / "processed" / n).read_bytes()]
+    assert different == []
+
+
+LANE_STRUCTURE = {"lane", "source_family", "universe_kind", "execution", "source_window", "covered_through", "stopped_by", "status"}
+PASS_SCOPE = (r"inclusion clauses 1-7 as written; lanes and queries declared before searching \(docs/countries/[A-Z0-9_]+\.md\); "
+              r"every published record reviewed blind by three independent roles and confirmed on its final text")
+
+
+@needs_payload
+@pytest.mark.parametrize("cc", NEW)
+def test_every_pass_of_a_new_systems_served_research_log_is_fixed_sentences_whoever_signed_it(cc):
+    """The fixed-notes test reads `limitation` and `finding` of the pass this iteration's writer
+    signed. A pass signed by anyone else, a third prose field on a lane, and the pass's own
+    `scope` and `status_reason` are read by nothing. For a system onboarded under the Gulf rules
+    every pass is held to the same whitelist, on the copy the browser is served."""
+    w = _load("write_gulf_pass")
+    notes = sorted(w.LANE_NOTES, key=len, reverse=True)
+    passes = _json(f"systems/{cc}/system.json")["research_log"]["passes"]
+    assert passes, cc
+    for i, p in enumerate(passes):
+        assert {k for k, v in p.items() if isinstance(v, str)} <= {"date", "by", "kind", "scope", "status", "status_reason"}, (cc, i)
+        assert re.fullmatch(r"\d+ of \d+ lanes executed as far as declared; the rest are stated per lane", p["status_reason"]), (cc, i)
+        assert re.fullmatch(PASS_SCOPE, p["scope"]), (cc, i, p["scope"])
+        for lane in p["lanes"]:
+            prose = {k for k, v in lane.items() if isinstance(v, str)} - LANE_STRUCTURE
+            assert prose <= {"limitation"}, (cc, i, lane["lane"], sorted(prose))
+            rest = lane.get("limitation") or ""
+            for note in notes:
+                rest = rest.replace(note, "")
+            assert not rest.strip(), (cc, i, lane["lane"], rest.strip()[:80])
+
+
+@needs_payload
+@pytest.mark.parametrize("sid", systems.COUNTRY_SYSTEMS)
+def test_every_served_date_is_inside_the_window_and_a_converted_one_can_be_reproduced(sid):
+    """The gate checks a converted date against the source's text. The build checks only that the
+    text is present, so a curated record a day out, or a Solar Hijri year left as written, ships."""
+    imp = _load("import_candidates")
+    system = _json(f"systems/{sid}/system.json")
+    for e in _json(f"systems/{sid}/events.json")["events"]:
+        assert B.COVERAGE_START <= e["date"] <= system["as_of"], e["event_id"]
+        assert imp.date_problem(e) is None, (e["event_id"], imp.date_problem(e))
+        cal = e.get("date_calendar")
+        assert cal in (None, *B.DATE_CALENDARS), e["event_id"]
+        if cal and cal != "gregorian":
+            n = C.normalize_date(e["source_date_text"], cal)
+            assert e["conversion_basis"] == n["conversion_basis"], e["event_id"]
+            assert not (cal == "hijri" and e["date_precision"] == "day" and "may differ" not in e["conversion_basis"]), e["event_id"]
+
+
+@needs_payload
+def test_the_served_iranian_map_carries_todays_province_codes():
+    """The same pins as the Natural Earth test, on the file the map draws. That test rebuilds the
+    units from the raw cache and is skipped wherever the cache is absent, which includes CI."""
+    feats = _json("systems/ir/regions.geojson")["features"]
+    units = {f["properties"]["code"]: f["properties"]["name"] for f in feats}
+    assert len(feats) == len(units) == 31 and set(units) == {f"IR-{i:02d}" for i in range(31)}
+    assert (units["IR-07"], units["IR-23"], units["IR-30"]) == ("Fars", "Tehran", "Alborz")
+    assert (units["IR-22"], units["IR-06"], units["IR-18"]) == ("Hormozgan", "Khuzestan", "Bushehr")
+
+
+@needs_payload
+@pytest.mark.parametrize("sid", NEW)
+def test_the_served_map_draws_the_units_the_system_declares(sid):
+    doc = json.loads((CURATED / sid / "system.json").read_text(encoding="utf-8"))
+    feats = _json(f"systems/{sid}/regions.geojson")["features"]
+    codes = [f["properties"]["code"] for f in feats]
+    assert len(codes) == len(set(codes)) == doc["geography"]["units_expected"], sid
+    barred = set(doc["geography"]["precision_policy"].get("no_event_units") or [])
+    assert all(not f["properties"]["recorded_events"] for f in feats if f["properties"]["code"] in barred), sid
+
+
+# The latest date each Gulf campaign's rule may start from. Moving one LATER publishes recovery
+# status for records the reviewers accepted as withheld: do it here, on purpose, with the register.
+CAMPAIGN_FROM = {"ir": "2025-06-01", "iq": "2022-01-01", "ae": "2026-01-01", "bh": "2026-01-01", "kw": "2026-01-01",
+                 "om": "2026-01-01", "qa": "2026-01-01", "sa": "2026-01-01"}
+
+
+def test_no_gulf_campaign_rule_starts_later_or_covers_fewer_causes_than_reviewed():
+    by = {c["system_id"]: c for c in _campaigns()["campaigns"]}
+    assert set(CAMPAIGN_FROM) == set(GULF)
+    for sid, latest in CAMPAIGN_FROM.items():
+        rule = by[sid]["member_rule"]
+        assert by[sid]["policy_applied"] is True and rule["from"] <= latest, sid
+        assert set(B.KINETIC_CAUSES) <= set(rule.get("causes", B.KINETIC_CAUSES)), sid
+
+
+@needs_payload
+@pytest.mark.parametrize("sid", sorted(CAMPAIGN_FROM))
+def test_every_served_attack_record_since_its_campaign_began_withholds_status(sid):
+    """Expected from the pinned dates above, not from the register the build itself read."""
+    for e in _json(f"systems/{sid}/events.json")["events"]:
+        if e["cause"] in B.KINETIC_CAUSES and e["date"] >= CAMPAIGN_FROM[sid]:
+            assert e["recovery"] == {"research_status": B.WITHHELD, "kind": None, "date": None, "evidence": None, "url": None}, e["event_id"]
+            assert e["publication"] and e["date_end"] is None, e["event_id"]
+
+
+# ---- RED TODAY: each of these fails on the repository as it stands. See the report. ---------------
+
+def test_every_mutation_in_the_campaign_still_has_its_anchor():
+    """A mutation whose anchor text has drifted raises inside the campaign and stops it: every
+    mutation after it is never run, and the count it prints is never printed."""
+    mc = _load("mutation_campaign")
+    stale = []
+    for name, edits, _ in mc.MUTATIONS:
+        for rel, mutate in edits:
+            text = (ROOT / rel).read_text(encoding="utf-8")
+            try:
+                if mutate(text) == text:
+                    stale.append(f"{name}: changes nothing in {rel}")
+            except AssertionError as err:
+                stale.append(f"{name}: {err}")
+    assert stale == []

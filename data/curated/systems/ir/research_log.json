@@ -43,9 +43,8 @@
           ],
           "queries_declared": 12,
           "queries_run": 5,
-          "finding": "The search index does hold SHANA items with titles, including incident statements, but they cannot be opened from here. The only pages readable for this lane were Tasnim, Al-Monitor's Persian edition and Iran International.",
-          "limitation": "No official site could be opened, so nothing official was read. No winter gas shortfall was returned by any query run; that is a gap in this pass, not a finding that none was reported.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. The search tool gave little weight to year terms, so earlier years were reached mainly through publishers' own listings.",
           "carried_forward": false
         },
         {
@@ -67,9 +66,8 @@
           "queries_declared": 6,
           "queries_run": 3,
           "items_enumerated": 29,
-          "finding": "NIORDC's first listing page carries no incident notices. Persian media report refinery fires with dates and officials' statements, but in the reports seen none states a shutdown or a throughput cut, which is what clause 1 needs.",
-          "limitation": "Three of six declared queries ran. Every media page with a refinery fire refused access, so no refinery record could be verified and none is proposed for acceptance.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. At least one source in this lane refused automated access and was not worked around. The listings that could be read were read in part: by title, or for their newest pages only. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
           "carried_forward": false
         },
         {
@@ -90,9 +88,8 @@
           ],
           "queries_declared": 12,
           "queries_run": 6,
-          "finding": "No source read gives megawatts shed or customers cut for a dated event; figures are shortfall estimates (context, not events). Tavanir is reported as saying the national grid has had no nationwide collapse in the window. A search summary mentions widespread outages in winter 1401 for lack of plant fuel; no article was found for it and it is not yet researched.",
-          "limitation": "No official electricity site could be opened, so nothing was enumerated and no official statement was read on its own page: every Tavanir or ministry statement here is as relayed by Radio Farda or Iran International. Six of twelve declared queries ran; four of those six were restricted to the three hosts that can be opened, which is narrower than the declared query, and the search engine did not separate results by Solar Hijri year (the 1401 and 1402 runs returned mostly 1403 to 1405 items). 2022, 2023 and the first half of 2024 are in effect not searched.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. Official statements were read as carried by other publishers, not on the issuing body's own site. Some declared documents were not read.",
           "carried_forward": false
         },
         {
@@ -115,9 +112,8 @@
           "queries_declared": 8,
           "queries_run": 2,
           "items_enumerated": 49,
-          "finding": "Tasnim's provincial reporting does carry dated local outages with a named official, but the two items read give no customer count, so neither meets the rule. Plant-level items found were either small or had no reported effect. No electricity item appeared in the newest Radio Farda economy listing.",
-          "limitation": "The listings that can be read show only the newest days, so the archive for 2022 to 2025 was not enumerated. Two of eight declared queries ran, both restricted to the three hosts that can be opened; the coal-mine and gas-pipeline queries and the 1400, 1401, 1402 and 1405 years did not run. Domestic agencies other than Tasnim were not retried after the audit's refusals.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. At least one source in this lane refused automated access and was not worked around. The listings that could be read were read in part: by title, or for their newest pages only. Some declared documents were not read. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
           "carried_forward": false
         },
         {
@@ -138,9 +134,8 @@
           ],
           "queries_declared": 10,
           "queries_run": 5,
-          "finding": "No discrete, dated grid failure was found by these queries.",
-          "limitation": "Half the declared queries ran. The wire services cannot be opened directly, so their stories were read where another outlet carried them. Iran International's English home page was read as the only listing available and holds only the newest items;",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. The listings that could be read were read in part: by title, or for their newest pages only. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
           "carried_forward": false
         },
         {
@@ -164,9 +159,8 @@
           ],
           "queries_declared": 11,
           "queries_run": 5,
-          "finding": "No ship or tanker item was recorded.",
-          "limitation": "Five of eleven declared queries ran. Iranian agency pages could not be opened, so every Iranian account is read through a wire or a foreign outlet.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. At least one source in this lane refused automated access and was not worked around. Official statements were read as carried by other publishers, not on the issuing body's own site. Some declared documents were not read. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
           "carried_forward": false
         }
       ]

@@ -48,9 +48,8 @@
           "queries_run": 0,
           "items_enumerated": 4,
           "items_in_universe": 58,
-          "finding": "The bilingual bulletin is tables with definitional footnotes (provisional, coverage, source). Its oil and gas table (source: the ministry), refinery table (source: OQ) and electricity table (source: the regulator) carry no sentence that attributes a change to a disruption in any issue read. From 2024 the issues add infographic captions that state a percentage rise or fall (for example in total refinery output) with no cause: a numeric series with no attribution, so context and never an incident. No ministry statement of a disruption was reached by ordinary access. Zero candidates is a finding about the publication, not about the period.",
-          "limitation": "The listing at ncsi.gov.om/publications?page=N is static but mixes all publication types at six per page with no working type filter, so the other issues were not located.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. Some declared documents were not read.",
           "carried_forward": false
         },
         {
@@ -75,9 +74,8 @@
           "queries_run": 0,
           "items_enumerated": 5,
           "items_in_universe": 14,
-          "finding": "The reports read are performance documents. They give company totals, safety statistics (recordable injuries, fatalities, counts of Tier 1 and Tier 2 process-safety incidents by year) and, for the upstream operator, a general aim of reducing 'deferments', with no date, place, cause or volume for any interruption. A count of process-safety incidents with no date and no effect is context, never an incident. Zero candidates is a property of what these publishers disclose.",
-          "limitation": "Five of fourteen reports were read. Nine were not: four are over the fetch size limit, one timed out twice, two have links that resolve to cover images, and the two OQEP annual reports have no reachable address. The exchange's disclosure history and the gas-network company's investor pages remain unread.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. At least one document was too large for the fetch tool or timed out. The listings that could be read were read in part: by title, or for their newest pages only. Some declared documents were not read.",
           "carried_forward": false
         },
         {
@@ -101,9 +99,8 @@
           "queries_run": 0,
           "items_enumerated": 2,
           "items_in_universe": 4,
-          "finding": "The editions read report annual LNG output, a plant reliability percentage and a utilisation percentage for each of the last five years, and zero Tier 1 and Tier 2 process-safety events. They state no interruption, trip or cut of LNG production, and give no cause for any year-to-year change in utilisation. A reliability or utilisation series with no attribution is context, never an incident. Zero candidates is a finding about the publication.",
-          "limitation": "Two of four editions were read, both in English. The 2022 edition is over the size limit in both languages and the 2025 edition returns no body text. Cargo, vessel and delivery passages were not recorded.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. At least one document was too large for the fetch tool or timed out.",
           "carried_forward": false
         },
         {
@@ -129,9 +126,8 @@
           "queries_run": 3,
           "items_enumerated": 5,
           "items_in_universe": 9,
-          "finding": "The procurement company's reports and statements describe demand, capacity planning and a reliability standard; none read states a past outage, blackout, generation shortfall or cyclone effect. For both, the regulator announced an investigation and no published findings document was found. No tropical-cyclone effect on electricity dated 2022-2025 with a customer or megawatt figure surfaced; the one cyclone figure met (about 120,000 customers) belongs to October 2021, before the window. A press report of the regulator's data lists nine investigated interruptions from 2014 to 2021, which shows the regulator does investigate such events; none of those is in the window.",
-          "limitation": "Three of four declared queries were run, the cap; the English cyclone query was not. Two of four annual reports are over the fetch size limit and one 7-Year Statement issue is not listed. The regulator's site is unreadable, so whether it publishes investigation reports or interruption statistics is still not established; its statements were read only as the press carried them. No transmission-company document was read. The interconnection and reinforcement passages of the 7-Year Statements and all per-plant rows were not recorded.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. At least one document was too large for the fetch tool or timed out.",
           "carried_forward": false
         },
         {
@@ -155,9 +151,8 @@
           "queries_declared": 20,
           "queries_run": 7,
           "items_enumerated": 64,
-          "finding": "Storm reports give duration and pole counts, not customers. Local distribution cuts surface through a trade site quoting the distribution company's social-media statements. A discovery page gives counts and claims for later months;",
-          "limitation": "Seven of twenty declared queries ran, all Arabic; no English query ran, so the lane is partial in language as well as in count. The year token barely filters: every power query returned the same 2022 and mid-2026 pages, and the fire strings returned no Omani refinery or gas-plant incident at all, so 2023 and 2024 are years in which the queries found nothing, not years shown to be quiet.",
           "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. The search tool gave little weight to year terms, so earlier years were reached mainly through publishers' own listings. Official statements were read as carried by other publishers, not on the issuing body's own site. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
           "carried_forward": false
         }
       ]

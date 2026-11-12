@@ -68,6 +68,85 @@ def _reason(roles, why):
     return f"Blind review, role(s) {', '.join(roles)}: {why}"
 
 
+def _restricted():
+    """Systems under the campaign publication policy (active or uncertain)."""
+    from pipeline import build_systems
+    states = build_systems.load_campaigns().get("system_states") or {}
+    return sorted(s for s, v in states.items() if v.get("state") in build_systems.RESTRICTING_STATES)
+
+
+def _import_gate():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("import_candidates", ROOT / "scripts" / "import_candidates.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _who(reasons):
+    """The label of a collapsed edit, from the labels of the edits it replaces. Nothing else of
+    their wording survives."""
+    import re
+    roles, lead = set(), False
+    for r in reasons:
+        m = re.match(r"Blind review, role\(s\) ([A-C](?:, [A-C])*)", r or "")
+        if m:
+            roles |= set(m.group(1).split(", "))
+        lead = lead or (r or "").startswith("Lead ruling") or "stricter lead ruling" in (r or "")
+    if roles and lead:
+        return f"Blind review, role(s) {', '.join(sorted(roles))}, and a stricter lead ruling confirmed by all three on the final text"
+    if roles:
+        return f"Blind review, role(s) {', '.join(sorted(roles))}"
+    if lead:
+        return "Lead ruling, stricter than the roles and confirmed by all three on the final text"
+    return "Review correction"
+
+
+def collapse_restricted(edits_doc):
+    """For every system under the campaign policy: one `set` of the final text per corrected field,
+    a label and no wording, and nothing at all for a record that is not published.
+
+    An edit's reason, a `replace` pair and a superseded `set` each state the thing the edit
+    removed: 'briefly halted', a load figure, the station a blackout was traced to. This file is
+    public, so for these systems only the result is kept; the reviewers' wording stays in the
+    local review files (found by the release safety red team, iteration 19)."""
+    imp = _import_gate()
+    restricted = _restricted()
+    out, done, dropped = [], set(), 0
+    queues = {}
+    for cc in restricted:
+        qpath = ROOT / "data" / "candidates" / f"{cc}.json"
+        queues[cc] = {r.get("candidate_id"): r for r in (_read(qpath) if qpath.exists() else [])}
+    by_event = {}
+    for e in edits_doc["edits"]:
+        by_event.setdefault(e["event_id"], []).append(e)
+    for e in edits_doc["edits"]:
+        cc = e["event_id"].split("-")[0]
+        if cc not in restricted:
+            out.append(e)
+            continue
+        q = queues[cc].get(e["event_id"])
+        if q is None:
+            raise SystemExit(f"review edit for {e['event_id']}, which is not in the local {cc} queue")
+        unpublished = (q.get("suggested_disposition") != "accept"
+                       or (q.get("independent_review") or {}).get("disposition") == "held")
+        key = (e["event_id"], e["field"])
+        if unpublished or key in done:
+            dropped += 1
+            continue
+        done.add(key)
+        final = imp.apply_edits(q, by_event[e["event_id"]])
+        value = final
+        for k in e["field"].split("."):
+            value = (value or {}).get(k)
+        mine = [x.get("reason") for x in by_event[e["event_id"]] if x["field"] == e["field"]]
+        out.append({"event_id": e["event_id"], "field": e["field"],
+                    "set": _public_set(e["field"], value, _abstract(cc, q)),
+                    "reason": f"{_who(mine)}: {GENERIC_REASON}"})
+    edits_doc["edits"] = out
+    return dropped
+
+
 def _public_set(field, value, abstract):
     """The value as it may be committed. A kept citation of an abstracted record carries no
     headline: the gate would drop it at import, but this file is public before that."""
@@ -148,6 +227,7 @@ def apply(prefix, report):
             if before != ep["event_ids"] or len(before) < 2:
                 report.append((prefix, ep["episode_id"], "episode dissolved", 0))
     _write(qpath, queue)
+    collapse_restricted(edits_doc)
     _write(EDITS, edits_doc)
     gf_doc["event_ids"] = sorted(gf)
     _write(GF, gf_doc)
@@ -218,6 +298,13 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         raise SystemExit(__doc__)
     report = []
+    sys.path.insert(0, str(ROOT))
+    if sys.argv[1] == "--collapse":
+        doc = _read(EDITS)
+        n = collapse_restricted(doc)
+        _write(EDITS, doc)
+        print(f"collapsed; {n} superseded or unpublished edits removed, {len(doc['edits'])} kept")
+        raise SystemExit(0)
     if sys.argv[1] == "--confirm":
         for p in sys.argv[2:]:
             confirm(p, report)

@@ -43,7 +43,7 @@ export interface ManifestGroup {
   members: string[];
 }
 
-/** Totals for the five countries together (iteration 17). Never one figure per country. */
+/** Totals for the country systems together (iteration 17). Never one figure per country. */
 export interface CorpusTotals {
   countries: number;
   records: number;
@@ -310,7 +310,10 @@ export interface GroupContext {
   note: string;
   statement: string;
   not_built: string;
-  memberships: Record<"gcc" | "opec", { label: string; note: string; members: string[] }>;
+  /** Every member of the view, by name, in registry (alphabetical) order. */
+  member_names?: string[];
+  memberships: Record<"gcc" | "opec", { label: string; note: string; members: string[]; member_names?: string[];
+                                        as_of?: string | null; basis?: string | null }>;
   order: string;
   sources: Record<string, { name: string; url: string; release: string | null; attribution: string | null }>;
   metrics: Record<string, { label: string; unit: string; definition: string; year: number; source_id: string }>;
