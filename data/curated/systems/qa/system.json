@@ -38,7 +38,10 @@
       }
     },
     "display_names": {
-      "QA-DA": "Doha"
+      "QA-DA": "Doha",
+      "QA-KH": "Al Khor",
+      "QA-MS": "Al Shamal",
+      "QA-RA": "Al Rayyan"
     },
     "unit_aliases": {
       "QA-DA": [

@@ -88,4 +88,8 @@ describe("dirFor", () => {
     expect(dirFor("en")).toBe("ltr");
     expect(dirFor(undefined)).toBe("ltr");
   });
+  it("reads the whole language subtag and a script subtag", () => {
+    for (const l of ["ckb", "ug", "ps", "sd", "dv", "ur", "fa-IR", "az-Arab"]) expect(dirFor(l)).toBe("rtl");
+    for (const l of ["ku-Latn", "ckx", "en-GB", "zh", "hi"]) expect(dirFor(l)).toBe("ltr");
+  });
 });

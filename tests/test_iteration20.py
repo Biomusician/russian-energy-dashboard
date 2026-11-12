@@ -39,7 +39,7 @@ def _served(sid):
 # --- §52 parse_number fails closed -------------------------------------------------------------------
 
 @pytest.mark.parametrize("text,want", [
-    ("1500", 1500), ("1,500", 1500), ("1 500", 1500), ("12,345,678", 12345678), ("2.5", 2.5),
+    ("1500", 1500), ("1,500", 1500), ("12,345,678", 12345678), ("2.5", 2.5),
     ("۱۵۰۰", 1500), ("١٬٥٠٠", 1500), ("٢٫٥", 2.5), ("-40", -40), ("0", 0), ("0.75", 0.75),
 ])
 def test_an_unambiguous_number_is_read(text, want):
@@ -49,11 +49,44 @@ def test_an_unambiguous_number_is_read(text, want):
 @pytest.mark.parametrize("text", [
     "1.500", "1,5", "12,34", "1.234.567", "10 20", "2025 2026", "5، 300", "5،300", "0,500", "007",
     "1,500 2,000", "1,50,000", "1 500,000", "1,500.000.1", "", "   ", "abc", "1,", ",500", "1..5", "+-5",
+    # Geography red team, round two: space groups, other scripts' digits, mixed digit sets.
+    "1 500", "10 200", "٢٠ ٢٠٠", "१२३", "１２３", "1٢3", "۱٢",
 ])
 def test_ambiguous_number_forms_are_refused(text):
     # Each of these is a guess in at least one reading convention; the parser refuses rather than
     # pick one (iteration 20 §52).
     assert C.parse_number(text) is None
+
+
+def test_space_groups_are_read_only_when_the_caller_says_the_source_uses_them():
+    assert C.parse_number("1 500", allow_space_groups=True) == 1500
+    assert C.parse_number("10 20", allow_space_groups=True) is None
+
+
+def test_a_hijri_day_carries_a_one_day_range_unless_a_weekday_settles_it():
+    n = C.normalize_date("1 رمضان 1446", "hijri")
+    assert n["normalized_date"] == "2025-03-01" and n["gregorian_range"] == ["2025-02-28", "2025-03-02"]
+    # 2025-03-02 was a Sunday: the weekday picks the day inside the range.
+    n = C.normalize_date("الأحد 1446/09/01 هـ", "hijri")
+    assert n["normalized_date"] == "2025-03-02" and n["gregorian_range"] == ["2025-03-02", "2025-03-02"]
+    assert "weekday" in n["conversion_basis"]
+
+
+@pytest.mark.parametrize("text,cal", [
+    ("Monday 2025-03-14", "gregorian"),            # a Friday
+    ("Saturday1404/01/01", "solar_hijri"),          # no separator
+    ("دوشنبه ۱۴۰۴/۰۱/۰۱", "solar_hijri"),            # 1 Farvardin 1404 was a Friday
+    ("Monday 2025-03", "gregorian"),                # a weekday with no day
+    ("2025-03-14T25:99Z", "gregorian"),             # no such time
+])
+def test_a_wrong_weekday_or_an_impossible_time_is_refused(text, cal):
+    with pytest.raises(ValueError):
+        C.normalize_date(text, cal)
+
+
+def test_a_right_weekday_is_accepted():
+    assert C.normalize_date("Friday 2025-03-14", "gregorian")["normalized_date"] == "2025-03-14"
+    assert C.normalize_date("جمعه ۱۴۰۴/۰۱/۰۱", "solar_hijri")["normalized_date"] == "2025-03-21"
 
 
 def test_parse_number_fuzz_never_raises_and_never_reads_two_numbers_as_one():
@@ -687,6 +720,109 @@ def test_every_unit_of_a_country_policy_system_has_a_native_script_and_a_latin_n
             names = [f["properties"]["name"], *al.get(code, [])]
             assert any(n.isascii() for n in names), (cc, code)
             assert any(not n.isascii() for n in names), (cc, code, "no name in Arabic or Persian script")
+
+
+# --- energy-analyst red team, round two ------------------------------------------------------------
+
+def test_corroboration_is_counted_by_origin_not_by_url():
+    def ev(*srcs):
+        return {"sources": [{"url": u, "publisher": p} for u, p in srcs]}
+    # Two situation reports from one agency are one origin.
+    assert len(B.event_origins(ev(("https://www.energy.gov/a", "US DOE"), ("https://www.energy.gov/b", "US DOE")))) == 1
+    # A wire story and its republication are one origin, whatever site carries them.
+    assert len(B.event_origins(ev(("https://www.reuters.com/x", "Reuters"), ("https://boereport.com/y", "BOE Report (Reuters)")))) == 1
+    # Wikipedia and a content aggregator are discovery aids: no origin at all.
+    assert B.event_origins(ev(("https://en.wikipedia.org/wiki/X", "Wikipedia"), ("https://www.indexbox.io/blog/y", "IndexBox"))) == set()
+    # Two independent sites are two origins; a country-code second level is one registered domain.
+    assert len(B.event_origins(ev(("https://www.bbc.co.uk/a", "BBC"), ("https://news.bbc.co.uk/b", "BBC News"),
+                                  ("https://apnews.com/c", "Associated Press")))) == 2
+    assert B.registered_domain("https://news.example.com.cn/x") == "example.com.cn"
+
+
+@needs_payload
+def test_every_served_source_health_counts_origins_beside_citations():
+    for p in (WEB / "systems").glob("*/system.json"):
+        h = json.loads(p.read_text(encoding="utf-8")).get("source_health")
+        if not h:
+            continue
+        assert h["single_origin_events"] >= h["single_source_events"] - h["discovery_only_events"], p.parent.name
+        assert "Wikipedia" in h["origin_rule"]
+
+
+@needs_payload
+def test_a_metric_label_carries_its_definition_qualifier_and_the_convention_is_served():
+    ctx = json.loads((WEB / "global" / "energy_context.json").read_text(encoding="utf-8"))
+    m = ctx["metrics"]
+    assert "lease condensate" in m["crude_production"]["label"]
+    assert m["gas_production"]["label"].startswith("Dry")
+    assert m["electricity_generation"]["label"].startswith("Net")
+    assert "heat" in ctx["accounting_convention"] and "heat" in m["total_production"]["definition"]
+    gulf = json.loads((WEB / "global" / "gulf.json").read_text(encoding="utf-8"))
+    assert gulf["accounting_convention"] == ctx["accounting_convention"]
+    assert gulf["metrics"]["crude_production"]["label"] == m["crude_production"]["label"]
+    irq = next(r for r in ctx["countries"] if r["a3"] == "IRQ")
+    assert "federal Iraq" in irq["scope_note"]
+    assert sum(1 for r in ctx["countries"] if "scope_note" in r) == len(json.loads(
+        (ROOT / "data" / "curated" / "global_context" / "energy_context.json").read_text(encoding="utf-8"))["scope_notes"])
+
+
+def test_profile_figures_say_what_series_they_are():
+    sa = json.loads((CURATED / "sa" / "profile.json").read_text(encoding="utf-8"))
+    crude = next(m for m in sa["metrics"] if m["metric"] == "crude_oil_production")
+    assert "lease condensate" in crude["basis"] and "crude oil only" not in crude["basis"]
+    us = " ".join(json.loads((CURATED / "us" / "profile.json").read_text(encoding="utf-8"))["significance"])
+    assert "22% of world" not in us and "26% of a record" not in us and "about 27%" in us
+    india = next(m for m in json.loads((CURATED / "in" / "profile.json").read_text(encoding="utf-8"))["metrics"]
+                 if m["metric"] == "electricity_generation")
+    assert not india["basis"].startswith("country total") and "not be read as a whole-country total" in india["basis"]
+
+
+def test_an_empty_record_is_not_described_as_resting_on_anything():
+    for cc in ("ae", "bh", "ir", "om", "qa"):
+        doc = json.loads((CURATED / cc / "system.json").read_text(encoding="utf-8"))
+        ev = json.loads((CURATED / cc / "events.json").read_text(encoding="utf-8")).get("events", []) if (CURATED / cc / "events.json").exists() else []
+        if not ev:
+            assert "the record rests on" not in (doc.get("reporting_note") or ""), cc
+
+
+# --- geography red team, round two: enclaves, direction, titles --------------------------------------
+
+def test_simplification_keeps_a_small_hole():
+    from pipeline import geo
+    outer = [[0, 0], [10, 0], [10, 10], [5, 12], [0, 10], [0, 0]]
+    hole = [[4, 4], [5, 4], [5, 5], [4, 4]]
+    g = geo.simplify_geometry({"type": "Polygon", "coordinates": [outer, hole]}, 0.01)
+    assert len(g["coordinates"]) == 2
+
+
+@needs_payload
+def test_the_nahwa_enclave_is_drawn_once():
+    from pipeline import geo
+    feats = {f["properties"]["code"]: f for sid in ("om", "ae")
+             for f in json.loads((WEB / "systems" / sid / "regions.geojson").read_text(encoding="utf-8"))["features"]}
+    pt = (56.273, 25.266)
+    assert geo.point_in_geometry(*pt, feats["AE-SH"]["geometry"])
+    assert not geo.point_in_geometry(*pt, feats["OM-MU"]["geometry"])
+
+
+def test_the_review_refuses_a_unit_that_never_takes_records_in_any_code_field():
+    imp = _load("import_candidates")
+    pol = {"no_event_units": ["BH-16"]}
+    for r in ({"admin1_code": "BH-16"}, {"admin1_code": "BH-13", "admin1_codes_affected": ["BH-13", "BH-16"]},
+              {"admin1_code": "CN-X01~"}):
+        why = imp.review("bh", {"suggested_disposition": "accept", "date": "2025-01-01", "date_precision": "day",
+                                "sources": [{"url": "https://example.com/a"}], **r}, {"BH-13", "BH-16", "CN-X01~"}, policy=pol,
+                        unplaceable=frozenset({"CN-X01~"}))
+        assert why and "never used for events" in why, (r, why)
+
+
+def test_an_original_headline_must_be_in_its_language_script():
+    imp = _load("import_candidates")
+    assert imp.title_matches_language("انقطاع الكهرباء في عدة مناطق", "ar")
+    assert not imp.title_matches_language("(headline not recorded: names the facility)", "ar")
+    assert imp.title_matches_language("Anything at all", "fr")
+    s = {"url": "https://example.com/a", "language": "ar", "title_original": "(headline not recorded)", "title_en": "Power cut"}
+    assert "title_original" not in imp._source(s, True)
 
 
 # --- §110 mutation harness ----------------------------------------------------------------------

@@ -4,21 +4,21 @@
   "metrics": [
     {
       "metric": "total_energy_production",
-      "value": 29.7,
+      "value": 29.99,
       "unit": "quadrillion Btu (primary energy production)",
       "year": 2022,
-      "basis": "country total; 85% petroleum liquids, 15% natural gas, 0% coal",
-      "source": "U.S. EIA, Country Analysis Brief: Saudi Arabia, Table 1 (last updated 2024-10-04)",
-      "url": "https://www.eia.gov/international/content/analysis/countries_long/saudi_arabia/"
+      "basis": "country total, series INTL.44-1 (29.986). The October 2024 country brief gave 29.7 and a split of 85% petroleum liquids, 15% natural gas",
+      "source": "U.S. EIA, International Energy Statistics, bulk file INTL.zip (project copy downloaded 2026-11-10)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
     },
     {
       "metric": "crude_oil_production",
-      "value": 9.5,
+      "value": 9.72,
       "unit": "million barrels per day",
       "year": 2023,
-      "basis": "country total, crude oil only (EIA International Energy Statistics)",
-      "source": "U.S. EIA, Country Analysis Brief: Saudi Arabia (last updated 2024-10-04)",
-      "url": "https://www.eia.gov/international/content/analysis/countries_long/saudi_arabia/"
+      "basis": "country total, crude oil including lease condensate, series INTL.57-1 (9,716 thousand b/d). The October 2024 country brief gave 9.5",
+      "source": "U.S. EIA, International Energy Statistics, bulk file INTL.zip (project copy downloaded 2026-11-10)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
     },
     {
       "metric": "aramco_total_liquids_production",
@@ -40,12 +40,12 @@
     },
     {
       "metric": "electricity_generation",
-      "value": 453,
+      "value": 441.6,
       "unit": "TWh",
       "year": 2023,
-      "basis": "country total, EIA estimate (62% natural gas, 38% oil, <1% renewables)",
-      "source": "U.S. EIA, Country Analysis Brief: Saudi Arabia (last updated 2024-10-04)",
-      "url": "https://www.eia.gov/international/content/analysis/countries_long/saudi_arabia/"
+      "basis": "country total, net generation, series INTL.2-12 (441.56). The October 2024 country brief gave 453 and a split of 62% natural gas, 38% oil, under 1% renewables",
+      "source": "U.S. EIA, International Energy Statistics, bulk file INTL.zip (project copy downloaded 2026-11-10)",
+      "url": "https://www.eia.gov/opendata/bulk/INTL.zip"
     },
     {
       "metric": "generating_capacity",

@@ -27,8 +27,10 @@ const SEARCH_ALIASES: Record<string, string> = {
   us: "united states", usa: "united states", uk: "united kingdom", uae: "united arab emirates",
 };
 
-function Figure({ label, value }: { label: string; value: string }) {
-  return <div className="ctx-fig"><span className="dim">{label}</span><span className="mono">{value}</span></div>;
+// The label carries the definition's qualifier ("incl. lease condensate", "dry", "net"), and the
+// full definition is the hover text: a bare "Crude oil" invited comparison with crude-only figures.
+function Figure({ label, value, title }: { label: string; value: string; title?: string }) {
+  return <div className="ctx-fig" title={title}><span className="dim">{label}</span><span className="mono">{value}</span></div>;
 }
 
 export function NationalFigures({ row, ctx }: { row: ContextRow; ctx: EnergyContext }) {
@@ -40,13 +42,14 @@ export function NationalFigures({ row, ctx }: { row: ContextRow; ctx: EnergyCont
   return (
     <>
       <div className="ctx-figs">
-        <Figure label={`Energy production, ${ctx.comparison_year}`} value={fmtValue(v.total_production, m.total_production.unit)} />
-        <Figure label={`Energy consumption, ${ctx.comparison_year}`} value={fmtValue(v.total_consumption, m.total_consumption.unit)} />
-        <Figure label={`Crude oil, ${ctx.comparison_year}`} value={fmtValue(v.crude_production, m.crude_production.unit)} />
-        <Figure label={`Natural gas, ${ctx.comparison_year}`} value={fmtValue(v.gas_production, m.gas_production.unit)} />
-        <Figure label={`Coal, ${ctx.comparison_year}`} value={fmtValue(v.coal_production, m.coal_production.unit)} />
-        <Figure label={`Electricity, ${ctx.comparison_year}`} value={fmtValue(elecTotal, m.electricity_generation.unit)} />
+        <Figure label={`Energy production, ${ctx.comparison_year}`} title={m.total_production.definition} value={fmtValue(v.total_production, m.total_production.unit)} />
+        <Figure label={`Energy consumption, ${ctx.comparison_year}`} title={m.total_consumption.definition} value={fmtValue(v.total_consumption, m.total_consumption.unit)} />
+        <Figure label={`${m.crude_production.label}, ${ctx.comparison_year}`} title={m.crude_production.definition} value={fmtValue(v.crude_production, m.crude_production.unit)} />
+        <Figure label={`${m.gas_production.label.replace(/ production$/, "")}, ${ctx.comparison_year}`} title={m.gas_production.definition} value={fmtValue(v.gas_production, m.gas_production.unit)} />
+        <Figure label={`Coal, ${ctx.comparison_year}`} title={m.coal_production.definition} value={fmtValue(v.coal_production, m.coal_production.unit)} />
+        <Figure label={`${m.electricity_generation.label}, ${ctx.comparison_year}`} title={m.electricity_generation.definition} value={fmtValue(elecTotal, m.electricity_generation.unit)} />
       </div>
+      {row.scope_note && <p className="small dim">{row.scope_note}</p>}
       {shares.length > 0 && (
         <div>
           <div className="eyebrow">Production mix</div>
@@ -55,6 +58,7 @@ export function NationalFigures({ row, ctx }: { row: ContextRow; ctx: EnergyCont
             {shares.map((s) => <span key={s.id} style={{ width: `${s.share * 100}%`, background: s.color }} />)}
           </div>
           <div className="small dim">{shares.map((s) => `${s.label} ${Math.round(s.share * 100)}%`).join(" · ")}</div>
+          {ctx.accounting_convention && <div className="small dim">{ctx.accounting_convention}</div>}
         </div>
       )}
       {elecTotal != null && elecTotal > 0 && (
@@ -358,6 +362,7 @@ function WorldProfile({ ctx, partly, onContext, systemNames }: { ctx: EnergyCont
         {shares.map((s) => `${s.label} ${Math.round(s.share * 100)}%`).join(" · ")}.
         {total ? ` The countries containing the monitored systems produced ${Math.round((monitored / total) * 100)}% of it; the map shows the rest for context only.` : ""}
       </p>
+      {ctx.accounting_convention && <p className="small dim">{ctx.accounting_convention}</p>}
       {/* No "largest producers" list (iteration 20, §80): a top-N selection is a ranking even when
           printed alphabetically. The national figures are in the table below, alphabetical. */}
       <details>

@@ -860,6 +860,24 @@ ITER20_MUTATIONS = [
      [("data/curated/systems/us/events.json", _artifact(_criterion(5, threshold_basis="About 250,000 people lost power (TEST PLACEHOLDER).")))],
      "counts_people_as_customers"),
 
+    ("a republished wire story counts as a second origin",
+     [("pipeline/build_systems.py", _text('            return "wire:" + name', '            pass'))],
+     "counted_by_origin_not_by_url"),
+    ("Wikipedia counts as an origin",
+     [("pipeline/build_systems.py", _text('    if domain in DISCOVERY_ONLY_DOMAINS or "wikipedia" in (source.get("publisher") or "").lower():\n        return None',
+                                          '    if False:\n        return None'))],
+     "counted_by_origin_not_by_url"),
+    ("the crude label loses its condensate qualifier",
+     [("web/public/data/global/energy_context.json", _artifact(lambda d: d["metrics"]["crude_production"].__setitem__("label", "Crude oil production")))],
+     "label_carries_its_definition_qualifier"),
+    ("the accounting convention is not served to the Gulf view",
+     [("web/public/data/global/gulf.json", _artifact(lambda d: d.pop("accounting_convention")))],
+     "label_carries_its_definition_qualifier"),
+
+    ("simplification drops small holes again",
+     [("pipeline/geo.py", _text("if len(s) >= min_ring_points or (i > 0 and len(s) >= 4):", "if len(s) >= min_ring_points:"))],
+     "keeps_a_small_hole"),
+
     # §43 newer national totals
     ("a campaign-year national total is served for a country under the campaign policy",
      [(CTX, _artifact(_context_row("SAU", {"oil_production": {"year": 2026, "value": 1.0}})))],

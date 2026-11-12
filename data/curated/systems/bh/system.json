@@ -72,6 +72,13 @@
         "Shamaliyah",
         "الشمالية"
       ]
+    },
+    "display_names": {
+      "BH-13": "Capital",
+      "BH-14": "Southern",
+      "BH-15": "Muharraq",
+      "BH-16": "Central (abolished 2014)",
+      "BH-17": "Northern"
     }
   },
   "sectors": [

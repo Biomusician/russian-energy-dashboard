@@ -749,6 +749,43 @@ def _first_party(source):
             and "wikipedia.org" not in (source.get("url") or "").lower())
 
 
+# Wire services a republisher names in its publisher field: the wire is the origin, not the outlet.
+WIRE_ORIGINS = (("reuters", "Reuters"), ("bloomberg", "Bloomberg"), ("associated press", "Associated Press"),
+                ("canadian press", "The Canadian Press"), ("xinhua", "Xinhua"), ("pti", "PTI"), ("ians", "IANS"),
+                ("afp", "AFP"), ("spa", "Saudi Press Agency"), ("kuna", "KUNA"), ("wam", "WAM"), ("qna", "QNA"),
+                ("irna", "IRNA"), ("wire copy", "an unnamed wire"))
+# Discovery aids, never an origin: an encyclopedia and a content aggregator restate others' reporting.
+DISCOVERY_ONLY_DOMAINS = ("wikipedia.org", "indexbox.io")
+_SECOND_LEVEL = {"co", "com", "gov", "org", "net", "ac", "edu", "nic"}
+
+
+def registered_domain(url):
+    host = (url or "").split("://", 1)[-1].split("/", 1)[0].split(":", 1)[0].lower()
+    labels = [x for x in host.split(".") if x and x != "www"]
+    if len(labels) >= 3 and len(labels[-1]) == 2 and labels[-2] in _SECOND_LEVEL:
+        return ".".join(labels[-3:])
+    return ".".join(labels[-2:])
+
+
+def source_origin(source):
+    """The originating statement a citation carries, as far as the record shows it: a wire service
+    the publisher field names, else the registered domain the citation sits on (three releases of
+    one utility are one origin). None for a discovery aid. Republication the record does not name
+    stays invisible; this can only undercount independence, never overstate it."""
+    domain = registered_domain(source.get("url"))
+    if domain in DISCOVERY_ONLY_DOMAINS or "wikipedia" in (source.get("publisher") or "").lower():
+        return None
+    words = " " + re.sub(r"[^a-z]+", " ", (source.get("publisher") or "").lower()) + " "
+    for key, name in WIRE_ORIGINS:
+        if f" {key} " in words:
+            return "wire:" + name
+    return domain or (source.get("publisher") or "").lower()
+
+
+def event_origins(event):
+    return {o for o in (source_origin(s) for s in event["sources"]) if o}
+
+
 def source_health(events):
     """Describe the citations behind a country's published events, inside that country only.
 
@@ -773,6 +810,15 @@ def source_health(events):
                    "not_recorded": sum(1 for s in cites if s.get("opened") is None)},
         "dated": sum(1 for s in cites if s.get("date")),
         "single_source_events": sum(1 for e in events if len(e["sources"]) == 1),
+        # Corroboration is counted in originating statements, not URLs (iteration 20, energy-analyst
+        # red team): two situation reports from one agency, or a wire story and its republication,
+        # are one origin; Wikipedia and content aggregators are discovery aids and count for none.
+        "single_origin_events": sum(1 for e in events if len(event_origins(e)) == 1),
+        "discovery_only_events": sum(1 for e in events if not event_origins(e)),
+        "origin_rule": ("An origin is a wire service the citation names, else the website it sits on. "
+                        "Wikipedia and content aggregators are discovery aids and count as no origin. "
+                        "Republication a record does not name cannot be seen, so this can undercount "
+                        "independence but not overstate it."),
         "events_with_first_party_source": sum(
             1 for e in events if any(_first_party(s) for s in e["sources"])),
         "first_party_roles": list(FIRST_PARTY_ROLES),

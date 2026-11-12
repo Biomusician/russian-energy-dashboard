@@ -469,7 +469,7 @@
         "value_min": null,
         "value_max": null,
         "qualifier": "exact",
-        "measure": "affected",
+        "measure": "other",
         "unit": "TMT crude processed in June 2023 (target 267.00)",
         "source_says": "Crude processed lower due to ... Fire"
       },

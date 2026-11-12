@@ -165,6 +165,8 @@ def build(world, admin0=None, today=None, restricted=frozenset()):
                      "system_id": owner.get(c["a3"]),
                      "values": c["values"],
                      "newer": {} if owner.get(c["a3"]) in restricted else c.get("newer") or {},
+                     # Only where a scope differs from what a reader would assume (iteration 20).
+                     **({"scope_note": (doc.get("scope_notes") or {})[c["a3"]]} if c["a3"] in (doc.get("scope_notes") or {}) else {}),
                      "roles": c["roles"]})
     rows.sort(key=lambda r: _sort_key(r["name"]))
     src = {k: doc["source"][k] for k in SOURCE_FIELDS}
@@ -181,6 +183,7 @@ def build(world, admin0=None, today=None, restricted=frozenset()):
         "comparison_year": doc["comparison_year"],
         "comparison_year_reason": doc["comparison_year_reason"],
         "balance_band": doc["balance_band"],
+        "accounting_convention": doc["accounting_convention"],
         "map_metrics": list(MAP_METRICS),
         "metrics": doc["metrics"],
         "coverage": {m: sum(1 for c in doc["countries"] if c["values"][m] is not None) for m in doc["metrics"]},

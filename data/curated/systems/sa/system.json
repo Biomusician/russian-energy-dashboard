@@ -12,7 +12,13 @@
         "status": "note",
         "note": "Includes the Saudi share of the former Saudi-Kuwaiti Neutral Zone."
       }
-    ]
+    ],
+    "display_names": {
+      "SA-01": "Riyadh",
+      "SA-05": "Al-Qassim",
+      "SA-06": "Ha'il",
+      "SA-14": "Asir"
+    }
   },
   "sectors": [
     {

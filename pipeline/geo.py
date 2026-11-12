@@ -276,7 +276,9 @@ def simplify_geometry(geom, tolerance, min_ring_points=6, keep_min_extent=None):
         rings = []
         for i, ring in enumerate(poly):
             s = simplify_ring(ring, tolerance)
-            if len(s) >= min_ring_points:
+            if len(s) >= min_ring_points or (i > 0 and len(s) >= 4):
+                # A hole is topology, not a sliver: dropping one draws the enclave twice, once in
+                # the unit around it and once as itself (Nahwa inside Madha; iteration 20).
                 rings.append(s)
             elif i == 0 and keep_min_extent and len(s) >= 4 and _extent(ring) >= keep_min_extent:
                 # Too few points to pass as a shape, but too large to be a speck: kept as drawn.

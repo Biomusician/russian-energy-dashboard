@@ -893,6 +893,11 @@ function SourceHealthBlock({ h }: { h: SourceHealth }) {
         <li>{h.events_with_first_party_source} of {h.events} events cite at least one first-party
           source (the operator, a regulator, a government body or a dataset; Wikipedia does not count); {h.single_source_events} rest
           on a single citation.</li>
+        {h.single_origin_events !== undefined && (
+          <li>Counted by origin rather than by citation: {h.single_origin_events} events rest on a single originating
+            statement{h.discovery_only_events ? <>, and {h.discovery_only_events} only on Wikipedia or a content aggregator</> : null}.{" "}
+            <span className="dim">{h.origin_rule}</span></li>
+        )}
         <li>Opened by the researcher: {h.opened.opened} recorded opened, {h.opened.not_opened} recorded
           not opened, {h.opened.not_recorded} not recorded.</li>
         <li>{h.dated} of {h.citations} citations carry their own publication date. Languages: {langs}.</li>

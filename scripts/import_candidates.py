@@ -312,7 +312,7 @@ def date_problem(r):
     return None
 
 
-def review(system_id, r, unit_codes, grandfathered=frozenset(), policy=None):
+def review(system_id, r, unit_codes, grandfathered=frozenset(), policy=None, unplaceable=frozenset()):
     """None if the record passes, else the reason it is held."""
     if r.get("suggested_disposition") != "accept":
         return f"disposition {r.get('suggested_disposition')!r}"
@@ -331,8 +331,10 @@ def review(system_id, r, unit_codes, grandfathered=frozenset(), policy=None):
             return "a record at or about a nuclear site is not published"
         if any("in the record" in p for p in build_systems.route_problems([{**r, "event_id": "x", "sources": []}])):
             return "shipping, strait or route material is outside this product"
-    if r.get("admin1_code") in set((policy or {}).get("no_event_units") or []):
-        return f"{r.get('admin1_code')} is drawn but never used for events"
+    never = set((policy or {}).get("no_event_units") or []) | set(unplaceable)
+    for c in [r.get("admin1_code"), *(r.get("admin1_codes_affected") or [])]:
+        if c in never:
+            return f"{c} is drawn but never used for events"
     if r.get("cause") in build_systems.KINETIC_CAUSES and r.get("asset_class") in ((policy or {}).get("single_site_classes") or {}):
         # Country plus class names the site; no truthful parent class exists (iteration 20, §44).
         return "[SINGLE-SITE] the country has one site of this class, so the class names it"
@@ -479,6 +481,25 @@ def _canonical(s):
     return {**s, "url": canonical_url(s["url"])}
 
 
+# The script a headline in each language is written in. A placeholder such as "(headline not
+# recorded)" stored as an Arabic title would render as English inside a right-to-left span.
+TITLE_SCRIPT = {"ar": "؀-ۿ", "fa": "؀-ۿ", "ku": "؀-ۿ", "ckb": "؀-ۿ",
+                "ur": "؀-ۿ", "zh": "一-鿿", "ru": "Ѐ-ӿ", "uk": "Ѐ-ӿ",
+                "hi": "ऀ-ॿ"}
+
+
+def title_matches_language(title, lang):
+    """Whether most letters of an original-language headline are in that language's script."""
+    rng = TITLE_SCRIPT.get((lang or "").lower())
+    if not rng:
+        return True
+    letters = [c for c in title if c.isalpha()]
+    if not letters:
+        return False
+    native = sum(1 for c in letters if re.match(f"[{rng}]", c))
+    return native * 2 > len(letters)
+
+
 def _source(s, with_titles):
     out = {k: s.get(k) for k in ("url", "publisher", "date", "language", "source_role", "opened")}
     # A non-English source keeps its own title and a gloss, where the headline is safe to show.
@@ -486,6 +507,8 @@ def _source(s, with_titles):
         for k in ("title_original", "title_en"):
             t = s.get(k)
             if t and safe_title(t) and not build_systems.status_wording(t) and not build_systems.LOADED_WORDING.search(t):
+                if k == "title_original" and not title_matches_language(t, s.get("language")):
+                    continue
                 out[k] = t
         # Both or neither: a headline whose gloss was refused (status or loaded wording) says the
         # same thing in its own language, where the wording rule reads less well.
@@ -594,12 +617,16 @@ def run(system_id):
     campaigns = build_systems.load_campaigns()
     doc = json.loads((ROOT / "data" / "curated" / "systems" / system_id / "system.json").read_text(encoding="utf-8"))
     policy = doc["geography"].get("precision_policy")
+    # A unit drawn for reference only (disputed, unassigned) never takes a record, whatever the
+    # policy; the build refused it, the review did not (geography red team, iteration 20).
+    # Passed apart from the policy: a policy switches on the iteration-19 rules, which China does not have.
+    unplaceable = frozenset(x["code"] for x in doc["geography"].get("rulings", []) if x.get("status") == "disputed_unassigned")
     if policy:
         policy = {**policy, "unit_words": sorted(set(unit_words(build_systems.unit_name_rows(doc, units)))
                                                  | {build_systems.fold(w) for w in policy.get("region_words") or []})}
     accepted, held = [], []
     for r in queue:
-        why = review(system_id, r, unit_codes, grandfathered, policy)
+        why = review(system_id, r, unit_codes, grandfathered, policy, unplaceable)
         if why is None:
             ev = to_event(system_id, r, grandfathered, campaigns, policy)
             if ev["sources"]:

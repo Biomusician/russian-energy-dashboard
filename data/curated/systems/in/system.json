@@ -5,7 +5,7 @@
   "geography": {
     "unit_label": "state or union territory",
     "units_expected": 36,
-    "note": "28 states and 8 union territories, with the ISO codes as revised in November 2023. Boundaries show the line of actual control (Natural Earth's default edition), which is an analytic choice, not a statement about sovereignty.",
+    "note": "28 states and 8 union territories, with the ISO codes as revised in November 2023. Boundaries show the line of actual control (Natural Earth's default edition), which is an analytic choice, not a statement about sovereignty. Natural Earth files the Siachen Glacier area as indeterminate, outside any country, so it is not drawn in this system and no record is placed there; that is the source's classification, not a ruling.",
     "rulings": [
       {
         "code": "IN-JK",

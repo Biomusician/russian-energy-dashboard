@@ -4104,6 +4104,12 @@
       "field": "recovery.research_status",
       "set": "RESEARCHED_NO_PUBLIC_EVIDENCE",
       "reason": "Lead correction (iteration 20, energy-analyst red team): the evidence does not state whether supply was lost"
+    },
+    {
+      "event_id": "in-2023-05-29-numaligarh-refinery-fire",
+      "field": "capacity_affected.measure",
+      "set": "other",
+      "reason": "Lead correction (iteration 20, energy-analyst red team): 8.30 TMT is the crude processed in June 2023, not the amount lost; the shortfall against the 267.00 TMT target is not stated by the source as a loss"
     }
   ]
 }

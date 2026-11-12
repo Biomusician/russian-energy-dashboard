@@ -18,6 +18,8 @@ export interface ContextRow {
   values: Record<string, number | null>;
   newer: Record<string, { year: number; value: number }>;
   roles: { overall: Role; by_commodity: Record<string, Role> };
+  /** Where the source's scope differs from what a reader would assume (iteration 20). */
+  scope_note?: string;
 }
 export type Role = "net_producer" | "net_consumer" | "about_balanced" | null;
 
@@ -30,6 +32,7 @@ export interface EnergyContext {
             attribution: string; update_cadence: string };
   comparison_year: number;
   comparison_year_reason: string;
+  accounting_convention?: string;
   balance_band: number;
   map_metrics: string[];
   metrics: Record<string, { label: string; unit: string; definition: string; source_series: string }>;

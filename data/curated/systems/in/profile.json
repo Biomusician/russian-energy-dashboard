@@ -50,7 +50,7 @@
       "year_basis": "fiscal FY 2025-26 (provisional)",
       "source": "CEA Executive Summary, March 2026, table 1.1 (FY 2024-25: 1,828.88 BU; +1.04%). Read from PDF text extraction; column assignment confirmed by arithmetic only",
       "url": "https://cea.nic.in/api/dashboardReports/download-pdf/en/9c52056c-194c-4ce7-b650-f13e0bf07ab7",
-      "basis": "country total, fiscal year; generation including renewables, provisional"
+      "basis": "fiscal year, generation including renewables, provisional, as CEA's executive summary tables it. Below EIA's net-generation figure for calendar 2024 (2,051.8 TWh), so it should not be read as a whole-country total; it appears to cover utilities only, without captive plants (not confirmed)"
     },
     {
       "metric": "generating_capacity",

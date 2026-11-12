@@ -145,6 +145,7 @@ def build(context, country_payloads):
         "order": "alphabetical by name; never by any figure",
         "sources": sources,
         "metrics": metrics,
+        "accounting_convention": context["accounting_convention"],
         "systems": out_systems,
         "region": region,
     }

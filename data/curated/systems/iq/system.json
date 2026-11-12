@@ -60,7 +60,9 @@
       "IQ-MU": "Al-Muthanna",
       "IQ-SD": "Salah ad-Din",
       "IQ-AR": "Erbil",
-      "IQ-DA": "Duhok"
+      "IQ-DA": "Duhok",
+      "IQ-KA": "Karbala",
+      "IQ-QA": "Al-Qadisiyah"
     },
     "unit_aliases": {
       "IQ-TS": [

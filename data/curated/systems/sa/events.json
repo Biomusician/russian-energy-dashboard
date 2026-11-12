@@ -271,7 +271,7 @@
         "value": 300000,
         "value_min": null,
         "value_max": null,
-        "qualifier": "exact",
+        "qualifier": "about",
         "measure": "affected",
         "unit": "bbl/d",
         "source_says": "Energy ministry source via SPA, 9 Apr 2026: an earlier attack on Khurais reduced its output by 300,000 b/d of its production capacity."

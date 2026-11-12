@@ -5,7 +5,7 @@
   "geography": {
     "unit_label": "province-level unit",
     "units_expected": 34,
-    "note": "31 provinces, autonomous regions and municipalities, plus Hong Kong and Macau as special administrative regions, and the Paracel Islands as drawn by Natural Earth. Boundaries show the line of actual control (Natural Earth's default edition), which is an analytic choice, not a statement about sovereignty. Taiwan is not part of this system.",
+    "note": "31 provinces, autonomous regions and municipalities, plus Hong Kong and Macau as special administrative regions, and the Paracel Islands as drawn by Natural Earth. Boundaries show the line of actual control (Natural Earth's default edition), which is an analytic choice, not a statement about sovereignty. Taiwan is not part of this system. The Spratly Islands, which Natural Earth files as a separate disputed unit, are not drawn in this system and no record is placed there; the Paracels are drawn for reference and also take no record.",
     "rulings": [
       {
         "code": "CN-XJ",
@@ -22,7 +22,10 @@
         "status": "disputed_unassigned",
         "note": "Paracel Islands: administered by China, claimed by Vietnam and Taiwan. Drawn; never assigned an event."
       }
-    ]
+    ],
+    "display_names": {
+      "CN-NM": "Inner Mongolia"
+    }
   },
   "sectors": [
     {

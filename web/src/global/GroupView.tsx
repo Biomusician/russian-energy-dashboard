@@ -252,7 +252,7 @@ export default function GroupView({ id }: { id: string }) {
                 <thead>
                   <tr>
                     <th>Country</th><th>GCC</th><th>OPEC</th>
-                    {Object.entries(ctx.metrics).map(([k, x]) => <th key={k}>{x.label} ({x.unit}, {x.year})</th>)}
+                    {Object.entries(ctx.metrics).map(([k, x]) => <th key={k} title={x.definition}>{x.label} ({x.unit}, {x.year})</th>)}
                   </tr>
                 </thead>
                 <tbody>
@@ -289,7 +289,12 @@ export default function GroupView({ id }: { id: string }) {
             <p className="small dim">
               {Object.entries(ctx.sources).map(([k, s]) => <span key={k}>Source: <a href={s.url} target="_blank" rel="noreferrer">{s.name}</a>{s.release ? `, release of ${fmtDate(s.release)}` : ""}. </span>)}
               Each column is one source and one year. Metrics with no common redistributable source are left out, not estimated.
+              {ctx.accounting_convention && <> {ctx.accounting_convention}</>}
             </p>
+            <details className="small">
+              <summary>What each column measures</summary>
+              <ul>{Object.entries(ctx.metrics).map(([k, x]) => <li key={k}><strong>{x.label}.</strong> {x.definition}</li>)}</ul>
+            </details>
           </section>
         )}
 

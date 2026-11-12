@@ -1,7 +1,7 @@
 {
   "system_id": "ir",
   "reporting_environment": "conflict_restricted",
-  "reporting_note": "A war involving attacks on Iranian territory is recorded from 28 February 2026, after an earlier one in June 2025, and each party restricts what is reported about damage. Most Iranian official and agency sites could not be read from outside the country when this was written. For 2022 to mid-2025 the record rests on ministry statements carried by state-supervised news agencies. No body publishes an event register, so the coverage of this record cannot be computed.",
+  "reporting_note": "A war involving attacks on Iranian territory is recorded from 28 February 2026, after an earlier one in June 2025, and each party restricts what is reported about damage. Most Iranian official and agency sites could not be read from outside the country when this was written. No record has been published for Iran yet: the searches so far found ministry statements carried by state-supervised news agencies, and no body publishes an event register, so the coverage of this record cannot be computed.",
   "geography": {
     "unit_label": "province",
     "units_expected": 31,

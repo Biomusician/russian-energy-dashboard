@@ -204,6 +204,9 @@ export interface SourceHealth {
   opened: { opened: number; not_opened: number; not_recorded: number };
   dated: number;
   single_source_events: number;
+  single_origin_events?: number;
+  discovery_only_events?: number;
+  origin_rule?: string;
   events_with_first_party_source: number;
   first_party_roles: string[];
   first_party_excludes?: string;
@@ -320,6 +323,7 @@ export interface GroupContext {
   order: string;
   sources: Record<string, { name: string; url: string; release: string | null; attribution: string | null }>;
   metrics: Record<string, { label: string; unit: string; definition: string; year: number; source_id: string }>;
+  accounting_convention?: string;
   systems: GroupSystem[];
   region: Record<string, { value: number | null; world_share: number | null; reason: string | null }>;
   recent?: RecentEvidence;
@@ -629,10 +633,16 @@ export const CALENDAR_LABEL: Record<string, string> = {
   gregorian: "Gregorian calendar",
 };
 
-const RTL = new Set(["ar", "fa", "ku", "ur", "he"]);
+// Whole primary subtags, not two-letter prefixes: "ckb".slice(0, 2) is "ck" (iteration 20, geography
+// red team). "ku" stays right to left because this dataset uses it for Sorani in Arabic script; a
+// script subtag overrides the language either way ("ku-Latn" is Kurmanji in Latin letters).
+const RTL = new Set(["ar", "fa", "ku", "ckb", "ur", "he", "ug", "ps", "sd", "dv", "yi", "syr"]);
 /** Text direction for a language code, so an Arabic or Persian headline is not laid out backwards. */
 export function dirFor(lang: string | undefined): "rtl" | "ltr" {
-  return RTL.has((lang ?? "").slice(0, 2).toLowerCase()) ? "rtl" : "ltr";
+  const parts = (lang ?? "").toLowerCase().split(/[-_]/);
+  if (parts.includes("arab") || parts.includes("hebr") || parts.includes("thaa") || parts.includes("syrc")) return "rtl";
+  if (parts.includes("latn") || parts.includes("cyrl")) return "ltr";
+  return RTL.has(parts[0]) ? "rtl" : "ltr";
 }
 
 /** Language names for reader copy (iteration 20, §66). The codes stay in the data. */

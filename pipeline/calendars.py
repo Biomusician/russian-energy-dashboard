@@ -41,7 +41,17 @@ def western_digits(text):
     return "".join(DIGITS.get(ch, ch) for ch in text)
 
 
-def parse_number(text):
+def _digit_set(ch):
+    if "0" <= ch <= "9":
+        return "ascii"
+    if "\u0660" <= ch <= "\u0669":
+        return "arabic_indic"
+    if "\u06F0" <= ch <= "\u06F9":
+        return "persian"
+    return "other" if ch.isdigit() or ch.isdecimal() else None
+
+
+def parse_number(text, allow_space_groups=False):
     """A number written in any of the three digit sets, or None if `text` is not exactly one number.
 
     Fails closed (iteration 20). Accepted: digits; thousands groups of exactly three digits after a
@@ -52,14 +62,23 @@ def parse_number(text):
       - "1,5" and "12,34" (a decimal comma or a typo);
       - "1.500" (one point then exactly three digits: 1.5 in Houston, 1,500 in Berlin);
       - "0,500" and "007" (a leading zero in front of more digits);
-      - mixed or repeated decimal marks.
+      - mixed or repeated decimal marks;
+      - a space between groups ("10 200"), unless the caller says the source groups thousands with
+        spaces: Arabic and Persian sources rarely do, and two numbers side by side read the same;
+      - digits from any other script ("१२३", full-width "１２３"), and digit sets mixed in one
+        number ("1٢3"): int() would read them, but no source in scope writes them.
     """
     if text is None:
+        return None
+    sets = {_digit_set(ch) for ch in str(text)} - {None}
+    if "other" in sets or len(sets) > 1:
         return None
     s = western_digits(str(text)).strip()
     if not s or "،" in s:
         return None
-    s = s.replace("٫", ".").replace("٬", ",").replace(" ", " ").replace(" ", " ")
+    s = s.replace("٫", ".").replace("٬", ",").replace("\u00a0", " ").replace("\u202f", " ")
+    if " " in s and not allow_space_groups:
+        return None
     m = re.fullmatch(r"([+-]?)(\d{1,3}(?:([, ])\d{3})*|\d+)(?:\.(\d+))?", s)
     if not m:
         return None
@@ -129,6 +148,13 @@ WEEKDAYS = ("شنبه", "یکشنبه", "يکشنبه", "یک‌شنبه", "دو
             "پنج‌شنبه", "جمعه", "السبت", "الأحد", "الاحد", "الإثنين", "الاثنين", "الثلاثاء", "الأربعاء",
             "الاربعاء", "الخميس", "الجمعة", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
             "Saturday", "Sunday")
+# Python weekday numbers (Monday 0) for the names above. A weekday a source writes is checked
+# against the date it converts to (iteration 20, geography red team): a mismatch is a misread.
+WEEKDAY_NUMBER = {"دوشنبه": 0, "سه‌شنبه": 1, "سه شنبه": 1, "چهارشنبه": 2, "پنجشنبه": 3, "پنج‌شنبه": 3,
+                  "جمعه": 4, "شنبه": 5, "یکشنبه": 6, "يکشنبه": 6, "یک‌شنبه": 6,
+                  "الإثنين": 0, "الاثنين": 0, "الثلاثاء": 1, "الأربعاء": 2, "الاربعاء": 2, "الخميس": 3,
+                  "الجمعة": 4, "السبت": 5, "الأحد": 6, "الاحد": 6,
+                  "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6}
 # Calendar suffixes a source may write after the year, per calendar. Anything else left over is
 # refused: a parser that skips what it does not understand loses the year or the day silently.
 SUFFIXES = {"gregorian": ("م", "میلادی", "ميلادي", "CE", "AD"),
@@ -138,17 +164,22 @@ MONTH_NAMES = {"solar_hijri": JALALI_MONTHS, "hijri": HIJRI_MONTHS}
 
 
 def _strip(s, calendar):
-    """`s` without a leading weekday and a trailing calendar suffix, each optional and explicit."""
-    s = re.sub(r"\s+", " ", s.replace("‌", "‌")).strip().strip("،,")
+    """(`s` without a leading weekday and a trailing calendar suffix, the weekday number or None).
+    Both are optional and explicit; a weekday must be followed by a separator."""
+    s = re.sub(r"\s+", " ", s).strip().strip("،,")
+    weekday = None
     for w in sorted(WEEKDAYS, key=len, reverse=True):
         if s.startswith(w):
-            s = s[len(w):].lstrip(" ،,")
+            rest = s[len(w):]
+            if rest and rest[0] not in " ،,":
+                raise ValueError(f"{s!r}: a weekday must be separated from the date")
+            s, weekday = rest.lstrip(" ،,"), WEEKDAY_NUMBER[w]
             break
     for suf in sorted(SUFFIXES[calendar], key=len, reverse=True):
         if s.endswith(suf) and (len(s) == len(suf) or not s[-len(suf) - 1].isalpha()):
             s = s[:-len(suf)].rstrip(" .")
             break
-    return s.strip()
+    return s.strip(), weekday
 
 
 def _check_year(year, calendar, raw):
@@ -201,8 +232,12 @@ def normalize_date(text, calendar):
     if calendar == "gregorian":
         ts = re.fullmatch(r"(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?", s)
         if ts:
+            try:
+                dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
+            except ValueError:
+                raise ValueError(f"{raw!r}: not a real time") from None
             s = ts.group(1)
-    s = _strip(s, calendar)
+    s, weekday = _strip(s, calendar)
     year = month = day = None
     names = MONTH_NAMES.get(calendar, {})
     named = None
@@ -246,7 +281,25 @@ def normalize_date(text, calendar):
     else:
         g = hijri_to_gregorian(year, month, day) if day else None
         basis = "Hijri to Gregorian, tabular calendar (may differ by one day from the observed date)"
-    first, last = (g, g) if g else _month_range(calendar, year, month)
+    if weekday is not None and g is None:
+        raise ValueError(f"{raw!r}: a weekday with no day")
+    if weekday is not None and calendar != "hijri" and g.weekday() != weekday:
+        raise ValueError(f"{raw!r}: the weekday does not match {g.isoformat()}")
+    if calendar == "hijri" and g is not None:
+        # The tabular date can differ from the observed one by a day either way. A weekday the
+        # source states settles which; without one the range says so.
+        near = [g + dt.timedelta(days=k) for k in (-1, 0, 1)]
+        if weekday is not None:
+            match = [d for d in near if d.weekday() == weekday]
+            if not match:
+                raise ValueError(f"{raw!r}: the weekday matches no day within one of {g.isoformat()}")
+            g = match[0]
+            basis = "Hijri to Gregorian, tabular calendar, day settled by the weekday the source states"
+            first = last = g
+        else:
+            first, last = near[0], near[2]
+    else:
+        first, last = (g, g) if g else _month_range(calendar, year, month)
     for d in (first, last):
         if not GREGORIAN_PLAUSIBLE[0] <= d.year <= GREGORIAN_PLAUSIBLE[1]:
             raise ValueError(f"{raw!r}: converts to {d.isoformat()}, outside {GREGORIAN_PLAUSIBLE}")
