@@ -291,16 +291,31 @@ theatre's geometry.
 
 ## 24. Tests
 
-Final totals are recorded in §28 from the release gate. At the last full run before release:
-pytest 1,060 passed and 2 skipped; vitest 275 passed; TypeScript clean; Playwright 205 passed and 1
-skipped. `tests/test_iteration20.py` holds the iteration's new Python tests.
+Release gate, on the release commit:
+
+| Suite | Result |
+|---|---|
+| pytest (full) | 1,074 passed, 2 skipped |
+| vitest | 275 passed (22 files) |
+| TypeScript | clean |
+| Vite build | succeeds |
+| Playwright (local preview) | 205 passed, 1 skipped |
+| Refresh-gated pytest in the next-day simulation | 1,034 passed, 4 skipped, 24 deselected |
+
+`tests/test_iteration20.py` holds the iteration's new Python tests.
 
 ## 25. Mutations
 
-210 mutants (133 at the start of the iteration). The first full run caught 208. The two survivors
-were real test gaps: the research-log test checked only the iteration-19 Gulf pass, not the
-iteration-20 continuation, and the free-text-reason mutant was aimed at a test that does not read
-Saudi edits. Both tests were fixed and both mutants are caught. Final release-gate totals are in §28.
+234 mutants at release (133 at the start of the iteration). Two rounds of survivors were real test
+gaps, each closed by a stronger test or a new build guard, never by deleting the mutant:
+
+- The project's own campaign: the research-log test checked only the iteration-19 Gulf pass, not
+  the iteration-20 continuation; the free-text-reason mutant was aimed at a test that did not read
+  Saudi edits.
+- The test-architecture red team's independent mutants (§26): 24 survived against the tree it
+  started from. All 24 were ported into `scripts/mutation_campaign.py` and are caught.
+
+Release gate: **234 mutants, 234 caught, 0 survived, 0 invalid anchors, 0 errors, 0 baselines not green.**
 
 ## 26. Red teams
 
@@ -318,11 +333,25 @@ geography and language, and test architecture. All findings were acted on or tur
   (crude processed, not the amount lost, now `measure: other`), the Khurais qualifier. The cause
   vocabulary gap for shortfalls is D-40.
 - **Geography and language.** Items 1 to 12, 14 and 15 fixed (§17, §18); 13 is D-41.
-- **Test architecture.** See the appendix at the end of this review.
+- **Test architecture.** It wrote its own mutants in a sandbox copy and ran them with a rebuild
+  between each; 24 survived. The serious ones were places where the build trusted the import: a
+  campaign-covered record's headline and its review source count (the import strips and recounts
+  them; the build now refuses either), an opaque id that could carry a lane's free-text middle words
+  (now date and class only, in the import and in the build), and a Gulf extra metric newer than the
+  comparison year (now refused by the Gulf builder). The rest were rules with no test that pinned
+  them: an English-only headline or method wording on an abstracted record, the publisher and hazard
+  name in the status rule, the capacity note in the facility-name check, three-letter Arabic place
+  names in an address, the capacity contract's defaults, the partial-pass research clock, the recent
+  list's precision and episode names, two-country recovery durations, the context's finished-year
+  rule, coverage counts and name order. Each now has a test and a mutant. The agent stalled on its
+  own background work before writing a final report; its findings were taken from its transcript and
+  scratch results, and it was stopped.
 
 ## 27. Moving-main integration
 
-Recorded at release (§28).
+`origin/main` stayed at `e626df2` for the whole iteration: the daily refresh did not commit while this
+work ran. Every iteration-20 commit is a fast-forward of it, so nothing needed integrating; a fetch
+immediately before the push confirmed it.
 
 ## 28. Production
 
@@ -330,7 +359,13 @@ Recorded at release.
 
 ## 29. First unattended refresh
 
-Recorded at release.
+No scheduled refresh ran during the iteration, so a simulation stood in for it, as the brief allows.
+A clean worktree at the release commit, the clock moved to 13 November, and the bot's steps from
+`refresh.yml`: the build succeeds with no Gulf source fetched and no research invoked (ESDI 6.58, time
+decay only); the refresh-gated tests pass (1,034 passed, 4 skipped, 24 deselected); change detection
+reports a substantive change; staging from the artifact contract and `verify_staged.py` pass; all
+thirteen systems are retained. One note for local runs only: piping `staging_paths.py` on Windows
+needs carriage returns stripped; the Linux runner is unaffected.
 
 ## 30. Remaining owner decisions
 

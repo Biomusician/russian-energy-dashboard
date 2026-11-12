@@ -60,7 +60,7 @@ what the code does until it is ruled.
 - **Source health counts origins** (`single_origin_events`, `discovery_only_events`), not only URLs.
 - **Metric labels carry their qualifiers**; `accounting_convention` and `scope_notes` live in
   `data/curated/global_context/energy_context.json`.
-- **Mutation campaign:** `scripts/mutation_campaign.py` (210 mutants); `--from N` for new ones, the
+- **Mutation campaign:** `scripts/mutation_campaign.py` (234 mutants); `--from N` for new ones, the
   release gate runs all and requires zero survivors, invalid anchors and errors.
 - **D-34:** earlier commits and old Vercel deployments still contain material withdrawn this
   iteration. No history was rewritten; that is the owner's decision.
