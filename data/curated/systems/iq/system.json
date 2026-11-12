@@ -5,7 +5,7 @@
   "geography": {
     "unit_label": "governorate",
     "units_expected": 18,
-    "note": "Iraq has 19 governorates in law since 2025, when Halabja became the nineteenth; Natural Earth draws 18, with Halabja inside As-Sulaymaniyah. The Kurdistan Region is a federal region of Iraq that contains governorates (Constitution, Art. 117); it is not a separate unit or system here. Events are placed by the governorate Natural Earth draws, which is an analytic choice, not a statement about the administration of any area.",
+    "note": "Iraq has 19 governorates in law since 2025, when Halabja became the nineteenth; Natural Earth draws 18, with Halabja inside As-Sulaymaniyah. The Kurdistan Region is a federal region of Iraq that contains governorates (Constitution, Art. 117); it is not a separate unit or system here. Events are placed by the governorate Natural Earth draws, which is an analytic choice, not a statement about the administration of any area. Parts of other governorates are also commonly described as disputed under the same article; they were not verified from an official source and carry no separate flag here.",
     "rulings": [
       {
         "code": "IQ-AR",
@@ -13,9 +13,24 @@
         "note": "A governorate of the Kurdistan Region, a federal region of Iraq. Shown as an Iraqi governorate. Natural Earth spells it Arbil."
       },
       {
+        "code": "IQ-BG",
+        "status": "note",
+        "note": "Drawn by Natural Earth as the city only. Districts of Baghdad governorate outside that shape fall inside neighbouring units on this map, so an event reported there is recorded for the country, not for a neighbour."
+      },
+      {
         "code": "IQ-DA",
         "status": "note",
         "note": "A governorate of the Kurdistan Region, a federal region of Iraq. Shown as an Iraqi governorate. Natural Earth spells it Dihok."
+      },
+      {
+        "code": "IQ-MU",
+        "status": "note",
+        "note": "Al-Muthanna. The name in the map file is Natural Earth's, which spells it Al-Muthannia."
+      },
+      {
+        "code": "IQ-SD",
+        "status": "note",
+        "note": "Salah ad-Din. The name in the map file is Natural Earth's, which spells it Sala ad-Din."
       },
       {
         "code": "IQ-SU",
@@ -25,12 +40,108 @@
       {
         "code": "IQ-TS",
         "status": "contains_disputed_area",
-        "note": "Kirkuk governorate, under Natural Earth's code and former name (At-Ta'mim); ISO is reported to list it as IQ-KI. The Constitution (Art. 140) names Kirkuk among territories whose status is to be settled by a process that has not been completed. Events are placed by the boundary Natural Earth draws."
+        "note": "Kirkuk governorate. Natural Earth's map file carries it under a former name (At-Ta'mim) and code; ISO is reported to list it as IQ-KI. The Constitution (Art. 140) names Kirkuk among territories whose status is to be settled by a process that has not been completed. Events are placed by the boundary Natural Earth draws."
       }
     ],
     "precision_policy": {
       "kinetic": "country",
       "reason": "Attacks on energy facilities in Iraq have been reported from 2022 to this month. In the governorates where most were reported, a governorate and an infrastructure class together name one facility, and publishing some governorates but not others would show which. An attack or sabotage record is therefore recorded for the country, with no governorate, facility or operator. Other events (accidents, grid failures, fuel-supply shortfalls) are placed by governorate."
+    },
+    "display_names": {
+      "IQ-TS": "Kirkuk",
+      "IQ-MU": "Al-Muthanna",
+      "IQ-SD": "Salah ad-Din",
+      "IQ-AR": "Erbil",
+      "IQ-DA": "Duhok"
+    },
+    "unit_aliases": {
+      "IQ-TS": [
+        "At-Ta'mim",
+        "Tamim",
+        "كركوك"
+      ],
+      "IQ-MU": [
+        "Al-Muthannia",
+        "Muthanna",
+        "المثنى"
+      ],
+      "IQ-SD": [
+        "Sala ad-Din",
+        "Salahuddin",
+        "Saladin",
+        "صلاح الدين"
+      ],
+      "IQ-AR": [
+        "Arbil",
+        "Irbil",
+        "أربيل",
+        "اربيل",
+        "هەولێر"
+      ],
+      "IQ-DA": [
+        "Dihok",
+        "Dohuk",
+        "دهوك",
+        "دهۆک"
+      ],
+      "IQ-BA": [
+        "Basra",
+        "Basrah",
+        "البصرة"
+      ],
+      "IQ-SU": [
+        "Sulaymaniyah",
+        "Sulaimani",
+        "Sulaimaniyah",
+        "السليمانية",
+        "سلێمانی"
+      ],
+      "IQ-DQ": [
+        "Thi Qar",
+        "Dhi Qar",
+        "ذي قار"
+      ],
+      "IQ-NI": [
+        "Nineveh",
+        "نينوى"
+      ],
+      "IQ-NA": [
+        "Najaf",
+        "النجف"
+      ],
+      "IQ-KA": [
+        "Karbala",
+        "Kerbala",
+        "كربلاء"
+      ],
+      "IQ-AN": [
+        "Anbar",
+        "الأنبار",
+        "الانبار"
+      ],
+      "IQ-QA": [
+        "Qadisiyah",
+        "Diwaniyah",
+        "القادسية",
+        "الديوانية"
+      ],
+      "IQ-MA": [
+        "Missan",
+        "ميسان"
+      ],
+      "IQ-BG": [
+        "بغداد"
+      ],
+      "IQ-BB": [
+        "Babylon",
+        "بابل"
+      ],
+      "IQ-DI": [
+        "ديالى"
+      ],
+      "IQ-WA": [
+        "واسط"
+      ]
     }
   },
   "sectors": [

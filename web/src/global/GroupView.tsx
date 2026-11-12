@@ -41,7 +41,7 @@ function classOf(v: number, max: number): number {
 
 function fmtEpisodeDate(ep: RecentEpisode): string {
   if (ep.date_precision === "month") {
-    return new Date(`${ep.first_date}T00:00:00Z`).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" });
+    return new Date(`${ep.first_date.slice(0, 7)}-01T00:00:00Z`).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" });
   }
   return ep.first_date === ep.last_date ? fmtDate(ep.first_date) : `${fmtDate(ep.first_date)} – ${fmtDate(ep.last_date)}`;
 }

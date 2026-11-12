@@ -733,6 +733,27 @@ def units(system_id, admin1, admin0):
     return sorted(out, key=lambda u: u[0])
 
 
+def shown_units(doc, us):
+    """`us` with each unit under the name this system shows for it. Natural Earth's file carries a
+    former name for one governorate and unusual spellings for several; the code never changes."""
+    names = (doc.get("geography") or {}).get("display_names") or {}
+    stray = sorted(set(names) - {u[0] for u in us})
+    if stray:
+        raise ValueError(f"display_names for units that do not exist: {stray}")
+    return [(code, names.get(code, name), g) for code, name, g in us]
+
+
+def unit_name_rows(doc, us):
+    """[(code, name)] for every name a unit goes by: Natural Earth's, the one shown, and listed
+    spelling variants. The import gate reads citation addresses against all of them: "Dubay" and
+    "Al-Basrah" alone would let an address that says Dubai or Basra through."""
+    geo_doc = doc.get("geography") or {}
+    rows = [(code, name) for code, name, _ in us]
+    rows += [(code, name) for code, name in (geo_doc.get("display_names") or {}).items()]
+    rows += [(code, alias) for code, aliases in (geo_doc.get("unit_aliases") or {}).items() for alias in aliases]
+    return rows
+
+
 def _bounds(geoms):
     """[w, s, e, n] over several geometries, kept on one side of the antimeridian.
 
@@ -1318,7 +1339,7 @@ def build_system(system_id, admin1, admin0, as_of):
     campaigns = load_campaigns()
     reg = systems.system(system_id)
 
-    us = units(system_id, admin1, admin0)
+    us = shown_units(doc, units(system_id, admin1, admin0))
     unit_codes = {u[0] for u in us}
     unit_names = {u[0]: u[1] for u in us}
     if doc["geography"]["units_expected"] != len(us):
@@ -1510,7 +1531,11 @@ def build_world(admin1, admin0):
         a3 = p.get("ADM0_A3")
         if a3 == "RUS":
             continue
-        g = geo.simplify_geometry(f["geometry"], WORLD_TOLERANCE)
+        # A monitored country keeps its sizeable detached parts: at this tolerance a governorate
+        # larger than a neighbouring state simplified to a triangle and vanished from the
+        # overview map (geography red team, iteration 19).
+        g = geo.simplify_geometry(f["geometry"], WORLD_TOLERANCE,
+                                  keep_min_extent=0.3 if a3 in owner else None)
         if g is None:
             continue   # specks below a dashboard pixel at world zoom
         feats.append({"type": "Feature",

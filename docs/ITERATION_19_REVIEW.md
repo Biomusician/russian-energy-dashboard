@@ -31,6 +31,7 @@ Group metadata on every system, kept apart because they are different things:
 - `regional_groups`: `["gulf_littoral"]` for the eight.
 - `gcc_member`: true for `sa kw bh qa ae om`, false for `ir iq`, null outside the Gulf.
 - `opec_member`: true for `ir iq kw sa ae`, false for `bh qa om` (Qatar left OPEC in 2019). Membership is checked against OPEC's own member list during the source audit.
+  *Corrected during the run: the UAE left OPEC on 2026-05-01 and is published as a non-member; OPEC's own page could not be read (§2).*
 
 Groups are navigation and context only, never a score input.
 

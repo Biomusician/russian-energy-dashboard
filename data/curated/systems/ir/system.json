@@ -13,9 +13,19 @@
         "note": "Fars. Natural Earth carries the numbering from before 2020, in which this code meant Tehran. This system uses the current numbering throughout."
       },
       {
+        "code": "IR-21",
+        "status": "note",
+        "note": "Yazd. Drawn on an older extent: Natural Earth marks the subdivision of the former Khorasan province as estimated, and the Tabas area, which current sources place in South Khorasan, is drawn inside Yazd. A statement about the map file."
+      },
+      {
         "code": "IR-22",
-        "status": "contains_disputed_area",
-        "note": "Hormozgan. Natural Earth draws Abu Musa with this province; the Greater and Lesser Tunbs are not drawn at this scale. Iran administers the three islands and the United Arab Emirates claims them. They are drawn as Natural Earth draws them, a cartographic matter and not a statement about sovereignty. The islands are never a unit of analysis and no event is assigned to them."
+        "status": "note",
+        "note": "Hormozgan. At this map's level of detail none of Abu Musa and the Greater and Lesser Tunbs is drawn. Iran administers the three islands and the United Arab Emirates claims them. Natural Earth's source file attaches Abu Musa to this province, which is a property of the map file and not a statement about sovereignty. The islands are never a unit of analysis and no event is placed on them."
+      },
+      {
+        "code": "IR-29",
+        "status": "note",
+        "note": "South Khorasan. Drawn on an older extent: Natural Earth marks the subdivision of the former Khorasan province as estimated, and the Tabas area, which current sources place in South Khorasan, is drawn inside Yazd. A statement about the map file."
       },
       {
         "code": "IR-30",

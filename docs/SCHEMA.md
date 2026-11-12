@@ -661,3 +661,20 @@ state may be null until it is fetched.
 
 - `system_states`: `{<system_id>: {state, checked, basis, campaign_id, limitation}}`.
 - Campaign `status` may be `active`, `uncertain` or `ended`; `policy_applied` is the switch.
+
+### Added after the iteration-19 release reviews
+
+- `system.json` → `geography.display_names` `{code: name}`: the name shown for a unit where the map
+  file's name is a former name or an unusual spelling. `geography.unit_aliases` `{code: [names]}`:
+  other spellings, read only by the import gate when it checks citation addresses.
+- `regions.geojson` feature → `records_placed` (boolean). `false` where this system places no
+  record in the unit; `recorded_events` is then `null`, never `0`.
+- `conflict_campaigns.json` → `status_sources` is a list of `{publisher, published}`. No address.
+- `research_log.json`, passes written from iteration 19: a lane has no `finding`, and its
+  `limitation` is made only of the sentences in `write_gulf_pass.LANE_NOTES`.
+- `review_edits.json`, systems under the campaign policy: every edit is a `set` of the final text
+  with a reason of the form `<label>: reconciled correction; ...`. One edit per record and field.
+- `global/gulf.json` → `member_names`, and per membership `member_names`, `as_of`, `basis`.
+  `recent.episodes[].episode_id` is a row key (`<system>-row-NN`). `systems[].role` is gone.
+- Queue records (local): `independent_review.confirmed` `{evidence, safety, taxonomy}`, required
+  by the gate for a record of an iteration-19 or later pass.

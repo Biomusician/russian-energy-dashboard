@@ -68,3 +68,10 @@ would bring, from what the iteration-14 lanes learned about the first five.
 
 Only Indonesia, Iran and Australia were read from the EIA table this iteration. Ordering the rest
 needs one more read of the same table, not a judgement.
+
+## Note added in iteration 19
+
+This document records how the first five country systems were chosen in iteration 14, and its
+figures are of that date. It is not the rule for any later system. The seven systems added in
+iteration 19 were chosen as a region (the Gulf littoral), not by size, and nothing here ranks
+them. A country's place in the iteration-14 list never appears in the dashboard.

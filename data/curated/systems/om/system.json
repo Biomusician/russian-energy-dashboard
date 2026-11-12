@@ -13,6 +13,11 @@
         "note": "Al Batinah North. Natural Earth keeps the code of the former undivided Al Batinah region; the current ISO code is OM-BS. Joined by name."
       },
       {
+        "code": "OM-BJ",
+        "status": "note",
+        "note": "Al Batinah South. The name in the map file is Natural Earth's, which spells it Al Batnah South."
+      },
+      {
         "code": "OM-MU",
         "status": "note",
         "note": "Musandam is not contiguous with the rest of Oman. It is drawn in two parts; the smaller is the wilayat of Madha, which belongs to this governorate. The area enclosed within Madha (Nahwa) is drawn with the United Arab Emirates."
@@ -26,6 +31,21 @@
     "precision_policy": {
       "kinetic": "country",
       "reason": "Oman's governorates are large, but each of its coastal ones holds a single port-industrial area, so a governorate and a class together name the facility. While the 2026 war has no reported end, attacks and sabotage are recorded for the country, with no governorate, facility or operator. Other events are placed by governorate."
+    },
+    "display_names": {
+      "OM-BA": "Al Batinah North",
+      "OM-BJ": "Al Batinah South"
+    },
+    "unit_aliases": {
+      "OM-BA": [
+        "Al Batnah North"
+      ],
+      "OM-BJ": [
+        "Al Batnah South"
+      ],
+      "OM-MA": [
+        "مسقط"
+      ]
     }
   },
   "sectors": [

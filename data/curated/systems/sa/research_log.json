@@ -225,7 +225,7 @@
           "queries_declared": 0,
           "queries_run": 0,
           "items_enumerated": 2,
-          "finding": "GASTAT does not attribute production changes to a disruption in the releases read. The monthly IPI release is a short bulletin of index movements: it says the index moved 'affected by the decline in mining and quarrying activity' and names the manufacturing sub-activities that moved, but gives no cause for the mining or refining movement (no incident, attack, outage or policy reason) in the two campaign-period months read. JODI-Oil publishes a numeric database with definitions, a manual and availability footnotes only; the pages opened carry no narrative attribution.",
+          "finding": "GASTAT does not attribute production changes to a disruption in the releases read. JODI-Oil publishes a numeric database with definitions, a manual and availability footnotes only; the pages opened carry no narrative attribution.",
           "limitation": "Only two monthly IPI release PDFs were read in full (March and April 2026, English), so no continuous span is covered and covered_through is null. The 2022-2025 monthly releases, the Arabic editions and GASTAT's petroleum-and-gas statistics were not read, and the search listing did not show a complete 2022-2025 series on the pages opened. JODI's Saudi metadata page was not reached.",
           "carried_forward": false
         },

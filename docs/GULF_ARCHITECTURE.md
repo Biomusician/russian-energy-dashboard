@@ -91,9 +91,10 @@ reported struck again: an old record's recovery would be a current target's stat
 Under `kinetic: "country"` a record has no region, no facility name, no operator, and an id of the
 form `<cc>-<date>-<class>-attack-<n>` that names nothing. The import gate does the downgrade, so no
 later step has to remember to; the build refuses a record that escaped it; and a record whose
-summary or effect names its facility is held. **Residual, stated:** a citation's address may still
-name the place the publisher reported. The record does not repeat it, and a status-bearing address
-is not published, but the link is a link to a public news page.
+summary or effect names its facility is held. A citation whose address names the place, the
+operator or the method is not published, nor is a short link. **Residual, stated:** the page
+behind a published citation is a public news report and names the place. The record does not
+repeat it; the link is still a link.
 
 The UAE's two areas that Natural Earth labels "Neutral Zone" are drawn and listed in
 `no_event_units`: no record is ever placed there. Iran's and the UAE's disputed islands are never
@@ -139,3 +140,32 @@ No Gulf index, no ranking, no facility layer, no route or strait or shipping vie
 or importance measure, no export-route or bypass analysis, no interconnector status, no nuclear
 fuel-cycle or site status, no economic-impact model. `docs/GULF_ENERGY_CONTEXT.md` lists what the
 overview may and may not hold; the tests in `tests/test_iteration19.py` hold it there.
+
+## Changes after the release reviews
+
+Five independent reviews read the release candidate (safety, methodology and sources, geography,
+test architecture, and a first-time reader). The record fields held. What they found was in text
+that sits around the records and that no gate read. Each is now a rule with a test:
+
+- **Campaign bases** (`conflict_campaigns.json`) say only that attacks are reported. Status
+  sources are a publisher and a date. `build_systems.campaign_text_problems` stops the build
+  otherwise.
+- **Research-log notes** are fixed sentences (`write_gulf_pass.LANE_NOTES`), chosen by what the
+  researcher's note mentions. The note itself is never published. Two word-list filters had each
+  let paraphrase through.
+- **`review_edits.json`** keeps only the final text for systems under the campaign policy
+  (`apply_reviews.py --collapse`, run by every apply).
+- **The gate** refuses a short link as the citation of a record published without its place, reads
+  addresses against every name a unit goes by (`geography.display_names`, `unit_aliases`), shows a
+  headline with its gloss or not at all, and imports an iteration-19 record only with three
+  confirmations.
+- **Units where no record can be placed** serve `records_placed: false` and no count.
+- **The regional list** places a campaign-covered record at country level and carries row keys.
+- **An attack record published for the country is its own episode.**
+- **Display names.** Natural Earth's file carries a former name for one governorate and unusual
+  spellings for others. `geography.display_names` gives the name shown; the code never changes,
+  and a ruling says what the map file calls it.
+- **The overview map** keeps a monitored country's sizeable detached parts, which simplification
+  used to drop.
+
+`docs/ITERATION_19_REVIEW.md` §24 lists what the reviews found that was not changed, and why.

@@ -45,7 +45,7 @@ def packet(prefix, imp=None):
     doc = json.loads((ROOT / "data" / "curated" / "systems" / cc / "system.json").read_text(encoding="utf-8"))
     policy = doc["geography"].get("precision_policy")
     if policy:
-        policy = {**policy, "unit_words": imp.unit_words(units)}
+        policy = {**policy, "unit_words": imp.unit_words(build_systems.unit_name_rows(doc, units))}
     campaigns = build_systems.load_campaigns()
     by_id = {r.get("candidate_id"): r for r in queue}
     records, held = [], []

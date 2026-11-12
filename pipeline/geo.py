@@ -250,7 +250,12 @@ def simplify_ring(ring, tolerance):
     return out
 
 
-def simplify_geometry(geom, tolerance, min_ring_points=6):
+def _extent(ring):
+    xs, ys = [p[0] for p in ring], [p[1] for p in ring]
+    return max(max(xs) - min(xs), max(ys) - min(ys))
+
+
+def simplify_geometry(geom, tolerance, min_ring_points=6, keep_min_extent=None):
     """Simplify a Polygon/MultiPolygon for display.
 
     Rings that collapse below `min_ring_points` after simplification are dropped
@@ -272,6 +277,9 @@ def simplify_geometry(geom, tolerance, min_ring_points=6):
         for i, ring in enumerate(poly):
             s = simplify_ring(ring, tolerance)
             if len(s) >= min_ring_points:
+                rings.append(s)
+            elif i == 0 and keep_min_extent and len(s) >= 4 and _extent(ring) >= keep_min_extent:
+                # Too few points to pass as a shape, but too large to be a speck: kept as drawn.
                 rings.append(s)
             elif i == 0:
                 rings = []

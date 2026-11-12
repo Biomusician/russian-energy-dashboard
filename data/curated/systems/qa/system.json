@@ -8,6 +8,11 @@
     "note": "Qatar has 8 municipalities today; Natural Earth draws 7, on the arrangement before Al-Shahaniya was separated from Al Rayyan in 2014. Qatar is small and several municipalities hold a single large energy complex, so kinetic or security events default to COUNTRY level. A non-conflict event uses a municipality only where a safety reviewer finds it non-identifying. Offshore events are country level.",
     "rulings": [
       {
+        "code": "QA-DA",
+        "status": "note",
+        "note": "Doha. The name in the map file is Natural Earth's, which calls it Ad Dawhah."
+      },
+      {
         "code": "QA-KH",
         "status": "note",
         "note": "Natural Earth names it Al Khawr; the official name is Al Khor and Al Thakhira."
@@ -26,6 +31,15 @@
     "precision_policy": {
       "kinetic": "country",
       "reason": "Qatar's gas processing and export, and most of its power and water plants, are concentrated in two industrial cities, so a municipality and a class together name the facility. Attacks and sabotage are recorded for the country, with no municipality, facility or operator. Other events are placed by municipality."
+    },
+    "display_names": {
+      "QA-DA": "Doha"
+    },
+    "unit_aliases": {
+      "QA-DA": [
+        "Ad Dawhah",
+        "الدوحة"
+      ]
     }
   },
   "sectors": [

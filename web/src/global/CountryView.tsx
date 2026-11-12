@@ -36,7 +36,7 @@ function initialRegion(): string | null {
 /** A month-precision date is shown as a month: printing "1 Apr" would invent a day. */
 function fmtEventDate(e: CountryEvent): string {
   const d = e.date_precision === "month"
-    ? new Date(`${e.date}T00:00:00Z`).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" })
+    ? new Date(`${e.date.slice(0, 7)}-01T00:00:00Z`).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" })
     : fmtDate(e.date);
   return e.date_end ? `${d} – ${fmtDate(e.date_end)}` : d;
 }

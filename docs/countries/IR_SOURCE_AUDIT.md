@@ -170,7 +170,7 @@ not an administrative unit, and must not be mistaken for one.
   distribution companies do not map one-to-one onto the 31 provinces **(not verified this
   session: Tavanir's site did not resolve)**. A regional electricity statement must be placed by the
   province the source names, never by the company's name.
-- No other difference between Natural Earth and the current divisions was found. The Natural Earth
+- One other difference was found later (iteration-19 geography review): Natural Earth draws Yazd and the Khorasan provinces on an older, estimated extent, with the Tabas area inside Yazd. The Natural Earth
   disputed-areas layer was not inspected (it is not in the local cache).
 
 ---

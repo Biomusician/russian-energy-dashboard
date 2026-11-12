@@ -963,6 +963,60 @@ def test_the_committed_and_served_campaign_bases_name_no_unit_class_tally_or_day
         assert B.campaign_text_problems(doc, words) == [], cc
 
 
+def test_the_gate_publishes_an_iteration_19_record_only_with_three_confirmations():
+    """Confirmation of the final text was a step of the procedure that the gate never checked."""
+    imp = _load("import_candidates")
+    r = _full_candidate(candidate_id="kw-2024-08-power-cuts", cause="technical")
+    r["research_pass"] = "iteration-19-kw"
+    r["primary_review"] = {"completed": "2026-11-11"}
+    r["independent_review"].update({"standard": imp.BLIND, "roles": {k: "accept" for k in imp.BLIND_ROLES},
+                                    "confirmed": {k: "confirm" for k in imp.BLIND_ROLES}})
+    assert imp.review("kw", r, {"KW-AH"}, policy=POLICY) is None
+    first = imp.BLIND_ROLES[0]
+    r["independent_review"]["confirmed"][first] = "object"
+    assert "not confirmed" in imp.review("kw", r, {"KW-AH"}, policy=POLICY)
+    del r["independent_review"]["confirmed"]
+    assert "not confirmed" in imp.review("kw", r, {"KW-AH"}, policy=POLICY)
+    r["research_pass"] = "iteration-17-kw"
+    assert imp.review("kw", r, {"KW-AH"}, policy=POLICY) is None
+    return
+    r["independent_review"]["confirmed"]["taxonomy"] = "object"
+    assert "not confirmed" in imp.review("kw", r, {"KW-AH"}, policy=POLICY)
+    del r["independent_review"]["confirmed"]
+    assert "not confirmed" in imp.review("kw", r, {"KW-AH"}, policy=POLICY)
+    r["research_pass"] = "iteration-17-kw"
+    assert imp.review("kw", r, {"KW-AH"}, policy=POLICY) is None
+
+
+def test_a_unit_goes_by_every_name_the_gate_should_read_for():
+    """Natural Earth says 'Dubay' and 'Al-Basrah'. An address that says Dubai or Basra named the
+    place and passed."""
+    imp = _load("import_candidates")
+    doc = {"geography": {"display_names": {"AE-DU": "Dubai"}, "unit_aliases": {"AE-DU": ["دبي"]}}}
+    us = [("AE-DU", "Dubay", None), ("AE-AZ", "Abu Dhabi", None)]
+    words = set(imp.unit_words(B.unit_name_rows(doc, us)))
+    assert {"dubay", "dubai", "دبي", "dhabi"} <= words
+    assert [u[1] for u in B.shown_units(doc, us)] == ["Dubai", "Abu Dhabi"]
+    with pytest.raises(ValueError):
+        B.shown_units({"geography": {"display_names": {"AE-ZZ": "Nowhere"}}}, us)
+    assert imp.names_the_place("https://example.org/news/fire-in-dubai-reported", words)
+
+
+@needs_payload
+def test_a_unit_where_no_record_can_be_placed_serves_no_count():
+    """A zero there read as 'looked and found nothing' for a unit this system never uses."""
+    for sid in NEW:
+        doc = json.loads((CURATED / sid / "system.json").read_text(encoding="utf-8"))
+        policy = doc["geography"]["precision_policy"]
+        for f in _json(f"systems/{sid}/regions.geojson")["features"]:
+            p = f["properties"]
+            never = p["code"] in (policy.get("no_event_units") or []) or policy.get("other") == "country" or p["status"] == "disputed_unassigned"
+            assert p["records_placed"] is (not never), (sid, p["code"])
+            assert (p["recorded_events"] is None) is never, (sid, p["code"])
+    bh = _json("systems/bh/regions.geojson")["features"]
+    assert bh and all(f["properties"]["recorded_events"] is None for f in bh)
+
+
 def test_the_gate_refuses_a_recovery_status_outside_the_vocabulary():
     """A lane wrote 'RESEARCHED'. It passed three reviews and stopped the whole build."""
     imp = _load("import_candidates")

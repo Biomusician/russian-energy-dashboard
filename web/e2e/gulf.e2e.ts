@@ -97,7 +97,7 @@ test.describe("Gulf group", () => {
       await expect(card).toContainText(s.gcc_member ? "GCC member" : "Not a GCC member");
       await expect(card).toContainText(s.opec_member ? "OPEC member" : "Not an OPEC member");
       // The campaign badge wherever the build withholds recovery status, and only there.
-      await expect(card.getByText("Recovery status withheld")).toHaveCount(s.recovery_status_withheld ? 1 : 0);
+      await expect(card.getByText("Later status of attacked facilities is not published")).toHaveCount(s.recovery_status_withheld ? 1 : 0);
       // Why two neighbours' attack records look different is said on the card, not left to guess.
       await expect(card).toContainText(s.attack_records_placed === "country"
         ? "Attacks are recorded for the country as a whole" : "Attacks are recorded by first-level region");
@@ -243,7 +243,7 @@ test.describe("Gulf country systems", () => {
       const outcome = passes[passes.length - 1]?.outcome;
       if (outcome?.candidates) {
         await expect(ribbon).toContainText(`looked at ${outcome.candidates} candidate records`);
-        if (outcome.held > 0) await expect(ribbon).toContainText(`${outcome.held} are held in review`);
+        if (outcome.held > 0) await expect(ribbon).toContainText(`${outcome.held} of them are not shown`);
       }
 
       // Tiny states need usable bounds: the map shows the country, not empty sea.
@@ -270,35 +270,6 @@ test.describe("Gulf country systems", () => {
       await app.button("Why no score").click();
       await expect(page.locator(".country-side")).toContainText(sys.no_index_reason.slice(0, 40));
       expect(app.errors).toEqual([]);
-    });
-  }
-
-  for (const id of GULF) {
-    test(`${id}: what the page shows for an attack matches the system's precision rule`, async ({ app, page }) => {
-      await app.open(`?sys=${id}`);
-      const sys = await payload(page, id, "system.json");
-      const events = (await payload(page, id, "events.json")).events as Event[];
-      const policy = sys.geography.precision_policy as { kinetic: string; other: string } | undefined;
-      test.skip(!policy || policy.kinetic !== "country", "this system places attacks at first-level regions");
-      const attacks = events.filter((e) => e.cause === "attack");
-      for (const e of attacks) {
-        expect(e.region_code, `${e.event_id} carries a region`).toBeNull();
-        expect(e.facility_name, `${e.event_id} carries a facility`).toBeNull();
-        expect(e.geography_precision).toBe("country");
-        expect(e.event_id).toMatch(new RegExp(`^${id}-\\d{4}(-\\d{2}){0,2}-[a-z_]+-attack-\\d+$`));
-      }
-      // On the page each such record is titled with the country and nothing narrower.
-      const titles = await page.locator(".event-item").filter({ hasText: /attack/i }).locator(".event-title").allInnerTexts();
-      for (const t of titles) expect([sys.name, ...events.map((e) => e.facility_name ?? e.region_name ?? sys.name)]).toContain(t);
-      const attackTitles = await page.locator(".event-item").evaluateAll((items, causeLabel) =>
-        items.filter((li) => li.querySelector(".event-head")?.textContent?.includes(causeLabel as string))
-             .map((li) => li.querySelector(".event-title")?.textContent ?? ""), sys.taxonomy.causes.attack?.label ?? "Attack");
-      for (const t of attackTitles) expect(t).toBe(sys.name);
-      // And the page offers no restart or repair wording for them.
-      const text = await page.locator(".event-list, .country-side").first().innerText();
-      if (attacks.length === events.length && attacks.length > 0) {
-        expect(text).not.toMatch(/\b(restarted|resumed operations|back online|repairs? (completed|under way)|fully restored)\b/i);
-      }
     });
   }
 
@@ -470,5 +441,156 @@ test.describe("Gulf payloads load lazily", () => {
     await app.open("?sys=qa");
     expect(seen.length).toBeGreaterThan(0);
     expect(seen.every((p) => p.startsWith("/data/systems/qa/"))).toBe(true);
+  });
+});
+
+const KINETIC = ["kinetic_strike", "sabotage"];
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+type Drawn = { text: string; right: number; width: number };
+
+test.describe("Gulf red team", () => {
+  test("attack records under a country rule are found by their real cause and render with no place, headline or status", async ({ app, page }) => {
+    let checked = 0;
+    for (const id of GULF) {
+      await app.open(`?sys=${id}`);
+      const sys = await payload(page, id, "system.json");
+      if (sys.geography.precision_policy?.kinetic !== "country") continue;
+      const events = (await payload(page, id, "events.json")).events as (Event & { publication: unknown })[];
+      const attacks = events.filter((e) => KINETIC.includes(e.cause));
+      if (attacks.length === 0) continue;
+      for (const e of attacks) {
+        expect(e.region_code, `${e.event_id} carries a region`).toBeNull();
+        expect(e.region_name, `${e.event_id} carries a region name`).toBeNull();
+        expect(e.facility_name, `${e.event_id} carries a facility`).toBeNull();
+        expect(e.regions_affected).toEqual([]);
+        expect(e.geography_precision).toBe("country");
+        expect(e.event_id).toMatch(new RegExp(`^${id}-\\d{4}-\\d{2}(-\\d{2})?-[a-z-]+-attack-[0-9a-z]{1,6}$`));
+        expect(e.sources.filter((s) => s.title_original)).toEqual([]);
+      }
+      // The cause label comes from the payload's own taxonomy, never typed here.
+      const labels = KINETIC.map((c) => sys.taxonomy.causes[c]).filter(Boolean) as string[];
+      expect(labels.length, `${id}: the taxonomy labels no attack cause`).toBeGreaterThan(0);
+      const items = page.locator(".event-item").filter({
+        has: page.locator(".event-head", { hasText: new RegExp(labels.map(escapeRe).join("|")) }),
+      });
+      await expect(items).toHaveCount(attacks.length);
+      await expect(items.locator(".withheld-note")).toHaveCount(attacks.filter((e) => e.publication).length);
+      for (let i = 0; i < attacks.length; i++) {
+        const item = items.nth(i);
+        await expect(item.locator(".event-title")).toHaveText(sys.name);
+        await expect(item.locator(".source-title")).toHaveCount(0);
+        await expect(item).not.toContainText("Regions affected");
+        expect(await item.innerText()).not.toMatch(
+          /\b(restarted|resumed|back online|repairs? (completed|under way)|fully restored|drones?|missiles?|rockets?)\b/i);
+        checked += 1;
+      }
+    }
+    expect(checked, "no attack record was rendered and checked: this test proved nothing").toBeGreaterThan(0);
+  });
+
+  test("a missing national value is words, the total is refused with its reason, and no share is printed", async ({ app, page }) => {
+    // No Gulf value is null today, so this path never runs on real data. One value is removed in
+    // the browser only; the file on disk is untouched.
+    await page.route("**/data/global/gulf.json", async (route) => {
+      const response = await route.fetch();
+      const g = await response.json();
+      const metric = Object.keys(g.metrics)[0];
+      g.systems[0].values[metric] = null;
+      g.region[metric] = { value: null, world_share: null, reason: `1 of ${g.systems.length} members have no value` };
+      await route.fulfill({ response, json: g });
+    });
+    await app.open("?group=gulf");
+    const g = await gulf(page);
+    const first = (g.systems as GulfSystem[])[0];
+    const context = page.getByRole("region", { name: "Regional energy context" });
+    const row = page.locator(".group-table tbody tr").filter({ has: page.getByRole("button", { name: first.name, exact: true }) });
+    await expect(row.locator("td").nth(3)).toHaveText("no data");
+    await expect(page.locator(".group-table tfoot td").nth(1)).toHaveText(`not summed: 1 of ${g.systems.length} members have no value`);
+    await expect(page.locator(".group-table tfoot td").nth(1)).not.toContainText("% of world");
+    await expect(context).not.toContainText("A descriptive annual figure");
+    await expect(row.locator("td").nth(3)).not.toHaveText(/^0\b/);
+  });
+
+  test("the regional brief draws the payload's own figures, order and refusals into the image", async ({ app, page }) => {
+    // A PNG cannot be read back as text, so every string drawn into a 2D canvas is recorded.
+    await page.addInitScript(() => {
+      const drawn: { text: string; right: number; width: number }[] = [];
+      (window as unknown as { __drawn: typeof drawn }).__drawn = drawn;
+      const original = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (this: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth?: number) {
+        drawn.push({ text: String(text), right: x + this.measureText(String(text)).width, width: this.canvas.width });
+        return maxWidth === undefined ? original.call(this, text, x, y) : original.call(this, text, x, y, maxWidth);
+      };
+    });
+    await app.open("?group=gulf");
+    const g = await gulf(page);
+    const systems = g.systems as GulfSystem[];
+    for (const [id, m] of Object.entries(g.metrics) as [string, { label: string; unit: string; year: number; source_id: string }][]) {
+      await page.getByLabel("Regional map metric").selectOption(id);
+      await app.mapIdle();
+      await page.evaluate(() => { (window as unknown as { __drawn: unknown[] }).__drawn.length = 0; });
+      const [download] = await Promise.all([page.waitForEvent("download"), app.button("Download brief (PNG)").click()]);
+      expect(download.suggestedFilename()).toBe(`gulf-energy-context-${id}-${m.year}.png`);
+      const drawn = (await page.evaluate(() => (window as unknown as { __drawn: Drawn[] }).__drawn.slice())).filter((d) => d.width === 1600);
+      const texts = drawn.map((d) => d.text);
+      expect(texts[0]).toBe(`${g.label} energy context: ${m.label}, ${m.year}`);
+      expect(texts[1]).toContain(m.unit);
+      expect(texts[1]).toContain("National annual totals");
+      expect(texts[1]).toContain(g.sources[m.source_id].name);
+      const rows = texts.slice(2, 2 + systems.length);
+      expect(rows.map((t) => t.split(": ")[0])).toEqual(systems.map((s) => s.name));
+      systems.forEach((s, i) => {
+        if (s.values[id] == null) expect(rows[i]).toContain("no data"); else expect(rows[i]).toMatch(/: [\d.,]+ /);
+        expect(rows[i].includes("· GCC")).toBe(s.gcc_member);
+        expect(rows[i].includes("· OPEC")).toBe(s.opec_member);
+        expect(rows[i].includes("research preview")).toBe(s.maturity === "research_preview");
+      });
+      const foot = texts.slice(2 + systems.length).join(" ");
+      const r = g.region[id];
+      if (r.value == null) expect(foot).toContain(`Not summed: ${r.reason}`);
+      else if (r.world_share != null) expect(foot).toContain(`${Math.round(r.world_share * 1000) / 10}% of the world total`);
+      expect(foot).toContain("No index is published for any of them");
+      expect(foot).toContain("no facilities, no routes or shipping, no current status of any facility");
+      expect(texts.join(" ")).not.toMatch(/\b(attacks?|strikes?|incidents?|records)\b/i);
+      // Nothing runs off the right edge of the image.
+      for (const d of drawn) expect(d.right, `"${d.text}" runs off the image`).toBeLessThanOrEqual(1600);
+    }
+  });
+
+  test("every served original-language headline is on the page in its own script, and at least one exists", async ({ app, page }) => {
+    let checked = 0;
+    for (const id of GULF) {
+      await app.open(`?sys=${id}`);
+      const events = (await payload(page, id, "events.json")).events as Event[];
+      const titled = events.flatMap((e) => e.sources).filter((s) => s.title_original);
+      const shown = page.locator(".source-title bdi");
+      await expect(shown).toHaveCount(titled.length);
+      const onPage = await shown.evaluateAll((els) => els.map((el) => ({ text: el.textContent, lang: el.getAttribute("lang"), dir: el.getAttribute("dir") })));
+      expect(onPage.map((x) => x.text).sort()).toEqual(titled.map((s) => s.title_original).sort());
+      for (const x of onPage) {
+        expect(x.lang).toMatch(/^(ar|fa|ku)$/);
+        expect(x.dir).toBe("rtl");
+      }
+      checked += titled.length;
+    }
+    expect(checked, "no original-language headline is served: this test proved nothing").toBeGreaterThan(0);
+  });
+
+  test("a converted date shows what the source wrote, its calendar and the basis", async ({ app, page }) => {
+    // No served record carries a converted date yet. The fields are added in the browser only:
+    // a rendering fixture, not a fact about the record.
+    await page.route("**/data/systems/om/events.json", async (route) => {
+      const response = await route.fetch();
+      const d = await response.json();
+      Object.assign(d.events[0], { date_calendar: "solar_hijri", source_date_text: "۲۵ خرداد ۱۴۰۴",
+                                   conversion_basis: "Solar Hijri to Gregorian, arithmetic calendar (exact)" });
+      await route.fulfill({ response, json: d });
+    });
+    await app.open("?sys=om");
+    const item = page.locator(".event-item").first();
+    await expect(item).toContainText("Date in the source:");
+    await expect(item.locator('bdi[lang="fa"]')).toHaveText("۲۵ خرداد ۱۴۰۴");
+    await expect(item).toContainText("Solar Hijri calendar");
+    await expect(item).toContainText("arithmetic calendar (exact)");
   });
 });

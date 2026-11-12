@@ -620,6 +620,84 @@ REVIEW_MUTATIONS = [
           e for e in d["edits"] if e["event_id"] == "kw-2026-03-20-refinery-attack-1").__setitem__(
           "reason", "Blind review, role(s) B: removed the citation naming TEST PLACEHOLDER refinery")))],
      "committed_review_edits_hand_back_nothing"),
+    ("a short link is accepted as a citation for a record published without its place",
+     [("scripts/import_candidates.py", _text(" or build_systems.method_in_address(url) or short_link(url)", " or build_systems.method_in_address(url)"))],
+     "short_link_is_not_a_citation"),
+    ("half a headline pair is shown",
+     [("scripts/import_candidates.py", _text('        if not ("title_en" in out and "title_original" in out):', '        if False:'))],
+     "headline_is_shown_with_its_gloss"),
+    ("the gate stops looking for the confirmation of the final text",
+     [("scripts/import_candidates.py", _text("            if m and int(m.group(1)) >= 19:", "            if False:"))],
+     "only_with_three_confirmations"),
+    ("a campaign basis names a region and a day",
+     [("data/curated/systems/conflict_campaigns.json", _artifact(lambda d: d["system_states"]["iq"].__setitem__(
+         "basis", "Attacks on gas fields in the north are reported, the most recent on 2026-11-08."))),
+      ("web/public/data/systems/iq/system.json", _artifact(lambda d: d["campaign_state"].__setitem__(
+         "basis", "Attacks on gas fields in the north are reported, the most recent on 2026-11-08.")))],
+     "campaign_bas"),
+    ("the build stops reading campaign bases",
+     [("pipeline/build_systems.py", _text("    return out + campaign_text_problems(campaigns)", "    return out"))],
+     "campaign_basis_says_only"),
+    ("a campaign status source is an address again",
+     [("data/curated/systems/conflict_campaigns.json", _artifact(lambda d: d["campaigns"][0].__setitem__(
+         "status_sources", ["https://example.org/mapping-attacks"])))],
+     "campaign_bas"),
+    ("a reviewer's wording comes back into the public edits of a restricted system",
+     [("data/curated/systems/review_edits.json", _artifact(lambda d: next(
+         e for e in d["edits"] if e["event_id"].startswith("sa-")).__setitem__(
+         "reason", "Active-campaign policy: TEST PLACEHOLDER 'briefly' states how soon loadings resumed")))],
+     "review_edits_of_a_system_under_the_campaign_policy"),
+    ("a replace pair comes back into the public edits of a restricted system",
+     [("data/curated/systems/review_edits.json", _artifact(lambda d: d["edits"].append(
+         {"event_id": "kw-2026-03-20-refinery-attack-1", "field": "summary", "replace": ["TEST PLACEHOLDER", "x"],
+          "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"})))],
+     "review_edits_of_a_system_under_the_campaign_policy"),
+    ("the regional list shows a campaign record's own region",
+     [("web/public/data/global/gulf.json", _artifact(lambda d: next(
+         m for ep in d["recent"]["episodes"] for m in ep["members"] if m["withheld"]).__setitem__("region", "TEST PLACEHOLDER region")))],
+     "recent_list_shows_of_each_record"),
+    ("the regional list carries a country's episode id",
+     [("web/public/data/global/gulf.json", _artifact(lambda d: d["recent"]["episodes"][0].__setitem__(
+         "episode_id", "sa-2026-test-placeholder-refinery-shutdown")))],
+     "recent_list_shows_of_each_record"),
+    ("the regional list shows effect text for a campaign record",
+     [("web/public/data/global/gulf.json", _artifact(lambda d: next(
+         m for ep in d["recent"]["episodes"] for m in ep["members"] if m["withheld"]).update(
+         {"effect": "TEST PLACEHOLDER effect", "withheld": False})))],
+     "recent_list_shows_of_each_record"),
+    ("a Gulf figure is not the national context's own",
+     [("web/public/data/global/gulf.json", _artifact(lambda d: d["region"][next(iter(d["region"]))].__setitem__("world_share", 3.2)))],
+     "gulf_figure_is_the_national_contexts_own"),
+    ("a unit where no record can be placed serves a zero",
+     [("web/public/data/systems/bh/regions.geojson", _artifact(lambda d: d["features"][0]["properties"].__setitem__("recorded_events", 0)))],
+     "no_record_can_be_placed_serves_no_count"),
+    ("an attack record published for the country joins a named episode",
+     [("pipeline/build_systems.py", _text('            if e.get("cause") in KINETIC_CAUSES and e.get("episode_id") not in (None, e.get("event_id")):',
+                                        "            if False:"))],
+     "is_its_own_episode"),
+    ("a lane nobody started reads as stopped by the search limit",
+     [("pipeline/build_systems.py", _text('''    if ex == "not_started":
+        return "blocked_by_source" if win == "inaccessible" else "not_started"
+    if win == "inaccessible":
+        return "blocked_by_source"
+    # Our own''', '''    if lane.get("stopped_by") == "search_limit":
+        return "stopped_by_search_limit"
+    if ex == "not_started":
+        return "blocked_by_source" if win == "inaccessible" else "not_started"
+    if win == "inaccessible":
+        return "blocked_by_source"
+    # Our own'''))],
+     "nobody_started_is_not_stopped"),
+    ("the gate reads addresses against Natural Earth's spellings only",
+     [("pipeline/build_systems.py", _text('''    rows += [(code, name) for code, name in (geo_doc.get("display_names") or {}).items()]
+    rows += [(code, alias) for code, aliases in (geo_doc.get("unit_aliases") or {}).items() for alias in aliases]
+''', ""))],
+     "unit_goes_by_every_name"),
+    ("a served headline the gate would refuse today",
+     [("web/public/data/systems/iq/events.json", _artifact(lambda d: next(
+         s for e in d["events"] if e["cause"] not in ("kinetic_strike", "sabotage") for s in e["sources"]).update(
+         {"title_original": "TEST PLACEHOLDER", "title_en": "Largest plant restarted", "language": "ar"})))],
+     "served_headline_is_one_the_import_gate_would_publish"),
 ]
 MUTATIONS += REVIEW_MUTATIONS
 MUTATIONS += GULF_MUTATIONS

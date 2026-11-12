@@ -160,6 +160,9 @@ def unit_words(units):
     out = set()
     for u in units:
         out |= name_tokens({"admin1_name": u[1]})
+        # A three-letter word is too common to read for in Latin script, but in Arabic script it
+        # is a whole place name ("دبي").
+        out |= {w for w in re.split(r"[^\w]+", str(u[1]).lower()) if len(w) == 3 and not w.isascii()}
     return sorted(out)
 
 
@@ -300,6 +303,15 @@ def review(system_id, r, unit_codes, grandfathered=frozenset(), policy=None):
             failed = [k for k in BLIND_ROLES if roles.get(k) not in BLIND_PASS]
             if failed:
                 return f"blind review: role(s) {failed} did not accept"
+            # The confirmation round was procedure only: the gate never looked for it, so a text
+            # changed after acceptance could be imported unconfirmed (iteration 19). Records of
+            # earlier passes predate the field.
+            m = re.match(r"iteration-(\d+)", r.get("research_pass") or "")
+            if m and int(m.group(1)) >= 19:
+                confirmed = indep.get("confirmed") or {}
+                missing = [k for k in BLIND_ROLES if confirmed.get(k) != "confirm"]
+                if missing:
+                    return f"the final text was not confirmed by role(s) {missing}"
     return None
 
 
@@ -484,7 +496,7 @@ def run(system_id):
     doc = json.loads((ROOT / "data" / "curated" / "systems" / system_id / "system.json").read_text(encoding="utf-8"))
     policy = doc["geography"].get("precision_policy")
     if policy:
-        policy = {**policy, "unit_words": unit_words(units)}
+        policy = {**policy, "unit_words": unit_words(build_systems.unit_name_rows(doc, units))}
     accepted, held = [], []
     for r in queue:
         why = review(system_id, r, unit_codes, grandfathered, policy)

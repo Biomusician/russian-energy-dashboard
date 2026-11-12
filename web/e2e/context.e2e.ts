@@ -126,7 +126,7 @@ test.describe("world energy context", () => {
 
   test("a country page answers the reader's questions without opening a tab", async ({ app, page }) => {
     await app.open("?sys=sa");
-    await expect(page.getByText(/recovery statuses\s+are withheld while an attack campaign is active/)).toBeVisible();
+    await expect(page.getByText(/Recovery status is withheld for \d+ of \d+ records\s+while an attack campaign is active/)).toBeVisible();
     await app.open("?sys=cn");
     const ribbon = page.locator(".research-status");
     await expect(ribbon).toContainText(/source groups finished/);

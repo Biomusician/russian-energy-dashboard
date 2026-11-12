@@ -5,7 +5,7 @@
   "geography": {
     "unit_label": "emirate",
     "units_expected": 9,
-    "note": "Seven emirates (AE-AZ, AE-AJ, AE-DU, AE-FU, AE-RK, AE-SH, AE-UQ) are the analytical units. Natural Earth draws nine units: the seven emirates and two jointly administered areas. Official electricity statistics are reported by four authorities, not by emirate; Ajman, Umm Al Quwain, Ras Al Khaimah and Fujairah are pooled under one. For kinetic or security events the default event geography is country level, because an emirate plus an infrastructure class can identify one facility. Cartographic note: Abu Musa and the Greater and Lesser Tunbs are administered by Iran and claimed by the United Arab Emirates; Natural Earth draws Abu Musa with Iran, and this project keeps Natural Earth's line of actual control, which is an analytic choice, not a statement about sovereignty. The islands are never an analytical unit of this system.",
+    "note": "Seven emirates (AE-AZ, AE-AJ, AE-DU, AE-FU, AE-RK, AE-SH, AE-UQ) are the analytical units. Natural Earth draws nine units: the seven emirates and two jointly administered areas. Official electricity statistics are reported by four authorities, not by emirate; Ajman, Umm Al Quwain, Ras Al Khaimah and Fujairah are pooled under one. For kinetic or security events the default event geography is country level, because an emirate plus an infrastructure class can identify one facility. Cartographic note: Abu Musa and the Greater and Lesser Tunbs are administered by Iran and claimed by the United Arab Emirates; At this map's level of detail none of the three is drawn; Natural Earth's source file attaches Abu Musa to Iran, which is a property of the map file and not a statement about sovereignty. Small exclaves of several emirates are also not drawn at this level of detail. The islands are never an analytical unit of this system.",
     "rulings": [
       {
         "code": "AE-X01~",
@@ -25,6 +25,46 @@
         "AE-X02~"
       ],
       "reason": "Five of the seven emirates are small enough that an emirate and an infrastructure class together name one facility, and publishing some emirates but not others would show which. Attacks and sabotage are therefore recorded for the country, with no emirate, facility or operator. The two areas Natural Earth labels Neutral Zone are drawn and never used for a record."
+    },
+    "display_names": {
+      "AE-DU": "Dubai",
+      "AE-FU": "Fujairah",
+      "AE-RK": "Ras Al Khaimah",
+      "AE-UQ": "Umm Al Quwain",
+      "AE-X01~": "Jointly administered area (east)",
+      "AE-X02~": "Jointly administered area (north)"
+    },
+    "unit_aliases": {
+      "AE-DU": [
+        "Dubay",
+        "دبي"
+      ],
+      "AE-FU": [
+        "Fujayrah",
+        "Fujeirah",
+        "الفجيرة"
+      ],
+      "AE-RK": [
+        "Ras Al Khaymah",
+        "Khaimah",
+        "رأس الخيمة"
+      ],
+      "AE-UQ": [
+        "Umm Al Qaywayn",
+        "Quwain",
+        "أم القيوين"
+      ],
+      "AE-AZ": [
+        "أبوظبي",
+        "ابوظبي",
+        "Abudhabi"
+      ],
+      "AE-SH": [
+        "الشارقة"
+      ],
+      "AE-AJ": [
+        "عجمان"
+      ]
     }
   },
   "sectors": [

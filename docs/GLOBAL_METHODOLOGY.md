@@ -914,12 +914,20 @@ iteration 19 on. They add to the canonical summary above and loosen nothing in i
 | **Not an event** | An OPEC or voluntary production decision, a sanction, planned maintenance, and a decline with no stated physical cause. | `build_systems.not_a_physical_event` |
 | **Nuclear** | National generation totals only. No site, unit, fuel-cycle or enrichment content in any record or profile. | `build_systems.nuclear_problems` |
 | **Routes** | No shipping, strait, tanker, chokepoint or export-route wording in a record, a citation address or a title. No dependency or bypass figure anywhere. | `build_systems.route_problems`; `gulf_context.FORBIDDEN_KEY_PARTS` |
-| **Citations** | A citation whose address names the facility or region of an abstracted record is not published; a record left with none is held. | `import_candidates.names_the_place` |
-| **Headlines** | An original-language headline is shown only if it states no later status, weighs no facility and names none the record does not. | `import_candidates._source` |
-| **Regional view** | National annual totals, memberships and a date-ordered list. No score, rank, count per member or trend. | `gulf_context.validate_extra`; frontend tests |
+| **Citations** | A citation whose address names the facility, the operator, any first-level unit (under any spelling the system lists) or the method of an abstracted record is not published, and neither is a redirecting short link, whose destination address was never read; a record left with none is held. | `import_candidates.unpublishable_address` |
+| **Confirmation** | A record reviewed from iteration 19 on is imported only if all three roles confirmed its final text. | `import_candidates.review` |
+| **Campaign basis** | The sentence that says why a system is under the campaign policy says that attacks are reported and whether an end is. No month or day, tally, class of facility, part of the country or method. A status source is a publisher and a date, never an address. | `build_systems.campaign_text_problems` |
+| **Research notes** | A lane publishes its counts and fixed sentences chosen from a closed list. None of a researcher's own prose is published. | `write_gulf_pass.fixed_notes`; tests on the served log |
+| **Review edits** | For a system under the campaign policy the public edits file keeps one final text per corrected field and a label: no reviewer wording, no replaced text, nothing for an unpublished record. | `apply_reviews.collapse_restricted` |
+| **Episodes** | An attack record published for the country is its own episode: a declared episode's name and id pass no text rule. | `build_systems.precision_problems` |
+| **Units with no records** | Where a system places nothing in a unit (every record is the country's, or the unit is drawn for reference), the unit serves no count. "Not applicable" is not zero. | `build_systems.build_system`; `CountryView` |
+| **Headlines** | An original-language headline is shown only with its English gloss, and only if neither states later status, weighs a facility or names one the record does not. | `import_candidates._source` |
+| **Regional view** | National annual totals, memberships and a date-ordered list. No score, rank, count per member or trend. In the list a campaign-covered record is the country's and a row carries a row key, never a country's own record id. | `gulf_context.validate_extra`; `build_systems.recent_evidence`; frontend tests |
 | **Empty record** | "No qualifying records in the current reviewed corpus", never "0 disruptions". | `CountryView`; `gulf.e2e.ts` |
 
-**Residual risk, stated.** A published citation leads to a page that may name what the record does
-not. The gate removes addresses and headlines that do; it cannot remove what the page says. The
-alternative, publishing an attack record with no citation, would break the rule that every record
-has a source.
+**Residual risk, stated.** A published citation leads to a public news page, and for an attack
+record that page names what the record does not: the release safety review opened the cited pages
+and found the place named on every one. The gate removes addresses and headlines that do; it
+cannot remove what the page says. The alternative, publishing an attack record with no citation,
+would break the rule that every record has a source. Abstraction lowers what this product
+aggregates and states. It does not make the cited report say less.
