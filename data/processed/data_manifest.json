@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-11-12T07:43:57+00:00",
+  "build_time": "2026-11-12T13:48:46+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -9,12 +9,12 @@
     },
     {
       "name": "build_changes.json",
-      "bytes": 10435,
+      "bytes": 4110,
       "optional": false
     },
     {
       "name": "data_quality.json",
-      "bytes": 26542,
+      "bytes": 26544,
       "optional": false
     },
     {
