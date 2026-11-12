@@ -39,7 +39,7 @@ SYS = ROOT / "data" / "curated" / "systems"
 EDITS = SYS / "review_edits.json"
 GF = SYS / "review_grandfathered.json"
 ROLE_NAME = {"A": "evidence", "B": "safety", "C": "taxonomy"}
-REVIEWED_AT = "2026-11-10"
+REVIEWED_AT = os.environ.get("EDM_REVIEWED_AT", "2026-11-11")
 
 
 def _read(path):

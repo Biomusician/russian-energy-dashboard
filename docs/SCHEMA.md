@@ -614,3 +614,50 @@ state may be null until it is fetched.
 ### Research log lanes (`research_log.json`, newest pass)
 
 `execution`, `source_window`, `universe_kind`, `covered_through`, `languages_required`, `languages_executed`, `queries_declared`, `queries_run`, `items_enumerated`, `items_in_universe`, `limitation`, `finding`, `carried_forward`, `stopped_by`. Text is published: it never names a held record.
+
+## Iteration 19 additions
+
+### Manifest (`global/manifest.json`)
+
+- `groups`: `{<group_id>: {label, kind: "geographic" | "membership", note, slug, context, members[]}}`.
+  `members` are system ids in alphabetical order of name. `slug` and `context` are set only for a
+  group with a regional view. A membership group states its `as_of` date and basis in `note`.
+- Per system: `aliases[]` (search names, including local-language ones), `regional_groups[]`,
+  `maturity`, `campaign_restricted`.
+- `selection.regional_rule`: why the Gulf systems were added.
+
+### Regional context (`global/gulf.json`)
+
+`{group, label, note, statement, not_built, memberships, order, sources[], metrics, systems[], region, recent}`. `not_built` is one sentence saying what the view leaves out by design.
+
+- `metrics`: `{<id>: {label, unit, year}}`. One year and one source per metric.
+- `systems[]`: `{system_id, name, a3, gcc_member, opec_member, maturity, recovery_status_withheld,
+  values, role, last_systematic_pass, lane_states, languages_required, languages_executed,
+  reporting_environment}`. `values` entries are numbers or null. No event count.
+- `region`: per metric `{value, world_share, reason}`; `value` is null with a reason when any
+  member is missing, never a partial sum.
+- `recent`: `{order, scope, note, episodes[]}`, newest first by `last_date`; members under an active or uncertain campaign
+  carry `effect: null` and `withheld: true`.
+- A key containing a rank, a share of a route, a trend, a delta or a coordinate fails the build.
+
+### Country `system.json`
+
+- `geography.precision_policy`: `{kinetic: "country" | "admin1", other?: "country" | "admin1",
+  no_event_units?: [codes], reason}`.
+- `maturity`: `"research_preview"` or absent.
+- `campaign_state`: `{state, checked, basis, limitation}` from `conflict_campaigns.json`.
+- `aliases[]`, `regional_groups[]`.
+
+### Country events
+
+- `source_date_text`, `date_calendar` (`gregorian`, `solar_hijri`, `hijri`), `conversion_basis`.
+- `sources[]`: `language`, `title_original`, `title_en` (both optional; dropped at the gate when
+  unsafe).
+- Under `kinetic: "country"` an attack or sabotage record has `geography_precision: "country"`, no
+  `region_code`, `regions_affected`, `facility_name` or `operator`, and an id of the form
+  `<cc>-<date>-<class>-attack-<n>`.
+
+### Campaign register (`conflict_campaigns.json`)
+
+- `system_states`: `{<system_id>: {state, checked, basis, campaign_id, limitation}}`.
+- Campaign `status` may be `active`, `uncertain` or `ended`; `policy_applied` is the switch.

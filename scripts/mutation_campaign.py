@@ -568,6 +568,41 @@ GULF_MUTATIONS = [
      "manifest_carries_groups" ),
 ]
 
+# Found by the blind safety review of iteration 19, then turned into rules.
+REVIEW_MUTATIONS = [
+    ("the gate stops reading how an attack was carried out in a citation address",
+     [("pipeline/build_systems.py", _text("    return bool(METHOD_WORDING.search(path))", "    return False"))],
+     "naming_any_region_the_operator_or_the_method or refuses_method_wording"),
+    ("the gate stops reading first-level unit names in a citation address",
+     [("scripts/import_candidates.py", _text('    return name_tokens(r) | set((policy or {}).get("unit_words") or [])',
+                                           "    return name_tokens(r)"))],
+     "naming_any_region_the_operator_or_the_method"),
+    ("the gate stops reading the operator's name in a citation address",
+     [("scripts/import_candidates.py", _text('for k in ("facility_name", "facility_name_local", "admin1_name", "operator"):',
+                                           'for k in ("facility_name", "facility_name_local", "admin1_name"):'))],
+     "naming_any_region_the_operator_or_the_method"),
+    ("a headline may be shown on an attack record published without its place",
+     [("pipeline/build_systems.py", _text('                if s.get("title_original") or s.get("title_en"):',
+                                        "                if False:"))],
+     "refuses_method_wording_and_headlines"),
+    ("a month-precision date crashes the late-citation check again",
+     [("pipeline/build_systems.py", _text(
+         'start = dt.date.fromisoformat((e["date"] + "-01-01")[:10] if len(e["date"]) < 10 else e["date"][:10])',
+         'start = dt.date.fromisoformat(e["date"][:10])'))],
+     "month_precision_date_does_not_crash"),
+    ("a lane that only points at another lane's record replaces it in the queue",
+     [("scripts/merge_sweep.py", _text(
+         "if same_pass and RANK.get(r.get(\"suggested_disposition\"), 1) <= RANK.get(old.get(\"suggested_disposition\"), 1):",
+         "if False:"))],
+     "two_lanes_reporting_one_event"),
+    ("a recent-events list states a number of systems again",
+     [("pipeline/build_systems.py", _text('def recent_evidence(all_events, scope="The country systems."):',
+                                        'def recent_evidence(all_events, scope="The five country systems."):')),
+      ("data/processed/global/recent_evidence.json", _artifact(lambda d: d.__setitem__("scope", "The five country systems."))),
+      ],
+     "no_recent_list_states_a_number"),
+]
+MUTATIONS += REVIEW_MUTATIONS
 MUTATIONS += GULF_MUTATIONS
 
 def _sandbox():

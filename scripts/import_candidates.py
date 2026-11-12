@@ -132,19 +132,45 @@ GENERIC_NAME_WORDS = {
     "desalination", "liquefied", "natural", "offshore", "onshore", "governorate", "province", "municipality", "emirate",
     "kuwait", "kuwaiti", "qatar", "qatari", "bahrain", "bahraini", "oman", "omani", "iran", "iranian", "iraq", "iraqi",
     "emirates", "emirati", "saudi", "arabia", "gulf", "arab", "united", "state", "sultanate", "kingdom", "islamic", "republic",
+    "northern", "southern", "eastern", "western", "capital", "neutral", "region", "district", "news", "english", "article",
     "مصفاة", "محطة", "حقل", "ميناء", "شركة", "مدينة", "الصناعية", "منشأة", "مجمع", "مستودع", "الكويت", "قطر", "البحرين",
     "عمان", "الإمارات", "ایران", "العراق", "پالایشگاه", "نیروگاه", "میدان", "پتروشیمی", "شرکت", "بندر", "استان", "محافظة",
 }
 
 
 def name_tokens(r):
-    """The distinctive words of a record's facility and region names, in any script."""
+    """The distinctive words of a record's facility, operator and place names, in any script.
+
+    `withheld_place_words` is a list a reviewer or the lead adds for what the name fields do not
+    hold: a region, a town, an operator's short name. The first Iraq packet showed why: the only
+    token from the facility's name was one word, and an address under a regional section of a
+    news site, or one naming the operator, went straight through (blind safety review)."""
     out = set()
-    for k in ("facility_name", "facility_name_local", "admin1_name"):
+    for k in ("facility_name", "facility_name_local", "admin1_name", "operator"):
         for w in re.findall(r"[^\W\d_]{4,}", str(r.get(k) or "").lower()):
             if w not in GENERIC_NAME_WORDS:
                 out.add(w)
+    out |= {str(w).lower() for w in (r.get("withheld_place_words") or []) if len(str(w)) >= 3}
     return out
+
+
+def unit_words(units):
+    """The distinctive words of every first-level unit's name. An address that names any unit of
+    the country narrows a record published for the country as a whole."""
+    out = set()
+    for u in units:
+        out |= name_tokens({"admin1_name": u[1]})
+    return sorted(out)
+
+
+def place_tokens(r, policy):
+    return name_tokens(r) | set((policy or {}).get("unit_words") or [])
+
+
+def unpublishable_address(url, tokens):
+    """A citation that cannot stand beside a record published without its place: its address names
+    the place or the operator, or says how the attack was carried out."""
+    return names_the_place(url, tokens) or build_systems.method_in_address(url)
 
 
 def names_the_place(url, tokens):
@@ -152,7 +178,7 @@ def names_the_place(url, tokens):
     percent-escapes decoded, so an Arabic or Persian slug is read like a Latin one."""
     # The path only: a publisher's own domain is not a statement about the event.
     path = unquote(url or "").split("://", 1)[-1].partition("/")[2]
-    words = set(re.findall(r"[^\W\d_]{4,}", path.lower()))
+    words = set(re.findall(r"[^\W\d_]{3,}", path.lower()))
     return bool(words & tokens)
 
 
@@ -214,9 +240,11 @@ def review(system_id, r, unit_codes, grandfathered=frozenset(), policy=None):
         # A record published without its facility must not be one click from it by reading its
         # own citation list: an address that spells the place out is not published, and a record
         # with no other citation waits for one.
-        tokens = name_tokens(r)
-        if tokens and r.get("sources") and all(names_the_place(s.get("url"), tokens) for s in r["sources"]):
-            return "its only citations name the facility or region in their address"
+        tokens = place_tokens(r, policy)
+        if r.get("sources") and all(unpublishable_address(s.get("url"), tokens) for s in r["sources"]):
+            return "its only citations name the facility or region, or the method, in their address"
+        if build_systems.METHOD_WORDING.search(text):
+            return "states how the attack was carried out"
     srcs = r.get("sources") or []
     if not srcs or not all(s.get("url") for s in srcs):
         return "a source has no URL"
@@ -339,9 +367,9 @@ def _source(s, with_titles):
 def to_event(system_id, r, grandfathered=frozenset(), campaigns=None, policy=None):
     abstract = kinetic_country_policy(policy, r)
     if abstract:
-        tokens = name_tokens(r)
+        tokens = place_tokens(r, policy)
         # Downgraded here, at the gate, so no later step has to remember to (iteration 19).
-        r = {**r, "sources": [s for s in r["sources"] if not names_the_place(s.get("url"), tokens)],
+        r = {**r, "sources": [s for s in r["sources"] if not unpublishable_address(s.get("url"), tokens)],
              "geography_precision": "country", "admin1_code": None, "admin1_codes_affected": [],
              "facility_name": None, "facility_name_local": None, "operator": None,
              "published_id": opaque_id(system_id, r)}
@@ -422,7 +450,8 @@ def to_event(system_id, r, grandfathered=frozenset(), campaigns=None, policy=Non
 def run(system_id):
     queue = json.loads((ROOT / "data" / "candidates" / f"{system_id}.json").read_text(encoding="utf-8"))
     admin1, admin0 = build_systems.load_admin1(), build_systems.load_admin0()
-    unit_codes = {u[0] for u in build_systems.units(system_id, admin1, admin0)}
+    units = build_systems.units(system_id, admin1, admin0)
+    unit_codes = {u[0] for u in units}
     edits = json.loads(EDITS.read_text(encoding="utf-8"))["edits"]
     known = {r.get("candidate_id") for r in queue}
     stray = sorted({e["event_id"] for e in edits if e["event_id"].startswith(system_id + "-")} - known)
@@ -433,6 +462,8 @@ def run(system_id):
     campaigns = build_systems.load_campaigns()
     doc = json.loads((ROOT / "data" / "curated" / "systems" / system_id / "system.json").read_text(encoding="utf-8"))
     policy = doc["geography"].get("precision_policy")
+    if policy:
+        policy = {**policy, "unit_words": unit_words(units)}
     accepted, held = [], []
     for r in queue:
         why = review(system_id, r, unit_codes, grandfathered, policy)

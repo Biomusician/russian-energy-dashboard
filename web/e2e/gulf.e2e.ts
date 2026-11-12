@@ -30,7 +30,8 @@ const gulf = (page: Page) => json(page, "/data/global/gulf.json");
 const payload = (page: Page, id: string, file: string) => json(page, `/data/systems/${id}/${file}`);
 
 // Wording a regional picture must never carry, whatever the data says.
-const RANKING = /\b(rank(ed|ing)?|league|top \d|most (important|vulnerable|critical|exposed)|worst[- ]hit|hardest[- ]hit)\b/i;
+// The page's own refusals ("never a ranking") are allowed; a positive ranking statement is not.
+const RANKING = /\b(ranked (first|second|third|\d)|top \d|#\d|most (important|vulnerable|critical|exposed)|worst[- ]hit|hardest[- ]hit|league table of)\b/i;
 const ROUTES = /hormuz|tanker|choke ?point|shipping lane|bypass/i;
 
 async function sideways(page: Page) {
@@ -67,7 +68,7 @@ test.describe("Gulf group", () => {
     await expect(cards).toHaveCount(6);
     await expect(page.getByRole("article", { name: "Iran" })).toHaveCount(0);
     await expect(page.getByRole("article", { name: "Iraq" })).toHaveCount(0);
-    await expect(page.locator(".map-control-row")).toContainText("Iran and Iraq are not members");
+    await expect(page.locator(".map-control-row").filter({ has: filter })).toContainText("Iran and Iraq are not members");
 
     await app.button("Open the Gulf overview").click();
     await expect(page).toHaveURL(/[?&]group=gulf\b/);
@@ -112,7 +113,7 @@ test.describe("Gulf group", () => {
       const row = rows.filter({ has: page.getByRole("button", { name: s.name, exact: true }) });
       for (const v of Object.values(s.values)) if (v == null) await expect(row).toContainText("no data");
     }
-    for (const src of g.sources as { name: string }[]) {
+    for (const src of Object.values(g.sources) as { name: string }[]) {
       await expect(page.getByRole("region", { name: "Regional energy context" })).toContainText(src.name);
     }
   });
@@ -149,7 +150,8 @@ test.describe("Gulf group", () => {
     await page.getByLabel("Membership filter").selectOption("all");
     await expect(cards).toHaveCount(8);
 
-    const main = await page.locator("main").innerText();
+    // The view's one statement of what it leaves out names those things; nothing else may.
+    const main = (await page.locator("main").innerText()).replace(g.not_built, "");
     expect(main).not.toMatch(RANKING);
     expect(main).not.toMatch(ROUTES);
     expect(main).toContain("Gulf, GCC and OPEC are three different things");
@@ -161,14 +163,15 @@ test.describe("Gulf group", () => {
     const feed = page.getByRole("region", { name: "Recent reviewed events in this region" });
     await expect(feed).toContainText("Date order only");
     await expect(feed).toContainText("not a deteriorating region");
-    const eps = g.recent.episodes as { system_id: string; start: string; members: { region: string; withheld: boolean }[] }[];
+    const eps = g.recent.episodes as { system_id: string; last_date: string; members: { region: string; withheld: boolean }[] }[];
     if (eps.length === 0) {
       await expect(feed).toContainText("No qualifying records in the current reviewed corpus for this region");
       return;
     }
     await expect(feed.locator(".feed-item")).toHaveCount(eps.length);
-    const starts = eps.map((e) => e.start);
-    expect(starts).toEqual([...starts].sort().reverse());
+    const dates = eps.map((e) => e.last_date);
+    expect(dates).toEqual([...dates].sort().reverse());
+    expect(g.recent.scope).not.toMatch(/five/);
     expect(await feed.innerText()).not.toMatch(ROUTES);
   });
 
@@ -326,9 +329,13 @@ test.describe("Gulf country systems", () => {
       // Bounds: the drawn map belongs to this country, i.e. it is not blank after the switch.
       const px = await app.mapPixels();
       expect(px.distinct, `${id}: blank map after switching`).toBeGreaterThan(8);
+      // Source health belongs to this country: its citations are counted across its own events.
       await app.button("Sources & data quality").click();
-      await expect(page.locator(".country-side")).toContainText(sys.name);
-      await app.button("Events").click();
+      await expect(page.getByRole("heading", { name: /sources & data quality/i })).toBeVisible();
+      if (events.length > 0) {
+        await expect(page.locator(".country-side")).toContainText(new RegExp(`across ${events.length} events?\\b`));
+      }
+      await app.button("Reported events").click();
     }
     expect(app.errors).toEqual([]);
   });

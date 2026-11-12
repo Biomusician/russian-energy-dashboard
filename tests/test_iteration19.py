@@ -767,6 +767,79 @@ def test_a_headline_that_weighs_a_facility_is_not_shown(title):
     assert "title_original" not in imp._source(src, with_titles=True)
 
 
+def test_two_lanes_reporting_one_event_keep_the_fuller_record(tmp_path, monkeypatch):
+    """A lane that only points at another lane's record must not replace it in the queue: the
+    first merge of this pass dropped an accepted record behind a 'duplicate' pointer."""
+    ms = _load("merge_sweep")
+    sweep = tmp_path / "s"
+    sweep.mkdir()
+    full = {"candidate_id": "zz-1", "suggested_disposition": "accept", "summary": "full"}
+    pointer = {"candidate_id": "zz-1", "suggested_disposition": "duplicate", "summary": "see lane a"}
+    held = {"candidate_id": "zz-2", "suggested_disposition": "held", "summary": "held"}
+    better = {"candidate_id": "zz-2", "suggested_disposition": "accept", "summary": "resolved"}
+    (sweep / "zz_a_candidates.json").write_text(json.dumps([full, held]), encoding="utf-8")
+    (sweep / "zz_b_candidates.json").write_text(json.dumps([pointer, better]), encoding="utf-8")
+    monkeypatch.setattr(ms, "CANDIDATES", tmp_path)
+    ms.main("s", "19", ("zz",))
+    queue = {r["candidate_id"]: r for r in json.loads((tmp_path / "zz.json").read_text(encoding="utf-8"))}
+    assert queue["zz-1"]["summary"] == "full" and queue["zz-1"]["also_found_by"] == ["zz_b"]
+    assert queue["zz-2"]["summary"] == "resolved"
+    # Running the merge again changes nothing.
+    ms.main("s", "19", ("zz",))
+    again = {r["candidate_id"]: r for r in json.loads((tmp_path / "zz.json").read_text(encoding="utf-8"))}
+    assert again["zz-1"]["summary"] == "full" and again["zz-2"]["summary"] == "resolved"
+
+
+def test_no_recent_list_states_a_number_of_systems():
+    """It said 'the five country systems' over a list of twelve."""
+    for rel in ("global/recent_evidence.json", "global/gulf.json"):
+        doc = json.loads((ROOT / "data/processed" / rel).read_text(encoding="utf-8"))
+        scope = (doc.get("recent") or doc)["scope"]
+        assert not re.search(r"\b(five|six|seven|eight|twelve|\d+)\b", scope), scope
+
+
+def test_an_address_naming_any_region_the_operator_or_the_method_is_not_published():
+    """Found by the blind safety review: the only token from one facility's name was a single word,
+    so an address under a regional section of a news site, one naming the operator and one saying
+    how the attack was carried out all went through."""
+    imp = _load("import_candidates")
+    policy = {**POLICY, "unit_words": imp.unit_words([("KW-AH", "Al Ahmadi"), ("KW-JA", "Al Jahra")])}
+    r = _full_candidate(candidate_id="kw-2026-03-12-refinery-attack-1", facility_name="Example Refinery",
+                        operator="Zedco Petroleum Company", withheld_place_words=["wafra"])
+    clean = r["sources"][0]
+    r["sources"] = [clean,
+                    {**clean, "url": "https://example.org/english/jahra/20260312"},
+                    {**clean, "url": "https://example.org/news/zedco-statement"},
+                    {**clean, "url": "https://example.org/news/wafra-site-hit"},
+                    {**clean, "url": "https://example.org/2026/03/drone-attack-on-energy-site"},
+                    {**clean, "url": "https://example.org/a/%D9%85%D8%B3%D9%8A%D8%B1%D8%A9-%D8%AA%D8%B3%D8%AA%D9%87%D8%AF%D9%81"}]
+    ev = imp.to_event("kw", r, policy=policy)
+    assert [s["url"] for s in ev["sources"]] == ["https://example.org/a"]
+    only = {**r, "sources": r["sources"][1:]}
+    assert "only citations" in imp.review("kw", only, {"KW-AH"}, policy=policy)
+    said = {**r, "summary": "A drone attack was reported on a refinery in Kuwait."}
+    assert "how the attack was carried out" in imp.review("kw", said, {"KW-AH"}, policy=policy)
+
+
+def test_the_build_refuses_method_wording_and_headlines_on_a_record_published_without_its_place():
+    ev = _event(event_id="kw-2026-03-12-refinery-attack-1", cause="kinetic_strike", geography_precision="country",
+                region_code=None, summary="An attack was reported on a refinery in Kuwait.")
+    ev["sources"] = [{"url": "https://example.org/news/missile-strike-reported", "publisher": "P", "date": "2026-03-12"}]
+    doc = {"geography": {"precision_policy": {"kinetic": "country", "reason": "x" * 70}}}
+    assert any("how the attack was carried out" in p for p in B.precision_problems("kw", doc, [ev]))
+    ev["sources"] = [{"url": "https://example.org/a", "publisher": "P", "date": "2026-03-12", "title_original": "عنوان"}]
+    assert any("headline" in p for p in B.precision_problems("kw", doc, [ev]))
+    ev["sources"] = [{"url": "https://example.org/a", "publisher": "P", "date": "2026-03-12"}]
+    assert not [p for p in B.precision_problems("kw", doc, [ev]) if "kw-2026" in p]
+
+
+def test_a_month_precision_date_does_not_crash_the_late_citation_check():
+    e = {"date": "2025-05", "date_precision": "month"}
+    assert B.late_citation(e, {"date": "2025-06-03"}) is False
+    assert B.late_citation(e, {"date": "2025-07-01"}) is True
+    assert B.late_citation({"date": "2025", "date_precision": "year"}, {"date": None}) is True
+
+
 # --- research-pass honesty -----------------------------------------------------------------------
 
 def _body(**kw):

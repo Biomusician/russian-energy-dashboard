@@ -147,3 +147,36 @@ the reason. Its choropleth classes come from that country's own range (never a s
   picker across all six systems with Back, the race, error containment, PNG per country,
   print/PDF for all seven pages, two responsive sizes, and three map goldens (win32 only).
 - **Unit** (`web/src/global/router.test.ts`): the routing table above.
+
+## Iteration 19: thirteen systems, groups and a regional view
+
+Seven country systems were added (Bahrain, Iran, Iraq, Kuwait, Oman, Qatar, United Arab Emirates),
+which with Saudi Arabia make the Gulf littoral group. Nothing about the theatre or the five earlier
+countries moved. The full account is [GULF_ARCHITECTURE.md](GULF_ARCHITECTURE.md); what changed in
+the architecture described above is:
+
+- **Groups.** `pipeline/systems.py` holds `GROUPS` beside `SYSTEMS`: one geographic group
+  (`gulf_littoral`) and two memberships (`gcc`, `opec`). The manifest carries them; the frontend
+  reads them and holds no list of its own. A group is a filter and a context view. It has no
+  score, no count per member and no order other than alphabetical.
+- **One regional context file.** `global/gulf.json`, built by `pipeline/gulf_context.py` from the
+  same national context the world map uses. National annual totals, their year and source, the
+  memberships, and a date-ordered list of reviewed episodes. A key that would carry a rank, a
+  share of a route, a trend or a coordinate fails the build.
+- **Campaign state per system.** `conflict_campaigns.json → system_states` classifies every Gulf
+  system before any event is ingested; `policy_applied` on a campaign is what withholds recovery
+  status, and the build refuses a restricted system with no campaign covering it.
+- **Precision policy per system.** `system.json → geography.precision_policy`. Admin-1 is a
+  maximum. All seven new systems record attacks and sabotage for the country, with no region,
+  facility or operator and an id that names none; Bahrain records everything for the country.
+- **Text rules at the gate and in the build**, for systems that state a precision policy: a
+  production decision, sanction, planned maintenance or unexplained decline is not an event;
+  nothing nuclear below a national generation total; no shipping, strait or route wording; a
+  citation whose address names an abstracted facility is not published.
+- **Calendars.** `pipeline/calendars.py` converts Solar Hijri dates exactly and Hijri dates to
+  within a day, and the gate recomputes every converted date from the source's own text.
+- **Maturity.** `maturity: research_preview` marks a system whose first research pass is far from
+  complete. It is shown on the card and the country page and relaxes nothing.
+- **Routes.** `?group=gulf` opens the regional view. `sys` wins if both are present.
+
+The daily refresh builds all thirteen systems from curated files and does no research.

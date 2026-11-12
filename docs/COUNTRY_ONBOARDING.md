@@ -164,3 +164,39 @@ vintage and sensitivity. A country composite needs the six-point gate in §7.3.
 - No ranking of countries, and no field that would allow one.
 - Counts are shown with the reporting environment beside them.
 - `null` with a reason, never `0`, where a value does not exist.
+
+## Iteration 19 additions
+
+Seven systems were onboarded in one pass. What that added to the steps above:
+
+1. **Classify the campaign state first.** Before any event research, add the system to
+   `conflict_campaigns.json → system_states` with a dated basis and public sources:
+   `ACTIVE_KINETIC_CAMPAIGN`, `RECENT_ENDED_CAMPAIGN`, `NO_ACTIVE_CAMPAIGN` or `UNCERTAIN`. One
+   incident is not a campaign. `UNCERTAIN` is treated as active. A restricted state needs a
+   campaign entry with `policy_applied: true`, or the build fails.
+2. **Decide the precision policy** and write its reason in `geography.precision_policy`. Ask, for
+   attacks and sabotage, whether a first-level unit and an infrastructure class together name one
+   facility. If they do anywhere in the country, record such events for the country. Do not
+   publish some units and not others. Never jitter a location.
+3. **State the languages each lane requires** in the plan. A lane searched in fewer languages than
+   its plan requires is `partial`, whatever else it did.
+4. **Commit the plan before searching.** `docs/countries/<CC>_SYSTEMATIC_SWEEP.md` Part A is read
+   back from that commit by `scripts/write_gulf_pass.py`, so the log cannot declare a lane the plan
+   did not.
+5. **Scaffold with `scripts/onboard_system.py <cc>`** from the audit's draft files. It refuses to
+   overwrite a system that already has events. Do not re-run it on an onboarded system: it would
+   drop hand edits.
+6. **Dates and numerals.** A date the source wrote in another calendar keeps `source_date_text`,
+   `date_calendar` and `conversion_basis`; the gate recomputes it. Persian and Arabic numerals are
+   normalised by `pipeline/calendars.py`; an ambiguous number is `None`, never a guess.
+7. **Original-language citations** keep `title_original`, `title_en` and `language`. A headline
+   that states later status, weighs a facility, or names one the record does not, is not shown.
+8. **A new system starts as `maturity: research_preview`** and says so on its card and page until
+   its lanes have run as far as declared.
+9. **Lead rulings may only be stricter.** After the research wave and before review the lead may
+   hold a record, mark a duplicate or reduce what a record says. Never the reverse.
+10. **Browser tests.** Add the system id to `GULF` in `web/e2e/gulf.e2e.ts` only if it belongs to
+    that group; otherwise to `COUNTRIES` in `global.e2e.ts`.
+
+A blocked source (HTTP 402, 403, login wall, script-only page) is recorded as blocked and not
+worked around. A site whose terms forbid linking is never cited.

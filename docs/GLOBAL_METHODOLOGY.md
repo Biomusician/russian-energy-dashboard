@@ -26,7 +26,7 @@ The governing rules this document is held to, verbatim from the project:
 
 ---
 
-## Canonical policy summary (current as of iteration 18)
+## Canonical policy summary (current as of iteration 19)
 
 **This section is the one place the country-system rules are stated together.** The analysis
 below (§0-§9) is dated 2026-10-30 and kept as written; where a later iteration decided
@@ -879,3 +879,25 @@ The cross-country statistic (`recovery_by_class`) uses completed kinds only, dro
 only the date of a report, and shows a group only if at least two countries contribute: a row from
 one country identifies it. Fewer than three cases are listed, three or four give a range, five or
 more a median.
+
+## Gulf rules (iteration 19)
+
+These apply to every system that states a `precision_policy`, which is every system onboarded from
+iteration 19 on. They add to the canonical summary above and loosen nothing in it.
+
+| Rule | What is in force | Enforced by |
+|---|---|---|
+| **Campaign state before research** | Every system is classified before any event is ingested. Uncertain is treated as active. | `build_systems.campaign_problems` |
+| **Attack precision** | Attacks and sabotage are recorded for the country in all seven new systems: no region, facility or operator, and an id that names none. Admin-1 is a maximum. | `build_systems.precision_problems`; `import_candidates.kinetic_country_policy` |
+| **Not an event** | An OPEC or voluntary production decision, a sanction, planned maintenance, and a decline with no stated physical cause. | `build_systems.not_a_physical_event` |
+| **Nuclear** | National generation totals only. No site, unit, fuel-cycle or enrichment content in any record or profile. | `build_systems.nuclear_problems` |
+| **Routes** | No shipping, strait, tanker, chokepoint or export-route wording in a record, a citation address or a title. No dependency or bypass figure anywhere. | `build_systems.route_problems`; `gulf_context.FORBIDDEN_KEY_PARTS` |
+| **Citations** | A citation whose address names the facility or region of an abstracted record is not published; a record left with none is held. | `import_candidates.names_the_place` |
+| **Headlines** | An original-language headline is shown only if it states no later status, weighs no facility and names none the record does not. | `import_candidates._source` |
+| **Regional view** | National annual totals, memberships and a date-ordered list. No score, rank, count per member or trend. | `gulf_context.validate_extra`; frontend tests |
+| **Empty record** | "No qualifying records in the current reviewed corpus", never "0 disruptions". | `CountryView`; `gulf.e2e.ts` |
+
+**Residual risk, stated.** A published citation leads to a page that may name what the record does
+not. The gate removes addresses and headlines that do; it cannot remove what the page says. The
+alternative, publishing an attack record with no citation, would break the rule that every record
+has a source.

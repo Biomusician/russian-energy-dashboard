@@ -469,6 +469,23 @@ LOADED_WORDING = re.compile(
     r"بزرگ[\u200c ]?ترین|مهم[\u200c ]?ترین|اصلی[\u200c ]?ترین|راهبردی|حیاتی", re.I)
 
 
+# How an attack was carried out. Never in our text, and for a record published without its place
+# not in a citation's address either: the policy publishes that an attack happened, not its method.
+METHOD_WORDING = re.compile(
+    r"\b(drones?|uavs?|missiles?|rockets?|shahed|projectiles?|katyusha|ballistic|cruise|loitering|shelling|"
+    r"bomb(ing|ed|s)?|intercept\w*)\b|مسي[ّ]?رة|مسيرات|مسي[ّ]?رتين|صاروخ|صواريخ|درون|پهپاد|موشک|راکت", re.I)
+
+
+def address_words(url):
+    """A citation address as words, percent-escapes decoded and separators opened up."""
+    return re.sub(r"[-_/+.]", " ", unquote(url or ""))
+
+
+def method_in_address(url):
+    path = address_words(re.sub(r"^https?://[^/]+", "", url or ""))
+    return bool(METHOD_WORDING.search(path))
+
+
 def route_problems(events):
     out = []
     for e in events:
@@ -882,6 +899,14 @@ def precision_problems(system_id, doc, events):
                     out.append(f"{eid}: {k} on a kinetic record under a country-level policy")
             if not re.fullmatch(OPAQUE_ID.format(cc=system_id), eid):
                 out.append(f"{eid}: a kinetic record under a country-level policy needs an opaque id")
+            for s in e.get("sources", []):
+                if method_in_address(s.get("url")):
+                    out.append(f"{eid}: a citation address states how the attack was carried out")
+                if s.get("title_original") or s.get("title_en"):
+                    out.append(f"{eid}: a headline on a record published without its place")
+            text = " ".join(str(e.get(k) or "") for k in ("summary", "effect", "threshold_basis"))
+            if METHOD_WORDING.search(text):
+                out.append(f"{eid}: the record's text states how the attack was carried out")
         if policy.get("other") == "country" and (e["geography_precision"] != "country" or e.get("region_code")
                                                  or e.get("regions_affected")):
             # The drawn units are not the current ones, or the state is too small for a region to
@@ -908,7 +933,9 @@ def late_citation(e, source):
     of the month for a month-precision date). An undated source counts as late."""
     if not source.get("date"):
         return True
-    start = dt.date.fromisoformat(e["date"][:10])
+    # A month-precision date is written "2025-05": fromisoformat refused it, so the first covered
+    # month-precision record would have stopped the import (found by review, iteration 19).
+    start = dt.date.fromisoformat((e["date"] + "-01-01")[:10] if len(e["date"]) < 10 else e["date"][:10])
     if e.get("date_precision") == "month":
         start = (start.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)
     return (dt.date.fromisoformat(source["date"][:10]) - start).days > LATE_CITATION_DAYS
@@ -1547,8 +1574,8 @@ def _days(a, b):
     return (dt.date.fromisoformat(b) - dt.date.fromisoformat(a)).days
 
 
-def recent_evidence(all_events):
-    """The most recent qualifying episodes across the five countries, newest first.
+def recent_evidence(all_events, scope="The country systems."):
+    """The most recent qualifying episodes across the given country systems, newest first.
 
     A chronological list and nothing else: no severity sort, no impact order, no count per
     country. An active campaign's record names its region, class and date, and carries no effect
@@ -1581,7 +1608,8 @@ def recent_evidence(all_events):
     items.sort(key=lambda x: (x["last_date"], x["system_id"], x["episode_id"]), reverse=True)
     return {
         "order": "newest first; never by size or severity",
-        "scope": "The five country systems. Qualifying records only, grouped by episode. Precision is first-level region.",
+        # Never a count of systems typed here: it said "five" for a list of twelve (iteration 19).
+        "scope": f"{scope} Qualifying records only, grouped by episode. Precision is first-level region at most.",
         "note": ("What was publicly reported, found and reviewed: counts here are not rates of disruption and "
                  "are not comparable between countries. Events can date back to 2022, but systematic research "
                  "for these systems began in 2026, so older records were found later, not monitored as they happened."),
@@ -1697,7 +1725,8 @@ def build(theatre_snapshot):
     members = set(systems.GROUPS[gulf_context.GROUP]["members"])
     # The group's own recent list: the cross-system one holds the newest 40 of every system, which
     # can leave a region with none.
-    gulf["recent"] = recent_evidence({k: v for k, v in all_events.items() if k in members})
+    gulf["recent"] = recent_evidence({k: v for k, v in all_events.items() if k in members},
+                                     scope="The Gulf country systems.")
     write_json(outputs.processed() / gulf_context.OUTPUT, gulf)
     build_time = theatre_snapshot.get("build_time") or dt.datetime.now(dt.timezone.utc).isoformat()
     write_json(outputs.processed() / "global" / "manifest.json",
