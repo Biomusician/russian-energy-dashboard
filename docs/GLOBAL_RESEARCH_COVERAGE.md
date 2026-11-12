@@ -4,7 +4,9 @@
 how was its record of events searched for? Whether its sources are current is a separate question,
 answered on each country page. It carries process facts only and is dated.
 
-*State as of 2026-11-10.*
+*State as of 2026-11-10.* The Gulf systems' coverage is in [GULF_RESEARCH_COVERAGE.md](GULF_RESEARCH_COVERAGE.md);
+the iteration-20 continuation pass is summarised in [ITERATION_20_REVIEW.md](ITERATION_20_REVIEW.md). Each country
+page carries the live state.
 
 ## The coverage model
 

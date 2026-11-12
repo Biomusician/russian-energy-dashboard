@@ -314,8 +314,8 @@ from it.
   carry *their* terms.
 - **Geography precision:** national; facility names only.
 - **Capacity semantics:** refinery table **does not state gross vs net**; it matches Aramco's gross
-  per-plant figures for some plants and differs for others (Yanbu' 220 vs Aramco-2025 250;
-  Riyadh 126 vs 130; YASREF 430 vs 450) — a vintage difference, not a basis difference.
+  per-plant figures for some plants and differs for others — a vintage difference, not a basis
+  difference. (Per-plant figures removed in iteration 20.)
   Gas-plant capacities are labelled **"estimated"**.
 - **Known biases:** secondary compilation; stale between editions.
 - **Language:** English.

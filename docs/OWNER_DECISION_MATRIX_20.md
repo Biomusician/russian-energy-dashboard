@@ -21,7 +21,7 @@ affected** · **Held records affected** · **Safety** · **Analysis** · **Recom
 - **Question.** A government's published season of rotating cuts (Iran, Iraq, Kuwait): one record per announced cut, one record for the season, an episode, or national context only?
 - **Written rule.** Clause 4, second limb: a generation shortfall that forced rotating outages. Silent on duration.
 - **Precedent.** Single dated programmed-cut days were published (Kuwait 2024).
-- **Systems.** ir, iq, kw. **Published.** 3 (Kuwait, single days). **Held.** several season-level candidates.
+- **Systems.** ir, iq, kw. **Published.** 3 (Kuwait, single days). **Held.** yes; counts are kept in the local queue for systems under the campaign policy.
 - **Safety.** Low; national, non-kinetic. **Analysis.** A season recorded as daily records would dominate the corpus; one record hides duration.
 - **Recommendation.** One record per announced season where a source ties it to a shortfall, dated to the announcement, with the season as an episode.
 - **If approved.** A `season` episode type; season records imported.
@@ -39,7 +39,7 @@ affected** · **Held records affected** · **Safety** · **Analysis** · **Recom
 ### D-03 Attack occurrence with no effect within seven days
 - **Question.** Is a sourced attack with no qualifying effect reported within seven days a record?
 - **Written rule.** Every clause names an effect; none admits occurrence alone. **Precedent.** Held since iteration 19.
-- **Systems.** all Gulf. **Published.** 0. **Held.** 5 this pass, plus earlier.
+- **Systems.** all Gulf. **Published.** 0. **Held.** yes; counts are kept in the local queue for systems under the campaign policy.
 - **Safety.** Publishing occurrence alone moves the product toward an attack log. **Analysis.** Effect-based records are the threshold's whole point.
 - **Recommendation.** Confirm: not a record.
 - **If approved.** No change. **Until then.** Held [NO-EFFECT].
@@ -48,7 +48,7 @@ affected** · **Held records affected** · **Safety** · **Analysis** · **Recom
 - **Question.** Out of scope by the route rule? Is a field halted by a fault on its own export line the same case?
 - **Written rule.** Gulf systems: nothing about routes, export-route dependence or bypass capacity. Clause 7 is otherwise met by a stated volume.
 - **Precedent.** iq-2025-12-08 published in iteration 19, held in 20.
-- **Systems.** iq (and potentially every exporter). **Published.** 0 (1 held this iteration). **Held.** 2.
+- **Systems.** iq (and potentially every exporter). **Published.** 0. **Held.** yes; counts are kept in the local queue for systems under the campaign policy.
 - **Safety.** Recording why a field stopped (its outlet failed) is a dependency statement. **Analysis.** The shut-in volume is a real disruption.
 - **Recommendation.** A record may state that production was shut in and the volume; it must not state that the cause was the export route. Where the route is the only stated cause and the record cannot be written without it, hold.
 - **If approved.** Edit wording; re-import. **Until then.** Held [ROUTE].
@@ -56,7 +56,7 @@ affected** · **Held records affected** · **Safety** · **Analysis** · **Recom
 ### D-05 Force majeure with no stated shutdown
 - **Question.** Does a force-majeure declaration alone meet clause 1 or 2?
 - **Written rule.** Clause 3 names force majeure for trunk pipelines only. **Precedent.** Two Qatar duplicates held.
-- **Systems.** qa, sa, ae. **Published.** 0 rely on it alone. **Held.** 2.
+- **Systems.** qa, sa, ae. **Published.** 0 rely on it alone. **Held.** yes; counts are kept in the local queue for systems under the campaign policy.
 - **Safety.** Low. **Analysis.** Force majeure is a contractual statement and may cover a reduction, not a stop.
 - **Recommendation.** Not on its own; it qualifies with a stated suspension or cut.
 - **If approved.** No change. **Until then.** Held [C3-FM].
@@ -64,7 +64,7 @@ affected** · **Held records affected** · **Safety** · **Analysis** · **Recom
 ### D-06 Capacity share as the only threshold basis
 - **Question.** If the only fact that crosses a threshold is a share of national capacity, which the safety rule removes, does the record qualify on damage alone?
 - **Written rule.** Brief §20: either another safe fact qualifies it, or hold. **Precedent.** Held.
-- **Systems.** Gulf. **Published.** 0. **Held.** 0 this pass.
+- **Systems.** Gulf. **Published.** 0. **Held.** yes; counts are kept in the local queue for systems under the campaign policy.
 - **Recommendation.** Confirm: hold. **Until then.** Held [SHARE-ONLY].
 
 ### D-07 Substations, calls, districts in place of customers
@@ -76,14 +76,14 @@ affected** · **Held records affected** · **Safety** · **Analysis** · **Recom
 ### D-08 "Emergency plans activated" or "working on a full emergency footing"
 - **Question.** Is either a clause-5 grid-operator emergency declaration?
 - **Written rule.** A declaration. **Precedent.** iq-2025-08-11 published on it in iteration 19; held in 20.
-- **Systems.** iq, sa. **Published.** 0 (1 held this iteration). **Held.** 2+.
+- **Systems.** iq, sa. **Published.** 0. **Held.** yes; counts are kept in the local queue for systems under the campaign policy.
 - **Recommendation.** No. A declaration is a named, formal operator act (EEA 3, an emergency notice, an ordered load shed).
 - **Until then.** Held [C5-EMERGENCY].
 
 ### D-09 An importer's shortfall caused by a supplier's planned maintenance
 - **Question.** Excluded by the planned-maintenance exclusion, or a disruption of the importing system?
 - **Written rule.** "planned maintenance and turnarounds" are excluded. **Precedent.** Held.
-- **Systems.** iq. **Published.** 0. **Held.** 3 this pass (two report cut supply hours).
+- **Systems.** iq. **Published.** 0. **Held.** yes; counts are kept in the local queue for systems under the campaign policy.
 - **Safety.** Recording supplier, cut and megawatts is the dependency series of D-25. **Analysis.** The importer's shortfall is real; its cause is another system's plan.
 - **Recommendation.** Excluded, unless the importing system reports rotating outages and the source states a shortfall beyond the planned volume.
 - **Until then.** Held [SUPPLIER].
@@ -91,7 +91,7 @@ affected** · **Held records affected** · **Safety** · **Analysis** · **Recom
 ### D-10 Non-attack records at a site that has country-level attack records
 - **Question.** Publish by name, cover by the campaign, abstract, or hold?
 - **Written rule.** None. **Precedent.** Lead hold (iteration 19) on records naming a facility whose attack records are published without a place.
-- **Systems.** iq, kw. **Published.** 0 affected. **Held.** 2+ new this pass.
+- **Systems.** iq, kw. **Published.** 0 affected. **Held.** yes; counts are kept in the local queue for systems under the campaign policy.
 - **Safety.** A named non-attack record beside an abstracted attack record re-identifies the site.
 - **Recommendation.** For a system under the campaign policy, a non-attack record at a site with a published country-level attack record is published at the same abstraction (country level, no facility) while the campaign holds.
 - **Until then.** Held.
@@ -110,8 +110,8 @@ affected** · **Held records affected** · **Safety** · **Analysis** · **Recom
 
 ### D-14 One facility of a class in a country
 - **Question.** For an attack record where country plus class names one facility: a coarser class, a caveat, or no record?
-- **Written rule.** Brief §44: broaden truthfully or hold. **Precedent.** One confirmed record held (iteration 19); Qatar LNG candidates held.
-- **Systems.** qa, bh, and any class that is one site. **Published.** 0. **Held.** 3+.
+- **Written rule.** Brief §44: broaden truthfully or hold. **Precedent.** Held since iteration 19.
+- **Systems.** every system with a declared single-site class. **Published.** 0. **Held.** counted across systems only.
 - **Recommendation.** The generic single-site rule implemented this iteration (see `GULF_ARCHITECTURE.md`): where a truthful parent class exists and the record still meets its clause, publish under the parent; otherwise hold.
 - **Until then.** Held [SINGLE-SITE].
 

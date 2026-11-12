@@ -5,6 +5,7 @@ import {
 } from "./manifest";
 import { navigate } from "./router";
 import { daysBetween, fmtDate } from "../data";
+import { readerText } from "./readerText";
 
 /** Recent evidence and Data Quality on the global home (iteration 18). */
 
@@ -37,7 +38,7 @@ export function RecentEvidencePanel() {
       {failed && <p className="small warn-text" role="alert">The recent list could not be loaded. Each country's own page still lists its record.</p>}
       {data && (
         <>
-          <p className="small dim">{data.scope} Newest first. {data.note}</p>
+          <p className="small dim">{data.scope} Newest first. {readerText(data.note)}</p>
           <div className="map-control-row">
             <label className="small">Country{" "}
               <select aria-label="Filter recent evidence by country" value={country} onChange={(e) => setCountry(e.target.value)}>
@@ -134,7 +135,7 @@ export function DataQualityPanel() {
                     <div key={title as string}>
                       <div className="eyebrow">{title as string}</div>
                       <ul className="lane-list small">
-                        {(ls as typeof blocked).map((l) => <li key={l.lane}><span className="mono">{l.lane}</span>: {l.limitation}</li>)}
+                        {(ls as typeof blocked).map((l) => <li key={l.lane}><span className="mono">{l.lane}</span>: {readerText(l.limitation)}</li>)}
                       </ul>
                     </div>
                   )

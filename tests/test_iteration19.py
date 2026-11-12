@@ -276,7 +276,7 @@ def test_a_clean_kinetic_record_passes_a_country_level_policy():
     ({"facility_name": "Some refinery"}, "facility_name"),
     ({"facility_name_local": "مصفاة"}, "facility_name_local"),
     ({"operator": "Some company"}, "operator"),
-    ({"event_id": "kw-2026-03-mina-abdullah-refinery-strike"}, "opaque id"),
+    ({"event_id": "kw-2026-03-example-refinery-strike"}, "opaque id"),
 ])
 def test_a_kinetic_record_in_a_small_state_cannot_name_or_place_its_facility(change, needle):
     problems = B.precision_problems("kw", COUNTRY_POLICY, [_event(**change)])
@@ -905,15 +905,15 @@ def test_collapsing_review_edits_is_a_label_and_the_final_text():
 
 
 def test_a_short_link_is_not_a_citation_for_a_record_published_without_its_place():
-    """`/?p=587846` passed the address rule because it has no words; the address it redirects to
+    """`/?p=500001` passed the address rule because it has no words; the address it redirects to
     carries the headline."""
     imp = _load("import_candidates")
-    assert imp.short_link("https://example.org/?p=587846")
-    assert not imp.short_link("https://example.org/article/126594")
+    assert imp.short_link("https://example.org/?p=500001")
+    assert not imp.short_link("https://example.org/article/500002")
     assert not imp.short_link("https://example.org/news/2026/03/a-fire-is-reported?page=1")
-    assert imp.unpublishable_address("https://example.org/?p=587846", set())
+    assert imp.unpublishable_address("https://example.org/?p=500001", set())
     r = _full_candidate(candidate_id="kw-2026-03-20-refinery-attack-1", cause="kinetic_strike", asset_class="refinery")
-    r["sources"] = [{**r["sources"][0], "url": "https://example.org/?p=587846"}]
+    r["sources"] = [{**r["sources"][0], "url": "https://example.org/?p=500001"}]
     assert "address" in (imp.review("kw", r, {"KW-AH"}, policy=POLICY) or "")
 
 

@@ -23,6 +23,7 @@ WHAT IT DELIBERATELY DOES NOT DO.
 
 import datetime as dt
 import re
+import unicodedata
 from urllib.parse import unquote
 
 from pipeline import geo, global_context, gulf_context, systems
@@ -334,6 +335,8 @@ def validate_sources(system_id, doc, research_log):
             problems.append(f"{tag}: outcome carries non-count fields {sorted(extra)}")
         if any(not isinstance(v, int) or isinstance(v, bool) for v in outcome.values()):
             problems.append(f"{tag}: outcome values must be integer counts")
+        if "under_review" in p and not isinstance(p["under_review"], bool):
+            problems.append(f"{tag}: under_review is true or false")
         lanes = p.get("lanes") or []
         for lane in lanes:
             if "execution" in lane:
@@ -472,9 +475,12 @@ LANE_SUMMARY_STATES = ("stopped_by_search_limit", "universe_searched", "current_
                        "partially_searched", "blocked_by_source", "not_started", "legacy")
 
 
-# The outcome counts a campaign page may serve (iteration 20, §42). How many candidates were
-# looked at, held or rejected beside one published attack record is a hint of the campaign's scale.
-PUBLIC_OUTCOME_UNDER_CAMPAIGN = ("records",)
+# The outcome counts a campaign page may serve (iteration 20, §42): none. How many candidates were
+# looked at, held or rejected beside one published attack record is a hint of the campaign's scale,
+# and the published count is the page's own record list. Since the safety red team of iteration 20
+# the committed log of such a system carries no counts either: they are in the local
+# data/candidates/research_outcomes.json, and the public log has `under_review` only.
+PUBLIC_OUTCOME_UNDER_CAMPAIGN = ()
 
 
 def public_research_log(research_log, restricted):
@@ -486,8 +492,8 @@ def public_research_log(research_log, restricted):
     out = {**research_log, "passes": []}
     for p in research_log.get("passes", []):
         o = p.get("outcome") or {}
-        q = {**p, "outcome": {k: o[k] for k in PUBLIC_OUTCOME_UNDER_CAMPAIGN if k in o},
-             "under_review": bool(o.get("held") or o.get("insufficient_evidence"))}
+        under = p["under_review"] if "under_review" in p else bool(o.get("held") or o.get("insufficient_evidence"))
+        q = {**p, "outcome": {k: o[k] for k in PUBLIC_OUTCOME_UNDER_CAMPAIGN if k in o}, "under_review": under}
         out["passes"].append(q)
     return out
 
@@ -614,7 +620,7 @@ NUCLEAR_METRICS = ("nuclear_generation",)
 # citation address that carries the wording is not published in a system onboarded under this rule.
 ROUTE_WORDING = re.compile(
     r"hormuz|\bstrait\b|\btankers?\b|choke ?point|shipping (lane|route)s?|\bbypass\w*|export route|"
-    r"\bvessels?\b|\bais\b|هرمز|تنگه|مضيق|ناقلة|ناقلات|نفتکش", re.I)
+    r"\bvessels?\b|\bais\b|\bhormoz\b|هرمز|تنگه|مضيق|ناقلة|ناقلات|نفتکش|ناقله|نفت ?كش|ناو", re.I)
 
 
 # Size and importance wording, in the three languages the Gulf sources use. Our own text never
@@ -630,12 +636,35 @@ LOADED_WORDING = re.compile(
 # not in a citation's address either: the policy publishes that an attack happened, not its method.
 METHOD_WORDING = re.compile(
     r"\b(drones?|uavs?|missiles?|rockets?|shahed|projectiles?|katyusha|ballistic|cruise|loitering|shelling|"
-    r"bomb(ing|ed|s)?|intercept\w*)\b|مسي[ّ]?رة|مسيرات|مسي[ّ]?رتين|صاروخ|صواريخ|درون|پهپاد|موشک|راکت", re.I)
+    r"bomb(ing|ed|s)?|intercept\w*|mortars?|ieds?|artillery|air ?strikes?)\b|"
+    r"مسي[ّ]?رة|مسيرات|مسي[ّ]?رتين|صاروخ|صواريخ|درون|پهپاد|موشک|راکت|"
+    # The same words as `fold` writes them (heh for teh marbuta, Arabic kaf and yeh), and more.
+    r"مسيره|مسيرتين|موشك|راكت|قصف|قذيفه|هاون|كاتيوشا|عبوه ناسفه|بمباران|حمله هوايي", re.I)
+
+# Letter variants that spell one word: Persian yeh and keheh, alef maqsura, teh marbuta, hamza seats.
+_FOLD = str.maketrans({"ی": "ي", "ى": "ي", "ک": "ك", "ة": "ه", "ۀ": "ه", "ؤ": "و", "ئ": "ي",
+                       "ٱ": "ا", "\u0640": "", "\u200c": " ", "\u200d": ""})
+
+
+def fold(text):
+    """Text as the address checks compare it (iteration 20, geography red team): percent-escapes
+    decoded until stable, camelCase split, diacritics and harakat removed, hamza seats and Persian
+    letter forms folded, lower case. Applied to place names and addresses alike, so "Muḩarraq",
+    "muharraq", "إربيل" and "اربيل" are one word."""
+    s = text or ""
+    for _ in range(3):
+        u = unquote(s)
+        if u == s:
+            break
+        s = u
+    s = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", s)
+    s = "".join(ch for ch in unicodedata.normalize("NFKD", s) if unicodedata.category(ch) != "Mn")
+    return unicodedata.normalize("NFKC", s).translate(_FOLD).lower()
 
 
 def address_words(url):
-    """A citation address as words, percent-escapes decoded and separators opened up."""
-    return re.sub(r"[-_/+.]", " ", unquote(url or ""))
+    """A citation address as words: folded, separators opened up."""
+    return re.sub(r"[-_/+.,=&?#:]", " ", fold(url))
 
 
 def method_in_address(url):
@@ -651,7 +680,7 @@ def route_problems(events):
         if ROUTE_WORDING.search(text):
             out.append(f"{e['event_id']}: shipping, strait or route wording in the record")
         for s in e.get("sources", []):
-            words = unquote(s.get("url") or "").replace("-", " ").replace("_", " ")
+            words = address_words(s.get("url") or "")
             if ROUTE_WORDING.search(words + " " + str(s.get("title_original") or "") + " " + str(s.get("title_en") or "")):
                 out.append(f"{e['event_id']}: a citation's address or title carries shipping or route wording")
     return out
@@ -1501,6 +1530,20 @@ def _readiness(doc):
     return "INSUFFICIENT_EVIDENCE"
 
 
+def guard_profile_years(profile, year):
+    """Under the campaign policy a country's own profile shows national figures up to the common
+    comparison year only, as the world map does (D-26): a total from a later year can stand for one
+    site's current output where a class is one site. A figure is withheld, never changed, and the
+    page says how many were (iteration 20, safety red team)."""
+    kept = [m for m in profile.get("metrics", []) if not (isinstance(m.get("year"), int) and m["year"] > year)]
+    dropped = len(profile.get("metrics", [])) - len(kept)
+    if not dropped:
+        return profile
+    note = (f" {dropped} figure{'s' if dropped > 1 else ''} newer than {year} "
+            f"{'are' if dropped > 1 else 'is'} withheld while the campaign policy applies.")
+    return {**profile, "metrics": kept, "as_of_note": (profile.get("as_of_note") or "") + note}
+
+
 def build_system(system_id, admin1, admin0, as_of):
     src = SYSTEMS_CURATED / system_id
     doc = read_json(src / "system.json")
@@ -1511,6 +1554,8 @@ def build_system(system_id, admin1, admin0, as_of):
     validate_sources(system_id, doc, research_log)
     campaigns = load_campaigns()
     reg = systems.system(system_id)
+    if ((campaigns.get("system_states") or {}).get(system_id) or {}).get("state") in RESTRICTING_STATES:
+        profile = guard_profile_years(profile, campaigns["profile_year_cap"]["year"])
 
     us = shown_units(doc, units(system_id, admin1, admin0))
     unit_codes = {u[0] for u in us}

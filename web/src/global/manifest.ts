@@ -496,6 +496,11 @@ export function shapeProblems(system: unknown, events: unknown, regions?: unknow
   if (regions !== undefined && !(obj(regions) && Array.isArray((regions as Record<string, unknown>).features))) {
     out.push("regions.features is not a list");
   }
+  // Optional, but read unguarded when present (iteration 20, §122: found by a corrupt-file test).
+  const sh = s.source_health as Record<string, unknown> | undefined;
+  if (sh !== undefined && sh !== null && !(obj(sh) && obj(sh.opened) && obj(sh.by_role) && obj(sh.by_language))) {
+    out.push("source_health is malformed");
+  }
   const log = s.research_log as Record<string, unknown> | undefined;
   if (!obj(log) || !Array.isArray(log!.passes)) out.push("research_log.passes is not a list");
   if (!Array.isArray(e.events)) out.push("events is not a list");

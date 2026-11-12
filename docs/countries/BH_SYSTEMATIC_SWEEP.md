@@ -77,9 +77,9 @@ Clause 6 (coal) is not applicable: Bahrain has no coal sector (`BH_INDEX_READINE
 | BH2 | partial; stopped by search limit | rolling_archive_gap | 2026-11-11 | 0 of 4 | 148 of 148 | ar, en | ar, en |
 | BH3 | partial; stopped by search limit | no_census_exists | not reached | 9 of 15 | - | ar, en | ar |
 
-Candidates 9: accepted after blind review 0, rejected 3, duplicate 0, held 3, out of scope 3. Published records in this system after the pass: 0.
+Candidate counts are kept in the local research queue (iteration 20 safety review). Published records in this system after the pass: 0.
 
-**Result.** No record from this pass is published. 3 candidates are held: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The electricity authority's terms forbid linking, so it was never cited.
+**Result.** No record from this pass is published. Additional candidates remain under review: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The electricity authority's terms forbid linking, so it was never cited.
 
 **Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
 

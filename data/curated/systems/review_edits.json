@@ -1937,30 +1937,6 @@
       "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
-      "event_id": "sa-2026-09-11-east-west-pipeline-shutdown",
-      "field": "admin1_codes_affected",
-      "set": [
-        "SA-01",
-        "SA-03"
-      ],
-      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "sa-2026-09-11-east-west-pipeline-shutdown",
-      "field": "sources",
-      "set": [
-        {
-          "url": "https://www.thenationalnews.com/news/2026/09/11/saudi-arabia-closes-east-west-oil-pipeline-following-attacks/",
-          "publisher": "The National",
-          "title": "Saudi Arabia closes East-West oil pipeline following attacks",
-          "date": "2026-09-11",
-          "language": "en",
-          "source_role": "media"
-        }
-      ],
-      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
       "event_id": "us-2022-11-10-hurricane-nicole-florida-outages",
       "field": "effect",
       "set": "More than 330,000 Florida customers were without power on the morning of 10 Nov 2022 (PowerOutage.US via Fox Business, with AP contributing); NHC reports over 300,000 homes and businesses in the affected region lost power.",
@@ -3938,105 +3914,196 @@
       "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
-      "event_id": "kw-2025-10-21-refinery-fire-partial-shutdown",
-      "field": "summary",
-      "set": "A fire in a residue desulfurization unit at a refinery in Al Ahmadi governorate led the operator to shut parts of the refinery on 21 October 2025, including further residue desulfurization units and a 205,000 b/d crude distillation unit.",
-      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
+      "event_id": "us-2022-12-24-gulf-coast-refineries-cold-shutdowns",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C1-AGGREGATE] a regional total across refineries, no plant named; the fleet-wide PJM record is held for the same reason"
     },
     {
-      "event_id": "kw-2025-10-21-refinery-fire-partial-shutdown",
-      "field": "effect",
-      "set": "Industry monitor IIR, in an alert reported by Asharq Al-Awsat on 28 October 2025, said the fire led the operator to shut further residue desulfurization units and a 205,000 b/d crude distillation unit, leaving the refinery partially shut. MEES reported on 31 October 2025 that the fire had forced a partial shutdown and that 'refinery throughputs have dropped sharply'.",
-      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
+      "event_id": "us-2022-12-24-gulf-coast-refineries-cold-shutdowns",
+      "field": "disposition_reason",
+      "set": "Strict reading, methodology red team (iteration 20). Held: [C1-AGGREGATE] a regional total across refineries, no plant named; the fleet-wide PJM record is held for the same reason",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C1-AGGREGATE]"
     },
     {
-      "event_id": "kw-2025-10-21-refinery-fire-partial-shutdown",
-      "field": "threshold_basis",
-      "set": "Clause 1 (refinery throughput materially cut, with the effect reported): a crude distillation unit and further desulfurization units were shut after a fire, and an independent trade publication states that throughput dropped sharply.",
-      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
+      "event_id": "cn-2023-02-22-alxa-xinjing-open-pit-collapse",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [NO-EFFECT] the record states no output reduction; clause 6 needs a material supply cut"
     },
     {
-      "event_id": "kw-2025-10-21-refinery-fire-partial-shutdown",
-      "field": "capacity_affected",
-      "set": {
-        "value": 205000,
-        "value_min": null,
-        "value_max": null,
-        "qualifier": "component_only",
-        "measure": "facility_size",
-        "unit": "b/d",
-        "source_says": "a 205,000 b/d crude distillation unit"
-      },
-      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
+      "event_id": "cn-2023-02-22-alxa-xinjing-open-pit-collapse",
+      "field": "disposition_reason",
+      "set": "Strict reading, methodology red team (iteration 20). Held: [NO-EFFECT] the record states no output reduction; clause 6 needs a material supply cut",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [NO-EFFECT]"
     },
     {
-      "event_id": "kw-2025-10-21-refinery-fire-partial-shutdown",
-      "field": "sources",
-      "set": [
-        {
-          "url": "https://english.aawsat.com/business/5202369-kuwaits-al-zour-refinery-partially-shut-due-fire-iir-says",
-          "publisher": "Asharq Al-Awsat",
-          "publisher_id": "Asharq Al-Awsat",
-          "statement_family": "IIR alert 2025-10-27 (via Reuters)",
-          "date": "2025-10-28",
-          "language": "en",
-          "source_role": "media",
-          "title_original": "Kuwait's Al-Zour Refinery Partially Shut due to Fire, IIR Says",
-          "title_en": "Kuwait refinery partially shut due to fire, IIR says",
-          "opened": true
-        },
-        {
-          "url": "https://www.mees.com/2025/10/31/opec/kuwait-sells-prompt-crude-cargoes-following-al-zour-fire/d7bce100-b661-11f0-822f-77c396cc460c",
-          "publisher": "MEES",
-          "publisher_id": "MEES",
-          "statement_family": "MEES 2025-10-31 (own reporting)",
-          "date": "2025-10-31",
-          "language": "en",
-          "source_role": "media",
-          "title_original": "Kuwait sells prompt crude cargoes following Al-Zour fire",
-          "title_en": "Kuwait sells prompt crude cargoes following refinery fire",
-          "opened": true,
-          "opened_extent": "public lede only; the remainder (about 810 words) is behind a subscription wall"
-        }
-      ],
-      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
+      "event_id": "us-2023-02-23-pemex-deer-park-crude-unit-fire",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C1-PARTIAL] one of two crude units shut with no throughput figure stated; reading (c) needs a reported throughput effect"
     },
     {
-      "event_id": "kw-2023-11-12-refinery-production-halt-fuel-gas-loss",
-      "field": "summary",
-      "set": "Production at a refinery in Al Ahmadi governorate came to an almost complete halt in November 2023 after a sudden interruption of fuel gas that the operator attributed to an equipment fault; the operator announced it on 12 November 2023.",
-      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
+      "event_id": "us-2023-02-23-pemex-deer-park-crude-unit-fire",
+      "field": "disposition_reason",
+      "set": "Strict reading, methodology red team (iteration 20). Held: [C1-PARTIAL] one of two crude units shut with no throughput figure stated; reading (c) needs a reported throughput effect",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C1-PARTIAL]"
     },
     {
-      "event_id": "kw-2023-11-12-refinery-production-halt-fuel-gas-loss",
-      "field": "effect",
-      "set": "The refinery operator announced an 'almost complete halt of production operations' (توقف شبه كامل لعمليات الإنتاج) caused by a sudden interruption of fuel gas (Al-Jarida, 12 November 2023).",
-      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
+      "event_id": "us-2024-10-10-pemex-deer-park-h2s-release",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C1-MATERIAL] 'run at a low level' is reduced-rates wording, as for the held El Segundo and Tuscaloosa records"
     },
     {
-      "event_id": "kw-2023-11-12-refinery-production-halt-fuel-gas-loss",
-      "field": "sources",
-      "set": [
-        {
-          "url": "https://www.aljarida.com/article/44344",
-          "publisher": "Al-Jarida",
-          "publisher_id": "Al-Jarida",
-          "statement_family": "KIPIC statement 2023-11-12",
-          "date": "2023-11-12",
-          "language": "ar",
-          "source_role": "media",
-          "title_original": "«كيبك»: توقف عمليات الإنتاج في «مصفاة الزور»",
-          "title_en": "KIPIC: production operations halted at the refinery",
-          "opened": true
-        }
-      ],
-      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
+      "event_id": "us-2024-10-10-pemex-deer-park-h2s-release",
+      "field": "disposition_reason",
+      "set": "Strict reading, methodology red team (iteration 20). Held: [C1-MATERIAL] 'run at a low level' is reduced-rates wording, as for the held El Segundo and Tuscaloosa records",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C1-MATERIAL]"
     },
     {
-      "event_id": "kw-2023-11-12-refinery-production-halt-fuel-gas-loss",
-      "field": "source_date_text",
-      "set": "operator announcement published 12 November 2023; onset not stated",
-      "reason": "Blind review, role(s) A: reconciled correction; the reviewers' wording is kept in the local review file"
+      "event_id": "us-2022-06-10-california-firm-load-shed",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-LOADSHED] an OE-417 firm-load-shed filing is a reporting category, not a declaration; no cause and under 100,000 customers (D-27)"
+    },
+    {
+      "event_id": "us-2022-06-10-california-firm-load-shed",
+      "field": "disposition_reason",
+      "set": "Strict reading, methodology red team (iteration 20). Held: [C5-LOADSHED] an OE-417 firm-load-shed filing is a reporting category, not a declaration; no cause and under 100,000 customers (D-27)",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-LOADSHED]"
+    },
+    {
+      "event_id": "us-2024-04-28-texas-new-mexico-firm-load-shed",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-LOADSHED] an OE-417 firm-load-shed filing with no stated cause and no customer count meeting the floor (D-27)"
+    },
+    {
+      "event_id": "us-2024-04-28-texas-new-mexico-firm-load-shed",
+      "field": "disposition_reason",
+      "set": "Strict reading, methodology red team (iteration 20). Held: [C5-LOADSHED] an OE-417 firm-load-shed filing with no stated cause and no customer count meeting the floor (D-27)",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-LOADSHED]"
+    },
+    {
+      "event_id": "us-2025-04-02-louisiana-firm-load-shed",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-LOADSHED] an OE-417 firm-load-shed filing with no stated cause and no customer count meeting the floor (D-27)"
+    },
+    {
+      "event_id": "us-2025-04-02-louisiana-firm-load-shed",
+      "field": "disposition_reason",
+      "set": "Strict reading, methodology red team (iteration 20). Held: [C5-LOADSHED] an OE-417 firm-load-shed filing with no stated cause and no customer count meeting the floor (D-27)",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-LOADSHED]"
+    },
+    {
+      "event_id": "us-2025-04-26-louisiana-firm-load-shed",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-LOADSHED] an OE-417 firm-load-shed filing with no stated cause and no customer count meeting the floor (D-27)"
+    },
+    {
+      "event_id": "us-2025-04-26-louisiana-firm-load-shed",
+      "field": "disposition_reason",
+      "set": "Strict reading, methodology red team (iteration 20). Held: [C5-LOADSHED] an OE-417 firm-load-shed filing with no stated cause and no customer count meeting the floor (D-27)",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-LOADSHED]"
+    },
+    {
+      "event_id": "us-2024-02-03-tgp-line-100-1-mississippi",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C3-PARTIAL] the record says the parallel loops kept operating; the trunk system was not shut"
+    },
+    {
+      "event_id": "us-2024-02-03-tgp-line-100-1-mississippi",
+      "field": "disposition_reason",
+      "set": "Strict reading, methodology red team (iteration 20). Held: [C3-PARTIAL] the record says the parallel loops kept operating; the trunk system was not shut",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C3-PARTIAL]"
+    },
+    {
+      "event_id": "us-2025-03-30-michigan-ice-storm-outages",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-SUBSTITUTE] the source counts people, not customers, as for the held Francine record"
+    },
+    {
+      "event_id": "us-2025-03-30-michigan-ice-storm-outages",
+      "field": "disposition_reason",
+      "set": "Strict reading, methodology red team (iteration 20). Held: [C5-SUBSTITUTE] the source counts people, not customers, as for the held Francine record",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-SUBSTITUTE]"
+    },
+    {
+      "event_id": "us-2023-03-03-michigan-storm-outages",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-SUBSTITUTE] the source counts people, not customers, as for the held Francine record"
+    },
+    {
+      "event_id": "us-2023-03-03-michigan-storm-outages",
+      "field": "disposition_reason",
+      "set": "Strict reading, methodology red team (iteration 20). Held: [C5-SUBSTITUTE] the source counts people, not customers, as for the held Francine record",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-SUBSTITUTE]"
+    },
+    {
+      "event_id": "us-2022-12-23-winter-storm-elliott-maine-outages",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-SOURCE] the only at-one-time figure is an aggregator snapshot (REVIEW_GOVERNANCE.md section 6)"
+    },
+    {
+      "event_id": "us-2022-12-23-winter-storm-elliott-maine-outages",
+      "field": "disposition_reason",
+      "set": "Strict reading, methodology red team (iteration 20). Held: [C5-SOURCE] the only at-one-time figure is an aggregator snapshot (REVIEW_GOVERNANCE.md section 6)",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-SOURCE]"
+    },
+    {
+      "event_id": "us-2026-01-24-winter-storm-fern-mississippi-outages",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-TOTAL] an event total with no at-one-time figure, under three times the floor; the sweep holds such rows"
+    },
+    {
+      "event_id": "us-2026-01-24-winter-storm-fern-mississippi-outages",
+      "field": "disposition_reason",
+      "set": "Strict reading, methodology red team (iteration 20). Held: [C5-TOTAL] an event total with no at-one-time figure, under three times the floor; the sweep holds such rows",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-TOTAL]"
+    },
+    {
+      "event_id": "us-2026-10-09-hurricane-isaias-outages",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-SOURCE] a three-state total from a content aggregator, with no utility or per-state figure"
+    },
+    {
+      "event_id": "us-2026-10-09-hurricane-isaias-outages",
+      "field": "disposition_reason",
+      "set": "Strict reading, methodology red team (iteration 20). Held: [C5-SOURCE] a three-state total from a content aggregator, with no utility or per-state figure",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C5-SOURCE]"
+    },
+    {
+      "event_id": "in-2024-10-23-cyclone-dana-odisha-port-suspensions",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C2-PORT] a port-level precautionary suspension with no terminal-level statement, as for the held US port closures"
+    },
+    {
+      "event_id": "in-2024-10-23-cyclone-dana-odisha-port-suspensions",
+      "field": "disposition_reason",
+      "set": "Strict reading, methodology red team (iteration 20). Held: [C2-PORT] a port-level precautionary suspension with no terminal-level statement, as for the held US port closures",
+      "reason": "Strict reading, methodology red team (iteration 20). Held: [C2-PORT]"
+    },
+    {
+      "event_id": "us-2022-09-06-caiso-eea3-heat",
+      "field": "recovery.kind",
+      "set": null,
+      "reason": "Lead correction (iteration 20, energy-analyst red team): the evidence does not state whether supply was lost"
+    },
+    {
+      "event_id": "us-2022-09-06-caiso-eea3-heat",
+      "field": "recovery.research_status",
+      "set": "RESEARCHED_NO_PUBLIC_EVIDENCE",
+      "reason": "Lead correction (iteration 20, energy-analyst red team): the evidence does not state whether supply was lost"
     }
   ]
 }

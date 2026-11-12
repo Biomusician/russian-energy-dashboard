@@ -60,9 +60,9 @@ substituted. The output file is written after each lane. Blind three-role review
 | SA4 | not_started | inaccessible | not reached | 0 of 0 | - | en | none |
 | SA5 | partial; stopped by search limit | no_census_exists | not reached | 7 of 15 | - | ar, en | ar, en |
 
-Candidates 30: accepted after blind review 0, rejected 9, duplicate 14, held 6, out of scope 1. Published records in this system after the pass: 9.
+Candidate counts are kept in the local research queue (iteration 20 safety review). Published records in this system after the pass: 9.
 
-**Result.** No record from this pass is published. 6 candidates are held: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The sections of the Arabic annual reports that carry incident wording, and the 2024-2025 monthly statistical releases, were read by keyword and attribute no change to a disruption. Four official sources refused access again.
+**Result.** No record from this pass is published. Additional candidates remain under review: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The sections of the Arabic annual reports that carry incident wording, and the 2024-2025 monthly statistical releases, were read by keyword and attribute no change to a disruption. Four official sources refused access again.
 
 **Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
 

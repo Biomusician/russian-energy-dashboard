@@ -45,9 +45,9 @@ Run on 2026-11-03 against the plan as committed in `a7f3a36`. The research log (
 
 ### B.1 Dispositions
 
-candidates 30 · accepted 0 · rejected 2 · duplicate 18 · held 6 · out of scope 4
+candidate counts are kept in the local research queue (iteration 20 safety review)
 
-No candidate was accepted by a lane: 18 of 30 were duplicates of published records, and the 6 held stay in the local queue with their reasons.
+No candidate was accepted by a lane; most were duplicates of published records, and the rest stay in the local queue with their reasons.
 
 ### B.2 Lane by lane
 

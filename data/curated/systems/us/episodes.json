@@ -32,10 +32,8 @@
       "name": "Winter Storm Elliott, December 2022",
       "basis": "named_hazard",
       "event_ids": [
-        "us-2022-12-24-gulf-coast-refineries-cold-shutdowns",
         "us-2022-12-winter-storm-elliott-gas-production",
-        "us-2022-12-23-tva-rolling-blackouts-elliott",
-        "us-2022-12-23-winter-storm-elliott-maine-outages"
+        "us-2022-12-23-tva-rolling-blackouts-elliott"
       ],
       "hazard": "Winter Storm Elliott (2022)"
     },
@@ -113,20 +111,9 @@
       "basis": "named_hazard",
       "event_ids": [
         "us-2026-01-winter-storm-fern-gas-production",
-        "us-2026-01-24-winter-storm-fern-mississippi-outages",
         "us-2026-01-24-winter-storm-fern-tennessee-outages"
       ],
       "hazard": "Winter Storm Fern (2026)"
-    },
-    {
-      "episode_id": "us-2026-10-hurricane-isaias",
-      "name": "Hurricane Isaias, October 2026",
-      "basis": "named_hazard",
-      "event_ids": [
-        "us-2026-10-09-hurricane-isaias-gulf-shut-ins",
-        "us-2026-10-09-hurricane-isaias-outages"
-      ],
-      "hazard": "Hurricane Isaias (2026)"
     },
     {
       "episode_id": "us-2024-08-hurricane-debby",

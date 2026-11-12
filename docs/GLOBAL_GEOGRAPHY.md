@@ -1,5 +1,9 @@
 # Global geography — sources, licences, disputed territory, size budget
 
+> Dated research document for the first five country systems (iteration 14). The seven Gulf
+> systems added in iteration 19 are covered in [GULF_ARCHITECTURE.md](GULF_ARCHITECTURE.md); the
+> rules here (Natural Earth, line of actual control, sovereignty-neutral rulings) apply to them.
+
 Status: **research and recommendation, 2026-10-30.** No pipeline code has been changed. This
 document decides where the geometry for the five-country extension (China, United States,
 Saudi Arabia, Canada, India) comes from, under what licence, how heavy it is, and how disputed

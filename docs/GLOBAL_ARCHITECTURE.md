@@ -143,8 +143,8 @@ the reason. Its choropleth classes come from that country's own range (never a s
   map, antimeridian-safe bounds, the build never reads the candidate queue, the build refuses a
   sector claiming a score, the import gate holds what it should. The served-data safety gates now
   recurse into the subtrees.
-- **Browser** (`web/e2e/global.e2e.ts`): the home page, all five countries, deep links, the
-  picker across all six systems with Back, the race, error containment, PNG per country,
+- **Browser** (`web/e2e/global.e2e.ts`; the Gulf systems in `web/e2e/gulf.e2e.ts`): the home page,
+  every country system, deep links, the picker across all thirteen systems with Back, the race, error containment, PNG per country,
   print/PDF for all seven pages, two responsive sizes, and three map goldens (win32 only).
 - **Unit** (`web/src/global/router.test.ts`): the routing table above.
 

@@ -103,6 +103,21 @@ CARRIED = {
 PRIVATE_SENTENCE = re.compile(r"\b(held|hold|candidates?|leads?|accepted|unverified|jeddah|riyadh)\b|\.md\b", re.I)
 
 
+
+def public_outcome(cc, entry):
+    """A system under the campaign policy keeps its counts in the local queue folder; its public
+    log says only whether anything is still under review (iteration 20, safety red team)."""
+    states = (json.loads((ROOT / "data" / "curated" / "systems" / "conflict_campaigns.json").read_text(encoding="utf-8"))
+              .get("system_states") or {})
+    if (states.get(cc) or {}).get("state") not in ("ACTIVE_KINETIC_CAMPAIGN", "RECENT_ENDED_CAMPAIGN", "UNCERTAIN"):
+        return entry
+    local = ROOT / "data" / "candidates" / "research_outcomes.json"
+    store = json.loads(local.read_text(encoding="utf-8")) if local.exists() else {}
+    o = entry["outcome"]
+    store.setdefault(cc, {})[f"{entry['date']}|{entry['by']}"] = o
+    local.write_bytes((json.dumps(store, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+    return {**entry, "outcome": {}, "under_review": bool(o.get("held") or o.get("insufficient_evidence"))}
+
 def unpublished_names(cc):
     """Facility names in the local queue that no published record uses."""
     queue = read(ROOT / "data" / "candidates" / f"{cc}.json")
@@ -249,6 +264,7 @@ def pass_for(cc):
         "plan": {"document": f"docs/countries/{PLAN[cc]}_LANE_PASS_18.md", "commit": PLAN_COMMIT},
         "lanes": lanes,
     }
+    entry = public_outcome(cc, entry)
     log["passes"] = [p for p in log["passes"] if not (p["date"] == PASS_DATE and p["by"] == PASS_BY)] + [entry]
     path.write_text(json.dumps(log, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(cc, {k: sum(1 for x in lanes if x["execution"] == k) for k in ORDER}, outcome)

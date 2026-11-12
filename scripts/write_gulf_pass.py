@@ -48,6 +48,21 @@ KIND = {"declared query set": "declared_query_set", "report archive": "report_ar
 SEARCH_LIMIT = re.compile(r"search (limit|allowance|cap|budget)", re.I)
 
 
+
+def public_outcome(cc, entry):
+    """A system under the campaign policy keeps its counts in the local queue folder; its public
+    log says only whether anything is still under review (iteration 20, safety red team)."""
+    states = (json.loads((ROOT / "data" / "curated" / "systems" / "conflict_campaigns.json").read_text(encoding="utf-8"))
+              .get("system_states") or {})
+    if (states.get(cc) or {}).get("state") not in ("ACTIVE_KINETIC_CAMPAIGN", "RECENT_ENDED_CAMPAIGN", "UNCERTAIN"):
+        return entry
+    local = ROOT / "data" / "candidates" / "research_outcomes.json"
+    store = json.loads(local.read_text(encoding="utf-8")) if local.exists() else {}
+    o = entry["outcome"]
+    store.setdefault(cc, {})[f"{entry['date']}|{entry['by']}"] = o
+    local.write_bytes((json.dumps(store, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+    return {**entry, "outcome": {}, "under_review": bool(o.get("held") or o.get("insufficient_evidence"))}
+
 def read(p):
     return json.loads(Path(p).read_text(encoding="utf-8"))
 
@@ -249,6 +264,7 @@ def pass_for(cc, commit):
         problems = build_systems.lane_problems(lane, entry["window"])
         if problems:
             raise SystemExit(f"{cc}: " + "; ".join(problems))
+    entry = public_outcome(cc, entry)
     log["passes"] = [p for p in log["passes"] if not (p["date"] == PASS_DATE and p["by"] == PASS_BY)] + [entry]
     path.write_bytes((json.dumps(log, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
     print(cc, {k: sum(1 for x in lanes if x["execution"] == k) for k in ORDER}, outcome)

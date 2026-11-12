@@ -43,13 +43,71 @@
     },
     "unit_aliases": {
       "OM-BA": [
-        "Al Batnah North"
+        "Al Batnah North",
+        "Batinah",
+        "Sohar",
+        "صحار",
+        "الباطنة"
       ],
       "OM-BJ": [
-        "Al Batnah South"
+        "Al Batnah South",
+        "Batinah South",
+        "Rustaq",
+        "الرستاق"
       ],
       "OM-MA": [
-        "مسقط"
+        "مسقط",
+        "Mina al Fahal",
+        "Mina Al Fahal"
+      ],
+      "OM-BU": [
+        "Buraimi",
+        "البريمي"
+      ],
+      "OM-DA": [
+        "Dakhiliyah",
+        "Dakhliyah",
+        "Dakhliya",
+        "الداخلية",
+        "Nizwa",
+        "نزوى"
+      ],
+      "OM-MU": [
+        "مسندم",
+        "Khasab",
+        "خصب"
+      ],
+      "OM-SH": [
+        "Sharqiyah South",
+        "Sharqiya",
+        "الشرقية",
+        "Sur",
+        "صور"
+      ],
+      "OM-SS": [
+        "Sharqiyah North",
+        "Ibra",
+        "إبراء"
+      ],
+      "OM-WU": [
+        "Wusta",
+        "الوسطى",
+        "Duqm",
+        "الدقم"
+      ],
+      "OM-ZA": [
+        "Dhahira",
+        "Dhahirah",
+        "الظاهرة",
+        "Ibri",
+        "عبري"
+      ],
+      "OM-ZU": [
+        "Dhofar",
+        "Dhufar",
+        "ظفار",
+        "Salalah",
+        "صلالة"
       ]
     }
   },

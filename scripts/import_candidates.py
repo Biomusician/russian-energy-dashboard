@@ -159,6 +159,36 @@ GENERIC_NAME_WORDS = {
 }
 
 
+_GENERIC = None
+
+
+def _generic():
+    global _GENERIC
+    if _GENERIC is None:
+        _GENERIC = {build_systems.fold(w) for w in GENERIC_NAME_WORDS}
+    return _GENERIC
+
+
+# An Arabic word can carry the article and a one-letter preposition or conjunction in front:
+# "بالبصرة" is "in Basra". A word is also read without them.
+ARABIC_PREFIXES = ("وال", "بال", "فال", "كال", "لل", "ال", "و", "ب", "ل", "ف")
+
+
+def word_forms(w):
+    out = {w}
+    if not w.isascii():
+        for pre in ARABIC_PREFIXES:
+            if w.startswith(pre) and len(w) - len(pre) >= 3:
+                out.add(w[len(pre):])
+    return out
+
+
+def _words(text):
+    """Single words, folded, three letters or more in Arabic script and four in Latin."""
+    return [w for w in re.findall(r"[^\W\d_]+", build_systems.fold(text))
+            if (len(w) >= 3 and not w.isascii()) or len(w) >= 4]
+
+
 def name_tokens(r):
     """The distinctive words of a record's facility, operator and place names, in any script.
 
@@ -168,10 +198,10 @@ def name_tokens(r):
     news site, or one naming the operator, went straight through (blind safety review)."""
     out = set()
     for k in ("facility_name", "facility_name_local", "admin1_name", "operator"):
-        for w in re.findall(r"[^\W\d_]{4,}", str(r.get(k) or "").lower()):
-            if w not in GENERIC_NAME_WORDS:
+        for w in _words(str(r.get(k) or "")):
+            if w not in _generic():
                 out.add(w)
-    out |= {str(w).lower() for w in (r.get("withheld_place_words") or []) if len(str(w)) >= 3}
+    out |= {build_systems.fold(str(w)).strip() for w in (r.get("withheld_place_words") or []) if len(str(w)) >= 3}
     return out
 
 
@@ -181,9 +211,11 @@ def unit_words(units):
     out = set()
     for u in units:
         out |= name_tokens({"admin1_name": u[1]})
-        # A three-letter word is too common to read for in Latin script, but in Arabic script it
-        # is a whole place name ("دبي").
-        out |= {w for w in re.split(r"[^\w]+", str(u[1]).lower()) if len(w) == 3 and not w.isascii()}
+        # The whole name as a phrase: "dhi qar" and "abu dhabi" are read even where each word is
+        # short or common (iteration 20, geography red team).
+        phrase = " ".join(re.findall(r"[^\W\d_]+", build_systems.fold(str(u[1]))))
+        if " " in phrase or len(phrase) >= 2:
+            out.add(phrase)
     return sorted(out)
 
 
@@ -192,7 +224,7 @@ def place_tokens(r, policy):
 
 
 def short_link(url):
-    """A publisher's redirecting short link ("/?p=587846"): no path, only a query. The address a
+    """A publisher's redirecting short link ("/?p=500001"): no path, only a query. The address a
     reader lands on is a different string, with the headline in it, and the gate never read it
     (release safety red team, iteration 19)."""
     rest = (url or "").split("://", 1)[-1].partition("/")[2]
@@ -212,7 +244,10 @@ def opaque_unresolved(url):
 
 # Path words that say nothing about the article ("/node/123", "/ar/article/456").
 GENERIC_PATH_WORDS = {"node", "article", "articles", "news", "newsdetails", "story", "stories", "post",
-                      "posts", "item", "details", "detail", "amp", "html", "php", "aspx", "index"}
+                      "posts", "item", "details", "detail", "amp", "html", "php", "aspx", "index",
+                      # Section names say nothing about the article (iteration 20, geography red team).
+                      "english", "arabic", "persian", "world", "business", "politics", "economy", "energy",
+                      "middleeast", "region", "local", "latest", "home", "kurdistan", "iraq", "gulf"}
 
 
 def unpublishable_address(url, tokens):
@@ -225,12 +260,27 @@ def unpublishable_address(url, tokens):
 
 
 def names_the_place(url, tokens):
-    """Whether a citation's address spells out the facility or region. Read as words, with
-    percent-escapes decoded, so an Arabic or Persian slug is read like a Latin one."""
-    # The path only: a publisher's own domain is not a statement about the event.
-    path = unquote(url or "").split("://", 1)[-1].partition("/")[2]
-    words = set(re.findall(r"[^\W\d_]{3,}", path.lower()))
-    return bool(words & tokens)
+    """Whether a citation's address spells out the facility or region. Read as folded words, so an
+    Arabic or Persian slug is read like a Latin one, whatever its letter forms, diacritics, attached
+    prefixes or escapes; a multi-word name is read as a phrase; and a subdomain counts
+    ("basra.example.com"), the publisher's own registered domain does not."""
+    rest = (url or "").split("://", 1)[-1]
+    host, _, path = rest.partition("/")
+    labels = [x for x in host.lower().split(".") if x and x != "www"][:-2]
+    text = " ".join(labels) + " " + path
+    seq = [w for w in re.findall(r"[^\W\d_]+", build_systems.fold(text))]
+    words = {f for w in seq for f in word_forms(w)}
+    padded = " " + " ".join(seq) + " "
+    for t in tokens:
+        t = build_systems.fold(t).strip()
+        if not t:
+            continue
+        if " " in t:
+            if f" {t} " in padded or f" {t.replace('al ', 'al')} " in padded:
+                return True
+        elif word_forms(t) & words:
+            return True
+    return False
 
 
 def kinetic_country_policy(policy, r):
@@ -545,7 +595,8 @@ def run(system_id):
     doc = json.loads((ROOT / "data" / "curated" / "systems" / system_id / "system.json").read_text(encoding="utf-8"))
     policy = doc["geography"].get("precision_policy")
     if policy:
-        policy = {**policy, "unit_words": unit_words(build_systems.unit_name_rows(doc, units))}
+        policy = {**policy, "unit_words": sorted(set(unit_words(build_systems.unit_name_rows(doc, units)))
+                                                 | {build_systems.fold(w) for w in policy.get("region_words") or []})}
     accepted, held = [], []
     for r in queue:
         why = review(system_id, r, unit_codes, grandfathered, policy)

@@ -44,6 +44,45 @@
       "QA-DA": [
         "Ad Dawhah",
         "الدوحة"
+      ],
+      "QA-KH": [
+        "Al Khor",
+        "Khor",
+        "الخور",
+        "Ras Laffan",
+        "Laffan",
+        "راس لفان",
+        "رأس لفان"
+      ],
+      "QA-MS": [
+        "Al Shamal",
+        "Madinat ash Shamal",
+        "الشمال"
+      ],
+      "QA-RA": [
+        "Al Rayyan",
+        "Rayyan",
+        "الريان",
+        "Dukhan",
+        "دخان"
+      ],
+      "QA-US": [
+        "Umm Slal",
+        "ام صلال",
+        "أم صلال"
+      ],
+      "QA-WA": [
+        "Wakra",
+        "Wakrah",
+        "الوكرة",
+        "Mesaieed",
+        "Umm Said",
+        "مسيعيد"
+      ],
+      "QA-ZA": [
+        "Daayen",
+        "Al Daayen",
+        "الضعاين"
       ]
     }
   },

@@ -114,7 +114,7 @@ function ContextCard({ row, ctx, note, onClose }: { row: ContextRow; ctx: Energy
   );
 }
 
-function NationalTable({ ctx, partly, onContext }: { ctx: EnergyContext; partly: Set<string>; onContext: (a3: string) => void }) {
+function NationalTable({ ctx, partly, onContext, systemNames }: { ctx: EnergyContext; partly: Set<string>; onContext: (a3: string) => void; systemNames: Record<string, string> }) {
   const [sort, setSort] = useState<string | null>(null);
   const cols = ctx.map_metrics;
   const rows = useMemo(() => {
@@ -146,7 +146,9 @@ function NationalTable({ ctx, partly, onContext }: { ctx: EnergyContext; partly:
               <td>
                 <button className="linklike" onClick={() => { if (r.system_id) navigate(r.system_id); else onContext(r.a3); }}>{r.name}</button>
               </td>
-              <td className="small dim">{partly.has(r.a3) ? "Partly monitored" : r.system_id ? "Monitored" : "Context only"}</td>
+              <td className="small dim">{partly.has(r.a3) ? "Partly monitored"
+                : r.system_id ? (systemNames[r.system_id] && systemNames[r.system_id] !== r.name ? `Monitored, in the ${systemNames[r.system_id]} system` : "Monitored")
+                : "Context only"}</td>
               {cols.map((c) => <td key={c} className="mono small">{fmtValue(r.values[c], ctx.metrics[c].unit).replace(/ .*$/, (s) => (s === " data" ? " data" : ""))}</td>)}
             </tr>
           ))}
@@ -336,12 +338,13 @@ export default function WorldContext({ world, worldError, manifest }: {
       )}
       {exportMsg && <p className="small" role="status">{exportMsg}</p>}
       {card && ctx && <ContextCard row={card} ctx={ctx} note={noteOf.get(card.a3)} onClose={() => setCardA3(null)} />}
-      {ctx && <WorldProfile ctx={ctx} partly={partly} onContext={setCardA3} />}
+      {ctx && <WorldProfile ctx={ctx} partly={partly} onContext={setCardA3}
+                             systemNames={Object.fromEntries((manifest?.systems ?? []).map((s) => [s.id, s.name]))} />}
     </section>
   );
 }
 
-function WorldProfile({ ctx, partly, onContext }: { ctx: EnergyContext; partly: Set<string>; onContext: (a3: string) => void }) {
+function WorldProfile({ ctx, partly, onContext, systemNames }: { ctx: EnergyContext; partly: Set<string>; onContext: (a3: string) => void; systemNames: Record<string, string> }) {
   const w = ctx.world.values;
   const total = w.total_production;
   const monitored = ctx.countries.filter((r) => r.system_id).reduce((a, r) => a + (r.values.total_production ?? 0), 0);
@@ -359,7 +362,7 @@ function WorldProfile({ ctx, partly, onContext }: { ctx: EnergyContext; partly: 
           printed alphabetically. The national figures are in the table below, alphabetical. */}
       <details>
         <summary className="small">National figures table ({ctx.countries.length} countries and territories)</summary>
-        <NationalTable ctx={ctx} partly={partly} onContext={onContext} />
+        <NationalTable ctx={ctx} partly={partly} onContext={onContext} systemNames={systemNames} />
       </details>
       <SourceLine ctx={ctx} />
       <p className="small dim">{ctx.not_scoring}</p>

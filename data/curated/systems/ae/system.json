@@ -42,30 +42,51 @@
     "unit_aliases": {
       "AE-DU": [
         "Dubay",
-        "دبي"
+        "دبي",
+        "Jebel Ali",
+        "جبل علي"
       ],
       "AE-FU": [
         "Fujayrah",
         "Fujeirah",
-        "الفجيرة"
+        "الفجيرة",
+        "Fujaira",
+        "Fujeira",
+        "الفجيره"
       ],
       "AE-RK": [
         "Ras Al Khaymah",
         "Khaimah",
-        "رأس الخيمة"
+        "رأس الخيمة",
+        "Ras al-Khaima",
+        "Ras Al Khaima",
+        "RAK",
+        "رأس الخيمه"
       ],
       "AE-UQ": [
         "Umm Al Qaywayn",
         "Quwain",
-        "أم القيوين"
+        "أم القيوين",
+        "Umm al-Qaiwain",
+        "Umm Al Qaiwain",
+        "ام القيوين"
       ],
       "AE-AZ": [
         "أبوظبي",
         "ابوظبي",
-        "Abudhabi"
+        "Abudhabi",
+        "أبو ظبي",
+        "Ruwais",
+        "الرويس",
+        "Das Island",
+        "Habshan",
+        "حبشان"
       ],
       "AE-SH": [
-        "الشارقة"
+        "الشارقة",
+        "Sharja",
+        "Hamriyah",
+        "الحمرية"
       ],
       "AE-AJ": [
         "عجمان"

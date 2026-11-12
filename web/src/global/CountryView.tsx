@@ -14,6 +14,7 @@ import { composeCountryFrame, countryFilename } from "./countryExport";
 import { DISPUTED, NO_EVENTS, fillFor, scaleFor, type Scale } from "./countryScale";
 import { downloadBlob, exportMapPng } from "../mapExport";
 import { daysBetween, fmtDate } from "../data";
+import { readerText } from "./readerText";
 
 /** One country system (iteration 14).
  *
@@ -161,7 +162,8 @@ export default function CountryView({ id }: { id: string }) {
 
   return (
     <div className="global-page country-page">
-      <CountryHeader name={sys.name} id={id} wholeCountry={sys.geography.precision_policy?.other === "country"}>
+      <CountryHeader name={sys.name} id={id} wholeCountry={sys.geography.precision_policy?.other === "country"}
+                     attacksWhole={sys.geography.precision_policy?.kinetic === "country"}>
         <button className="ghost" onClick={runExport} disabled={exporting}>
           {exporting ? "Rendering…" : "Download PNG"}
         </button>
@@ -206,6 +208,10 @@ export default function CountryView({ id }: { id: string }) {
               <strong>No qualifying records in the current reviewed corpus.</strong> That describes this
               dataset, not {sys.name}: it does not mean nothing happened. Reporting environment:{" "}
               {labelFor(ENVIRONMENT_LABEL, sys.reporting_environment)}.
+              {sys.campaign_state && sys.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && (
+                <> Attacks are reported in the news; a record is published only once a reported event meets the
+                  inclusion rule and has passed review, and none has yet.</>
+              )}
               <HeldLine sys={sys} />
             </div>
           ) : (
@@ -213,7 +219,7 @@ export default function CountryView({ id }: { id: string }) {
               <strong>{sys.event_summary.recorded_events}</strong> qualifying events recorded
               {" "}in <strong>{sys.event_summary.episodes}</strong> episodes ·
               reporting environment: {labelFor(ENVIRONMENT_LABEL, sys.reporting_environment)}.
-              {" "}{sys.event_summary.note}
+              {" "}{readerText(sys.event_summary.note)}
               <HeldLine sys={sys} />
             </div>
           )}
@@ -238,9 +244,9 @@ export default function CountryView({ id }: { id: string }) {
           {sys.maturity === "research_preview" && (
             <p className="small">
               <span className="badge research-partial">Research preview</span>{" "}
-              The systematic search for {sys.name} is still incomplete, so the absence of a record is not
-              evidence that no disruption occurred. Sources were searched for a limited time and some could not
-              be read at all; the Research coverage tab says which.
+              {sys.name} was added recently and has had one first research pass. The systematic search is still
+              incomplete, so the absence of a record is not evidence that no disruption occurred. Sources were
+              searched for a limited time and some could not be read at all; the Research coverage tab says which.
             </p>
           )}
           {sys.campaign_state && sys.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && (
@@ -253,7 +259,7 @@ export default function CountryView({ id }: { id: string }) {
             </p>
           )}
           {sys.geography.precision_policy && (
-            <p className="small dim">How precisely events are placed: {sys.geography.precision_policy.reason}</p>
+            <p className="small dim">How precisely events are placed: {readerText(sys.geography.precision_policy.reason)}</p>
           )}
           {/* A system under the campaign policy that still places attack records in a region (Saudi
               Arabia, onboarded in iteration 14): said plainly, by rule rather than by name (iteration 20, §79). */}
@@ -263,7 +269,7 @@ export default function CountryView({ id }: { id: string }) {
               {sys.name} was onboarded before the newer rule for the Gulf countries, under which an attack record is
               published for the country as a whole, with no facility or region. Its older published records keep the
               earlier geography convention: an attack record here names its facility and its region. Whether that
-              changes is an open decision, set out in the Method tab.
+              changes is an open decision, set out in the Why no score tab.
             </p>
           )}
         </section>
@@ -378,13 +384,13 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
         {rf.lane_states && Object.keys(rf.lane_states).length > 0 && (
           <ul className="lane-state-list">
             {Object.entries(rf.lane_states).map(([k, n]) => (
-              <li key={k}><span className="mono">{n}</span> {labelFor(LANE_STATE_LABEL, k).toLowerCase()}</li>
+              <li key={k}><span className="mono">{n}</span> {n === 1 ? "source group" : "source groups"}: {labelFor(LANE_STATE_LABEL, k).toLowerCase()}</li>
             ))}
           </ul>
         )}
         {rf.last_systematic_pass && rf.coverage_window && (
           <span className="dim"> · research period {fmtDate(rf.coverage_window[0])} – {fmtDate(rf.coverage_window[1])};
-            last worked on {fmtDate(rf.last_systematic_pass)}; {rf.lanes_complete} of {rf.lanes_declared} source groups finished{overdue ? " (due again)" : ""}</span>
+            last worked on {fmtDate(rf.last_systematic_pass)}; {rf.lanes_complete} of {rf.lanes_declared} source groups finished{overdue ? " (a new pass is due)" : ""}</span>
         )}
       </div>
       <div className="eyebrow">Source health <span className="dim">· whether the registered sources were checked on schedule</span></div>
@@ -402,12 +408,13 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
   );
 }
 
-function CountryHeader({ name, id, wholeCountry, children }: { name: string; id: string; wholeCountry?: boolean; children?: React.ReactNode }) {
+function CountryHeader({ name, id, wholeCountry, attacksWhole, children }: { name: string; id: string; wholeCountry?: boolean; attacksWhole?: boolean; children?: React.ReactNode }) {
   return (
     <header className="global-head">
       <div>
         <h1 className="ribbon-title">{name}</h1>
-        <div className="ribbon-sub">Energy Disruption Monitor · reported major disruptions{wholeCountry ? ", recorded for the country as a whole" : " by first-level region"}</div>
+        <div className="ribbon-sub">Energy Disruption Monitor · reported major disruptions{wholeCountry ? ", recorded for the country as a whole"
+          : attacksWhole ? " by first-level region; attacks recorded for the country as a whole" : " by first-level region"}</div>
       </div>
       <div className="head-actions">
         {children}
@@ -647,7 +654,7 @@ function SectorsPanel({ bundle }: { bundle: CountryBundle }) {
             <tr key={s.sector}>
               <td>{s.label}</td>
               <td><span className={`badge state-${s.state.toLowerCase()}`}>{SECTOR_STATE_LABEL[s.state]}</span></td>
-              <td className="small">could reach: {s.assessed_readiness.replace(/_/g, " ").toLowerCase()}<div className="dim">{s.reason}</div></td>
+              <td className="small">could reach: {s.assessed_readiness.replace(/_/g, " ").toLowerCase()}<div className="dim">{readerText(s.reason)}</div></td>
             </tr>
           ))}
         </tbody>
@@ -690,13 +697,13 @@ function ContextPanel({ bundle, ctx, ctxFailed }: { bundle: CountryBundle; ctx: 
               <td className="small">{m.unit}{m.year ? ` · ${m.year}` : ""}
                 <div className="dim">{m.url ? <a href={m.url} target="_blank" rel="noreferrer">{m.source}</a> : m.source}</div>
                 {m.basis && <div className="dim">Basis: {m.basis}</div>}
-                {m.note && <div className="dim">{m.note}</div>}
+                {m.note && <div className="dim">{readerText(m.note)}</div>}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      {p.as_of_note && <p className="small dim">{p.as_of_note}</p>}
+      {p.as_of_note && <p className="small dim">{readerText(p.as_of_note)}</p>}
     </div>
   );
 }
@@ -727,9 +734,12 @@ function ResearchPanel({ bundle }: { bundle: CountryBundle }) {
       <p className="small dim">Events can date back to 2022, but systematic research for this country began
         {rf.first_systematic_pass ? ` on ${fmtDate(rf.first_systematic_pass)}` : " later"}. Older records were found afterwards, not monitored as they happened.</p>
       <p className="small">Reporting environment: <strong>{labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}</strong>. {s.reporting_environment_text}</p>
-      {s.source_families && <p className="small">Source families cited: {Object.values(s.source_families.labels).join(", ")}. <span className="dim">{s.source_families.note}</span></p>}
+      {s.source_families && <p className="small">Source families cited: {Object.values(s.source_families.labels).join(", ") || "none"}. <span className="dim">{s.source_families.note}</span></p>}
       {languages.length > 0 && <p className="small">Languages the research plan requires: {languageNames(languages)}.
-        {" "}{v2.filter((l) => (l.languages_required ?? []).some((x) => !(l.languages_executed ?? []).includes(x))).map((l) => l.lane).join(", ") || "No source group"} did not run in every required language.</p>}
+        {" "}{(() => {
+          const short = v2.filter((l) => (l.languages_required ?? []).some((x) => !(l.languages_executed ?? []).includes(x))).map((l) => l.lane);
+          return short.length ? `${short.join(", ")} did not run in every required language.` : "Every source group ran in every language it requires.";
+        })()}</p>}
       <table className="sector-table lane-table">
         <thead><tr><th>Lane</th><th>What the analyst did</th><th>What the source allows</th><th>Furthest date reached</th></tr></thead>
         <tbody>
@@ -744,14 +754,14 @@ function ResearchPanel({ bundle }: { bundle: CountryBundle }) {
         </tbody>
       </table>
       <h3 className="eyebrow">Known gaps, from the source groups above</h3>
-      <ul className="small">{gaps.map((l) => <li key={l.lane}><span className="mono">{l.lane}</span>: {l.limitation}</li>)}</ul>
+      <ul className="small">{gaps.map((l) => <li key={l.lane}><span className="mono">{l.lane}</span>: {readerText(l.limitation)}</li>)}</ul>
       {s.research_gaps.length > 0 && (<>
         <h3 className="eyebrow">Other gaps</h3>
         <ul className="small">{s.research_gaps.map((g, i) => <li key={i}>{g}</li>)}</ul>
       </>)}
       {v2.some((l) => l.finding) && (<>
         <h3 className="eyebrow">Findings about the sources</h3>
-        <ul className="small">{v2.filter((l) => l.finding).map((l) => <li key={l.lane}><span className="mono">{l.lane}</span>: {l.finding}</li>)}</ul>
+        <ul className="small">{v2.filter((l) => l.finding).map((l) => <li key={l.lane}><span className="mono">{l.lane}</span>: {readerText(l.finding)}</li>)}</ul>
       </>)}
       {rc && (<>
         <h3 className="eyebrow">Recovery research</h3>
@@ -784,8 +794,8 @@ function ResearchPanel({ bundle }: { bundle: CountryBundle }) {
           <tbody>
             {s.research_log.passes.map((p) => (
               <tr key={`${p.date}-${p.by}`}>
-                <td className="small">{fmtDate(p.date)}<div className="dim">{p.by}</div></td>
-                <td className="small">{p.kind === "targeted" ? "targeted search" : p.status}{p.status_reason && <div className="dim">{p.status_reason}</div>}</td>
+                <td className="small">{fmtDate(p.date)}<div className="dim">{readerText(p.by)}</div></td>
+                <td className="small">{p.kind === "targeted" ? "targeted search" : p.status}{p.status_reason && <div className="dim">{readerText(p.status_reason)}</div>}</td>
                 <td className="small">{Object.entries(p.outcome).map(([k, n]) => `${k.replace(/_/g, " ")} ${n}`).join(" · ")}</td>
               </tr>
             ))}
@@ -839,7 +849,7 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
           : s.research_log.passes.length === 0 ? "No research pass has been logged for this country."
             : "Every pass so far was targeted at named gaps and leads."}
       </p>
-      <p className="small dim">{s.research_freshness.note}</p>
+      <p className="small dim">{readerText(s.research_freshness.note)}</p>
       <h3 className="eyebrow">Recovery evidence across the recorded events</h3>
       <p className="small dim recovery-meaning">"Recovery" on these pages means a cited public report
         that a facility or service came back, fully or partly. Nothing is modelled: with no such report
@@ -859,7 +869,7 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
         independently reviewed ({s.review_summary.blind_reviewed ?? 0} blind by three reviewers,{" "}
         {s.review_summary.dual_reviewed} by one); {s.review_summary.legacy_single_review} published before independent
         review was required.</p>
-      <p className="small dim">{s.review_summary.note}
+      <p className="small dim">{readerText(s.review_summary.note)}
         {unrecorded > 0 && ` For ${unrecorded} of ${bundle.events.length} events the researchers did not record whether they read the cited sources.`}</p>
     </div>
   );
@@ -1011,9 +1021,11 @@ function MethodPanel({ bundle }: { bundle: CountryBundle }) {
         {" "}{s.reporting_environment_text}</p>
       <h3 className="eyebrow">Publication checklist</h3>
       <p className="small dim">
-        {unmet > 0
-          ? `Shown as a research preview: ${unmet} of ${s.onboarding_gate.length} items of the onboarding gate are not met or only partly met.`
-          : "Every item of the onboarding gate is met."}
+        {unmet === 0
+          ? "Every item of the publication checklist is met."
+          : s.maturity === "research_preview"
+            ? `Shown as a research preview (added recently, one first research pass): ${unmet} of ${s.onboarding_gate.length} items of the publication checklist are not met or only partly met.`
+            : `${unmet} of ${s.onboarding_gate.length} items of the publication checklist are not met or only partly met; each says why below.`}
       </p>
       <table className="sector-table">
         <tbody>
@@ -1021,7 +1033,7 @@ function MethodPanel({ bundle }: { bundle: CountryBundle }) {
             <tr key={g.item}>
               <td className="small">{g.item}. {g.label}</td>
               <td><span className={`badge gate-${g.status}`}>{g.status}</span></td>
-              <td className="small dim">{g.note}</td>
+              <td className="small dim">{readerText(g.note)}</td>
             </tr>
           ))}
         </tbody>
@@ -1032,9 +1044,9 @@ function MethodPanel({ bundle }: { bundle: CountryBundle }) {
         {Object.entries(s.inclusion_threshold.clauses).map(([k, v]) => <li key={k} value={Number(k)}>{v}</li>)}
       </ol>
       <h3 className="eyebrow">Geography</h3>
-      <p className="small">{s.geography.note}</p>
+      <p className="small">{readerText(s.geography.note)}</p>
       {s.geography.rulings.length > 0 && (
-        <ul className="small">{s.geography.rulings.map((r) => <li key={r.code}><span className="mono">{r.code}</span>: {r.note}</li>)}</ul>
+        <ul className="small">{s.geography.rulings.map((r) => <li key={r.code}><span className="mono">{r.code}</span>: {readerText(r.note)}</li>)}</ul>
       )}
       {s.campaign_state && s.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && s.geography.precision_policy?.kinetic !== "country" && (
         <p className="small">

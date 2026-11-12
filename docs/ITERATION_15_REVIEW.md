@@ -87,7 +87,7 @@ paywall, an "access denied" or a bot challenge meant the source was not used, ne
 | CA | 3 | Quebec windstorm (Mar 2026); Ontario and Quebec thunderstorms (Jul 2026, one episode) |
 | CN | 1 | Typhoon Ragasa (Sep 2025) |
 | IN | 1 | Cyclone Montha (Oct 2025) |
-| SA | 1 | Jazan refinery shutdown (Jul 2026); restart not confirmed: `RESEARCHED_NO_PUBLIC_EVIDENCE` |
+| SA | 1 | a 2026 Saudi refinery record (held since iteration 17; status not published) |
 
 Four were leads the earlier lane had left as "insufficient evidence, budget exhausted"; they were
 resolved and replaced in place under the same ids. Leads that did not reach the threshold or
@@ -99,7 +99,7 @@ residents, not customers; Fiona in New Brunswick at about 95,000, under the 100,
 ships. Two were trimmed: a sentence on the Louisiana grid's generation margin (dependency
 analysis, however public) and a sub-provincial placement for Ragasa. Left out from the start:
 parish and district names, the distribution-network damage inventory for Montha, the explosion's
-felt distance at Port Arthur, unit-level damage at Jazan, and "largest refinery" framing for El
+felt distance at Port Arthur, unit-level damage at a Saudi refinery, and "largest refinery" framing for El
 Segundo.
 
 ---
@@ -143,7 +143,7 @@ responsive hotfix were deleted (every commit is in `main`).
 2. **Twelve events published on a single researcher's reading.** Same review gate and scope scan
    as iteration 14, plus a full read-through, but no independent second reviewer and no red-team
    lane this time.
-3. **A new Saudi event under a live attack campaign** (Jazan), including its restart status. This
+3. **A new Saudi event under a live attack campaign**, including its status (redacted in iteration 20). This
    follows the theatre's doctrine and iteration 14's Saudi records; ITERATION_14_REVIEW §10 item 7
    (whether to publish recovery status during a live campaign) is still the owner's.
 4. **Episode rule and the Saudi grouping.** Five April 2026 Saudi records reported in one ministry

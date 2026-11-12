@@ -6765,13 +6765,14 @@ def test_a_historical_as_of_build_reconstructs_country_systems_instead_of_failin
     from pipeline import outputs
     monkeypatch.setitem(outputs._target, "root", tmp_path)  # write beside, never into, the payload
     a1, a0 = B.load_admin1(), B.load_admin0()
-    full = B.build_system("sa", a1, a0, "2026-10-30")
-    early = B.build_system("sa", a1, a0, "2026-08-28")
+    # The US system: since iteration 20 no published Saudi record is dated after 28 August.
+    full = B.build_system("us", a1, a0, "2026-10-30")
+    early = B.build_system("us", a1, a0, "2026-08-28")
     assert early["event_summary"]["recorded_events"] < full["event_summary"]["recorded_events"]
     assert early["event_summary"]["excluded_after_as_of"] > 0
-    ev = json.loads((tmp_path / "systems" / "sa" / "events.json").read_text(encoding="utf-8"))
+    ev = json.loads((tmp_path / "systems" / "us" / "events.json").read_text(encoding="utf-8"))
     assert all(e["date"] <= "2026-08-28" for e in ev["events"])
-    regions = json.loads((tmp_path / "systems" / "sa" / "regions.geojson").read_text(encoding="utf-8"))
+    regions = json.loads((tmp_path / "systems" / "us" / "regions.geojson").read_text(encoding="utf-8"))
     placed = sum(f["properties"]["recorded_events"] or 0 for f in regions["features"])
     assert placed == sum(1 for e in ev["events"] if e["region_code"])
 
@@ -7353,11 +7354,9 @@ def test_no_served_record_under_an_active_campaign_shows_facility_status():
                 assert not any(B.late_citation(e, s) for s in e["sources"]), e["event_id"]
             else:
                 assert e["publication"] is None and e["recovery"]["research_status"] != B.WITHHELD
-    # The Saudi 2026 records: Jazan is held (its only citation reports status), and the iteration-17
-    # blind review sent two more to the owner (April East-West cut, September Yanbu suspension).
-    # Iteration 20's strict reading held one more Saudi record and the Iraq and Kuwait attack records
-    # (CROSS_SYSTEM_THRESHOLD_AUDIT_20.md), so seven remain; the floor follows the corpus.
-    assert covered >= 7
+    # Saudi campaign records held since iteration 17, and iteration 20's strict reading and red teams
+    # held more (CROSS_SYSTEM_THRESHOLD_AUDIT_20.md, ITERATION_20_REVIEW.md); the floor follows the corpus.
+    assert covered >= 6
 
 
 def test_every_campaign_states_its_status_and_the_theatre_says_why_the_rule_waits():

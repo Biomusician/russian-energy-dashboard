@@ -12,14 +12,8 @@
       "scope": "all sectors; operator and regulator releases, national and local-language media",
       "status": "partial",
       "status_reason": "the shared web-search budget ran out before 2025-2026 were covered",
-      "outcome": {
-        "records": 33,
-        "accepted": 11,
-        "insufficient_evidence": 13,
-        "rejected": 6,
-        "duplicate": 0,
-        "out_of_scope": 3
-      }
+      "outcome": {},
+      "under_review": true
     },
     {
       "date": "2026-10-30",
@@ -32,10 +26,8 @@
       "scope": "non-conflict incidents 2022-2025, plus 2026 refinery incidents; every source used was opened and read",
       "status": "partial",
       "status_reason": "a targeted pass over named gaps and major 2025-2026 events, not a month-by-month sweep of every source",
-      "outcome": {
-        "accepted": 1,
-        "insufficient_evidence": 1
-      }
+      "outcome": {},
+      "under_review": true
     },
     {
       "date": "2026-11-03",
@@ -118,18 +110,12 @@
       ],
       "status": "partial",
       "status_reason": "0 of 5 lanes complete; the others are partial for the reasons stated per lane",
-      "outcome": {
-        "candidates": 30,
-        "accepted": 0,
-        "rejected": 2,
-        "duplicate": 18,
-        "held": 6,
-        "out_of_scope": 4
-      },
+      "outcome": {},
       "plan": {
         "document": "docs/countries/SA_SYSTEMATIC_SWEEP.md",
         "commit": "a7f3a36"
-      }
+      },
+      "under_review": true
     },
     {
       "date": "2026-11-10",
@@ -142,14 +128,7 @@
       "scope": "inclusion clauses 1-7 as written; lanes and queries declared before searching (docs/countries/SA_LANE_PASS_18.md); every published record reviewed blind by three independent roles and confirmed on its final text",
       "status": "partial",
       "status_reason": "0 of 5 lanes executed as far as declared; the rest are stated per lane",
-      "outcome": {
-        "candidates": 13,
-        "accepted": 0,
-        "rejected": 6,
-        "duplicate": 1,
-        "held": 3,
-        "out_of_scope": 3
-      },
+      "outcome": {},
       "plan": {
         "document": "docs/countries/SA_LANE_PASS_18.md",
         "commit": "1a793d5"
@@ -274,7 +253,8 @@
           "carried_forward": false,
           "stopped_by": "search_limit"
         }
-      ]
+      ],
+      "under_review": true
     },
     {
       "date": "2026-11-11",
@@ -287,14 +267,7 @@
       "scope": "inclusion clauses 1-7 as written; lanes and queries declared before searching (docs/countries/SA_LANE_PASS_19.md); every published record reviewed blind by three independent roles and confirmed on its final text",
       "status": "partial",
       "status_reason": "0 of 5 lanes executed as far as declared; the rest are stated per lane",
-      "outcome": {
-        "candidates": 30,
-        "accepted": 0,
-        "rejected": 9,
-        "duplicate": 14,
-        "held": 6,
-        "out_of_scope": 1
-      },
+      "outcome": {},
       "plan": {
         "document": "docs/countries/SA_LANE_PASS_19.md",
         "commit": "e825386"
@@ -414,7 +387,8 @@
           "limitation": "The shared search allowance ran out before every declared query was run. At least one source in this lane refused automated access and was not worked around. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
           "carried_forward": false
         }
-      ]
+      ],
+      "under_review": true
     },
     {
       "date": "2026-11-11",
@@ -427,14 +401,7 @@
       "scope": "continuation of the iteration-19 pass: lanes as declared in docs/countries/SA_LANE_PASS_19.md, work order in docs/countries/GULF_CONTINUATION_PLAN_20.md; each lane states its execution after both passes; inclusion clauses 1-7 read strictly; every published record reviewed blind by three independent roles and confirmed on its final text",
       "status": "partial",
       "status_reason": "0 of 5 lanes executed as far as declared; the rest are stated per lane",
-      "outcome": {
-        "candidates": 25,
-        "accepted": 0,
-        "rejected": 2,
-        "duplicate": 16,
-        "held": 1,
-        "out_of_scope": 6
-      },
+      "outcome": {},
       "plan": {
         "document": "docs/countries/GULF_CONTINUATION_PLAN_20.md",
         "commit": "c03bff6",
@@ -564,7 +531,8 @@
       "continues": {
         "date": "2026-11-11",
         "by": "iteration-19 Gulf research pass"
-      }
+      },
+      "under_review": true
     }
   ]
 }

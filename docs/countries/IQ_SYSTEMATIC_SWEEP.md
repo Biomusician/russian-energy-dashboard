@@ -98,9 +98,9 @@ confirmation before import.
 | IQ4 | partial; stopped by search limit | no_census_exists | 2026-11-11 | 5 of 13 | - | en, ku | en, ku |
 | IQ5 | partial; stopped by search limit | no_census_exists | 2026-11-11 | 5 of 10 | - | ar, en | ar, en |
 
-Candidates 69: accepted after blind review 5, rejected 15, duplicate 1, held 43, out of scope 5. Published records in this system after the pass: 5.
+Candidate counts are kept in the local research queue (iteration 20 safety review). Published records in this system after the pass: 5.
 
-**Result.** 5 records from this pass are published. 43 candidates are held: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The Kurdish-language and media lanes ran about half their declared queries.
+**Result.** 5 records from this pass are published. Additional candidates remain under review: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The Kurdish-language and media lanes ran about half their declared queries.
 
 **Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
 

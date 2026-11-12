@@ -36,6 +36,177 @@
     "precision_policy": {
       "kinetic": "country",
       "reason": "Strikes on energy facilities in Iran are being reported now. While that holds, an attack or sabotage record is recorded for the country, with no province, facility or operator: a province and a class would often name the site. Other events (accidents, weather, grid failures) are placed by province."
+    },
+    "unit_aliases": {
+      "IR-00": [
+        "مرکزی",
+        "Arak",
+        "اراک"
+      ],
+      "IR-01": [
+        "Guilan",
+        "گیلان",
+        "Rasht",
+        "رشت"
+      ],
+      "IR-02": [
+        "مازندران",
+        "Sari",
+        "ساری"
+      ],
+      "IR-03": [
+        "Azerbaijan",
+        "Azarbayjan",
+        "آذربایجان شرقی",
+        "Tabriz",
+        "تبریز"
+      ],
+      "IR-04": [
+        "آذربایجان غربی",
+        "Urmia",
+        "Orumiyeh",
+        "ارومیه"
+      ],
+      "IR-05": [
+        "کرمانشاه"
+      ],
+      "IR-06": [
+        "Khouzestan",
+        "Khuzistan",
+        "خوزستان",
+        "Ahvaz",
+        "Ahwaz",
+        "اهواز",
+        "Abadan",
+        "آبادان",
+        "Mahshahr",
+        "ماهشهر"
+      ],
+      "IR-07": [
+        "فارس",
+        "Shiraz",
+        "شیراز"
+      ],
+      "IR-08": [
+        "کرمان"
+      ],
+      "IR-09": [
+        "Khorasan Razavi",
+        "خراسان رضوی",
+        "Mashhad",
+        "مشهد"
+      ],
+      "IR-10": [
+        "Isfahan",
+        "Esfehan",
+        "اصفهان"
+      ],
+      "IR-11": [
+        "Sistan",
+        "Baluchestan",
+        "Baluchistan",
+        "سیستان و بلوچستان",
+        "Zahedan",
+        "زاهدان",
+        "Chabahar",
+        "چابهار"
+      ],
+      "IR-12": [
+        "Kurdistan",
+        "Kordistan",
+        "کردستان",
+        "Sanandaj",
+        "سنندج"
+      ],
+      "IR-13": [
+        "Hamedan",
+        "همدان"
+      ],
+      "IR-14": [
+        "Bakhtiari",
+        "چهارمحال و بختیاری",
+        "Shahrekord",
+        "شهرکرد"
+      ],
+      "IR-15": [
+        "لرستان",
+        "Khorramabad",
+        "خرم آباد"
+      ],
+      "IR-16": [
+        "ایلام"
+      ],
+      "IR-17": [
+        "Kohgiluyeh",
+        "Boyer-Ahmad",
+        "کهگیلویه و بویراحمد",
+        "Yasuj",
+        "یاسوج",
+        "Gachsaran",
+        "گچساران"
+      ],
+      "IR-18": [
+        "بوشهر",
+        "Asaluyeh",
+        "Assaluyeh",
+        "عسلویه",
+        "Kangan",
+        "کنگان"
+      ],
+      "IR-19": [
+        "زنجان"
+      ],
+      "IR-20": [
+        "سمنان"
+      ],
+      "IR-21": [
+        "یزد"
+      ],
+      "IR-22": [
+        "هرمزگان",
+        "Bandar Abbas",
+        "بندرعباس",
+        "بندر عباس",
+        "Qeshm",
+        "قشم"
+      ],
+      "IR-23": [
+        "تهران",
+        "Teheran"
+      ],
+      "IR-24": [
+        "Ardabil",
+        "اردبیل"
+      ],
+      "IR-25": [
+        "Qum",
+        "قم"
+      ],
+      "IR-26": [
+        "قزوین"
+      ],
+      "IR-27": [
+        "گلستان",
+        "Gorgan",
+        "گرگان"
+      ],
+      "IR-28": [
+        "Khorasan Shomali",
+        "خراسان شمالی",
+        "Bojnurd",
+        "بجنورد"
+      ],
+      "IR-29": [
+        "Khorasan Jonubi",
+        "خراسان جنوبی",
+        "Birjand",
+        "بیرجند"
+      ],
+      "IR-30": [
+        "البرز",
+        "Karaj",
+        "کرج"
+      ]
     }
   },
   "sectors": [

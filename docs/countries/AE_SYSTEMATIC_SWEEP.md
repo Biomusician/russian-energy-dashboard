@@ -72,9 +72,9 @@ or worked around. Blind three-role review before import, as in `SA_LANE_PASS_18.
 | AE3 | partial; stopped by search limit | rolling_archive_gap | 2026-11-05 | 2 of 4 | 269 | ar, en | ar, en |
 | AE4 | partial; stopped by search limit | no_census_exists | not reached | 8 of 18 | - | ar, en | ar, en |
 
-Candidates 21: accepted after blind review 0, rejected 2, duplicate 1, held 15, out of scope 3. Published records in this system after the pass: 0.
+Candidate counts are kept in the local research queue (iteration 20 safety review). Published records in this system after the pass: 0.
 
-**Result.** No record from this pass is published. 15 candidates are held: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The emirate utilities' and regulators' pages returned no dated outage with a qualifying figure.
+**Result.** No record from this pass is published. Additional candidates remain under review: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The emirate utilities' and regulators' pages returned no dated outage with a qualifying figure.
 
 **Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
 

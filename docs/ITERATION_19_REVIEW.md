@@ -5,6 +5,10 @@ The brief for this run was titled "Iteration 18 — Gulf energy expansion". The 
 already used iteration 18 for the rest-of-world pass (`ITERATION_18_REVIEW.md`), and the repo wins
 over the prompt, so this is iteration 19. Every "iteration 18" file name in the brief maps to 19.
 
+
+> Redacted in iteration 20 (safety red team): per-country candidate and held counts, and tallies of
+> held attack records, for systems under the campaign policy. The counts are kept in the local research
+> queue; the page says only that additional candidates remain under review.
 ## 0. Checkpoint (2026-11-11, before any Gulf research)
 
 ### 0.1 Baseline
@@ -227,11 +231,10 @@ Campaign state `ACTIVE_KINETIC_CAMPAIGN`. Attacks and sabotage are recorded for 
 events by province. Six lanes, Persian and English, all partial; most official Persian archives
 were unreachable or script-only, and every Iranian official statement read was a relayed copy.
 
-**No record is published.** Thirty-five candidates; two reached blind review. One is with the
-owner (clause 3: no opened source says the line was shut). One is held because the evidence
-reviewer's footing and the safety reviewer's removal could not both be honoured. The country page
+**No record is published.** Candidates that reached blind review are with the owner or held on
+review. The country page
 says "No qualifying records in the current reviewed corpus", states that this describes the
-dataset and not Iran, and gives the number of candidates held.
+dataset and not Iran, and says that additional candidates remain under review.
 
 Nothing nuclear appears in any record, citation or profile row. Iran's 31 provinces are on current
 ISO codes; the map source gave Alborz Tehran's code and used pre-2020 numbering, and both were
@@ -252,10 +255,9 @@ were narrowed and sent to three fresh roles: two were confirmed, and one is held
 objection to its cause (a blockade by people who were not the workforce is not labour action, and
 the vocabulary has no value for it).
 
-Also held or with the owner, as before: attack records whose every citation names the place in its
-address, a set the safety reviewer judged to read as a tally, non-attack records at or about a
-site that has attack records, a blackout whose reported cause may include sabotage, two shortfalls
-whose stated reason is a supplier's maintenance, and one attack record with no stated volume.
+Also held or with the owner, as before, on the rules stated in §27: citation addresses that name
+the place, records that read together as a tally, records at or about a site with attack records,
+a cause that may include sabotage, and supplier maintenance.
 
 Three disputed-area rulings proposed by the audit were not verified and were dropped; the Kirkuk
 ruling was kept. The map file's former name for Kirkuk is no longer shown.
@@ -263,36 +265,29 @@ ruling was kept. The map file's former name for Kirkuk is no longer shown.
 ## 7. Kuwait
 
 Campaign state `UNCERTAIN`, treated as active. Four lanes; the ministry's Arabic and English
-listings were read by title for the window. Forty-eight candidates, five published: four
+listings were read by title for the window. Five records were published: four
 dated episodes of programmed power cuts announced by the ministry, and one attack record at
-country level. With the owner: a programmed cut that coincided with periodic maintenance, and two
-attack records whose only qualifying statement is that emergency plans were activated.
+country level. Others are with the owner on the questions in §27.
 
 ## 8. Bahrain
 
 Campaign state `UNCERTAIN`. Every record is the country's: the map source still draws five
 governorates where there are four, and the country is small enough that a governorate would name a
-facility. Three lanes. **No record is published.** One attack record reached review and is with
-the owner: the sources report a force-majeure declaration and disrupted operations, and clause 1
-asks for a shutdown or a throughput cut. The electricity authority's terms forbid linking, so it
+facility. Three lanes. **No record is published.** A record that reached review is with the owner on the force-majeure
+question in §27. The electricity authority's terms forbid linking, so it
 was never cited.
 
 ## 9. Qatar
 
-Campaign state `UNCERTAIN`. Three lanes. Twelve candidates. **No record is published.** One attack
-record passed three roles and their confirmation. The release safety review then pointed out that
-the country has one facility of that class, so the class and the country name it whatever the
-text withholds. That is an owner question (§27), and the brief holds a record that waits on one,
-so the lead held it. A second attack record was already with the owner. The utility's terms forbid
+Campaign state `UNCERTAIN`. Three lanes. **No record is published.** Records that reached review
+are held on owner questions in §27. The utility's terms forbid
 linking, so it was never cited.
 
 ## 10. United Arab Emirates
 
-Campaign state `UNCERTAIN`. Four lanes. Twenty-one candidates. **No record is published.** One
-attack record passed three roles and their confirmation; its only citation is a publisher's short
-link, and the release safety review reported that the address it redirects to names the place.
-The gate had read only the stored string. The lead held the record and the gate now refuses such
-a link. Four other attack records and a 2023 gas-plant fault were already held. The two areas the
+Campaign state `UNCERTAIN`. Four lanes. **No record is published.** A citation that was a
+publisher's short link was found to redirect to an address the gate would refuse; the record was
+held and the gate now judges where a link lands. The two areas the
 map source labels as a neutral zone are drawn and never used for a record.
 
 ## 11. Oman
@@ -308,8 +303,7 @@ its own governorate with no narrative attached.
 The nine published Saudi records are unchanged: the import was re-run and produced the same file.
 Five lanes ran again on a plan of their own. The sections of the Arabic annual reports for four fiscal years that carry incident wording, and all
 24 monthly statistical releases for 2024 and 2025, were read by keyword; none attributes a change to a
-disruption. No new record: thirty candidates, fourteen already known, six held, nine rejected, one
-out of scope. SPA, the ministry site, Tadawul and OPEC refused access again.
+disruption. No new record. SPA, the ministry site, Tadawul and OPEC refused access again.
 
 Saudi records predate the Gulf rules and place attacks by region with the facility named. That is
 stated on its Gulf card. Bringing them under the country-level rule would change published records
@@ -335,14 +329,14 @@ The final data audit, generated from the served payloads. Alphabetical; no row i
 
 | System | Research window | Languages run / required | Lanes | Execution state | Candidates | Published | Held | Episodes | Records with recovery evidence | Campaign state | Index |
 |---|---|---|---:|---|---:|---:|---:|---:|---:|---|---|
-| Bahrain | 2022-01-01 to 2026-11-11 | ar, en / ar, en | 3 | 3 partial | 9 | 0 | 3 | 0 | 0 | UNCERTAIN | none |
-| Iran | 2022-01-01 to 2026-11-11 | en, fa / en, fa | 6 | 6 partial | 35 | 0 | 23 | 0 | 0 | ACTIVE_KINETIC_CAMPAIGN | none |
-| Iraq | 2022-01-01 to 2026-11-11 | ar, en, ku / ar, en, ku | 5 | 5 partial | 69 | 5 | 43 | 5 | 1 | ACTIVE_KINETIC_CAMPAIGN | none |
-| Kuwait | 2022-01-01 to 2026-11-11 | ar, en / ar, en | 4 | 4 partial | 48 | 5 | 18 | 5 | 0 | UNCERTAIN | none |
-| Oman | 2022-01-01 to 2026-11-11 | ar, en / ar, en | 5 | 5 partial | 14 | 1 | 7 | 1 | 1 | UNCERTAIN | none |
-| Qatar | 2022-01-01 to 2026-11-11 | ar, en / ar, en | 3 | 3 partial | 12 | 0 | 7 | 0 | 0 | UNCERTAIN | none |
-| Saudi Arabia | 2022-01-01 to 2026-11-11 | ar, en / ar, en | 5 | 2 not started, 3 partial | 30 | 9 (0 new) | 6 | 9 | 0 | ACTIVE_KINETIC_CAMPAIGN | none |
-| United Arab Emirates | 2022-01-01 to 2026-11-11 | ar, en / ar, en | 4 | 4 partial | 21 | 0 | 15 | 0 | 0 | UNCERTAIN | none |
+| Bahrain | 2022-01-01 to 2026-11-11 | ar, en / ar, en | 3 | 3 partial | local | 0 | local | 0 | 0 | UNCERTAIN | none |
+| Iran | 2022-01-01 to 2026-11-11 | en, fa / en, fa | 6 | 6 partial | local | 0 | local | 0 | 0 | ACTIVE_KINETIC_CAMPAIGN | none |
+| Iraq | 2022-01-01 to 2026-11-11 | ar, en, ku / ar, en, ku | 5 | 5 partial | local | 5 | local | 5 | 1 | ACTIVE_KINETIC_CAMPAIGN | none |
+| Kuwait | 2022-01-01 to 2026-11-11 | ar, en / ar, en | 4 | 4 partial | local | 5 | local | 5 | 0 | UNCERTAIN | none |
+| Oman | 2022-01-01 to 2026-11-11 | ar, en / ar, en | 5 | 5 partial | local | 1 | local | 1 | 1 | UNCERTAIN | none |
+| Qatar | 2022-01-01 to 2026-11-11 | ar, en / ar, en | 3 | 3 partial | local | 0 | local | 0 | 0 | UNCERTAIN | none |
+| Saudi Arabia | 2022-01-01 to 2026-11-11 | ar, en / ar, en | 5 | 2 not started, 3 partial | local | 9 (0 new) | local | 9 | 0 | ACTIVE_KINETIC_CAMPAIGN | none |
+| United Arab Emirates | 2022-01-01 to 2026-11-11 | ar, en / ar, en | 4 | 4 partial | local | 0 | local | 0 | 0 | UNCERTAIN | none |
 
 "Held" counts every candidate not published and not rejected, duplicate or out of scope: records
 held by a reviewer, by the lead, by the import gate, or waiting on an owner decision. "Index: none"

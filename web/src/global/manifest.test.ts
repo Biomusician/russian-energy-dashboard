@@ -21,6 +21,14 @@ describe("country payload shape check (iteration 17, error containment)", () => 
     expect(shapeProblems({ ...sys, research_log: undefined }, ev)).toEqual(["research_log.passes is not a list"]);
   });
 
+  it("a malformed source-health block is refused at load; a missing one is allowed", () => {
+    const sys = read("systems/iq/system.json");
+    const ev = read("systems/iq/events.json");
+    expect(shapeProblems({ ...sys, source_health: "corrupt" }, ev)).toEqual(["source_health is malformed"]);
+    expect(shapeProblems({ ...sys, source_health: { ...sys.source_health, opened: null } }, ev)).toEqual(["source_health is malformed"]);
+    expect(shapeProblems({ ...sys, source_health: undefined }, ev)).toEqual([]);
+  });
+
   it("every field the view reads unguarded is named when missing", () => {
     const sys = read("systems/us/system.json");
     const ev = read("systems/us/events.json");

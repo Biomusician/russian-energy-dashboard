@@ -232,7 +232,7 @@
         "also_covers": [
           {
             "event_id": "sa-2026-02-23-juaymah-lpg-export-halt",
-            "reason": "Its own cause is unknown. It is covered with the campaign's record at the same facility."
+            "reason": "Its own cause is unknown. The campaign covers it."
           }
         ]
       },
@@ -337,5 +337,9 @@
       "campaign_id": "sa-2026-attacks-on-energy-facilities",
       "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred. Iteration 20 added four conflict-level searches (the wider war, the Gulf states as a group, Iraq). None reported an end of the war, and renewed hostilities were reported in the autumn of 2026. No facility was looked up."
     }
+  },
+  "profile_year_cap": {
+    "year": 2024,
+    "reason": "Under the campaign policy a country's own profile shows national figures up to the common comparison year of the national context and no later (D-26). Kept equal to that year by a test."
   }
 }

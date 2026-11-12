@@ -85,9 +85,9 @@ second. The lane log is written after each lane. Blind three-role review before 
 | QA2 | partial; stopped by search limit | no_census_exists | 2026-11-11 | 3 of 6 | 107 of 107 | ar, en | ar, en |
 | QA3 | partial; stopped by search limit | no_census_exists | 2026-11-10 | 7 of 20 | 192 | ar, en | ar |
 
-Candidates 12: accepted after blind review 0, rejected 4, duplicate 1, held 7, out of scope 0. Published records in this system after the pass: 0.
+Candidate counts are kept in the local research queue (iteration 20 safety review). Published records in this system after the pass: 0.
 
-**Result.** No record from this pass is published. 7 candidates are held: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The utility's terms forbid linking, so it was never cited.
+**Result.** No record from this pass is published. Additional candidates remain under review: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The utility's terms forbid linking, so it was never cited.
 
 **Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
 

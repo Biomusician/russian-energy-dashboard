@@ -15,7 +15,7 @@
   "update_cadence": "annual, with a monthly oil series; refreshed by an analyst, never by the daily build"
  },
  "comparison_year": 2024,
- "comparison_year_reason": "The latest year EIA publishes across production, consumption, gas, coal and electricity. Oil runs one year later and is shown only on a country's own page.",
+ "comparison_year_reason": "The latest year EIA publishes across production, consumption, gas, coal and electricity. Oil runs one year later and is shown only on a country's own page, except for a country under the campaign policy, which shows the comparison year only.",
  "balance_band": 0.15,
  "metrics": {
   "total_production": {

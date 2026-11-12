@@ -82,15 +82,14 @@ published; Part B of [countries/US_SYSTEMATIC_SWEEP.md](countries/US_SYSTEMATIC_
 the lane-level counts, including the 92 records the lanes themselves held. The removed record is
 Elba Island, whose effect had been inferred from timing.
 
-**After review, at publication.** Jazan's review disposition is *corrected*, but the record is now
-held by the active-campaign publication policy: its only citation's address announces a restart
-delay ([CURRENT_EVENT_PUBLICATION_POLICY.md](CURRENT_EVENT_PUBLICATION_POLICY.md) §3). This is a
+**After review, at publication.** One Saudi record's review disposition is *corrected*, but the record is now
+held by the active-campaign publication policy: its only citation's address states facility status ([CURRENT_EVENT_PUBLICATION_POLICY.md](CURRENT_EVENT_PUBLICATION_POLICY.md) §3). This is a
 publication hold, not a review finding, so the review counts above are unchanged.
 
 The iteration-15 corrections were: unit-level wording trimmed (El Segundo, Port Arthur), two
 recovery claims that overstated their sources (El Segundo's "working to restart" shown as partial
 restoration; Isaias' platforms "coming back", unsupported), one wrong date (Ontario thunderstorms
-began on 1 July), attributions fixed, corroborating public sources added, and the Saudi Jazan
+began on 1 July), attributions fixed, corroborating public sources added, and a Saudi
 record's current-status detail removed (§ CURRENT_EVENT_PUBLICATION_POLICY). Two episodes were
 dissolved because no source called their records one event: the Ontario/Quebec thunderstorms of
 July 2026 and the five Saudi April 2026 records.

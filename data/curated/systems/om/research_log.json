@@ -12,14 +12,7 @@
       "scope": "inclusion clauses 1-7 as written; lanes and queries declared before searching (docs/countries/OM_SYSTEMATIC_SWEEP.md); every published record reviewed blind by three independent roles and confirmed on its final text",
       "status": "partial",
       "status_reason": "0 of 5 lanes executed as far as declared; the rest are stated per lane",
-      "outcome": {
-        "candidates": 14,
-        "accepted": 1,
-        "rejected": 3,
-        "duplicate": 0,
-        "held": 7,
-        "out_of_scope": 3
-      },
+      "outcome": {},
       "plan": {
         "document": "docs/countries/OM_SYSTEMATIC_SWEEP.md",
         "commit": "e825386"
@@ -155,7 +148,8 @@
           "limitation": "The shared search allowance ran out before every declared query was run. Not run in every language its plan requires. The search tool gave little weight to year terms, so earlier years were reached mainly through publishers' own listings. Official statements were read as carried by other publishers, not on the issuing body's own site. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
           "carried_forward": false
         }
-      ]
+      ],
+      "under_review": true
     },
     {
       "date": "2026-11-11",
@@ -168,14 +162,7 @@
       "scope": "continuation of the iteration-19 pass: lanes as declared in docs/countries/OM_SYSTEMATIC_SWEEP.md, work order in docs/countries/GULF_CONTINUATION_PLAN_20.md; each lane states its execution after both passes; inclusion clauses 1-7 read strictly; every published record reviewed blind by three independent roles and confirmed on its final text",
       "status": "partial",
       "status_reason": "1 of 5 lanes executed as far as declared; the rest are stated per lane",
-      "outcome": {
-        "candidates": 15,
-        "accepted": 0,
-        "rejected": 2,
-        "duplicate": 0,
-        "held": 4,
-        "out_of_scope": 9
-      },
+      "outcome": {},
       "plan": {
         "document": "docs/countries/GULF_CONTINUATION_PLAN_20.md",
         "commit": "c03bff6",
@@ -314,7 +301,8 @@
       "continues": {
         "date": "2026-11-11",
         "by": "iteration-19 Gulf research pass"
-      }
+      },
+      "under_review": true
     }
   ]
 }

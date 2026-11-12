@@ -76,9 +76,9 @@ language is `partial`. Every lane-accepted record goes through blind three-role 
 | OM4 | partial; stopped by search limit | current_through_end_date | 2025-12-31 | 3 of 4 | 5 of 9 | ar, en | ar, en |
 | OM5 | partial; stopped by search limit | no_census_exists | not reached | 7 of 20 | 64 | ar, en | ar |
 
-Candidates 14: accepted after blind review 1, rejected 3, duplicate 0, held 7, out of scope 3. Published records in this system after the pass: 1.
+Candidate counts are kept in the local research queue (iteration 20 safety review). Published records in this system after the pass: 1.
 
-**Result.** 1 record from this pass is published. 7 candidates are held: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The published record is accepted under clause 5 on stated extent with no customer count (see the correction note in OM_SOURCE_AUDIT.md). Ministry, regulator and operator publication pages were mostly script-only or larger than the fetch tool reads.
+**Result.** 1 record from this pass is published. Additional candidates remain under review: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The published record is accepted under clause 5 on stated extent with no customer count (see the correction note in OM_SOURCE_AUDIT.md). Ministry, regulator and operator publication pages were mostly script-only or larger than the fetch tool reads.
 
 **Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
 

@@ -270,6 +270,18 @@ STRICT_HOLDS = {
     "us-2025-05-07-hunt-tuscaloosa-coker-fire", "us-2025-06-14-marathon-galveston-bay-fire",
     "us-2025-08-14-phillips66-linden-fcc-fire", "in-2022-02-21-chandigarh-power-strike-blackout",
     "in-2023-06-15-biparjoy-gujarat-power-outage", "us-2022-12-23-pjm-forced-outages-elliott",
+    # Methodology red team, round two (§13): fail the written rule, or analogous records are held.
+    "us-2022-12-24-gulf-coast-refineries-cold-shutdowns", "cn-2023-02-22-alxa-xinjing-open-pit-collapse",
+    "us-2023-02-23-pemex-deer-park-crude-unit-fire", "us-2024-10-10-pemex-deer-park-h2s-release",
+    "us-2022-06-10-california-firm-load-shed", "us-2024-04-28-texas-new-mexico-firm-load-shed",
+    "us-2025-04-02-louisiana-firm-load-shed", "us-2025-04-26-louisiana-firm-load-shed",
+    "us-2024-02-03-tgp-line-100-1-mississippi", "us-2025-03-30-michigan-ice-storm-outages",
+    "us-2023-03-03-michigan-storm-outages", "us-2022-12-23-winter-storm-elliott-maine-outages",
+    "us-2026-01-24-winter-storm-fern-mississippi-outages", "us-2026-10-09-hurricane-isaias-outages",
+    "in-2024-10-23-cyclone-dana-odisha-port-suspensions",
+    "sa-2026-09-11-east-west-pipeline-shutdown",
+    # Safety red team (D-10): facility-named records of a class with attack records in the campaign window.
+    "kw-2025-10-21-refinery-fire-partial-shutdown", "kw-2023-11-12-refinery-production-halt-fuel-gas-loss",
 }
 # Held attack records whose ids name their facility, by digest: a public file names no held attack
 # record (§48). sha256 of the id, first 16 hex digits.
@@ -293,7 +305,7 @@ def test_no_record_held_on_a_strict_reading_is_published():
 
 
 RESTRICTED = ("ae", "bh", "iq", "ir", "kw", "om", "qa", "sa")
-TAG = re.compile(r"\[(C[1-7]-[A-Z]+|ROUTE|NO-EFFECT|SHARE-ONLY|TAXONOMY|SINGLE-SITE)\]")
+TAG = re.compile(r"\[(C[1-7]-[A-Z]+|ROUTE|NO-EFFECT|SHARE-ONLY|TAXONOMY|SINGLE-SITE|D-10)\]")
 
 
 def test_every_strict_hold_is_on_file_with_its_tag():
@@ -346,14 +358,18 @@ def test_no_published_clause_5_record_counts_people_as_customers():
         for e in _curated(sid):
             if e["criterion_met"] == 5:
                 cap = e.get("capacity_affected") or {}
+                basis = e.get("threshold_basis") or ""
                 if cap.get("unit") == "people":
-                    assert "customers" in (e.get("threshold_basis") or "") or "outages" in (e.get("threshold_basis") or ""), e["event_id"]
+                    assert "customers" in basis or "outages" in basis, e["event_id"]
+                # The basis, not only the unit field: "200,000 people" written up as customers.
+                if re.search(r"\bpeople\b", basis) and not re.search(r"customers|outages|accounts|connections|households", basis):
+                    raise AssertionError(f"{e['event_id']}: clause 5 on a count of people")
 
 
 def test_no_published_clause_4_record_rests_on_demand_alone():
     for sid in COUNTRIES:
         for e in _curated(sid):
-            if e["criterion_met"] == 4 and re.search(r"load rise|demand (peak|rise)", e.get("threshold_basis") or "", re.I):
+            if e["criterion_met"] == 4 and re.search(r"load rise|demand (peak|rise)|(peak|rising) demand", e.get("threshold_basis") or "", re.I):
                 assert re.search(r"shortfall|unable|deficit|out of service|lost|offline", e.get("effect") or "", re.I), e["event_id"]
 
 
@@ -361,7 +377,7 @@ def test_no_published_clause_1_record_rests_on_an_unquantified_partial_effect():
     vague = re.compile(r"\b(some units|a number of units|several process units|reduced (operating )?rates|cut back|"
                        r"temporary reduction|affected exports|production outage)\b", re.I)
     shut = re.compile(r"\b(refinery (fully )?shut|whole|entire|sitewide|full refinery shutdown|shut down|"
-                      r"knocked out of production|b/d|bpd|Bcf/d|crude unit|trains?|low level|thousand tonnes|operations were suspended)\b", re.I)
+                      r"knocked out of production|b/d|bpd|Bcf/d|crude unit|trains?|thousand tonnes|operations were suspended)\b", re.I)
     for sid in COUNTRIES:
         for e in _curated(sid):
             if e["criterion_met"] == 1 and vague.search(e.get("effect") or ""):
@@ -404,7 +420,7 @@ LOG = {"passes": [{"date": "2026-11-11", "kind": "systematic", "outcome": {"reco
 def test_a_campaign_page_says_candidates_remain_under_review_never_how_many():
     assert B.public_research_log(LOG, False) is LOG
     out = B.public_research_log(LOG, True)
-    assert [p["outcome"] for p in out["passes"]] == [{"records": 1}, {"records": 2}, {"records": 2}]
+    assert [p["outcome"] for p in out["passes"]] == [{}, {}, {}]
     assert [p["under_review"] for p in out["passes"]] == [True, True, False]
     assert LOG["passes"][0]["outcome"]["held"] == 4, "the canonical log is not changed"
 
@@ -442,6 +458,34 @@ def test_a_country_under_the_campaign_policy_shows_the_comparison_year_only():
         else:
             assert row["newer"] == (curated[row["a3"]].get("newer") or {}), row["a3"]
     assert guarded, "no restricted country had a newer value to withhold: this test proved nothing"
+
+
+@needs_payload
+def test_a_campaign_country_page_shows_no_profile_figure_newer_than_the_comparison_year():
+    year = json.loads((ROOT / "data" / "curated" / "global_context" / "energy_context.json").read_text(encoding="utf-8"))["comparison_year"]
+    assert B.load_campaigns()["profile_year_cap"]["year"] == year, "the cap follows the context comparison year"
+    states = B.load_campaigns().get("system_states") or {}
+    guarded = 0
+    for sid in COUNTRIES:
+        s = json.loads((WEB / "systems" / sid / "system.json").read_text(encoding="utf-8"))
+        curated = json.loads((CURATED / sid / "profile.json").read_text(encoding="utf-8"))
+        newer = [m for m in curated["metrics"] if isinstance(m.get("year"), int) and m["year"] > year]
+        if (states.get(sid) or {}).get("state") in B.RESTRICTING_STATES:
+            assert all(not (isinstance(m.get("year"), int) and m["year"] > year) for m in s["profile"]["metrics"]), sid
+            guarded += bool(newer)
+        else:
+            assert len(s["profile"]["metrics"]) == len(curated["metrics"]), sid
+    assert guarded, "no campaign country had a newer figure to withhold: this test proved nothing"
+
+
+def test_the_committed_research_log_of_a_campaign_system_carries_no_counts():
+    states = B.load_campaigns().get("system_states") or {}
+    for sid in COUNTRIES:
+        if (states.get(sid) or {}).get("state") not in B.RESTRICTING_STATES:
+            continue
+        for p in json.loads((CURATED / sid / "research_log.json").read_text(encoding="utf-8"))["passes"]:
+            assert p.get("outcome") == {}, (sid, p["date"])
+            assert isinstance(p.get("under_review"), bool), (sid, p["date"])
 
 
 # --- §44 single-site classes ---------------------------------------------------------------------
@@ -510,7 +554,7 @@ def test_a_citation_is_judged_by_where_it_lands(monkeypatch):
     tokens = {"laffan"}
     assert imp.unpublishable_address("https://ex.org/node/2636397", tokens), "the address it lands on names the place"
     assert imp.unpublishable_address("https://ex.org/article/744381", tokens), "an opaque link never read"
-    assert imp.unpublishable_address("https://ex.org/?p=587846", tokens), "a short link never read"
+    assert imp.unpublishable_address("https://ex.org/?p=500001", tokens), "a short link never read"
     assert not imp.unpublishable_address("https://ex.org/news/power-cuts-reported-nationwide", tokens)
     assert imp.opaque_unresolved("https://ex.org/ar/article/74438")
     assert not imp.opaque_unresolved("https://ex.org/node/2636397")
@@ -571,6 +615,78 @@ def test_every_served_capacity_block_has_one_shape_per_qualifier():
                 seen += 1
                 assert B.capacity_problems(e["event_id"], cap) == [], e["event_id"]
     assert seen
+
+
+# --- the address gate reads every spelling (geography red team, round two) -----------------------
+
+GATE_CASES = [
+    ("ir", "https://www.mehrnews.com/news/6509376/%D8%A8%D8%B1%D9%82-%D8%AA%D9%87%D8%B1%D8%A7%D9%86"),
+    ("ir", "https://example.ir/news/qom-oil-depot-fire"), ("ir", "https://example.ir/fa/آتش-سوزی-در-بوشهر"),
+    ("iq", "https://example.com/dhi-qar-power-station-fire"), ("iq", "https://example.com/thi-qar-oil"),
+    ("iq", "https://example.com/حريق-بالبصرة"), ("iq", "https://example.com/البصره"), ("iq", "https://example.com/إربيل-x"),
+    ("iq", "https://basra.example.com/news/2025/fire"), ("iq", "https://example.com/attack-on-kurdistan-region-gas-field"),
+    ("bh", "https://example.com/manama-power-outage"), ("bh", "https://example.com/muharraq-fire"),
+    ("qa", "https://example.com/al-khor-industrial-fire"), ("qa", "https://example.com/الخور"),
+    ("kw", "https://example.com/jahra-power-station"),
+    ("kw", "https://example.com/%25D8%25A7%25D9%2584%25D8%25A3%25D8%25AD%25D9%2585%25D8%25AF%25D9%258A"),
+    ("ae", "https://example.com/ras-al-khaima-fire"), ("ae", "https://example.com/أبو-ظبي"), ("ae", "https://example.com/حريق-بالفجيرة"),
+    ("om", "https://example.com/ظفار"), ("om", "https://example.com/sharqiya-fire"),
+]
+
+
+def _gate_words(cc):
+    imp = _load("import_candidates")
+    doc = json.loads((CURATED / cc / "system.json").read_text(encoding="utf-8"))
+    feats = json.loads((WEB / "systems" / cc / "regions.geojson").read_text(encoding="utf-8"))["features"]
+    us = [(f["properties"]["code"], f["properties"]["name"], None) for f in feats]
+    return imp, set(imp.unit_words(B.unit_name_rows(doc, us))) | {B.fold(w) for w in doc["geography"]["precision_policy"].get("region_words") or []}
+
+
+@needs_payload
+@pytest.mark.parametrize("cc,url", GATE_CASES)
+def test_the_gate_reads_a_place_in_any_common_spelling(cc, url):
+    imp, words = _gate_words(cc)
+    assert imp.unpublishable_address(url, words), url
+
+
+@needs_payload
+@pytest.mark.parametrize("cc,url", [("kw", "https://example.com/news/power-cuts-reported-nationwide"),
+                                    ("ir", "https://example.com/news/electricity-outages-national-grid"),
+                                    ("ae", "https://example.com/news/energy-ministry-statement-on-supply")])
+def test_the_gate_still_publishes_an_address_that_names_no_place(cc, url):
+    imp, words = _gate_words(cc)
+    assert not imp.unpublishable_address(url, words), url
+
+
+def test_fold_makes_one_word_of_every_spelling():
+    assert B.fold("Al Muḩarraq") == "al muharraq"
+    assert B.fold("إربيل") == B.fold("اربيل")
+    assert B.fold("البصرة") == B.fold("البصره")
+    assert B.fold("کرکوک") == B.fold("كركوك")
+    assert B.fold("الأنـبار") == B.fold("الانبار")
+    assert B.fold("%25D8%25A8") == B.fold("ب")
+
+
+def test_method_and_route_wording_is_read_after_folding():
+    for u in ("/mortar-attack-on-gas-field", "/ied-blast-at-power-line", "/artillery-hits-refinery", "/airstrike-on-refinery",
+              "/%D9%82%D8%B5%D9%81-%D9%85%D8%B5%D9%81%D8%A7%D8%A9", "/بمُسيّرة", "/مسیرة", "/بمباران"):
+        assert B.method_in_address(u), u
+    assert B.ROUTE_WORDING.search(B.address_words("/نفت‌کش"))
+    assert not B.ROUTE_WORDING.search(B.address_words("/hormozgan-power-outage"))
+
+
+def test_every_unit_of_a_country_policy_system_has_a_native_script_and_a_latin_name():
+    for cc in ("ae", "bh", "iq", "ir", "kw", "om", "qa"):
+        doc = json.loads((CURATED / cc / "system.json").read_text(encoding="utf-8"))
+        al = doc["geography"].get("unit_aliases") or {}
+        feats = json.loads((WEB / "systems" / cc / "regions.geojson").read_text(encoding="utf-8"))["features"]
+        for f in feats:
+            code = f["properties"]["code"]
+            if code.endswith("~"):
+                continue
+            names = [f["properties"]["name"], *al.get(code, [])]
+            assert any(n.isascii() for n in names), (cc, code)
+            assert any(not n.isascii() for n in names), (cc, code, "no name in Arabic or Persian script")
 
 
 # --- §110 mutation harness ----------------------------------------------------------------------

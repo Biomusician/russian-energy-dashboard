@@ -45,7 +45,15 @@
     ],
     "precision_policy": {
       "kinetic": "country",
-      "reason": "Attacks on energy facilities in Iraq have been reported from 2022 to this month. In the governorates where most were reported, a governorate and an infrastructure class together name one facility, and publishing some governorates but not others would show which. An attack or sabotage record is therefore recorded for the country, with no governorate, facility or operator. Other events (accidents, grid failures, fuel-supply shortfalls) are placed by governorate."
+      "reason": "Attacks on energy facilities in Iraq have been reported from 2022 to this month. In the governorates where most were reported, a governorate and an infrastructure class together name one facility, and publishing some governorates but not others would show which. An attack or sabotage record is therefore recorded for the country, with no governorate, facility or operator. Other events (accidents, grid failures, fuel-supply shortfalls) are placed by governorate.",
+      "region_words": [
+        "Kurdistan",
+        "Kurdistan Region",
+        "KRG",
+        "كردستان",
+        "کوردستان",
+        "إقليم كردستان"
+      ]
     },
     "display_names": {
       "IQ-TS": "Kirkuk",
@@ -58,7 +66,8 @@
       "IQ-TS": [
         "At-Ta'mim",
         "Tamim",
-        "كركوك"
+        "كركوك",
+        "کرکوک"
       ],
       "IQ-MU": [
         "Al-Muthannia",
@@ -82,12 +91,14 @@
         "Dihok",
         "Dohuk",
         "دهوك",
-        "دهۆک"
+        "دهۆک",
+        "دهوک"
       ],
       "IQ-BA": [
         "Basra",
         "Basrah",
-        "البصرة"
+        "البصرة",
+        "البصره"
       ],
       "IQ-SU": [
         "Sulaymaniyah",
@@ -112,7 +123,8 @@
       "IQ-KA": [
         "Karbala",
         "Kerbala",
-        "كربلاء"
+        "كربلاء",
+        "كربلا"
       ],
       "IQ-AN": [
         "Anbar",
@@ -137,7 +149,8 @@
         "بابل"
       ],
       "IQ-DI": [
-        "ديالى"
+        "ديالى",
+        "دیالی"
       ],
       "IQ-WA": [
         "واسط"

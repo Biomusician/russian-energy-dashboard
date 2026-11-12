@@ -81,9 +81,9 @@ listing first; then run queries in the order KW4 (2026 back to 2022, Arabic firs
 | KW3 | partial; stopped by search limit | no_census_exists | not reached | 2 of 4 | - | ar, en | ar |
 | KW4 | partial; stopped by search limit | no_census_exists | not reached | 9 of 20 | - | ar, en | ar |
 
-Candidates 48: accepted after blind review 5, rejected 12, duplicate 11, held 18, out of scope 2. Published records in this system after the pass: 5.
+Candidate counts are kept in the local research queue (iteration 20 safety review). Published records in this system after the pass: 5.
 
-**Result.** 5 records from this pass are published. 18 candidates are held: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The ministry's Arabic and English listings were read by title for the window.
+**Result.** 5 records from this pass are published. Additional candidates remain under review: by a reviewer, by the lead, by the import gate, or for an owner decision (ITERATION_19_REVIEW.md, section 27). What each one is stays in the local review queue. The ministry's Arabic and English listings were read by title for the window.
 
 **Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
 

@@ -275,7 +275,7 @@ red team. Each turns on a rule:
   question as the December 2023 record.
 
 Other questions raised in review, not holding records: Ras Tanura's published capacity figure may
-overstate (the ministry said "some units"); the Jazan hold; Houston peak versus total; the CA
+overstate (the ministry said "some units"); a Saudi hold; Houston peak versus total; the CA
 snowstorm ECCC source and the Milton Fox Weather source should probably record `opened: true`
 (role A opened them).
 

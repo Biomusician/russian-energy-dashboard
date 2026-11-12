@@ -354,6 +354,25 @@ test.describe("Gulf error containment", () => {
     await expect(page.getByRole("region", { name: "Monitored systems in this view" }).getByRole("article")).toHaveCount(8);
   });
 
+  test("a corrupt source-health block is contained: that country is refused and the others still work", async ({ app, page }) => {
+    // Iteration 20 (§122). Before the load-time check this crashed the page during render.
+    app.allowConsoleError(/malformed payload|source_health/);
+    await page.route("**/data/systems/iq/system.json", async (route) => {
+      const response = await route.fetch();
+      const d = await response.json();
+      d.source_health = "corrupt";
+      await route.fulfill({ response, json: d });
+    });
+    await page.goto("/?sys=iq");
+    await expect(page.getByRole("alert")).toContainText("could not be loaded");
+    const picker = page.getByRole("combobox", { name: "Monitored system" });
+    await picker.selectOption("kw");
+    await expect(page.getByRole("heading", { name: "Kuwait", level: 1 })).toBeVisible();
+    await app.mapIdle();
+    await picker.selectOption("group:gulf");
+    await expect(page.getByRole("heading", { name: "Gulf littoral overview", level: 1 })).toBeVisible();
+  });
+
   test("a corrupt Gulf context is contained: the view says so and every country still opens", async ({ app, page }) => {
     app.allowConsoleError(/status of 500|Unexpected token|JSON/);
     await page.route("**/data/global/gulf.json", (route) => route.fulfill({ status: 200, contentType: "application/json", body: "<html>" }));
@@ -459,7 +478,7 @@ test.describe("Iteration 20 page rules", () => {
   test("Saudi Arabia's older convention is stated plainly, and only where it applies", async ({ app, page }) => {
     await app.open("?sys=sa");
     await expect(page.locator(".legacy-convention")).toContainText("was onboarded before the newer rule for the Gulf countries");
-    await expect(page.locator(".legacy-convention")).toContainText("Method tab");
+    await expect(page.locator(".legacy-convention")).toContainText("Why no score tab");
     for (const id of ["kw", "bh", "us"]) {
       await app.open(`?sys=${id}`);
       await expect(page.locator(".legacy-convention")).toHaveCount(0);

@@ -162,8 +162,8 @@ See [ITERATION_16_REVIEW.md](ITERATION_16_REVIEW.md); its last section lists the
 - **Active-campaign publication policy.** For Saudi Arabia, a record's event is published, but
   not the facility's restart or operating status. That covers citations whose address states
   status, citations published more than 7 days after the event, and records at a struck site
-  named in `conflict_campaigns.json` → `also_covers`. Jazan is held because its only citation
-  is an article whose address states facility status. The theatre is recorded but not under the policy: owner decision.
+  named in `conflict_campaigns.json` → `also_covers`. A record whose only citation's address states
+  facility status is held. The theatre is recorded but not under the policy: owner decision.
   [CURRENT_EVENT_PUBLICATION_POLICY.md](CURRENT_EVENT_PUBLICATION_POLICY.md).
 - **Episodes are explicit.**
   - `named_hazard`: every record naming the hazard, and only those.

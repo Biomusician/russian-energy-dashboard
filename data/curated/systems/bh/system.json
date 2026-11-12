@@ -40,6 +40,38 @@
           "basis": "The lead's reading of public reporting (iteration 20): one LNG import terminal. Not yet confirmed in the source audit; an entry here can only hold a record, never publish one."
         }
       }
+    },
+    "unit_aliases": {
+      "BH-13": [
+        "Manama",
+        "Capital Governorate",
+        "المنامة",
+        "العاصمة"
+      ],
+      "BH-14": [
+        "Southern Governorate",
+        "Janubiyah",
+        "الجنوبية",
+        "Awali",
+        "عوالي"
+      ],
+      "BH-15": [
+        "Muharraq",
+        "Muharaq",
+        "المحرق"
+      ],
+      "BH-16": [
+        "Wusta",
+        "Central Governorate",
+        "الوسطى",
+        "Sitra",
+        "سترة"
+      ],
+      "BH-17": [
+        "Northern Governorate",
+        "Shamaliyah",
+        "الشمالية"
+      ]
     }
   },
   "sectors": [

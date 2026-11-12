@@ -28,7 +28,7 @@ Hard rules, each tested in `tests/test_iteration18.py`:
   held apart under `newer` and labelled with its year.
 - Colour ramp is its own sequential scale, unlike the disruption palette: a large producer must not
   look like a damaged one.
-- Rows sort by name. The table can be sorted on the reader's own request, and the world profile lists the six largest producers alphabetically. No position number is shown. **The sort is an owner question** (`docs/ITERATION_18_REVIEW.md` §15): these are national aggregates, not assets, but a descending sort is a ranking.
+- Rows sort by name. The table can be sorted on the reader's own request. Since iteration 20 the world profile lists no "largest producers" at all, alphabetical or not (brief §80: no rank language). No position number is shown. **The sort is an owner question** (`docs/ITERATION_18_REVIEW.md` §15): these are national aggregates, not assets, but a descending sort is a ranking.
 
 ## Metrics
 

@@ -392,65 +392,6 @@
         }
       },
       "hazard_name": null
-    },
-    {
-      "event_id": "sa-2026-09-11-east-west-pipeline-shutdown",
-      "date": "2026-09-11",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": null,
-      "geography_precision": "country",
-      "regions_affected": [
-        "SA-01",
-        "SA-03"
-      ],
-      "facility_name": "East-West crude pipeline",
-      "facility_name_local": "خط أنابيب شرق - غرب",
-      "operator": "Saudi Aramco",
-      "asset_class": "pipeline_oil",
-      "cause": "kinetic_strike",
-      "summary": "The energy ministry said the East-West crude pipeline was shut 'as a precautionary measure' after multiple attacks.",
-      "effect": "Pipeline shut down (ministry).",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 3,
-      "threshold_basis": "Clause 3: official statement that a crude trunk pipeline was shut down.",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://www.thenationalnews.com/news/2026/09/11/saudi-arabia-closes-east-west-oil-pipeline-following-attacks/",
-          "publisher": "The National",
-          "date": "2026-09-11",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        }
-      ],
-      "recovery": {
-        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-11-03",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 1,
-        "sources_opened_by_reviewer": 1,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "not recorded by the research lane",
-        "roles": {
-          "evidence": "accept_with_correction",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
     }
   ]
 }

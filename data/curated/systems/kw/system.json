@@ -26,6 +26,48 @@
     "precision_policy": {
       "kinetic": "country",
       "reason": "Kuwait's refineries, export terminals and most large power and water plants sit in two or three governorates, so a governorate and a class together name the facility. Attacks and sabotage are recorded for the country, with no governorate, facility or operator. Other events are placed by governorate."
+    },
+    "unit_aliases": {
+      "KW-AH": [
+        "Ahmadi",
+        "الأحمدي",
+        "الاحمدي",
+        "Mina al-Ahmadi",
+        "Mina Abdullah",
+        "ميناء عبدالله",
+        "Zour",
+        "Al-Zour",
+        "الزور",
+        "Shuaiba",
+        "Shuaibah",
+        "الشعيبة",
+        "Fahaheel",
+        "الفحيحيل"
+      ],
+      "KW-FA": [
+        "Farwaniya",
+        "Farwaniyah",
+        "الفروانية"
+      ],
+      "KW-HA": [
+        "حولي"
+      ],
+      "KW-JA": [
+        "Jahra",
+        "Jahrah",
+        "الجهراء",
+        "الجهرا"
+      ],
+      "KW-KU": [
+        "Capital Governorate",
+        "Kuwait City",
+        "العاصمة"
+      ],
+      "KW-MU": [
+        "Mubarak Al-Kabir",
+        "مبارك الكبير",
+        "Sabah Al-Salem"
+      ]
     }
   },
   "sectors": [
