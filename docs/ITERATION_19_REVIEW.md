@@ -484,11 +484,32 @@ monitored country's detached parts are now kept.
 
 ## 22. Tests
 
-TESTS_PLACEHOLDER
+Release gate, run on `23c309b` (the pushed commit). Exact totals:
+
+| Gate | Result |
+|---|---|
+| Python suite (`pytest`) | 898 passed, 2 skipped |
+| Publication gate, geography, source/provenance, language/date, historical regression | inside the Python suite; all pass |
+| Frontend unit (`vitest`) | 266 passed, 20 files |
+| Typecheck (`tsc --noEmit`) | clean |
+| Production build (`vite build`) | clean |
+| Playwright, every spec (incl. Gulf, visual structure, goldens) | 199 passed, 1 skipped |
+| Mutation campaign | 133 mutations, 133 caught |
+| Served-JSON safety scan (local build) | 0 problems over 28 files, 20 Gulf records, 30 lanes |
+| Next-day refresh simulation | clean worktree at the release commit, clock set to 2026-11-12, the bot's steps from `refresh.yml`: build succeeds with no Gulf source fetched, 874 gated tests pass, change detection reports a substantive change, staged-artifact verification passes. The ESDI moves by time decay only. |
+
+At the checkpoint the counts were Python 613, vitest 254, Playwright 131, mutations 56.
 
 ## 23. Mutations
 
-MUTATIONS_PLACEHOLDER
+133 mutations, 133 caught (56 at the start of the iteration). New this iteration: 49 for the Gulf
+rules, 11 from the blind safety review of the first packets, and 17 for the rules added after the
+release reviews. The first full run caught 130: three survivors showed tests that checked less than
+their names said (the headline-pairing rule was never reached because both strings failed the
+wording rule on their own; the campaign-text check was tested as a function but not as part of
+what stops a build; the registry was not checked for a membership given a page). All three tests
+were strengthened and the whole campaign re-run. A test now also fails if any mutation's anchor
+text has drifted, which had silently ended an earlier run.
 
 ## 24. Red teams
 
@@ -554,7 +575,35 @@ first screen on a phone, which is explanation before map by design.
 
 ## 25. Production
 
-PRODUCTION_PLACEHOLDER
+| | |
+|---|---|
+| Start SHA | local `8e51bb7` (iteration 18, unpushed); `origin/main` `f74a12b` |
+| Released SHA | `23c309b`, pushed 2026-11-12 (UTC) as a fast-forward of `f74a12b`; ships iterations 18 and 19 together |
+| Deployed SHA | `23c309b`, GitHub deployment environment "Production", status success |
+| Build | payload built 2026-11-12T01:50:40Z |
+
+- **Served files.** The manifest, the four global payloads and the three payloads of each of the
+  eight Gulf systems were fetched from production and compared with the release commit: identical
+  (the manifest differs only in line endings from a local working copy).
+- **Production browser suite** (`E2E_BASE_URL` set to production; screenshot goldens and visual
+  structure excluded, as they are tied to this machine's renderer): 191 passed, 1 skipped, over the
+  Gulf, global, context, theatre, history and smoke specs. That covers the home page, the Gulf
+  overview, all eight Gulf country pages, the existing systems, keyboard routes, error
+  containment, phone and tablet widths, and no console errors.
+- **Safety scan of the served JSON**: 0 problems. It checked 28 files: no coordinate-like key in
+  any event or system payload; every Gulf attack record under the campaign policy with its
+  recovery block withheld; in the seven new systems, attack records at country level with an
+  opaque id, no headline, no method and no short-link citation; no status wording on a covered
+  record; campaign bases and research notes as the rules allow; no route, target or vulnerability
+  wording; no unit serving a count where none applies; the regional payload free of forbidden keys
+  and record ids.
+- **Context.** The national context is EIA International Energy Statistics, 2024, as built.
+- **Counts as served.** Thirteen systems; twelve countries in the corpus with 208 records in 176
+  episodes. Gulf: Bahrain 0, Iran 0, Iraq 5, Kuwait 5, Oman 1, Qatar 0, Saudi Arabia 9, United
+  Arab Emirates 0. No country system has an index.
+- **Exports.** The Gulf brief and the country images for Iran, Iraq, Qatar, the UAE, Oman and Saudi
+  Arabia were downloaded from production by the browser suite and checked for size and content;
+  print and PDF layout was checked the same way.
 
 ## 26. Unverified
 
