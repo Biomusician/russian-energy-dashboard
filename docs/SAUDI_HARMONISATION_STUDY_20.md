@@ -7,9 +7,12 @@ seven publish an attack or sabotage record at **country level**, with no facilit
 region, an opaque id, and no headline. Saudi Arabia's attack records keep the earlier convention:
 the facility is named, the record sits in a first-level region, and its id names both.
 
-Saudi Arabia's published corpus after the iteration-20 strict-reading audit is seven records. Six
-are attack records under the campaign policy. Five of the six are placed in a region, and four of
-those in the same one. One pipeline record lists two regions. Two carry a per-site figure: one the
+Saudi Arabia's published corpus after the iteration-20 strict-reading audit was seven records; the
+methodology red team then held the precautionary pipeline-shutdown record, leaving six, of which
+five are attack records under the campaign policy. (The paragraph below describes the six attack
+records as the audit found them; the held pipeline record, which listed two regions, was one.) Five
+of the six were placed in a region, and four of those in the same one. One pipeline record listed
+two regions. Two carry a per-site figure: one the
 refinery's nameplate (marked `facility_size` since iteration 20) and one a stated production
 reduction. At least one citation address names the attack method, the facility and its nameplate
 capacity together. Each attack record's recovery status, end date and status-bearing citations are already
