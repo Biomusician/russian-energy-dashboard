@@ -2,78 +2,6 @@
   "system_id": "sa",
   "events": [
     {
-      "event_id": "sa-2022-03-20-yasref-yanbu",
-      "date": "2022-03-20",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "SA-03",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": "YASREF refinery",
-      "facility_name_local": "مصفاة ياسرف",
-      "operator": "Yanbu Aramco Sinopec Refining Co. (Aramco / Sinopec JV)",
-      "asset_class": "refinery",
-      "cause": "kinetic_strike",
-      "summary": "The Saudi energy ministry said an attack on YASREF facilities led to a temporary reduction in the refinery's production.",
-      "effect": "Ministry: the attack led to a temporary reduction in the refinery's production. No volume or duration given.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 1,
-      "threshold_basis": "Clause 1: official statement of a reduction in refinery throughput following an attack.",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://www.timesofisrael.com/houthi-drone-attack-causes-temporary-reduction-in-saudi-oil-output/",
-          "publisher": "The Times of Israel (AFP)",
-          "date": "2022-03-20",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://www.saudigazette.com.sa/article/618361/SAUDI-ARABIA/Temporary-reduction-in-YASREF-refinerys-production-following-drone-attack-Ministry",
-          "publisher": "Saudi Gazette",
-          "date": "2022-03-20",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://www.spglobal.com/energy/en/news-research/latest-news/crude-oil/032022-saudi-arabias-yasref-refinery-output-disrupted-from-attacks-ministry",
-          "publisher": "S&P Global Commodity Insights",
-          "date": "2022-03-20",
-          "language": "en",
-          "source_role": "industry",
-          "opened": null
-        }
-      ],
-      "recovery": {
-        "research_status": "RESEARCHED_NO_PUBLIC_EVIDENCE",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-11-03",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 3,
-        "sources_opened_by_reviewer": 1,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "not recorded by the research lane",
-        "roles": {
-          "evidence": "accept",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
-    },
-    {
       "event_id": "sa-2026-02-23-juaymah-lpg-export-halt",
       "date": "2026-02-23",
       "date_precision": "day",
@@ -149,6 +77,10 @@
       "threshold_basis": "Clause 1: refinery shut down after an attack, per official statement.",
       "capacity_affected": {
         "value": 550000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "facility_size",
         "unit": "bbl/d",
         "source_says": "Bloomberg/World Oil: the 550,000 b/d refinery was shut."
       },
@@ -218,7 +150,7 @@
       "capacity_affected": null,
       "sources": [
         {
-          "url": "https://boereport.com/2026/03/19/saudi-port-of-yanbu-stops-oil-loadings-two-sources-say/amp/",
+          "url": "https://boereport.com/2026/03/19/saudi-port-of-yanbu-stops-oil-loadings-two-sources-say/",
           "publisher": "BOE Report (Reuters)",
           "date": "2026-03-19",
           "language": "en",
@@ -319,7 +251,7 @@
     },
     {
       "event_id": "sa-2026-04-khurais-production-cut",
-      "date": "2026-04-01",
+      "date": "2026-04",
       "date_precision": "month",
       "date_end": null,
       "region_code": "SA-04",
@@ -337,6 +269,10 @@
       "threshold_basis": "Clause 7: official statement of production curtailed by a stated material volume.",
       "capacity_affected": {
         "value": 300000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "bbl/d",
         "source_says": "Energy ministry source via SPA, 9 Apr 2026: an earlier attack on Khurais reduced its output by 300,000 b/d of its production capacity."
       },
@@ -387,7 +323,7 @@
     },
     {
       "event_id": "sa-2026-04-manifa-production-cut",
-      "date": "2026-04-01",
+      "date": "2026-04",
       "date_precision": "month",
       "date_end": null,
       "region_code": "SA-04",
@@ -405,6 +341,10 @@
       "threshold_basis": "Clause 7: official statement of production curtailed by a stated material volume.",
       "capacity_affected": {
         "value": 300000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "bbl/d",
         "source_says": "Energy ministry source via SPA, 9 Apr 2026: Manifa output down by about 300,000 b/d."
       },
@@ -421,70 +361,6 @@
           "url": "https://www.thenationalnews.com/business/energy/2026/04/09/saudi-output-capacity-cut-by-600000-barrels-a-day-due-to-iran-war",
           "publisher": "The National",
           "date": "2026-04-09",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        }
-      ],
-      "recovery": {
-        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-11-03",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "confirmed",
-        "source_count": 2,
-        "sources_opened_by_reviewer": 2,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "not recorded by the research lane",
-        "roles": {
-          "evidence": "accept",
-          "safety": "accept",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "sa-2026-04-juaymah-processing-fires",
-      "date": "2026-04-01",
-      "date_precision": "month",
-      "date_end": null,
-      "region_code": "SA-04",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": "Juaymah processing facilities",
-      "facility_name_local": "الجعيمة",
-      "operator": "Saudi Aramco",
-      "asset_class": "gas_processing",
-      "cause": "kinetic_strike",
-      "summary": "The energy ministry reported on 9 April 2026 that fires at the Juaymah processing facilities affected LPG and NGL exports. The date of the fires was not given and may precede April.",
-      "effect": "Ministry: fires at Juaymah processing facilities affected exports of LPG and natural gas liquids. No volume or duration given.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 1,
-      "threshold_basis": "Clause 1: official statement of fires at a gas-processing facility affecting output/exports; no volume.",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://www.aleqt.com/الطاقة/توقف-العمليات-التشغيلية-في-عدد-من-منشآت-الطاقة-السعودية-8573",
-          "publisher": "Al-Eqtisadiah (republishing SPA)",
-          "date": "2026-04-09",
-          "language": "ar",
-          "source_role": "official",
-          "opened": null
-        },
-        {
-          "url": "https://amp.insurancejournal.com/news/international/2026/04/07/864740.htm",
-          "publisher": "Insurance Journal (Bloomberg)",
-          "date": "2026-04-07",
           "language": "en",
           "source_role": "media",
           "opened": null

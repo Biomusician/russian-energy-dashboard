@@ -25,10 +25,18 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from pipeline import build_systems  # noqa: E402
 
-SWEEP = ROOT / "data" / "candidates" / "gulf19"
+import os  # noqa: E402
+
+# EDM_PASS=20 writes the iteration-20 continuation (iteration 20 §4-5). The iteration-19 pass is
+# history: this script never rewrites a pass other than its own.
+PASS = os.environ.get("EDM_PASS", "19")
+SWEEP = ROOT / "data" / "candidates" / f"gulf{PASS}"
 SYS = ROOT / "data" / "curated" / "systems"
 PASS_DATE = "2026-11-11"
-PASS_BY = "iteration-19 Gulf research pass"
+PASS_BY = {"19": "iteration-19 Gulf research pass", "20": "iteration-20 Gulf continuation pass"}[PASS]
+LANE_GLOB = {"19": "{cc}_*_lanes.json", "20": "{cc}_lanes20.json"}[PASS]
+CONTINUES = {"20": {"date": "2026-11-11", "by": "iteration-19 Gulf research pass"}}.get(PASS)
+CONTINUATION_PLAN = "docs/countries/GULF_CONTINUATION_PLAN_20.md"
 PLAN_DOC = {cc: f"docs/countries/{cc.upper()}_SYSTEMATIC_SWEEP.md" for cc in ("ae", "bh", "iq", "ir", "kw", "om", "qa")}
 PLAN_DOC["sa"] = "docs/countries/SA_LANE_PASS_19.md"
 ORDER = ("not_started", "partial", "declared_search_complete", "enumerated_complete")
@@ -74,7 +82,7 @@ def registry_for(cc):
 
 def logs_for(cc):
     out = {}
-    for path in sorted(glob.glob(str(SWEEP / f"{cc}_*_lanes.json"))):
+    for path in sorted(glob.glob(str(SWEEP / LANE_GLOB.format(cc=cc)))):
         for lane in read(path).get("lanes", []):
             out.setdefault(lane["lane"], []).append(lane)
     return out
@@ -207,7 +215,7 @@ def pass_for(cc, commit):
     outcome = {k: 0 for k in OUTCOMES}
     qpath = ROOT / "data" / "candidates" / f"{cc}.json"
     for r in (read(qpath) if qpath.exists() else []):
-        if r.get("research_pass") != f"iteration-19-{cc}":
+        if r.get("research_pass") != f"iteration-{PASS}-{cc}":
             continue
         d = r.get("suggested_disposition")
         # "accepted" means passed blind review, not proposed by a researcher.
@@ -228,12 +236,21 @@ def pass_for(cc, commit):
         "plan": {"document": PLAN_DOC[cc], "commit": commit},
         "lanes": lanes,
     }
+    if CONTINUES:
+        # The lanes are the iteration-19 plan's (Part A, as committed); the work order is the
+        # continuation plan, committed in the same commit before any search.
+        entry["plan"] = {"document": CONTINUATION_PLAN, "commit": commit, "lanes_from": PLAN_DOC[cc]}
+        entry["continues"] = CONTINUES
+        entry["scope"] = (f"continuation of the iteration-19 pass: lanes as declared in {PLAN_DOC[cc]}, work order in "
+                          f"{CONTINUATION_PLAN}; each lane states its execution after both passes; inclusion clauses 1-7 "
+                          "read strictly; every published record reviewed blind by three independent roles and "
+                          "confirmed on its final text")
     for lane in lanes:
         problems = build_systems.lane_problems(lane, entry["window"])
         if problems:
             raise SystemExit(f"{cc}: " + "; ".join(problems))
     log["passes"] = [p for p in log["passes"] if not (p["date"] == PASS_DATE and p["by"] == PASS_BY)] + [entry]
-    path.write_text(json.dumps(log, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    path.write_bytes((json.dumps(log, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
     print(cc, {k: sum(1 for x in lanes if x["execution"] == k) for k in ORDER}, outcome)
 
 

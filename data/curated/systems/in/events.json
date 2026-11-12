@@ -2,78 +2,6 @@
   "system_id": "in",
   "events": [
     {
-      "event_id": "in-2022-02-21-chandigarh-power-strike-blackout",
-      "date": "2022-02-21",
-      "date_precision": "day",
-      "date_end": "2022-02-23",
-      "region_code": "IN-CH",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": "Chandigarh Electricity Department",
-      "asset_class": "system_wide",
-      "cause": "labour",
-      "summary": "A 72-hour strike by electricity department staff against privatisation, beginning the night of 21 Feb 2022, was followed by a blackout across large parts of the union territory lasting 36-40 hours. The army was called in to help restore supply.",
-      "effect": "Blackout across roughly half of Chandigarh (The Wire) lasting 36-40 hours.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 5,
-      "threshold_basis": "Clause 5: loss of supply across about half of a UT of ~1.1 million people for 36-40 hours (extent-based; no customer count published).",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://scroll.in/latest/1018068/scroll_in",
-          "publisher": "Scroll.in",
-          "date": "2022-02-23",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://thewire.in/urban/half-of-chandigarh-reels-from-blackout-admin-blames-electricity-workers-strike",
-          "publisher": "The Wire",
-          "date": "2022-02-23",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://www.tribuneindia.com/news/chandigarh/130-regular-power-staffers-behind-sabotage-in-chandigarh-probe-372862/amp",
-          "publisher": "The Tribune",
-          "date": "2022-02-25",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        }
-      ],
-      "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "partial_restoration",
-        "date": "2022-02-23",
-        "evidence": "Power restored in most parts of the city after 36+ hours (UT Adviser, 23 Feb 2022); employees rejoined work the evening of 23 Feb (some sectors still out that afternoon).",
-        "url": "https://scroll.in/latest/1018068/scroll_in"
-      },
-      "review": {
-        "reviewed_at": "2026-11-03",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 3,
-        "sources_opened_by_reviewer": 3,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "not recorded by the research lane",
-        "roles": {
-          "evidence": "accept_with_correction",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
-    },
-    {
       "event_id": "in-2023-03-16-uttar-pradesh-power-strike",
       "date": "2023-03-16",
       "date_precision": "day",
@@ -93,6 +21,10 @@
       "threshold_basis": "Clause 4 (power-plant units >=500 MW aggregate forced offline with reported supply effect) and clause 5 (~1.3 million households on urban feeders alone).",
       "capacity_affected": {
         "value": 2392,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "MW generation unavailable",
         "source_says": "2,392 MW power generation, which is 17 per cent of the total 13,856 MW demand, was not available (IANS)."
       },
@@ -114,7 +46,7 @@
           "opened": null
         },
         {
-          "url": "https://www.freepressjournal.in/amp/india/up-protesting-power-employees-call-off-strike-after-state-govts-assurance",
+          "url": "https://www.freepressjournal.in/india/up-protesting-power-employees-call-off-strike-after-state-govts-assurance",
           "publisher": "Free Press Journal",
           "date": "2023-03-19",
           "language": "en",
@@ -222,78 +154,6 @@
       "hazard_name": "Cyclone Biparjoy (2023)"
     },
     {
-      "event_id": "in-2023-06-15-biparjoy-gujarat-power-outage",
-      "date": "2023-06-15",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "IN-GJ",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": "Paschim Gujarat Vij Company Ltd (PGVCL) and other Gujarat discoms",
-      "asset_class": "system_wide",
-      "cause": "natural_hazard",
-      "summary": "Cyclone Biparjoy's landfall in Gujarat on 15-16 Jun 2023 damaged distribution infrastructure and cut power across Saurashtra-Kutch and parts of North Gujarat. Gujarat power companies estimated damage at Rs 1,013 crore.",
-      "effect": "Initially ~4,600 villages without power (Telangana Today); restoration later reported across 3,495 towns and 4,917 villages in eight districts, with 28 villages still pending on 22 Jun.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 5,
-      "threshold_basis": "Clause 5: loss of supply across thousands of villages and towns (well above 100,000 customers by extent; no customer count published).",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://www.sakshipost.com/news/widespread-damage-and-power-outages-cyclone-biparjoy-lashes-gujarat-200042",
-          "publisher": "Sakshi Post (IANS)",
-          "date": "2023-06-16",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://www.nationalheraldindia.com/amp/story/national/cyclone-biparjoy-gujarat-power-companies-suffer-rs-1013-cr-loss",
-          "publisher": "National Herald (IANS)",
-          "date": "2023-06-22",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://telanganatoday.com/cyclone-biparjoy-aftermath-1000-villages-in-gujarat-without-power-trees-uprooted-houses-damaged",
-          "publisher": "Telangana Today",
-          "date": "2023-06-17",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        }
-      ],
-      "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "partial_restoration",
-        "date": "2023-06-22",
-        "evidence": "By 22 Jun 2023 power restored in 3,495 towns and 4,917 villages; 28 villages pending due to waterlogging. Service restoration only.",
-        "url": "https://www.nationalheraldindia.com/amp/story/national/cyclone-biparjoy-gujarat-power-companies-suffer-rs-1013-cr-loss"
-      },
-      "review": {
-        "reviewed_at": "2026-11-03",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 3,
-        "sources_opened_by_reviewer": 3,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "not recorded by the research lane",
-        "roles": {
-          "evidence": "accept_with_correction",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": "Cyclone Biparjoy (2023)"
-    },
-    {
       "event_id": "in-2023-10-04-sikkim-glof-teesta-iii",
       "date": "2023-10-04",
       "date_precision": "day",
@@ -313,6 +173,10 @@
       "threshold_basis": "Clause 4: >=500 MW power plant forced offline with reported physical destruction.",
       "capacity_affected": {
         "value": 1200,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "facility_size",
         "unit": "MW installed",
         "source_says": "1.2 GW Teesta Stage III hydroelectric project"
       },
@@ -389,6 +253,10 @@
       "threshold_basis": "Clause 4: 510 MW hydro station forced offline with reported effect and an operator-confirmed outage period.",
       "capacity_affected": {
         "value": 510,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "facility_size",
         "unit": "MW installed",
         "source_says": "510 MW installed."
       },
@@ -467,6 +335,10 @@
       "threshold_basis": "Clause 5: ~400,000 consumers lost supply (distributor figure).",
       "capacity_affected": {
         "value": 440,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "MW load shed (TPDDL area)",
         "source_says": "TPDDL reported load shedding of 440 MW, affecting about 4 lakh consumers"
       },
@@ -568,7 +440,7 @@
           "opened": true
         },
         {
-          "url": "https://www.orissapost.com/cyclone-dana-great-danger-signal-number-10-issued-at-3-ports-in-odisha/amp/",
+          "url": "https://www.orissapost.com/cyclone-dana-great-danger-signal-number-10-issued-at-3-ports-in-odisha/",
           "publisher": "Orissa Post",
           "date": "2024-10-23",
           "language": "en",
@@ -682,6 +554,10 @@
       "threshold_basis": "Clause 1: refinery throughput materially cut with the effect reported: 8.30 TMT processed in June 2023 against a 267.00 TMT monthly target, attributed by the ministry to the fire.",
       "capacity_affected": {
         "value": 8.3,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "TMT crude processed in June 2023 (target 267.00)",
         "source_says": "Crude processed lower due to ... Fire"
       },
@@ -769,6 +645,10 @@
       "threshold_basis": "Clause 3: gas transmission pipeline section isolated and supply stopped (operator statement); regulator reports 464 industries, 176+ commercial customers and 21 CNG stations disrupted.",
       "capacity_affected": {
         "value": 464,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "industrial customers",
         "source_says": "464 industries, more than 176 commercial customers and supply to 21 nos. CNG stations"
       },

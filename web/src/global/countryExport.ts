@@ -1,3 +1,4 @@
+import { fillFitted } from "./canvasText";
 import { ENVIRONMENT_LABEL, labelFor, type CountrySystem } from "./manifest";
 import { DISPUTED, NO_EVENTS, type Scale } from "./countryScale";
 import { fmtValue, type ContextRow, type EnergyContext } from "./context";
@@ -28,11 +29,13 @@ export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, 
 
   const s = W / 1600;
   const pad = Math.round(24 * s);
+  // Every line fits the image whatever font the browser substitutes (canvasText.ts).
+  const fit = (t: string, x: number, y: number) => fillFitted(c, t, x, y, W - x - pad);
   c.fillStyle = BAND;
   c.fillRect(0, 0, W, Math.round(96 * s));
   c.fillStyle = INK;
   c.font = `600 ${Math.round(30 * s)}px ${SANS}`;
-  c.fillText(`${sys.name} — reported major energy disruptions`, pad, Math.round(42 * s));
+  fit(`${sys.name} — reported major energy disruptions`, pad, Math.round(42 * s));
   c.fillStyle = DIM;
   c.font = `${Math.round(16 * s)}px ${SANS}`;
   // The count never travels without the reporting environment that produced it (§6.4).
@@ -40,11 +43,13 @@ export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, 
   // An empty record is never "0 qualifying events ... reviewed null": the picture travels without
   // the page, so it carries the page's own sentence (release methodology red team, iteration 19).
   const passes = sys.research_log.passes.filter((p) => p.kind === "systematic");
-  const held = passes[passes.length - 1]?.outcome?.held ?? 0;
-  c.fillText(
+  const last = passes[passes.length - 1];
+  const held = last?.under_review !== undefined ? 0 : last?.outcome?.held ?? 0;
+  const reviewing = last?.under_review === true;
+  fit(
     sys.event_summary.recorded_events === 0
       ? `No index. No qualifying records in the current reviewed corpus (reporting: ${env}). ` +
-        `That describes this dataset, not ${sys.name}` + (held > 0 ? `; ${held} candidate records are held back and not shown.` : ".")
+        `That describes this dataset, not ${sys.name}` + (held > 0 ? `; ${held} candidate records are held back and not shown.` : reviewing ? "; additional candidates remain under review." : ".")
       : `No index. ${sys.event_summary.recorded_events} qualifying events in ${sys.event_summary.episodes} episodes ` +
         `(reporting: ${env}); ` +
         `national or multi-region events not drawn: ${sys.event_summary.country_level}. Record reviewed ${sys.record_reviewed}.`,
@@ -59,13 +64,13 @@ export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, 
   c.fillRect(kx - Math.round(10 * s), ky - Math.round(22 * s), Math.round(340 * s), Math.round((keys.length * 20 + 34) * s));
   c.fillStyle = DIM;
   c.font = `${Math.round(13 * s)}px ${SANS}`;
-  c.fillText(`Events recorded per ${sys.geography.unit_label} (this country's range)`, kx, ky);
+  fit(`Events recorded per ${sys.geography.unit_label} (this country's range)`, kx, ky);
   for (const [color, label] of keys) {
     ky += Math.round(20 * s);
     c.fillStyle = color;
     c.fillRect(kx, ky - Math.round(11 * s), Math.round(14 * s), Math.round(14 * s));
     c.fillStyle = INK;
-    c.fillText(label, kx + Math.round(22 * s), ky);
+    fit(label, kx + Math.round(22 * s), ky);
   }
 
   const fh = Math.round(58 * s);
@@ -73,12 +78,12 @@ export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, 
   c.fillRect(0, H - fh, W, fh);
   c.fillStyle = DIM;
   c.font = `${Math.round(13 * s)}px ${SANS}`;
-  c.fillText("What was reported and found, not a rate of disruption. Counts reflect this country's " +
+  fit("What was reported and found, not a rate of disruption. Counts reflect this country's " +
              "reporting rules; not comparable across countries; never ranked.", pad, H - Math.round(34 * s));
   const nat = national?.row
     ? `National energy production ${fmtValue(national.row.values.total_production, national.ctx.metrics.total_production.unit)} (${national.ctx.comparison_year}, ${national.ctx.source.name}) is context only. `
     : "";
-  c.fillText(`${nat}Energy Disruption Monitor · open sources · boundaries: Natural Earth (line of actual control)`,
+  fit(`${nat}Energy Disruption Monitor · open sources · boundaries: Natural Earth (line of actual control)`,
              pad, H - Math.round(14 * s));
   return out;
 }

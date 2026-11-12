@@ -102,6 +102,110 @@
           "carried_forward": false
         }
       ]
+    },
+    {
+      "date": "2026-11-11",
+      "by": "iteration-20 Gulf continuation pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-11"
+      ],
+      "scope": "continuation of the iteration-19 pass: lanes as declared in docs/countries/QA_SYSTEMATIC_SWEEP.md, work order in docs/countries/GULF_CONTINUATION_PLAN_20.md; each lane states its execution after both passes; inclusion clauses 1-7 read strictly; every published record reviewed blind by three independent roles and confirmed on its final text",
+      "status": "partial",
+      "status_reason": "1 of 3 lanes executed as far as declared; the rest are stated per lane",
+      "outcome": {
+        "candidates": 6,
+        "accepted": 0,
+        "rejected": 0,
+        "duplicate": 3,
+        "held": 2,
+        "out_of_scope": 1
+      },
+      "plan": {
+        "document": "docs/countries/GULF_CONTINUATION_PLAN_20.md",
+        "commit": "c03bff6",
+        "lanes_from": "docs/countries/QA_SYSTEMATIC_SWEEP.md"
+      },
+      "lanes": [
+        {
+          "lane": "QA1",
+          "source_family": "QatarEnergy and QatarEnergy LNG: the LNG company's news archive and operator statements",
+          "registry": [
+            "QatarEnergy LNG news archive; QatarEnergy statements"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "current_through_end_date",
+          "covered_through": "2026-11-10",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 4,
+          "queries_run": 4,
+          "items_enumerated": 57,
+          "limitation": "At least one official listing is built by script in the browser and could not be read. At least one document was too large for the fetch tool or timed out. Official statements were read as carried by other publishers, not on the issuing body's own site.",
+          "carried_forward": false
+        },
+        {
+          "lane": "QA2",
+          "source_family": "Electricity and water: utility and ministry statements carried by the state news agency",
+          "registry": [
+            "KAHRAMAA and ministry statements (Qatar News Agency, Arabic and English)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "declared_search_complete",
+          "source_window": "no_census_exists",
+          "covered_through": "2026-11-11",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 6,
+          "queries_run": 6,
+          "items_enumerated": 107,
+          "limitation": "At least one official listing is built by script in the browser and could not be read. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
+          "carried_forward": false
+        },
+        {
+          "lane": "QA3",
+          "source_family": "Arabic and English media by year, via search",
+          "registry": [
+            "Domestic and international press (Al-Raya, Al-Sharq, Al-Watan, The Peninsula, Gulf Times, Al Jazeera, Reuters, S&P Global)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "no_census_exists",
+          "covered_through": "2026-11-11",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 20,
+          "queries_run": 16,
+          "items_enumerated": 192,
+          "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
+          "carried_forward": false
+        }
+      ],
+      "continues": {
+        "date": "2026-11-11",
+        "by": "iteration-19 Gulf research pass"
+      }
     }
   ]
 }

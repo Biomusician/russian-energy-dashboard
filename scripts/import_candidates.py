@@ -114,6 +114,27 @@ BLIND_PROCESS = ("Found by a research lane; then reviewed blind by three indepen
 
 PAGE_DATES = (json.loads(LINK_HEALTH.read_text(encoding="utf-8")).get("page_stated_dates", {})
               if LINK_HEALTH.exists() else {})
+# Where a redirecting citation lands, from the last link check (iteration 20).
+FINAL_ADDRESSES = (json.loads(LINK_HEALTH.read_text(encoding="utf-8")).get("final_addresses", {})
+                   if LINK_HEALTH.exists() else {})
+
+
+def canonical_url(url):
+    """The address a citation is published under: where the link lands, without an amp suffix. A
+    reader should reach the article, and the gate should judge the address the reader sees."""
+    if not url:
+        return url
+    final = re.sub(r"/amp/?$", "/", FINAL_ADDRESSES.get(url, url))
+    final = re.sub(r"[?&](amp(=1)?|outputType=amp)$", "", final)
+    # The common spellings of an accelerated-mobile copy: an "amp." host, a leading "/amp/" path
+    # segment, and "/ampArticle/" for "/article/". Each is the same article at its canonical address.
+    final = re.sub(r"^(https?://)amp\.", r"\1", final)
+    final = re.sub(r"^(https?://[^/]+)/amp/", r"\1/", final)
+    return re.sub(r"/ampArticle/", "/article/", final)
+
+
+# A page's own date, found under the address the citation is now published at.
+PAGE_DATES = {**{canonical_url(u): d for u, d in PAGE_DATES.items()}, **PAGE_DATES}
 
 
 def _texts(r):
@@ -179,11 +200,28 @@ def short_link(url):
     return bool(query) and not re.search(r"[^\W\d_]{3,}", unquote(path))
 
 
+def opaque_unresolved(url):
+    """An address with no words in its path ("/node/2636397", "/article/74438") whose destination
+    no link check has recorded: what a reader lands on was never read (iteration 20)."""
+    if url in FINAL_ADDRESSES:
+        return False
+    path = unquote(url or "").split("://", 1)[-1].partition("/")[2].partition("?")[0]
+    words = set(re.findall(r"[^\W\d_]{3,}", path.lower())) - GENERIC_PATH_WORDS
+    return bool(path) and not words and bool(re.search(r"\d{4,}", path))
+
+
+# Path words that say nothing about the article ("/node/123", "/ar/article/456").
+GENERIC_PATH_WORDS = {"node", "article", "articles", "news", "newsdetails", "story", "stories", "post",
+                      "posts", "item", "details", "detail", "amp", "html", "php", "aspx", "index"}
+
+
 def unpublishable_address(url, tokens):
-    """A citation that cannot stand beside a record published without its place: its address names
-    the place or the operator, says how the attack was carried out, or is a short link whose
-    destination address was never read."""
-    return names_the_place(url, tokens) or build_systems.method_in_address(url) or short_link(url)
+    """A citation that cannot stand beside a record published without its place: its address, or
+    the address it redirects to, names the place or the operator, says how the attack was carried
+    out, or is a short or opaque link whose destination was never read."""
+    final = FINAL_ADDRESSES.get(url, url)
+    return any(names_the_place(u, tokens) or build_systems.method_in_address(u) for u in {url, final}) \
+        or (short_link(url) and url not in FINAL_ADDRESSES) or opaque_unresolved(url)
 
 
 def names_the_place(url, tokens):
@@ -213,6 +251,9 @@ def date_problem(r):
         n = calendars.normalize_date(r["source_date_text"], cal)
     except ValueError as err:
         return f"date conversion failed: {err}"
+    if n["normalized_date"] is None:
+        return (f"{r['source_date_text']!r} is a {cal} month, which spans two Gregorian months "
+                f"({n['gregorian_range'][0]} to {n['gregorian_range'][1]}); give a day or hold")
     if n["normalized_date"][:len(r["date"])] != r["date"] and not (
             cal == "hijri" and r.get("date_precision") == "day" and len(r["date"]) == 10
             and abs((calendars.dt.date.fromisoformat(n["normalized_date"])
@@ -242,6 +283,9 @@ def review(system_id, r, unit_codes, grandfathered=frozenset(), policy=None):
             return "shipping, strait or route material is outside this product"
     if r.get("admin1_code") in set((policy or {}).get("no_event_units") or []):
         return f"{r.get('admin1_code')} is drawn but never used for events"
+    if r.get("cause") in build_systems.KINETIC_CAUSES and r.get("asset_class") in ((policy or {}).get("single_site_classes") or {}):
+        # Country plus class names the site; no truthful parent class exists (iteration 20, §44).
+        return "[SINGLE-SITE] the country has one site of this class, so the class names it"
     if kinetic_country_policy(policy, r):
         # The record will be published with no facility. Its text must not name one either.
         names = [n for n in (r.get("facility_name"), r.get("facility_name_local")) if n and len(n) >= 4]
@@ -381,6 +425,10 @@ def opaque_id(system_id, r):
     return f"{system_id}-{r['date']}-{r['asset_class'].replace('_', '-')}-attack-{tag}"
 
 
+def _canonical(s):
+    return {**s, "url": canonical_url(s["url"])}
+
+
 def _source(s, with_titles):
     out = {k: s.get(k) for k in ("url", "publisher", "date", "language", "source_role", "opened")}
     # A non-English source keeps its own title and a gloss, where the headline is safe to show.
@@ -412,7 +460,7 @@ def to_event(system_id, r, grandfathered=frozenset(), campaigns=None, policy=Non
     precise = r["geography_precision"] == "admin1"
     ev = {
         "event_id": r.get("published_id") or r["candidate_id"],
-        "date": r["date"],
+        "date": build_systems.canonical_date(r["date"], r.get("date_precision") or "day"),
         "date_precision": r.get("date_precision") or "day",
         "date_end": r.get("date_end"),
         "region_code": r["admin1_code"] if precise else None,
@@ -431,11 +479,12 @@ def to_event(system_id, r, grandfathered=frozenset(), campaigns=None, policy=Non
         "inclusion_basis": "reported_effect" if r.get("effect") else "occurrence",
         "criterion_met": r.get("threshold_clause"),
         "threshold_basis": r.get("threshold_basis"),
-        "capacity_affected": r.get("capacity_affected"),
+        "capacity_affected": build_systems.normalize_capacity(r.get("capacity_affected")),
         # Titles are the publishers' headlines, not our words, and the page shows the publisher
         # only; `opened` is null where the lane did not record whether it read the source.
-        "sources": [_source(s, with_titles=not abstract) for s in r["sources"]],
-        "recovery": r.get("recovery") or {"research_status": "NOT_YET_RESEARCHED"},
+        "sources": [_source(_canonical(s), with_titles=not abstract) for s in r["sources"]],
+        "recovery": ({**r["recovery"], "url": canonical_url(r["recovery"].get("url"))} if r.get("recovery")
+                     else {"research_status": "NOT_YET_RESEARCHED"}),
         "review": _review_block(r, grandfathered),
         "hazard_name": r.get("hazard_name"),
     }
@@ -510,8 +559,9 @@ def run(system_id):
         elif r.get("suggested_disposition") == "accept":
             held.append((r["candidate_id"], why))
     out = ROOT / "data" / "curated" / "systems" / system_id / "events.json"
-    out.write_text(json.dumps({"system_id": system_id, "events": accepted},
-                              ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # Bytes, so Windows does not turn every newline into CRLF (iteration 20).
+    out.write_bytes((json.dumps({"system_id": system_id, "events": accepted},
+                                ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
     print(f"{system_id}: {len(accepted)} imported, {len(held)} lane-accepted records held")
     for cid, why in held:
         print(f"   held {cid}: {why}")

@@ -2,80 +2,6 @@
   "system_id": "kw",
   "events": [
     {
-      "event_id": "kw-2025-04-09-programmed-power-cuts-demand-above-generation",
-      "date": "2025-04-09",
-      "date_precision": "day",
-      "date_end": "2025-04-10",
-      "region_code": null,
-      "geography_precision": "country",
-      "regions_affected": [
-        "KW-AH",
-        "KW-FA",
-        "KW-HA",
-        "KW-JA",
-        "KW-MU"
-      ],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": null,
-      "asset_class": "system_wide",
-      "cause": "unknown",
-      "summary": "Programmed (rotating) power cuts were carried out in Kuwait on 9 April 2025, reaching parts of some residential, agricultural and industrial areas, when electrical load ran well above the same day a year earlier. The electricity ministry later said the load rise of 9 and 10 April 2025 required a programme of programmed cuts.",
-      "effect": "The electricity ministry stated on 13 April 2025 that loads on 9 and 10 April 2025 were about 21% and 17.3% above the same period of the previous year, 'which required implementing a programme of programmed cuts'. The press reported that on 9 April the ministry cut power to parts of some residential, agricultural and industrial areas, eight residential areas being named, under what the ministry called an emergency plan for peak loads.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 4,
-      "threshold_basis": "Clause 4, second limb (a generation shortfall that forced rotating outages): the ministry's own page says the load rise of 9-10 April 2025 'required implementing a programme of programmed cuts', and a newspaper names eight residential areas cut on 9 April. Neither source uses the words generation shortfall, and no megawatts-shed figure is given.",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://www.mew.gov.kw/ar/NewsDetails?fromurl=news&&newsname=n_april13",
-          "publisher": "Ministry of Electricity, Water and Renewable Energy (Kuwait)",
-          "date": "2025-04-13",
-          "language": "ar",
-          "source_role": "official",
-          "opened": true,
-          "title_original": "زيارة معالي رئيس مجلس الوزراء بالإنابة الشيخ فهد اليوسف الصباح لمركز التحكم الوطني",
-          "title_en": "Visit of the acting Prime Minister to the National Control Centre"
-        },
-        {
-          "url": "https://www.aljarida.com/article/94808",
-          "publisher": "Al-Jarida",
-          "date": "2025-04-10",
-          "language": "ar",
-          "source_role": "media",
-          "opened": true,
-          "title_original": "مؤشر أحمال الكهرباء... أحمر",
-          "title_en": "Electricity load indicator: red"
-        }
-      ],
-      "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-11-11",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 2,
-        "sources_opened_by_reviewer": 2,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "at least one source read",
-        "roles": {
-          "evidence": "accept_with_correction",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
-    },
-    {
       "event_id": "kw-2024-06-19-programmed-power-cuts-generation-shortfall",
       "date": "2024-06-19",
       "date_precision": "day",
@@ -102,12 +28,16 @@
       "threshold_basis": "Clause 4, second limb (a generation shortfall that forced rotating outages): the ministry's own statement gives the cause as plants unable to meet peak demand and describes programmed cuts of one to two hours; about 40 areas were affected on a dated day.",
       "capacity_affected": {
         "value": 300,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "component_only",
+        "measure": "affected",
         "unit": "MW",
         "source_says": "خروج وحدة توليد ... بقدرة 300 ميغاواط (Attaqa, 19 June 2024; one unit, as reported by the press, not by the ministry)"
       },
       "sources": [
         {
-          "url": "https://www.alraimedia.com/ampArticle/1691580",
+          "url": "https://www.alraimedia.com/article/1691580",
           "publisher": "Al-Rai",
           "date": "2024-06-19",
           "language": "ar",
@@ -127,7 +57,7 @@
           "title_en": "Minister reassures, then cuts the power"
         },
         {
-          "url": "https://attaqa.net/?p=395135",
+          "url": "https://attaqa.net/2024/06/19/%d8%a7%d9%86%d9%82%d8%b7%d8%a7%d8%b9-%d8%a7%d9%84%d9%83%d9%87%d8%b1%d8%a8%d8%a7%d8%a1-%d9%81%d9%8a-%d8%a7%d9%84%d9%83%d9%88%d9%8a%d8%aa-%d9%8a%d8%b6%d8%b1%d8%a8-40-%d9%85%d9%86%d8%b7%d9%82%d8%a9/",
           "publisher": "Attaqa (attaqa.net)",
           "date": "2024-06-19",
           "language": "ar",
@@ -283,6 +213,10 @@
       "threshold_basis": "Clause 4, second limb (a generation shortfall that forced rotating outages): two units lost unexpectedly and programmed cuts applied to parts of 11 residential areas on a dated day.",
       "capacity_affected": {
         "value": 390,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "component_only",
+        "measure": "affected",
         "unit": "MW",
         "source_says": "paraphrase of Al-Rai, 10 September 2024: two generating units, 390 MW combined, went out unexpectedly (unnamed ministry source)"
       },
@@ -332,36 +266,114 @@
       "hazard_name": null
     },
     {
-      "event_id": "kw-2026-03-20-refinery-attack-1",
-      "date": "2026-03-20",
+      "event_id": "kw-2025-10-21-refinery-fire-partial-shutdown",
+      "date": "2025-10-21",
       "date_precision": "day",
       "date_end": null,
-      "region_code": null,
-      "geography_precision": "country",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": null,
+      "region_code": "KW-AH",
+      "geography_precision": "admin1",
+      "regions_affected": [
+        "KW-AH"
+      ],
+      "facility_name": "Al-Zour refinery",
+      "facility_name_local": "مصفاة الزور",
+      "operator": "Kuwait Integrated Petroleum Industries Company",
       "asset_class": "refinery",
-      "cause": "kinetic_strike",
-      "summary": "An attack was reported on a refinery in Kuwait on 20 March 2026.",
-      "effect": "An official statement said a fire broke out in some of the refinery's units and that a number of units were shut.",
+      "cause": "technical",
+      "summary": "A fire in a residue desulfurization unit at a refinery in Al Ahmadi governorate led the operator to shut parts of the refinery on 21 October 2025, including further residue desulfurization units and a 205,000 b/d crude distillation unit.",
+      "effect": "Industry monitor IIR, in an alert reported by Asharq Al-Awsat on 28 October 2025, said the fire led the operator to shut further residue desulfurization units and a 205,000 b/d crude distillation unit, leaving the refinery partially shut. MEES reported on 31 October 2025 that the fire had forced a partial shutdown and that 'refinery throughputs have dropped sharply'.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 1,
-      "threshold_basis": "Clause 1: an official statement said a number of the refinery's units were shut after a fire in some units (Arabic: \"تم إغلاق عدد من الوحدات في المصفاة\").",
-      "capacity_affected": null,
+      "threshold_basis": "Clause 1 (refinery throughput materially cut, with the effect reported): a crude distillation unit and further desulfurization units were shut after a fire, and an independent trade publication states that throughput dropped sharply.",
+      "capacity_affected": {
+        "value": 205000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "component_only",
+        "measure": "facility_size",
+        "unit": "b/d",
+        "source_says": "a 205,000 b/d crude distillation unit"
+      },
       "sources": [
         {
-          "url": "https://www.aljarida.com/article/126594",
-          "publisher": "Al-Jarida (الجريدة)",
-          "date": "2026-03-21",
-          "language": "ar",
+          "url": "https://english.aawsat.com/business/5202369-kuwaits-al-zour-refinery-partially-shut-due-fire-iir-says",
+          "publisher": "Asharq Al-Awsat",
+          "date": "2025-10-28",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://www.mees.com/2025/10/31/opec/kuwait-sells-prompt-crude-cargoes-following-al-zour-fire/d7bce100-b661-11f0-822f-77c396cc460c",
+          "publisher": "MEES",
+          "date": "2025-10-31",
+          "language": "en",
           "source_role": "media",
           "opened": true
         }
       ],
       "recovery": {
-        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
+        "research_status": "NOT_YET_RESEARCHED",
+        "kind": null,
+        "date": null,
+        "evidence": null,
+        "url": null
+      },
+      "review": {
+        "reviewed_at": "2026-11-11",
+        "threshold_version": "2026-10-30.1",
+        "review_status": "blind_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
+        "source_count": 2,
+        "sources_opened_by_reviewer": 2,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept"
+        }
+      },
+      "hazard_name": null
+    },
+    {
+      "event_id": "kw-2023-11-12-refinery-production-halt-fuel-gas-loss",
+      "date": "2023-11-12",
+      "date_precision": "day",
+      "date_end": null,
+      "region_code": "KW-AH",
+      "geography_precision": "admin1",
+      "regions_affected": [
+        "KW-AH"
+      ],
+      "facility_name": "Al-Zour refinery",
+      "facility_name_local": "مصفاة الزور",
+      "operator": "Kuwait Integrated Petroleum Industries Company",
+      "asset_class": "refinery",
+      "cause": "technical",
+      "summary": "Production at a refinery in Al Ahmadi governorate came to an almost complete halt in November 2023 after a sudden interruption of fuel gas that the operator attributed to an equipment fault; the operator announced it on 12 November 2023.",
+      "effect": "The refinery operator announced an 'almost complete halt of production operations' (توقف شبه كامل لعمليات الإنتاج) caused by a sudden interruption of fuel gas (Al-Jarida, 12 November 2023).",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 1,
+      "threshold_basis": "Clause 1 (refinery shut down, with the effect reported): the operator states an almost complete halt of refinery production on a dated announcement.",
+      "capacity_affected": null,
+      "sources": [
+        {
+          "url": "https://www.aljarida.com/article/44344",
+          "publisher": "Al-Jarida",
+          "date": "2023-11-12",
+          "language": "ar",
+          "source_role": "media",
+          "opened": true,
+          "title_original": "«كيبك»: توقف عمليات الإنتاج في «مصفاة الزور»",
+          "title_en": "KIPIC: production operations halted at the refinery"
+        }
+      ],
+      "recovery": {
+        "research_status": "NOT_YET_RESEARCHED",
         "kind": null,
         "date": null,
         "evidence": null,

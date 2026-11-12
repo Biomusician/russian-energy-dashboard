@@ -71,9 +71,9 @@ test.describe("Gulf group", () => {
     await expect(page.getByRole("article", { name: "Iraq" })).toHaveCount(0);
     await expect(page.locator(".map-control-row").filter({ has: filter })).toContainText("Iran and Iraq are not members");
 
-    await app.button("Open the Gulf overview").click();
+    await app.button("Open the Gulf littoral overview").click();
     await expect(page).toHaveURL(/[?&]group=gulf\b/);
-    await expect(page.getByRole("heading", { name: "Gulf overview", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Gulf littoral overview", level: 1 })).toBeVisible();
     await page.goBack();
     await expect(page.getByRole("heading", { name: "Energy Disruption Monitor", level: 1 })).toBeVisible();
   });
@@ -83,7 +83,7 @@ test.describe("Gulf group", () => {
     const g = await gulf(page);
     const systems = g.systems as GulfSystem[];
     expect(systems).toHaveLength(8);
-    await expect(page.getByRole("heading", { name: "Gulf overview", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Gulf littoral overview", level: 1 })).toBeVisible();
     await expect(page.getByRole("note")).toContainText("not shown to be safer");
 
     const cards = page.getByRole("region", { name: "Monitored systems in this view" }).getByRole("article");
@@ -201,7 +201,7 @@ test.describe("Gulf group", () => {
     await expect(page.getByRole("alert")).toContainText("no regional view called");
     await app.open("?sys=qa");
     await page.getByRole("combobox", { name: "Monitored system" }).selectOption("group:gulf");
-    await expect(page.getByRole("heading", { name: "Gulf overview", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Gulf littoral overview", level: 1 })).toBeVisible();
     await expect(page).toHaveURL(/[?&]group=gulf\b/);
     expect(app.errors).toEqual([]);
   });
@@ -337,7 +337,7 @@ test.describe("Gulf error containment", () => {
     await expect(page.getByRole("heading", { name: "Iraq", level: 1 })).toBeVisible();
     await app.mapIdle();
     await picker.selectOption("group:gulf");
-    await expect(page.getByRole("heading", { name: "Gulf overview", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Gulf littoral overview", level: 1 })).toBeVisible();
     await expect(page.getByRole("region", { name: "Monitored systems in this view" }).getByRole("article")).toHaveCount(8);
   });
 

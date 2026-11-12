@@ -21,6 +21,10 @@
       "threshold_basis": "Loss of supply to >=100,000 customers (586,000 outages in Ontario per IESO briefing).",
       "capacity_affected": {
         "value": 586000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "586,000 Hydro One outages in Ontario"
       },
@@ -97,12 +101,16 @@
       "threshold_basis": "Loss of supply to >=100,000 customers.",
       "capacity_affected": {
         "value": 540000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "près de 540 000 clients ont été privés d'électricité, selon Hydro-Québec"
       },
       "sources": [
         {
-          "url": "https://www.meteomedia.com/ca/nouvelles/article/arbres-deracines-toitures-abimees-et-140-000-pannes",
+          "url": "https://www.meteomedia.com/fr/nouvelles/meteo/previsions/arbres-deracines-toitures-abimees-et-140-000-pannes",
           "publisher": "MétéoMédia",
           "date": "2022-05-21",
           "language": "fr",
@@ -324,13 +332,17 @@
       "criterion_met": 5,
       "threshold_basis": "Loss of supply to >=100,000 customers.",
       "capacity_affected": {
-        "value": 350000,
+        "value": null,
+        "value_min": 350000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "at its height knocked out power for more than 350,000 hydro customers"
       },
       "sources": [
         {
-          "url": "https://amp.cbc.ca/lite/story/1.6696318",
+          "url": "https://www.cbc.ca/lite/story/1.6696318",
           "publisher": "CBC News",
           "date": "2022-12-23",
           "language": "en",
@@ -400,7 +412,11 @@
       "criterion_met": 7,
       "threshold_basis": "Production shut in at a reported material volume (319,000 boe/d, Reuters tally of operator statements).",
       "capacity_affected": {
-        "value": 319000,
+        "value": null,
+        "value_min": 319000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "boe/d",
         "source_says": "at least 319,000 barrels of oil equivalent per day, or 3.7% of Canada's production"
       },
@@ -414,7 +430,7 @@
           "opened": null
         },
         {
-          "url": "https://calgary.ctvnews.ca/energy-companies-curtail-production-due-to-alberta-wildfires-1.6388908",
+          "url": "https://www.ctvnews.ca/calgary/article/energy-companies-curtail-production-due-to-alberta-wildfires/",
           "publisher": "CTV Calgary",
           "date": "2023-05-07",
           "language": "en",
@@ -422,7 +438,7 @@
           "opened": null
         },
         {
-          "url": "https://boereport.com/2023/05/18/some-canadian-oil-and-gas-producers-re-curtail-output-as-wildfires-persist/amp/",
+          "url": "https://boereport.com/2023/05/18/some-canadian-oil-and-gas-producers-re-curtail-output-as-wildfires-persist/",
           "publisher": "Reuters (via BOE Report)",
           "date": "2023-05-18",
           "language": "en",
@@ -477,6 +493,10 @@
       "threshold_basis": "Loss of supply to >=100,000 customers.",
       "capacity_affected": {
         "value": 392000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "Au plus fort de la crise, jeudi soir, 392 000 clients d'Hydro-Québec étaient touchés par des pannes"
       },
@@ -537,12 +557,16 @@
       "threshold_basis": "Grid-operator emergency declaration: AESO Grid Alert (EEA 3 from 15:30, per MSA) plus a province-wide Emergency Alert; no firm load was shed.",
       "capacity_affected": {
         "value": 350,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "MW (consumption reduction)",
         "source_says": "The MSA estimates the Alert reduced demand by approximately 350 MW over an hour."
       },
       "sources": [
         {
-          "url": "https://aeso.ca/aeso/media/aeso-thanks-albertans-for-quick-response-to-call-for-power-conservation/",
+          "url": "https://www.aeso.ca/aeso/newsroom/aeso-thanks-albertans-for-quick-response-to-call-for-power-conservation/",
           "publisher": "AESO",
           "date": "2024-01-13",
           "language": "en",
@@ -558,7 +582,7 @@
           "opened": null
         },
         {
-          "url": "https://www.cbc.ca/1.7082405",
+          "url": "https://www.cbc.ca/news/canada/calgary/alberta-electricity-record-high-power-demand-aeso-1.7082405",
           "publisher": "CBC News",
           "date": "2024-01-14",
           "language": "en",
@@ -571,7 +595,7 @@
         "kind": "no_supply_lost",
         "date": "2024-01-13",
         "evidence": "The AESO ended the Grid Alert at 20:40 on 13 January 2024; no customer load was shed.",
-        "url": "https://aeso.ca/aeso/media/aeso-thanks-albertans-for-quick-response-to-call-for-power-conservation/"
+        "url": "https://www.aeso.ca/aeso/newsroom/aeso-thanks-albertans-for-quick-response-to-call-for-power-conservation/"
       },
       "review": {
         "reviewed_at": "2026-11-03",
@@ -613,12 +637,16 @@
       "threshold_basis": "Generation shortfall forcing rotating outages (firm load shed).",
       "capacity_affected": {
         "value": 244,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "MW firm load shed",
         "source_says": "The AESO issued 244 MW of load shed instructions at 08:53 ... Load shed was cancelled at 09:19."
       },
       "sources": [
         {
-          "url": "https://aeso.ca/aeso/media/media-briefing-overview-of-the-grid-alerts",
+          "url": "https://www.aeso.ca/aeso/newsroom/media-briefing-overview-of-the-grid-alerts/",
           "publisher": "AESO",
           "date": "2024-04-05",
           "language": "en",
@@ -680,7 +708,11 @@
       "criterion_met": 5,
       "threshold_basis": "Loss of supply to >=100,000 customers.",
       "capacity_affected": {
-        "value": 550000,
+        "value": null,
+        "value_min": 550000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "At its peak, Hydro-Québec reported more than 550,000 clients without power"
       },
@@ -702,7 +734,7 @@
           "opened": null
         },
         {
-          "url": "https://amp.cbc.ca/lite/story/1.7291210",
+          "url": "https://www.cbc.ca/lite/story/1.7291210",
           "publisher": "CBC News",
           "date": "2024-08-11",
           "language": "en",
@@ -765,6 +797,10 @@
       "threshold_basis": "Loss of supply to >=100,000 customers.",
       "capacity_affected": {
         "value": 270000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "about 270,000 BC Hydro customers were without power at the peak of the storm"
       },
@@ -840,13 +876,17 @@
       "criterion_met": 5,
       "threshold_basis": "Loss of supply to >=100,000 customers.",
       "capacity_affected": {
-        "value": 430000,
+        "value": null,
+        "value_min": 430000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "more than 430,000 homes and businesses still without power Monday morning"
       },
       "sources": [
         {
-          "url": "https://cfjctoday.com/?p=1007394",
+          "url": "https://cfjctoday.com/2025/03/31/hundreds-of-thousands-in-ontario-still-without-power-on-third-day-of-spring-storm/",
           "publisher": "Canadian Press (via CFJC Today)",
           "date": "2025-03-31",
           "language": "en",
@@ -917,6 +957,10 @@
       "threshold_basis": "Production shut in at a reported material volume, confirmed by operator statements.",
       "capacity_affected": {
         "value": 274500,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "bbl/d",
         "source_says": "Cenovus ~238,000 bbl/d off-line at Christina Lake; CNRL 36,500 bbl/d shut in at Jackfish 1"
       },
@@ -938,7 +982,7 @@
           "opened": null
         },
         {
-          "url": "https://insurancejournal.com/news/national/2025/06/03/826136.htm",
+          "url": "https://www.insurancejournal.com/news/international/2025/06/03/826136.htm",
           "publisher": "Bloomberg (via Insurance Journal)",
           "date": "2025-06-03",
           "language": "en",
@@ -951,7 +995,7 @@
         "kind": "estimate",
         "date": null,
         "evidence": "Only an estimate found: an article of 3 June 2025 reports Cenovus saying on Sunday that it expected to resume Christina Lake operations in the near term; no restart timing was given for the other shut-in sites. No confirmed restart was found.",
-        "url": "https://insurancejournal.com/news/national/2025/06/03/826136.htm"
+        "url": "https://www.insurancejournal.com/news/international/2025/06/03/826136.htm"
       },
       "review": {
         "reviewed_at": "2026-11-03",
@@ -993,6 +1037,10 @@
       "threshold_basis": "Loss of supply to >=100,000 customers (addresses).",
       "capacity_affected": {
         "value": 209795,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "addresses",
         "source_says": "209,795 addresses without power early Thursday morning"
       },
@@ -1265,6 +1313,10 @@
       "threshold_basis": "Clause 5: Hydro One stated that about 120,000 of its Ontario customers were without power at one time on 5 April 2023 (operator release).",
       "capacity_affected": {
         "value": 120000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "approximately 120,000 customers that remain without power (Hydro One, 5 April 2023)"
       },
@@ -1336,6 +1388,10 @@
       "threshold_basis": "Grid event affecting about 100,000 customers or more: about 395,000 addresses out at one time (Hydro-Québec peak).",
       "capacity_affected": {
         "value": 395000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "on comptait environ 395 000 adresses touchées"
       },
@@ -1404,6 +1460,10 @@
       "threshold_basis": "Clause 1: gas-processing plant shut down, effect reported (about 6,200 boe/d shut in).",
       "capacity_affected": {
         "value": 6200,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "boe/d",
         "source_says": "temporarily shut production of about 6,200 barrels of oil equivalent per day"
       },
@@ -1464,6 +1524,10 @@
       "threshold_basis": "Grid event affecting about 100,000 customers or more: 500,000 customers out at one time.",
       "capacity_affected": {
         "value": 500000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "environ 500 000 clients avaient été privés d'électricité ... vers 12h30"
       },
@@ -1485,7 +1549,7 @@
           "opened": true
         },
         {
-          "url": "https://www.cbc.ca/1.6821747",
+          "url": "https://www.cbc.ca/news/canada/montreal/hydro-qu%C3%A9bec-customers-without-power-1.6821747",
           "publisher": "CBC News",
           "date": "2023-04-25",
           "language": "en",
@@ -1539,7 +1603,11 @@
       "criterion_met": 5,
       "threshold_basis": "Grid event affecting about 100,000 customers or more: 115,000 customers out at one time.",
       "capacity_affected": {
-        "value": 115000,
+        "value": null,
+        "value_min": 115000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "Plus de 115 000 clients d'Hydro-Québec sont présentement privés de courant"
       },
@@ -1600,6 +1668,10 @@
       "threshold_basis": "Grid event affecting about 100,000 customers or more: 300,000 customers out at one time around 07:00 (Hydro-Québec via Noovo).",
       "capacity_affected": {
         "value": 300000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "la société d'État signalait que 300 000 de ses abonnés ... étaient plongés dans le noir"
       },
@@ -1668,6 +1740,10 @@
       "threshold_basis": "Grid event affecting about 100,000 customers or more: 108,000 customers out at one time.",
       "capacity_affected": {
         "value": 108000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "au plus fort du blizzard, vers 21 h, 108 000 client.e.s étaient dans le noir"
       },
@@ -1792,6 +1868,10 @@
       "threshold_basis": "Generation of about 500 MW or more forced offline with a reported effect: around 2,600 MW lost and about 900 MW of load shed.",
       "capacity_affected": {
         "value": 900,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "MW",
         "source_says": "approximately 900 MW of load was shed in BC"
       },
@@ -1806,7 +1886,8 @@
         }
       ],
       "recovery": {
-        "research_status": "NOT_YET_RESEARCHED"
+        "research_status": "NOT_YET_RESEARCHED",
+        "url": null
       },
       "review": {
         "reviewed_at": "2026-11-10",
@@ -1848,6 +1929,10 @@
       "threshold_basis": "Grid event affecting about 100,000 customers or more: approximately 135,000 customers without power at one time (BC Hydro).",
       "capacity_affected": {
         "value": 135000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "approximately 135,000 customers were without power"
       },

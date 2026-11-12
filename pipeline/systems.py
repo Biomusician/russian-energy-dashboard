@@ -84,7 +84,7 @@ SYSTEMS = (
 # Groups are navigation and context. They never enter a score, and no group has an index.
 GROUPS = {
     "gulf_littoral": {
-        "label": "Gulf",
+        "label": "Gulf littoral",
         # A group with a `slug` has a regional overview at ?group=<slug>, fed by `context`.
         "slug": "gulf",
         "context": "global/gulf.json",

@@ -415,6 +415,156 @@
           "carried_forward": false
         }
       ]
+    },
+    {
+      "date": "2026-11-11",
+      "by": "iteration-20 Gulf continuation pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-11"
+      ],
+      "scope": "continuation of the iteration-19 pass: lanes as declared in docs/countries/SA_LANE_PASS_19.md, work order in docs/countries/GULF_CONTINUATION_PLAN_20.md; each lane states its execution after both passes; inclusion clauses 1-7 read strictly; every published record reviewed blind by three independent roles and confirmed on its final text",
+      "status": "partial",
+      "status_reason": "0 of 5 lanes executed as far as declared; the rest are stated per lane",
+      "outcome": {
+        "candidates": 25,
+        "accepted": 0,
+        "rejected": 2,
+        "duplicate": 16,
+        "held": 1,
+        "out_of_scope": 6
+      },
+      "plan": {
+        "document": "docs/countries/GULF_CONTINUATION_PLAN_20.md",
+        "commit": "c03bff6",
+        "lanes_from": "docs/countries/SA_LANE_PASS_19.md"
+      },
+      "lanes": [
+        {
+          "lane": "SA1",
+          "source_family": "Ministry of Energy statements as carried by SPA (spa.gov.sa; moenergy.gov.sa), reached through Saudi outlets republishing them",
+          "registry": [
+            "Ministry of Energy statements (Saudi Press Agency)"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "rolling_archive_gap",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 10,
+          "queries_run": 6,
+          "items_enumerated": 90,
+          "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. At least one source in this lane refused automated access and was not worked around. Official statements were read as carried by other publishers, not on the issuing body's own site.",
+          "carried_forward": false
+        },
+        {
+          "lane": "SA2",
+          "source_family": "Saudi Aramco disclosures: Tadawul announcements; aramco.com news and annual-report incident statements",
+          "registry": [
+            "Aramco Annual Report",
+            "Aramco Tadawul announcements"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "current_through_end_date",
+          "covered_through": "2025-12-31",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 2,
+          "queries_run": 2,
+          "items_enumerated": 4,
+          "items_in_universe": 4,
+          "limitation": "At least one source in this lane refused automated access and was not worked around. The listings that could be read were read in part: by title, or for their newest pages only.",
+          "carried_forward": false
+        },
+        {
+          "lane": "SA3",
+          "source_family": "GASTAT and JODI production releases (production effects explicitly attributed to a disruption)",
+          "registry": [
+            "JODI Oil",
+            "GASTAT, SEC, EIA, OPEC"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "rolling_archive_gap",
+          "covered_through": "2025-12-31",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 0,
+          "queries_run": 0,
+          "items_enumerated": 24,
+          "items_in_universe": 48,
+          "limitation": "At least one source in this lane refused automated access and was not worked around.",
+          "carried_forward": false
+        },
+        {
+          "lane": "SA4",
+          "source_family": "OPEC Monthly Oil Market Report archive",
+          "registry": [
+            "OPEC Monthly Oil Market Report"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "not_started",
+          "source_window": "inaccessible",
+          "covered_through": null,
+          "languages_required": [
+            "en"
+          ],
+          "languages_executed": [],
+          "queries_declared": 0,
+          "limitation": "Not run in every language its plan requires. At least one source in this lane refused automated access and was not worked around.",
+          "carried_forward": false
+        },
+        {
+          "lane": "SA5",
+          "source_family": "International and regional reporting (Reuters, Bloomberg, AP, S&P Global, Argus, as carried by open outlets), via search",
+          "registry": [
+            "International news agencies and energy press (Reuters, Bloomberg, AP, S&P Global, Argus)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "no_census_exists",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 15,
+          "queries_run": 13,
+          "stopped_by": "search_limit",
+          "limitation": "The shared search allowance ran out before every declared query was run. At least one source in this lane refused automated access and was not worked around. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
+          "carried_forward": false
+        }
+      ],
+      "continues": {
+        "date": "2026-11-11",
+        "by": "iteration-19 Gulf research pass"
+      }
     }
   ]
 }

@@ -146,18 +146,6 @@
       "reason": "No importance framing of facilities."
     },
     {
-      "event_id": "sa-2022-03-20-yasref-yanbu",
-      "field": "recovery.research_status",
-      "set": "RESEARCHED_NO_PUBLIC_EVIDENCE",
-      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "sa-2022-03-20-yasref-yanbu",
-      "field": "recovery.kind",
-      "set": null,
-      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
       "event_id": "us-2022-09-06-caiso-eea3-heat",
       "field": "recovery.kind",
       "set": "no_supply_lost",
@@ -1973,30 +1961,6 @@
       "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
-      "event_id": "sa-2022-03-20-yasref-yanbu",
-      "field": "summary",
-      "set": "The Saudi energy ministry said an attack on YASREF facilities led to a temporary reduction in the refinery's production.",
-      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "sa-2022-03-20-yasref-yanbu",
-      "field": "effect",
-      "set": "Ministry: the attack led to a temporary reduction in the refinery's production. No volume or duration given.",
-      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "sa-2022-03-20-yasref-yanbu",
-      "field": "recovery.evidence",
-      "set": null,
-      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "sa-2022-03-20-yasref-yanbu",
-      "field": "recovery.url",
-      "set": null,
-      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
       "event_id": "us-2022-11-10-hurricane-nicole-florida-outages",
       "field": "effect",
       "set": "More than 330,000 Florida customers were without power on the morning of 10 Nov 2022 (PowerOutage.US via Fox Business, with AP contributing); NHC reports over 300,000 homes and businesses in the affected region lost power.",
@@ -2118,7 +2082,7 @@
       "field": "recovery",
       "set": {
         "research_status": "EVIDENCE_FOUND",
-        "kind": "service_restored",
+        "kind": "partial_restoration",
         "date": "2023-04-25",
         "evidence": "Service largely restored by late afternoon the same day (Noovo).",
         "url": "https://www.noovo.info/nouvelle/panne-majeure-pres-de-500-000-quebecois-prives-delectricite-selon-hydro-quebec.html"
@@ -2392,12 +2356,6 @@
       "event_id": "sa-2026-04-manifa-production-cut",
       "field": "effect",
       "set": "Production capacity reduced by about 300,000 b/d (ministry).",
-      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "sa-2026-04-juaymah-processing-fires",
-      "field": "summary",
-      "set": "The energy ministry reported on 9 April 2026 that fires at the Juaymah processing facilities affected LPG and NGL exports. The date of the fires was not given and may precede April.",
       "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
@@ -2838,12 +2796,6 @@
       "event_id": "sa-2026-02-23-juaymah-lpg-export-halt",
       "field": "summary",
       "set": "Aramco said damage at Juaymah on 23 February 2026 halted LPG exports from the site, and declared force majeure on shipments.",
-      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "sa-2022-03-20-yasref-yanbu",
-      "field": "facility_name",
-      "set": "YASREF refinery",
       "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
@@ -3461,136 +3413,10 @@
       "reason": "Confirmation round, role A: words that rested on a citation dropped in reconciliation are replaced by the wording of the two citations kept."
     },
     {
-      "event_id": "sa-2022-03-20-yasref-yanbu",
-      "field": "recovery.date",
-      "set": null,
-      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "iq-2025-12-08-west-qurna-2-production-halt-leak",
-      "field": "summary",
-      "set": "Production at the West Qurna 2 field in Basra governorate was halted on 8 December 2025 after a reported leak, according to oil ministry and Basra Oil Company sources.",
-      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "iq-2025-12-08-west-qurna-2-production-halt-leak",
-      "field": "effect",
-      "set": "Two sources, one at the oil ministry and one at Basra Oil Company, told Rudaw that production at the field, which was producing roughly 480,000 barrels a day, was halted (Rudaw, 8 December 2025); Attaqa reported the same halt and volume the same day and said the ministry did not answer a request for comment.",
-      "reason": "Blind review, role(s) A, and a stricter lead ruling confirmed by all three on the final text: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "iq-2025-12-08-west-qurna-2-production-halt-leak",
-      "field": "sources",
-      "set": [
-        {
-          "url": "https://www.rudaw.net/english/middleeast/iraq/081220251",
-          "publisher": "Rudaw",
-          "date": "2025-12-08",
-          "language": "en",
-          "source_role": "media",
-          "title_original": null,
-          "title_en": null,
-          "opened": true
-        },
-        {
-          "url": "https://attaqa.net/2025/12/08/%d9%88%d9%82%d9%81-%d8%a5%d9%86%d8%aa%d8%a7%d8%ac-%d8%a7%d9%84%d9%86%d9%81%d8%b7-%d9%85%d9%86-%d8%ad%d9%82%d9%84-%d8%ba%d8%b1%d8%a8-%d8%a7%d9%84%d9%82%d8%b1%d9%86%d8%a9-2-%d8%a7%d9%84%d8%b9%d8%b1/",
-          "publisher": "Attaqa (own reporting, with a Reuters credit)",
-          "date": "2025-12-08",
-          "language": "ar",
-          "source_role": "media",
-          "title_original": "وقف إنتاج النفط من حقل غرب القرنة 2 العراقي بالكامل",
-          "title_en": "Oil production from Iraq's West Qurna 2 field stopped completely",
-          "opened": true
-        }
-      ],
-      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "iq-2025-08-11-national-grid-collapse",
-      "field": "summary",
-      "set": "On the afternoon of 11 August 2025 the national grid collapsed during extreme heat: the Ministry of Electricity said the system lost more than 6,000 MW at once under high loads, generating units tripped and the system went into total blackout across the centre and south.",
-      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "iq-2025-08-11-national-grid-collapse",
-      "field": "recovery.evidence",
-      "set": "Ministry statement on the evening of 11 August 2025: power was being returned gradually, with full service expected within hours (the full return is the ministry's forecast). No opened source states completion.",
-      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "iq-2025-08-11-national-grid-collapse",
-      "field": "threshold_basis",
-      "set": "Clause 5 (grid event; operator emergency and stated scale): the ministry reported \"خسارة الشبكة أكثر من 6 آلاف ميغاواط بشكل مفاجئ وعرضي\", a total blackout, and that it was working \"بحالة الطوارئ الكاملة\". No customer count is stated and megawatts are not converted to customers.",
-      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
       "event_id": "iq-2025-12-23-imported-gas-halt-generation-loss",
       "field": "threshold_basis",
       "set": "Clause 4 (generation shortfall): dated ministry statement (23 December 2025), stated cause (complete halt of imported gas) and stated size, \"ما بين 4 آلاف و4500 ميغاواط من الكهرباء المنتجة\".",
       "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "iq-2026-03-04-national-grid-total-blackout",
-      "field": "summary",
-      "set": "National grid collapse: on 4 March 2026 the Ministry of Electricity said the national grid had gone into total blackout in all governorates. As carried by Attaqa, it attributed the blackout to a sudden drop in gas supply to generation, which it called a technical incident, and did not say why the gas supply fell.",
-      "reason": "Blind review, role(s) B, and a stricter lead ruling confirmed by all three on the final text: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "iq-2026-03-04-national-grid-total-blackout",
-      "field": "threshold_basis",
-      "set": "Clause 5 (grid event, stated scale): the ministry said the system \"انطفأت بشكل تام في عموم محافظات العراق\" (went completely dark across all governorates).",
-      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "iq-2026-03-04-national-grid-total-blackout",
-      "field": "sources",
-      "set": [
-        {
-          "url": "https://attaqa.net/?p=585269",
-          "publisher": "Attaqa (منصة الطاقة)",
-          "date": "2026-03-04",
-          "language": "ar",
-          "source_role": "media",
-          "title_original": null,
-          "title_en": null,
-          "opened": true
-        },
-        {
-          "url": "https://www.banker.news/128815",
-          "publisher": "Banker (بانكير)",
-          "date": "2026-03-04",
-          "language": "ar",
-          "source_role": "media",
-          "title_original": "العراق في ظلام.. انقطاع تام للكهرباء في عموم الدولة",
-          "title_en": "Iraq in darkness: a total power cut across the whole country",
-          "opened": true
-        }
-      ],
-      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "iq-2026-03-14-refinery-attack-1",
-      "field": "effect",
-      "set": "Operations were suspended, officials told Reuters.",
-      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "kw-2025-04-09-programmed-power-cuts-demand-above-generation",
-      "field": "summary",
-      "set": "Programmed (rotating) power cuts were carried out in Kuwait on 9 April 2025, reaching parts of some residential, agricultural and industrial areas, when electrical load ran well above the same day a year earlier. The electricity ministry later said the load rise of 9 and 10 April 2025 required a programme of programmed cuts.",
-      "reason": "Blind review, role(s) A: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "kw-2025-04-09-programmed-power-cuts-demand-above-generation",
-      "field": "effect",
-      "set": "The electricity ministry stated on 13 April 2025 that loads on 9 and 10 April 2025 were about 21% and 17.3% above the same period of the previous year, 'which required implementing a programme of programmed cuts'. The press reported that on 9 April the ministry cut power to parts of some residential, agricultural and industrial areas, eight residential areas being named, under what the ministry called an emergency plan for peak loads.",
-      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "kw-2025-04-09-programmed-power-cuts-demand-above-generation",
-      "field": "threshold_basis",
-      "set": "Clause 4, second limb (a generation shortfall that forced rotating outages): the ministry's own page says the load rise of 9-10 April 2025 'required implementing a programme of programmed cuts', and a newspaper names eight residential areas cut on 9 April. Neither source uses the words generation shortfall, and no megawatts-shed figure is given.",
-      "reason": "Blind review, role(s) A: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "kw-2024-06-19-programmed-power-cuts-generation-shortfall",
@@ -3720,97 +3546,497 @@
       "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
-      "event_id": "kw-2026-03-20-refinery-attack-1",
-      "field": "summary",
-      "set": "An attack was reported on a refinery in Kuwait on 20 March 2026.",
-      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
+      "event_id": "cn-2022-06-18-shanghai-petchem-fire",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
     },
     {
-      "event_id": "kw-2026-03-20-refinery-attack-1",
+      "event_id": "cn-2022-08-15-sichuan-industrial-power-halt",
+      "field": "capacity_affected.measure",
+      "set": "other",
+      "reason": "Capacity schema review (iteration 20): the figure is not a capacity (a count, a change or a volume spilled)"
+    },
+    {
+      "event_id": "cn-2023-01-15-panjin-haoye-refinery-explosion",
+      "field": "capacity_affected.qualifier",
+      "set": "exact",
+      "reason": "Capacity schema review (iteration 20): the figure is stated exactly; a qualifier in the note belongs to another figure"
+    },
+    {
+      "event_id": "cn-2023-01-15-panjin-haoye-refinery-explosion",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
+    },
+    {
+      "event_id": "cn-2023-02-22-alxa-xinjing-open-pit-collapse",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
+    },
+    {
+      "event_id": "cn-2025-11-13-sinochem-quanzhou-crude-unit-fire",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
+    },
+    {
+      "event_id": "cn-2026-05-22-liushenyu-coal-mine-explosion",
+      "field": "capacity_affected.measure",
+      "set": "other",
+      "reason": "Capacity schema review (iteration 20): the figure is not a capacity (a count, a change or a volume spilled)"
+    },
+    {
+      "event_id": "in-2023-10-04-sikkim-glof-teesta-iii",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
+    },
+    {
+      "event_id": "in-2023-10-04-sikkim-glof-teesta-v",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
+    },
+    {
+      "event_id": "in-2024-06-11-mandola-substation-fire-delhi-outage",
+      "field": "capacity_affected.qualifier",
+      "set": "exact",
+      "reason": "Capacity schema review (iteration 20): the figure is stated exactly; a qualifier in the note belongs to another figure"
+    },
+    {
+      "event_id": "in-2025-08-16-gauna-bawana-gas-pipeline-leak",
+      "field": "capacity_affected.qualifier",
+      "set": "exact",
+      "reason": "Capacity schema review (iteration 20): the figure is stated exactly; a qualifier in the note belongs to another figure"
+    },
+    {
+      "event_id": "in-2025-08-16-gauna-bawana-gas-pipeline-leak",
+      "field": "capacity_affected.value",
+      "set": 464,
+      "reason": "Capacity schema review (iteration 20): range bounds as the source states them"
+    },
+    {
+      "event_id": "in-2025-08-16-gauna-bawana-gas-pipeline-leak",
+      "field": "capacity_affected.value_min",
+      "set": null,
+      "reason": "Capacity schema review (iteration 20): range bounds as the source states them"
+    },
+    {
+      "event_id": "iq-2025-12-23-imported-gas-halt-generation-loss",
+      "field": "capacity_affected.value_min",
+      "set": 4000,
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
+    },
+    {
+      "event_id": "iq-2025-12-23-imported-gas-halt-generation-loss",
+      "field": "capacity_affected.value_max",
+      "set": 4500,
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
+    },
+    {
+      "event_id": "iq-2025-12-23-imported-gas-halt-generation-loss",
+      "field": "capacity_affected.source_says",
+      "set": "ما بين 4 آلاف و4500 ميغاواط من الكهرباء المنتجة",
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
+    },
+    {
+      "event_id": "kw-2024-06-19-programmed-power-cuts-generation-shortfall",
+      "field": "capacity_affected.qualifier",
+      "set": "component_only",
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
+    },
+    {
+      "event_id": "kw-2024-09-10-programmed-power-cuts-unit-outages",
+      "field": "capacity_affected.qualifier",
+      "set": "component_only",
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
+    },
+    {
+      "event_id": "sa-2026-03-02-ras-tanura-refinery-shutdown",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
+    },
+    {
+      "event_id": "us-2022-06-08-freeport-lng-explosion",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
+    },
+    {
+      "event_id": "us-2022-08-24-bp-whiting-electrical-fire",
+      "field": "capacity_affected.qualifier",
+      "set": "disputed",
+      "reason": "Capacity schema review (iteration 20): sources or rows disagree; no point value is chosen"
+    },
+    {
+      "event_id": "us-2022-08-24-bp-whiting-electrical-fire",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
+    },
+    {
+      "event_id": "us-2022-08-24-bp-whiting-electrical-fire",
+      "field": "capacity_affected.value",
+      "set": null,
+      "reason": "Capacity schema review (iteration 20): range bounds as the source states them"
+    },
+    {
+      "event_id": "us-2022-09-20-bp-husky-toledo-fire",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
+    },
+    {
+      "event_id": "us-2022-12-07-keystone-kansas-spill",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
+    },
+    {
+      "event_id": "us-2023-08-25-marathon-garyville-tank-fire",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
+    },
+    {
+      "event_id": "us-2024-02-01-bp-whiting-power-outage",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
+    },
+    {
+      "event_id": "us-2025-04-08-keystone-north-dakota-rupture",
+      "field": "capacity_affected.measure",
+      "set": "other",
+      "reason": "Capacity schema review (iteration 20): the figure is not a capacity (a count, a change or a volume spilled)"
+    },
+    {
+      "event_id": "us-2025-02-01-pbf-martinez-refinery-fire",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
+    },
+    {
+      "event_id": "us-2026-03-23-valero-port-arthur-refinery-explosion",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
+    },
+    {
+      "event_id": "us-2024-04-28-texas-new-mexico-firm-load-shed",
+      "field": "capacity_affected.qualifier",
+      "set": "disputed",
+      "reason": "Capacity schema review (iteration 20): sources or rows disagree; no point value is chosen"
+    },
+    {
+      "event_id": "us-2024-04-28-texas-new-mexico-firm-load-shed",
+      "field": "capacity_affected.value",
+      "set": null,
+      "reason": "Capacity schema review (iteration 20): range bounds as the source states them"
+    },
+    {
+      "event_id": "us-2025-11-13-wyoming-disturbance-outages",
+      "field": "capacity_affected.qualifier",
+      "set": "about",
+      "reason": "Capacity schema review (iteration 20): the source's figure is approximate"
+    },
+    {
+      "event_id": "us-2025-11-13-wyoming-disturbance-outages",
+      "field": "capacity_affected.value",
+      "set": 250000,
+      "reason": "Capacity schema review (iteration 20): range bounds as the source states them"
+    },
+    {
+      "event_id": "us-2025-11-13-wyoming-disturbance-outages",
+      "field": "capacity_affected.value_max",
+      "set": null,
+      "reason": "Capacity schema review (iteration 20): range bounds as the source states them"
+    },
+    {
+      "event_id": "us-2024-07-07-hurricane-beryl-freeport-lng-shutdown",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
+    },
+    {
+      "event_id": "us-2025-02-12-par-pacific-wyoming-refinery-shutdown",
+      "field": "capacity_affected.measure",
+      "set": "facility_size",
+      "reason": "Capacity schema review (iteration 20): the figure is the facility's size, not an amount reported lost"
+    },
+    {
+      "event_id": "us-2024-09-11-hurricane-francine-louisiana-outages",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading (iteration 20). Held: [C5-SUBSTITUTE] the only source gives 'people', not customers, and no customer count is stated"
+    },
+    {
+      "event_id": "us-2024-09-11-hurricane-francine-louisiana-outages",
+      "field": "disposition_reason",
+      "set": "Strict reading (iteration 20). Held: [C5-SUBSTITUTE] the only source gives 'people', not customers, and no customer count is stated",
+      "reason": "Strict reading (iteration 20). Held: [C5-SUBSTITUTE]"
+    },
+    {
+      "event_id": "us-2023-08-25-marathon-garyville-tank-fire",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading (iteration 20). Held: [C1-MATERIAL] a tank fire and 'reduced rates for about a week' with no volume, share or named unit shut"
+    },
+    {
+      "event_id": "us-2023-08-25-marathon-garyville-tank-fire",
+      "field": "disposition_reason",
+      "set": "Strict reading (iteration 20). Held: [C1-MATERIAL] a tank fire and 'reduced rates for about a week' with no volume, share or named unit shut",
+      "reason": "Strict reading (iteration 20). Held: [C1-MATERIAL]"
+    },
+    {
+      "event_id": "us-2025-10-02-chevron-el-segundo-fire",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading (iteration 20). Held: [C1-PARTIAL] 'several process units shut' and 'diminished rates': no named major unit, no volume and no plant shutdown"
+    },
+    {
+      "event_id": "us-2025-10-02-chevron-el-segundo-fire",
+      "field": "disposition_reason",
+      "set": "Strict reading (iteration 20). Held: [C1-PARTIAL] 'several process units shut' and 'diminished rates': no named major unit, no volume and no plant shutdown",
+      "reason": "Strict reading (iteration 20). Held: [C1-PARTIAL]"
+    },
+    {
+      "event_id": "us-2025-05-07-hunt-tuscaloosa-coker-fire",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading (iteration 20). Held: [C1-MATERIAL] 'reduced operating rates' with no volume and no unit reported shut"
+    },
+    {
+      "event_id": "us-2025-05-07-hunt-tuscaloosa-coker-fire",
+      "field": "disposition_reason",
+      "set": "Strict reading (iteration 20). Held: [C1-MATERIAL] 'reduced operating rates' with no volume and no unit reported shut",
+      "reason": "Strict reading (iteration 20). Held: [C1-MATERIAL]"
+    },
+    {
+      "event_id": "us-2025-06-14-marathon-galveston-bay-fire",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading (iteration 20). Held: [C1-PARTIAL] production 'cut back' on one unit; no unit reported shut and the size of the cut is not reported"
+    },
+    {
+      "event_id": "us-2025-06-14-marathon-galveston-bay-fire",
+      "field": "disposition_reason",
+      "set": "Strict reading (iteration 20). Held: [C1-PARTIAL] production 'cut back' on one unit; no unit reported shut and the size of the cut is not reported",
+      "reason": "Strict reading (iteration 20). Held: [C1-PARTIAL]"
+    },
+    {
+      "event_id": "us-2025-08-14-phillips66-linden-fcc-fire",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading (iteration 20). Held: [C1-PARTIAL] 'a production outage' with no volume and no plant-level effect"
+    },
+    {
+      "event_id": "us-2025-08-14-phillips66-linden-fcc-fire",
+      "field": "disposition_reason",
+      "set": "Strict reading (iteration 20). Held: [C1-PARTIAL] 'a production outage' with no volume and no plant-level effect",
+      "reason": "Strict reading (iteration 20). Held: [C1-PARTIAL]"
+    },
+    {
+      "event_id": "in-2022-02-21-chandigarh-power-strike-blackout",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading (iteration 20). Held: [C5-EXTENT] loss of supply across about half of the territory: extent, with no customer count or emergency declaration"
+    },
+    {
+      "event_id": "in-2022-02-21-chandigarh-power-strike-blackout",
+      "field": "disposition_reason",
+      "set": "Strict reading (iteration 20). Held: [C5-EXTENT] loss of supply across about half of the territory: extent, with no customer count or emergency declaration",
+      "reason": "Strict reading (iteration 20). Held: [C5-EXTENT]"
+    },
+    {
+      "event_id": "in-2023-06-15-biparjoy-gujarat-power-outage",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading (iteration 20). Held: [C5-EXTENT] 'thousands of villages and towns': extent, with no customer count or emergency declaration"
+    },
+    {
+      "event_id": "in-2023-06-15-biparjoy-gujarat-power-outage",
+      "field": "disposition_reason",
+      "set": "Strict reading (iteration 20). Held: [C5-EXTENT] 'thousands of villages and towns': extent, with no customer count or emergency declaration",
+      "reason": "Strict reading (iteration 20). Held: [C5-EXTENT]"
+    },
+    {
+      "event_id": "us-2024-11-19-bomb-cyclone-washington-outages",
+      "field": "threshold_basis",
+      "set": "Clause 5: one county utility alone had over 135,000 customers out (the 650,000 figure counts people, not customers, and is not the basis).",
+      "reason": "Strict reading (iteration 20): the basis cites the customer count the record states, not a count of people"
+    },
+    {
+      "event_id": "us-2026-01-24-winter-storm-fern-tennessee-outages",
+      "field": "threshold_basis",
+      "set": "Clause 5: more than 250,000 outages statewide on 26 January (the 'as many as 300,000 people' estimate counts people and is not the basis).",
+      "reason": "Strict reading (iteration 20): the basis cites the customer count the record states, not a count of people"
+    },
+    {
+      "event_id": "us-2023-01-07-california-storm-outages",
+      "field": "capacity_affected.qualifier",
+      "set": "disputed",
+      "reason": "Capacity schema review (iteration 20): sources disagree (185,434 in OE-417, nearly 350,000 in the press); no point value is chosen"
+    },
+    {
+      "event_id": "us-2023-01-07-california-storm-outages",
+      "field": "capacity_affected.value",
+      "set": null,
+      "reason": "Capacity schema review (iteration 20): sources disagree (185,434 in OE-417, nearly 350,000 in the press); no point value is chosen"
+    },
+    {
+      "event_id": "us-2023-01-07-california-storm-outages",
+      "field": "capacity_affected.value_min",
+      "set": null,
+      "reason": "Capacity schema review (iteration 20): sources disagree (185,434 in OE-417, nearly 350,000 in the press); no point value is chosen"
+    },
+    {
+      "event_id": "us-2023-01-07-california-storm-outages",
+      "field": "capacity_affected.value_max",
+      "set": null,
+      "reason": "Capacity schema review (iteration 20): sources disagree (185,434 in OE-417, nearly 350,000 in the press); no point value is chosen"
+    },
+    {
+      "event_id": "us-2022-12-23-pjm-forced-outages-elliott",
+      "field": "suggested_disposition",
+      "set": "held",
+      "reason": "Strict reading (iteration 20). Held: [C4-MW] about 46,000 MW of forced outages across the fleet with no plant named and, in the record's own words, no load shed reported; a Maximum Generation Emergency Action is not an EEA 3 declaration, so neither clause 4 nor the US operational definition (load shed, EEA 3 or a stated supply effect) is met. The rotating outages that followed are separate records (TVA, Duke)"
+    },
+    {
+      "event_id": "us-2022-12-23-pjm-forced-outages-elliott",
+      "field": "disposition_reason",
+      "set": "Strict reading (iteration 20). Held: [C4-MW] about 46,000 MW of forced outages across the fleet with no plant named and, in the record's own words, no load shed reported; a Maximum Generation Emergency Action is not an EEA 3 declaration, so neither clause 4 nor the US operational definition (load shed, EEA 3 or a stated supply effect) is met. The rotating outages that followed are separate records (TVA, Duke)",
+      "reason": "Strict reading (iteration 20). Held: [C4-MW]"
+    },
+    {
+      "event_id": "iq-2022-01-fuel-supply-shortfall-generation-loss",
+      "field": "capacity_affected",
+      "set": {
+        "value": null,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "disputed",
+        "measure": "affected",
+        "unit": "MW",
+        "source_says": "lost 7,500 Megawatts (Shafaq, ministry statement); lost capacity due to gas shortage 6,500 MW plus 1,100 MW of imports (Shafaq); 7,600 MW lost (Al Jazeera, own narration)"
+      },
+      "reason": "Blind review, role(s) A: reconciled correction; the reviewers' wording is kept in the local review file"
+    },
+    {
+      "event_id": "iq-2022-01-fuel-supply-shortfall-generation-loss",
       "field": "effect",
-      "set": "An official statement said a fire broke out in some of the refinery's units and that a number of units were shut.",
+      "set": "Ministry of Electricity, as carried by Shafaq News on 22 January 2022: 6,500 MW lost through gas shortage and 1,100 MW through the loss of imported electricity, which together 'drastically reduced' power supply hours; Shafaq gives the national loss as 7,500 MW. Al Jazeera (23 January 2022) reported a near-total outage of grid power in Iraqi governorates, the capital Baghdad above all, after the loss of 7,600 MW, and quoted the ministry spokesman that the gas cuts led to load limiting and the stoppage of many generating units.",
+      "reason": "Blind review, role(s) A: reconciled correction; the reviewers' wording is kept in the local review file"
+    },
+    {
+      "event_id": "iq-2022-01-fuel-supply-shortfall-generation-loss",
+      "field": "threshold_basis",
+      "set": "Clause 4, second limb: a generation shortfall that forced rotating outages. Shafaq reports the ministry's gas and imported-power losses 'drastically reduced' supply hours; Al Jazeera quotes the ministry spokesman that the gas cuts led to load limiting and the stoppage of many generating units. The date is the statement date; the onset is not stated.",
       "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
-      "event_id": "kw-2026-03-20-refinery-attack-1",
+      "event_id": "kw-2025-10-21-refinery-fire-partial-shutdown",
+      "field": "summary",
+      "set": "A fire in a residue desulfurization unit at a refinery in Al Ahmadi governorate led the operator to shut parts of the refinery on 21 October 2025, including further residue desulfurization units and a 205,000 b/d crude distillation unit.",
+      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
+    },
+    {
+      "event_id": "kw-2025-10-21-refinery-fire-partial-shutdown",
+      "field": "effect",
+      "set": "Industry monitor IIR, in an alert reported by Asharq Al-Awsat on 28 October 2025, said the fire led the operator to shut further residue desulfurization units and a 205,000 b/d crude distillation unit, leaving the refinery partially shut. MEES reported on 31 October 2025 that the fire had forced a partial shutdown and that 'refinery throughputs have dropped sharply'.",
+      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
+    },
+    {
+      "event_id": "kw-2025-10-21-refinery-fire-partial-shutdown",
       "field": "threshold_basis",
-      "set": "Clause 1: an official statement said a number of the refinery's units were shut after a fire in some units (Arabic: \"تم إغلاق عدد من الوحدات في المصفاة\").",
+      "set": "Clause 1 (refinery throughput materially cut, with the effect reported): a crude distillation unit and further desulfurization units were shut after a fire, and an independent trade publication states that throughput dropped sharply.",
       "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
-      "event_id": "kw-2026-03-20-refinery-attack-1",
+      "event_id": "kw-2025-10-21-refinery-fire-partial-shutdown",
+      "field": "capacity_affected",
+      "set": {
+        "value": 205000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "component_only",
+        "measure": "facility_size",
+        "unit": "b/d",
+        "source_says": "a 205,000 b/d crude distillation unit"
+      },
+      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
+    },
+    {
+      "event_id": "kw-2025-10-21-refinery-fire-partial-shutdown",
       "field": "sources",
       "set": [
         {
-          "url": "https://www.aljarida.com/article/126594",
-          "publisher": "Al-Jarida (الجريدة)",
-          "date": "2026-03-21",
-          "language": "ar",
+          "url": "https://english.aawsat.com/business/5202369-kuwaits-al-zour-refinery-partially-shut-due-fire-iir-says",
+          "publisher": "Asharq Al-Awsat",
+          "publisher_id": "Asharq Al-Awsat",
+          "statement_family": "IIR alert 2025-10-27 (via Reuters)",
+          "date": "2025-10-28",
+          "language": "en",
           "source_role": "media",
+          "title_original": "Kuwait's Al-Zour Refinery Partially Shut due to Fire, IIR Says",
+          "title_en": "Kuwait refinery partially shut due to fire, IIR says",
           "opened": true
+        },
+        {
+          "url": "https://www.mees.com/2025/10/31/opec/kuwait-sells-prompt-crude-cargoes-following-al-zour-fire/d7bce100-b661-11f0-822f-77c396cc460c",
+          "publisher": "MEES",
+          "publisher_id": "MEES",
+          "statement_family": "MEES 2025-10-31 (own reporting)",
+          "date": "2025-10-31",
+          "language": "en",
+          "source_role": "media",
+          "title_original": "Kuwait sells prompt crude cargoes following Al-Zour fire",
+          "title_en": "Kuwait sells prompt crude cargoes following refinery fire",
+          "opened": true,
+          "opened_extent": "public lede only; the remainder (about 810 words) is behind a subscription wall"
         }
       ],
-      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "om-2022-09-05-main-grid-partial-blackout",
-      "field": "summary",
-      "set": "On 5 September 2022 a fault in the transmission network, which the regulator attributed to technical causes, led to a partial blackout in Oman. Supply was lost in Muscat governorate and in parts of Al Batinah South, Ash Sharqiyah North, Ash Sharqiyah South and Ad Dakhliyah; one report also names parts of Al Batinah North.",
-      "reason": "Blind review, role(s) A, B, C: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "om-2022-09-05-main-grid-partial-blackout",
-      "field": "effect",
-      "set": "Power was lost from early afternoon. The Authority for Public Services Regulation confirmed a partial blackout across Muscat and parts of four other governorates (The National and Al Bayan, 5 September 2022, both carrying the regulator's statement). Oman Observer reported commercial and industrial activity disrupted for between six and twelve hours and, citing the regulator's data, described the outage as the \"most serious in a decade\". Schools in affected areas were closed the next day.",
       "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
-      "event_id": "om-2022-09-05-main-grid-partial-blackout",
-      "field": "threshold_basis",
-      "set": "Clause 5: loss of supply at one time across Muscat governorate and parts of four other governorates, as stated by the regulator (extent-based; no customer count published). One report names a fifth, and Oman Observer reported disruption of six to twelve hours. The cited sources give no number of customers or megawatts, and none is estimated here.",
-      "reason": "Blind review, role(s) A, B, C: reconciled correction; the reviewers' wording is kept in the local review file"
+      "event_id": "kw-2023-11-12-refinery-production-halt-fuel-gas-loss",
+      "field": "summary",
+      "set": "Production at a refinery in Al Ahmadi governorate came to an almost complete halt in November 2023 after a sudden interruption of fuel gas that the operator attributed to an equipment fault; the operator announced it on 12 November 2023.",
+      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
-      "event_id": "om-2022-09-05-main-grid-partial-blackout",
-      "field": "admin1_codes_affected",
+      "event_id": "kw-2023-11-12-refinery-production-halt-fuel-gas-loss",
+      "field": "effect",
+      "set": "The refinery operator announced an 'almost complete halt of production operations' (توقف شبه كامل لعمليات الإنتاج) caused by a sudden interruption of fuel gas (Al-Jarida, 12 November 2023).",
+      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
+    },
+    {
+      "event_id": "kw-2023-11-12-refinery-production-halt-fuel-gas-loss",
+      "field": "sources",
       "set": [
-        "OM-MA",
-        "OM-BJ",
-        "OM-SS",
-        "OM-SH",
-        "OM-DA"
+        {
+          "url": "https://www.aljarida.com/article/44344",
+          "publisher": "Al-Jarida",
+          "publisher_id": "Al-Jarida",
+          "statement_family": "KIPIC statement 2023-11-12",
+          "date": "2023-11-12",
+          "language": "ar",
+          "source_role": "media",
+          "title_original": "«كيبك»: توقف عمليات الإنتاج في «مصفاة الزور»",
+          "title_en": "KIPIC: production operations halted at the refinery",
+          "opened": true
+        }
       ],
+      "reason": "Blind review, role(s) A, B: reconciled correction; the reviewers' wording is kept in the local review file"
+    },
+    {
+      "event_id": "kw-2023-11-12-refinery-production-halt-fuel-gas-loss",
+      "field": "source_date_text",
+      "set": "operator announcement published 12 November 2023; onset not stated",
       "reason": "Blind review, role(s) A: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "om-2022-09-05-main-grid-partial-blackout",
-      "field": "recovery.evidence",
-      "set": "The Authority for Public Services Regulation said electricity had been restored in all affected areas as of 2 am on Tuesday 6 September 2022 (Oman Observer).",
-      "reason": "Blind review, role(s) A: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "iq-2025-08-11-national-grid-collapse",
-      "field": "effect",
-      "set": "Ministry of Electricity, as carried by Asharq News and Arabi21: the grid lost more than 6,000 MW suddenly and accidentally, leading to a complete blackout; the ministry said it was working under full emergency footing. Media and local sources reported loss of power in Basra, Maysan, Dhi Qar, Wasit, Baghdad, Diyala, Anbar and Kirkuk.",
-      "reason": "Lead ruling, stricter than the roles and confirmed by all three on the final text: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "iq-2026-03-04-national-grid-total-blackout",
-      "field": "effect",
-      "set": "Ministry of Electricity, as carried by Attaqa and Banker: the system blacked out completely across all governorates.",
-      "reason": "Lead ruling, stricter than the roles and confirmed by all three on the final text: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "iq-2026-03-14-refinery-attack-1",
-      "field": "threshold_basis",
-      "set": "Clause 1: refinery shut down with the effect reported: operations were suspended, per officials.",
-      "reason": "Lead ruling, stricter than the roles and confirmed by all three on the final text: reconciled correction; the reviewers' wording is kept in the local review file"
-    },
-    {
-      "event_id": "om-2022-09-05-main-grid-partial-blackout",
-      "field": "recovery.research_status",
-      "set": "EVIDENCE_FOUND",
-      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     }
   ]
 }

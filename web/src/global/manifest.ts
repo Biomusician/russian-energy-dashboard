@@ -221,6 +221,8 @@ export interface ResearchPass {
   source_families?: string[];
   lanes?: ResearchLane[];
   outcome: Record<string, number>;
+  // Present only under the campaign policy, where the outcome carries the published count alone.
+  under_review?: boolean;
 }
 
 /** A lane of a systematic pass. Passes before iteration 18 carry `status`; since then `execution`
@@ -278,7 +280,8 @@ export interface RecentEpisode {
   date_precision: string;
   classes: string[];
   causes: string[];
-  members: { date: string; date_precision: string; region: string; effect: string | null; withheld: boolean }[];
+  // effect_on_country_page: the record's system is under the campaign policy, so no list repeats its effect.
+  members: { date: string; date_precision: string; region: string; effect: string | null; effect_on_country_page: boolean; withheld: boolean }[];
   more_members: number;
 }
 
@@ -373,7 +376,18 @@ export interface CountryEvent {
   inclusion_basis: string;
   criterion_met: number | null;
   threshold_basis: string | null;
-  capacity_affected: { value: number | null; unit?: string; source_says?: string } | null;
+  // Iteration 20: a figure carries its uncertainty. `value` is null for a bound, a range or a
+  // disputed figure; `measure` says whether it is an amount affected or the facility's size.
+  // Nothing sums these figures.
+  capacity_affected: {
+    value: number | null;
+    value_min: number | null;
+    value_max: number | null;
+    qualifier: "exact" | "about" | "at_least" | "at_most" | "range" | "component_only" | "disputed";
+    measure: "affected" | "facility_size" | "other";
+    unit: string;
+    source_says: string;
+  } | null;
   sources: { url: string; publisher?: string; date?: string; language?: string;
              source_role?: string; opened?: boolean | null;
              /** A non-English source's own headline and an English gloss (iteration 19). */
@@ -553,7 +567,7 @@ export const REVIEW_STATUS_LABEL: Record<string, string> = {
 };
 
 export const RESEARCH_COMPLETENESS_LABEL: Record<string, string> = {
-  complete: "Every declared lane executed",
+  complete: "Every declared source group searched",
   partial: "Systematic search under way",
   never_systematic: "Targeted searches only, no systematic search yet",
 };
@@ -614,6 +628,18 @@ const RTL = new Set(["ar", "fa", "ku", "ur", "he"]);
 /** Text direction for a language code, so an Arabic or Persian headline is not laid out backwards. */
 export function dirFor(lang: string | undefined): "rtl" | "ltr" {
   return RTL.has((lang ?? "").slice(0, 2).toLowerCase()) ? "rtl" : "ltr";
+}
+
+/** Language names for reader copy (iteration 20, §66). The codes stay in the data. */
+export const LANGUAGE_LABEL: Record<string, string> = {
+  ar: "Arabic", en: "English", fa: "Persian", ku: "Kurdish (Sorani)", ckb: "Kurdish (Sorani)", fr: "French",
+  zh: "Chinese", hi: "Hindi", ru: "Russian", uk: "Ukrainian", es: "Spanish", de: "German",
+  "not recorded": "not recorded",
+};
+
+/** "Arabic, English" from ["ar", "en"]; an unknown code is shown as it is, never dropped. */
+export function languageNames(codes: Iterable<string>): string {
+  return [...codes].map((c) => LANGUAGE_LABEL[c] ?? c).join(", ");
 }
 
 export function labelFor(map: Record<string, string>, key: string): string {

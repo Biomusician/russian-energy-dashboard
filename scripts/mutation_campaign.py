@@ -346,6 +346,18 @@ def _restart_in_effect(e):
     e["effect"] = "A fire was reported and the unit has since restarted (TEST PLACEHOLDER, not a fact)."
 
 
+def _attack_in_a_province(d):
+    """An attack record placed in a first-level region: an existing one if served, else a copy of
+    the first record turned into one. Either way the country-level policy is broken."""
+    target = next((e for e in d["events"] if e["cause"] in KINETIC), None)
+    if target is None:
+        import copy
+        target = copy.deepcopy(d["events"][0])
+        target.update({"event_id": target["event_id"] + "-injected", "cause": "kinetic_strike", "episode_id": None})
+        d["events"].append(target)
+    _province_on_attack(target)
+
+
 def _province_on_attack(e):
     e["geography_precision"] = "admin1"
     e["region_code"] = "XX-00"
@@ -380,8 +392,10 @@ def _merge_two_attacks(d):
 
 
 GULF = "web/public/data/global/gulf.json"
-SID_COVERED = _gulf_payload(_covered)
-SID_ATTACK = _gulf_payload(lambda e: e["cause"] in KINETIC and e["geography_precision"] == "country", ("ir", "kw", "qa", "ae", "bh", "om"))
+SID_COVERED = _gulf_payload(_covered, ("ir", "kw", "qa", "ae", "bh", "om", "iq", "sa"))
+# A country-policy system with any served record: if none of its attack records is published (the
+# iteration-20 strict reading held them), the mutation injects one placed in a province.
+SID_ATTACK = _gulf_payload(lambda e: True, ("kw", "iq", "ir", "qa", "ae", "bh", "om"))
 SID_ANY = _gulf_payload(lambda e: True)
 
 GULF_MUTATIONS = [
@@ -390,7 +404,7 @@ GULF_MUTATIONS = [
      _both(SID_COVERED, "events.json", _artifact(_on_event(_covered, _restart_in_effect))),
      "no_served_record_under_an_active_campaign"),
     ("an attack record is placed in a province where the policy says country",
-     _both(SID_ATTACK, "events.json", _artifact(_on_event(lambda e: e["cause"] in KINETIC, _province_on_attack))),
+     _both(SID_ATTACK, "events.json", _artifact(_attack_in_a_province)),
      "emitted_kinetic_records_obey"),
     ("Bahrain's records may be placed in a governorate",
      [("data/curated/systems/bh/system.json", _artifact(lambda d: d["geography"]["precision_policy"].__setitem__("other", "admin1")))],
@@ -459,7 +473,8 @@ GULF_MUTATIONS = [
      [("pipeline/calendars.py", _text("**{chr(0x06F0 + i): str(i) for i in range(10)}}", "}"))],
      "persian_and_arabic_digits"),
     ("an ambiguous number is guessed",
-     [("pipeline/calendars.py", _text('r"[+-]?(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?"', 'r"[+-]?[\\d,]+(\\.\\d+)?"'))],
+     [("pipeline/calendars.py", _text('        return None                                   # "1.500": thousands or decimal?',
+                                      '        pass                                          # "1.500": thousands or decimal?'))],
      "ambiguous_number"),
     ("a Hijri conversion claims to be exact",
      [("pipeline/calendars.py", _text("tabular calendar (may differ", "astronomical calendar (may differ"))],
@@ -596,8 +611,8 @@ REVIEW_MUTATIONS = [
          "if False:"))],
      "two_lanes_reporting_one_event"),
     ("a recent-events list states a number of systems again",
-     [("pipeline/build_systems.py", _text('def recent_evidence(all_events, scope="The country systems.", regional=False):',
-                                        'def recent_evidence(all_events, scope="The five country systems.", regional=False):')),
+     [("pipeline/build_systems.py", _text('def recent_evidence(all_events, scope="The country systems.", regional=False, restricted=frozenset()):',
+                                        'def recent_evidence(all_events, scope="The five country systems.", regional=False, restricted=frozenset()):')),
       ("data/processed/global/recent_evidence.json", _artifact(lambda d: d.__setitem__("scope", "The five country systems."))),
       ],
      "no_recent_list_states_a_number"),
@@ -617,11 +632,12 @@ REVIEW_MUTATIONS = [
      [("scripts/apply_reviews.py", _text("                why = GENERIC_REASON if abstract else e.get(\"reason\")",
                                        "                why = e.get(\"reason\")")),
       ("data/curated/systems/review_edits.json", _artifact(lambda d: next(
-          e for e in d["edits"] if e["event_id"] == "kw-2026-03-20-refinery-attack-1").__setitem__(
+          e for e in d["edits"] if e["event_id"].split("-")[0] in ("kw", "iq", "sa")).__setitem__(
           "reason", "Blind review, role(s) B: removed the citation naming TEST PLACEHOLDER refinery")))],
      "committed_review_edits_hand_back_nothing"),
     ("a short link is accepted as a citation for a record published without its place",
-     [("scripts/import_candidates.py", _text(" or build_systems.method_in_address(url) or short_link(url)", " or build_systems.method_in_address(url)"))],
+     [("scripts/import_candidates.py", _text("        or (short_link(url) and url not in FINAL_ADDRESSES) or opaque_unresolved(url)",
+                                             "        or opaque_unresolved(url)"))],
      "short_link_is_not_a_citation"),
     ("half a headline pair is shown",
      [("scripts/import_candidates.py", _text('        if not ("title_en" in out and "title_original" in out):', '        if False:'))],
@@ -702,6 +718,309 @@ REVIEW_MUTATIONS = [
 MUTATIONS += REVIEW_MUTATIONS
 MUTATIONS += GULF_MUTATIONS
 
+
+# --- Iteration 20 (§109): one mutant per new rule, at the code or at the artifact it governs -------
+
+def _append(line):
+    return lambda s: s + line
+
+
+def _first(seq, pred):
+    return next(x for x in seq if pred(x))
+
+
+def _recent_members(d):
+    return [m for ep in d["episodes"] for m in ep["members"]]
+
+
+def _readd_strict_hold(d):
+    import copy
+    e = copy.deepcopy(d["events"][0])
+    e["event_id"] = "us-2025-10-02-chevron-el-segundo-fire"
+    d["events"].append(e)
+
+
+def _criterion(n, **fields):
+    def edit(d):
+        e = d["events"][0]
+        e["criterion_met"] = n
+        e.update(fields)
+    return edit
+
+
+def _people_as_customers(d):
+    e = d["events"][0]
+    e["criterion_met"] = 5
+    e["threshold_basis"] = "About 200,000 people were without power (TEST PLACEHOLDER)."
+    e["capacity_affected"] = {"value": 200000, "value_min": None, "value_max": None, "qualifier": "about",
+                              "measure": "affected", "unit": "people", "source_says": "about 200,000 people"}
+
+
+def _edit_for(event_id, field, value, reason):
+    return lambda d: d["edits"].append({"event_id": event_id, "field": field, "set": value, "reason": reason})
+
+
+def _untag_hold(d):
+    e = _first(d["edits"], lambda x: x["event_id"] == "us-2025-10-02-chevron-el-segundo-fire" and x["field"] == "suggested_disposition")
+    e["reason"] = "Held on review."
+
+
+def _drop_single_site(cc, cls=None, basis=None):
+    def edit(d):
+        classes = d["geography"]["precision_policy"]["single_site_classes"]
+        if basis is None:
+            classes.pop(cls or next(iter(classes)))
+        else:
+            classes[cls]["basis"] = basis
+    return edit
+
+
+def _context_row(a3, newer):
+    def edit(d):
+        _first(d["countries"], lambda r: r["a3"] == a3)["newer"] = newer
+    return edit
+
+
+ITER20_MUTATIONS = [
+    # §46 campaign text, every country system and every field
+    ("a campaign sentence may say what state an attacked facility is in",
+     [("pipeline/build_systems.py", _text("m = CAMPAIGN_TEXT.search(text) or METHOD_WORDING.search(text) or CAMPAIGN_STATUS.search(text)",
+                                        "m = CAMPAIGN_TEXT.search(text) or METHOD_WORDING.search(text)"))],
+     "campaign_text_rule_reads_every"),
+    ("the campaign text rule reads the Gulf group only again",
+     [("pipeline/build_systems.py", _text("        if sid not in systems.COUNTRY_SYSTEMS:\n            continue\n        cid = c.get(\"campaign_id\")",
+                                        "        if sid not in systems.GROUPS[\"gulf_littoral\"][\"members\"]:\n            continue\n        cid = c.get(\"campaign_id\")"))],
+     "campaign_text_rule_reads_every"),
+    ("a campaign's name is printed without being read",
+     [("pipeline/build_systems.py", _text("        check(f\"{cid} name\", sid, c.get(\"name\"))\n", ""))],
+     "campaign_text_rule_reads_every"),
+    ("a campaign's notes are printed without being read",
+     [("pipeline/build_systems.py", _text("        check(f\"{cid} notes\", sid, c.get(\"notes\"))\n", ""))],
+     "campaign_text_rule_reads_every"),
+    ("a system state's notes are printed without being read",
+     [("pipeline/build_systems.py", _text("\n        check(f\"system state {sid} notes\", sid, s.get(\"notes\"))", ""))],
+     "campaign_text_rule_reads_every"),
+    ("the served campaign basis states a restart of production",
+     [("web/public/data/systems/iq/system.json", _artifact(lambda d: d["campaign_state"].__setitem__(
+         "basis", d["campaign_state"]["basis"] + " Production has resumed (TEST PLACEHOLDER).")))],
+     "served_campaign_bases"),
+    ("the committed campaign name names a place",
+     [("data/curated/systems/conflict_campaigns.json", _artifact(lambda d: _first(
+         d["campaigns"], lambda c: c["system_id"] == "sa").__setitem__("name", "Attacks on Eastern Province energy facilities, 2026")))],
+     "served_campaign_bases"),
+
+    # §42, §47 held counts beside a campaign
+    ("a campaign page serves the held count",
+     [("pipeline/build_systems.py", _text('PUBLIC_OUTCOME_UNDER_CAMPAIGN = ("records",)', 'PUBLIC_OUTCOME_UNDER_CAMPAIGN = ("records", "held")'))],
+     "under_review_never_how_many"),
+    ("the research log is served unchanged under the campaign policy",
+     [("pipeline/build_systems.py", _text("    if not restricted:\n        return research_log\n    out = {**research_log",
+                                        "    if True:\n        return research_log\n    out = {**research_log"))],
+     "under_review_never_how_many"),
+    ("records short of evidence no longer count as under review",
+     [("pipeline/build_systems.py", _text('"under_review": bool(o.get("held") or o.get("insufficient_evidence"))',
+                                        '"under_review": bool(o.get("held"))'))],
+     "under_review_never_how_many"),
+    ("a served campaign research log carries a held count",
+     [("web/public/data/systems/iq/system.json", _artifact(lambda d: d["research_log"]["passes"][-1]["outcome"].__setitem__("held", 3)))],
+     "no_served_research_log"),
+    ("a served campaign research log drops the under-review statement",
+     [("web/public/data/systems/kw/system.json", _artifact(lambda d: d["research_log"]["passes"][-1].pop("under_review")))],
+     "no_served_research_log"),
+
+    # §43 newer national totals
+    ("a campaign-year national total is served for a country under the campaign policy",
+     [(CTX, _artifact(_context_row("SAU", {"oil_production": {"year": 2026, "value": 1.0}})))],
+     "comparison_year_only"),
+    ("the newer-year guard hides a newer total of a country outside the campaign policy",
+     [(CTX, _artifact(_context_row("USA", {})))],
+     "comparison_year_only"),
+
+    # §44 single-site classes
+    ("an attack record of a single-site class is not refused by the build",
+     [("pipeline/build_systems.py", _text('        if e.get("cause") in KINETIC_CAUSES and e.get("asset_class") in single:',
+                                        '        if False:'))],
+     "one_site_of_is_refused"),
+    ("a single-site class needs no basis",
+     [("pipeline/build_systems.py", _text('        if not (why or {}).get("basis"):', '        if False:'))],
+     "one_site_of_is_refused"),
+    ("a single-site class need not be an asset class",
+     [("pipeline/build_systems.py", _text('        if cls not in set(ASSET_CLASSES) | set(TAXONOMY_EXTENSIONS["asset_classes"]):', '        if False:'))],
+     "one_site_of_is_refused"),
+    ("the import gate stops holding an attack record of a single-site class",
+     [("scripts/import_candidates.py", _text('    if r.get("cause") in build_systems.KINETIC_CAUSES and r.get("asset_class") in ((policy or {}).get("single_site_classes") or {}):',
+                                           '    if False:'))],
+     "single_site_class"),
+    ("Qatar's LNG is no longer declared a single site",
+     [("data/curated/systems/qa/system.json", _artifact(_drop_single_site("qa", "lng_terminal")))],
+     "every_declared_single_site"),
+    ("Bahrain's single refinery loses its basis",
+     [("data/curated/systems/bh/system.json", _artifact(_drop_single_site("bh", "refinery", "")))],
+     "every_declared_single_site"),
+
+    # §10 canonical citation addresses
+    ("an amp host is published as the citation",
+     [("scripts/import_candidates.py", _text('    final = re.sub(r"^(https?://)amp\\.", r"\\1", final)\n', ""))],
+     "lands_on"),
+    ("a leading amp path segment is published as the citation",
+     [("scripts/import_candidates.py", _text('    final = re.sub(r"^(https?://[^/]+)/amp/", r"\\1/", final)\n', ""))],
+     "lands_on"),
+    ("an ampArticle address is published as the citation",
+     [("scripts/import_candidates.py", _text('    return re.sub(r"/ampArticle/", "/article/", final)', "    return final"))],
+     "lands_on"),
+    ("the citation keeps the short link a reader is redirected from",
+     [("scripts/import_candidates.py", _text('    final = re.sub(r"/amp/?$", "/", FINAL_ADDRESSES.get(url, url))',
+                                           '    final = re.sub(r"/amp/?$", "/", url)'))],
+     "lands_on"),
+    ("the gate judges only the address as cited, not where it lands",
+     [("scripts/import_candidates.py", _text("for u in {url, final})", "for u in {url})"))],
+     "judged_by_where"),
+    ("an opaque link whose destination was never read is published",
+     [("scripts/import_candidates.py", _text('    return bool(path) and not words and bool(re.search(r"\\d{4,}", path))', "    return False"))],
+     "judged_by_where"),
+    ("a bot challenge is read as the article",
+     [("scripts/check_source_links.py", _text('    if CHALLENGE.search(final):\n        return "challenge"\n', ""))],
+     "redirect_is_classed"),
+    ("an article id in the path is not read",
+     [("scripts/check_source_links.py", _text(' or re.search(r"\\d{4,}", urllib.parse.urlsplit(final).path)', ""))],
+     "redirect_is_classed"),
+    ("a home page counts as the article",
+     [("scripts/check_source_links.py", _text('if w]) >= 3', 'if w]) >= 0'))],
+     "redirect_is_classed"),
+    ("an adopted address keeps its tracking parameters",
+     [("scripts/check_source_links.py", _text("                                    if not TRACKING.match(k)])", "                                    ])"))],
+     "redirect_is_classed"),
+
+    # Pass order, the absent index, review edits
+    ("of two passes on one day the earlier wins",
+     [("pipeline/build_systems.py", _text('    last = max(enumerate(systematic), key=lambda ip: (ip[1]["date"], ip[0]))[1] if systematic else None',
+                                        '    last = max(systematic, key=lambda p: p["date"]) if systematic else None'))],
+     "later_in_the_log"),
+    ("a country page loses the statement that no index is not a zero",
+     [("web/public/data/systems/ca/system.json", _artifact(lambda d: d.__setitem__("no_index_reason", "No index; see GLOBAL_METHODOLOGY.json.")))],
+     "no_index_is_not_a_zero"),
+    ("the public review edits keep a held record of a system under the campaign policy",
+     [("data/curated/systems/review_edits.json", _artifact(_edit_for(
+         "kw-2026-03-20-refinery-attack-1", "effect", "TEST PLACEHOLDER",
+         "Blind review, role(s) safety: reconciled correction; the reviewers' wording is kept in the local review file")))],
+     "keep_nothing_for_an_unpublished"),
+
+    # §26-27 capacity
+    ("an at-least figure is left as a point value",
+     [("pipeline/build_systems.py", _text('        out["value"] = None\n    elif q == "at_most":', '        pass\n    elif q == "at_most":'))],
+     "bound_is_never_left"),
+    ("a disputed figure may carry a point value",
+     [("pipeline/build_systems.py", _text('"disputed": v is None and lo is None and hi is None,', '"disputed": lo is None and hi is None,'))],
+     "shape_contradicts"),
+    ("a range may run backwards",
+     [("pipeline/build_systems.py", _text(' and hi is not None and lo < hi,', ' and hi is not None,'))],
+     "shape_contradicts"),
+    ("an unknown capacity measure is accepted",
+     [("pipeline/build_systems.py", _text('    if cap["measure"] not in CAPACITY_MEASURES:', '    if False:'))],
+     "shape_contradicts"),
+    ("'over 2,000 MW' is read as an exact figure",
+     [("pipeline/build_systems.py", _text('r"\\b(more than|over(?=\\s+\\d)|at least|', 'r"\\b(more than|at least|'))],
+     "qualifier_follows"),
+    ("a served capacity block contradicts its qualifier",
+     [("web/public/data/systems/us/events.json", _artifact(_on_event(lambda e: e.get("capacity_affected"),
+                                                                    lambda e: e["capacity_affected"].update({"qualifier": "range", "value_min": None}))))],
+     "served_capacity_block"),
+    ("a capacity total is computed downstream",
+     [("pipeline/build_systems.py", _append('\n\ndef _total(evs):\n    return sum(e["capacity_affected"]["value"] for e in evs)\n'))],
+     "nothing_sums"),
+
+    # §50-53 dates and numbers
+    ("a queue month date keeps its first-of-month form",
+     [("pipeline/build_systems.py", _text('    return {"month": date[:7], "year": date[:4]}.get(precision, date)', "    return date"))],
+     "compatibility_path_canonicalises"),
+    ("the build accepts the old first-of-month form",
+     [("pipeline/build_systems.py", _text('DATE_SHAPES = {"day": r"\\d{4}-\\d{2}-\\d{2}", "month": r"\\d{4}-\\d{2}",',
+                                        'DATE_SHAPES = {"day": r"\\d{4}-\\d{2}-\\d{2}", "month": r"\\d{4}-\\d{2}(-01)?",'))],
+     "refuses_the_old_month_form"),
+    ("the build accepts a day the calendar does not have",
+     [("pipeline/build_systems.py", _text("""            out.append(f"{eid}: {e['date']!r} is not a calendar date")""", "            pass"))],
+     "refuses_the_old_month_form"),
+    ("the build accepts an end date before the start",
+     [("pipeline/build_systems.py", _text('        elif end < e.get("date", ""):', "        elif False:"))],
+     "refuses_the_old_month_form"),
+    ("a served month record drifts to a day",
+     [("web/public/data/systems/us/events.json", _artifact(_on_event(lambda e: e["date_precision"] == "month",
+                                                                    lambda e: e.__setitem__("date", e["date"] + "-01"))))],
+     "served_month_records"),
+    ("a curated month record drifts to a day",
+     [("data/curated/systems/us/events.json", _artifact(_on_event(lambda e: e["date_precision"] == "month",
+                                                                 lambda e: e.__setitem__("date", e["date"] + "-01"))))],
+     "every_curated_date_is_written"),
+    ("'10 20' is read as 1020",
+     [("pipeline/calendars.py", _text('    if not s or "\u060c" in s:', '    s = s.replace(" ", "")\n    if not s or "\u060c" in s:'))],
+     "ambiguous_number_forms"),
+    ("a leading zero is read through",
+     [("pipeline/calendars.py", _text('    if len(digits) > 1 and digits[0] == "0":', "    if False:"))],
+     "ambiguous_number_forms"),
+    ("the Arabic comma is read as a thousands separator",
+     [("pipeline/calendars.py", _text('    if not s or "\u060c" in s:\n        return None\n    s = s.replace(',
+                                    '    s = s.replace("\u060c", ",")\n    if not s:\n        return None\n    s = s.replace('))],
+     "ambiguous_number_forms"),
+    ("a Solar Hijri month is shown as one Gregorian month",
+     [("pipeline/calendars.py", _text('        normalized = None\n        basis += "; month precision',
+                                    '        normalized = first.isoformat()[:7]\n        basis += "; month precision'))],
+     "solar_hijri_month_keeps_month_precision"),
+    ("the tabular Hijri leap month is forgotten",
+     [("pipeline/calendars.py", _text("return 30 if month % 2 == 1 or (month == 12 and _hijri_leap(year)) else 29",
+                                    "return 30 if month % 2 == 1 else 29"))],
+     "hijri_month_lengths"),
+    ("a day-month order is guessed when both are 12 or below",
+     [("pipeline/calendars.py", _text("            if a <= 12 and b <= 12 and a != b:", "            if False:"))],
+     "ambiguous_or_impossible_date"),
+
+    # §13-24 strict reading, every system
+    ("a record held on the strict reading is published again",
+     [("data/curated/systems/us/events.json", _artifact(_readd_strict_hold))],
+     "no_record_held_on_a_strict"),
+    ("a clause-5 record rests on extent alone",
+     [("data/curated/systems/us/events.json", _artifact(_criterion(5, threshold_basis="Outages by extent across many counties (TEST PLACEHOLDER).")))],
+     "clause_5_record_rests_on_extent"),
+    ("a clause-5 record counts people as customers",
+     [("data/curated/systems/us/events.json", _artifact(_people_as_customers))],
+     "counts_people_as_customers"),
+    ("a clause-4 record rests on demand alone",
+     [("data/curated/systems/us/events.json", _artifact(_criterion(4, threshold_basis="Programmed cuts tied to a load rise (TEST PLACEHOLDER).",
+                                                                  effect="Programmed cuts were announced (TEST PLACEHOLDER).")))],
+     "clause_4_record_rests_on_demand"),
+    ("a partial refinery effect is accepted under clause 1",
+     [("data/curated/systems/us/events.json", _artifact(_criterion(1, effect="A number of units were shut (TEST PLACEHOLDER).")))],
+     "clause_1_record_rests_on_an_unquantified"),
+    ("a public strict hold loses its tag",
+     [("data/curated/systems/review_edits.json", _artifact(_untag_hold))],
+     "strict_hold_is_on_file"),
+    ("a restricted system's strict hold is a public edit",
+     [("data/curated/systems/review_edits.json", _artifact(_edit_for(
+         "kw-2025-04-09-programmed-power-cuts-demand-above-generation", "suggested_disposition", "held",
+         "[C4-DEMAND] TEST PLACEHOLDER")))],
+     "strict_hold_is_on_file"),
+
+    # Option B on the global recent list (derived artifact)
+    ("the global recent list shows a campaign record's own region",
+     [("web/public/data/global/recent_evidence.json", _artifact(lambda d: _first(
+         _recent_members(d), lambda m: m["withheld"]).__setitem__("region", "Eastern Province")))],
+     "recent_list_shows_of_each_record"),
+    ("the global recent list carries a campaign record's own episode id",
+     [("web/public/data/global/recent_evidence.json", _artifact(lambda d: _first(
+         d["episodes"], lambda ep: any(m["withheld"] for m in ep["members"])).__setitem__("episode_id", "sa-2026-03-01-refinery-strike")))],
+     "recent_list_shows_of_each_record"),
+    ("the global recent list shows effect text for a record of a restricted system",
+     [("web/public/data/global/recent_evidence.json", _artifact(lambda d: _first(
+         _recent_members(d), lambda m: m["effect_on_country_page"]).__setitem__("effect", "Output fell by 300 MW (TEST PLACEHOLDER).")))],
+     "recent_list_shows_of_each_record"),
+    ("the global recent list stops pointing to the country page for an effect",
+     [("web/public/data/global/recent_evidence.json", _artifact(lambda d: _first(
+         _recent_members(d), lambda m: m["effect_on_country_page"]).__setitem__("effect_on_country_page", False)))],
+     "recent_list_shows_of_each_record"),
+
+]
+MUTATIONS += ITER20_MUTATIONS
+
+
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
     for d in COPY_DIRS:
@@ -714,25 +1033,68 @@ def _sandbox():
     return box
 
 
+TEST_FILES = ("tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py",
+              "tests/test_iteration20.py")
+
+
 def _run(box, k):
     env = {**os.environ, "EDM_GIT_ROOT": str(ROOT), "PYTHONIOENCODING": "utf-8"}
     r = subprocess.run([PY, "-m", "pytest", "-q", "-o", "addopts=", "-p", "no:cacheprovider",
-                        "tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py", "-k", k], cwd=box, capture_output=True, text=True,
+                        *TEST_FILES, "-k", k], cwd=box, capture_output=True, text=True,
                        encoding="utf-8", env=env)
     tail = (r.stdout.strip().splitlines() or [""])[-1]
     return r.returncode, tail
 
 
+def invalid_anchors(root=ROOT):
+    """Every mutation whose anchor is missing, repeated or changes nothing, checked before any
+    mutant runs: a drifted anchor used to raise mid-campaign and silently end it."""
+    bad = []
+    for name, edits, _ in MUTATIONS:
+        for rel, mutate in edits:
+            text = (root / rel).read_text(encoding="utf-8")
+            try:
+                if mutate(text) == text:
+                    bad.append(f"{name}: changes nothing in {rel}")
+            except Exception as err:   # a target that no longer exists raises anything, not only an assertion
+                bad.append(f"{name}: {type(err).__name__}: {err}")
+    names = [n for n, _, _ in MUTATIONS]
+    bad += [f"duplicate mutation name: {n}" for n in sorted({n for n in names if names.count(n) > 1})]
+    return bad
+
+
+def classify(code, tail):
+    """pytest exit 1 = a test failed: caught. 0 = survived. Anything else (2 interrupted or a
+    collection error, 3 internal error, 4 usage, 5 nothing collected) = errored."""
+    if code == 0:
+        return "survived"
+    if code == 1 and "failed" in tail:
+        return "caught"
+    return "errored"
+
+
 def main():
+    invalid = invalid_anchors()
+    counts = {"attempted": 0, "caught": 0, "survived": 0, "invalid_anchor": len(invalid), "errored": 0,
+              "baseline_not_green": 0}
+    for x in invalid:
+        print(f"  INVALID   {x}")
+    bad_names = {x.split(":")[0] for x in invalid}
     box = _sandbox()
     try:
-        failures = []
-        for name, edits, k in MUTATIONS:
+        failures = list(invalid)
+        # --from N: start at the Nth mutation, to check new mutants quickly. A release gate runs all.
+        start = int(sys.argv[sys.argv.index("--from") + 1]) if "--from" in sys.argv else 0
+        for name, edits, k in MUTATIONS[start:]:
+            if name in bad_names:
+                continue
             code, tail = _run(box, k)
             if code != 0 or "skipped" in tail and "passed" not in tail:
+                counts["baseline_not_green"] += 1
                 failures.append(f"BASELINE not green for {k!r}: {tail}")
                 print(f"  baseline  {name}: {tail}")
                 continue
+            counts["attempted"] += 1
             originals = {}
             for rel, mutate in edits:
                 p = box / rel
@@ -741,11 +1103,13 @@ def main():
             code, tail = _run(box, k)
             for rel, text in originals.items():
                 (box / rel).write_text(text, encoding="utf-8")
-            caught = code != 0
-            print(f"  {'CAUGHT  ' if caught else 'SURVIVED'}  {name}  ({tail})")
-            if not caught:
-                failures.append(f"survived: {name}")
-        print(f"{len(MUTATIONS)} mutations, {len(MUTATIONS) - sum(1 for f in failures if f.startswith('survived'))} caught")
+            outcome = classify(code, tail)
+            counts[outcome] += 1
+            print(f"  {outcome.upper():9} {name}  ({tail})")
+            if outcome != "caught":
+                failures.append(f"{outcome}: {name}")
+        print(f"{len(MUTATIONS)} mutations, {counts['caught']} caught")
+        print("outcome " + " ".join(f"{k}={v}" for k, v in counts.items()))
         if failures:
             print("\n".join(failures))
             sys.exit(1)

@@ -1274,7 +1274,7 @@ def test_onboarding_refuses_a_draft_that_is_not_ready(mutate, needle):
 
 RECENT_EPISODE_KEYS = {"system_id", "country", "episode_id", "episode_name", "basis", "records", "first_date",
                        "last_date", "date_precision", "classes", "causes", "members", "more_members"}
-RECENT_MEMBER_KEYS = {"date", "date_precision", "region", "effect", "withheld"}
+RECENT_MEMBER_KEYS = {"date", "date_precision", "region", "effect", "effect_on_country_page", "withheld"}
 
 
 def _country_policy(system):
@@ -1288,7 +1288,9 @@ def test_a_recent_list_shows_of_each_record_only_what_that_record_may_show(rel, 
     """The first test of this list trusted the list's own `withheld` flag. Here what a row may
     show is worked out from the country's own served record and the campaign register. In the
     regional list a campaign-covered record is the country's and a row carries a row key, never a
-    country's episode id (older ids name the facility and the effect)."""
+    country's episode id (older ids name the facility and the effect). Since iteration 20 (Saudi
+    harmonisation, option B) every list does the same for a campaign-covered row, and a record of a
+    system under the campaign policy carries no effect text in any list."""
     doc = _json(rel)
     recent = doc.get("recent") or doc
     campaigns = _campaigns()
@@ -1300,29 +1302,37 @@ def test_a_recent_list_shows_of_each_record_only_what_that_record_may_show(rel, 
     assert [(ep["last_date"], ep["system_id"]) for ep in recent["episodes"]] == [(d, s) for d, s, _ in expected]
     for n, (ep, (_, sid, real_id)) in enumerate(zip(recent["episodes"], expected)):
         assert set(ep) == RECENT_EPISODE_KEYS, (real_id, sorted(set(ep) ^ RECENT_EPISODE_KEYS))
-        assert ep["episode_id"] == (f"{sid}-row-{n + 1:02d}" if regional else real_id), real_id
         system, payload = _json(f"systems/{sid}/system.json"), _json(f"systems/{sid}/events.json")
         by_id = {e["event_id"]: e for e in payload["events"]}
         served = next(x for x in payload["episodes"] if x["episode_id"] == real_id)
         pool = [by_id[x] for x in served["event_ids"]]
+        any_covered = any(B.campaign_of(e, sid, campaigns) is not None for e in pool)
+        restricted = (system.get("campaign_state") or {}).get("state") in B.RESTRICTING_STATES
+        assert ep["episode_id"] == (f"{sid}-row-{n + 1:02d}" if regional or any_covered else real_id), real_id
         assert ep["country"] == system["name"], real_id
         assert ep["records"] == len(pool) == len(ep["members"]) + ep["more_members"], real_id
-        assert ep["episode_name"] == (served["name"] if len(pool) > 1 else None), real_id
+        assert ep["episode_name"] == (served["name"] if len(pool) > 1 and not any_covered else None), real_id
         for m, e in zip(ep["members"], pool):
             assert set(m) == RECENT_MEMBER_KEYS, real_id
             assert m["date"] == e["date"], e["event_id"]
             covered = B.campaign_of(e, sid, campaigns) is not None   # from the register, never from the list's flag
             assert m["withheld"] is covered and bool(e["publication"]) is covered, e["event_id"]
-            assert m["effect"] == (None if covered else e["effect"]), e["event_id"]
+            assert m["effect"] == (None if covered or restricted else e["effect"]), e["event_id"]
+            assert m["effect_on_country_page"] is (restricted and not covered), e["event_id"]
             own = e["region_name"] or ("Multiple regions" if e["regions_affected"] else "National")
-            assert m["region"] == ("National" if regional and covered else own), e["event_id"]
+            assert m["region"] == ("National" if covered else own), e["event_id"]
             withheld_seen += covered
             if _country_policy(system) and e["cause"] in B.KINETIC_CAUSES:
                 abstracted_seen += 1
                 assert m["region"] == "National", e["event_id"]
     assert withheld_seen > 0, "no campaign record was in the list: this test proved nothing"
     if regional:
-        assert abstracted_seen > 0
+        # Iteration 20's strict reading held the only published country-level attack records (Iraq,
+        # Kuwait); every covered row is still checked to read "National" above. When such a record is
+        # published again, it must be among those seen.
+        exists = any(_country_policy(_json(f"systems/{sid}/system.json")) and e["cause"] in B.KINETIC_CAUSES
+                     for sid in members for e in _json(f"systems/{sid}/events.json")["events"])
+        assert abstracted_seen > 0 or not exists
         text = json.dumps(recent, ensure_ascii=False).lower()
         for sid in members:
             for e in _json(f"systems/{sid}/events.json")["events"]:
@@ -1440,7 +1450,12 @@ def test_the_two_copies_of_every_country_and_global_file_are_the_same_bytes():
 
 LANE_STRUCTURE = {"lane", "source_family", "universe_kind", "execution", "source_window", "covered_through", "stopped_by", "status"}
 PASS_SCOPE = (r"inclusion clauses 1-7 as written; lanes and queries declared before searching \(docs/countries/[A-Z0-9_]+\.md\); "
-              r"every published record reviewed blind by three independent roles and confirmed on its final text")
+              r"every published record reviewed blind by three independent roles and confirmed on its final text"
+              # Iteration 20: the continuation pass's fixed sentence, written by the same script.
+              r"|continuation of the iteration-19 pass: lanes as declared in docs/countries/[A-Z0-9_]+\.md, work order in "
+              r"docs/countries/GULF_CONTINUATION_PLAN_20\.md; each lane states its execution after both passes; inclusion "
+              r"clauses 1-7 read strictly; every published record reviewed blind by three independent roles and confirmed "
+              r"on its final text")
 
 
 @needs_payload

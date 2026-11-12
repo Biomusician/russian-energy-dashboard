@@ -5,7 +5,7 @@ import SystemSwitcher from "./SystemSwitcher";
 import { fmtValue } from "./context";
 import { composeGroupFrame } from "./groupExport";
 import {
-  ENVIRONMENT_LABEL, LANE_STATE_LABEL, groupBySlug, labelFor, loadGroupContext, loadManifest, loadWorld,
+  ENVIRONMENT_LABEL, LANE_STATE_LABEL, groupBySlug, languageNames, labelFor, loadGroupContext, loadManifest, loadWorld,
   type GroupContext, type GroupSystem, type Manifest, type RecentEpisode,
 } from "./manifest";
 import { navigate } from "./router";
@@ -23,6 +23,8 @@ import { fmtDate } from "../data";
 const MEMBER_RAMP = ["#27517a", "#2a7596", "#3c9aa5", "#69bea6", "#a9dba4"];
 const NO_DATA = "#5a5e66";
 const OTHER = "#141c25";
+// The one colour of every member while the map shows geography only (iteration 20, §38).
+const NEUTRAL = "#33475b";
 
 /** The box that holds every member, from the manifest. A typed-in box cropped two members on a
  *  tall phone, and would be a country list in the frontend by another name. */
@@ -40,9 +42,8 @@ function classOf(v: number, max: number): number {
 }
 
 function fmtEpisodeDate(ep: RecentEpisode): string {
-  if (ep.date_precision === "month") {
-    return new Date(`${ep.first_date.slice(0, 7)}-01T00:00:00Z`).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" });
-  }
+  // From the string itself: a browser's Date parser reads "2026-04" differently across engines.
+  if (ep.date_precision === "month") return fmtDate(ep.first_date.slice(0, 7));
   return ep.first_date === ep.last_date ? fmtDate(ep.first_date) : `${fmtDate(ep.first_date)} – ${fmtDate(ep.last_date)}`;
 }
 
@@ -79,7 +80,10 @@ export default function GroupView({ id }: { id: string }) {
   const group = manifest ? groupBySlug(manifest, id)?.group : undefined;
   useEffect(() => { document.title = `Energy Disruption Monitor — ${group?.label ?? "regional"} overview`; }, [group]);
 
-  const metricId = metric ?? (ctx ? Object.keys(ctx.metrics)[0] : null);
+  // The map is coloured only once a reader chooses a metric; until then it is geography. The table,
+  // the regional total and the brief still describe a metric, the first one, so they have one.
+  const colourBy = metric && ctx?.metrics[metric] ? metric : null;
+  const metricId = colourBy ?? (ctx ? Object.keys(ctx.metrics)[0] : null);
   const m = ctx && metricId ? ctx.metrics[metricId] : null;
   const inSubset = (s: GroupSystem) => subset === "all" || (subset === "gcc" ? s.gcc_member : s.opec_member);
   const shown = useMemo(() => (ctx?.systems ?? []).filter(inSubset), [ctx, subset]);  // eslint-disable-line react-hooks/exhaustive-deps
@@ -87,6 +91,12 @@ export default function GroupView({ id }: { id: string }) {
 
   const fill = useMemo(() => {
     if (!ctx || !metricId) return OTHER;
+    if (!colourBy) {
+      const neutral: unknown[] = ["match", ["get", "a3"]];
+      for (const s of ctx.systems) neutral.push(s.a3, inSubset(s) ? NEUTRAL : OTHER);
+      neutral.push(OTHER);
+      return neutral as maplibregl.ExpressionSpecification;
+    }
     const vals = ctx.systems.map((s) => s.values[metricId]).filter((v): v is number => v != null && v > 0);
     const max = Math.max(...vals, 0);
     const expr: unknown[] = ["match", ["get", "a3"]];
@@ -96,7 +106,7 @@ export default function GroupView({ id }: { id: string }) {
     }
     expr.push(OTHER);
     return expr as maplibregl.ExpressionSpecification;
-  }, [ctx, metricId, subset]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ctx, metricId, colourBy, subset]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const memberA3 = (ctx?.systems ?? []).map((s) => s.a3);
   const bounds = useMemo(() => {
@@ -109,6 +119,8 @@ export default function GroupView({ id }: { id: string }) {
   const runExport = async () => {
     const map = mapRef.current;
     if (!map || !ctx || !m || !metricId) { setExportMsg("The map is not ready yet."); return; }
+    // A brief names the metric its colours show; an uncoloured map has none to name.
+    if (!colourBy) { setExportMsg("Choose a metric under \"Colour the map by\" first: the brief describes the colours it shows."); return; }
     try {
       const res = await exportMapPng({ source: map, width: 1600, height: 900, pixelRatio: 1,
                                        compose: (c) => composeGroupFrame(c, ctx, metricId) });
@@ -140,9 +152,19 @@ export default function GroupView({ id }: { id: string }) {
       <main className="global-main">
         {manifest && <p className="comparability" role="note">{manifest.comparability_statement}</p>}
         {ctx && (
-          <section className="panel global-note" aria-label="What this view is">
-            <p>{ctx.statement}</p>
-            <p className="small"><strong>Gulf, GCC and OPEC are three different things.</strong></p>
+          <section className="panel global-note group-intro" aria-label="What this view is">
+            <p>
+              <strong>{ctx.label}{ctx.member_names ? `: ${ctx.member_names.join(", ")}` : ""}.</strong>{" "}
+              National energy figures for each country, for context, and links to each country's reviewed
+              record of reported disruptions. The map starts uncoloured; choose a figure to colour it, or open a country.
+            </p>
+            <details className="group-howto">
+              <summary className="small">How to read this view: what “Gulf littoral”, GCC and OPEC mean, why there is no
+                score, and the two ways attacks are recorded</summary>
+            <p className="small">{ctx.statement}</p>
+            <p className="small">“Gulf littoral” is a geographic label for the states on the Gulf's coast. It is used instead of
+              “Gulf” alone, which on this site also names the United States Gulf coast.</p>
+            <p className="small"><strong>Gulf littoral, GCC and OPEC are three different things.</strong></p>
             <ul className="small group-kinds">
               <li><strong>{ctx.label}{ctx.member_names ? `: ${ctx.member_names.join(", ")}` : ""}.</strong> {ctx.note}</li>
               <li><strong>{ctx.memberships.gcc.label}{ctx.memberships.gcc.member_names ? `: ${ctx.memberships.gcc.member_names.join(", ")}` : ""}.</strong> {ctx.memberships.gcc.note}
@@ -157,6 +179,7 @@ export default function GroupView({ id }: { id: string }) {
               by region and names the facility; whether to bring its older records under the newer rule is an open decision.
               Each card below says which rule applies.</p>
             <p className="small dim">{ctx.not_built}</p>
+            </details>
           </section>
         )}
         {ctxFailed && <p className="warn-text" role="alert">The regional context could not be loaded. Each country's own page still works.</p>}
@@ -169,7 +192,8 @@ export default function GroupView({ id }: { id: string }) {
             </div>
             <div className="map-control-row">
               <label className="small">Colour the map by{" "}
-                <select aria-label="Regional map metric" value={metricId} onChange={(e) => setMetric(e.target.value)}>
+                <select aria-label="Regional map metric" value={colourBy ?? "none"} onChange={(e) => setMetric(e.target.value === "none" ? null : e.target.value)}>
+                  <option value="none">nothing (geography only)</option>
                   {Object.entries(ctx.metrics).map(([k, x]) => <option key={k} value={k}>{x.label} — {x.year}</option>)}
                 </select>
               </label>
@@ -194,23 +218,32 @@ export default function GroupView({ id }: { id: string }) {
                   onPick={(a3) => { const s = a3 ? byA3.get(a3) : null; if (s) navigate(s.system_id); }}
                   onHover={(p) => {
                     const s = p ? byA3.get(String(p.a3)) : null;
-                    setHover(s ? `${s.name}: ${fmtValue(s.values[metricId], m.unit)} (${m.year}, national total)` : null);
+                    setHover(s ? (colourBy ? `${s.name}: ${fmtValue(s.values[metricId], m.unit)} (${m.year}, national total)` : s.name) : null);
                   }}
-                  ariaLabel={`Map of the Gulf coloured by ${m.label}, ${m.year}. Countries only. Use the table below for a keyboard route.`}
+                  ariaLabel={colourBy ? `Map of the ${ctx.label} coloured by ${m.label}, ${m.year}. Countries only. Use the table below for a keyboard route.`
+                    : `Map of the ${ctx.label}, every country in one colour. Countries only. Use the table below for a keyboard route.`}
                   attribution="Boundaries: Natural Earth (public domain), line of actual control. Countries only: no facilities, routes or incident points."
                   onMap={(mm) => { mapRef.current = mm; }}
                 />
               ) : <div className="simple-map placeholder">Loading map…</div>}
               <div className="map-hover-line small mono" aria-live="off">{hover ?? " "}</div>
             </div>
-            <div className="map-legend-mini" aria-label="Map legend">
-              <span className="legend-title"><strong>{m.label} — {m.year}</strong> <span className="dim">({m.unit}; national totals)</span></span>
-              <span><i style={{ background: MEMBER_RAMP[0] }} />smaller</span>
-              <span><i style={{ background: MEMBER_RAMP[4] }} />larger, within this group</span>
-              <span><i style={{ background: NO_DATA }} />no data</span>
-              <span><i style={{ background: OTHER }} />not in this view</span>
-              <span className="small dim">Colour is a national energy figure. It says nothing about disruption, and a larger figure is not a more important country.</span>
-            </div>
+            {colourBy ? (
+              <div className="map-legend-mini" aria-label="Map legend">
+                <span className="legend-title"><strong>{m.label} — {m.year}</strong> <span className="dim">({m.unit}; national totals)</span></span>
+                <span><i style={{ background: MEMBER_RAMP[0] }} />smaller</span>
+                <span><i style={{ background: MEMBER_RAMP[4] }} />larger, within this group</span>
+                <span><i style={{ background: NO_DATA }} />no data</span>
+                <span><i style={{ background: OTHER }} />not in this view</span>
+                <span className="small dim">Colour is a national energy figure. It says nothing about disruption, and a larger figure is not a more important country.</span>
+              </div>
+            ) : (
+              <div className="map-legend-mini" aria-label="Map legend">
+                <span><i style={{ background: NEUTRAL }} />in this view</span>
+                <span><i style={{ background: OTHER }} />not in this view</span>
+                <span className="small dim">Geography only. To colour the countries by a national energy figure, choose one above; the colours never show disruption.</span>
+              </div>
+            )}
             {exportMsg && <p className="small" role="status">{exportMsg}</p>}
 
             <div className="table-scroll">
@@ -288,7 +321,7 @@ export default function GroupView({ id }: { id: string }) {
                 {Object.keys(s.lane_states).length > 0 && `: ${laneLine(s.lane_states)}`}
               </div>
               {s.languages_required.length > 0 && (
-                <div className="small dim">Languages the search plan requires: {s.languages_required.join(", ")}. Used in at least one lane so far: {s.languages_executed.join(", ") || "none"}.</div>
+                <div className="small dim">Languages the search plan requires: {languageNames(s.languages_required)}. Used in at least one source group so far: {languageNames(s.languages_executed) || "none"}.</div>
               )}
               <button className="ghost" onClick={() => navigate(s.system_id)}>Open {s.name}</button>
             </article>
@@ -313,7 +346,7 @@ export default function GroupView({ id }: { id: string }) {
                   <ul className="lane-list small">
                     {ep.members.map((mm, i) => (
                       <li key={i}><span className="dim">{mm.region}: </span>
-                        {mm.withheld ? <span className="dim">Not summarised in this list while an attack campaign is active or recent. The country page gives the effect reported at the time; later status is not published anywhere.</span> : (mm.effect ?? <span className="dim">no effect text</span>)}
+                        {mm.withheld ? <span className="dim">Not summarised in this list while an attack campaign is active or recent. The country page gives the effect reported at the time; later status is not published anywhere.</span> : mm.effect_on_country_page ? <span className="dim">Effect: on the country page.</span> : (mm.effect ?? <span className="dim">no effect text</span>)}
                       </li>
                     ))}
                   </ul>

@@ -9,9 +9,8 @@ import { daysBetween, fmtDate } from "../data";
 /** Recent evidence and Data Quality on the global home (iteration 18). */
 
 function fmtEpisodeDate(ep: RecentEpisode): string {
-  if (ep.date_precision === "month") {
-    return new Date(`${ep.first_date}T00:00:00Z`).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" });
-  }
+  // From the string itself: a browser's Date parser reads "2026-04" differently across engines.
+  if (ep.date_precision === "month") return fmtDate(ep.first_date.slice(0, 7));
   return ep.first_date === ep.last_date ? fmtDate(ep.first_date) : `${fmtDate(ep.first_date)} – ${fmtDate(ep.last_date)}`;
 }
 
@@ -66,7 +65,7 @@ export function RecentEvidencePanel() {
                   {ep.members.map((m, i) => (
                     <li key={i}>
                       <span className="dim">{m.region}: </span>
-                      {m.withheld ? <span className="dim">Effect and facility status are not shown here while an attack campaign is active; see the country page.</span> : m.effect ?? "Effect not stated."}
+                      {m.withheld ? <span className="dim">Effect and facility status are not shown here while an attack campaign is active; see the country page.</span> : m.effect_on_country_page ? <span className="dim">Effect: on the country page.</span> : m.effect ?? "Effect not stated."}
                     </li>
                   ))}
                   {ep.more_members > 0 && <li className="dim">and {ep.more_members} more on the country page</li>}

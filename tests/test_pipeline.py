@@ -7153,11 +7153,11 @@ def test_the_published_research_log_is_counts_only_and_says_where_it_stopped():
         # pass: complete -> met, partial -> partial, none -> unmet.
         systematic = [x for x in passes if x["kind"] == "systematic"]
         gate7b = {g["item"]: g for g in p["onboarding_gate"]}["7B"]
-        want = ({"complete": "met", "partial": "partial"}[max(systematic, key=lambda x: x["date"])["status"]]
+        want = ({"complete": "met", "partial": "partial"}[max(enumerate(systematic), key=lambda ix: (ix[1]["date"], ix[0]))[1]["status"]]
                 if systematic else "unmet")
         assert gate7b["status"] == want, sid
         assert p["research_freshness"]["completeness"] == (
-            max(systematic, key=lambda x: x["date"])["status"] if systematic else "never_systematic"), sid
+            max(enumerate(systematic), key=lambda ix: (ix[1]["date"], ix[0]))[1]["status"] if systematic else "never_systematic"), sid
         for s in p["sources"]:
             assert s["last_checked"], (sid, s)
 
@@ -7355,7 +7355,9 @@ def test_no_served_record_under_an_active_campaign_shows_facility_status():
                 assert e["publication"] is None and e["recovery"]["research_status"] != B.WITHHELD
     # The Saudi 2026 records: Jazan is held (its only citation reports status), and the iteration-17
     # blind review sent two more to the owner (April East-West cut, September Yanbu suspension).
-    assert covered >= 8
+    # Iteration 20's strict reading held one more Saudi record and the Iraq and Kuwait attack records
+    # (CROSS_SYSTEM_THRESHOLD_AUDIT_20.md), so seven remain; the floor follows the corpus.
+    assert covered >= 7
 
 
 def test_every_campaign_states_its_status_and_the_theatre_says_why_the_rule_waits():
@@ -7448,14 +7450,25 @@ def test_a_systematic_pass_ran_the_lanes_its_committed_plan_declared():
                 if shallow:
                     pytest.skip(f"plan commit {plan['commit']} not in this shallow clone")
                 pytest.fail(f"{sid}: plan commit {plan['commit']} / {plan['document']} not found in git")
-            # The plan must predate the log entry that claims it: committed BEFORE searching.
-            added = subprocess.run(["git", "log", "--reverse", "--format=%H", "-S", f'"date": "{p["date"]}"',
+            # The plan must predate the log entry that claims it: committed BEFORE searching. A pass
+            # is found by its own label where that is unique in the log; two passes can share a date
+            # (iteration 20: a continuation written the day of the pass it continues).
+            bys = [x.get("by") for x in log["passes"]]
+            needle = f'"by": "{p["by"]}"' if bys.count(p.get("by")) == 1 else f'"date": "{p["date"]}"'
+            added = subprocess.run(["git", "log", "--reverse", "--format=%H", "-S", needle,
                                     "--", f"data/curated/systems/{sid}/research_log.json"], cwd=GIT_ROOT,
                                    capture_output=True, text=True).stdout.split()[:1]
             for sha in added:
                 anc = subprocess.run(["git", "merge-base", "--is-ancestor", plan["commit"], sha], cwd=GIT_ROOT)
                 assert anc.returncode == 0, (sid, plan["commit"], "is not an ancestor of", sha)
-            part_a = r.stdout.split("## Part B")[0]
+            # A continuation pass names the continuation plan as its document and takes its lanes
+            # from the original plan's Part A, read at the SAME commit (iteration 20).
+            text = r.stdout
+            if plan.get("lanes_from"):
+                text = subprocess.run(["git", "show", f"{plan['commit']}:{plan['lanes_from']}"], cwd=GIT_ROOT,
+                                      capture_output=True, text=True, encoding="utf-8").stdout
+                assert p.get("continues"), (sid, "a pass whose lanes come from another plan names the pass it continues")
+            part_a = text.split("## Part B")[0]
             declared = re.findall(r"^\| ([A-Z]{1,2}\d) \|", part_a, flags=re.M)
             assert declared, plan
             assert [x["lane"] for x in p["lanes"]] == declared, (sid, declared)
@@ -8067,7 +8080,7 @@ def test_the_corpus_totals_are_sums_and_never_per_country():
         sysm = [x for x in p["research_log"]["passes"] if x["kind"] == "systematic"]
         if not sysm:        # onboarded, no systematic pass yet: no lane to count
             continue
-        newest = max(sysm, key=lambda x: x["date"])
+        newest = max(enumerate(sysm), key=lambda ix: (ix[1]["date"], ix[0]))[1]  # the later of a tie
         total += len(newest["lanes"])
         done += sum(1 for lane in newest["lanes"] if _lane_done(lane))
     assert (c["research_lanes_complete"], c["research_lanes"]) == (done, total)

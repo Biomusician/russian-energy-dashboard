@@ -21,6 +21,10 @@
       "threshold_basis": "LNG plant shut down entirely after an explosion and fire.",
       "capacity_affected": {
         "value": 15,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "facility_size",
         "unit": "Mt/y LNG",
         "source_says": "15 million tonnes per annum nameplate."
       },
@@ -96,13 +100,17 @@
       "criterion_met": 1,
       "threshold_basis": "Whole refinery shut after a fire.",
       "capacity_affected": {
-        "value": 440000,
+        "value": null,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "disputed",
+        "measure": "facility_size",
         "unit": "bbl/d",
         "source_says": "OGJ: 440,000 b/d; BIC Magazine: 435,000 bpd"
       },
       "sources": [
         {
-          "url": "https://www.ogj.com/refining-processing/refining/article/14282111/bp-progresses-with-work-to-restart-whiting-refinery",
+          "url": "https://www.ogj.com/refining-processing/refining/article/14282111/bp-progresses-work-to-restart-whiting-refinery",
           "publisher": "Oil & Gas Journal",
           "date": "2022-08-31",
           "language": "en",
@@ -110,7 +118,7 @@
           "opened": true
         },
         {
-          "url": "https://www.bicmagazine.com/api/amp/departments/operations/bp-restarting-whiting-indiana-refinery-production-units/",
+          "url": "https://www.bicmagazine.com/departments/operations/bp-restarting-whiting-indiana-refinery-production-units/",
           "publisher": "BIC Magazine",
           "date": "2022-09-02",
           "language": "en",
@@ -123,7 +131,7 @@
         "kind": "partial_restart",
         "date": "2022-08-31",
         "evidence": "Phased restart began Wednesday 31 Aug 2022; on 2 Sep BP said the refinery was 'returning to normal operation'.",
-        "url": "https://www.bicmagazine.com/api/amp/departments/operations/bp-restarting-whiting-indiana-refinery-production-units/"
+        "url": "https://www.bicmagazine.com/departments/operations/bp-restarting-whiting-indiana-refinery-production-units/"
       },
       "review": {
         "reviewed_at": "2026-11-03",
@@ -165,6 +173,10 @@
       "threshold_basis": "Whole refinery shut after a fire; months-long outage.",
       "capacity_affected": {
         "value": 160000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "facility_size",
         "unit": "bbl/d",
         "source_says": "Argus and Hydrocarbon Engineering: a 160,000 b/d refinery"
       },
@@ -178,7 +190,7 @@
           "opened": true
         },
         {
-          "url": "https://www.argusmedia.com/es/news/2373087-bp-toledo-refinery-shuts-down-after-fire-update-3",
+          "url": "https://www.argusmedia.com/es/news-and-insights/latest-market-news/2373087-bp-toledo-refinery-shuts-down-after-fire-update-3",
           "publisher": "Argus Media",
           "date": "2022-09-21",
           "language": "en",
@@ -297,6 +309,10 @@
       "threshold_basis": "Loss of supply to far more than 100,000 customers.",
       "capacity_affected": {
         "value": 2700000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "about 2.7 million customers lost power at the peak, reported by DOE on 29 Sep 2022"
       },
@@ -357,12 +373,16 @@
       "threshold_basis": "Crude trunk pipeline shut down.",
       "capacity_affected": {
         "value": 622000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "facility_size",
         "unit": "bbl/d",
         "source_says": "ENR: Keystone system capacity about 622,000 barrels per day"
       },
       "sources": [
         {
-          "url": "https://www.enr.com/articles/55680-keystone-pipe-has-full-restart-after-14000-barrel-spill-dec-7",
+          "url": "https://www.enr.com/articles/55680-keystone-pipe-has-full-restart-after-14-000-barrel-spill-dec-7",
           "publisher": "Engineering News-Record",
           "date": "2022-12-30",
           "language": "en",
@@ -383,7 +403,7 @@
         "kind": "full_restart",
         "date": "2022-12-30",
         "evidence": "Full restart reported 30 Dec 2022, under a regulator-set operating restriction; site remediation continued into 2023.",
-        "url": "https://www.enr.com/articles/55680-keystone-pipe-has-full-restart-after-14000-barrel-spill-dec-7"
+        "url": "https://www.enr.com/articles/55680-keystone-pipe-has-full-restart-after-14-000-barrel-spill-dec-7"
       },
       "review": {
         "reviewed_at": "2026-11-03",
@@ -424,7 +444,11 @@
       "criterion_met": 5,
       "threshold_basis": "Single-day snapshot above 100,000 customers.",
       "capacity_affected": {
-        "value": 250000,
+        "value": null,
+        "value_min": 250000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "over 250,000 in Maine on December 23 (PowerOutage.us snapshot)"
       },
@@ -494,7 +518,7 @@
       "capacity_affected": null,
       "sources": [
         {
-          "url": "https://www.power-eng.com/?p=120269",
+          "url": "https://www.power-eng.com/operations-maintenance/tva-lost-approximately-20-of-power-production-during-december-storm/",
           "publisher": "Power Engineering",
           "date": "2023-05-10",
           "language": "en",
@@ -515,7 +539,7 @@
         "kind": "service_restored",
         "date": "2022-12-24",
         "evidence": "TVA directed load curtailments on two occasions, 23 Dec (2 h 15 min) and 24 Dec (5 h 40 min); local power companies ran short rolling outages, one saying about 15 minutes each (Local 3 News).",
-        "url": "https://www.power-eng.com/?p=120269"
+        "url": "https://www.power-eng.com/operations-maintenance/tva-lost-approximately-20-of-power-production-during-december-storm/"
       },
       "review": {
         "reviewed_at": "2026-11-03",
@@ -560,6 +584,10 @@
       "threshold_basis": "Generation shortfall forcing rotating outages (also exceeds clause 5's 100,000 customers).",
       "capacity_affected": {
         "value": 500000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "about 500,000 across the Carolinas"
       },
@@ -601,91 +629,8 @@
       "hazard_name": null
     },
     {
-      "event_id": "us-2022-12-23-pjm-forced-outages-elliott",
-      "date": "2022-12-23",
-      "date_precision": "day",
-      "date_end": "2022-12-25",
-      "region_code": null,
-      "geography_precision": "country",
-      "regions_affected": [
-        "US-DE",
-        "US-IL",
-        "US-IN",
-        "US-KY",
-        "US-MD",
-        "US-MI",
-        "US-NJ",
-        "US-NC",
-        "US-OH",
-        "US-PA",
-        "US-TN",
-        "US-VA",
-        "US-WV",
-        "US-DC"
-      ],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": "PJM Interconnection",
-      "asset_class": "power_plant_thermal",
-      "cause": "natural_hazard",
-      "summary": "During Winter Storm Elliott PJM generators suffered very large forced outages; PJM invoked emergency procedures and obtained a DOE order to keep certain units available.",
-      "effect": "Forced outages rose to nearly 46,000 MW by the morning of 24 Dec (about 57,000 MW of the fleet unavailable at the morning peak). PJM ran an RTO-wide Maximum Generation Emergency Action, called demand response and issued a conservation call; no load shed is reported.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 4,
-      "threshold_basis": "Power plants well above 500 MW forced offline with a reported effect (emergency procedures and DOE order).",
-      "capacity_affected": {
-        "value": 46000,
-        "unit": "MW",
-        "source_says": "nearly 46,000 MW forced outages (initial estimate) by Saturday morning, 24 Dec"
-      },
-      "sources": [
-        {
-          "url": "https://insidelines.pjm.com/pjm-operated-reliably-throughout-winter-storm-challenges/",
-          "publisher": "PJM Inside Lines",
-          "date": "2023-01-12",
-          "language": "en",
-          "source_role": "operator",
-          "opened": true
-        },
-        {
-          "url": "https://www.spglobal.com/market-intelligence/en/news-insights/articles/2023/3/holiday-2022-winter-storm-raises-reliability-generation-diversity-questions-74685081",
-          "publisher": "S&P Global Market Intelligence",
-          "date": null,
-          "language": "en",
-          "source_role": "industry",
-          "opened": false
-        }
-      ],
-      "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "no_supply_lost",
-        "date": "2022-12-25",
-        "evidence": "All PJM emergency procedures ended 10 p.m. Sunday 25 Dec 2022. No customer load was shed.",
-        "url": "https://insidelines.pjm.com/pjm-operated-reliably-throughout-winter-storm-challenges/"
-      },
-      "review": {
-        "reviewed_at": "2026-11-03",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 2,
-        "sources_opened_by_reviewer": 1,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "at least one source read",
-        "roles": {
-          "evidence": "accept",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": "Winter Storm Elliott (2022)"
-    },
-    {
       "event_id": "us-2022-12-winter-storm-elliott-gas-production",
-      "date": "2022-12-01",
+      "date": "2022-12",
       "date_precision": "month",
       "date_end": null,
       "region_code": null,
@@ -702,7 +647,11 @@
       "criterion_met": 7,
       "threshold_basis": "Production shut in at a material volume per a federal statistical agency.",
       "capacity_affected": {
-        "value": 6,
+        "value": null,
+        "value_min": 6,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "bcf/d",
         "source_says": "Northeast (incl. Appalachian Basin) output fell by more than 6 Bcf/d; Permian output by about 3 Bcf/d (EIA)"
       },
@@ -762,7 +711,11 @@
       "criterion_met": 5,
       "threshold_basis": "More than 100,000 customers without supply.",
       "capacity_affected": {
-        "value": 800000,
+        "value": null,
+        "value_min": 800000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "At the peak the prior week, Michigan had more than 800,000 outages"
       },
@@ -804,74 +757,6 @@
       "hazard_name": null
     },
     {
-      "event_id": "us-2023-08-25-marathon-garyville-tank-fire",
-      "date": "2023-08-25",
-      "date_precision": "day",
-      "date_end": "2023-08-31",
-      "region_code": "US-LA",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": "Garyville refinery",
-      "facility_name_local": null,
-      "operator": "Marathon Petroleum",
-      "asset_class": "refinery",
-      "cause": "technical",
-      "summary": "A storage tank fire at Marathon's Garyville refinery led to units being shut; the plant was not closed entirely.",
-      "effect": "Refinery ran at reduced rates for about a week; no volume or percentage of the cut is given.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 1,
-      "threshold_basis": "Units shut with a reported throughput effect ('running at reduced rates', 'curtailed throughputs').",
-      "capacity_affected": {
-        "value": 596000,
-        "unit": "bbl/d",
-        "source_says": "596,000 b/d nameplate; the size of the reduction is not reported"
-      },
-      "sources": [
-        {
-          "url": "https://www.argusmedia.com/de/news-and-insights/latest-market-news/2483560-marathon-garyville-refinery-runs-reduced-post-fire",
-          "publisher": "Argus Media",
-          "date": "2023-08-27",
-          "language": "en",
-          "source_role": "industry",
-          "opened": true
-        },
-        {
-          "url": "https://www.argusmedia.com/es/news-and-insights/latest-market-news/2485045-marathon-garyville-resumes-normal-ops",
-          "publisher": "Argus Media",
-          "date": "2023-08-31",
-          "language": "en",
-          "source_role": "industry",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "full_restart",
-        "date": "2023-08-31",
-        "evidence": "Marathon spokesperson told Argus the refinery had 'resumed normal operations and is running at planned rates'.",
-        "url": "https://www.argusmedia.com/es/news-and-insights/latest-market-news/2485045-marathon-garyville-resumes-normal-ops"
-      },
-      "review": {
-        "reviewed_at": "2026-11-03",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 2,
-        "sources_opened_by_reviewer": 2,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "at least one source read",
-        "roles": {
-          "evidence": "accept_with_correction",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
-    },
-    {
       "event_id": "us-2023-08-30-hurricane-idalia-florida-outages",
       "date": "2023-08-30",
       "date_precision": "day",
@@ -891,6 +776,10 @@
       "threshold_basis": "More than 100,000 customers without supply.",
       "capacity_affected": {
         "value": 288248,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "peak power outages reported statewide were 288,248 customers"
       },
@@ -933,7 +822,7 @@
     },
     {
       "event_id": "us-2024-01-winter-storm-heather-gas-production",
-      "date": "2024-01-01",
+      "date": "2024-01",
       "date_precision": "month",
       "date_end": null,
       "region_code": null,
@@ -950,7 +839,11 @@
       "criterion_met": 7,
       "threshold_basis": "Production shut in at a material volume per a federal statistical agency.",
       "capacity_affected": {
-        "value": 15,
+        "value": null,
+        "value_min": 15,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "bcf/d",
         "source_says": "weekly U.S. production interrupted by more than 15 Bcf/d; Permian ~3 Bcf/d; Haynesville >2 Bcf/d"
       },
@@ -1011,6 +904,10 @@
       "threshold_basis": "Whole refinery shut down.",
       "capacity_affected": {
         "value": 435000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "facility_size",
         "unit": "bbl/d",
         "source_says": "435,000 barrels per day."
       },
@@ -1070,7 +967,11 @@
       "criterion_met": 5,
       "threshold_basis": "Loss of supply to far more than 100,000 customers.",
       "capacity_affected": {
-        "value": 2260000,
+        "value": null,
+        "value_min": 2260000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "more than 2.26 million customers lost power at the peak"
       },
@@ -1120,66 +1021,6 @@
       "hazard_name": "Hurricane Beryl (2024)"
     },
     {
-      "event_id": "us-2024-09-11-hurricane-francine-louisiana-outages",
-      "date": "2024-09-11",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "US-LA",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": null,
-      "asset_class": "system_wide",
-      "cause": "natural_hazard",
-      "summary": "Hurricane Francine made landfall in Louisiana as a Category 2 storm.",
-      "effect": "About 450,000 people lost power in Louisiana, mostly due to fallen debris.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 5,
-      "threshold_basis": "More than 100,000 without supply.",
-      "capacity_affected": {
-        "value": 450000,
-        "unit": "people",
-        "source_says": "About 450,000 people lost power (Louisiana)"
-      },
-      "sources": [
-        {
-          "url": "https://en.wikipedia.org/wiki/Hurricane_Francine",
-          "publisher": "Wikipedia",
-          "date": null,
-          "language": "en",
-          "source_role": "media",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "No restoration report has been searched for yet; the sources cited for the event do not give one. This is 'not yet researched', not 'no evidence exists'.",
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-11-03",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 1,
-        "sources_opened_by_reviewer": 1,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "at least one source read",
-        "roles": {
-          "evidence": "accept",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": "Hurricane Francine (2024)"
-    },
-    {
       "event_id": "us-2024-09-11-hurricane-francine-gulf-shut-ins",
       "date": "2024-09-11",
       "date_precision": "day",
@@ -1199,6 +1040,10 @@
       "threshold_basis": "Production shut in at a reported material share.",
       "capacity_affected": {
         "value": 39,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "percent of Gulf oil and gas production",
         "source_says": "the storm knocked out 39% of oil and natural gas production (Wikipedia, citing Reuters 12 Sep 2024; Gulf of Mexico context)"
       },
@@ -1314,7 +1159,11 @@
       "criterion_met": 5,
       "threshold_basis": "Loss of supply to far more than 100,000 customers.",
       "capacity_affected": {
-        "value": 1300000,
+        "value": null,
+        "value_min": 1300000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "More than 1.3 million customers."
       },
@@ -1375,6 +1224,10 @@
       "threshold_basis": "Loss of supply to far more than 100,000 customers.",
       "capacity_affected": {
         "value": 1280000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "~1.28 million (estimated)"
       },
@@ -1434,7 +1287,11 @@
       "criterion_met": 5,
       "threshold_basis": "Loss of supply to far more than 100,000 customers.",
       "capacity_affected": {
-        "value": 879000,
+        "value": null,
+        "value_min": 879000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "at least 879,000"
       },
@@ -1495,6 +1352,10 @@
       "threshold_basis": "Loss of supply to far more than 100,000 customers.",
       "capacity_affected": {
         "value": 1690000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "About 1.69 million customers."
       },
@@ -1554,7 +1415,11 @@
       "criterion_met": 5,
       "threshold_basis": "Loss of supply to far more than 100,000 customers.",
       "capacity_affected": {
-        "value": 3000000,
+        "value": null,
+        "value_min": 3000000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "More than 3 million homes and buildings statewide lost power"
       },
@@ -1620,9 +1485,13 @@
       "effect": "About 650,000 people in Washington lost power; one county utility had over 135,000 customers out.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
-      "threshold_basis": "Grid event with transmission damage causing loss of supply to far more than 100,000.",
+      "threshold_basis": "Clause 5: one county utility alone had over 135,000 customers out (the 650,000 figure counts people, not customers, and is not the basis).",
       "capacity_affected": {
         "value": 650000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "people",
         "source_says": "About 650,000 people lost power"
       },
@@ -1683,6 +1552,10 @@
       "threshold_basis": "Crude trunk pipeline shut down.",
       "capacity_affected": {
         "value": 3500,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "other",
         "unit": "bbl released",
         "source_says": "About 3,500 barrels (147,000 gallons), estimated later — volume spilled, not throughput affected"
       },
@@ -1748,9 +1621,13 @@
       "effect": "As many as 300,000 people in Tennessee were estimated to have lost power; more than 250,000 outages statewide remained on 26 Jan.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
-      "threshold_basis": "More than 100,000 customers without supply.",
+      "threshold_basis": "Clause 5: more than 250,000 outages statewide on 26 January (the 'as many as 300,000 people' estimate counts people and is not the basis).",
       "capacity_affected": {
-        "value": 300000,
+        "value": null,
+        "value_min": null,
+        "value_max": 300000,
+        "qualifier": "at_most",
+        "measure": "affected",
         "unit": "people",
         "source_says": "As many as 300,000 people were estimated to have lost power."
       },
@@ -1811,6 +1688,10 @@
       "threshold_basis": "More than 100,000 customers without supply.",
       "capacity_affected": {
         "value": 300000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "almost 300,000 customers"
       },
@@ -1871,6 +1752,10 @@
       "threshold_basis": "Refinery shut, then throughput materially cut for more than a year.",
       "capacity_affected": {
         "value": 157000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "facility_size",
         "unit": "b/d",
         "source_says": "157,000 barrel-per-day refinery"
       },
@@ -1892,7 +1777,7 @@
           "opened": true
         },
         {
-          "url": "https://www.sec.gov/Archives/edgar/data/0001534504/000153450426000029/a991pressreleaseq2-26.htm",
+          "url": "https://www.sec.gov/Archives/edgar/data/1534504/000153450426000029/a991pressreleaseq2-26.htm",
           "publisher": "PBF Energy (SEC filing)",
           "date": "2026-07-30",
           "language": "en",
@@ -1905,7 +1790,7 @@
         "kind": "full_restart",
         "date": null,
         "evidence": "PBF's second-quarter 2026 results release states the Martinez refinery returned to full operations in May 2026.",
-        "url": "https://www.sec.gov/Archives/edgar/data/0001534504/000153450426000029/a991pressreleaseq2-26.htm"
+        "url": "https://www.sec.gov/Archives/edgar/data/1534504/000153450426000029/a991pressreleaseq2-26.htm"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -1917,65 +1802,6 @@
         "disposition": "corrected",
         "source_count": 3,
         "sources_opened_by_reviewer": 5,
-        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
-        "source_access": "at least one source read"
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "us-2025-10-02-chevron-el-segundo-fire",
-      "date": "2025-10-02",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "US-CA",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": "El Segundo refinery",
-      "facility_name_local": null,
-      "operator": "Chevron",
-      "asset_class": "refinery",
-      "cause": "unknown",
-      "summary": "An explosion and fire at Chevron's El Segundo refinery on the night of 2 October 2025 forced several process units offline. Chevron said the fire was extinguished on 4 October.",
-      "effect": "Several process units shut; Chevron said the refinery kept producing fuels at diminished rates.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 1,
-      "threshold_basis": "Refinery throughput materially cut, with the effect reported by the operator.",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://en.wikipedia.org/wiki/October_2025_El_Segundo_fire",
-          "publisher": "Wikipedia",
-          "date": "2025-10-03",
-          "language": "en",
-          "source_role": "media",
-          "opened": true
-        },
-        {
-          "url": "https://hydrocarbonprocessing.com/news/2025/10/chevron-working-to-restart-units-at-el-segundo-refinery-us-after-fire/",
-          "publisher": "Hydrocarbon Processing",
-          "date": "2025-10-08",
-          "language": "en",
-          "source_role": "industry",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "RESEARCHED_NO_PUBLIC_EVIDENCE",
-        "kind": null,
-        "date": null,
-        "evidence": "The source read on 8 October 2025 said Chevron was working to restart units, an intention rather than a restart. No restart report from an openly readable source was found on review.",
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-10-31",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "dual_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 2,
-        "disposition": "corrected",
-        "source_count": 2,
-        "sources_opened_by_reviewer": 3,
         "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
       },
@@ -2060,6 +1886,10 @@
       "threshold_basis": "Whole refinery shut after an explosion and fire.",
       "capacity_affected": {
         "value": 380000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "facility_size",
         "unit": "b/d",
         "source_says": "380,000-bpd Port Arthur refinery"
       },
@@ -2245,6 +2075,10 @@
       "threshold_basis": "Grid event affecting at least 100,000 customers: utility-reported peak of 186,000 in Tennessee.",
       "capacity_affected": {
         "value": 186000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "Peak Outages: 186,000"
       },
@@ -2367,6 +2201,10 @@
       "threshold_basis": "Grid-operator emergency action: firm load shed under emergency operational policy (OE-417).",
       "capacity_affected": {
         "value": 100,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "MW",
         "source_says": "Demand Loss (MW) 100; customers 39,094"
       },
@@ -2422,6 +2260,10 @@
       "threshold_basis": "Grid-operator emergency action: firm load shed ordered by PJM (clause 5 operational definition).",
       "capacity_affected": {
         "value": 500,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "MW",
         "source_says": "PJM directed the reduction of 500 MWs of firm AEP load"
       },
@@ -2492,7 +2334,11 @@
       "criterion_met": 5,
       "threshold_basis": "Grid event affecting at least 100,000 customers: one utility alone reported over 231,000 out at one time in Michigan.",
       "capacity_affected": {
-        "value": 231000,
+        "value": null,
+        "value_min": 231000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "more than 231,000 customers without power (DTE)"
       },
@@ -2556,6 +2402,10 @@
       "threshold_basis": "Grid event affecting at least 100,000 customers: about 122,000 out at one time in Michigan (utility release).",
       "capacity_affected": {
         "value": 122000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "about 122,000 Consumers Energy customers remain affected"
       },
@@ -2618,7 +2468,11 @@
       "criterion_met": 5,
       "threshold_basis": "Clause 5: more than 330,000 customers out at one time in Florida on the morning of 10 Nov 2022 (PowerOutage.US via Fox Business).",
       "capacity_affected": {
-        "value": 330000,
+        "value": null,
+        "value_min": 330000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "more than 330,000 customers are in the dark"
       },
@@ -2687,6 +2541,10 @@
       "threshold_basis": "Grid event affecting at least 100,000 customers: about 154,141 out at one time in California (one utility).",
       "capacity_affected": {
         "value": 154141,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "approximately 154,141 SMUD customers were without power"
       },
@@ -2749,7 +2607,11 @@
       "criterion_met": 5,
       "threshold_basis": "Grid event affecting at least 100,000 customers: reports range from 185,434 (OE-417) to nearly 350,000 (CapRadio); simultaneous peak unconfirmed.",
       "capacity_affected": {
-        "value": 350000,
+        "value": null,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "disputed",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "nearly 350,000 SMUD customers were without electricity"
       },
@@ -2813,6 +2675,10 @@
       "threshold_basis": "Grid event affecting at least 100,000 customers: 280,159 out at one time in Texas.",
       "capacity_affected": {
         "value": 280159,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "280,159 customers are without power in the North Texas area"
       },
@@ -2875,7 +2741,11 @@
       "criterion_met": 5,
       "threshold_basis": "Grid event affecting at least 100,000 customers: more than 200,000 KU/LG&E customers out in Kentucky, within well over half a million statewide that night (WEKU).",
       "capacity_affected": {
-        "value": 200000,
+        "value": null,
+        "value_min": 200000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "more than 200,000 customers served by Kentucky Utilities-L-G and E"
       },
@@ -2939,6 +2809,10 @@
       "threshold_basis": "Grid event affecting at least 100,000 customers: around 200,000 out at one time in Michigan.",
       "capacity_affected": {
         "value": 200000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "around 200,000 people remain without power"
       },
@@ -3001,7 +2875,11 @@
       "criterion_met": 5,
       "threshold_basis": "Grid event affecting at least 100,000 customers: AEP Texas reported a peak of over 155,000 customers out at one time in Texas.",
       "capacity_affected": {
-        "value": 155000,
+        "value": null,
+        "value_min": 155000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "At the storm's peak, at 2 a.m. Saturday, over 155,000 customers were left without power."
       },
@@ -3072,7 +2950,11 @@
       "criterion_met": 5,
       "threshold_basis": "Grid event affecting at least 100,000 customers: more than 120,000 out at one time in Tennessee.",
       "capacity_affected": {
-        "value": 120000,
+        "value": null,
+        "value_min": 120000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "more than 120,000 Memphis Light, Gas and Water customers did not have power"
       },
@@ -3143,7 +3025,11 @@
       "criterion_met": 5,
       "threshold_basis": "Grid event affecting at least 100,000 customers: more than 155,000 out at one time in Michigan.",
       "capacity_affected": {
-        "value": 155000,
+        "value": null,
+        "value_min": 155000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "more than 155,000 DTE Energy customers were without power"
       },
@@ -3157,7 +3043,7 @@
           "opened": true
         },
         {
-          "url": "https://cbsnews.com/amp/detroit/news/more-than-80k-dte-customers-without-power-amid-severe-weather-in-southeast-michigan",
+          "url": "https://www.cbsnews.com/detroit/news/more-than-80k-dte-customers-without-power-amid-severe-weather-in-southeast-michigan/",
           "publisher": "CBS News Detroit",
           "date": "2023-07-26",
           "language": "en",
@@ -3207,6 +3093,10 @@
       "threshold_basis": "Grid event affecting at least 100,000 customers: over 230,000 still out at one time in Maine two days after the storm.",
       "capacity_affected": {
         "value": 185000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "roughly 185,000 Central Maine Power customers"
       },
@@ -3270,6 +3160,10 @@
       "threshold_basis": "Grid-operator emergency action: firm load shed under emergency operational policy (OE-417).",
       "capacity_affected": {
         "value": 180,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "MW",
         "source_says": "Demand Loss (MW) 180"
       },
@@ -3324,7 +3218,11 @@
       "criterion_met": 5,
       "threshold_basis": "Grid event affecting at least 100,000 customers: more than 600,000 out at one time in California.",
       "capacity_affected": {
-        "value": 600000,
+        "value": null,
+        "value_min": 600000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "More than 600,000 homes and businesses were still without power"
       },
@@ -3390,7 +3288,11 @@
       "criterion_met": 5,
       "threshold_basis": "Grid-operator emergency action: firm load shed under emergency operational policy (OE-417).",
       "capacity_affected": {
-        "value": 156,
+        "value": null,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "disputed",
+        "measure": "affected",
         "unit": "MW",
         "source_says": "Demand Loss (MW) 150 / 150 / 156 across three rows"
       },
@@ -3445,7 +3347,11 @@
       "criterion_met": 5,
       "threshold_basis": "Grid event affecting at least 100,000 customers: more than 500,000 out at one time in Texas.",
       "capacity_affected": {
-        "value": 500000,
+        "value": null,
+        "value_min": 500000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "more than a half million customers were still without electricity"
       },
@@ -3509,6 +3415,10 @@
       "threshold_basis": "Grid event affecting at least 100,000 customers: about 150,000 out at one time in Michigan.",
       "capacity_affected": {
         "value": 150000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "About 150,000 Consumers Energy customers were without power"
       },
@@ -3572,6 +3482,10 @@
       "threshold_basis": "Grid event affecting at least 100,000 customers: utility-reported peak of 218,332 in Nebraska.",
       "capacity_affected": {
         "value": 218332,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "At the peak, 218,332 customers were in the dark"
       },
@@ -3634,7 +3548,11 @@
       "criterion_met": 5,
       "threshold_basis": "Grid event affecting at least 100,000 customers: more than 320,000 out at one time in Michigan.",
       "capacity_affected": {
-        "value": 320000,
+        "value": null,
+        "value_min": 320000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "more than 320,000 Michigan customers were without power"
       },
@@ -3648,7 +3566,7 @@
           "opened": true
         },
         {
-          "url": "https://gandernewsroom.com/2024/08/28/crews-work-to-restore-power-to-more-than-300000-michigan-homes-businesses-after-storms",
+          "url": "https://gandernewsroom.com/local/crews-work-to-restore-power-to-more-than-300000-michigan-homes-businesses-after-storms/",
           "publisher": "Gander Newsroom",
           "date": "2024-08-28",
           "language": "en",
@@ -3698,6 +3616,10 @@
       "threshold_basis": "Grid-operator emergency action: firm load shed under emergency operational policy (OE-417).",
       "capacity_affected": {
         "value": 330,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "MW",
         "source_says": "Demand Loss (MW) 330; customers 8,517"
       },
@@ -3752,7 +3674,11 @@
       "criterion_met": 5,
       "threshold_basis": "Grid event affecting at least 100,000 customers: utility-reported peak above 335,000 in Texas.",
       "capacity_affected": {
-        "value": 335000,
+        "value": null,
+        "value_min": 335000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "At its peak, the storm resulted in more than 335,000 outages"
       },
@@ -3815,7 +3741,11 @@
       "criterion_met": 5,
       "threshold_basis": "Grid event affecting at least 100,000 customers: over 194,000 out at one time in Michigan (one utility).",
       "capacity_affected": {
-        "value": 194000,
+        "value": null,
+        "value_min": 194000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "over 194,000 people are without service"
       },
@@ -3829,7 +3759,7 @@
           "opened": true
         },
         {
-          "url": "https://www.cbsnews.com/amp/detroit/news/power-outages-northern-michigan-weekend-storms",
+          "url": "https://www.cbsnews.com/detroit/news/power-outages-northern-michigan-weekend-storms/",
           "publisher": "CBS News Detroit",
           "date": "2025-03-30",
           "language": "en",
@@ -3882,6 +3812,10 @@
       "threshold_basis": "Grid-operator emergency action: firm load shed under emergency operational policy (OE-417).",
       "capacity_affected": {
         "value": 122,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "MW",
         "source_says": "Demand Loss (MW) 122"
       },
@@ -3988,6 +3922,10 @@
       "threshold_basis": "Grid-operator emergency action: firm load shed under emergency operational policy (OE-417).",
       "capacity_affected": {
         "value": 140,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "MW",
         "source_says": "Demand Loss (MW) 140"
       },
@@ -4043,6 +3981,10 @@
       "threshold_basis": "Grid event affecting at least 100,000 customers: utility-stated peak of about 169,000 out at one time in Texas.",
       "capacity_affected": {
         "value": 169000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "At peak, approximately 169,000 of CenterPoint's 2.9 million customers were without power"
       },
@@ -4119,6 +4061,10 @@
       "threshold_basis": "Clause 4: more than 4,800 MW of generation forced offline in a cascading disturbance, with about 1,100 MW of firm load lost and about 250,000 customers affected across four states (no per-state split published).",
       "capacity_affected": {
         "value": 250000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "affected approximately 250,000 customers, lasting up to 9.5 hours"
       },
@@ -4190,6 +4136,10 @@
       "threshold_basis": "Clause 5: at least 243,000 customers without power at one time in South Carolina (DOE).",
       "capacity_affected": {
         "value": 243000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "243,000 customers in South Carolina ... without power"
       },
@@ -4253,6 +4203,10 @@
       "threshold_basis": "Clause 5: about 326,000 customers out at one time in North Carolina (DOE).",
       "capacity_affected": {
         "value": 326000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "approximately 326,000 outages in North Carolina"
       },
@@ -4316,6 +4270,10 @@
       "threshold_basis": "Clause 7: regulator-reported shut-in of about 11% of Gulf oil production.",
       "capacity_affected": {
         "value": 11,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "percent of Gulf oil production",
         "source_says": "approximately 11% of current oil production ... had been shut-in"
       },
@@ -4446,6 +4404,10 @@
       "threshold_basis": "Clause 5: about 209,000 customers out at one time in Georgia (DOE).",
       "capacity_affected": {
         "value": 209000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "209,000 outages in Georgia as of 3:00 PM EDT on August 30"
       },
@@ -4509,12 +4471,16 @@
       "threshold_basis": "Clause 1: LNG terminal shut down (all three trains), reported by trade press citing the operator.",
       "capacity_affected": {
         "value": 15,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "facility_size",
         "unit": "Mt/y LNG",
         "source_says": "15 mtpa of export capacity"
       },
       "sources": [
         {
-          "url": "https://lngprime.com/?p=116661",
+          "url": "https://lngprime.com/americas/freeport-lng-terminal-in-texas-shut-down-due-to-hurricane-beryl/116661/",
           "publisher": "LNG Prime",
           "date": "2024-07-08",
           "language": "en",
@@ -4580,6 +4546,10 @@
       "threshold_basis": "Clause 5: peak of 128,592 customers without power in Tennessee (DOE).",
       "capacity_affected": {
         "value": 128592,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "Tennessee ... Peak Storm Outages 128,592"
       },
@@ -4643,6 +4613,10 @@
       "threshold_basis": "Clause 5: peak of 243,827 customers without power in Virginia (DOE).",
       "capacity_affected": {
         "value": 243827,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "Virginia ... Peak Storm Outages 243,827"
       },
@@ -4706,6 +4680,10 @@
       "threshold_basis": "Clause 5: peak of 226,810 customers without power in Kentucky (DOE).",
       "capacity_affected": {
         "value": 226810,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "Kentucky ... Peak Storm Outages 226,810"
       },
@@ -4769,6 +4747,10 @@
       "threshold_basis": "Clause 5: peak of 330,464 customers without power in Ohio (DOE).",
       "capacity_affected": {
         "value": 330464,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "Ohio ... Peak Storm Outages 330,464"
       },
@@ -4832,6 +4814,10 @@
       "threshold_basis": "Clause 5: peak of 114,114 customers without power in Indiana (DOE).",
       "capacity_affected": {
         "value": 114114,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "Indiana ... Peak Storm Outages 114,114"
       },
@@ -4895,6 +4881,10 @@
       "threshold_basis": "Clause 7: regulator-reported shut-in of 511,000 b/d of Gulf oil production.",
       "capacity_affected": {
         "value": 511000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "b/d",
         "source_says": "511,000 barrels per day ... 29% of offshore Gulf output"
       },
@@ -5041,6 +5031,10 @@
       "threshold_basis": "Clause 5: 165,000 customers of one utility out at the peak.",
       "capacity_affected": {
         "value": 165000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "initial Jan. 13 storm peak at 165,000 customers"
       },
@@ -5104,6 +5098,10 @@
       "threshold_basis": "Clause 5: about 250,000 customers out at one time in Florida.",
       "capacity_affected": {
         "value": 250000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "250,000 customers were without power across the state"
       },
@@ -5159,6 +5157,10 @@
       "threshold_basis": "Clause 5: about 132,000 customers out at one time in North Carolina.",
       "capacity_affected": {
         "value": 132000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "nearly 132,000 outages were reported across the state"
       },
@@ -5227,6 +5229,10 @@
       "threshold_basis": "Clause 7: regulator-reported shut-in of 449,541 b/d of Gulf oil production.",
       "capacity_affected": {
         "value": 449541,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "b/d",
         "source_says": "449,541 barrels of oil per day (BOPD), or 25.69%"
       },
@@ -5240,7 +5246,7 @@
           "opened": true
         },
         {
-          "url": "https://ogj.com/general-interest/article/55241321/bsee-22-of-gom-oil-production-shut-in-as-hurricane-rafael-churns-through-southern-gulf",
+          "url": "https://www.ogj.com/general-interest/article/55241321/bsee-22-of-gom-oil-production-shut-in-as-hurricane-rafael-churns-through-southern-gulf",
           "publisher": "Oil & Gas Journal",
           "date": "2024-11-07",
           "language": "en",
@@ -5264,7 +5270,7 @@
           "opened": true
         },
         {
-          "url": "https://amp.insurancejournal.com/news/national/2024/11/07/800368.htm",
+          "url": "https://insurancejournal.com/news/national/2024/11/07/800368.htm",
           "publisher": "Insurance Journal (Reuters)",
           "date": "2024-11-07",
           "language": "en",
@@ -5313,7 +5319,11 @@
       "criterion_met": 5,
       "threshold_basis": "Clause 5: more than 220,000 customers out at one time in Hawaii (state officials).",
       "capacity_affected": {
-        "value": 220000,
+        "value": null,
+        "value_min": 220000,
+        "value_max": null,
+        "qualifier": "at_least",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "dropped from more than 220,000"
       },
@@ -5359,7 +5369,7 @@
     },
     {
       "event_id": "us-2026-01-winter-storm-fern-gas-production",
-      "date": "2026-01-01",
+      "date": "2026-01",
       "date_precision": "month",
       "date_end": null,
       "region_code": null,
@@ -5377,6 +5387,10 @@
       "threshold_basis": "Clause 7: EIA-reported production decline of 4 Bcf/d attributed to freeze-offs.",
       "capacity_affected": {
         "value": 4,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "bcf/d",
         "source_says": "production fell by 4 Bcf/d (3%) from December to January"
       },
@@ -5861,6 +5875,10 @@
       "threshold_basis": "Clause 3: interstate gas transmission line shut down after a rupture, per PHMSA's corrective action order.",
       "capacity_affected": {
         "value": 830,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "affected",
         "unit": "customers",
         "source_says": "approximately 830 customers being affected"
       },
@@ -6821,7 +6839,7 @@
       "capacity_affected": null,
       "sources": [
         {
-          "url": "https://boereport.com/2025/05/07/freeport-lng-export-plant-in-texas-on-track-to-exit-outage-on-wed-lseg-data-shows/amp",
+          "url": "https://boereport.com/2025/05/07/freeport-lng-export-plant-in-texas-on-track-to-exit-outage-on-wed-lseg-data-shows/",
           "publisher": "BOE Report (Reuters)",
           "date": "2025-05-07",
           "language": "en",
@@ -6834,7 +6852,7 @@
         "kind": "estimate",
         "date": "2025-05-07",
         "evidence": "Estimate: LSEG data showed the plant on track to resume taking gas (1.8 Bcf/d) on 7 May.",
-        "url": "https://boereport.com/2025/05/07/freeport-lng-export-plant-in-texas-on-track-to-exit-outage-on-wed-lseg-data-shows/amp"
+        "url": "https://boereport.com/2025/05/07/freeport-lng-export-plant-in-texas-on-track-to-exit-outage-on-wed-lseg-data-shows/"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -7178,7 +7196,7 @@
       "capacity_affected": null,
       "sources": [
         {
-          "url": "https://globalnews.ca/news/9377194/suncor-extreme-weather-fire-shutdown-colorado-refinery/amp",
+          "url": "https://globalnews.ca/news/9377194/suncor-extreme-weather-fire-shutdown-colorado-refinery/",
           "publisher": "Global News (Canadian Press)",
           "date": "2022-12-29",
           "language": "en",
@@ -7191,7 +7209,7 @@
         "kind": "estimate",
         "date": null,
         "evidence": "Estimate: Suncor expected the refinery to be offline until late March 2023.",
-        "url": "https://globalnews.ca/news/9377194/suncor-extreme-weather-fire-shutdown-colorado-refinery/amp"
+        "url": "https://globalnews.ca/news/9377194/suncor-extreme-weather-fire-shutdown-colorado-refinery/"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -7210,7 +7228,7 @@
     },
     {
       "event_id": "us-2022-12-24-gulf-coast-refineries-cold-shutdowns",
-      "date": "2022-12-01",
+      "date": "2022-12",
       "date_precision": "month",
       "date_end": null,
       "region_code": null,
@@ -7486,7 +7504,7 @@
       "capacity_affected": null,
       "sources": [
         {
-          "url": "https://boereport.com/2024/01/11/all-crude-units-shut-at-totalenergies-texas-refinery-sources/amp/",
+          "url": "https://boereport.com/2024/01/11/all-crude-units-shut-at-totalenergies-texas-refinery-sources/",
           "publisher": "BOE Report (Reuters)",
           "date": "2024-01-11",
           "language": "en",
@@ -7518,7 +7536,7 @@
     },
     {
       "event_id": "us-2024-02-totalenergies-port-arthur-power-outage",
-      "date": "2024-02-01",
+      "date": "2024-02",
       "date_precision": "month",
       "date_end": null,
       "region_code": "US-TX",
@@ -7588,7 +7606,7 @@
       "capacity_affected": null,
       "sources": [
         {
-          "url": "https://boereport.com/2024/03/22/totalenergies-texas-refinery-production-cut-after-fire-sources-say/amp",
+          "url": "https://boereport.com/2024/03/22/totalenergies-texas-refinery-production-cut-after-fire-sources-say/",
           "publisher": "BOE Report (Reuters)",
           "date": "2024-03-22",
           "language": "en",
@@ -7601,7 +7619,7 @@
         "kind": "estimate",
         "date": null,
         "evidence": "Estimate: sources said repairs could take up to a month.",
-        "url": "https://boereport.com/2024/03/22/totalenergies-texas-refinery-production-cut-after-fire-sources-say/amp"
+        "url": "https://boereport.com/2024/03/22/totalenergies-texas-refinery-production-cut-after-fire-sources-say/"
       },
       "review": {
         "reviewed_at": "2026-10-31",
@@ -7639,7 +7657,7 @@
       "capacity_affected": null,
       "sources": [
         {
-          "url": "https://boereport.com/2024/07/16/exxon-shut-joliet-illinois-refinery-after-power-outage/amp/",
+          "url": "https://boereport.com/2024/07/16/exxon-shut-joliet-illinois-refinery-after-power-outage/",
           "publisher": "BOE Report (Reuters)",
           "date": "2024-07-16",
           "language": "en",
@@ -7749,7 +7767,7 @@
           "opened": true
         },
         {
-          "url": "https://ogj.com/refining-processing/article/55234995/pemex-halts-some-operations-following-fatal-blast-at-deer-park-refinery",
+          "url": "https://www.ogj.com/refining-processing/article/55234995/pemex-halts-some-operations-following-fatal-blast-at-deer-park-refinery",
           "publisher": "Oil & Gas Journal",
           "date": "2024-10-11",
           "language": "en",
@@ -7782,159 +7800,6 @@
         "disposition": "confirmed",
         "source_count": 3,
         "sources_opened_by_reviewer": 3,
-        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
-        "source_access": "at least one source read"
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "us-2025-05-07-hunt-tuscaloosa-coker-fire",
-      "date": "2025-05-07",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "US-AL",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": "Tuscaloosa refinery",
-      "facility_name_local": null,
-      "operator": "Hunt Refining",
-      "asset_class": "refinery",
-      "cause": "unknown",
-      "summary": "A fire in the coker unit after an external power outage led Hunt Refining to reduce operating rates at its Tuscaloosa refinery in Alabama.",
-      "effect": "Reduced operating rates.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 1,
-      "threshold_basis": "Clause 1: refinery throughput cut, effect reported.",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://srnnews.com/factbox-us-refinery-fire-incidents-so-far-in-2025/",
-          "publisher": "SRN News (Reuters factbox)",
-          "date": "2025-10-03",
-          "language": "en",
-          "source_role": "media",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "",
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-10-31",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "dual_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 2,
-        "disposition": "confirmed",
-        "source_count": 1,
-        "sources_opened_by_reviewer": 1,
-        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
-        "source_access": "at least one source read"
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "us-2025-06-14-marathon-galveston-bay-fire",
-      "date": "2025-06-14",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "US-TX",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": "Galveston Bay refinery",
-      "facility_name_local": null,
-      "operator": "Marathon Petroleum",
-      "asset_class": "refinery",
-      "cause": "unknown",
-      "summary": "A fire at Marathon's Galveston Bay refinery in Texas led the company to cut back production on a fluid catalytic cracker and its feed hydrotreater.",
-      "effect": "Production cut back on a fluid catalytic cracker and its feed hydrotreater; size of the cut not reported.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 1,
-      "threshold_basis": "Clause 1: production cut stated by the source after a fire at named refinery units.",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://srnnews.com/factbox-us-refinery-fire-incidents-so-far-in-2025/",
-          "publisher": "SRN News (Reuters factbox)",
-          "date": "2025-10-03",
-          "language": "en",
-          "source_role": "media",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "",
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-10-31",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "dual_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 2,
-        "disposition": "corrected",
-        "source_count": 1,
-        "sources_opened_by_reviewer": 1,
-        "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
-        "source_access": "at least one source read"
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "us-2025-08-14-phillips66-linden-fcc-fire",
-      "date": "2025-08-14",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "US-NJ",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": "Bayway (Linden) refinery",
-      "facility_name_local": null,
-      "operator": "Phillips 66",
-      "asset_class": "refinery",
-      "cause": "unknown",
-      "summary": "A fire on equipment at the fluid catalytic cracking unit of Phillips 66's Linden refinery in New Jersey caused a production outage.",
-      "effect": "Production outage reported; no volume given.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 1,
-      "threshold_basis": "Clause 1: named major unit with a reported production outage.",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://srnnews.com/factbox-us-refinery-fire-incidents-so-far-in-2025/",
-          "publisher": "SRN News (Reuters factbox)",
-          "date": "2025-10-03",
-          "language": "en",
-          "source_role": "media",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": "",
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-10-31",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "dual_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 2,
-        "disposition": "confirmed",
-        "source_count": 1,
-        "sources_opened_by_reviewer": 1,
         "process": "Found by a research lane; then a second, independent reviewer opened the sources and checked identity, date, region, class, threshold, provenance, wording and episode before publication.",
         "source_access": "at least one source read"
       },
@@ -8146,7 +8011,7 @@
     },
     {
       "event_id": "us-2024-06-long-view-mine-fire",
-      "date": "2024-06-01",
+      "date": "2024-06",
       "date_precision": "month",
       "date_end": "2025-09-03",
       "region_code": "US-WV",
@@ -8266,6 +8131,10 @@
       "threshold_basis": "Clause 1: refinery shut down; the whole 18,000 b/d plant reported shut for repairs.",
       "capacity_affected": {
         "value": 18000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "facility_size",
         "unit": "b/d",
         "source_says": "remains shut for repairs"
       },

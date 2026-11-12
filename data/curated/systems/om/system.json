@@ -30,7 +30,12 @@
     ],
     "precision_policy": {
       "kinetic": "country",
-      "reason": "Oman's governorates are large, but each of its coastal ones holds a single port-industrial area, so a governorate and a class together name the facility. While the 2026 war has no reported end, attacks and sabotage are recorded for the country, with no governorate, facility or operator. Other events are placed by governorate."
+      "reason": "Oman's governorates are large, but each of its coastal ones holds a single port-industrial area, so a governorate and a class together name the facility. While the 2026 war has no reported end, attacks and sabotage are recorded for the country, with no governorate, facility or operator. Other events are placed by governorate.",
+      "single_site_classes": {
+        "lng_terminal": {
+          "basis": "The lead's reading of public reporting (iteration 20): one liquefaction site. Not yet confirmed in the source audit; an entry here can only hold a record, never publish one."
+        }
+      }
     },
     "display_names": {
       "OM-BA": "Al Batinah North",

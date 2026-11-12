@@ -347,9 +347,6 @@ function WorldProfile({ ctx, partly, onContext }: { ctx: EnergyContext; partly: 
   const monitored = ctx.countries.filter((r) => r.system_id).reduce((a, r) => a + (r.values.total_production ?? 0), 0);
   const fake: ContextRow = { a3: "WLD", name: "World", on_map: false, system_id: null, values: w, newer: {}, roles: { overall: null, by_commodity: {} } };
   const shares = mixShares(fake);
-  // Alphabetical, so the answer to "who produces the most" carries no position.
-  const largest = [...ctx.countries].sort((a, b) => (b.values.total_production ?? 0) - (a.values.total_production ?? 0))
-    .slice(0, 6).map((r) => r.name).sort((a, b) => a.localeCompare(b));
   return (
     <div className="panel global-note world-profile">
       <div className="eyebrow">World energy profile, {ctx.comparison_year}</div>
@@ -358,7 +355,8 @@ function WorldProfile({ ctx, partly, onContext }: { ctx: EnergyContext; partly: 
         {shares.map((s) => `${s.label} ${Math.round(s.share * 100)}%`).join(" · ")}.
         {total ? ` The countries containing the monitored systems produced ${Math.round((monitored / total) * 100)}% of it; the map shows the rest for context only.` : ""}
       </p>
-      <p className="small">Six largest producers in {ctx.comparison_year}, alphabetically: {largest.join(", ")}. Size says nothing about disruption.</p>
+      {/* No "largest producers" list (iteration 20, §80): a top-N selection is a ranking even when
+          printed alphabetically. The national figures are in the table below, alphabetical. */}
       <details>
         <summary className="small">National figures table ({ctx.countries.length} countries and territories)</summary>
         <NationalTable ctx={ctx} partly={partly} onContext={onContext} />

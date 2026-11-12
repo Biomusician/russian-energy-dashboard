@@ -53,7 +53,13 @@ def packet(prefix, imp=None):
         if rec["decision"] != "accept":
             continue
         r = imp.apply_edits(by_id[rec["event_id"]], edits)
-        why = imp.review(cc, r, {u[0] for u in units}, policy=policy)
+        # The gate is asked as it will be once the roles confirm: confirmation is the one thing these
+        # packets exist to collect, so it cannot be a reason to withhold them (iteration 20: the gate
+        # learned to require confirmation after iteration 19's round, and then held every packet).
+        # Every other reason to hold still applies.
+        indep = dict(r.get("independent_review") or {})
+        indep["confirmed"] = {k: "confirm" for k in imp.BLIND_ROLES}
+        why = imp.review(cc, {**r, "independent_review": indep}, {u[0] for u in units}, policy=policy)
         ev = None if why else imp.to_event(cc, r, campaigns=campaigns, policy=policy)
         if ev is not None and not ev["sources"]:
             why = "no citation is left after the gate"

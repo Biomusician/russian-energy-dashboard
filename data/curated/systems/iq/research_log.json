@@ -145,6 +145,156 @@
           "carried_forward": false
         }
       ]
+    },
+    {
+      "date": "2026-11-11",
+      "by": "iteration-20 Gulf continuation pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-11"
+      ],
+      "scope": "continuation of the iteration-19 pass: lanes as declared in docs/countries/IQ_SYSTEMATIC_SWEEP.md, work order in docs/countries/GULF_CONTINUATION_PLAN_20.md; each lane states its execution after both passes; inclusion clauses 1-7 read strictly; every published record reviewed blind by three independent roles and confirmed on its final text",
+      "status": "partial",
+      "status_reason": "3 of 5 lanes executed as far as declared; the rest are stated per lane",
+      "outcome": {
+        "candidates": 59,
+        "accepted": 1,
+        "rejected": 1,
+        "duplicate": 31,
+        "held": 24,
+        "out_of_scope": 2
+      },
+      "plan": {
+        "document": "docs/countries/GULF_CONTINUATION_PLAN_20.md",
+        "commit": "c03bff6",
+        "lanes_from": "docs/countries/IQ_SYSTEMATIC_SWEEP.md"
+      },
+      "lanes": [
+        {
+          "lane": "IQ1",
+          "source_family": "SOMO monthly statistics, read only for a change the publisher attributes to a disruption",
+          "registry": [
+            "SOMO monthly export statistics"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "inaccessible",
+          "covered_through": null,
+          "languages_required": [
+            "ar"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 2,
+          "queries_run": 2,
+          "items_enumerated": 7,
+          "limitation": "Some declared documents were not read.",
+          "carried_forward": false
+        },
+        {
+          "lane": "IQ2",
+          "source_family": "Ministry of Oil and state oil company statements, as carried by agencies",
+          "registry": [
+            "Ministry of Oil and state oil companies (statements; South Refineries Company news list)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "declared_search_complete",
+          "source_window": "no_census_exists",
+          "covered_through": "2026-11-11",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 10,
+          "queries_run": 10,
+          "items_enumerated": 21,
+          "limitation": "At least one source in this lane refused automated access and was not worked around. At least one official listing is built by script in the browser and could not be read. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
+          "carried_forward": false
+        },
+        {
+          "lane": "IQ3",
+          "source_family": "Ministry of Electricity statements on dated losses of supply",
+          "registry": [
+            "Ministry of Electricity statements"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "inaccessible",
+          "covered_through": "2026-11-11",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 15,
+          "queries_run": 15,
+          "limitation": "At least one source in this lane refused automated access and was not worked around.",
+          "carried_forward": false
+        },
+        {
+          "lane": "IQ4",
+          "source_family": "Kurdistan Region official sources and industry-association statements, as carried by media",
+          "registry": [
+            "Kurdistan Regional Government ministries (Natural Resources, Electricity) and APIKUR (industry association)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "declared_search_complete",
+          "source_window": "no_census_exists",
+          "covered_through": "2026-11-11",
+          "languages_required": [
+            "en",
+            "ku"
+          ],
+          "languages_executed": [
+            "ar",
+            "en",
+            "ku"
+          ],
+          "queries_declared": 13,
+          "queries_run": 13,
+          "limitation": "At least one source in this lane refused automated access and was not worked around. Official statements were read as carried by other publishers, not on the issuing body's own site. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
+          "carried_forward": false
+        },
+        {
+          "lane": "IQ5",
+          "source_family": "Media corroboration: Iraqi, Kurdish and international outlets",
+          "registry": [
+            "Iraqi News Agency; Shafaq News, Rudaw, Kurdistan24",
+            "International news agencies and energy press (Reuters, AP, S&P Global, Argus)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "declared_search_complete",
+          "source_window": "no_census_exists",
+          "covered_through": "2026-11-11",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 10,
+          "queries_run": 10,
+          "items_enumerated": 16,
+          "limitation": "Some declared documents were not read. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
+          "carried_forward": false
+        }
+      ],
+      "continues": {
+        "date": "2026-11-11",
+        "by": "iteration-19 Gulf research pass"
+      }
     }
   ]
 }

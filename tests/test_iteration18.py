@@ -265,7 +265,9 @@ def test_a_new_reviewed_event_leaves_national_context_alone(tmp_path, monkeypatc
     (tmp_path / "x").mkdir()
     # The context builder takes no event input and its source never names one.
     import inspect
-    assert set(inspect.signature(G.build).parameters) == {"world", "admin0", "today"}
+    # `restricted` (iteration 20) is a set of system ids by campaign state: it hides the newer national
+    # year under the campaign policy and carries no event.
+    assert set(inspect.signature(G.build).parameters) == {"world", "admin0", "today", "restricted"}
     src = inspect.getsource(G)
     assert "events.json" not in src and "load_events" not in src and "research_log" not in src
 
@@ -399,7 +401,9 @@ def test_a_campaign_record_shows_no_effect_in_the_recent_list():
     for ep in d["episodes"]:
         if ep["system_id"] != "sa":
             continue
-        pool = [e for e in ev.values() if e["episode_id"] == ep["episode_id"]]
+        # A campaign-covered row carries a row key, not the episode id (iteration 20), so the
+        # record is found by its date within the country.
+        pool = [e for e in ev.values() if e["episode_id"] == ep["episode_id"]] or list(ev.values())
         for m in ep["members"]:
             # The expected state comes from the record, not from the feed's own flag.
             source = next(e for e in pool if e["date"] == m["date"])
@@ -447,7 +451,8 @@ def test_every_record_reviewed_in_this_pass_was_blind_reviewed():
 def test_a_month_precision_record_keeps_its_precision_in_the_feed():
     events = {sid: _json(f"systems/{sid}/events.json")["events"] for sid in systems.COUNTRY_SYSTEMS}
     for ep in _json("global/recent_evidence.json")["episodes"]:
-        pool = [e for e in events[ep["system_id"]] if e["episode_id"] == ep["episode_id"]]
+        pool = ([e for e in events[ep["system_id"]] if e["episode_id"] == ep["episode_id"]]
+                or events[ep["system_id"]])   # a row key since iteration 20: found by date
         for m in ep["members"]:
             assert m["date_precision"] == next(e for e in pool if e["date"] == m["date"])["date_precision"], ep["episode_id"]
 

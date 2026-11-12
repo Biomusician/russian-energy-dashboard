@@ -2,48 +2,54 @@
   "system_id": "iq",
   "events": [
     {
-      "event_id": "iq-2025-12-08-west-qurna-2-production-halt-leak",
-      "date": "2025-12-08",
+      "event_id": "iq-2022-01-fuel-supply-shortfall-generation-loss",
+      "date": "2022-01-22",
       "date_precision": "day",
       "date_end": null,
-      "region_code": "IQ-BA",
-      "geography_precision": "admin1",
+      "region_code": null,
+      "geography_precision": "country",
       "regions_affected": [
-        "IQ-BA"
+        "IQ-BG",
+        "IQ-DI",
+        "IQ-TS"
       ],
-      "facility_name": "West Qurna 2 field",
-      "facility_name_local": "حقل غرب القرنة 2",
+      "facility_name": null,
+      "facility_name_local": null,
       "operator": null,
-      "asset_class": "upstream_production",
-      "cause": "technical",
-      "summary": "Production at the West Qurna 2 field in Basra governorate was halted on 8 December 2025 after a reported leak, according to oil ministry and Basra Oil Company sources.",
-      "effect": "Two sources, one at the oil ministry and one at Basra Oil Company, told Rudaw that production at the field, which was producing roughly 480,000 barrels a day, was halted (Rudaw, 8 December 2025); Attaqa reported the same halt and volume the same day and said the ministry did not answer a request for comment.",
+      "asset_class": "system_wide",
+      "cause": "unknown",
+      "summary": "Fuel supply shortfall: on 22 January 2022 the Ministry of Electricity attributed a sharp fall in electricity supply to reduced domestic gas output (which it linked to bad weather), a cut in imported gas and the loss of imported electricity. Its spokesman named Baghdad, Diyala, Kirkuk and the middle-Euphrates governorates as most affected.",
+      "effect": "Ministry of Electricity, as carried by Shafaq News on 22 January 2022: 6,500 MW lost through gas shortage and 1,100 MW through the loss of imported electricity, which together 'drastically reduced' power supply hours; Shafaq gives the national loss as 7,500 MW. Al Jazeera (23 January 2022) reported a near-total outage of grid power in Iraqi governorates, the capital Baghdad above all, after the loss of 7,600 MW, and quoted the ministry spokesman that the gas cuts led to load limiting and the stoppage of many generating units.",
       "inclusion_basis": "reported_effect",
-      "criterion_met": 7,
-      "threshold_basis": "Clause 7: production shut in at a reported volume, about 480,000 barrels a day ('تعطّل ضخّ ما يقارب 480 ألف برميل يوميًا').",
+      "criterion_met": 4,
+      "threshold_basis": "Clause 4, second limb: a generation shortfall that forced rotating outages. Shafaq reports the ministry's gas and imported-power losses 'drastically reduced' supply hours; Al Jazeera quotes the ministry spokesman that the gas cuts led to load limiting and the stoppage of many generating units. The date is the statement date; the onset is not stated.",
       "capacity_affected": {
-        "value": 480000,
-        "unit": "barrels per day",
-        "source_says": "ما يقارب 480 ألف برميل يوميًا"
+        "value": null,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "disputed",
+        "measure": "affected",
+        "unit": "MW",
+        "source_says": "lost 7,500 Megawatts (Shafaq, ministry statement); lost capacity due to gas shortage 6,500 MW plus 1,100 MW of imports (Shafaq); 7,600 MW lost (Al Jazeera, own narration)"
       },
       "sources": [
         {
-          "url": "https://www.rudaw.net/english/middleeast/iraq/081220251",
-          "publisher": "Rudaw",
-          "date": "2025-12-08",
-          "language": "en",
-          "source_role": "media",
-          "opened": true
-        },
-        {
-          "url": "https://attaqa.net/2025/12/08/%d9%88%d9%82%d9%81-%d8%a5%d9%86%d8%aa%d8%a7%d8%ac-%d8%a7%d9%84%d9%86%d9%81%d8%b7-%d9%85%d9%86-%d8%ad%d9%82%d9%84-%d8%ba%d8%b1%d8%a8-%d8%a7%d9%84%d9%82%d8%b1%d9%86%d8%a9-2-%d8%a7%d9%84%d8%b9%d8%b1/",
-          "publisher": "Attaqa (own reporting, with a Reuters credit)",
-          "date": "2025-12-08",
+          "url": "https://www.aljazeera.net/ebusiness/2022/1/23/العراق-بلدُ-الطاقة-يعاني-من-شح-في",
+          "publisher": "Al Jazeera",
+          "date": "2022-01-23",
           "language": "ar",
           "source_role": "media",
           "opened": true,
-          "title_original": "وقف إنتاج النفط من حقل غرب القرنة 2 العراقي بالكامل",
-          "title_en": "Oil production from Iraq's West Qurna 2 field stopped completely"
+          "title_original": "العراق.. بلد الطاقة يعاني من شح في الكهرباء",
+          "title_en": "Iraq: the energy country suffers an electricity shortage"
+        },
+        {
+          "url": "https://shafaq.com/en/Iraq/Iraq-s-MoE-attributes-power-outages-to-Iranian-gas-and-electricity-supply-cuts",
+          "publisher": "Shafaq News",
+          "date": "2022-01-22",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
         }
       ],
       "recovery": {
@@ -74,103 +80,6 @@
       "hazard_name": null
     },
     {
-      "event_id": "iq-2025-08-11-national-grid-collapse",
-      "date": "2025-08-11",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": null,
-      "geography_precision": "country",
-      "regions_affected": [
-        "IQ-AN",
-        "IQ-BA",
-        "IQ-BG",
-        "IQ-DI",
-        "IQ-DQ",
-        "IQ-MA",
-        "IQ-TS",
-        "IQ-WA"
-      ],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": null,
-      "asset_class": "system_wide",
-      "cause": "technical",
-      "summary": "On the afternoon of 11 August 2025 the national grid collapsed during extreme heat: the Ministry of Electricity said the system lost more than 6,000 MW at once under high loads, generating units tripped and the system went into total blackout across the centre and south.",
-      "effect": "Ministry of Electricity, as carried by Asharq News and Arabi21: the grid lost more than 6,000 MW suddenly and accidentally, leading to a complete blackout; the ministry said it was working under full emergency footing. Media and local sources reported loss of power in Basra, Maysan, Dhi Qar, Wasit, Baghdad, Diyala, Anbar and Kirkuk.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 5,
-      "threshold_basis": "Clause 5 (grid event; operator emergency and stated scale): the ministry reported \"خسارة الشبكة أكثر من 6 آلاف ميغاواط بشكل مفاجئ وعرضي\", a total blackout, and that it was working \"بحالة الطوارئ الكاملة\". No customer count is stated and megawatts are not converted to customers.",
-      "capacity_affected": {
-        "value": 6000,
-        "unit": "MW",
-        "source_says": "خسارة الشبكة أكثر من 6 آلاف ميغاواط بشكل مفاجئ وعرضي"
-      },
-      "sources": [
-        {
-          "url": "https://shafaq.com/ar/مجتـمع/الكهربا-بد-عادة-الطاقة-بشكل-تدريجي",
-          "publisher": "Shafaq News",
-          "date": "2025-08-11",
-          "language": "ar",
-          "source_role": "media",
-          "opened": true
-        },
-        {
-          "url": "https://asharq.com/reports/148156/العراق-بدء-عودة-الكهرباء-تدريجيا/",
-          "publisher": "Asharq News",
-          "date": "2025-08-11",
-          "language": "ar",
-          "source_role": "media",
-          "opened": true
-        },
-        {
-          "url": "https://arabi21.com/story/1700070/انقطاع-الكهرباء-في-وسط-وجنوب-العراق-بعد-توقف-محطة-توليد",
-          "publisher": "Arabi21",
-          "date": "2025-08-11",
-          "language": "ar",
-          "source_role": "media",
-          "opened": true,
-          "title_original": "انقطاع الكهرباء في وسط وجنوب العراق بعد توقف محطة توليد",
-          "title_en": "Power cut in central and southern Iraq after a generating station stops"
-        },
-        {
-          "url": "https://attaqa.net/?p=524017",
-          "publisher": "Attaqa (منصة الطاقة)",
-          "date": "2025-08-11",
-          "language": "ar",
-          "source_role": "media",
-          "opened": true,
-          "title_original": "انهيار شبكة الكهرباء في العراق.. ومصادر تكشف السبب",
-          "title_en": "Iraq's electricity grid collapses, and sources reveal the cause"
-        }
-      ],
-      "recovery": {
-        "research_status": "EVIDENCE_FOUND",
-        "kind": "partial_restoration",
-        "date": "2025-08-11",
-        "evidence": "Ministry statement on the evening of 11 August 2025: power was being returned gradually, with full service expected within hours (the full return is the ministry's forecast). No opened source states completion.",
-        "url": "https://shafaq.com/ar/مجتـمع/الكهربا-بد-عادة-الطاقة-بشكل-تدريجي"
-      },
-      "review": {
-        "reviewed_at": "2026-11-11",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 4,
-        "sources_opened_by_reviewer": 4,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "at least one source read",
-        "roles": {
-          "evidence": "accept",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
-    },
-    {
       "event_id": "iq-2025-12-23-imported-gas-halt-generation-loss",
       "date": "2025-12-23",
       "date_precision": "day",
@@ -189,13 +98,17 @@
       "criterion_met": 4,
       "threshold_basis": "Clause 4 (generation shortfall): dated ministry statement (23 December 2025), stated cause (complete halt of imported gas) and stated size, \"ما بين 4 آلاف و4500 ميغاواط من الكهرباء المنتجة\".",
       "capacity_affected": {
-        "value": 4000,
+        "value": null,
+        "value_min": 4000,
+        "value_max": 4500,
+        "qualifier": "range",
+        "measure": "affected",
         "unit": "MW",
-        "source_says": "ما بين 4 آلاف و4500 ميغاواط من الكهرباء المنتجة (a range; the lower bound is recorded as the value)"
+        "source_says": "ما بين 4 آلاف و4500 ميغاواط من الكهرباء المنتجة"
       },
       "sources": [
         {
-          "url": "https://attaqa.net/?p=564628",
+          "url": "https://attaqa.net/2025/12/23/%d8%a5%d9%8a%d8%b1%d8%a7%d9%86-%d8%aa%d9%82%d8%b7%d8%b9-%d8%a7%d9%84%d8%ba%d8%a7%d8%b2-%d8%b9%d9%86-%d8%a7%d9%84%d8%b9%d8%b1%d8%a7%d9%82-%d9%88%d8%aa%d8%b3%d8%aa%d8%ab%d9%86%d9%8a-%d8%aa%d8%b1%d9%83/",
           "publisher": "Attaqa (منصة الطاقة)",
           "date": "2025-12-23",
           "language": "ar",
@@ -207,128 +120,6 @@
       ],
       "recovery": {
         "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-11-11",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 1,
-        "sources_opened_by_reviewer": 1,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "at least one source read",
-        "roles": {
-          "evidence": "accept",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "iq-2026-03-04-national-grid-total-blackout",
-      "date": "2026-03-04",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": null,
-      "geography_precision": "country",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": null,
-      "asset_class": "system_wide",
-      "cause": "unknown",
-      "summary": "National grid collapse: on 4 March 2026 the Ministry of Electricity said the national grid had gone into total blackout in all governorates. As carried by Attaqa, it attributed the blackout to a sudden drop in gas supply to generation, which it called a technical incident, and did not say why the gas supply fell.",
-      "effect": "Ministry of Electricity, as carried by Attaqa and Banker: the system blacked out completely across all governorates.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 5,
-      "threshold_basis": "Clause 5 (grid event, stated scale): the ministry said the system \"انطفأت بشكل تام في عموم محافظات العراق\" (went completely dark across all governorates).",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://attaqa.net/?p=585269",
-          "publisher": "Attaqa (منصة الطاقة)",
-          "date": "2026-03-04",
-          "language": "ar",
-          "source_role": "media",
-          "opened": true
-        },
-        {
-          "url": "https://www.banker.news/128815",
-          "publisher": "Banker (بانكير)",
-          "date": "2026-03-04",
-          "language": "ar",
-          "source_role": "media",
-          "opened": true,
-          "title_original": "العراق في ظلام.. انقطاع تام للكهرباء في عموم الدولة",
-          "title_en": "Iraq in darkness: a total power cut across the whole country"
-        }
-      ],
-      "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-11-11",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 2,
-        "sources_opened_by_reviewer": 2,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "at least one source read",
-        "roles": {
-          "evidence": "accept",
-          "safety": "accept_with_correction",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": null
-    },
-    {
-      "event_id": "iq-2026-03-14-refinery-attack-1",
-      "date": "2026-03-14",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": null,
-      "geography_precision": "country",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": null,
-      "asset_class": "refinery",
-      "cause": "kinetic_strike",
-      "summary": "An attack on a refinery in Iraq was reported on 14 March 2026; a fire broke out and operations at the refinery were suspended.",
-      "effect": "Operations were suspended, officials told Reuters.",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 1,
-      "threshold_basis": "Clause 1: refinery shut down with the effect reported: operations were suspended, per officials.",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://www.arabnews.pk/node/2636397",
-          "publisher": "Reuters, as carried by Arab News Pakistan",
-          "date": "2026-03-14",
-          "language": "en",
-          "source_role": "media",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "WITHHELD_ACTIVE_CAMPAIGN",
         "kind": null,
         "date": null,
         "evidence": null,

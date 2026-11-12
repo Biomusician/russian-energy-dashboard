@@ -1,3 +1,4 @@
+import { fillFitted } from "./canvasText";
 import { fmtValue } from "./context";
 import type { GroupContext } from "./manifest";
 
@@ -22,7 +23,9 @@ export function groupBriefLines(ctx: GroupContext, metricId: string): { title: s
       + `${s.gcc_member ? " · GCC" : ""}${s.opec_member ? " · OPEC" : ""}`
       + `${s.maturity === "research_preview" ? " · research preview" : ""}`),
     foot: [
-      r.value != null ? `All ${ctx.systems.length} together: ${fmtValue(r.value, m.unit)}${r.world_share != null ? `, ${Math.round(r.world_share * 1000) / 10}% of the world total` : ""}.`
+      // The share travels on the same line as what it is not, because the image travels without the
+      // page (iteration 20, owner question D-24).
+      r.value != null ? `All ${ctx.systems.length} together: ${fmtValue(r.value, m.unit)}${r.world_share != null ? `, ${Math.round(r.world_share * 1000) / 10}% of the world total (a descriptive annual share for the group, not an order of importance or exposure)` : ""}.`
         : `Not summed: ${r.reason}.`,
       "Countries in alphabetical order. No index is published for any of them. Event counts are not comparable between countries.",
       "National context only: no facilities, no routes or shipping, no current status of any facility. Energy Disruption Monitor · boundaries: Natural Earth (line of actual control).",
@@ -41,15 +44,17 @@ export function composeGroupFrame(map: HTMLCanvasElement, ctx: GroupContext, met
   c.drawImage(map, 0, 0, W, H);
   const s = W / 1600;
   const pad = Math.round(24 * s);
+  // Every line fits the image whatever font the browser substitutes (canvasText.ts).
+  const fit = (t: string, x: number, y: number) => fillFitted(c, t, x, y, W - x - pad);
   const lines = groupBriefLines(ctx, metricId);
   c.fillStyle = BAND;
   c.fillRect(0, 0, W, Math.round(96 * s));
   c.fillStyle = INK;
   c.font = `600 ${Math.round(30 * s)}px ${SANS}`;
-  c.fillText(lines.title, pad, Math.round(42 * s));
+  fit(lines.title, pad, Math.round(42 * s));
   c.fillStyle = DIM;
   c.font = `${Math.round(16 * s)}px ${SANS}`;
-  c.fillText(lines.sub, pad, Math.round(74 * s));
+  fit(lines.sub, pad, Math.round(74 * s));
 
   const kw = Math.round(430 * s);
   const kx = W - pad - kw;
@@ -59,7 +64,7 @@ export function composeGroupFrame(map: HTMLCanvasElement, ctx: GroupContext, met
   c.font = `${Math.round(15 * s)}px ${SANS}`;
   c.fillStyle = INK;
   for (const row of lines.rows) {
-    c.fillText(row, kx, ky);
+    fit(row, kx, ky);
     ky += Math.round(24 * s);
   }
 
@@ -68,6 +73,6 @@ export function composeGroupFrame(map: HTMLCanvasElement, ctx: GroupContext, met
   c.fillRect(0, H - fh, W, fh);
   c.fillStyle = DIM;
   c.font = `${Math.round(13 * s)}px ${SANS}`;
-  lines.foot.forEach((t, i) => c.fillText(t, pad, H - fh + Math.round((22 + i * 20) * s)));
+  lines.foot.forEach((t, i) => fit(t, pad, H - fh + Math.round((22 + i * 20) * s)));
   return out;
 }

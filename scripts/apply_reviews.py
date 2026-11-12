@@ -102,6 +102,11 @@ def _who(reasons):
     return "Review correction"
 
 
+def _published_ids(cc):
+    path = ROOT / "data" / "curated" / "systems" / cc / "events.json"
+    return {e["event_id"] for e in _read(path)["events"]} if path.exists() else set()
+
+
 def collapse_restricted(edits_doc):
     """For every system under the campaign policy: one `set` of the final text per corrected field,
     a label and no wording, and nothing at all for a record that is not published.
@@ -117,7 +122,7 @@ def collapse_restricted(edits_doc):
     for cc in restricted:
         qpath = ROOT / "data" / "candidates" / f"{cc}.json"
         queues[cc] = {r.get("candidate_id"): r for r in (_read(qpath) if qpath.exists() else [])}
-    by_event = {}
+    by_event, published = {}, {}
     for e in edits_doc["edits"]:
         by_event.setdefault(e["event_id"], []).append(e)
     for e in edits_doc["edits"]:
@@ -128,8 +133,11 @@ def collapse_restricted(edits_doc):
         q = queues[cc].get(e["event_id"])
         if q is None:
             raise SystemExit(f"review edit for {e['event_id']}, which is not in the local {cc} queue")
+        # Published means in the curated events: the import gate can hold a record the queue still
+        # accepts (iteration 20: an attack record whose only citation lands on a place and a method).
         unpublished = (q.get("suggested_disposition") != "accept"
-                       or (q.get("independent_review") or {}).get("disposition") == "held")
+                       or (q.get("independent_review") or {}).get("disposition") == "held"
+                       or e["event_id"] not in published.setdefault(cc, _published_ids(cc)))
         key = (e["event_id"], e["field"])
         if unpublished or key in done:
             dropped += 1

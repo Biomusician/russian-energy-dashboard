@@ -90,6 +90,124 @@ EVENT_FIELDS = (
     "threshold_basis", "capacity_affected", "sources", "recovery", "review", "episode_id",
     "hazard_name", "publication",
 )
+# Iteration 20. A capacity figure carries its uncertainty, so nothing downstream can read a lower
+# bound, an approximate figure or one unit of a larger event as an exact total. Nothing sums these
+# figures and nothing should until the methodology says how.
+CAPACITY_FIELDS = ("value", "value_min", "value_max", "qualifier", "measure", "unit", "source_says")
+CAPACITY_QUALIFIERS = ("exact", "about", "at_least", "at_most", "range", "component_only", "disputed")
+# What the figure is a figure OF. A refinery's nameplate is not the amount lost when it burned.
+CAPACITY_MEASURES = ("affected", "facility_size", "other")
+_AT_LEAST = re.compile(r"\b(more than|over(?=\s+\d)|at least|upwards of|exceed\w*|in excess of|plus de|au moins)\b"
+                       r"|أكثر من|اكثر من|ما لا يقل عن|بیش از|超过", re.I)
+_AT_MOST = re.compile(r"\b(as many as|up to|at most|no more than|jusqu'à)\b", re.I)
+_ABOUT = re.compile(r"\b(about|approximately|approx\.?|around|nearly|almost|roughly|estimated|"
+                    r"près de|environ|quelque)\b|~|ما يقارب|حوالي|نحو|قرابة|في حدود|约|近", re.I)
+_RANGE = re.compile(r"\bbetween\b|ما بين|بين .+ و|\d[\d,. ]*\s*(?:-|–|to|à|إلى)\s*\d", re.I)
+
+
+def capacity_qualifier(source_says):
+    """The qualifier the source's own words carry. A suggestion for a record that has none; a
+    reviewer's explicit qualifier always wins, and an unrecognised wording reads as exact only
+    because the source stated a bare number."""
+    text = source_says or ""
+    if _RANGE.search(text):
+        return "range"
+    if _AT_LEAST.search(text):
+        return "at_least"
+    if _AT_MOST.search(text):
+        return "at_most"
+    if _ABOUT.search(text):
+        return "about"
+    return "exact"
+
+
+def normalize_capacity(cap):
+    """A capacity block in the iteration-20 shape. An older block ({value, unit, source_says}) gets
+    a qualifier from its wording; a bound is never left standing as a point value."""
+    if not cap:
+        return None
+    out = {k: cap.get(k) for k in CAPACITY_FIELDS}
+    q = out["qualifier"] or capacity_qualifier(out["source_says"])
+    out["qualifier"] = q
+    out["measure"] = out["measure"] or "affected"
+    v = out["value"]
+    if q == "at_least":
+        out["value_min"] = out["value_min"] if out["value_min"] is not None else v
+        out["value"] = None
+    elif q == "at_most":
+        out["value_max"] = out["value_max"] if out["value_max"] is not None else v
+        out["value"] = None
+    elif q in ("range", "disputed"):
+        out["value"] = None
+    return out
+
+
+# The date string carries its own precision, so no reader can take the first of a month for a
+# reported day (iteration 20). A month written "2026-04-01" printed as "1 Apr" in one view.
+DATE_SHAPES = {"day": r"\d{4}-\d{2}-\d{2}", "month": r"\d{4}-\d{2}", "year": r"\d{4}"}
+
+
+def canonical_date(date, precision):
+    """The canonical spelling of a date at its precision: the compatibility path for queue
+    records written before iteration 20 ("2026-04-01" with precision month becomes "2026-04")."""
+    if not date:
+        return date
+    return {"month": date[:7], "year": date[:4]}.get(precision, date)
+
+
+def date_problems(eid, e):
+    out = []
+    shape = DATE_SHAPES.get(e.get("date_precision"))
+    if shape is None:
+        return [f"{eid}: unknown date precision {e.get('date_precision')!r}"]
+    if not re.fullmatch(shape, e.get("date") or ""):
+        out.append(f"{eid}: a {e['date_precision']}-precision date must be written {shape.replace(chr(92) + 'd', 'n')}")
+    else:
+        try:
+            dt.date.fromisoformat({"month": e["date"] + "-01", "year": e["date"] + "-01-01"}.get(e["date_precision"], e["date"]))
+        except ValueError:
+            out.append(f"{eid}: {e['date']!r} is not a calendar date")
+    end = e.get("date_end")
+    if end:
+        if not re.fullmatch(DATE_SHAPES["day"], end):
+            out.append(f"{eid}: an end date is a day, YYYY-MM-DD")
+        elif end < e.get("date", ""):
+            out.append(f"{eid}: the end date precedes the start")
+    return out
+
+
+def capacity_problems(eid, cap):
+    """Why a capacity block cannot ship, as a list. Each qualifier has exactly one shape."""
+    if cap is None:
+        return []
+    out = []
+    if set(cap) != set(CAPACITY_FIELDS):
+        return [f"{eid}: capacity_affected must carry exactly {CAPACITY_FIELDS}"]
+    q, v, lo, hi = cap["qualifier"], cap["value"], cap["value_min"], cap["value_max"]
+    if q not in CAPACITY_QUALIFIERS:
+        out.append(f"{eid}: unknown capacity qualifier {q!r}")
+    if cap["measure"] not in CAPACITY_MEASURES:
+        out.append(f"{eid}: unknown capacity measure {cap['measure']!r}")
+    for x in (v, lo, hi):
+        if x is not None and (isinstance(x, bool) or not isinstance(x, (int, float)) or x < 0):
+            out.append(f"{eid}: a capacity figure must be a non-negative number")
+    if not cap.get("unit") or not cap.get("source_says"):
+        out.append(f"{eid}: a capacity figure needs its unit and the source's words")
+    shape = {
+        "exact": v is not None and lo is None and hi is None,
+        "about": v is not None and lo is None and hi is None,
+        "component_only": v is not None and lo is None and hi is None,
+        "at_least": v is None and lo is not None and hi is None,
+        "at_most": v is None and lo is None and hi is not None,
+        "range": v is None and lo is not None and hi is not None and lo < hi,
+        # Sources that disagree are not resolved by picking one: no point value, no span.
+        "disputed": v is None and lo is None and hi is None,
+    }
+    if q in shape and not shape[q]:
+        out.append(f"{eid}: capacity qualifier {q!r} does not match its value fields")
+    return out
+
+
 # No `title`: headlines are the publishers' words, not ours, and the page shows the publisher.
 SOURCE_FIELDS = ("url", "publisher", "date", "language", "source_role", "opened")
 # Iteration 19. A non-English source keeps its title in its own script with an English gloss, and a
@@ -342,6 +460,26 @@ LANE_SUMMARY_STATES = ("stopped_by_search_limit", "universe_searched", "current_
                        "partially_searched", "blocked_by_source", "not_started", "legacy")
 
 
+# The outcome counts a campaign page may serve (iteration 20, §42). How many candidates were
+# looked at, held or rejected beside one published attack record is a hint of the campaign's scale.
+PUBLIC_OUTCOME_UNDER_CAMPAIGN = ("records",)
+
+
+def public_research_log(research_log, restricted):
+    """The research log as served. Unchanged outside the campaign policy; under it, each pass's
+    outcome keeps only the published count, and `under_review` says whether anything else is
+    still held, without saying how much."""
+    if not restricted:
+        return research_log
+    out = {**research_log, "passes": []}
+    for p in research_log.get("passes", []):
+        o = p.get("outcome") or {}
+        q = {**p, "outcome": {k: o[k] for k in PUBLIC_OUTCOME_UNDER_CAMPAIGN if k in o},
+             "under_review": bool(o.get("held") or o.get("insufficient_evidence"))}
+        out["passes"].append(q)
+    return out
+
+
 def research_freshness(research_log, kind="systematic"):
     """When the event search was last done SYSTEMATICALLY, over what window, and when it is due.
 
@@ -349,7 +487,9 @@ def research_freshness(research_log, kind="systematic"):
     does not mean the search was. `next_due` is a date; whether it has passed is computed on the
     reader's clock, like every other age on these pages."""
     systematic = [p for p in research_log.get("passes", []) if p.get("kind") == kind]
-    last = max(systematic, key=lambda p: p["date"]) if systematic else None
+    # Two passes can share a date (iteration 20: a continuation written the day of the pass it
+    # continues); the later in the log is the newer. max() alone returned the first of a tie.
+    last = max(enumerate(systematic), key=lambda ip: (ip[1]["date"], ip[0]))[1] if systematic else None
     due = None
     completeness = "never_systematic"
     lanes = []
@@ -597,8 +737,8 @@ def source_health(events):
         "first_party_roles": list(FIRST_PARTY_ROLES),
         "first_party_excludes": "Wikipedia, whatever role a record gives it",
         "note": ("Describes the citations of the published events in this country. Not opened and "
-                 "not recorded are different: a lane that did not record whether it opened a "
-                 "source is not evidence that it did not. Nothing here is comparable across "
+                 "not recorded are different: a researcher who did not record whether a "
+                 "source was opened is not evidence that it was not. Nothing here is comparable across "
                  "countries and nothing here enters a number."),
     }
 
@@ -877,6 +1017,11 @@ CAMPAIGN_TEXT = re.compile(
     r"\b(repeatedly|once more|again|none since|most recent|latest|target)\b|"
     r"\b(refiner\w*|fields?|gasfield|storage|terminals?|pipelines?|plants?|lng|depots?|ports?|gas facilit\w+|oil facilit\w+)\b|"
     r"\b(north|south|east|west|central)\w*\b|\b(region|governorate|province|emirate)s?\b", re.I)
+# Current status in a campaign sentence (iteration 20, §46): a basis justifies the publication
+# policy; it never says what state an attacked facility is in.
+CAMPAIGN_STATUS = re.compile(
+    r"\b(restart\w*|restor\w*|repair\w*|resum\w*|back online|offline|shut ?down|operating|output|throughput|"
+    r"capacity|production)\b", re.I)
 
 
 def campaign_text_problems(campaigns, unit_words=None):
@@ -887,7 +1032,7 @@ def campaign_text_problems(campaigns, unit_words=None):
     def check(where, sid, text):
         if not text:
             return
-        m = CAMPAIGN_TEXT.search(text) or METHOD_WORDING.search(text)
+        m = CAMPAIGN_TEXT.search(text) or METHOD_WORDING.search(text) or CAMPAIGN_STATUS.search(text)
         if m:
             out.append(f"{where}: {m.group(0)!r} is more than a campaign basis may say")
         words = set(re.findall(r"[^\W\d_]{4,}", text.lower()))
@@ -897,10 +1042,14 @@ def campaign_text_problems(campaigns, unit_words=None):
 
     for c in campaigns.get("campaigns", []):
         sid = c.get("system_id")
-        if sid not in systems.GROUPS["gulf_littoral"]["members"]:
+        # Every country system, not only the Gulf group (iteration 20, §46). The theatre publishes
+        # occurrence by region under its own embargo and is not read here.
+        if sid not in systems.COUNTRY_SYSTEMS:
             continue
         cid = c.get("campaign_id")
+        check(f"{cid} name", sid, c.get("name"))
         check(f"{cid} status_basis", sid, c.get("status_basis"))
+        check(f"{cid} notes", sid, c.get("notes"))
         rule = c.get("member_rule") or {}
         check(f"{cid} from_basis", sid, rule.get("from_basis"))
         for extra in rule.get("also_covers") or []:
@@ -911,6 +1060,7 @@ def campaign_text_problems(campaigns, unit_words=None):
     for sid, s in (campaigns.get("system_states") or {}).items():
         check(f"system state {sid} basis", sid, s.get("basis"))
         check(f"system state {sid} limitation", sid, s.get("limitation"))
+        check(f"system state {sid} notes", sid, s.get("notes"))
     return out
 
 
@@ -963,6 +1113,12 @@ def precision_problems(system_id, doc, events):
     if policy and not policy.get("reason"):
         out.append("a precision policy states its reason")
     barred = set(policy.get("no_event_units") or [])
+    single = policy.get("single_site_classes") or {}
+    for cls, why in single.items():
+        if cls not in set(ASSET_CLASSES) | set(TAXONOMY_EXTENSIONS["asset_classes"]):
+            out.append(f"single-site class {cls!r} is not an asset class")
+        if not (why or {}).get("basis"):
+            out.append(f"single-site class {cls!r} states no basis")
     # A declared episode has a name and an id written by hand, which pass no text rule: "Drone wave
     # on the X refinery" would be built and shown beside records that withhold all three words.
     # Until episode naming for such records has rules of its own, each is its own episode
@@ -976,6 +1132,9 @@ def precision_problems(system_id, doc, events):
         eid = e["event_id"]
         if e.get("region_code") in barred or barred & set(e.get("regions_affected") or []):
             out.append(f"{eid}: placed in a unit that is drawn but never used for events")
+        if e.get("cause") in KINETIC_CAUSES and e.get("asset_class") in single:
+            # Country plus class is the site (iteration 20, §44).
+            out.append(f"{eid}: an attack record of a class the country has one site of names that site")
         if policy.get("kinetic") == "country" and e["cause"] in KINETIC_CAUSES:
             if e["geography_precision"] != "country" or e.get("region_code") or e.get("regions_affected"):
                 out.append(f"{eid}: a kinetic record here is published at country level only")
@@ -1133,6 +1292,8 @@ def validate(system_id, doc, events, unit_codes, grandfathered=None):
             problems.append(f"{eid}: evidence found but its kind {kind!r} is not one of {RECOVERY_KINDS}")
         if rs != "EVIDENCE_FOUND" and kind is not None:
             problems.append(f"{eid}: a recovery kind without evidence")
+        problems += capacity_problems(eid, e.get("capacity_affected"))
+        problems += date_problems(eid, e)
         if not e.get("review"):
             problems.append(f"{eid}: not reviewed")
         else:
@@ -1304,9 +1465,9 @@ def onboarding_gate(doc, events, profile, research_log=None):
         item("7B", "Systematic research coverage",
              {"complete": "met", "partial": "partial"}.get(rf["completeness"], "unmet"),
              {"complete": f"The newest systematic pass ({rf['last_systematic_pass']}) executed every "
-                          "declared source lane over its window.",
+                          "declared source group over its window.",
               "partial": f"The newest systematic pass ({rf['last_systematic_pass']}) did not execute "
-                         "every declared source lane; see the research log for which and why."
+                         "every declared source group; see the research log for which and why."
               }.get(rf["completeness"],
                     "No systematic pass yet: the record comes from targeted searches only, so "
                     "events that no search looked for are missing.")),
@@ -1428,11 +1589,13 @@ def build_system(system_id, admin1, admin0, as_of):
         # "measured, nothing wrong".
         "index": None,
         "headline": None,
+        # Said once, for a reader (iteration 20, §69-70). The technical version is in the
+        # methodology documents, not on the page.
         "no_index_reason": (
-            "No index is published for this country. The Monitored-Area ESDI's sector weights, "
-            "decay horizons and transmission measure were built for a strike campaign and do not "
-            "transfer (GLOBAL_METHODOLOGY.md §1-§3). This view shows reported major disruptions "
-            "and energy-system context instead."),
+            "Only the Russia-theatre system has a disruption index. Its weights and recovery "
+            "assumptions were designed for that theatre and are not transferred to other countries, "
+            "so this page shows reported disruptions and national energy context instead. No index "
+            "is not a zero."),
         "sectors": [{**s, "label": SECTORS[s["sector"]]} for s in doc["sectors"]],
         "reporting_environment": doc["reporting_environment"],
         "reporting_environment_text": systems.REPORTING_ENVIRONMENTS[doc["reporting_environment"]],
@@ -1488,7 +1651,7 @@ def build_system(system_id, admin1, admin0, as_of):
         # implies the corpus was re-checked today (iteration-14 red team).
         "record_reviewed": reviewed,
         "review_freshness_days": doc.get("review_freshness_days", 120),
-        "research_log": research_log,
+        "research_log": public_research_log(research_log, ((campaigns.get("system_states") or {}).get(system_id) or {}).get("state") in RESTRICTING_STATES),
         "research_freshness": research_freshness(research_log),
         "recovery_coverage": recovery_coverage(events),
         "source_families": source_families(doc, events),
@@ -1576,7 +1739,7 @@ def corpus_totals(country_payloads):
     for p in country_payloads.values():
         passes = [x for x in p["research_log"]["passes"] if x["kind"] == "systematic"]
         if passes:
-            newest = max(passes, key=lambda x: x["date"])
+            newest = max(enumerate(passes), key=lambda ix: (ix[1]["date"], ix[0]))[1]
             lanes_all += len(newest.get("lanes") or [])
             lanes_done += sum(1 for l in newest.get("lanes") or [] if _lane_done(l))
             for l in newest.get("lanes") or []:
@@ -1669,13 +1832,19 @@ def _days(a, b):
     return (dt.date.fromisoformat(b) - dt.date.fromisoformat(a)).days
 
 
-def recent_evidence(all_events, scope="The country systems.", regional=False):
+def recent_evidence(all_events, scope="The country systems.", regional=False, restricted=frozenset()):
     """The most recent qualifying episodes across the given country systems, newest first.
 
     A chronological list and nothing else: no severity sort, no impact order, no count per
-    country. An active campaign's record names its region, class and date, and carries no effect
+    country. An active campaign's record names its class and date only, and carries no effect
     text at all, so this cannot become a running tally of what an attack campaign achieved. The
     theatre is not included: its record has its own page and embargo.
+
+    Iteration 20 (Saudi harmonisation, option B). Every list that sets records side by side is an
+    aggregating surface. In it a campaign-covered record is the country's ("National") whatever its
+    own system records, and its row key replaces an id that may name the facility. Records of a
+    system under the campaign policy (`restricted`) carry no effect text here, so a run of them
+    cannot be read as a series of megawatts lost (D-25); the country page gives the effect.
     """
     labels = {**ASSET_CLASSES, **TAXONOMY_EXTENSIONS["asset_classes"]}
     causes = {**DISRUPTION_CAUSES, **TAXONOMY_EXTENSIONS["causes"]}
@@ -1691,13 +1860,15 @@ def recent_evidence(all_events, scope="The country systems.", regional=False):
             # campaign-covered record is the country's, whatever its own system records: one
             # system's finer placement must not be what the list is read for.
             rows = [{"date": m["date"], "date_precision": m["date_precision"],
-                     "region": "National" if regional and m.get("publication")
+                     "region": "National" if m.get("publication")
                      else m.get("region_name") or ("Multiple regions" if m["regions_affected"] else "National"),
-                     "effect": None if m.get("publication") else m.get("effect"),
+                     "effect": None if m.get("publication") or sid in restricted else m.get("effect"),
+                     "effect_on_country_page": sid in restricted and not m.get("publication"),
                      "withheld": bool(m.get("publication"))} for m in members]
+            covered = any(m.get("publication") for m in members)
             items.append({
-                "system_id": sid, "country": name, "episode_id": ep["episode_id"],
-                "episode_name": ep["name"] if ep["records"] > 1 else None, "basis": ep["basis"],
+                "system_id": sid, "country": name, "episode_id": ep["episode_id"], "covered": covered,
+                "episode_name": ep["name"] if ep["records"] > 1 and not covered else None, "basis": ep["basis"],
                 "records": ep["records"], "first_date": ep["first_date"], "last_date": ep["last_date"],
                 "date_precision": first["date_precision"],
                 "classes": sorted({labels.get(m["asset_class"], m["asset_class"]) for m in members}),
@@ -1706,11 +1877,13 @@ def recent_evidence(all_events, scope="The country systems.", regional=False):
             })
     items.sort(key=lambda x: (x["last_date"], x["system_id"], x["episode_id"]), reverse=True)
     items = items[:RECENT_EPISODES]
-    if regional:
+    for n, item in enumerate(items):
         # Older systems' ids name the facility and the effect ("...-refinery-shutdown"). The
-        # regional payload says it has no facility information, so its rows carry a row key only.
-        for n, item in enumerate(items):
+        # regional payload says it has no facility information, so its rows carry a row key only;
+        # since iteration 20 so does any campaign-covered row in any list.
+        if regional or item.pop("covered"):
             item["episode_id"] = f"{item['system_id']}-row-{n + 1:02d}"
+        item.pop("covered", None)
     return {
         "order": "newest first; never by size or severity",
         # Never a count of systems typed here: it said "five" for a list of twelve (iteration 19).
@@ -1781,7 +1954,7 @@ def data_quality(country_payloads, all_events, context):
     for sid in systems.COUNTRY_SYSTEMS:
         p = country_payloads[sid]
         passes = [x for x in p["research_log"]["passes"] if x["kind"] == "systematic"]
-        newest = max(passes, key=lambda x: x["date"]) if passes else None
+        newest = max(enumerate(passes), key=lambda ix: (ix[1]["date"], ix[0]))[1] if passes else None
         lanes = []
         for l in (newest or {}).get("lanes") or []:
             lanes.append({k: l.get(k) for k in ("lane", "source_family", "execution", "source_window", "covered_through",
@@ -1819,19 +1992,22 @@ def build(theatre_snapshot):
     (outputs.processed() / "global").mkdir(parents=True, exist_ok=True)
     world = build_world(admin1, admin0)
     write_json(outputs.processed() / "global" / "world.geojson", world)
-    context = global_context.build(world, admin0)
+    states = load_campaigns().get("system_states") or {}
+    restricted = frozenset(sid for sid in systems.COUNTRY_SYSTEMS if (states.get(sid) or {}).get("state") in RESTRICTING_STATES)
+    context = global_context.build(world, admin0, restricted=restricted)
     all_events = {}
     for sid in systems.COUNTRY_SYSTEMS:
         ev = read_json(outputs.processed() / systems.root(sid) / "events.json")
         all_events[sid] = (payloads[sid]["name"], ev["events"], ev["episodes"])
-    write_json(outputs.processed() / "global" / "recent_evidence.json", recent_evidence(all_events))
+    restricted = frozenset(sid for sid, p in payloads.items() if (p["campaign_state"] or {}).get("state") in RESTRICTING_STATES)
+    write_json(outputs.processed() / "global" / "recent_evidence.json", recent_evidence(all_events, restricted=restricted))
     write_json(outputs.processed() / "global" / "data_quality.json", data_quality(payloads, all_events, context))
     gulf = gulf_context.build(context, payloads)
     members = set(systems.GROUPS[gulf_context.GROUP]["members"])
     # The group's own recent list: the cross-system one holds the newest 40 of every system, which
     # can leave a region with none.
     gulf["recent"] = recent_evidence({k: v for k, v in all_events.items() if k in members},
-                                     scope="The Gulf country systems.", regional=True)
+                                     scope="The Gulf country systems.", regional=True, restricted=restricted)
     write_json(outputs.processed() / gulf_context.OUTPUT, gulf)
     build_time = theatre_snapshot.get("build_time") or dt.datetime.now(dt.timezone.utc).isoformat()
     write_json(outputs.processed() / "global" / "manifest.json",

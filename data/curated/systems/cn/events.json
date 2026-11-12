@@ -21,12 +21,16 @@
       "threshold_basis": "Refinery crude units shut after a fire, as the operator reported.",
       "capacity_affected": {
         "value": 16,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "facility_size",
         "unit": "million tonnes/year crude refining (site capacity)",
         "source_says": "16 million tonnes/year crude refining (site capacity)."
       },
       "sources": [
         {
-          "url": "https://arabnews.com/node/2107681",
+          "url": "https://www.arabnews.com/business/china-in-focus-sinopec-shanghai-petchem-shut-crude-ethylene-units-evergrande-sticks-to-restructuring-plan-2107681",
           "publisher": "Arab News (Reuters-sourced China In-Focus)",
           "date": "2022-06-21",
           "language": "en",
@@ -97,6 +101,10 @@
       "threshold_basis": "Clause 5: grid-operator emergency notice (State Grid Sichuan, jointly with the provincial department) ordering an industrial load shed in 19 of the province's 21 prefecture-level units; also clause 4, a generation shortfall with timed cuts reported in one city.",
       "capacity_affected": {
         "value": 19,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "other",
         "unit": "prefecture-level units under an ordered full industrial production halt",
         "source_says": "实施生产全停（保安负荷除外）"
       },
@@ -189,6 +197,10 @@
       "threshold_basis": "Whole refinery shut after an explosion, with crude refining capacity and throughput reported (crude refinery of 130,000 bpd, clause 1).",
       "capacity_affected": {
         "value": 130000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "facility_size",
         "unit": "barrels/day crude refining capacity",
         "source_says": "crude refining capacity of 130,000 barrels per day; processed 460,000 t of crude in December (~110,000 bpd)"
       },
@@ -257,6 +269,10 @@
       "threshold_basis": "Coal-mine disaster followed by reported mine halts with stated capacity. No output reduction was reported; the capacity figure rests on a document Reuters could not verify.",
       "capacity_affected": {
         "value": 26.55,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "facility_size",
         "unit": "million tonnes/year coal production capacity halted (32 open-pit mines)",
         "source_says": "the mines have 26.55 million tonnes of production capacity; document dated April 24 could not be independently verified by Reuters"
       },
@@ -397,6 +413,10 @@
       "threshold_basis": "Loss of supply to 1.68 million customers, per the official grid summary.",
       "capacity_affected": {
         "value": 1680000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers (户) affected",
         "source_says": "海南全省受影响的168万户; 受台风影响停电用户占全省总数的三分之一"
       },
@@ -521,6 +541,10 @@
       "threshold_basis": "Loss of supply to 245,000 customers, per Xinhua.",
       "capacity_affected": {
         "value": 245000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "affected",
         "unit": "customers (户) without power",
         "source_says": "受台风影响停电的24.5万户用户中超九成已恢复供电"
       },
@@ -589,6 +613,10 @@
       "threshold_basis": "Major refinery unit shut after a fire, with capacity reported.",
       "capacity_affected": {
         "value": 240000,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "about",
+        "measure": "facility_size",
         "unit": "barrels/day (crude unit capacity)",
         "source_says": "About 240,000 bpd crude unit capacity; refinery about 300,000 bpd."
       },
@@ -649,6 +677,10 @@
       "threshold_basis": "Coal-mine disaster followed by a reported, quantified provincial supply cut (clause 7 also met).",
       "capacity_affected": {
         "value": 31.5,
+        "value_min": null,
+        "value_max": null,
+        "qualifier": "exact",
+        "measure": "other",
         "unit": "percent y/y fall in Shanxi raw coal output, June 2026",
         "source_says": "78.01 million tonnes, down 31.5% year on year (Sxcoal, NBS data)"
       },

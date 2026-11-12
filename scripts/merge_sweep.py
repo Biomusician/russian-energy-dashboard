@@ -3,7 +3,7 @@
     .venv\\Scripts\\python.exe scripts\\merge_sweep.py                      # iteration 18's pass
     .venv\\Scripts\\python.exe scripts\\merge_sweep.py gulf19 19 ir iq ...  # <dir> <iteration> <cc ...>
 
-Reads `data/candidates/<dir>/<cc>_*_candidates.json` and adds each record to
+Reads `data/candidates/<dir>/<cc>_*_candidates.json` (iteration 20: `<cc>_candidates20.json`) and adds each record to
 `data/candidates/<cc>.json`. Both are local and gitignored. Publishes nothing: a record still has
 to pass blind review and the import gate.
 
@@ -14,6 +14,7 @@ governance allows; the reverse is not allowed.
 """
 import glob
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -39,13 +40,13 @@ def main(sweep="sweep18", iteration="18", countries=("us", "ca", "cn", "in", "sa
         queue = json.loads(qpath.read_text(encoding="utf-8")) if qpath.exists() else []
         index = {r.get("candidate_id"): i for i, r in enumerate(queue)}
         added = replaced = kept = 0
-        for path in sorted(glob.glob(str(CANDIDATES / sweep / f"{cc}_*_candidates.json"))):
+        for path in sorted(glob.glob(str(CANDIDATES / sweep / f"{cc}_*candidates*.json"))):
             for r in json.loads(Path(path).read_text(encoding="utf-8")):
                 cid = r.get("candidate_id")
                 # Always this pass's tag: a researcher's own spelling of it would drop the record
                 # from the pass's packets and counts.
                 r["research_pass"] = f"iteration-{iteration}-{cc}"
-                r["found_by"] = Path(path).name.replace("_candidates.json", "")
+                r["found_by"] = re.sub(r"_?candidates\d*\.json$", "", Path(path).name)
                 if cid in LEAD_HOLDS and r.get("suggested_disposition") == "accept":
                     r["suggested_disposition"] = "held"
                     r["disposition_reason"] = "lead hold: " + LEAD_HOLDS[cid]
@@ -67,7 +68,7 @@ def main(sweep="sweep18", iteration="18", countries=("us", "ca", "cn", "in", "sa
                     index[cid] = len(queue)
                     queue.append(r)
                     added += 1
-        qpath.write_text(json.dumps(queue, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        qpath.write_bytes((json.dumps(queue, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
         print(cc, f"added {added}, replaced unpublished {replaced}, left published alone {kept}, queue {len(queue)}")
 
 

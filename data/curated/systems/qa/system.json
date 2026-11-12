@@ -30,7 +30,12 @@
     ],
     "precision_policy": {
       "kinetic": "country",
-      "reason": "Qatar's gas processing and export, and most of its power and water plants, are concentrated in two industrial cities, so a municipality and a class together name the facility. Attacks and sabotage are recorded for the country, with no municipality, facility or operator. Other events are placed by municipality."
+      "reason": "Qatar's gas processing and export, and most of its power and water plants, are concentrated in two industrial cities, so a municipality and a class together name the facility. Attacks and sabotage are recorded for the country, with no municipality, facility or operator. Other events are placed by municipality.",
+      "single_site_classes": {
+        "lng_terminal": {
+          "basis": "The iteration-20 Qatar researcher: all of the country's liquefaction is in one industrial complex. Not yet confirmed in the source audit; an entry here can only hold a record, never publish one."
+        }
+      }
     },
     "display_names": {
       "QA-DA": "Doha"

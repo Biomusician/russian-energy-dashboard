@@ -35,7 +35,11 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 1 : 0,
-  reporter: [["list"], ["html", { outputFolder: "e2e-report", open: "never" }]],
+  // Under CI the "github" reporter writes failures as workflow annotations, which are public:
+  // the iteration-19 browser failure on Linux could not be read without signing in to see logs.
+  reporter: process.env.CI
+    ? [["github"], ["list"], ["html", { outputFolder: "e2e-report", open: "never" }]]
+    : [["list"], ["html", { outputFolder: "e2e-report", open: "never" }]],
   use: {
     ...devices["Desktop Chrome"],
     baseURL: BASE ?? `http://127.0.0.1:${PORT}`,

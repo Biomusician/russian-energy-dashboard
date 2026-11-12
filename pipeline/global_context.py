@@ -137,8 +137,13 @@ def _sort_key(name):
     return unicodedata.normalize("NFKD", name).casefold()
 
 
-def build(world, admin0=None, today=None):
-    """Write `global/energy_context.json`. `world` is the world layer, the source of map names."""
+def build(world, admin0=None, today=None, restricted=frozenset()):
+    """Write `global/energy_context.json`. `world` is the world layer, the source of map names.
+
+    `restricted`: system ids under the campaign policy. Their countries show the common comparison
+    year only. A newer national total from a campaign year can stand for one facility's current
+    output where a class is one site, which is status by another name (iteration 20, §43). The
+    guard is generic: by campaign state, never by country."""
     doc = read_json(CONTEXT_FILE)
     validate(doc, today)
     # The registry, and only the registry, says what is monitored.
@@ -158,7 +163,9 @@ def build(world, admin0=None, today=None):
     for c in doc["countries"]:
         rows.append({"a3": c["a3"], "name": names.get(c["a3"], c["name"]), "on_map": c["a3"] in names,
                      "system_id": owner.get(c["a3"]),
-                     "values": c["values"], "newer": c.get("newer") or {}, "roles": c["roles"]})
+                     "values": c["values"],
+                     "newer": {} if owner.get(c["a3"]) in restricted else c.get("newer") or {},
+                     "roles": c["roles"]})
     rows.sort(key=lambda r: _sort_key(r["name"]))
     src = {k: doc["source"][k] for k in SOURCE_FIELDS}
     payload = {

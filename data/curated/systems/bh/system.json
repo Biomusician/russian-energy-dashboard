@@ -31,7 +31,15 @@
     "precision_policy": {
       "kinetic": "country",
       "other": "country",
-      "reason": "Bahrain is about 780 square kilometres with a handful of energy facilities, and the map source still draws the five governorates that were replaced by four in 2014. A governorate would either identify the facility or place an event in a shape that no longer exists, so every record is the country's. Attacks and sabotage also carry no facility or operator."
+      "reason": "Bahrain is about 780 square kilometres with a handful of energy facilities, and the map source still draws the five governorates that were replaced by four in 2014. A governorate would either identify the facility or place an event in a shape that no longer exists, so every record is the country's. Attacks and sabotage also carry no facility or operator.",
+      "single_site_classes": {
+        "refinery": {
+          "basis": "BH_SOURCE_AUDIT: the national refining series describes a single refinery."
+        },
+        "lng_terminal": {
+          "basis": "The lead's reading of public reporting (iteration 20): one LNG import terminal. Not yet confirmed in the source audit; an entry here can only hold a record, never publish one."
+        }
+      }
     }
   },
   "sectors": [

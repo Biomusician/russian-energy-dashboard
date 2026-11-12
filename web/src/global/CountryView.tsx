@@ -3,7 +3,7 @@ import type maplibregl from "maplibre-gl";
 import SimpleMap from "./SimpleMap";
 import SystemSwitcher from "./SystemSwitcher";
 import {
-  CALENDAR_LABEL, CAMPAIGN_STATE_LABEL, ENVIRONMENT_LABEL, READINESS_LABEL, dirFor, RECOVERY_KIND_LABEL, RECOVERY_LABEL, RESEARCH_COMPLETENESS_LABEL,
+  CALENDAR_LABEL, CAMPAIGN_STATE_LABEL, LANGUAGE_LABEL, languageNames, ENVIRONMENT_LABEL, READINESS_LABEL, dirFor, RECOVERY_KIND_LABEL, RECOVERY_LABEL, RESEARCH_COMPLETENESS_LABEL,
   REVIEW_STATUS_LABEL, SECTOR_STATE_LABEL, LANE_EXECUTION_LABEL, LANE_STATE_LABEL, LANE_WINDOW_LABEL, labelFor, type CountrySystem, type SourceEntry, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type Episode,
   type ManifestSystem, type ResearchLane, type ResearchPass, type SourceHealth,
 } from "./manifest";
@@ -35,9 +35,8 @@ function initialRegion(): string | null {
 
 /** A month-precision date is shown as a month: printing "1 Apr" would invent a day. */
 function fmtEventDate(e: CountryEvent): string {
-  const d = e.date_precision === "month"
-    ? new Date(`${e.date.slice(0, 7)}-01T00:00:00Z`).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" })
-    : fmtDate(e.date);
+  // Formatted from the string, never through the browser's Date parser (iteration 20).
+  const d = e.date_precision === "month" ? fmtDate(e.date.slice(0, 7)) : fmtDate(e.date);
   return e.date_end ? `${d} – ${fmtDate(e.date_end)}` : d;
 }
 
@@ -179,11 +178,8 @@ export default function CountryView({ id }: { id: string }) {
       <section className="country-ribbon" aria-label="Headline">
         <div className="no-index">
           <div className="no-index-value" aria-label="No index">No index</div>
-          {/* Plain reason first (UX red team, iteration 16); the technical reason follows. */}
-          <div className="small no-index-plain">The disruption score was built for one strike campaign against one energy system; its
-            weights and recovery model do not transfer to this country's system, so applying it would mislead.
-            No score is shown, and that is not a score of zero.</div>
-          <div className="small dim">{sys.no_index_reason}</div>
+          {/* Said once, plainly (iteration 20, §70). */}
+          <div className="small no-index-plain">{sys.no_index_reason}</div>
         </div>
         <div>
           <div className="eyebrow">Evidence readiness</div>
@@ -238,7 +234,8 @@ export default function CountryView({ id }: { id: string }) {
           )}
           {sys.campaign_state && sys.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && (
             <p className="small">
-              <span className="badge context-only-badge">{labelFor(CAMPAIGN_STATE_LABEL, sys.campaign_state.state)}</span>{" "}
+              <span className="badge context-only-badge">Active-campaign publication safeguards apply</span>{" "}
+              <strong>{labelFor(CAMPAIGN_STATE_LABEL, sys.campaign_state.state)}.</strong>{" "}
               {sys.campaign_state.basis} Checked {fmtDate(sys.campaign_state.checked)}. While that holds, an attack
               is recorded as having happened, with its date, the kind of infrastructure and the effect reported at
               the time. Whether a facility has been repaired, restarted or is operating is not published.
@@ -246,6 +243,17 @@ export default function CountryView({ id }: { id: string }) {
           )}
           {sys.geography.precision_policy && (
             <p className="small dim">How precisely events are placed: {sys.geography.precision_policy.reason}</p>
+          )}
+          {/* A system under the campaign policy that still places attack records in a region (Saudi
+              Arabia, onboarded in iteration 14): said plainly, by rule rather than by name (iteration 20, §79). */}
+          {sys.campaign_state && sys.campaign_state.state !== "NO_ACTIVE_CAMPAIGN"
+            && sys.geography.precision_policy?.kinetic !== "country" && sys.event_summary.recorded_events > 0 && (
+            <p className="small legacy-convention">
+              {sys.name} was onboarded before the newer rule for the Gulf countries, under which an attack record is
+              published for the country as a whole, with no facility or region. Its older published records keep the
+              earlier geography convention: an attack record here names its facility and its region. Whether that
+              changes is an open decision, set out in the Method tab.
+            </p>
           )}
         </section>
       )}
@@ -348,7 +356,9 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
   const overdue = rf.next_due != null && rf.next_due < today;
   return (
     <div className="research-status" aria-label="Research status">
-      <div className="eyebrow">Research status</div>
+      {/* Two questions, two labelled answers (iteration 20, §68): how much of the planned search is
+          done, and whether the registered sources were checked on schedule. */}
+      <div className="eyebrow">Research coverage <span className="dim">· how much of the planned historical search is done</span></div>
       <div className="small">
         <span className={`badge research-${rf.completeness}`}>
           {sys.research_log.passes.length === 0 ? "No search has been run yet" : RESEARCH_COMPLETENESS_LABEL[rf.completeness]}
@@ -366,16 +376,17 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
             last worked on {fmtDate(rf.last_systematic_pass)}; {rf.lanes_complete} of {rf.lanes_declared} source groups finished{overdue ? " (due again)" : ""}</span>
         )}
       </div>
+      <div className="eyebrow">Source health <span className="dim">· whether the registered sources were checked on schedule</span></div>
       <div className="small">
-        <span className={`badge sources-${late.length ? "stale" : "current"}`}>
+        <span className={`source-health sources-${late.length ? "stale" : "current"}`}>
           {late.length
-            ? `${late.length} of ${used.length} listed sources overdue for a re-check`
-            : `All ${used.length} listed sources re-checked on schedule`}
+            ? `${late.length} of ${used.length} registered sources overdue for a check`
+            : `All ${used.length} registered sources checked on schedule`}
         </span>
       </div>
-      <div className="small dim">Two separate questions: whether the sources are current, and how far
-        the search for events got. One does not imply the other. A source lane is one family of sources
-        searched as a unit (for example, every federal outage report); see Research coverage.</div>
+      <div className="small dim">One does not imply the other: sources checked on schedule say nothing about how
+        much of the search is done. A source group is one family of sources searched as a unit, for example one
+        ministry's statements; see the Research coverage tab.</div>
     </div>
   );
 }
@@ -475,12 +486,11 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
         </ol>
       )}
       {!year && !cls && (<>
+      {/* An empty page says what was searched and what is incomplete; the episode definition belongs
+          beside episodes (iteration 20, §75). */}
       <p className="small dim">{events.length === 0
-        ? "No qualifying records in the current reviewed corpus."
-        : `${events.length} records in ${bundle.episodes.length} episodes.`} An episode
-        is one named hazard or one event a source explicitly identifies as common: a storm that cut
-        power in four states is one episode of four records. Incidents merely reported in the same
-        statement stay separate episodes, and a record linked to no other is an episode of one.</p>
+        ? "No qualifying records in the current reviewed corpus. The Research coverage tab says what was searched, in which languages, and what could not be read."
+        : `${events.length} records in ${bundle.episodes.length} episodes. An episode is one named hazard or one event a source explicitly identifies as common; a record linked to no other is an episode of one.`}</p>
       <ol className="event-list">
         {rows.map((row) => row.kind === "event"
           ? <EventItem key={row.e.event_id} e={row.e} bundle={bundle} />
@@ -519,7 +529,15 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
  *  held reads exactly like a country nobody looked at (iteration 19: two systems ended their first pass that way). */
 function HeldLine({ sys }: { sys: CountryBundle["system"] }) {
   const passes = sys.research_log.passes.filter((p) => p.kind === "systematic");
-  const o = passes[passes.length - 1]?.outcome;
+  const last = passes[passes.length - 1];
+  // Under the campaign policy the page gives no count of what is held: beside one published attack
+  // record a count is a hint of scale (iteration 20). It says only that review continues.
+  if (last?.under_review !== undefined) {
+    return last.under_review
+      ? <span className="held-line"> Additional candidates remain under review and are not shown. See the Research coverage tab.</span>
+      : null;
+  }
+  const o = last?.outcome;
   if (!o || !o.candidates) return null;
   const held = o.held ?? 0;
   return (
@@ -608,11 +626,11 @@ function SectorsPanel({ bundle }: { bundle: CountryBundle }) {
     <div>
       <h2>Sectors</h2>
       <p className="small dim">Every sector has an explicit published state. "Tracked, not scored"
-        means events are listed and context is shown, but no value is computed. The research
-        lane's assessment is what the evidence <em>could</em> support after the decisions in the
+        means events are listed and context is shown, but no value is computed. The
+        researchers' assessment is what the evidence <em>could</em> support after the decisions in the
         methodology; it is not a published state and no value exists behind it.</p>
       <table className="sector-table">
-        <thead><tr><th>Sector</th><th>Published state</th><th>Research lane's assessment (not published)</th></tr></thead>
+        <thead><tr><th>Sector</th><th>Published state</th><th>Researchers' assessment (not published)</th></tr></thead>
         <tbody>
           {bundle.system.sectors.map((s) => (
             <tr key={s.sector}>
@@ -699,8 +717,8 @@ function ResearchPanel({ bundle }: { bundle: CountryBundle }) {
         {rf.first_systematic_pass ? ` on ${fmtDate(rf.first_systematic_pass)}` : " later"}. Older records were found afterwards, not monitored as they happened.</p>
       <p className="small">Reporting environment: <strong>{labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}</strong>. {s.reporting_environment_text}</p>
       {s.source_families && <p className="small">Source families cited: {Object.values(s.source_families.labels).join(", ")}. <span className="dim">{s.source_families.note}</span></p>}
-      {languages.length > 0 && <p className="small">Languages required by the lanes: {languages.join(", ")}.
-        {" "}{v2.filter((l) => (l.languages_required ?? []).some((x) => !(l.languages_executed ?? []).includes(x))).map((l) => l.lane).join(", ") || "None"} did not run in every required language.</p>}
+      {languages.length > 0 && <p className="small">Languages the research plan requires: {languageNames(languages)}.
+        {" "}{v2.filter((l) => (l.languages_required ?? []).some((x) => !(l.languages_executed ?? []).includes(x))).map((l) => l.lane).join(", ") || "No source group"} did not run in every required language.</p>}
       <table className="sector-table lane-table">
         <thead><tr><th>Lane</th><th>What the analyst did</th><th>What the source allows</th><th>Furthest date reached</th></tr></thead>
         <tbody>
@@ -714,7 +732,7 @@ function ResearchPanel({ bundle }: { bundle: CountryBundle }) {
           ))}
         </tbody>
       </table>
-      <h3 className="eyebrow">Known gaps, from the lanes above</h3>
+      <h3 className="eyebrow">Known gaps, from the source groups above</h3>
       <ul className="small">{gaps.map((l) => <li key={l.lane}><span className="mono">{l.lane}</span>: {l.limitation}</li>)}</ul>
       {s.research_gaps.length > 0 && (<>
         <h3 className="eyebrow">Other gaps</h3>
@@ -743,7 +761,7 @@ function ResearchPanel({ bundle }: { bundle: CountryBundle }) {
         <h3 className="eyebrow">Citations behind the published events</h3>
         <ul className="small citation-quality">
           <li>{cq.citations} citations; {cq.with_publication_date} carry a publication date stated by the source.</li>
-          <li>Languages: {Object.entries(cq.languages).map(([k, n]) => `${k} ${n}`).join(", ")}.</li>
+          <li>Languages: {Object.entries(cq.languages).map(([k, n]) => `${LANGUAGE_LABEL[k] ?? k} ${n}`).join(", ")}.</li>
           <li>Event dates: {Object.entries(cq.event_date_precision).map(([k, n]) => `${n} to the ${k}`).join(", ")}.</li>
           {cq.link_check && <li>Automated link check, {fmtDate(cq.link_check_date ?? "")}: {cq.link_check.reachable} reachable, {cq.link_check.redirected} redirected, {cq.link_check.blocked} refused the check, {cq.link_check.dead} gone, {cq.link_check.error} failed to load.</li>}
         </ul>
@@ -806,7 +824,7 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
       <p className="small research-coverage">
         <strong>{s.research_log.passes.length === 0 ? "No search has been run yet" : RESEARCH_COMPLETENESS_LABEL[s.research_freshness.completeness]}.</strong>{" "}
         {s.research_freshness.last_systematic_pass
-          ? `Last systematic pass ${fmtDate(s.research_freshness.last_systematic_pass)}, over a declared window of ${fmtDate(s.research_freshness.coverage_window?.[0] ?? null)} – ${fmtDate(s.research_freshness.coverage_window?.[1] ?? null)}. Lane by lane under Research coverage.`
+          ? `Last systematic pass ${fmtDate(s.research_freshness.last_systematic_pass)}, over a declared window of ${fmtDate(s.research_freshness.coverage_window?.[0] ?? null)} – ${fmtDate(s.research_freshness.coverage_window?.[1] ?? null)}. Source group by source group under Research coverage.`
           : s.research_log.passes.length === 0 ? "No research pass has been logged for this country."
             : "Every pass so far was targeted at named gaps and leads."}
       </p>
@@ -831,7 +849,7 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
         {s.review_summary.dual_reviewed} by one); {s.review_summary.legacy_single_review} published before independent
         review was required.</p>
       <p className="small dim">{s.review_summary.note}
-        {unrecorded > 0 && ` For ${unrecorded} of ${bundle.events.length} events the research lane did not record whether it read the cited sources.`}</p>
+        {unrecorded > 0 && ` For ${unrecorded} of ${bundle.events.length} events the researchers did not record whether they read the cited sources.`}</p>
     </div>
   );
 }
@@ -844,7 +862,7 @@ const ROLE_TEXT: Record<string, string> = {
 /** What the citations behind this country's events are, inside this country only. */
 function SourceHealthBlock({ h }: { h: SourceHealth }) {
   const roles = Object.entries(h.by_role).map(([k, n]) => `${labelFor(ROLE_TEXT, k)} ${n}`).join(" · ");
-  const langs = Object.entries(h.by_language).map(([k, n]) => `${k} ${n}`).join(" · ");
+  const langs = Object.entries(h.by_language).map(([k, n]) => `${LANGUAGE_LABEL[k] ?? k} ${n}`).join(" · ");
   return (
     <div className="source-health">
       <h3 className="eyebrow">Source health: the citations behind the events</h3>
@@ -869,7 +887,7 @@ const SOURCE_KIND_LABEL: Record<string, string> = {
   recovery: "Recovery evidence",
   context: "Energy-system context",
   global: "National energy context (world map)",
-  registry: "Search registry (what the lanes searched)",
+  registry: "Search registry (what the source groups searched)",
 };
 
 function SourceBrowser({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyContext | null }) {
@@ -944,7 +962,7 @@ function SourceBrowser({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyCont
           {shown.map((r) => (
             <tr key={r.publisher}>
               <td className="small">{r.publisher}
-                {r.langs.size > 0 && <span className="dim"> ({[...r.langs].join(", ")})</span>}</td>
+                {r.langs.size > 0 && <span className="dim"> ({languageNames(r.langs)})</span>}</td>
               <td className="small dim">{[...r.roles].map((x) => labelFor(ROLE_TEXT, x)).join(", ")}</td>
               <td className="small">
                 <button type="button" className="linklike" aria-expanded={open === r.publisher}
@@ -1006,6 +1024,16 @@ function MethodPanel({ bundle }: { bundle: CountryBundle }) {
       <p className="small">{s.geography.note}</p>
       {s.geography.rulings.length > 0 && (
         <ul className="small">{s.geography.rulings.map((r) => <li key={r.code}><span className="mono">{r.code}</span>: {r.note}</li>)}</ul>
+      )}
+      {s.campaign_state && s.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && s.geography.precision_policy?.kinetic !== "country" && (
+        <p className="small">
+          Attack records here keep the convention this country was onboarded under: facility and region named. The
+          other Gulf countries publish attack records for the country as a whole. Whether this country's records move
+          to that rule while an attack campaign is recorded is an open decision for the project owner. Until it is
+          made, lists that set several countries side by side (the home page and the Gulf littoral overview) show
+          these records as country level, with no facility, region or effect, and every record's later status is
+          withheld here as everywhere.
+        </p>
       )}
       <p className="small dim">Audits: {s.audit_docs.join(", ")} in the project repository.</p>
     </div>

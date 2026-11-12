@@ -24,7 +24,12 @@
         "AE-X01~",
         "AE-X02~"
       ],
-      "reason": "Five of the seven emirates are small enough that an emirate and an infrastructure class together name one facility, and publishing some emirates but not others would show which. Attacks and sabotage are therefore recorded for the country, with no emirate, facility or operator. The two areas Natural Earth labels Neutral Zone are drawn and never used for a record."
+      "reason": "Five of the seven emirates are small enough that an emirate and an infrastructure class together name one facility, and publishing some emirates but not others would show which. Attacks and sabotage are therefore recorded for the country, with no emirate, facility or operator. The two areas Natural Earth labels Neutral Zone are drawn and never used for a record.",
+      "single_site_classes": {
+        "lng_terminal": {
+          "basis": "The lead's reading of public reporting (iteration 20): one operating liquefaction site. Not yet confirmed in the source audit; an entry here can only hold a record, never publish one."
+        }
+      }
     },
     "display_names": {
       "AE-DU": "Dubai",

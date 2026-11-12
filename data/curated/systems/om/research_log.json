@@ -156,6 +156,165 @@
           "carried_forward": false
         }
       ]
+    },
+    {
+      "date": "2026-11-11",
+      "by": "iteration-20 Gulf continuation pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-11"
+      ],
+      "scope": "continuation of the iteration-19 pass: lanes as declared in docs/countries/OM_SYSTEMATIC_SWEEP.md, work order in docs/countries/GULF_CONTINUATION_PLAN_20.md; each lane states its execution after both passes; inclusion clauses 1-7 read strictly; every published record reviewed blind by three independent roles and confirmed on its final text",
+      "status": "partial",
+      "status_reason": "1 of 5 lanes executed as far as declared; the rest are stated per lane",
+      "outcome": {
+        "candidates": 15,
+        "accepted": 0,
+        "rejected": 2,
+        "duplicate": 0,
+        "held": 4,
+        "out_of_scope": 9
+      },
+      "plan": {
+        "document": "docs/countries/GULF_CONTINUATION_PLAN_20.md",
+        "commit": "c03bff6",
+        "lanes_from": "docs/countries/OM_SYSTEMATIC_SWEEP.md"
+      },
+      "lanes": [
+        {
+          "lane": "OM1",
+          "source_family": "Ministry of Energy and Minerals statements and the national statistical bulletin, read for disruption-attributed changes",
+          "registry": [
+            "Ministry of Energy and Minerals statements (Oman News Agency)",
+            "National Centre for Statistics and Information, Monthly Statistical Bulletin"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "current_through_end_date",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 2,
+          "queries_run": 2,
+          "items_enumerated": 5,
+          "items_in_universe": 58,
+          "limitation": "Some declared documents were not read.",
+          "carried_forward": false
+        },
+        {
+          "lane": "OM2",
+          "source_family": "OQ group and PDO annual and sustainability reports and company releases",
+          "registry": [
+            "Muscat Stock Exchange company disclosures (OQ Gas Networks, OQ Exploration and Production, listed power companies)",
+            "OQ group, OQ Exploration and Production, PDO (annual and sustainability reports); EIA; GCC-Stat"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "current_through_end_date",
+          "covered_through": "2025-12-31",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 2,
+          "queries_run": 2,
+          "items_enumerated": 6,
+          "items_in_universe": 14,
+          "limitation": "At least one source in this lane refused automated access and was not worked around. At least one document was too large for the fetch tool or timed out.",
+          "carried_forward": false
+        },
+        {
+          "lane": "OM3",
+          "source_family": "Oman LNG annual reports, read for material interruptions of production",
+          "registry": [
+            "Oman LNG Annual Report"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "current_through_end_date",
+          "covered_through": "2024-12-31",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 2,
+          "queries_run": 2,
+          "items_enumerated": 2,
+          "items_in_universe": 4,
+          "limitation": "At least one source in this lane refused automated access and was not worked around.",
+          "carried_forward": false
+        },
+        {
+          "lane": "OM4",
+          "source_family": "Power: procurement company reports and the regulator's findings on major interruptions",
+          "registry": [
+            "Nama Power and Water Procurement: Annual Report and 7-Year Statement",
+            "Authority for Public Services Regulation statements and reports"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "current_through_end_date",
+          "covered_through": "2025-12-31",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 4,
+          "queries_run": 4,
+          "items_enumerated": 5,
+          "items_in_universe": 9,
+          "limitation": "Not run as far as declared in this pass.",
+          "carried_forward": false
+        },
+        {
+          "lane": "OM5",
+          "source_family": "Arabic and English media by year, via search",
+          "registry": [
+            "Omani press: Oman Daily, Al-Watan, Al-Shabiba (Arabic); Oman Observer, Times of Oman, Muscat Daily (English)",
+            "International news agencies and energy press (Reuters, S&P Global)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "declared_search_complete",
+          "source_window": "no_census_exists",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 20,
+          "queries_run": 20,
+          "items_enumerated": 95,
+          "limitation": "At least one source in this lane refused automated access and was not worked around. The search tool gave little weight to year terms, so earlier years were reached mainly through publishers' own listings. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
+          "carried_forward": false
+        }
+      ],
+      "continues": {
+        "date": "2026-11-11",
+        "by": "iteration-19 Gulf research pass"
+      }
     }
   ]
 }

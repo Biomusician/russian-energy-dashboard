@@ -34,7 +34,6 @@
       "event_ids": [
         "us-2022-12-24-gulf-coast-refineries-cold-shutdowns",
         "us-2022-12-winter-storm-elliott-gas-production",
-        "us-2022-12-23-pjm-forced-outages-elliott",
         "us-2022-12-23-tva-rolling-blackouts-elliott",
         "us-2022-12-23-winter-storm-elliott-maine-outages"
       ],
@@ -76,8 +75,7 @@
       "basis": "named_hazard",
       "event_ids": [
         "us-2024-09-11-hurricane-francine-gulf-shut-ins",
-        "us-2024-09-11-hurricane-francine-loop-closure",
-        "us-2024-09-11-hurricane-francine-louisiana-outages"
+        "us-2024-09-11-hurricane-francine-loop-closure"
       ],
       "hazard": "Hurricane Francine (2024)"
     },
