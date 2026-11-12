@@ -20,6 +20,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CANDIDATES = ROOT / "data" / "candidates"
 PASSING = ("confirmed", "corrected")
+# Two lanes of one pass can report the same event. The fuller record wins: a lane that only points
+# at another lane's record ("duplicate"), or defers to it, never replaces the record it points at.
+RANK = {"accept": 3, "held": 2, "reject": 1, "out_of_scope": 1, "duplicate": 0}
 
 LEAD_HOLDS = {
     "cn-2024-06-15-guangdong-flood-outage":
@@ -51,6 +54,12 @@ def main(sweep="sweep18", iteration="18", countries=("us", "ca", "cn", "in", "sa
                     published = (old.get("independent_review") or {}).get("disposition") in PASSING
                     if published:
                         kept += 1
+                        continue
+                    same_pass = old.get("research_pass") == r["research_pass"] and old.get("found_by") != r["found_by"]
+                    if same_pass and RANK.get(r.get("suggested_disposition"), 1) <= RANK.get(old.get("suggested_disposition"), 1):
+                        old.setdefault("also_found_by", [])
+                        if r["found_by"] not in old["also_found_by"]:
+                            old["also_found_by"].append(r["found_by"])
                         continue
                     queue[index[cid]] = {**r, "supersedes_earlier_candidate": True}
                     replaced += 1

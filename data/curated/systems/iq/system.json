@@ -29,8 +29,8 @@
       }
     ],
     "precision_policy": {
-      "kinetic": "admin1",
-      "reason": "Iraq's governorates are large and each holds many facilities, so a governorate is a real abstraction; this is the same precision the Saudi system uses. Recovery, restart and operating status are withheld for every attack record since 2022 under the campaign rule."
+      "kinetic": "country",
+      "reason": "Attacks on energy facilities in Iraq have been reported from 2022 to this month. In the governorates where most were reported, a governorate and an infrastructure class together name one facility, and publishing some governorates but not others would show which. An attack or sabotage record is therefore recorded for the country, with no governorate, facility or operator. Other events (accidents, grid failures, fuel-supply shortfalls) are placed by governorate."
     }
   },
   "sectors": [

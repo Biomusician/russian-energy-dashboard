@@ -368,7 +368,7 @@ Iraqi power reporting mixes five different things, and the event search must not
 4. **Load-shedding policy:** scheduled supply hours. EIA estimates available peak supply at about
    25 GW against about 48 GW of peak summer demand in 2024, so rationing is the normal state of the
    system. **It is background, never an event.**
-5. **Kinetic disruption:** an attack or sabotage. Occurrence, date, class and governorate only.
+5. **Kinetic disruption:** an attack or sabotage. Occurrence, date and class only, recorded for the country: the governorate was dropped on 2026-11-11 because, where most attacks were reported, a governorate and a class name one facility.
 
 Clause 4 of the inclusion rule ("a generation shortfall that forced rotating outages") would be
 met on most summer days if read literally. The plan (`IQ_SYSTEMATIC_SWEEP.md`, A.3) reads it as a

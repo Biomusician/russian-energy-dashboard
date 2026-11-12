@@ -81,7 +81,7 @@ reported struck again: an old record's recovery would be a current target's stat
 |---|---|---|---|
 | Bahrain | country | country | about 780 square kilometres; the map source draws governorates abolished in 2014 |
 | Iran | country | province | strikes are being reported now |
-| Iraq | governorate | governorate | governorates are large and each holds many facilities; the Saudi convention |
+| Iraq | country | governorate | changed after the research wave: where most attacks were reported, a governorate and a class name one facility |
 | Kuwait | country | governorate | facilities sit in two or three governorates |
 | Oman | country | governorate | each coastal governorate holds one port-industrial area |
 | Qatar | country | municipality | two industrial cities hold most of the system |
