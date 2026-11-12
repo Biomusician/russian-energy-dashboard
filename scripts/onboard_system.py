@@ -43,7 +43,7 @@ def read(path):
 
 
 def write(path, doc):
-    path.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 def loaded_words(doc):

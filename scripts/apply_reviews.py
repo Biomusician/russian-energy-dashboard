@@ -47,7 +47,7 @@ def _read(path):
 
 
 def _write(path, obj):
-    path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 GENERIC_REASON = "reconciled correction; the reviewers' wording is kept in the local review file"

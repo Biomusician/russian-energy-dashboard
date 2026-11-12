@@ -96,7 +96,7 @@ def merge(prefix):
         })
     path = R / f"{prefix}_merged.json"
     path.write_text(json.dumps({"packet": prefix, "records": out}, ensure_ascii=False, indent=2) + "\n",
-                    encoding="utf-8")
+                    encoding="utf-8", newline="\n")
     counts = {}
     for x in out:
         counts[x["outcome"]] = counts.get(x["outcome"], 0) + 1

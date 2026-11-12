@@ -74,7 +74,7 @@ def main():
         "captured_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "deployments": out,
     }
-    LEDGER.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
+    LEDGER.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8", newline="\n")
     unknown = sum(1 for d in out if d["state"] is None)
     print(f"{len(out)} deployments, {unknown} with state not yet fetched")
 

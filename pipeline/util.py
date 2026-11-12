@@ -33,7 +33,7 @@ def read_text(path):
 def write_text(path, text):
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(text, encoding="utf-8")
+    p.write_text(text, encoding="utf-8", newline="\n")
 
 
 def read_json(path):
@@ -44,7 +44,8 @@ def read_json(path):
 def write_json(path, obj, indent=None):
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    with open(p, "w", encoding="utf-8") as fh:
+    # No newline translation: the same bytes on Windows as on the Linux CI runner.
+    with open(p, "w", encoding="utf-8", newline="\n") as fh:
         # ensure_ascii=False keeps Cyrillic readable in the emitted files rather
         # than exploding every character into a \uXXXX escape.
         json.dump(obj, fh, ensure_ascii=False, indent=indent, separators=(",", ":") if indent is None else None)

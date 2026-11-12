@@ -73,7 +73,7 @@ def packet(prefix, imp=None):
            "note": "The final text as the import gate will publish it. Confirm or object; propose no wording.",
            "records": records, "held_by_gate": held}
     path = R / f"confirm_{group}_{cc}.json"
-    path.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")
     print(f"{path.relative_to(ROOT)}: {len(records)} to confirm, {len(held)} held by the gate")
     for h in held:
         print(f"   held {h['event_id']}: {h['reason']}")

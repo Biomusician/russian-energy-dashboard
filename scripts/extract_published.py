@@ -90,7 +90,7 @@ def extract(day, out, history=None):
         "snapshot_blob": blob,
     }
     (out / "PROVENANCE.json").write_text(json.dumps(provenance, ensure_ascii=False, indent=2) + "\n",
-                                         encoding="utf-8")
+                                         encoding="utf-8", newline="\n")
     return provenance
 
 

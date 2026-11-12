@@ -66,7 +66,7 @@ def _write(name, records, note, extra=None):
     OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / f"{name}.json"
     path.write_text(json.dumps({"packet": name, "note": note, **(extra or {}), "records": records},
-                               ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                               ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(f"{path.relative_to(ROOT)}: {len(records)} records")
 
 

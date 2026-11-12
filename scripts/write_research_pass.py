@@ -250,7 +250,7 @@ def pass_for(cc):
         "lanes": lanes,
     }
     log["passes"] = [p for p in log["passes"] if not (p["date"] == PASS_DATE and p["by"] == PASS_BY)] + [entry]
-    path.write_text(json.dumps(log, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(log, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(cc, {k: sum(1 for x in lanes if x["execution"] == k) for k in ORDER}, outcome)
 
 

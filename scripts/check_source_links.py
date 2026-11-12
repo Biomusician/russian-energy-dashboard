@@ -167,7 +167,7 @@ def main():
         if old.get("hash") and results[url].get("hash") and old["hash"] != results[url]["hash"]:
             results[url]["changed_content"] = True
         if (i + 1) % 25 == 0:
-            LOCAL.write_text(json.dumps(results, ensure_ascii=False, indent=0), encoding="utf-8")
+            LOCAL.write_text(json.dumps(results, ensure_ascii=False, indent=0), encoding="utf-8", newline="\n")
             print(i + 1, "of", len(urls), flush=True)
     # A short link the import already replaced is no longer cited; its answer is carried forward
     # while the address it lands on is still cited, so the import keeps the canonical address.

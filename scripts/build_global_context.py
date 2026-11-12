@@ -179,7 +179,7 @@ def main():
         "countries": sorted(countries, key=lambda c: c["name"]),
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    OUT.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")
     print(f"{OUT.relative_to(ROOT)}: {len(countries)} countries; no {COMPARISON_YEAR} totals: {skipped}")
 
 
