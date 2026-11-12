@@ -5,6 +5,12 @@ the owner questions scattered across the iteration-19 source audits and §27 of
 `ITERATION_19_REVIEW.md`; rows D-01 to D-26 are those questions, D-27 onward are new.
 
 **While a row is unresolved, the conservative behaviour in its last line is what the code does.**
+One stated exception, found by the iteration-20 methodology red team: D-27 to D-30 are the US
+sweep's operational definitions, and their "until then" keeps published records that the written
+clause alone would not admit. They are kept because each was adopted, documented and tested in
+iteration 16, and holding about twenty records on a reading the owner has never been asked about
+would itself be a lead ruling. The asymmetry with D-08, D-17, D-18 and D-23 (mostly Gulf and India,
+whose records are held) is real; D-35 asks the owner to close it either way.
 Nothing here is implemented beyond that. A ruling is implemented by the row's "if approved" line,
 and every held record it names is restored by re-import from the local queue, with no re-research.
 
@@ -171,19 +177,26 @@ affected** · **Held records affected** · **Safety** · **Analysis** · **Recom
 ### D-27 Clause 5 by an ordered firm load shed (US)
 - **Question.** Is an operator-ordered firm load shed a "grid-operator emergency declaration"?
 - **Written rule.** A declaration. **Precedent.** US operational definition (iteration 16, listed for owner review).
-- **Systems.** us (and any system that reports load shed). **Published.** 9 US records.
+- **Systems.** us (and any system that reports load shed). **Published.** 5 US records rest on this
+  reading alone after iteration 20: four OE-417 filings that each state a generation cause, and one
+  PJM directive. Four OE-417 filings with no stated cause were held [C5-LOADSHED].
 - **Recommendation.** Yes: an ordered firm load shed is an emergency act under NERC EOP-011 and is reported by obligation.
 - **Until then.** Kept, as the written US definition says.
 
 ### D-28 Clause 1 by a named major unit with a reported throughput effect
 - **Question.** Does a crude unit, liquefaction train or coker shut, with a reported throughput effect, meet "throughput materially cut"?
-- **Precedent.** US operational definition. **Published.** 6 records (5 US, 1 China). **Held.** applies to new Kuwait candidates.
+- **Precedent.** US operational definition. **Published.** 6 records (5 US, 1 China) by the iteration-20
+  audit, and the methodology red team adds kw-2025-10-21 and arguably cn-2022-06-18 and us-2024-01-11;
+  one Deer Park record whose source stated no throughput effect was held. **Held.** applies to new Kuwait candidates.
 - **Recommendation.** Yes, for a named major unit only.
 - **Until then.** Kept for every system alike.
 
 ### D-29 Clause 4 by aggregate megawatts with a reported consequence
 - **Question.** Does "at least about 500 MW forced offline" across several plants, with load shed, meet "a power plant of about 500 MW or more"?
-- **Published.** 3 (each also meets another clause or limb). **Recommendation.** Yes, where the consequence is load shed; no otherwise.
+- **Published.** 3. Correction (methodology red team): only one also meets another clause. in-2023-03-16
+  states no load shed (it would rest on clause 5 by D-30), and us-2025-11-13 lost load in a cascade
+  rather than shedding it (it would rest on clause 5 by its customer count). Both re-bases are D-35.
+  **Recommendation.** Yes, where the consequence is load shed; no otherwise.
 - **Until then.** Kept where load shed is stated; PJM Elliott held.
 
 ### D-30 Customer accounts under another name
@@ -201,6 +214,79 @@ affected** · **Held records affected** · **Safety** · **Analysis** · **Recom
 
 ### D-33 Saudi harmonisation
 - See `SAUDI_HARMONISATION_STUDY_20.md`. **Recommendation.** Option C. **Until then.** Option B.
+
+### D-34 Withheld material in git history and old deployments
+- **Question.** Iteration 20 withdrew, from the current files and payloads, material that the campaign policy and the
+  safety red team say should not be public (facility-identifying wording in some held records' review notes, per-system
+  counts of held attack candidates, and a few addresses). Earlier commits of this public repository, and earlier Vercel
+  deployments, still contain it.
+- **Written rule.** The Guardrails make history rewriting and force-push an owner decision. Nothing in the project says
+  past public states must be scrubbed.
+- **Options.** (a) Leave history as it is: the material was public and may already be copied; the current product is
+  clean. (b) Rewrite history to remove the files' earlier states, force-push, and ask Vercel to delete old deployments:
+  breaks every clone and every link to an old commit, and does not reach copies already made. (c) Make the repository
+  private for a period and keep only current deployments: no rewrite, limits casual discovery.
+- **Safety.** Medium: the material is coarse (no coordinates, no status), but its removal was a safety decision.
+- **Recommendation.** (c) or (a); (b) only if a specific item is judged harmful enough to justify breaking clones.
+- **Until then.** History untouched; no force-push; old deployments untouched. The lead cannot do (b) or (c).
+
+### D-35 Methodology re-bases and the D-27 to D-30 asymmetry
+- **Question.** Records whose clause, as written, does not fit, but which another clause would admit on the record's own
+  text. Moving a record to another clause is not stricter, so the lead did not do it.
+- **Records.** in-2023-03-16 (clause 4 to clause 5 on 1.3 million households, by D-30); four OE-417 firm load sheds that
+  state a generation cause (clause 5 to clause 4, second limb); us-2025-11-13 (clause 4 to clause 5, 250,000 customers);
+  ca-2026-03-08 (to clause 4, second limb, 900 MW of load shed); cn-2022-08-15 Sichuan (an industrial halt order filed as
+  an emergency notice; to clause 4, second limb, drought-cut hydropower with timed cuts); Helene (Georgia, North
+  Carolina, Florida) and Milton (to the DOE per-state peak, which the sibling Helene records already cite).
+- **Recommendation.** Approve the re-bases as a batch; each record's own text supports the new clause. Separately, rule
+  D-27 to D-30 now, so that the US definitions and the held Gulf and India records stand on the same footing.
+- **Until then.** Records kept on their current basis (D-27 to D-30 "until then"); none re-based.
+
+### D-36 Event totals offered as at-one-time counts (THRESHOLD_STUDY §2.6)
+- **Question.** Clause 5 says "affecting about 100,000"; the adopted reading wants an at-one-time figure, and the US sweep
+  held 75 OE-417 rows on that reading. Published records that give only an event total or a restored total include
+  ca-2022-05-21, cn-2024-09-06 (Guangdong, restored total; Hainan), in-2025-10-28 and the Helene and Milton records.
+- **Recommendation.** An event total counts only at three times the floor or more and only from a first-party source;
+  a restored total never counts. **Until then.** Kept with their current basis; the two that were also under three times
+  the floor or aggregator-only (Mississippi, Isaias) were held in iteration 20.
+
+### D-37 EEA-3 with no load shed
+- **Question.** The audit table lists Energy Emergency Alert 3 as a declaration, and three published records rest on it
+  (ca-2024-01-13, ca-2024-07-08, us-2022-09-06). About nine Alberta EEA-3s from iteration 17 and ca-2026-05-25 are held,
+  the last with a note conceding clause 5 as written is met.
+- **Recommendation.** Adopt THRESHOLD_STUDY decision 1 one way: EEA-3 is a declaration (restore the holds) or it needs
+  load shed (hold the three). **Until then.** Both sides stay as they are; the held records are not restored by the lead,
+  because restoring is broadening.
+
+### D-38 Parallel pipeline loops, mine halts and sub-day trips
+- **Question.** Three lead rulings of the US sweep that published records rest on and that never became matrix rows:
+  a loop line of a multi-line trunk system counts as the trunk (B.4 #3); a mine or longwall idled with no production
+  figure meets clause 6; and a liquefaction trip of a few hours meets clause 1 (no duration floor, THRESHOLD_STUDY §2.4).
+- **Published.** TGP 100-1 was held in iteration 20 because its record says the parallel loops kept running; ANR 1-501,
+  Gulf South 266, Enterprise East Leg and TGP 100-2/100-3 need the same check. One mine record (us-2024-03-20) and
+  several Freeport trips. **Recommendation.** Loops: only where the record says the system's flow was cut. Mine halts:
+  only with a production figure or a duration of a week or more. Trips: a 24-hour floor.
+- **Until then.** Kept, except TGP 100-1.
+
+### D-39 Saudi Arabia and the Gulf route rule
+- **Question.** The Gulf rules forbid route, strait, shipping and export-route material. Saudi Arabia is a retained
+  system without a precision policy, so its attack records name facilities in their ids, and one held record concerned
+  a pipeline shut as a precaution. Does the route rule (and the country-level precision of the seven new systems) apply
+  to Saudi Arabia? **Recommendation.** Yes for the route rule; precision is D-33. **Until then.** The route record is held
+  [TAXONOMY]; facility-named Saudi records stay as published (D-11).
+
+### D-40 Cause vocabulary for shortfalls
+- **Question.** Kuwait's 2024 programmed-cut records and both Iraq records state their cause (demand above generation,
+  a gas-supply fault, an imported-gas halt), but the cause list has no fitting value, so they read "unknown". Under the
+  campaign policy an unknown cause is treated as possibly an attack, which is the safe direction.
+- **Recommendation.** Add `supply_shortfall` (fuel or generation inadequacy) with D-19's `civil_blockade`.
+  **Until then.** Unknown.
+
+### D-41 Superseded unit codes
+- **Question.** IQ-TS, OM-BA and OM-SH are superseded; the project's notes give IQ-KI, OM-BS and OM-SJ. Iran and India
+  were remapped to current codes; these three were not. A researcher using a current code is refused loudly, so nothing
+  is misplaced. **Recommendation.** Remap after an ISO 3166-2 check (not possible offline). **Until then.** Natural
+  Earth's codes.
 
 ---
 

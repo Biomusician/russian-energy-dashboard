@@ -96,7 +96,7 @@
       "effect": "Ministry of Electricity, as carried by Attaqa: between 4,000 and 4,500 MW of generation lost; some units stopped and others load-limited; reduced supply hours in a number of governorates (not named). The ministry said it was running affected stations on domestic fuel.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 4,
-      "threshold_basis": "Clause 4 (generation shortfall): dated ministry statement (23 December 2025), stated cause (complete halt of imported gas) and stated size, \"ما بين 4 آلاف و4500 ميغاواط من الكهرباء المنتجة\".",
+      "threshold_basis": "Clause 4, second limb: a dated ministry statement (23 December 2025) of a generation shortfall with a stated cause (a complete halt of imported gas) that reduced supply hours in a number of governorates.",
       "capacity_affected": {
         "value": null,
         "value_min": 4000,

@@ -2355,7 +2355,7 @@
       "effect": "At one point during the storm nearly 350,000 SMUD customers were without electricity.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
-      "threshold_basis": "Grid event affecting at least 100,000 customers: reports range from 185,434 (OE-417) to nearly 350,000 (CapRadio); simultaneous peak unconfirmed.",
+      "threshold_basis": "Grid event affecting at least 100,000 customers: the utility's figure as reported, nearly 350,000 SMUD customers without electricity at one point; the OE-417 filing gives 185,434.",
       "capacity_affected": {
         "value": null,
         "value_min": null,

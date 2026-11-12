@@ -2473,8 +2473,8 @@
     {
       "event_id": "us-2023-01-07-california-storm-outages",
       "field": "threshold_basis",
-      "set": "Grid event affecting at least 100,000 customers: reports range from 185,434 (OE-417) to nearly 350,000 (CapRadio); simultaneous peak unconfirmed.",
-      "reason": "Corpus audit (iteration 18). cumulative_not_peak: Threshold basis: nearly 350,000 out at one time. CapRadio says at one point, but the record's other source, OE-417, lists 185,434 customers for Sacramento County. The conflict is undisclosed."
+      "set": "Grid event affecting at least 100,000 customers: the utility's figure as reported, nearly 350,000 SMUD customers without electricity at one point; the OE-417 filing gives 185,434.",
+      "reason": "Lead correction (iteration 20, methodology red team): the basis said the peak was unconfirmed while the effect quotes an at-one-time figure"
     },
     {
       "event_id": "us-2022-09-06-caiso-eea3-heat",
@@ -3391,8 +3391,8 @@
     {
       "event_id": "iq-2025-12-23-imported-gas-halt-generation-loss",
       "field": "threshold_basis",
-      "set": "Clause 4 (generation shortfall): dated ministry statement (23 December 2025), stated cause (complete halt of imported gas) and stated size, \"ما بين 4 آلاف و4500 ميغاواط من الكهرباء المنتجة\".",
-      "reason": "Blind review, role(s) B: reconciled correction; the reviewers' wording is kept in the local review file"
+      "set": "Clause 4, second limb: a dated ministry statement (23 December 2025) of a generation shortfall with a stated cause (a complete halt of imported gas) that reduced supply hours in a number of governorates.",
+      "reason": "Review correction: reconciled correction; the reviewers' wording is kept in the local review file"
     },
     {
       "event_id": "kw-2024-06-19-programmed-power-cuts-generation-shortfall",

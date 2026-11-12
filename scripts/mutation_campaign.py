@@ -634,7 +634,7 @@ REVIEW_MUTATIONS = [
       ("data/curated/systems/review_edits.json", _artifact(lambda d: next(
           e for e in d["edits"] if e["event_id"].split("-")[0] in ("kw", "iq", "sa")).__setitem__(
           "reason", "Blind review, role(s) B: removed the citation naming TEST PLACEHOLDER refinery")))],
-     "committed_review_edits_hand_back_nothing"),
+     "committed_review_edits_hand_back_nothing or campaign_policy_keep_the_result"),
     ("a short link is accepted as a citation for a record published without its place",
      [("scripts/import_candidates.py", _text("        or (short_link(url) and url not in FINAL_ADDRESSES) or opaque_unresolved(url)",
                                              "        or opaque_unresolved(url)"))],

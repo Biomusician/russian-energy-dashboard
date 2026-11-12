@@ -1076,13 +1076,18 @@ def test_the_published_research_log_of_a_gulf_system_carries_fixed_notes_only(cc
                 rest = rest.replace(note, "")
             assert not rest.strip(), (cc, where, lane["lane"], rest.strip()[:80])
 
+    # Every pass this writer made, not only the one EDM_PASS selects: the iteration-20 continuation
+    # went unchecked (mutation campaign, iteration 20).
+    gulf = set(w.GULF_PASS_BY.values())
     log = json.loads((CURATED / cc / "research_log.json").read_text(encoding="utf-8"))
-    newest = [p for p in log["passes"] if p.get("by") == w.PASS_BY]
-    assert newest, f"{cc}: the iteration-19 pass is not in the log"
-    check(newest[-1]["lanes"], "curated")
+    written = [p for p in log["passes"] if p.get("by") in gulf]
+    assert {p["by"] for p in written} == gulf, f"{cc}: a Gulf pass is missing from the log"
+    for p in written:
+        check(p["lanes"], "curated")
     served = json.loads((WEB / "systems" / cc / "system.json").read_text(encoding="utf-8"))["research_log"]["passes"]
+    assert sum(1 for p in served if p.get("by") in gulf) == len(written), cc
     for p in served:
-        if p.get("by") == w.PASS_BY:
+        if p.get("by") in gulf:
             check(p["lanes"], "served")
 
 
