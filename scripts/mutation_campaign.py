@@ -601,6 +601,25 @@ REVIEW_MUTATIONS = [
       ("data/processed/global/recent_evidence.json", _artifact(lambda d: d.__setitem__("scope", "The five country systems."))),
       ],
      "no_recent_list_states_a_number"),
+    ("a research lane's unreviewed notes about attacks are published",
+     [("scripts/write_gulf_pass.py", _text("    text = process_only(text)\n", "    pass\n"))],
+     "lane_note_publishes_no_attack_narrative"),
+    ("a published research log carries a strike tally in a lane note",
+     [(f"data/curated/systems/kw/research_log.json", _artifact(lambda d: d["passes"][-1]["lanes"][0].__setitem__(
+         "finding", "TEST PLACEHOLDER: the third attack since the war began."))),
+      (f"web/public/data/systems/kw/system.json", _artifact(lambda d: d["research_log"]["passes"][-1]["lanes"][0].__setitem__(
+         "finding", "TEST PLACEHOLDER: the third attack since the war began.")))],
+     "published_research_log_of_a_gulf_system"),
+    ("the gate accepts a recovery status outside the vocabulary",
+     [("scripts/import_candidates.py", _text("    if status not in build_systems.RECOVERY_STATUSES:", "    if False:"))],
+     "recovery_status_outside_the_vocabulary"),
+    ("a reviewer's free-text reason for an abstracted record is committed",
+     [("scripts/apply_reviews.py", _text("                why = GENERIC_REASON if abstract else e.get(\"reason\")",
+                                       "                why = e.get(\"reason\")")),
+      ("data/curated/systems/review_edits.json", _artifact(lambda d: next(
+          e for e in d["edits"] if e["event_id"] == "kw-2026-03-20-refinery-attack-1").__setitem__(
+          "reason", "Blind review, role(s) B: removed the citation naming TEST PLACEHOLDER refinery")))],
+     "committed_review_edits_hand_back_nothing"),
 ]
 MUTATIONS += REVIEW_MUTATIONS
 MUTATIONS += GULF_MUTATIONS

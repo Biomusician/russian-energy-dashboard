@@ -1,4 +1,119 @@
 {
   "system_id": "om",
-  "events": []
+  "events": [
+    {
+      "event_id": "om-2022-09-05-main-grid-partial-blackout",
+      "date": "2022-09-05",
+      "date_precision": "day",
+      "date_end": "2022-09-06",
+      "region_code": null,
+      "geography_precision": "country",
+      "regions_affected": [
+        "OM-MA",
+        "OM-BJ",
+        "OM-SS",
+        "OM-SH",
+        "OM-DA"
+      ],
+      "facility_name": null,
+      "facility_name_local": null,
+      "operator": null,
+      "asset_class": "system_wide",
+      "cause": "technical",
+      "summary": "On 5 September 2022 a fault in the transmission network, which the regulator attributed to technical causes, led to a partial blackout in Oman. Supply was lost in Muscat governorate and in parts of Al Batinah South, Ash Sharqiyah North, Ash Sharqiyah South and Ad Dakhliyah; one report also names parts of Al Batinah North.",
+      "effect": "Power was lost from early afternoon. The Authority for Public Services Regulation confirmed a partial blackout across Muscat and parts of four other governorates (The National and Al Bayan, 5 September 2022, both carrying the regulator's statement). Oman Observer reported commercial and industrial activity disrupted for between six and twelve hours and, citing the regulator's data, described the outage as the \"most serious in a decade\". Schools in affected areas were closed the next day.",
+      "inclusion_basis": "reported_effect",
+      "criterion_met": 5,
+      "threshold_basis": "Clause 5: loss of supply at one time across Muscat governorate and parts of four other governorates, as stated by the regulator (extent-based; no customer count published). One report names a fifth, and Oman Observer reported disruption of six to twelve hours. The cited sources give no number of customers or megawatts, and none is estimated here.",
+      "capacity_affected": null,
+      "sources": [
+        {
+          "url": "https://www.omandaily.om/ampArticle/1125008",
+          "publisher": "Oman Daily (جريدة عمان)",
+          "date": "2022-09-05",
+          "language": "ar",
+          "source_role": "media",
+          "opened": true,
+          "title_original": "«عطل فني» يتسبب في انقطاع الكهرباء عن 5 محافظات لساعات",
+          "title_en": "'Technical fault' cuts electricity to 5 governorates for hours"
+        },
+        {
+          "url": "https://www.thenationalnews.com/gulf-news/oman/2022/09/05/oman-working-to-restore-power-after-widespread-outages",
+          "publisher": "The National",
+          "date": "2022-09-05",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://www.omanobserver.om/article/1124813/oman/probe-launched-into-power-disruption",
+          "publisher": "Oman Observer",
+          "date": "2022-09-06",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://www.omanobserver.om/article/1124989/business/economy/power-outage-most-serious-in-a-decade-data-from-omans-regulator-reveals",
+          "publisher": "Oman Observer",
+          "date": "2022-09-10",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://www.omanobserver.om/article/1124752",
+          "publisher": "Oman Observer",
+          "date": "2022-09-05",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        },
+        {
+          "url": "https://www.albayan.ae/world/gcc/2022-09-05-1.4508618",
+          "publisher": "Al Bayan (البيان)",
+          "date": "2022-09-05",
+          "language": "ar",
+          "source_role": "media",
+          "opened": true,
+          "title_original": "عُمان تعلق الدراسة في المدارس بسبب الكهرباء",
+          "title_en": "Oman suspends school over electricity"
+        },
+        {
+          "url": "https://www.newarab.com/news/oman-probes-power-cuts-left-muscat-without-electricity",
+          "publisher": "The New Arab",
+          "date": "2022-09-07",
+          "language": "en",
+          "source_role": "media",
+          "opened": true
+        }
+      ],
+      "recovery": {
+        "research_status": "EVIDENCE_FOUND",
+        "kind": "service_restored",
+        "date": "2022-09-06",
+        "evidence": "The Authority for Public Services Regulation said electricity had been restored in all affected areas as of 2 am on Tuesday 6 September 2022 (Oman Observer).",
+        "url": "https://www.omanobserver.om/article/1124752"
+      },
+      "review": {
+        "reviewed_at": "2026-11-11",
+        "threshold_version": "2026-10-30.1",
+        "review_status": "blind_reviewed",
+        "primary_review_complete": true,
+        "independent_review_complete": true,
+        "reviewer_count": 4,
+        "disposition": "corrected",
+        "source_count": 7,
+        "sources_opened_by_reviewer": 7,
+        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
+        "source_access": "at least one source read",
+        "roles": {
+          "evidence": "accept_with_correction",
+          "safety": "accept_with_correction",
+          "taxonomy": "accept_with_correction"
+        }
+      },
+      "hazard_name": null
+    }
+  ]
 }

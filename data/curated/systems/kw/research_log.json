@@ -1,4 +1,132 @@
 {
   "note": "What was searched, when, and how far it got. Counts only: the candidate queue's per-record narratives are kept off the public record (data/candidates/README.md). A SYSTEMATIC pass declares its source lanes and window before searching. A window searched with the budget exhausted is PARTIAL, not researched-and-quiet.",
-  "passes": []
+  "passes": [
+    {
+      "date": "2026-11-11",
+      "by": "iteration-19 Gulf research pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-11"
+      ],
+      "scope": "inclusion clauses 1-7 as written; lanes and queries declared before searching (docs/countries/KW_SYSTEMATIC_SWEEP.md); every published record reviewed blind by three independent roles and confirmed on its final text",
+      "status": "partial",
+      "status_reason": "0 of 4 lanes executed as far as declared; the rest are stated per lane",
+      "outcome": {
+        "candidates": 48,
+        "accepted": 5,
+        "rejected": 12,
+        "duplicate": 11,
+        "held": 18,
+        "out_of_scope": 2
+      },
+      "plan": {
+        "document": "docs/countries/KW_SYSTEMATIC_SWEEP.md",
+        "commit": "e825386"
+      },
+      "lanes": [
+        {
+          "lane": "KW1",
+          "source_family": "Oil sector operators and ministry: statements and the national refining company's annual reports",
+          "registry": [
+            "Kuwait Petroleum Corporation, KNPC, KOC, KIPIC and Ministry of Oil statements; KNPC annual reports 2021-22 to 2025-26"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "rolling_archive_gap",
+          "covered_through": "2026-03-31",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 2,
+          "queries_run": 2,
+          "items_enumerated": 4,
+          "items_in_universe": 5,
+          "finding": "The refining company's annual reports are not an incident record. The 2022-23 and 2024-25 reports state no dated fire, explosion or unplanned shutdown. Absence from these reports is not evidence that nothing happened. No operator statement of an unplanned refinery shutdown in 2022-2025 was found; that is a statement about two queries, not about the refineries.",
+          "limitation": "The report listing has four of the five fiscal years 2021-22 to 2025-26; 2023-24 is not published there. No operator statement list can be enumerated. The sixth search of the cap was spent on this lane's English query rather than on KW2's first English query, because KW2 had an enumerable archive and this lane had none.",
+          "carried_forward": false
+        },
+        {
+          "lane": "KW2",
+          "source_family": "Electricity: the ministry's news archive, Arabic and English",
+          "registry": [
+            "Ministry of Electricity, Water and Renewable Energy news archive (Arabic and English)"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "rolling_archive_gap",
+          "covered_through": "2026-11-05",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 4,
+          "queries_run": 2,
+          "items_enumerated": 655,
+          "items_in_universe": 655,
+          "finding": "The ministry archive carries no outage register and no megawatts-shed figure anywhere. For 2022-2023 it holds no outage, cut or fault item. Read with the press, the record for 2024-2025 is five dated episodes of programmed cuts forced by a generation shortfall: 19-20 June 2024 (about 40 areas), 18-19 August 2024 (gas supply fault), 10 September 2024 (two units lost, 11 residential areas), 2 April 2025 and 9-10 April 2025. Nothing was found on cuts in summer 2025, and the ministry's own statements say the 2025 and 2026 peaks were lower than 2024's. Scheduled maintenance outages (February 2025) and peak-load statements are not events.",
+          "limitation": "Every title on both listings was read (all four pager pages are in the one static page; the page was fetched with an ordinary request and parsed locally, because the fetch tool stops at 100,000 characters). The archive is thin before 2024 (the English list has no 2022 item), so it is not a census of ministry statements. Languages: the archive was enumerated in Arabic and English, but only the two Arabic queries were run; the two English queries were not, so the lane is partial. The Arabic queries and seven day-pages of Al-Jarida's dated archive (first page of each day only) found nothing for 2022 or 2023.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        },
+        {
+          "lane": "KW3",
+          "source_family": "Official statements as carried by the state news agency, via search",
+          "registry": [
+            "Kuwait News Agency (KUNA), Arabic and English: official statements"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "no_census_exists",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar"
+          ],
+          "queries_declared": 4,
+          "queries_run": 2,
+          "finding": "KUNA statements reach the open web through Gulf newspapers and the Qatari agency.",
+          "limitation": "Two of four declared queries were run, both Arabic; the English pair was not, so the lane is partial. No KUNA page was opened: every KUNA statement was read in a press or sister-agency copy, which is the same source.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        },
+        {
+          "lane": "KW4",
+          "source_family": "Arabic and English media by year, via search",
+          "registry": [
+            "Domestic and international press (Al-Qabas, Al-Rai, Al-Anba, Al-Jarida, Arab Times, Kuwait Times, Reuters, S&P Global, Al Jazeera)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "no_census_exists",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar"
+          ],
+          "queries_declared": 20,
+          "queries_run": 9,
+          "finding": "Several reports name oil-sector 'facilities' or a 'vital site' without a class; those were noted inside same-date records, not given a class. For 2022 to 2024 the Arabic energy press (Attaqa) and wire copies report refinery fires with the operator's statement that operations were unaffected: six rejects in all, one of them upstream. The programmed power cuts of June 2024, August 2024 and April 2025 were opened through Al-Jarida's dated archive, not through a declared query, and each has a ministry reason that meets clause 4. 27 article pages were read; about 60 distinct result links were screened by title. One 2021 refinery fire surfaced and is outside the window.",
+          "limitation": "2025 returned no oil-sector item at all, which is a property of the two queries that ran, not a finding about 2025.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        }
+      ]
+    }
+  ]
 }

@@ -130,7 +130,12 @@ export default function GroupView({ id }: { id: string }) {
         {ctx && (
           <section className="panel global-note" aria-label="What this view is">
             <p>{ctx.statement}</p>
-            <p className="small"><strong>Gulf, GCC and OPEC are three different things.</strong> {ctx.note} {ctx.memberships.gcc.note} {ctx.memberships.opec.note}</p>
+            <p className="small"><strong>Gulf, GCC and OPEC are three different things.</strong></p>
+            <ul className="small group-kinds">
+              <li><strong>{ctx.label}.</strong> {ctx.note}</li>
+              <li><strong>{ctx.memberships.gcc.label}.</strong> {ctx.memberships.gcc.note}</li>
+              <li><strong>{ctx.memberships.opec.label}.</strong> {ctx.memberships.opec.note}</li>
+            </ul>
             <p className="small dim">{ctx.not_built}</p>
           </section>
         )}
@@ -251,6 +256,13 @@ export default function GroupView({ id }: { id: string }) {
               )}
               <div className="sys-headline none"><span className="small">No index. Reviewed historical events and context only.</span></div>
               <div className="small dim">Reporting: {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}</div>
+              {s.attack_records_placed && (
+                <div className="small dim">
+                  {s.attack_records_placed === "country"
+                    ? "Attacks are recorded for the country as a whole, with no region or facility."
+                    : "Attacks are recorded by first-level region, the rule this system was built under before the Gulf rules."}
+                </div>
+              )}
               <div className="small dim">
                 {s.last_systematic_pass ? `Latest systematic research pass ${fmtDate(s.last_systematic_pass)}` : "No systematic research pass yet"}
                 {Object.keys(s.lane_states).length > 0 && `: ${laneLine(s.lane_states)}`}

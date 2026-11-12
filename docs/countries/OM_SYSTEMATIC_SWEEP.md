@@ -63,3 +63,29 @@ access (403, certificate error, terms gate, script-only listing) is recorded and
 around. A query set fully run is `declared_search_complete`, never a census; a lane run in one
 language is `partial`. Every lane-accepted record goes through blind three-role review
 (`REVIEW_GOVERNANCE.md` §7) and confirmation before import.
+
+## Part B — execution (written after the pass, 2026-11-11)
+
+**This pass did not finish.** 0 of 5 lanes ran as far as declared; 5 were stopped by the shared limit of 200 web searches per turn, which was not worked around. Each lane states below what did not run. A blocked source (HTTP 402 or 403, login wall, script-only page) was recorded as blocked and left.
+
+| Lane | Execution | Source window | Covered through | Queries | Items read | Languages required | Languages run |
+|---|---|---|---|---|---|---|---|
+| OM1 | partial; stopped by search limit | current_through_end_date | not reached | 0 of 2 | 4 of 58 | ar, en | ar, en |
+| OM2 | partial; stopped by search limit | current_through_end_date | 2025-12-31 | 0 of 2 | 5 of 14 | ar, en | en |
+| OM3 | partial; stopped by search limit | current_through_end_date | 2024-12-31 | 0 of 2 | 2 of 4 | ar, en | en |
+| OM4 | partial; stopped by search limit | current_through_end_date | 2025-12-31 | 3 of 4 | 5 of 9 | ar, en | ar, en |
+| OM5 | partial; stopped by search limit | no_census_exists | not reached | 7 of 20 | 64 | ar, en | ar |
+
+Candidates 14: accepted after blind review 1, rejected 3, duplicate 0, held 7, out of scope 3. Published records in this system after the pass: 1.
+
+**Result.** One grid event is published, accepted under clause 5 on stated extent with no customer count (see the correction note in OM_SOURCE_AUDIT.md). Ministry, regulator and operator publication pages were mostly script-only or larger than the fetch tool reads; the annual reports that were read carry no outage narrative.
+
+**Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
+
+### Limitations, per lane
+
+- **OM1**: The listing at ncsi.gov.om/publications?page=N is static but mixes all publication types at six per page with no working type filter, so the other issues were not located.
+- **OM2**: Five of fourteen reports were read. Nine were not: four are over the fetch size limit, one timed out twice, two have links that resolve to cover images, and the two OQEP annual reports have no reachable address. The exchange's disclosure history and the gas-network company's investor pages remain unread.
+- **OM3**: Two of four editions were read, both in English. The 2022 edition is over the size limit in both languages and the 2025 edition returns no body text. Cargo, vessel and delivery passages were not recorded.
+- **OM4**: Three of four declared queries were run, the cap; the English cyclone query was not. Two of four annual reports are over the fetch size limit and one 7-Year Statement issue is not listed. The regulator's site is unreadable, so whether it publishes investigation reports or interruption statistics is still not established; its statements were read only as the press carried them. No transmission-company document was read. The interconnection and reinforcement passages of the 7-Year Statements and all per-plant rows were not recorded.
+- **OM5**: Seven of twenty declared queries ran, all Arabic; no English query ran, so the lane is partial in language as well as in count. The year token barely filters: every power query returned the same 2022 and mid-2026 pages, and the fire strings returned no Omani refinery or gas-plant incident at all, so 2023 and 2024 are years in which the queries found nothing, not years shown to be quiet. Nothing was accepted: the best-evidenced non-conflict event lacks a published figure, and the 2026 records lack either an opened source or a clause-meeting effect.

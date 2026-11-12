@@ -300,6 +300,8 @@ export interface GroupSystem {
   languages_required: string[];
   languages_executed: string[];
   reporting_environment: string;
+  /** Where the system places an attack record: the country as a whole, or a first-level region. */
+  attack_records_placed?: "country" | "admin1";
 }
 
 export interface GroupContext {

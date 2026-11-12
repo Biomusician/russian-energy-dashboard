@@ -1,4 +1,156 @@
 {
   "note": "What was searched, when, and how far it got. Counts only: the candidate queue's per-record narratives are kept off the public record (data/candidates/README.md). A SYSTEMATIC pass declares its source lanes and window before searching. A window searched with the budget exhausted is PARTIAL, not researched-and-quiet.",
-  "passes": []
+  "passes": [
+    {
+      "date": "2026-11-11",
+      "by": "iteration-19 Gulf research pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-11"
+      ],
+      "scope": "inclusion clauses 1-7 as written; lanes and queries declared before searching (docs/countries/IQ_SYSTEMATIC_SWEEP.md); every published record reviewed blind by three independent roles and confirmed on its final text",
+      "status": "partial",
+      "status_reason": "0 of 5 lanes executed as far as declared; the rest are stated per lane",
+      "outcome": {
+        "candidates": 69,
+        "accepted": 10,
+        "rejected": 15,
+        "duplicate": 1,
+        "held": 38,
+        "out_of_scope": 5
+      },
+      "plan": {
+        "document": "docs/countries/IQ_SYSTEMATIC_SWEEP.md",
+        "commit": "e825386"
+      },
+      "lanes": [
+        {
+          "lane": "IQ1",
+          "source_family": "SOMO monthly statistics, read only for a change the publisher attributes to a disruption",
+          "registry": [
+            "SOMO monthly export statistics"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "inaccessible",
+          "covered_through": null,
+          "languages_required": [
+            "ar"
+          ],
+          "languages_executed": [
+            "ar"
+          ],
+          "queries_declared": 2,
+          "queries_run": 1,
+          "items_enumerated": 7,
+          "finding": "On the pages an ordinary request can read, SOMO shows a national monthly export total and no stated reasons. Four of the seven news titles concern export arrangements and were not opened. One accepted IQ2 record (January 2025, Basra) rests on a production cut attributed to a fire by a SOMO official in the press, which is the kind of attribution this lane looks for. That is the result of one query and seven titles, not of an archive read.",
+          "limitation": "The monthly report archive and every news body are script-rendered, so no report was read and the archive was not enumerated. One of two fallback queries ran; the English one was left unrun to keep the cap for IQ2.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        },
+        {
+          "lane": "IQ2",
+          "source_family": "Ministry of Oil and state oil company statements, as carried by agencies",
+          "registry": [
+            "Ministry of Oil and state oil companies (statements; South Refineries Company news list)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "no_census_exists",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en (2022 only)"
+          ],
+          "queries_declared": 10,
+          "queries_run": 6,
+          "items_enumerated": 21,
+          "finding": "The ministry and the state companies issue a statement after most reported fires, and the statement usually says output was not affected: four of the six rejected items are such statements. The three accepted records are non-conflict events in Dhi Qar and Basra (2022 and 2025), each with a stated volume.",
+          "limitation": "Six of ten declared queries ran: Arabic for all five years, English for 2022 only, so English is partial. Official sites stayed unread, so every record is a media copy of a statement or of unnamed officials. One Arabic business outlet that recurred in the results refused every request.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        },
+        {
+          "lane": "IQ3",
+          "source_family": "Ministry of Electricity statements on dated losses of supply",
+          "registry": [
+            "Ministry of Electricity statements"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "inaccessible",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar"
+          ],
+          "queries_declared": 15,
+          "queries_run": 7,
+          "finding": "Media carry two kinds of ministry statement that meet the rule: total or near-total collapses of the national grid (one each found for 2023, 2025 and 2026) and dated national megawatt losses attributed to a cut in gas supply (found for 2023 twice, 2024, 2025 three times, and 2026). The ministry usually states megawatts and broad regions (\"the centre\", \"the middle Euphrates\") rather than governorates or customers, so most records sit at country level with few or no governorates coded. One regional energy outlet (Attaqa) supplies a large share of the readable copies.",
+          "limitation": "Seven of fifteen declared queries ran and none in English, so this lane is partial and its silence proves nothing. The gas-loss string did not run for 2022, 2024 or 2026; the 2022 and 2024 blackout searches returned no dated collapse, which is a search result, not a finding that none occurred. Station fires and unit faults with a stated loss were not found by these strings and remain not yet researched. Official pages could not be read, so every record rests on media copies of ministry statements, and six of the ten accepted records have one opened source.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        },
+        {
+          "lane": "IQ4",
+          "source_family": "Kurdistan Region official sources and industry-association statements, as carried by media",
+          "registry": [
+            "Kurdistan Regional Government ministries (Natural Resources, Electricity) and APIKUR (industry association)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "no_census_exists",
+          "covered_through": "2026-11-11",
+          "languages_required": [
+            "en",
+            "ku"
+          ],
+          "languages_executed": [
+            "en",
+            "ku"
+          ],
+          "queries_declared": 13,
+          "queries_run": 5,
+          "finding": "Regional ministry and operator statements, as carried, give a megawatt loss for the larger gas-supply interruptions and name the facility and governorate; they rarely give an oil volume. The industry association's one event statement gives no field, governorate or volume.",
+          "limitation": "Official regional sites refuse automated reading, so every statement was read as carried by media, mostly in English; Sorani text was read for four items. Five of 13 declared queries ran (2022, 2023 and the Sorani string for 2024) before the cap; the 2025 and 2026 strings and the three once-only strings did not run, so 2025-2026 rests on one outlet's tag listings, which are an editor's selection, not an archive. A tag or a year with no item is not evidence of no event.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        },
+        {
+          "lane": "IQ5",
+          "source_family": "Media corroboration: Iraqi, Kurdish and international outlets",
+          "registry": [
+            "Iraqi News Agency; Shafaq News, Rudaw, Kurdistan24",
+            "International news agencies and energy press (Reuters, AP, S&P Global, Argus)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "no_census_exists",
+          "covered_through": "2026-11-11",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 10,
+          "queries_run": 5,
+          "finding": "Media reports date the event and name the governorate; Many reports rest on a single unnamed source.",
+          "limitation": "Shafaq's section listings run to more than a thousand pages each and were read only at page 1; discovery was through tag listings, which are incomplete, and the Arabic listing was not paged. Kurdistan24's Economy listing exposes 5 undated pages (about 80 recent items). Five of 10 declared queries ran (2022, 2023 and the Arabic string for 2024). Reuters and AP were read only in syndicated copies. Federal-Iraq events were recorded only where met in passing; lanes IQ2 and IQ3 own them.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        }
+      ]
+    }
+  ]
 }

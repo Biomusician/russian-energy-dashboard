@@ -115,6 +115,10 @@ def build(context, country_payloads):
             "languages_required": sorted({x for lane in lanes for x in lane.get("languages_required") or []}),
             "languages_executed": sorted({x for lane in lanes for x in lane.get("languages_executed") or []}),
             "reporting_environment": p["reporting_environment"],
+            # Where this system places an attack record. A system onboarded before the Gulf rules
+            # states no policy and places by first-level region; the view says so rather than
+            # leave a reader to wonder why two neighbours' records look different.
+            "attack_records_placed": ((p["geography"].get("precision_policy") or {}).get("kinetic") or "admin1"),
         })
     region = {}
     for mid in metrics:
@@ -125,7 +129,7 @@ def build(context, country_payloads):
         sources[sid] = {k: src.get(k) for k in ("name", "url", "release", "attribution")}
     payload = {
         "group": GROUP, "label": group["label"], "note": group["note"],
-        "statement": ("National energy statistics for the eight Gulf systems, for context. A figure here "
+        "statement": (f"National energy statistics for the {len(members)} Gulf systems, for context. A figure here "
                       "is a country's annual total. It says nothing about any facility, and it is never "
                       "used to weigh, rank or score a disruption."),
         "not_built": ("This view has no route, strait, shipping or tanker information, no facility layer "

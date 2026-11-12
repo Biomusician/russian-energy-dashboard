@@ -80,7 +80,7 @@ export default function GlobalHome() {
         {groups.length > 0 && (
           <div className="map-control-row">
             <label className="small">Show{" "}
-              <select aria-label="Filter monitored systems by group" value={groupFilter} onChange={(e) => setGroupFilter(e.target.value)}>
+              <select aria-label="Filter the system cards by group" value={groupFilter} onChange={(e) => setGroupFilter(e.target.value)}>
                 <option value="all">all systems</option>
                 {groups.map(([id, g]) => <option key={id} value={id}>{g.label}{g.kind === "membership" ? " members" : " states"}</option>)}
               </select>

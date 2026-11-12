@@ -19,7 +19,8 @@ const MOBILE = [[1024, 768], [430, 932], [390, 844]] as const;
 
 type Page = import("@playwright/test").Page;
 type GulfSystem = { system_id: string; name: string; a3: string; gcc_member: boolean; opec_member: boolean;
-                    maturity: string; recovery_status_withheld: boolean; values: Record<string, number | null> };
+                    maturity: string; recovery_status_withheld: boolean; values: Record<string, number | null>;
+                    attack_records_placed: "country" | "admin1" };
 type Event = { event_id: string; cause: string; region_code: string | null; region_name: string | null;
                facility_name: string | null; geography_precision: string; summary: string; effect: string | null;
                regions_affected: string[]; sources: { url: string; title_original?: string; language?: string }[] };
@@ -54,7 +55,7 @@ test.describe("Gulf group", () => {
     await app.open("");
     const m = await manifest(page);
     const name = (id: string) => m.systems.find((s: { id: string }) => s.id === id).name;
-    const filter = page.getByLabel("Filter monitored systems by group");
+    const filter = page.getByLabel("Filter the system cards by group");
     const cards = page.getByRole("region", { name: "Monitored systems" }).getByRole("article");
     await expect(cards).toHaveCount(m.systems.length);
 
@@ -97,6 +98,9 @@ test.describe("Gulf group", () => {
       await expect(card).toContainText(s.opec_member ? "OPEC member" : "Not an OPEC member");
       // The campaign badge wherever the build withholds recovery status, and only there.
       await expect(card.getByText("Recovery status withheld")).toHaveCount(s.recovery_status_withheld ? 1 : 0);
+      // Why two neighbours' attack records look different is said on the card, not left to guess.
+      await expect(card).toContainText(s.attack_records_placed === "country"
+        ? "Attacks are recorded for the country as a whole" : "Attacks are recorded by first-level region");
       // A card carries no event count: eight numbers side by side are a league table.
       await expect(card).not.toContainText(/\d+\s+(qualifying|reported|recorded)/i);
     }
@@ -155,6 +159,7 @@ test.describe("Gulf group", () => {
     expect(main).not.toMatch(RANKING);
     expect(main).not.toMatch(ROUTES);
     expect(main).toContain("Gulf, GCC and OPEC are three different things");
+    await expect(page.locator(".group-kinds li")).toHaveCount(3);
   });
 
   test("regional events are in date order only, and an attack under a country rule names no place", async ({ app, page }) => {
@@ -231,6 +236,14 @@ test.describe("Gulf country systems", () => {
         await expect(ribbon).not.toContainText(/\b0 (qualifying|events|disruptions)/i);
       } else {
         await expect(ribbon).toContainText(`${events.length} qualifying events recorded`);
+      }
+
+      // A country whose candidates were all held must not read like one nobody looked at.
+      const passes = (sys.research_log.passes as { kind: string; outcome?: Record<string, number> }[]).filter((p) => p.kind === "systematic");
+      const outcome = passes[passes.length - 1]?.outcome;
+      if (outcome?.candidates) {
+        await expect(ribbon).toContainText(`looked at ${outcome.candidates} candidate records`);
+        if (outcome.held > 0) await expect(ribbon).toContainText(`${outcome.held} are held in review`);
       }
 
       // Tiny states need usable bounds: the map shows the country, not empty sea.

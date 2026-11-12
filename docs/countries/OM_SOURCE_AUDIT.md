@@ -460,6 +460,8 @@ Recommended value: **`corporate_disclosure`**.
   session)**. A report with no figure cannot meet clause 5; that would be a property of the
   reporting, not of the weather.
 
+**Correction, 2026-11-11 (after review).** The last sentence above is too strong as written. Records in other systems have been accepted under clause 5 on a stated extent with no customer count, with the words "extent-based; no customer count published" in their basis. One Omani grid event was accepted by all three blind roles on that precedent, and the taxonomy reviewer recorded the conflict with this page. Whether clause 5 may be met by official extent alone is not written in `REVIEW_GOVERNANCE.md` and is listed for the owner in `ITERATION_19_REVIEW.md`. The sentence is left in place so the plan reads as it was committed.
+
 ## 4. Low reported incidents is not low disruption
 
 The number of Omani incidents Wave B finds will be set by this environment: three official sites

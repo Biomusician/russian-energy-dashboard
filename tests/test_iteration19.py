@@ -840,6 +840,77 @@ def test_a_month_precision_date_does_not_crash_the_late_citation_check():
     assert B.late_citation({"date": "2025", "date_precision": "year"}, {"date": None}) is True
 
 
+def test_the_committed_review_edits_hand_back_nothing_about_an_abstracted_record():
+    """review_edits.json is public. An edit on a record published without its place carries no
+    headline and no reviewer's free-text reason, both of which name the place."""
+    ar = _load("apply_reviews")
+    sources = [{"url": "https://example.org/a", "publisher": "P", "title_original": "هجوم على مصفاة كذا", "title_en": "Attack on X refinery"}]
+    assert ar._public_set("sources", sources, True) == [{"url": "https://example.org/a", "publisher": "P"}]
+    assert ar._public_set("sources", sources, False) == sources
+    assert ar._public_set("summary", "text", True) == "text"
+    edits = json.loads((CURATED / "review_edits.json").read_text(encoding="utf-8"))["edits"]
+    for cc in ("ae", "bh", "iq", "ir", "kw", "om", "qa"):
+        pattern = re.compile(B.OPAQUE_ID.format(cc=cc))
+        for e in edits:
+            if not pattern.fullmatch(e["event_id"]):
+                continue
+            assert e["reason"].endswith(ar.GENERIC_REASON), e["event_id"]
+            if e["field"] == "sources":
+                assert not any("title_original" in s or "title_en" in s for s in e["set"]), e["event_id"]
+                assert not any(B.method_in_address(s["url"]) for s in e["set"]), e["event_id"]
+            else:
+                assert not B.METHOD_WORDING.search(json.dumps(e["set"], ensure_ascii=False)), e["event_id"]
+
+
+def test_the_gate_refuses_a_recovery_status_outside_the_vocabulary():
+    """A lane wrote 'RESEARCHED'. It passed three reviews and stopped the whole build."""
+    imp = _load("import_candidates")
+    r = _full_candidate(candidate_id="kw-2024-08-power-cuts", cause="technical")
+    r["recovery"] = {"research_status": "RESEARCHED", "kind": "service_restored", "date": "2024-08-02",
+                     "evidence": "x", "url": "https://example.org/a"}
+    assert "not in the vocabulary" in imp.review("kw", r, {"KW-AH"}, policy=POLICY)
+    r["recovery"]["research_status"] = "NOT_YET_RESEARCHED"
+    assert "go together" in imp.review("kw", r, {"KW-AH"}, policy=POLICY)
+    r["recovery"]["research_status"] = "EVIDENCE_FOUND"
+    assert "vocabulary" not in (imp.review("kw", r, {"KW-AH"}, policy=POLICY) or "")
+    assert "go together" not in (imp.review("kw", r, {"KW-AH"}, policy=POLICY) or "")
+
+
+def test_a_lane_note_publishes_no_attack_narrative_and_no_dated_event_of_the_campaign_year():
+    """Lane notes are unreviewed prose. Read together before release, the first versions were a
+    list of strikes by date and class, with tallies, that no reviewer had accepted."""
+    w = _load("write_gulf_pass")
+    note = ("Seven of twelve declared queries ran. For 2026 the queries surfaced attacks on three dates in March. "
+            "One outlet calls it the third since the war began. A fire at an installation was reported on 2026-11-10. "
+            "A statement dated 18 July gives no figure. The listing refused access (HTTP 403). "
+            "No refinery fire in 2023 was returned, which is a property of the results.")
+    out = w.process_only(note)
+    assert out == ("Seven of twelve declared queries ran. The listing refused access (HTTP 403). "
+                   "No refinery fire in 2023 was returned, which is a property of the results.")
+    assert w.process_only("Attacks dominate the results.") == w.WITHHELD_NOTE
+    assert w.public_text("A drone attack was reported in March 2026.", []) == w.WITHHELD_NOTE
+
+
+@pytest.mark.parametrize("cc", ["ae", "bh", "iq", "ir", "kw", "om", "qa", "sa"])
+def test_the_published_research_log_of_a_gulf_system_carries_no_conflict_narrative(cc):
+    w = _load("write_gulf_pass")
+    log = json.loads((CURATED / cc / "research_log.json").read_text(encoding="utf-8"))
+    newest = [p for p in log["passes"] if p.get("by") == w.PASS_BY]
+    assert newest, f"{cc}: the iteration-19 pass is not in the log"
+    for lane in newest[-1]["lanes"]:
+        for k in ("finding", "limitation"):
+            text = lane.get(k) or ""
+            assert not w.CONFLICT_NARRATIVE.search(text), (cc, lane["lane"], k, w.CONFLICT_NARRATIVE.search(text).group(0))
+            assert not w.CURRENT_YEAR_EVENT.search(text), (cc, lane["lane"], k)
+    # And the same holds for what the browser is served.
+    served = json.loads((WEB / "systems" / cc / "system.json").read_text(encoding="utf-8"))["research_log"]["passes"]
+    for p in served:
+        if p.get("by") != w.PASS_BY:
+            continue
+        for lane in p["lanes"]:
+            assert not w.CONFLICT_NARRATIVE.search((lane.get("finding") or "") + " " + (lane.get("limitation") or "")), (cc, lane["lane"])
+
+
 # --- research-pass honesty -----------------------------------------------------------------------
 
 def _body(**kw):

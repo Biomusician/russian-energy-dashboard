@@ -2099,3 +2099,7 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
 .group-page .sys-card .badge { white-space: normal; }
 
 .country-page > .system-notices { margin: 10px 16px 0; flex: 0 0 auto; max-width: 1100px; }
+
+/* The three kinds of group on the regional view (iteration 19). */
+.group-kinds { margin: 4px 0 8px; padding-left: 18px; }
+.group-kinds li { margin: 2px 0; }

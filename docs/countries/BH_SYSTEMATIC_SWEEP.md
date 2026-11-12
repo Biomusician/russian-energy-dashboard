@@ -66,3 +66,25 @@ Clause 6 (coal) is not applicable: Bahrain has no coal sector (`BH_INDEX_READINE
   `source_window` as `rolling_archive_gap` for 2022-2023; BH3 is a query set and is never a census.
 - Every candidate is read end to end by a safety reviewer before import; blind three-role review as
   in `SA_LANE_PASS_18.md`.
+
+## Part B — execution (written after the pass, 2026-11-11)
+
+**This pass did not finish.** 0 of 3 lanes ran as far as declared; 3 were stopped by the shared limit of 200 web searches per turn, which was not worked around. Each lane states below what did not run. A blocked source (HTTP 402 or 403, login wall, script-only page) was recorded as blocked and left.
+
+| Lane | Execution | Source window | Covered through | Queries | Items read | Languages required | Languages run |
+|---|---|---|---|---|---|---|---|
+| BH1 | partial; stopped by search limit | inaccessible | not reached | 0 of 5 | 8 | ar, en | en |
+| BH2 | partial; stopped by search limit | rolling_archive_gap | 2026-11-11 | 0 of 4 | 148 of 148 | ar, en | ar, en |
+| BH3 | partial; stopped by search limit | no_census_exists | not reached | 9 of 15 | - | ar, en | ar |
+
+Candidates 9: accepted after blind review 0, rejected 3, duplicate 0, held 3, out of scope 3. Published records in this system after the pass: 0.
+
+**Result.** One attack record was reviewed and is with the owner: the opened sources report a force-majeure declaration and disrupted operations but no shutdown or throughput cut, which is what clause 1 asks for, and they do not clearly tie the dated fire to the facility. Bahrain therefore has no published record. The electricity authority's site forbids linking and was never cited. The safety reviewer noted that where a country has one facility of a class, the class and the country name it whatever the text says.
+
+**Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
+
+### Limitations, per lane
+
+- **BH1**: Only the first page of the refining company's English press-release listing could be read: 8 items dated 2024-06-02 to 2025-07-31; the total number of items is not shown and later pages are script-driven. The group's media centre (English and Arabic) and the state news agency refused automated access, so no Arabic listing was read and nothing from 2022-2023 or from 2026 was enumerated. The lane's five declared queries were not run: the task assigned the whole search allowance to BH3. This is a count of items read, not a census.
+- **BH2**: Both listings were read in full by title and date (Arabic 79 of 79, English 69 of 69); no title concerned a supply interruption, so no item was opened. The listings begin in February 2024, so 2022 and 2023 cannot be enumerated here and rest on the lane's four declared queries, which were not run: the task assigned the whole search allowance to BH3.
+- **BH3**: A query set, never a census: 9 of 15 declared queries ran, all Arabic, so the lane was searched in one of its two required languages and the 2026 outage query did not run. Fifteen result pages were requested and thirteen read. Domestic Arabic papers were not reached (two are refused, the readable one has no search); every page read is foreign or English-language press carrying an official Bahraini statement. This is a count of records found.

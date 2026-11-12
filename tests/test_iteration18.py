@@ -490,7 +490,10 @@ def test_no_unpublished_record_is_named_in_any_served_string():
             continue
         for r in json.loads((QUEUE / f"{sid}.json").read_text(encoding="utf-8")):
             cid = r.get("candidate_id") or ""
-            if cid and cid not in published and len(cid) > 12 and cid in served:
+            # The whole id, not a prefix of a published one: two lanes named one event
+            # 'x-power-cuts' and 'x-power-cuts-generation-shortfall' (iteration 19).
+            if (cid and cid not in published and len(cid) > 12 and cid in served
+                    and re.search(r"(?<![\w-])" + re.escape(cid.lower()) + r"(?![\w-])", served)):
                 leaked.append(cid)
     assert not leaked, leaked[:10]
 

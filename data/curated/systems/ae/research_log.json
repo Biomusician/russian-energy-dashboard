@@ -1,4 +1,134 @@
 {
   "note": "What was searched, when, and how far it got. Counts only: the candidate queue's per-record narratives are kept off the public record (data/candidates/README.md). A SYSTEMATIC pass declares its source lanes and window before searching. A window searched with the budget exhausted is PARTIAL, not researched-and-quiet.",
-  "passes": []
+  "passes": [
+    {
+      "date": "2026-11-11",
+      "by": "iteration-19 Gulf research pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-11"
+      ],
+      "scope": "inclusion clauses 1-7 as written; lanes and queries declared before searching (docs/countries/AE_SYSTEMATIC_SWEEP.md); every published record reviewed blind by three independent roles and confirmed on its final text",
+      "status": "partial",
+      "status_reason": "0 of 4 lanes executed as far as declared; the rest are stated per lane",
+      "outcome": {
+        "candidates": 21,
+        "accepted": 1,
+        "rejected": 2,
+        "duplicate": 1,
+        "held": 14,
+        "out_of_scope": 3
+      },
+      "plan": {
+        "document": "docs/countries/AE_SYSTEMATIC_SWEEP.md",
+        "commit": "e825386"
+      },
+      "lanes": [
+        {
+          "lane": "AE1",
+          "source_family": "National statements: Ministry of Energy and Infrastructure and federal statements as carried by the state news agency, via search",
+          "registry": [
+            "Ministry of Energy and Infrastructure and federal statements (WAM, Emirates News Agency)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "inaccessible",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar"
+          ],
+          "queries_declared": 10,
+          "queries_run": 1,
+          "finding": "The one string run returned other countries' outage statements and nothing from the UAE. It reports the minister saying energy supplies were stable and local markets were supplied without interruption, and mentions a contained fire at an oil-industry zone with no date. That is a statement of no interruption, context for the 2026 records and not an event.",
+          "limitation": "One of ten declared strings was run (Arabic, 2026) and it returned no UAE item at all. The agency's pages cannot be opened by an ordinary request and the ministry's site closed the connection, so this lane was barely started: not yet researched, not 'no statements'.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        },
+        {
+          "lane": "AE2",
+          "source_family": "ADNOC group annual and integrated reports, read for incident occurrence",
+          "registry": [
+            "ADNOC group and listed subsidiaries (ADNOC Gas reports; ADX disclosures)"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "publisher_not_yet_released",
+          "covered_through": "2025-12-31",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 4,
+          "queries_run": 1,
+          "items_enumerated": 73,
+          "items_in_universe": 3,
+          "finding": "Each year states a plant reliability figure and the 2023 report states zero Tier 1 loss-of-containment events; these are annual averages, not event records, and none is recorded. Company annual reporting is framed around reliability and financial results and does not publish incident notices. The announcement listings reachable hold corporate, results and partnership items only. A source giving no incident is not evidence that none occurred.",
+          "limitation": "The reports cover one listed gas subsidiary, for 2023 to 2025 only: it listed in 2023, so there is no annual report for 2022, and the group's refining and upstream companies publish nothing this lane could reach (the group site and the exchange both refused access). The reports were read by keyword search over extracted text in both languages, not cover to cover. Three of the four declared queries did not run because of the search cap, including both English ones.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        },
+        {
+          "lane": "AE3",
+          "source_family": "Electricity utilities and regulators: media releases and news listings",
+          "registry": [
+            "Electricity and water authorities (EWEC, DEWA, SEWA, Etihad Water and Electricity, Abu Dhabi Department of Energy)"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "rolling_archive_gap",
+          "covered_through": "2026-11-05",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 4,
+          "queries_run": 2,
+          "items_enumerated": 269,
+          "items_in_universe": 151,
+          "finding": "These bodies publish procurement, projects, partnerships and awards on these pages; outage statements go out through the state news agency, whose pages cannot be opened by an ordinary request. For the April 2024 storm, press copies of authority statements were read for two emirates. A federal ministries' statement of 24 April 2024 refers to outages in limited areas with no emirate and no count. A search summary also mentioned a fault-report figure for a third utility on 19 April 2024; no page for it was identified, so nothing is recorded. Preparedness notices (October 2023, May 2024) are not events.",
+          "limitation": "The three readable utility listings were enumerated in full by title, but one of them has a three-year hole (2022 to early 2025) and another is a 13-item page, not an archive; the Dubai authority, the Abu Dhabi regulator's news page, the Dubai exchange and one listed utility could not be read at all. Two of four declared queries did not run because of the search cap, so the general outage queries in both languages are untested: by search, this lane looked for the April 2024 storm and nothing else.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        },
+        {
+          "lane": "AE4",
+          "source_family": "Arabic and English media by year, via search",
+          "registry": [
+            "Arabic and English press and news agencies (Al-Ittihad, Al-Khaleej, Al-Bayan, The National, Gulf News, Khaleej Times, Reuters, S&P Global)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "no_census_exists",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 18,
+          "queries_run": 8,
+          "finding": "For 2022 to 2025 the only non-conflict item found was a 2023 gas-supply fault with a power cut in one emirate. Emarat Al Youm (emaratalyoum.com), a domestic Arabic daily not in the audit, was readable by an ordinary request, as were attaqa.net, al-monitor.com, meed.com, arabnews.com and aljazeera.com.",
+          "limitation": "Ten of 18 declared strings were not run, eight of them English, so this is a partial query set and never a census. Several contemporaneous reports refused access, so some effects rest on one opened source.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        }
+      ]
+    }
+  ]
 }

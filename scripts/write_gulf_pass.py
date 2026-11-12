@@ -96,14 +96,43 @@ def unpublished_names(cc):
     return sorted(names, key=len, reverse=True)
 
 
-def public_text(text, names):
-    """`text` with unpublished names and status wording taken out, or a plain fallback."""
+# A lane note is the researcher's own prose about what the search turned up. It was never
+# reviewed, and for these systems most of what a search turns up is reports of attacks. A sentence
+# that mentions one, a tally, or any dated event of the current campaign year is not published:
+# together those sentences are a list of strikes by date and class that no reviewer accepted
+# (found by reading the notes before release, iteration 19).
+CONFLICT_NARRATIVE = re.compile(
+    r"attack|strike|struck|kinetic|sabotage|drone|missile|rocket|\bwar\b|wartime|hostil|force majeure|debris|"
+    r"tall(y|ies)|acled|cyber|intercept|nuclear|campaign|هجوم|حمله", re.I)
+MONTHS = "January|February|March|April|May|June|July|August|September|October|November|December"
+CURRENT_YEAR_EVENT = re.compile(rf"\b({MONTHS}) 2026\b|\b2026-\d\d(-\d\d)?\b|\b\d{{1,2}} ({MONTHS})\b(?! 20(1\d|2[0-5]))", re.I)
+# Nor does a note speak of held material, a document, or a question put to the lead: those are
+# the queue's business (the iteration-18 rule, which the first Gulf notes also broke).
+QUEUE_TALK = re.compile(r"\bheld\b|\.md\b|\blead'?s?\b|lead_decisions|\bruling\b", re.I)
+WITHHELD_NOTE = "What the search returned about individual reports stays in the local review queue."
+
+
+def process_only(text):
+    """`text` with every sentence about attacks or about a dated event of 2026 taken out."""
     if not text:
         return text
+    kept = [s for s in re.split(r"(?<=[.])\s+", text)
+            if not CONFLICT_NARRATIVE.search(s) and not CURRENT_YEAR_EVENT.search(s) and not QUEUE_TALK.search(s)]
+    # A sentence cut at a semicolon by the clause that followed it ends cleanly.
+    return re.sub(r"[;:,]\s*$", ".", " ".join(kept).strip()) or WITHHELD_NOTE
+
+
+def public_text(text, names):
+    """`text` with unpublished names, status wording and conflict narrative taken out."""
+    if not text:
+        return text
+    text = process_only(text)
     for n in names:
         text = re.sub(re.escape(n), "a facility", text, flags=re.I)
     if build_systems.status_wording(text):
-        sentences = [s for s in re.split(r"(?<=[.;])\s+", text) if not build_systems.status_wording(s)]
+        # A sentence that leaned on a removed one ("it was not opened...") is a fragment: drop it too.
+        sentences = [s for s in re.split(r"(?<=[.;])\s+", text)
+                     if not build_systems.status_wording(s) and not s[:1].islower()]
         text = " ".join(sentences) or "See the plan document; the researcher's note is kept in the local queue."
     return text.strip()
 

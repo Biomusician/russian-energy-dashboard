@@ -194,6 +194,7 @@ export default function CountryView({ id }: { id: string }) {
               <strong>No qualifying records in the current reviewed corpus.</strong> That describes this
               dataset, not {sys.name}: it does not mean nothing happened. Reporting environment:{" "}
               {labelFor(ENVIRONMENT_LABEL, sys.reporting_environment)}.
+              <HeldLine sys={sys} />
             </div>
           ) : (
             <div className="small">
@@ -201,6 +202,7 @@ export default function CountryView({ id }: { id: string }) {
               {" "}in <strong>{sys.event_summary.episodes}</strong> episodes ·
               reporting environment: {labelFor(ENVIRONMENT_LABEL, sys.reporting_environment)}.
               {" "}{sys.event_summary.note}
+              <HeldLine sys={sys} />
             </div>
           )}
           <div className="small dim">{sys.reporting_environment_text}</div>
@@ -502,6 +504,23 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
       )}
       </>)}
     </div>
+  );
+}
+
+/** How many candidate records the latest research pass found and did not publish. A count and
+ *  nothing else: what they are stays in review. Without it, a country whose every candidate was
+ *  held reads exactly like a country nobody looked at (iteration 19: two systems ended their first pass that way). */
+function HeldLine({ sys }: { sys: CountryBundle["system"] }) {
+  const passes = sys.research_log.passes.filter((p) => p.kind === "systematic");
+  const o = passes[passes.length - 1]?.outcome;
+  if (!o || !o.candidates) return null;
+  const held = o.held ?? 0;
+  return (
+    <span className="held-line">
+      {" "}The latest research pass looked at {o.candidates} candidate records for this country;{" "}
+      {held > 0 ? `${held} are held in review or wait on a rule decision and are not shown` : "none is held in review"},
+      and the rest were rejected, duplicates, out of scope or published. See the Research coverage tab.
+    </span>
   );
 }
 

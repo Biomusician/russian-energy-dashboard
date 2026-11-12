@@ -50,6 +50,32 @@ def _write(path, obj):
     path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+GENERIC_REASON = "reconciled correction; the reviewers' wording is kept in the local review file"
+
+
+def _abstract(cc, q):
+    """Whether this record is published without its place (an attack or sabotage record in a
+    system whose policy records those for the country)."""
+    doc = _read(SYS / cc / "system.json")
+    policy = (doc.get("geography") or {}).get("precision_policy") or {}
+    return policy.get("kinetic") == "country" and q.get("cause") in ("kinetic_strike", "sabotage")
+
+
+def _reason(roles, why):
+    """Who made the correction. The lead is not a blind role and is never labelled as one."""
+    if roles == ["lead"]:
+        return f"Lead ruling, stricter than the roles and confirmed by all three on the final text: {why}"
+    return f"Blind review, role(s) {', '.join(roles)}: {why}"
+
+
+def _public_set(field, value, abstract):
+    """The value as it may be committed. A kept citation of an abstracted record carries no
+    headline: the gate would drop it at import, but this file is public before that."""
+    if abstract and field == "sources" and isinstance(value, list):
+        return [{k: v for k, v in s.items() if k not in ("title_original", "title_en")} for s in value]
+    return value
+
+
 def apply(prefix, report):
     cc = prefix.split("_")[1]
     final = _read(R / f"{prefix}_final.json")["records"]
@@ -79,13 +105,18 @@ def apply(prefix, report):
             q["primary_review"] = {"completed": q.get("reviewed") or "2026-10-30",
                                    "note": "iteration-14 research lane, centrally reviewed (pre-dates this field)"}
         if rec["decision"] == "accept":
+            abstract = _abstract(cc, q)
             for e in rec.get("edits") or []:
-                key = (eid, e["field"], json.dumps(e["set"], ensure_ascii=False, sort_keys=True))
+                value = _public_set(e["field"], e["set"], abstract)
+                key = (eid, e["field"], json.dumps(value, ensure_ascii=False, sort_keys=True))
                 if key in have:
                     continue
+                # A reviewer's reason says what was removed and why, which for an abstracted
+                # record means naming the place. It stays in the local file (iteration 19).
+                why = GENERIC_REASON if abstract else e.get("reason")
                 edits_doc["edits"].append({
-                    "event_id": eid, "field": e["field"], "set": e["set"],
-                    "reason": f"Blind review, role(s) {', '.join(e.get('roles') or [])}: {e.get('reason')}",
+                    "event_id": eid, "field": e["field"], "set": value,
+                    "reason": _reason(e.get("roles") or [], why),
                 })
                 have.add(key)
             q["independent_review"] = {

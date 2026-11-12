@@ -1,4 +1,166 @@
 {
   "note": "What was searched, when, and how far it got. Counts only: the candidate queue's per-record narratives are kept off the public record (data/candidates/README.md). A SYSTEMATIC pass declares its source lanes and window before searching. A window searched with the budget exhausted is PARTIAL, not researched-and-quiet.",
-  "passes": []
+  "passes": [
+    {
+      "date": "2026-11-11",
+      "by": "iteration-19 Gulf research pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-11"
+      ],
+      "scope": "inclusion clauses 1-7 as written; lanes and queries declared before searching (docs/countries/OM_SYSTEMATIC_SWEEP.md); every published record reviewed blind by three independent roles and confirmed on its final text",
+      "status": "partial",
+      "status_reason": "0 of 5 lanes executed as far as declared; the rest are stated per lane",
+      "outcome": {
+        "candidates": 14,
+        "accepted": 1,
+        "rejected": 3,
+        "duplicate": 0,
+        "held": 7,
+        "out_of_scope": 3
+      },
+      "plan": {
+        "document": "docs/countries/OM_SYSTEMATIC_SWEEP.md",
+        "commit": "e825386"
+      },
+      "lanes": [
+        {
+          "lane": "OM1",
+          "source_family": "Ministry of Energy and Minerals statements and the national statistical bulletin, read for disruption-attributed changes",
+          "registry": [
+            "Ministry of Energy and Minerals statements (Oman News Agency)",
+            "National Centre for Statistics and Information, Monthly Statistical Bulletin"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "current_through_end_date",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 2,
+          "queries_run": 0,
+          "items_enumerated": 4,
+          "items_in_universe": 58,
+          "finding": "The bilingual bulletin is tables with definitional footnotes (provisional, coverage, source). Its oil and gas table (source: the ministry), refinery table (source: OQ) and electricity table (source: the regulator) carry no sentence that attributes a change to a disruption in any issue read. From 2024 the issues add infographic captions that state a percentage rise or fall (for example in total refinery output) with no cause: a numeric series with no attribution, so context and never an incident. No ministry statement of a disruption was reached by ordinary access. Zero candidates is a finding about the publication, not about the period.",
+          "limitation": "The listing at ncsi.gov.om/publications?page=N is static but mixes all publication types at six per page with no working type filter, so the other issues were not located.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        },
+        {
+          "lane": "OM2",
+          "source_family": "OQ group and PDO annual and sustainability reports and company releases",
+          "registry": [
+            "Muscat Stock Exchange company disclosures (OQ Gas Networks, OQ Exploration and Production, listed power companies)",
+            "OQ group, OQ Exploration and Production, PDO (annual and sustainability reports); EIA; GCC-Stat"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "current_through_end_date",
+          "covered_through": "2025-12-31",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "en"
+          ],
+          "queries_declared": 2,
+          "queries_run": 0,
+          "items_enumerated": 5,
+          "items_in_universe": 14,
+          "finding": "The reports read are performance documents. They give company totals, safety statistics (recordable injuries, fatalities, counts of Tier 1 and Tier 2 process-safety incidents by year) and, for the upstream operator, a general aim of reducing 'deferments', with no date, place, cause or volume for any interruption. A count of process-safety incidents with no date and no effect is context, never an incident. Zero candidates is a property of what these publishers disclose.",
+          "limitation": "Five of fourteen reports were read. Nine were not: four are over the fetch size limit, one timed out twice, two have links that resolve to cover images, and the two OQEP annual reports have no reachable address. The exchange's disclosure history and the gas-network company's investor pages remain unread.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        },
+        {
+          "lane": "OM3",
+          "source_family": "Oman LNG annual reports, read for material interruptions of production",
+          "registry": [
+            "Oman LNG Annual Report"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "current_through_end_date",
+          "covered_through": "2024-12-31",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "en"
+          ],
+          "queries_declared": 2,
+          "queries_run": 0,
+          "items_enumerated": 2,
+          "items_in_universe": 4,
+          "finding": "The editions read report annual LNG output, a plant reliability percentage and a utilisation percentage for each of the last five years, and zero Tier 1 and Tier 2 process-safety events. They state no interruption, trip or cut of LNG production, and give no cause for any year-to-year change in utilisation. A reliability or utilisation series with no attribution is context, never an incident. Zero candidates is a finding about the publication.",
+          "limitation": "Two of four editions were read, both in English. The 2022 edition is over the size limit in both languages and the 2025 edition returns no body text. Cargo, vessel and delivery passages were not recorded.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        },
+        {
+          "lane": "OM4",
+          "source_family": "Power: procurement company reports and the regulator's findings on major interruptions",
+          "registry": [
+            "Nama Power and Water Procurement: Annual Report and 7-Year Statement",
+            "Authority for Public Services Regulation statements and reports"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "current_through_end_date",
+          "covered_through": "2025-12-31",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 4,
+          "queries_run": 3,
+          "items_enumerated": 5,
+          "items_in_universe": 9,
+          "finding": "The procurement company's reports and statements describe demand, capacity planning and a reliability standard; none read states a past outage, blackout, generation shortfall or cyclone effect. For both, the regulator announced an investigation and no published findings document was found. No tropical-cyclone effect on electricity dated 2022-2025 with a customer or megawatt figure surfaced; the one cyclone figure met (about 120,000 customers) belongs to October 2021, before the window. A press report of the regulator's data lists nine investigated interruptions from 2014 to 2021, which shows the regulator does investigate such events; none of those is in the window.",
+          "limitation": "Three of four declared queries were run, the cap; the English cyclone query was not. Two of four annual reports are over the fetch size limit and one 7-Year Statement issue is not listed. The regulator's site is unreadable, so whether it publishes investigation reports or interruption statistics is still not established; its statements were read only as the press carried them. No transmission-company document was read. The interconnection and reinforcement passages of the 7-Year Statements and all per-plant rows were not recorded.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        },
+        {
+          "lane": "OM5",
+          "source_family": "Arabic and English media by year, via search",
+          "registry": [
+            "Omani press: Oman Daily, Al-Watan, Al-Shabiba (Arabic); Oman Observer, Times of Oman, Muscat Daily (English)",
+            "International news agencies and energy press (Reuters, S&P Global)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "no_census_exists",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar"
+          ],
+          "queries_declared": 20,
+          "queries_run": 7,
+          "items_enumerated": 64,
+          "finding": "Storm reports give duration and pole counts, not customers. Local distribution cuts surface through a trade site quoting the distribution company's social-media statements. A discovery page gives counts and claims for later months;",
+          "limitation": "Seven of twenty declared queries ran, all Arabic; no English query ran, so the lane is partial in language as well as in count. The year token barely filters: every power query returned the same 2022 and mid-2026 pages, and the fire strings returned no Omani refinery or gas-plant incident at all, so 2023 and 2024 are years in which the queries found nothing, not years shown to be quiet. Nothing was accepted: the best-evidenced non-conflict event lacks a published figure, and the 2026 records lack either an opened source or a clause-meeting effect.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        }
+      ]
+    }
+  ]
 }

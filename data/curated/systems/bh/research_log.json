@@ -1,4 +1,109 @@
 {
   "note": "What was searched, when, and how far it got. Counts only: the candidate queue's per-record narratives are kept off the public record (data/candidates/README.md). A SYSTEMATIC pass declares its source lanes and window before searching. A window searched with the budget exhausted is PARTIAL, not researched-and-quiet.",
-  "passes": []
+  "passes": [
+    {
+      "date": "2026-11-11",
+      "by": "iteration-19 Gulf research pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-11"
+      ],
+      "scope": "inclusion clauses 1-7 as written; lanes and queries declared before searching (docs/countries/BH_SYSTEMATIC_SWEEP.md); every published record reviewed blind by three independent roles and confirmed on its final text",
+      "status": "partial",
+      "status_reason": "0 of 3 lanes executed as far as declared; the rest are stated per lane",
+      "outcome": {
+        "candidates": 9,
+        "accepted": 0,
+        "rejected": 3,
+        "duplicate": 0,
+        "held": 3,
+        "out_of_scope": 3
+      },
+      "plan": {
+        "document": "docs/countries/BH_SYSTEMATIC_SWEEP.md",
+        "commit": "e825386"
+      },
+      "lanes": [
+        {
+          "lane": "BH1",
+          "source_family": "Hydrocarbons: Bapco Energies group press releases and ministry statements carried by the state news agency",
+          "registry": [
+            "Bapco Energies group and Bapco Refining press releases",
+            "Bahrain News Agency (official statements)"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "inaccessible",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "en"
+          ],
+          "queries_declared": 5,
+          "queries_run": 0,
+          "items_enumerated": 8,
+          "finding": "The eight press releases readable are corporate: visits, awards, a safe-hours record, a project inauguration, a trading partnership and an emergency-preparedness meeting. None is an operational incident notice.",
+          "limitation": "Only the first page of the refining company's English press-release listing could be read: 8 items dated 2024-06-02 to 2025-07-31; the total number of items is not shown and later pages are script-driven. The group's media centre (English and Arabic) and the state news agency refused automated access, so no Arabic listing was read and nothing from 2022-2023 or from 2026 was enumerated. The lane's five declared queries were not run: the task assigned the whole search allowance to BH3. This is a count of items read, not a census.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        },
+        {
+          "lane": "BH2",
+          "source_family": "Electricity: Electricity and Water Authority statements",
+          "registry": [
+            "Electricity and Water Authority news (ewa.bh, Arabic and English)"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "rolling_archive_gap",
+          "covered_through": "2026-11-11",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 4,
+          "queries_run": 0,
+          "items_enumerated": 148,
+          "items_in_universe": 148,
+          "finding": "The authority's news listing carries tariff and billing-service notices, inaugurations, tenders, agreements, visits and commemorations. In 148 titles there is no statement of a major outage, a generation interruption or a grid emergency; the one item touching works on the network is the completion of planned maintenance, which is excluded. An absence of outage items here is therefore not evidence that no outage occurred.",
+          "limitation": "Both listings were read in full by title and date (Arabic 79 of 79, English 69 of 69); no title concerned a supply interruption, so no item was opened. The listings begin in February 2024, so 2022 and 2023 cannot be enumerated here and rest on the lane's four declared queries, which were not run: the task assigned the whole search allowance to BH3.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        },
+        {
+          "lane": "BH3",
+          "source_family": "Arabic and English media by year, via search",
+          "registry": [
+            "Bahraini press (Akhbar Al Khaleej, Al-Ayam, Al-Watan, Gulf Daily News)",
+            "International news agencies and energy press (Reuters, S&P Global)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "no_census_exists",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar"
+          ],
+          "queries_declared": 15,
+          "queries_run": 9,
+          "finding": "No dated refinery fire, production stoppage or outage in Bahrain in 2022, 2023, 2024 or 2025 was returned by the Arabic strings; a 2023 item concerned record demand, and a 2026 item concerned billing disconnections. Several results were not opened because their headline or address concerns later facility status or damage assessment.",
+          "limitation": "A query set, never a census: 9 of 15 declared queries ran, all Arabic, so the lane was searched in one of its two required languages and the 2026 outage query did not run. Fifteen result pages were requested and thirteen read. Domestic Arabic papers were not reached (two are refused, the readable one has no search); every page read is foreign or English-language press carrying an official Bahraini statement. This is a count of records found.",
+          "stopped_by": "search_limit",
+          "carried_forward": false
+        }
+      ]
+    }
+  ]
 }

@@ -60,3 +60,27 @@ The output files are written after each lane so another agent can resume. When t
 reached or a search is refused, stop searching, finish from direct page requests, and record
 exactly which declared queries did not run. Blocked endpoints are recorded once and not retried
 or worked around. Blind three-role review before import, as in `SA_LANE_PASS_18.md`.
+
+## Part B — execution (written after the pass, 2026-11-11)
+
+**This pass did not finish.** 0 of 4 lanes ran as far as declared; 4 were stopped by the shared limit of 200 web searches per turn, which was not worked around. Each lane states below what did not run. A blocked source (HTTP 402 or 403, login wall, script-only page) was recorded as blocked and left.
+
+| Lane | Execution | Source window | Covered through | Queries | Items read | Languages required | Languages run |
+|---|---|---|---|---|---|---|---|
+| AE1 | partial; stopped by search limit | inaccessible | not reached | 1 of 10 | - | ar, en | ar |
+| AE2 | partial; stopped by search limit | publisher_not_yet_released | 2025-12-31 | 1 of 4 | 73 of 3 | ar, en | ar, en |
+| AE3 | partial; stopped by search limit | rolling_archive_gap | 2026-11-05 | 2 of 4 | 269 of 151 | ar, en | ar, en |
+| AE4 | partial; stopped by search limit | no_census_exists | not reached | 8 of 18 | - | ar, en | ar, en |
+
+Candidates 21: accepted after blind review 1, rejected 2, duplicate 1, held 14, out of scope 3. Published records in this system after the pass: 1.
+
+**Result.** One attack record is published, for the country, with no emirate, facility or operator. Four further attack records are held: for three, the page that states the qualifying effect could not be cited (its address names the place or the method, or it was undated or late), or no opened page dates the effect to the day; one could not be told apart from an earlier record on its one source. A 2023 gas-plant fault is with the owner: the safety reviewer read its only qualifying effect as a dependency between two facilities. The emirate utilities' and regulators' pages returned no dated outage with a qualifying figure.
+
+**Review.** Every published record was reviewed blind by three independent roles (evidence, safety, taxonomy), reconciled, and confirmed by all three on the text the import gate publishes. A hold from any role held the record.
+
+### Limitations, per lane
+
+- **AE1**: One of ten declared strings was run (Arabic, 2026) and it returned no UAE item at all. The agency's pages cannot be opened by an ordinary request and the ministry's site closed the connection, so this lane was barely started: not yet researched, not 'no statements'.
+- **AE2**: The reports cover one listed gas subsidiary, for 2023 to 2025 only: it listed in 2023, so there is no annual report for 2022, and the group's refining and upstream companies publish nothing this lane could reach (the group site and the exchange both refused access). The reports were read by keyword search over extracted text in both languages, not cover to cover. Three of the four declared queries did not run because of the search cap, including both English ones.
+- **AE3**: The three readable utility listings were enumerated in full by title, but one of them has a three-year hole (2022 to early 2025) and another is a 13-item page, not an archive; the Dubai authority, the Abu Dhabi regulator's news page, the Dubai exchange and one listed utility could not be read at all. Two of four declared queries did not run because of the search cap, so the general outage queries in both languages are untested: by search, this lane looked for the April 2024 storm and nothing else.
+- **AE4**: Ten of 18 declared strings were not run, eight of them English, so this is a partial query set and never a census. Several contemporaneous reports refused access, so some effects rest on one opened source.

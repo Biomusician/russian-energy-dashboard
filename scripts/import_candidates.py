@@ -245,6 +245,14 @@ def review(system_id, r, unit_codes, grandfathered=frozenset(), policy=None):
             return "its only citations name the facility or region, or the method, in their address"
         if build_systems.METHOD_WORDING.search(text):
             return "states how the attack was carried out"
+    rec = r.get("recovery") or {}
+    status = rec.get("research_status") or "NOT_YET_RESEARCHED"
+    if status not in build_systems.RECOVERY_STATUSES:
+        # Caught here, not by the build: a record that fails the build stops every system
+        # (iteration 19: a lane wrote "RESEARCHED" and three reviews read past it).
+        return f"recovery research status {status!r} is not in the vocabulary"
+    if (status == "EVIDENCE_FOUND") != (rec.get("kind") is not None):
+        return "a recovery kind and a status of EVIDENCE_FOUND go together"
     srcs = r.get("sources") or []
     if not srcs or not all(s.get("url") for s in srcs):
         return "a source has no URL"
