@@ -1228,7 +1228,8 @@ def precision_problems(system_id, doc, events):
             for k in ("facility_name", "facility_name_local", "operator"):
                 if e.get(k):
                     out.append(f"{eid}: {k} on a kinetic record under a country-level policy")
-            if not re.fullmatch(OPAQUE_ID.format(cc=system_id), eid):
+            if not re.fullmatch(OPAQUE_ID.format(cc=system_id), eid) or not eid.startswith(
+                    f"{system_id}-{e.get('date')}-{e.get('asset_class', '').replace('_', '-')}-attack-"):
                 out.append(f"{eid}: a kinetic record under a country-level policy needs an opaque id")
             for s in e.get("sources", []):
                 if method_in_address(s.get("url")):
@@ -1326,6 +1327,14 @@ def apply_publication_policy(system_id, events, campaigns):
         if not e["sources"]:
             problems.append(f"{e['event_id']}: under active campaign {c['campaign_id']} with no "
                             "publishable citation")
+        # The import strips these; the build checks, so a gate change cannot publish a headline
+        # announcing a restart (test-architecture red team, iteration 20).
+        if any(s.get("title_original") or s.get("title_en") for s in e["sources"]):
+            problems.append(f"{e['event_id']}: a headline on a record under an active campaign")
+        rv = e.get("review") or {}
+        if rv.get("source_count") is not None and rv["source_count"] != len(e["sources"]):
+            problems.append(f"{e['event_id']}: review source count {rv['source_count']} is not the "
+                            f"{len(e['sources'])} citations published, which says more exist")
     if problems:
         raise ValueError(f"system {system_id} publication policy: " + "; ".join(problems))
 

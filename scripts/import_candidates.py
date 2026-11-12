@@ -470,8 +470,11 @@ def _withheld_recovery():
 def opaque_id(system_id, r):
     """An id that names no facility, stable for the life of the record: date, class and four hex
     digits of the queue id's hash."""
-    # A lane that already wrote an opaque id keeps it, so reviews and edits refer to one name.
-    if re.fullmatch(build_systems.OPAQUE_ID.format(cc=system_id), r["candidate_id"]):
+    # A lane that already wrote an opaque id keeps it, so reviews and edits refer to one name, but
+    # only in the strict form: date and class. A lane's own middle words ("...-upstream-production-
+    # attack-1") are free text and can name a site (test-architecture red team, iteration 20).
+    prefix = f"{system_id}-{r['date']}-{r['asset_class'].replace('_', '-')}-attack-"
+    if re.fullmatch(build_systems.OPAQUE_ID.format(cc=system_id), r["candidate_id"]) and r["candidate_id"].startswith(prefix):
         return r["candidate_id"]
     tag = hashlib.sha1(r["candidate_id"].encode("utf-8")).hexdigest()[:4]
     return f"{system_id}-{r['date']}-{r['asset_class'].replace('_', '-')}-attack-{tag}"

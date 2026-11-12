@@ -529,10 +529,11 @@ def _single_site_doc(classes):
 
 def test_an_attack_record_of_a_class_the_country_has_one_site_of_is_refused():
     doc = _single_site_doc({"lng_terminal": {"basis": "one complex"}})
-    attack = {"event_id": "qa-2026-03-01-energy-attack-1", "cause": "kinetic_strike", "asset_class": "lng_terminal",
-              "geography_precision": "country", "region_code": None, "regions_affected": [], "episode_id": None}
+    attack = {"event_id": "qa-2026-03-01-lng-terminal-attack-1", "date": "2026-03-01", "cause": "kinetic_strike",
+              "asset_class": "lng_terminal", "geography_precision": "country", "region_code": None,
+              "regions_affected": [], "episode_id": None}
     assert any("one site of" in p for p in B.precision_problems("qa", doc, [attack]))
-    other = {**attack, "asset_class": "power_plant"}
+    other = {**attack, "asset_class": "power_plant", "event_id": "qa-2026-03-01-power-plant-attack-1"}
     assert B.precision_problems("qa", doc, [other]) == []
     accident = {**attack, "event_id": "qa-2024-01-01-fire", "cause": "technical"}
     assert B.precision_problems("qa", doc, [accident]) == []
@@ -823,6 +824,181 @@ def test_an_original_headline_must_be_in_its_language_script():
     assert imp.title_matches_language("Anything at all", "fr")
     s = {"url": "https://example.com/a", "language": "ar", "title_original": "(headline not recorded)", "title_en": "Power cut"}
     assert "title_original" not in imp._source(s, True)
+
+
+# --- test-architecture red team survivors -------------------------------------------------------------
+
+def _attack(**kw):
+    e = {"event_id": "kw-2026-03-12-refinery-attack-1", "date": "2026-03-12", "date_precision": "day",
+         "asset_class": "refinery", "cause": "kinetic_strike", "geography_precision": "country",
+         "region_code": None, "regions_affected": [], "facility_name": None, "facility_name_local": None,
+         "operator": None, "summary": "A refinery was reported attacked.", "effect": None,
+         "threshold_basis": "Clause 1.", "sources": [{"url": "https://example.org/a/123456", "publisher": "P"}]}
+    e.update(kw)
+    return e
+
+
+_KW = {"geography": {"precision_policy": {"kinetic": "country", "reason": "r"}}}
+
+
+def test_an_abstracted_attack_record_refuses_either_headline_and_method_text():
+    assert B.precision_problems("kw", _KW, [_attack()]) == []
+    gloss = _attack(sources=[{"url": "https://example.org/a/123456", "publisher": "P", "title_en": "Strike on X"}])
+    assert any("headline" in p for p in B.precision_problems("kw", _KW, [gloss]))
+    told = _attack(summary="A refinery was hit by a drone.")
+    assert any("how the attack was carried out" in p for p in B.precision_problems("kw", _KW, [told]))
+
+
+def test_a_lane_written_id_is_kept_only_in_the_strict_form():
+    imp = _load("import_candidates")
+    r = {"date": "2026-03-12", "asset_class": "refinery"}
+    assert imp.opaque_id("kw", {**r, "candidate_id": "kw-2026-03-12-refinery-attack-1"}) == "kw-2026-03-12-refinery-attack-1"
+    free = imp.opaque_id("kw", {**r, "candidate_id": "kw-2026-03-12-example-site-attack-1"})
+    assert free.startswith("kw-2026-03-12-refinery-attack-") and "example" not in free
+
+
+def test_an_opaque_id_names_the_class_and_date_never_a_facility():
+    named = _attack(event_id="kw-2026-03-12-mina-abdullah-refinery-attack-1")
+    assert any("opaque id" in p for p in B.precision_problems("kw", _KW, [named]))
+    wrong_date = _attack(event_id="kw-2026-03-11-refinery-attack-1")
+    assert any("opaque id" in p for p in B.precision_problems("kw", _KW, [wrong_date]))
+
+
+def _covered(**kw):
+    e = {"event_id": "sa-2026-03-19-x", "date": "2026-03-19", "date_precision": "day", "cause": "kinetic_strike",
+         "asset_class": "refinery", "summary": "s", "effect": None, "threshold_basis": "t", "date_end": None,
+         "capacity_affected": None, "facility_name": None, "operator": None, "hazard_name": None,
+         "recovery": {"research_status": B.WITHHELD, "kind": None, "date": None, "evidence": None, "url": None},
+         "sources": [{"url": "https://example.org/a", "publisher": "P", "date": "2026-03-19"}],
+         "review": {"source_count": 1}}
+    e.update(kw)
+    return e
+
+
+_CAMP = {"campaigns": [{"campaign_id": "c", "system_id": "sa", "policy_applied": True,
+                        "member_rule": {"causes": ["kinetic_strike"], "from": "2026-02-01"}}]}
+
+
+def _policy_errors(e):
+    try:
+        B.apply_publication_policy("sa", [e], _CAMP)
+    except ValueError as err:
+        return str(err)
+    return ""
+
+
+def test_the_build_refuses_what_the_import_should_have_removed_from_a_campaign_record():
+    assert _policy_errors(_covered()) == ""
+    head = _covered(sources=[{"url": "https://example.org/a", "publisher": "P", "date": "2026-03-19",
+                              "title_original": "استئناف التحميل", "title_en": "Loadings resume"}])
+    assert "headline" in _policy_errors(head)
+    stale = _covered(review={"source_count": 4})
+    assert "source count" in _policy_errors(stale)
+
+
+@pytest.mark.parametrize("field,value", [("hazard_name", "Restart of the plant"), ("publisher", "Plant back online daily")])
+def test_the_status_rule_reads_the_hazard_name_and_the_publisher(field, value):
+    e = _covered()
+    if field == "publisher":
+        e["sources"][0]["publisher"] = value
+    else:
+        e[field] = value
+    if B.status_wording(value):
+        assert "current status" in _policy_errors(e)
+
+
+def test_the_gate_reads_the_capacity_note_and_short_arabic_names():
+    imp = _load("import_candidates")
+    words = {B.fold("دبي")}
+    assert imp.unpublishable_address("https://example.com/حريق-في-دبي", words)
+    # A facility named only in the capacity note is still named in the record's text.
+    pol = {"kinetic": "country", "reason": "r"}
+    r = {"suggested_disposition": "accept", "date": "2026-03-12", "date_precision": "day", "cause": "kinetic_strike",
+         "asset_class": "refinery", "facility_name": "Example Refinery", "summary": "An attack was reported.",
+         "capacity_affected": {"source_says": "Example Refinery output fell"}, "geography_precision": "country",
+         "sources": [{"url": "https://example.org/a/123456"}]}
+    assert "names the facility in its text" in (imp.review("kw", r, {"KW-AH"}, policy=pol) or "")
+
+
+def test_a_capacity_block_defaults_to_the_amount_affected_and_needs_the_source_words():
+    cap = B.normalize_capacity({"value": 5, "unit": "MW", "source_says": "5 MW"})
+    assert cap["measure"] == "affected"
+    assert B.capacity_problems("x", {**cap, "source_says": None})
+    assert B.capacity_problems("x", {**cap, "value": None, "qualifier": "range", "value_min": 5, "value_max": 5})
+    assert not B.capacity_problems("x", {**cap, "value": None, "qualifier": "range", "value_min": 5, "value_max": 6})
+
+
+def test_a_partial_pass_is_owed_now():
+    log = {"passes": [{"kind": "systematic", "date": "2026-11-11", "window": ["2022-01-01", "2026-11-11"],
+                       "status": "partial", "lanes": []}]}
+    assert B.research_freshness(log)["next_due"] == "2026-11-11"
+
+
+def _recent_input(covered):
+    ev = [{"event_id": f"x-{i}", "date": f"2026-0{i}-01", "date_precision": "month", "asset_class": "refinery",
+           "cause": "technical", "region_name": "R", "regions_affected": [], "effect": "e",
+           **({"publication": {"rule": "r"}} if covered and i == 1 else {})} for i in (1, 2)]
+    ep = [{"episode_id": "ep", "name": "Named episode", "event_ids": ["x-1", "x-2"], "records": 2, "basis": "b",
+           "first_date": "2026-01-01", "last_date": "2026-02-01"}]
+    return {"zz": ("Z", ev, ep)}
+
+
+def test_the_recent_list_keeps_precision_and_names_no_episode_with_a_covered_record():
+    out = B.recent_evidence(_recent_input(False))["episodes"][0]
+    assert out["episode_name"] == "Named episode" and out["date_precision"] == "month"
+    assert B.recent_evidence(_recent_input(True))["episodes"][0]["episode_name"] is None
+
+
+def _rec(sid, kind, days):
+    return {"event_id": f"{sid}-{kind}-{days}", "date": "2026-01-01", "date_precision": "day", "asset_class": "refinery",
+            "recovery": {"research_status": "EVIDENCE_FOUND", "kind": kind, "date": f"2026-01-{1 + days:02d}", "evidence": "e"}}
+
+
+def test_recovery_durations_need_two_countries_and_a_completed_recovery():
+    one = B.recovery_by_class({"a": ("A", [_rec("a", "full_restart", 3)], [])})
+    assert one["rows"] == [] and one["single_country_groups_not_shown"] == 1
+    partial = B.recovery_by_class({"a": ("A", [_rec("a", "partial_restart", 3)], []), "b": ("B", [_rec("b", "partial_restart", 4)], [])})
+    assert partial["rows"] == []
+    two = B.recovery_by_class({"a": ("A", [_rec("a", "full_restart", 3)], []), "b": ("B", [_rec("b", "full_restart", 4)], [])})
+    assert two["rows"][0]["cases_days"] == [3, 4]
+
+
+def test_the_context_refuses_the_current_year_and_serves_true_coverage_in_name_order():
+    import datetime as dt
+    from pipeline import global_context as G
+    doc = json.loads((ROOT / "data" / "curated" / "global_context" / "energy_context.json").read_text(encoding="utf-8"))
+    with pytest.raises(ValueError, match="comparison_year 2026 is not a finished year"):
+        G.validate({**doc, "comparison_year": 2026}, today=dt.date(2026, 11, 12))
+    if (WEB / "global" / "energy_context.json").exists():
+        ctx = json.loads((WEB / "global" / "energy_context.json").read_text(encoding="utf-8"))
+        for m, n in ctx["coverage"].items():
+            assert n == sum(1 for r in ctx["countries"] if r["values"].get(m) is not None), m
+        names = [r["name"] for r in ctx["countries"]]
+        assert names == sorted(names, key=G._sort_key)
+
+
+def test_a_gulf_extra_metric_newer_than_the_comparison_year_is_refused(tmp_path, monkeypatch):
+    from pipeline import gulf_context as GC
+    extra = {"sources": {"s": {"name": "S", "url": "https://example.org", "release": "2026", "attribution": "S",
+                               "redistribution": "permitted_with_attribution"}},
+             "metrics": {"m": {"label": "L", "unit": "u", "definition": "d", "year": 2026, "source_id": "s",
+                               "values": {"QAT": 1.0}}}}
+    f = tmp_path / "extra.json"
+    f.write_text(json.dumps(extra), encoding="utf-8")
+    monkeypatch.setattr(GC, "EXTRA_FILE", f)
+    with pytest.raises(ValueError, match="newer than the comparison year"):
+        GC.build({"comparison_year": 2024, "countries": [], "metrics": {}, "source": {"id": "eia"}, "world": {"values": {}},
+                  "accounting_convention": "c"}, {})
+
+
+@needs_payload
+def test_no_served_campaign_record_carries_a_headline_or_a_stale_source_count():
+    for p in (WEB / "systems").glob("*/events.json"):
+        for e in json.loads(p.read_text(encoding="utf-8"))["events"]:
+            if not e.get("publication"):
+                continue
+            assert not any(s.get("title_original") or s.get("title_en") for s in e["sources"]), e["event_id"]
+            assert (e.get("review") or {}).get("source_count") in (None, len(e["sources"])), e["event_id"]
 
 
 # --- §110 mutation harness ----------------------------------------------------------------------

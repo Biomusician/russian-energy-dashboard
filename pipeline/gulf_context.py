@@ -86,6 +86,11 @@ def build(context, country_payloads):
     group = systems.GROUPS[GROUP]
     members = [s for s in systems.SYSTEMS if s["id"] in group["members"]]      # registry order: alphabetical
     extra = validate_extra(read_json(EXTRA_FILE)) if EXTRA_FILE.exists() else {"metrics": {}, "sources": {}}
+    # Every Gulf system is under the campaign policy: a year after the comparison year can stand for
+    # one site's current output (D-26). The national context guards it; so does this one.
+    late = sorted(mid for mid, m in extra["metrics"].items() if m["year"] > context["comparison_year"])
+    if late:
+        raise ValueError(f"gulf regional context: {late} newer than the comparison year {context['comparison_year']}")
     rows = {r["a3"]: r for r in context["countries"]}
     metrics = {m: {**context["metrics"][m], "year": context["comparison_year"], "source_id": context["source"]["id"]}
                for m in BASE_METRICS}

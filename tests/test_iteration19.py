@@ -257,7 +257,7 @@ def test_occurrence_wording_is_not_mistaken_for_status(text):
 # --- precision: admin-1 is a maximum -------------------------------------------------------------
 
 def _event(**kw):
-    base = {"event_id": "kw-2026-03-refinery-attack-1", "cause": "kinetic_strike", "date": "2026-03",
+    base = {"event_id": "kw-2026-03-refinery-attack-1", "cause": "kinetic_strike", "date": "2026-03", "asset_class": "refinery",
             "geography_precision": "country", "region_code": None, "regions_affected": [],
             "facility_name": None, "facility_name_local": None, "operator": None}
     return {**base, **kw}
@@ -827,7 +827,7 @@ def test_an_address_naming_any_region_the_operator_or_the_method_is_not_publishe
 
 
 def test_the_build_refuses_method_wording_and_headlines_on_a_record_published_without_its_place():
-    ev = _event(event_id="kw-2026-03-12-refinery-attack-1", cause="kinetic_strike", geography_precision="country",
+    ev = _event(event_id="kw-2026-03-12-refinery-attack-1", date="2026-03-12", cause="kinetic_strike", geography_precision="country",
                 region_code=None, summary="An attack was reported on a refinery in Kuwait.")
     ev["sources"] = [{"url": "https://example.org/news/missile-strike-reported", "publisher": "P", "date": "2026-03-12"}]
     doc = {"geography": {"precision_policy": {"kinetic": "country", "reason": "x" * 70}}}
