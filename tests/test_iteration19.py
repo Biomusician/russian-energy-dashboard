@@ -518,6 +518,9 @@ def test_the_manifest_carries_groups_and_no_rankable_figure_for_them():
     assert set(g) == {"gulf_littoral", "gcc", "opec"}
     assert g["gulf_littoral"]["slug"] == "gulf" and g["gulf_littoral"]["context"] == "global/gulf.json"
     assert g["gcc"]["slug"] is None, "a membership is a filter, not a page"
+    for gid, group in systems.GROUPS.items():
+        if group["kind"] == "membership":
+            assert not group.get("slug") and not group.get("context"), f"{gid}: a membership is a filter, not a page"
     for d in g.values():
         assert set(d) == {"label", "kind", "note", "slug", "context", "members"}
     by = {s["id"]: s for s in m["systems"]}
@@ -918,6 +921,9 @@ def test_a_headline_is_shown_with_its_gloss_or_not_at_all():
          "title_original": "الكهرباء: بدء اعادة الطاقة بشكل تدريجي", "title_en": "Electricity: power is being restored gradually"}
     out = imp._source(s, True)
     assert "title_en" not in out and "title_original" not in out
+    # The pairing itself: the original says nothing the rules refuse, the gloss does.
+    half = imp._source({**s, "title_original": "بيان وزارة الكهرباء", "title_en": "Ministry statement: power restored gradually"}, True)
+    assert "title_en" not in half and "title_original" not in half
     ok = imp._source({**s, "title_original": "انقطاع الكهرباء", "title_en": "Power cut"}, True)
     assert ok["title_en"] == "Power cut" and ok["title_original"] == "انقطاع الكهرباء"
 
@@ -937,6 +943,9 @@ def test_a_campaign_basis_says_only_that_attacks_are_reported():
         doc = json.loads(json.dumps(ok))
         doc["system_states"]["iq"]["basis"] = bad
         assert B.campaign_text_problems(doc), bad
+    doc = json.loads(json.dumps(ok))
+    doc["system_states"]["iq"]["basis"] = "Two attacks on fuel storage were reported in March 2026 and none since."
+    assert any("more than a campaign basis may say" in x for x in B.campaign_problems(doc)), "the build does not read campaign bases"
     doc = json.loads(json.dumps(ok))
     doc["campaigns"][0]["status_sources"] = ["https://example.org/mapping-attacks"]
     assert any("never an address" in x for x in B.campaign_text_problems(doc))
