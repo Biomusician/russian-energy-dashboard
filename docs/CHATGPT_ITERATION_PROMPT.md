@@ -32,13 +32,13 @@ deciding what to do next, not help writing code.
 
 3. **Seven Gulf country systems** (iteration 19): Bahrain, Iran, Iraq, Kuwait, Oman, Qatar,
    United Arab Emirates, shown with Saudi Arabia in a regional overview. Research previews: one
-   multilingual pass, no lane run as far as declared, two systems with no published record. In
+   multilingual pass, no lane run as far as declared, four systems with no published record. In
    these seven an attack is recorded for the country as a whole, with no region, facility,
    operator or headline, and nothing about its later status. The overview shows four national
    totals from one source and one year. There is no Gulf index and nothing about routes,
    shipping or individual facilities.
 
-No further country is planned. `docs/ITERATION_19_REVIEW.md` §27 lists 22 rule questions that
+No further country is planned. `docs/ITERATION_19_REVIEW.md` §27 lists the rule questions that
 hold more candidate records than any search limit does, and §28 recommends answering them and
 finishing the declared searches before adding anything.
 
@@ -98,7 +98,7 @@ A GitHub Action rebuilds daily and commits the payload.
 6. **Held records wait on the owner.** A set of country records is held on rule questions
    (citation addresses naming a city, grid alerts without load shed, partial pipeline cuts,
    peaks versus totals). They are listed in `docs/ITERATION_17_REVIEW.md`, and the Gulf pass added
-   22 more in `docs/ITERATION_19_REVIEW.md` §27.
+   more in `docs/ITERATION_19_REVIEW.md` §27.
 7. **The Gulf record is thin and uneven.** Most official archives could not be read by an
    automated client, the search tool gives little weight to year terms, and the safety rules hold
    an attack record whenever every supporting page names the place in its address. Gulf

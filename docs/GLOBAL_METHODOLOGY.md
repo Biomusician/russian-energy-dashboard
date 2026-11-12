@@ -807,7 +807,7 @@ Each of these would change what a published number means, or create a new publis
     exposure, that this project has so far declined to produce anywhere.
 13. **Disputed-territory scope rules (§7.2.1)** for India and China.
 
-**Added by the Gulf pass (iteration 19).** Twenty-two questions, each holding the records or the
+**Added by the Gulf pass (iteration 19).** Further questions, each holding the records or the
 feature it names; nothing was deployed. The full list, with the systems affected, is
 [ITERATION_19_REVIEW.md](ITERATION_19_REVIEW.md) §27. By kind:
 

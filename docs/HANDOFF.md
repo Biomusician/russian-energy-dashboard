@@ -53,17 +53,26 @@ unverified. Iterations 18 and 19 were pushed together.
 - **Every Gulf system is under the campaign policy.** `conflict_campaigns.json` → `system_states`.
   `UNCERTAIN` is treated as active. Recovery, restart and operating status of an attacked facility
   were not researched and must not be.
-- **The seven new systems are research previews.** No lane ran as far as declared. Iran and Bahrain
-  have no published record; their pages say "No qualifying records in the current reviewed corpus"
-  and how many candidates wait. That is a statement about the corpus, not the country.
-- **Research-log notes are filtered before they are published.** `scripts/write_gulf_pass.py`
-  removes every sentence about an attack, a tally, a dated event of the campaign year or the
-  review queue from a lane's notes (`process_only`). Re-run it, then `pipeline.run`, after any
-  change to the local lane files.
+- **The seven new systems are research previews.** No lane ran as far as declared. Eleven records
+  are published, in Iraq, Kuwait and Oman. Bahrain, Iran, Qatar and the United Arab Emirates have
+  none; their pages say "No qualifying records in the current reviewed corpus" and how many
+  candidates are held back. That is a statement about the corpus, not the country.
+- **Seven records that three roles had confirmed are held on lead rulings** made after the release
+  reviews (`ITERATION_19_REVIEW.md` §24, §27). The local final-decision files in
+  `data/candidates/review19/` carry each reason and what would release it. Do not re-import them
+  without the owner decision or the evidence each names.
+- **No researcher prose is published for a Gulf lane.** `scripts/write_gulf_pass.py` reads a
+  lane's note only to choose among fixed sentences (`LANE_NOTES`); a test fails on anything else
+  in a served log. Re-run it, then `pipeline.run`, after any change to the local lane files.
+- **Text around the records is gated too:** campaign bases (`campaign_text_problems`), the public
+  review-edits file for systems under the campaign policy (`apply_reviews.py --collapse`, run by
+  every apply), and citation addresses against every name a unit goes by
+  (`geography.display_names`, `unit_aliases`). The release reviews found every one of these open.
 - **The review chain** for a new Gulf record: `merge_sweep.py` → `review_packets.py queue` → three
   blind roles → `merge_reviews.py` → reconciliation → `apply_reviews.py` → `confirm_packets.py` →
   three confirmations on the text the gate will publish → `apply_reviews.py --confirm` →
-  `import_candidates.py`. `apply_reviews.py` commits no reviewer prose for an abstracted record.
+  `import_candidates.py`, which refuses an iteration-19 record without three confirmations.
+  `apply_reviews.py` commits no reviewer prose for any system under the campaign policy.
 - **Local only, never committed:** `data/candidates/gulf19/` (lane files, lead rulings,
   red-team reports, `WORKING_STATE.md`) and `data/candidates/review19/` (packets and reviews).
 - **Not built, by design:** any route, strait, shipping or tanker view; any facility layer; any
