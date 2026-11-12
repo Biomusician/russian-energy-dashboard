@@ -155,10 +155,12 @@ test.describe("Gulf group", () => {
     await expect(cards).toHaveCount(8);
 
     // The view's one statement of what it leaves out names those things; nothing else may.
+    // The definitions sit in a disclosure (iteration 20, §62): opened, they are all there.
+    await page.locator(".group-howto summary").click();
     const main = (await page.locator("main").innerText()).replace(g.not_built, "");
     expect(main).not.toMatch(RANKING);
     expect(main).not.toMatch(ROUTES);
-    expect(main).toContain("Gulf, GCC and OPEC are three different things");
+    expect(main).toContain("Gulf littoral, GCC and OPEC are three different things");
     await expect(page.locator(".group-kinds li")).toHaveCount(3);
   });
 
@@ -180,8 +182,19 @@ test.describe("Gulf group", () => {
     expect(await feed.innerText()).not.toMatch(ROUTES);
   });
 
+  test("the map opens uncoloured, and a brief needs a chosen figure", async ({ app, page }) => {
+    // Iteration 20 (§38): the default map is geography only, so it cannot be read as a ranking.
+    await app.open("?group=gulf");
+    await expect(page.getByLabel("Regional map metric")).toHaveValue("none");
+    await expect(page.locator(".map-legend-mini")).toContainText("Geography only");
+    await expect(page.locator(".map-legend-mini")).not.toContainText("larger, within this group");
+    await app.button("Download brief (PNG)").click();
+    await expect(page.getByText(/Choose a metric under "Colour the map by" first/)).toBeVisible();
+  });
+
   test("the regional brief downloads as a real image carrying its framing", async ({ app, page }) => {
     await app.open("?group=gulf");
+    await page.getByLabel("Regional map metric").selectOption({ index: 1 });
     const [download] = await Promise.all([
       page.waitForEvent("download"),
       app.button("Download brief (PNG)").click(),
@@ -413,9 +426,54 @@ test.describe("Gulf responsive", () => {
         expect(box!.width).toBeGreaterThan(w * 0.5);
         expect(box!.height).toBeGreaterThan(200);
         await expect(page.getByRole("combobox", { name: "Monitored system" })).toBeVisible();
+        if (w <= 600) {
+          // Iteration 20 (§78): on a phone the map starts in the first screen, a compact caveat line
+          // above it leads to the full statements, and the comparability statement is still on the page.
+          const top = await page.locator("[data-map-state]").evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+          expect(top, "the map starts below the first screen").toBeLessThan(h - 150);
+          await expect(page.locator(".phone-only").first()).toBeVisible();
+          await expect(page.locator(".comparability")).toHaveCount(1);
+        } else {
+          await expect(page.locator(".phone-only").first()).toBeHidden();
+        }
       });
     }
   }
+});
+
+test.describe("Iteration 20 page rules", () => {
+  test("a research preview is defined once, in words a reader can act on", async ({ app, page }) => {
+    await app.open("?sys=bh");
+    const notices = page.getByRole("region", { name: "How to read this country" });
+    await expect(notices).toContainText("the absence of a record is not evidence that no disruption occurred");
+  });
+
+  test("a page with no record says what that means and never prints a zero", async ({ app, page }) => {
+    await app.open("?sys=bh");
+    const ribbon = page.getByRole("region", { name: "Headline" });
+    await expect(ribbon).toContainText("No qualifying records in the current reviewed corpus.");
+    await expect(ribbon).toContainText("it does not mean nothing happened");
+    await expect(ribbon).not.toContainText(/\b0 (disruptions|events|records)\b/);
+  });
+
+  test("Saudi Arabia's older convention is stated plainly, and only where it applies", async ({ app, page }) => {
+    await app.open("?sys=sa");
+    await expect(page.locator(".legacy-convention")).toContainText("was onboarded before the newer rule for the Gulf countries");
+    await expect(page.locator(".legacy-convention")).toContainText("Method tab");
+    for (const id of ["kw", "bh", "us"]) {
+      await app.open(`?sys=${id}`);
+      await expect(page.locator(".legacy-convention")).toHaveCount(0);
+    }
+  });
+
+  test("a campaign page says candidates remain under review, never how many", async ({ app, page }) => {
+    await app.open("?sys=iq");
+    const sys = await payload(page, "iq", "system.json");
+    for (const p of sys.research_log.passes as { outcome: Record<string, number>; under_review?: boolean }[]) {
+      expect(Object.keys(p.outcome).filter((k) => k !== "records")).toEqual([]);
+      expect(typeof p.under_review).toBe("boolean");
+    }
+  });
 });
 
 test.describe("Gulf payloads load lazily", () => {
@@ -450,6 +508,34 @@ type Drawn = { text: string; right: number; width: number };
 
 test.describe("Gulf red team", () => {
   test("attack records under a country rule are found by their real cause and render with no place, headline or status", async ({ app, page }) => {
+    // Iteration 20's strict reading held every published country-level attack record. While none is
+    // served, Kuwait's payload gains one in the browser only (a rendering fixture, not a record), so
+    // the rendering rule is still exercised; a served record replaces the fixture automatically.
+    await page.route("**/data/systems/kw/events.json", async (route) => {
+      const response = await route.fetch();
+      const d = await response.json();
+      if (!d.events.some((e: Event) => KINETIC.includes(e.cause))) {
+        const base = d.events[0];
+        d.events.push({ ...base, event_id: "kw-2026-03-01-refinery-attack-zz", cause: "kinetic_strike",
+                        asset_class: "refinery", geography_precision: "country", region_code: null, region_name: null,
+                        regions_affected: [], facility_name: null, facility_name_local: null, operator: null,
+                        episode_id: "kw-2026-03-01-refinery-attack-zz",
+                        summary: "An attack on energy infrastructure was reported (rendering fixture).",
+                        sources: base.sources.map((s: Record<string, unknown>) => ({ ...s, title_original: undefined, title_en: undefined })) });
+        d.episodes.push({ ...d.episodes[0], episode_id: "kw-2026-03-01-refinery-attack-zz", event_ids: ["kw-2026-03-01-refinery-attack-zz"],
+                          records: 1, name: "Kuwait", first_date: base.date, last_date: base.date });
+      }
+      await route.fulfill({ response, json: d });
+    });
+    // A served taxonomy labels only the causes its records use; the fixture's label is borrowed
+    // from Saudi Arabia's served taxonomy, so it is still never typed here.
+    await page.route("**/data/systems/kw/system.json", async (route) => {
+      const response = await route.fetch();
+      const d = await response.json();
+      const sa = await (await route.fetch({ url: route.request().url().replace("/kw/", "/sa/") })).json();
+      for (const c of KINETIC) if (!d.taxonomy.causes[c] && sa.taxonomy.causes[c]) d.taxonomy.causes[c] = sa.taxonomy.causes[c];
+      await route.fulfill({ response, json: d });
+    });
     let checked = 0;
     for (const id of GULF) {
       await app.open(`?sys=${id}`);
@@ -579,14 +665,16 @@ test.describe("Gulf red team", () => {
   test("a converted date shows what the source wrote, its calendar and the basis", async ({ app, page }) => {
     // No served record carries a converted date yet. The fields are added in the browser only:
     // a rendering fixture, not a fact about the record.
-    await page.route("**/data/systems/om/events.json", async (route) => {
+    await page.route("**/data/systems/kw/events.json", async (route) => {
       const response = await route.fetch();
       const d = await response.json();
-      Object.assign(d.events[0], { date_calendar: "solar_hijri", source_date_text: "۲۵ خرداد ۱۴۰۴",
-                                   conversion_basis: "Solar Hijri to Gregorian, arithmetic calendar (exact)" });
+      for (const e of d.events) {
+        Object.assign(e, { date_calendar: "solar_hijri", source_date_text: "۲۵ خرداد ۱۴۰۴",
+                           conversion_basis: "Solar Hijri to Gregorian, arithmetic calendar (exact)" });
+      }
       await route.fulfill({ response, json: d });
     });
-    await app.open("?sys=om");
+    await app.open("?sys=kw");
     const item = page.locator(".event-item").first();
     await expect(item).toContainText("Date in the source:");
     await expect(item.locator('bdi[lang="fa"]')).toHaveText("۲۵ خرداد ۱۴۰۴");

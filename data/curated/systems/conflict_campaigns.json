@@ -286,56 +286,56 @@
       "checked": "2026-11-11",
       "basis": "Attacks on energy facilities in the UAE were reported in 2026. No end to the wider war is reported, so the classification is uncertain, and uncertain is treated as active.",
       "campaign_id": "ae-2026-attacks-on-energy-facilities",
-      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred. Iteration 20 added four conflict-level searches (the wider war, the Gulf states as a group, Iraq). None reported an end of the war, and renewed hostilities were reported in the autumn of 2026. No facility was looked up."
     },
     "bh": {
       "state": "UNCERTAIN",
       "checked": "2026-11-11",
       "basis": "Attacks on energy facilities in Bahrain were reported in 2026. No end to the wider war is reported, so the classification is uncertain, and uncertain is treated as active.",
       "campaign_id": "bh-2026-attacks-on-energy-facilities",
-      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred. Iteration 20 added four conflict-level searches (the wider war, the Gulf states as a group, Iraq). None reported an end of the war, and renewed hostilities were reported in the autumn of 2026. No facility was looked up."
     },
     "iq": {
       "state": "ACTIVE_KINETIC_CAMPAIGN",
       "checked": "2026-11-11",
       "basis": "Attacks on energy facilities in Iraq are reported from 2022 onward, including in 2026. No end is reported.",
       "campaign_id": "iq-2022-attacks-on-energy-facilities",
-      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred. Iteration 20 added four conflict-level searches (the wider war, the Gulf states as a group, Iraq). None reported an end of the war, and renewed hostilities were reported in the autumn of 2026. No facility was looked up."
     },
     "ir": {
       "state": "ACTIVE_KINETIC_CAMPAIGN",
       "checked": "2026-11-11",
       "basis": "Strikes on energy facilities in Iran were reported in 2025 and in 2026. No ceasefire or end is reported.",
       "campaign_id": "ir-2025-2026-strikes-on-energy-facilities",
-      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred. Iteration 20 added four conflict-level searches (the wider war, the Gulf states as a group, Iraq). None reported an end of the war, and renewed hostilities were reported in the autumn of 2026. No facility was looked up."
     },
     "kw": {
       "state": "UNCERTAIN",
       "checked": "2026-11-11",
       "basis": "Attacks on energy facilities in Kuwait were reported in 2026. No end to the wider war is reported, so the classification is uncertain, and uncertain is treated as active.",
       "campaign_id": "kw-2026-attacks-on-energy-facilities",
-      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred. Iteration 20 added four conflict-level searches (the wider war, the Gulf states as a group, Iraq). None reported an end of the war, and renewed hostilities were reported in the autumn of 2026. No facility was looked up."
     },
     "om": {
       "state": "UNCERTAIN",
       "checked": "2026-11-11",
       "basis": "Attacks on energy facilities in Oman were reported in 2026. No end to the wider war is reported, so the classification is uncertain, and uncertain is treated as active.",
       "campaign_id": "om-2026-attacks-on-energy-facilities",
-      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred. Iteration 20 added four conflict-level searches (the wider war, the Gulf states as a group, Iraq). None reported an end of the war, and renewed hostilities were reported in the autumn of 2026. No facility was looked up."
     },
     "qa": {
       "state": "UNCERTAIN",
       "checked": "2026-11-11",
       "basis": "Attacks on energy facilities in Qatar were reported in 2026. No end to the wider war is reported, so the classification is uncertain, and uncertain is treated as active.",
       "campaign_id": "qa-2026-attacks-on-energy-facilities",
-      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred. Iteration 20 added four conflict-level searches (the wider war, the Gulf states as a group, Iraq). None reported an end of the war, and renewed hostilities were reported in the autumn of 2026. No facility was looked up."
     },
     "sa": {
       "state": "ACTIVE_KINETIC_CAMPAIGN",
       "checked": "2026-11-11",
       "basis": "Attacks on energy facilities in Saudi Arabia were reported in 2026. No ceasefire or end is reported.",
       "campaign_id": "sa-2026-attacks-on-energy-facilities",
-      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred."
+      "limitation": "One status search per system, in English, on the date checked. A search that returns no recent report does not show that none occurred. Iteration 20 added four conflict-level searches (the wider war, the Gulf states as a group, Iraq). None reported an end of the war, and renewed hostilities were reported in the autumn of 2026. No facility was looked up."
     }
   }
 }

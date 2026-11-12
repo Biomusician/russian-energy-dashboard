@@ -98,7 +98,8 @@ GROUPS = {
         "kind": "membership",
         "members": ("bh", "kw", "om", "qa", "sa", "ae"),
         "as_of": "2026-11-11",
-        "basis": "The six founding members of 1981. No change of membership is reported.",
+        "basis": "The six founding members of 1981, as listed on the GCC Secretariat's member-states page "
+                 "(gcc-sg.org, read 11 Nov 2026).",
         "note": "Members of the Gulf Cooperation Council. Iran and Iraq are not members.",
     },
     "opec": {
@@ -108,15 +109,17 @@ GROUPS = {
         # iteration 19 listed it as a member; the membership published is today's.
         "members": ("ir", "iq", "kw", "sa"),
         "as_of": "2026-11-11",
-        "former_members": {"ae": "The United Arab Emirates was an OPEC member until 2026-04-30; the annual "
+        "former_members": {"ae": "The United Arab Emirates was an OPEC member until 30 April 2026; the annual "
                                  "figures shown here are for a year in which it was a member."},
         "note": "Monitored systems that are OPEC members today. The United Arab Emirates left on "
-                "2026-05-01, as its government announced on 2026-04-28; OPEC's own member page "
-                "refused access when this was checked, so the list rests on that announcement as "
-                "reported. Membership is context only; an OPEC production decision is policy, never "
-                "a disruption record.",
-        "basis": "UAE government announcement of 2026-04-28 (state news agency, widely reported); "
-                 "opec.org returned HTTP 402 on 2026-11-11 and was not read.",
+                "1 May 2026, as its government announced on 28 April 2026. OPEC's own member page, "
+                "read on 11 Nov 2026, still lists it among twelve members and mentions no withdrawal, "
+                "so the list rests on the government's announcement as reported. Membership is context "
+                "only; an OPEC production decision is policy, never a disruption record.",
+        "basis": "UAE government announcement of 28 April 2026, effective 1 May 2026 (state news agency; "
+                 "reported by the Associated Press and Khaleej Times). opec.org/member-countries.html, read "
+                 "11 Nov 2026, still lists the UAE; its 1 Nov 2026 release on market stability names the "
+                 "other seven countries of the earlier voluntary-cut group and not the UAE.",
     },
 }
 

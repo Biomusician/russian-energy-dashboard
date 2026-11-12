@@ -150,7 +150,7 @@ export default function GroupView({ id }: { id: string }) {
         <SystemSwitcher current={null} group={id} />
       </header>
       <main className="global-main">
-        {manifest && <p className="comparability" role="note">{manifest.comparability_statement}</p>}
+        {manifest && <p className="comparability" id="comparability" role="note">{manifest.comparability_statement}</p>}
         {ctx && (
           <section className="panel global-note group-intro" aria-label="What this view is">
             <p>
@@ -158,9 +158,9 @@ export default function GroupView({ id }: { id: string }) {
               National energy figures for each country, for context, and links to each country's reviewed
               record of reported disruptions. The map starts uncoloured; choose a figure to colour it, or open a country.
             </p>
+            <p className="small phone-only"><a href="#comparability">Event counts are not comparable between countries: why</a></p>
             <details className="group-howto">
-              <summary className="small">How to read this view: what “Gulf littoral”, GCC and OPEC mean, why there is no
-                score, and the two ways attacks are recorded</summary>
+              <summary className="small">How to read this view (memberships, no score, two recording rules)</summary>
             <p className="small">{ctx.statement}</p>
             <p className="small">“Gulf littoral” is a geographic label for the states on the Gulf's coast. It is used instead of
               “Gulf” alone, which on this site also names the United States Gulf coast.</p>

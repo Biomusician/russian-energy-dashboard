@@ -2103,3 +2103,19 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
 /* The three kinds of group on the regional view (iteration 19). */
 .group-kinds { margin: 4px 0 8px; padding-left: 18px; }
 .group-kinds li { margin: 2px 0; }
+
+/* Iteration 20 (§78): on a phone the map comes first after the one-paragraph purpose. The
+   comparability statement follows the map: still on the page, not 400 pixels in front of it. */
+@media (max-width: 600px) {
+  .group-page .global-main > .group-intro { order: -2; }
+  .group-page .global-main > .world-context { order: -1; }
+  .group-page .map-control-row { gap: 6px; }
+}
+.phone-only { display: none; }
+@media (max-width: 600px) { .phone-only { display: block; } }
+@media (max-width: 600px) {
+  .country-page > .global-head { order: -3; }
+  .country-page > .phone-caveats, .country-page > .stale-note { order: -2; margin: 8px 16px 0; }
+  .country-page > .country-body { order: -1; }
+  .phone-caveats .badge { margin-right: 4px; }
+}

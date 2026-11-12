@@ -47,7 +47,7 @@ def test_an_unambiguous_number_is_read(text, want):
 
 
 @pytest.mark.parametrize("text", [
-    "1.500", "1,5", "12,34", "1.234.567", "10 20", "2025 2026", "5، 300", "0,500", "007",
+    "1.500", "1,5", "12,34", "1.234.567", "10 20", "2025 2026", "5، 300", "5،300", "0,500", "007",
     "1,500 2,000", "1,50,000", "1 500,000", "1,500.000.1", "", "   ", "abc", "1,", ",500", "1..5", "+-5",
 ])
 def test_ambiguous_number_forms_are_refused(text):
@@ -155,6 +155,19 @@ def test_no_event_or_episode_date_is_formatted_through_the_browser_date_parser()
         assert not re.search(r"new Date\(`\$\{(e\.date|ep\.first_date)", src), rel
 
 
+def test_a_generated_sentence_writes_a_date_as_the_page_does():
+    assert B.reader_date("2026-11-01") == "1 Nov 2026"
+    assert B.reader_date("2022-01-31") == "31 Jan 2022"
+
+
+@needs_payload
+def test_no_generated_gate_note_carries_an_iso_date():
+    for sid in COUNTRIES:
+        s = json.loads((WEB / "systems" / sid / "system.json").read_text(encoding="utf-8"))
+        for item in s["onboarding_gate"]:
+            assert not re.search(r"\(20\d\d-\d\d-\d\d\)", item.get("note") or ""), (sid, item.get("note"))
+
+
 @needs_payload
 def test_served_month_records_carry_the_canonical_form():
     seen = 0
@@ -251,13 +264,23 @@ def test_nothing_sums_capacity_figures():
 STRICT_HOLDS = {
     "iq-2025-12-08-west-qurna-2-production-halt-leak", "iq-2025-08-11-national-grid-collapse",
     "iq-2026-03-04-national-grid-total-blackout", "kw-2025-04-09-programmed-power-cuts-demand-above-generation",
-    "kw-2026-03-20-refinery-attack-1", "om-2022-09-05-main-grid-partial-blackout", "sa-2022-03-20-yasref-yanbu",
-    "sa-2026-04-juaymah-processing-fires", "us-2024-09-11-hurricane-francine-louisiana-outages",
+    "kw-2026-03-20-refinery-attack-1", "om-2022-09-05-main-grid-partial-blackout",
+    "us-2024-09-11-hurricane-francine-louisiana-outages",
     "us-2023-08-25-marathon-garyville-tank-fire", "us-2025-10-02-chevron-el-segundo-fire",
     "us-2025-05-07-hunt-tuscaloosa-coker-fire", "us-2025-06-14-marathon-galveston-bay-fire",
     "us-2025-08-14-phillips66-linden-fcc-fire", "in-2022-02-21-chandigarh-power-strike-blackout",
     "in-2023-06-15-biparjoy-gujarat-power-outage", "us-2022-12-23-pjm-forced-outages-elliott",
 }
+# Held attack records whose ids name their facility, by digest: a public file names no held attack
+# record (§48). sha256 of the id, first 16 hex digits.
+STRICT_HOLD_DIGESTS = {"sa": {"4b75cfb9dd7a27db", "edf86f907a9f2e2b"}}
+
+
+def _digest(eid):
+    import hashlib
+    return hashlib.sha256(eid.encode("utf-8")).hexdigest()[:16]
+
+
 EXTENT = re.compile(r"extent-based|by extent|all governorates|across .* governorates|thousands of villages", re.I)
 EMERGENCY_FOOTING = re.compile(r"emergency footing|بحالة الطوارئ|emergency plans", re.I)
 
@@ -265,6 +288,8 @@ EMERGENCY_FOOTING = re.compile(r"emergency footing|بحالة الطوارئ|eme
 def test_no_record_held_on_a_strict_reading_is_published():
     published = {e["event_id"] for sid in COUNTRIES for e in _curated(sid)}
     assert not STRICT_HOLDS & published
+    for sid, digests in STRICT_HOLD_DIGESTS.items():
+        assert not {_digest(e["event_id"]) for e in _curated(sid)} & digests, sid
 
 
 RESTRICTED = ("ae", "bh", "iq", "ir", "kw", "om", "qa", "sa")
@@ -287,6 +312,22 @@ def test_every_strict_hold_is_on_file_with_its_tag():
         if qp.exists():
             r = next(x for x in json.loads(qp.read_text(encoding="utf-8")) if x.get("candidate_id") == eid)
             assert r["suggested_disposition"] == "held" and TAG.search(r["disposition_reason"]), eid
+    for cc, digests in STRICT_HOLD_DIGESTS.items():
+        assert not [e for e in edits if _digest(e["event_id"]) in digests], cc
+        qp = ROOT / "data" / "candidates" / f"{cc}.json"
+        if qp.exists():
+            held = [x for x in json.loads(qp.read_text(encoding="utf-8")) if _digest(x.get("candidate_id") or "") in digests]
+            assert len(held) == len(digests), cc
+            assert all(x["suggested_disposition"] == "held" and TAG.search(x["disposition_reason"]) for x in held), cc
+
+
+def test_no_public_document_of_this_iteration_names_a_held_attack_record():
+    # The documents written for iteration 20 name a held attack record by country and year only.
+    for p in (ROOT / "docs").glob("*_20.md"):
+        text = p.read_text(encoding="utf-8")
+        for token in re.findall(r"\b(?:ae|bh|iq|ir|kw|om|qa|sa)-20\d\d-[\w-]+", text):
+            for digests in STRICT_HOLD_DIGESTS.values():
+                assert _digest(token) not in digests, (p.name, "names a held attack record")
 
 
 def test_no_published_clause_5_record_rests_on_extent_or_emergency_footing_alone():

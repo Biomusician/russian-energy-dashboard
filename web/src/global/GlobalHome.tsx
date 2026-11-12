@@ -144,7 +144,7 @@ function SystemCard({ s, manifest }: { s: ManifestSystem; manifest: Manifest }) 
         {READINESS_LABEL[s.evidence_readiness]}
       </div>
       {s.maturity === "research_preview" && (
-        <div className="badge research-partial" title="Research on this country has started and is far from complete. Few records here means few found so far.">
+        <div className="badge research-partial" title="Research preview: the systematic search is still incomplete, so the absence of a record is not evidence that no disruption occurred.">
           Research preview
         </div>
       )}

@@ -54,7 +54,8 @@ iteration's new accepts: 191.
 ### Held
 
 Rows for the eight Gulf systems, which are under the campaign policy, give the clause and the tag
-only (§49 of the iteration brief); the reasoning is in the local queue.
+only (§49 of the iteration brief); the reasoning is in the local queue. An attack record whose id
+names its facility is given by country and year only (§48).
 
 | Record | Clause | Tag | Why |
 |---|---|---|---|
@@ -64,8 +65,8 @@ only (§49 of the iteration brief); the reasoning is in the local queue.
 | kw-2025-04-09-programmed-power-cuts-demand-above-generation | 4 | C4-DEMAND | no source states a supply or generation shortfall |
 | kw-2026-03-20-refinery-attack-1 | 1 | C1-PARTIAL | no plant-level effect stated |
 | om-2022-09-05-main-grid-partial-blackout | 5 | C5-EXTENT | thirteen opened sources give no customer count and no declaration |
-| sa-2022-03-20-yasref-yanbu | 1 | C1-MATERIAL | no shutdown and no material cut stated |
-| sa-2026-04-juaymah-processing-fires | 1 | C1-MATERIAL | no shutdown and no material cut stated |
+| a Saudi attack record, 2022 | 1 | C1-MATERIAL | no shutdown and no material cut stated |
+| a Saudi attack record, 2026 | 1 | C1-MATERIAL | no shutdown and no material cut stated |
 | us-2024-09-11-hurricane-francine-louisiana-outages | 5 | C5-SUBSTITUTE | the only source counts people, not customers |
 | us-2022-12-23-pjm-forced-outages-elliott | 4 | C4-MW | fleet-wide forced outages, no plant named, no load shed, no EEA 3 (fails the US definition too) |
 | us-2023-08-25-marathon-garyville-tank-fire | 1 | C1-MATERIAL | tank fire, "reduced rates", no volume |

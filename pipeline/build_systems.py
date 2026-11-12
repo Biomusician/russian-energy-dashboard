@@ -147,6 +147,18 @@ def normalize_capacity(cap):
 DATE_SHAPES = {"day": r"\d{4}-\d{2}-\d{2}", "month": r"\d{4}-\d{2}", "year": r"\d{4}"}
 
 
+MONTH_ABBR = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+
+def reader_date(iso):
+    """A day as the pages print it ("11 Nov 2026"), for a date inside a generated sentence. ISO stays
+    in the data fields; a sentence a reader sees uses one style (iteration 20, §74)."""
+    if not iso:
+        return "undated"
+    d = iso if isinstance(iso, dt.date) else dt.date.fromisoformat(str(iso)[:10])
+    return f"{d.day} {MONTH_ABBR[d.month - 1]} {d.year}"
+
+
 def canonical_date(date, precision):
     """The canonical spelling of a date at its precision: the compatibility path for queue
     records written before iteration 20 ("2026-04-01" with precision month becomes "2026-04")."""
@@ -1464,9 +1476,9 @@ def onboarding_gate(doc, events, profile, research_log=None):
              if not unstated else f"{len(unstated)} source(s) in use state no freshness metadata."),
         item("7B", "Systematic research coverage",
              {"complete": "met", "partial": "partial"}.get(rf["completeness"], "unmet"),
-             {"complete": f"The newest systematic pass ({rf['last_systematic_pass']}) executed every "
+             {"complete": f"The newest systematic pass ({reader_date(rf['last_systematic_pass'])}) executed every "
                           "declared source group over its window.",
-              "partial": f"The newest systematic pass ({rf['last_systematic_pass']}) did not execute "
+              "partial": f"The newest systematic pass ({reader_date(rf['last_systematic_pass'])}) did not execute "
                          "every declared source group; see the research log for which and why."
               }.get(rf["completeness"],
                     "No systematic pass yet: the record comes from targeted searches only, so "

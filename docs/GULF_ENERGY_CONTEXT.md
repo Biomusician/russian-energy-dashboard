@@ -24,9 +24,12 @@ These are three facts, kept in three fields (`pipeline/systems.py`, `GROUPS`). "
 "GCC" is never used as shorthand for the eight: Iran and Iraq are not members.
 
 **OPEC membership is today's.** The UAE government announced on 2026-04-28 that it would leave OPEC
-and OPEC+ with effect from 2026-05-01. OPEC's own member page returned HTTP 402 when checked on
-2026-11-11 and was not read, so the list rests on that announcement as reported, and the overview
-says so. The annual figures shown are for 2024, a year in which the UAE was a member. The brief
+and OPEC+ with effect from 2026-05-01 (reported by the Associated Press and Khaleej Times). In
+iteration 19 OPEC's own member page returned HTTP 402. In iteration 20 one ordinary visit read it:
+it still lists the UAE among twelve members and mentions no withdrawal, while OPEC's own
+1 November 2026 release on market stability names the other seven countries of the earlier
+voluntary-cut group and not the UAE. The list follows the member's announcement, and the overview
+says that the organisation's page disagrees. The annual figures shown are for 2024, a year in which the UAE was a member. The brief
 for this iteration listed the UAE as a member; the published membership follows the world.
 
 ## What is shown

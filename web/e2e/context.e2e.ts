@@ -116,12 +116,14 @@ test.describe("world energy context", () => {
     await expect(page.locator(".search-hits li").first()).toContainText("United Kingdom");
   });
 
-  test("the world profile names the largest producers without a position", async ({ app, page }) => {
+  test("the world profile lists no largest producers and no position", async ({ app, page }) => {
+    // Iteration 20 (§80): no "largest producers" list at all, alphabetical or not. The table is
+    // alphabetical by default and says what production does not mean.
     await app.open("");
     const profile = page.locator(".world-profile");
-    await expect(profile).toContainText(/Six largest producers in 2024, alphabetically:/);
-    await expect(profile).toContainText("Size says nothing about disruption");
-    await expect(profile).not.toContainText(/#1|No\. ?1|first place/);
+    await expect(profile).not.toContainText(/largest producers|leading|#1|No\. ?1|first place/i);
+    await expect(profile).toContainText("Alphabetical by default");
+    await expect(profile).toContainText("Energy production says nothing about disruption or importance");
   });
 
   test("a country page answers the reader's questions without opening a tab", async ({ app, page }) => {

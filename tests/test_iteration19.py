@@ -65,7 +65,9 @@ def test_opec_membership_is_todays_and_says_who_left():
     opec = systems.GROUPS["opec"]
     assert set(opec["members"]) == {"ir", "iq", "kw", "sa"}
     assert "ae" in opec["former_members"] and opec["as_of"]
-    assert "2026-05-01" in opec["note"]
+    assert "1 May 2026" in opec["note"]
+    # Iteration 20: the organisation's own page was read and disagrees; the note says so.
+    assert "still lists" in opec["note"]
 
 
 def test_groups_are_three_separate_facts():

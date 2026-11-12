@@ -272,7 +272,7 @@ test.describe("provenance and coverage (iteration 16)", () => {
     });
     await app.open("?sys=ca");
     const status = page.getByLabel("Research status");
-    await expect(status).toContainText("overdue for a re-check");
+    await expect(status).toContainText("overdue for a check");
     await expect(status.locator(".badge").first()).toHaveText(before);
   });
 
@@ -393,7 +393,8 @@ test.describe("provenance and coverage (iteration 16)", () => {
   test("the no-index reason is true for every country, including one under attack", async ({ app, page }) => {
     await app.open("?sys=sa");
     await expect(page.locator(".no-index-plain")).not.toContainText(/weather/i);
-    await expect(page.locator(".no-index-plain")).toContainText("do not transfer");
+    await expect(page.locator(".no-index-plain")).toContainText("not transferred");
+    await expect(page.locator(".no-index-plain")).toContainText("No index is not a zero.");
   });
 
   test("a broken events file is contained to its system", async ({ app, page }) => {

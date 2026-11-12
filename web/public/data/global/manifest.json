@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_time": "2026-11-12T04:14:35+00:00",
+  "build_time": "2026-11-12T04:43:13+00:00",
   "selection": {
     "rule": "The first five country systems are the five largest total primary energy producers in the world, excluding Russia: Canada, China, India, Saudi Arabia and the United States.",
     "source": "U.S. EIA International Energy Statistics, total primary energy production, 2024",
@@ -45,7 +45,7 @@
     "opec": {
       "label": "OPEC",
       "kind": "membership",
-      "note": "Monitored systems that are OPEC members today. The United Arab Emirates left on 2026-05-01, as its government announced on 2026-04-28; OPEC's own member page refused access when this was checked, so the list rests on that announcement as reported. Membership is context only; an OPEC production decision is policy, never a disruption record.",
+      "note": "Monitored systems that are OPEC members today. The United Arab Emirates left on 1 May 2026, as its government announced on 28 April 2026. OPEC's own member page, read on 11 Nov 2026, still lists it among twelve members and mentions no withdrawal, so the list rests on the government's announcement as reported. Membership is context only; an OPEC production decision is policy, never a disruption record.",
       "slug": null,
       "context": null,
       "members": [

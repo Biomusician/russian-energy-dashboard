@@ -168,6 +168,17 @@ export default function CountryView({ id }: { id: string }) {
         <button className="ghost" onClick={() => window.print()}>Print / PDF</button>
       </CountryHeader>
 
+      {/* On a phone the map comes before the full statements (iteration 20, §78). This line keeps
+          the caveats in the first screen and leads to them. Hidden on wider screens. */}
+      <p className="small phone-only phone-caveats">
+        {sys.maturity === "research_preview" && <><span className="badge research-partial">Research preview</span>{" "}</>}
+        {sys.campaign_state && sys.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && (
+          <><span className="badge context-only-badge">Active-campaign safeguards apply</span>{" "}</>
+        )}
+        No index · {sys.event_summary.recorded_events === 0 ? "no qualifying records yet" : `${sys.event_summary.recorded_events} qualifying records`}.{" "}
+        <a href="#notices">What this page can and cannot tell you</a>
+      </p>
+
       {stale && (
         <div className="stale-note" role="status">
           This country's event record was last reviewed on {fmtDate(sys.record_reviewed)},
@@ -175,7 +186,7 @@ export default function CountryView({ id }: { id: string }) {
         </div>
       )}
 
-      <section className="country-ribbon" aria-label="Headline">
+      <section className="country-ribbon" id="notices" aria-label="Headline">
         <div className="no-index">
           <div className="no-index-value" aria-label="No index">No index</div>
           {/* Said once, plainly (iteration 20, §70). */}
@@ -227,9 +238,9 @@ export default function CountryView({ id }: { id: string }) {
           {sys.maturity === "research_preview" && (
             <p className="small">
               <span className="badge research-partial">Research preview</span>{" "}
-              Research on {sys.name} has started and is far from complete. Sources were searched for a limited
-              time, some could not be read at all, and the Research coverage tab says which. Few records here
-              means few found so far.
+              The systematic search for {sys.name} is still incomplete, so the absence of a record is not
+              evidence that no disruption occurred. Sources were searched for a limited time and some could not
+              be read at all; the Research coverage tab says which.
             </p>
           )}
           {sys.campaign_state && sys.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && (
@@ -378,7 +389,7 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
       </div>
       <div className="eyebrow">Source health <span className="dim">· whether the registered sources were checked on schedule</span></div>
       <div className="small">
-        <span className={`source-health sources-${late.length ? "stale" : "current"}`}>
+        <span className={`source-freshness sources-${late.length ? "stale" : "current"}`}>
           {late.length
             ? `${late.length} of ${used.length} registered sources overdue for a check`
             : `All ${used.length} registered sources checked on schedule`}
