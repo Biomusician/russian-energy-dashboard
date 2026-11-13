@@ -80,6 +80,18 @@
 
 .region-select-reason { margin: 6px 0; }
 
+/* The page's own filters ("Show one state", "Year", "Type") look like every other select on the
+   site rather than the browser's default control. */
+.region-select select, .event-filters select {
+  background: var(--bg-inset); color: var(--text); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 4px 6px; font: inherit; max-width: 100%;
+}
+.region-select select:focus-visible, .event-filters select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+@media (max-width: 600px) {
+  .region-select, .event-filters label { display: flex; flex-direction: column; gap: 3px; }
+  .region-select select, .event-filters select { width: 100%; }
+}
+
 @media (max-width: 720px) {
   .event-facts > div { grid-template-columns: 1fr; gap: 0; }
   .ev-inspector { padding: 8px; }

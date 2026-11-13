@@ -8,11 +8,11 @@ describe("readerText", () => {
     expect(readerText("No model has been approved (GLOBAL_METHODOLOGY.md §2 and §8.3)."))
       .toBe("No model has been approved.");
     expect(readerText("Kept off the public record (data/candidates/README.md). A pass declares lanes."))
-      .toBe("Kept off the public record. A pass declares lanes.");
+      .toBe("Kept off the public record. A pass declares source groups.");
     expect(readerText("Weak on extent. See GLOBAL_METHODOLOGY.md §5.1 for the full red-team."))
       .toBe("Weak on extent.");
     expect(readerText("lanes as declared in docs/countries/AE_SYSTEMATIC_SWEEP.md; every record reviewed"))
-      .toBe("lanes as declared in the published research plan; every record reviewed");
+      .toBe("source groups as declared in the published research plan; every record reviewed");
   });
 
   it("drops iteration labels a reader cannot follow", () => {
@@ -21,7 +21,7 @@ describe("readerText", () => {
     // The home page's selection rule, as the manifest serves it.
     expect(readerText("Seven Gulf states were added in iteration 19 as a geographic expansion alongside Saudi Arabia."))
       .toBe("Seven Gulf states were added as a geographic expansion alongside Saudi Arabia.");
-    expect(readerText("Compiled by the UAE lane (iteration 19, Wave A). Context only.")).toBe("Compiled by the UAE lane. Context only.");
+    expect(readerText("Compiled by the UAE lane (iteration 19, Wave A). Context only.")).toBe("Compiled by the UAE source group. Context only.");
     expect(readerText("Territories are outside this system's geography this iteration; their events are held."))
       .toBe("Territories are outside this system's geography; their events are held.");
   });
@@ -43,7 +43,9 @@ describe("readerText", () => {
       .toBe("This state restates an earlier pass's finding in the current vocabulary");
     expect(readerText("the other 41 keep their iteration-16 dispositions")).toBe("the other 41 keep their earlier-pass dispositions");
     expect(readerText("continuation of the iteration-19 pass: lanes as declared in docs/countries/AE_SYSTEMATIC_SWEEP.md, work order in docs/countries/GULF_CONTINUATION_PLAN_20.md; each lane"))
-      .toBe("continuation of the earlier pass: lanes as declared in the published research plan; each lane");
+      .toBe("continuation of the earlier pass: source groups as declared in the published research plan; each source group");
+    expect(readerText("0 of 8 lanes complete; the others are partial")).toBe("0 of 8 source groups with all planned work done; the others are partial");
+    expect(readerText("a SYSTEMATIC pass declares its source lanes")).toBe("a systematic pass declares its source groups");
     expect(readerText("Iteration 20 added four searches.")).toBe("A later pass added four searches.");
     expect(readerText("The shared search allowance ran out before every declared query was run."))
       .toBe("The pass reached its search limit before every declared query was run.");

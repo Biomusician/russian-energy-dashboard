@@ -12,7 +12,8 @@ import { loadContext, type EnergyContext } from "./context";
 import { navigate, navigateGroup, navigateTo } from "./router";
 import { prefetchOn } from "./prefetch";
 import { PanelBoundary } from "../components/ViewBoundary";
-import { dated, laneChips, recordLine } from "./homeModel";
+import { dated, recordLine } from "./homeModel";
+import { laneLine } from "./laneCoverage";
 import { localISODate } from "../freshness";
 import { Disclosure, ResearchPreviewTag } from "./Disclosure";
 import { fmtDate, fmtNum } from "../data";
@@ -101,7 +102,6 @@ export default function GlobalHome() {
           </p>
           <GlobalSearch inputRef={searchRef} />
           <nav className="home-actions" aria-label="Main actions">
-            <button type="button" className="home-action" onClick={() => searchRef.current?.focus()}>Search systems</button>
             {gulf?.slug
               ? <a className="home-action" href={`?group=${gulf.slug}`} onClick={(e) => { e.preventDefault(); navigateGroup(gulf.slug as string); }}>Explore the {gulf.label} →</a>
               : <span className="home-action disabled">Regional overview loading…</span>}
@@ -200,8 +200,8 @@ export default function GlobalHome() {
               {manifest.corpus.independently_reviewed} independently reviewed ({manifest.corpus.blind_reviewed} blind
               by three reviewers). {manifest.corpus.records_with_observed_recovery} with a cited report that the
               facility or service came back at least in part ({manifest.corpus.records_reported_fully_back} of them
-              fully); {manifest.corpus.records_with_recovery_estimate_only} with only an estimate. Research process across{" "}
-              {manifest.corpus.research_lanes} source groups: {laneChips(manifest.corpus.research_lane_states ?? {})}.
+              fully); {manifest.corpus.records_with_recovery_estimate_only} with only an estimate. Research process:{" "}
+              {laneLine(manifest.corpus.research_lane_states ?? {}, manifest.corpus.research_lanes)}
               {" "}{manifest.corpus.registry_sources} sources are on the countries' check lists: the regulators, ministries,
               operators and other publishers that are re-read on a schedule.
             </p>

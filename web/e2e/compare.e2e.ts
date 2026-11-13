@@ -186,14 +186,15 @@ test.describe("Compare systems", () => {
     await page.getByLabel("Add a system to compare").selectOption("sa");
     await page.getByRole("button", { name: "Move Canada left" }).click();
     await expect(page).toHaveURL(/[?&]compare=ca,us,sa$/);
-    await expect(row(page, "lanes").locator("td").nth(1)).toContainText("declared complete", { timeout: 10_000 });
+    await expect(row(page, "lanes").locator("td").nth(1)).toContainText("planned searches run (not exhaustive)", { timeout: 10_000 });
   });
 
   test("a corrupt country file is contained to its own column", async ({ app, page }) => {
     await page.route("**/data/systems/ca/system.json", (r) => r.fulfill({ status: 200, contentType: "application/json", body: '{"system_id":"ca"}' }));
     await openCompare(page, "?compare=us,ca");
     await expect(row(page, "lanes").locator("td").nth(1)).toHaveText(/Could not be loaded/);
-    await expect(row(page, "lanes").locator("td").nth(0)).toContainText("declared complete");
+    await expect(row(page, "lanes").locator("td").nth(0)).toContainText("planned searches run (not exhaustive)");
+    await expect(row(page, "lanes").locator("td").nth(0)).not.toContainText(/declared complete|finished/);
     // The manifest-level rows still describe it.
     await expect(row(page, "index").locator("td").nth(1)).toContainText("No index");
   });

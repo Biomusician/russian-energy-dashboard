@@ -5,6 +5,7 @@
  *  load this file in Node, and a value import of manifest.ts would need the Vite runtime.
  */
 import type { CountryEvent, CountrySystem } from "./manifest";
+import type { Placement } from "./placement";
 
 // ---- originating statements ------------------------------------------------------------------
 // A MIRROR of pipeline/build_systems.py (WIRE_ORIGINS, DISCOVERY_ONLY_DOMAINS, registered_domain,
@@ -122,12 +123,14 @@ export function placementKind(e: CountryEvent, sys: CountrySystem): PlacementKin
   return "national";
 }
 
-export const PLACEMENT_LABEL: Record<PlacementKind, string> = {
-  region: "Placed in one region",
-  national: "National or multi-region record",
-  country_attack: "Country-level attack record",
-  country_rule: "Recorded for the country as a whole",
-};
+/** The record's placement in the shared reader words (placement.ts). A record not placed in one
+ *  region that names regions it affected spans several; one that names none is national. */
+export function eventPlacement(e: CountryEvent, sys: CountrySystem): Placement {
+  const kind = placementKind(e, sys);
+  if (kind === "region") return "one_region";
+  if (kind === "country_attack") return "national_safeguarded";
+  return Array.isArray(e.regions_affected) && e.regions_affected.length > 0 ? "several_regions" : "national";
+}
 
 /** An original-language headline may be shown. Never on a record under active-campaign
  *  safeguards or on a country-level attack record: a headline can name the place, the facility

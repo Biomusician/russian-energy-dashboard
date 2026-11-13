@@ -3,7 +3,18 @@
  *  Reader copy, so it speaks to the reader: no file names, internal ids or build vocabulary. Each
  *  entry keeps the distinctions the site exists to keep (exposure is not loss, no index is not
  *  zero, unknown is not none). Order is alphabetical by term; nothing here is ranked.
+ *
+ *  The words for research states and for placement are not typed here: they come from the one
+ *  module each (laneCoverage.ts, placement.ts) that every other page uses too.
  */
+import { COVERAGE_STATES, LANE_STATE_LABEL } from "./laneCoverage";
+import { PLACEMENTS, PLACEMENT_LABEL, PLACEMENT_MEANING } from "./placement";
+
+/** "every published item read; searched through …; … or not started" from the shared labels. */
+function stateList(): string {
+  const words = COVERAGE_STATES.filter((k) => k !== "legacy").map((k) => LANE_STATE_LABEL[k].toLowerCase());
+  return `${words.slice(0, -1).join("; ")}; or ${words[words.length - 1]}`;
+}
 
 export interface GlossaryEntry {
   id: string;
@@ -65,25 +76,33 @@ export const GLOSSARY: GlossaryEntry[] = [
     detail: "Corroboration is counted in originating statements, not links. An origin is the wire service a citation names, otherwise the website it appears on, so a record with many links can still rest on a single statement, and the country page says so.",
   },
   {
+    id: "placement",
+    term: "Placement: National, Several regions, One region",
+    aliases: ["national", "several regions", "multiple regions", "country level", "one region", "first-level region", "where", "placed"],
+    plain: "How precisely a record is placed. Every page uses the same four words.",
+    detail: PLACEMENTS.map((k) => `${PLACEMENT_LABEL[k]}: ${PLACEMENT_MEANING[k]}`).join(" ")
+      + " A record is never placed more precisely than one first-level region, and never at a facility's coordinates.",
+  },
+  {
     id: "publication-safeguard",
     term: "Publication safeguard",
-    aliases: ["withheld", "campaign", "national", "row key", "safeguard", "attack campaign"],
-    plain: "While attacks on a country's energy facilities are being reported, some detail is not published: the facility's current status, and in some countries where the attack happened inside the country. Such records appear as \"National\".",
-    detail: "The record still shows that something was reported, its date, its broad class and its cause. Lists that put records from several countries side by side show such a record as \"National\" with a neutral row key instead of a name. Historical evidence may be published once the campaign is over.",
+    aliases: ["withheld", "campaign", "row key", "list entry", "safeguard", "attack campaign", "under safeguards"],
+    plain: `While attacks on a country's energy facilities are being reported, some detail is not published: the facility's current status, and in some countries where the attack happened inside the country. Such records appear as "${PLACEMENT_LABEL.national_safeguarded}".`,
+    detail: "The record still shows that something was reported, its date, its broad class and its cause. Lists that put records from several countries side by side show such a record for the country as a whole, with a list entry number instead of its own name. Historical evidence may be published once the campaign is over.",
   },
   {
     id: "research-coverage",
     term: "Research coverage vs source health",
     aliases: ["coverage", "source health", "research state", "lanes", "source groups"],
     plain: "Research coverage says how much of the planned search for events has been done. Source health says whether the registered sources were checked on schedule. One does not imply the other.",
-    detail: "Research is organised in source groups (for example one regulator's notices). Each group is shown as searched, searched through the publisher's latest release, partly searched, blocked by the source, stopped when the search limit was reached, or not started. These are shown as words, never as a percentage, and differ from country to country.",
+    detail: `Research is organised in source groups (for example one regulator's notices). Each group is in one state: ${stateList()}. "Planned searches run" means every planned search was run, not that every event was found. These are shown as words, never as a percentage or a "complete" count, and differ from country to country.`,
   },
   {
     id: "research-preview",
     term: "Research preview",
     aliases: ["preview", "early stage", "incomplete research"],
     plain: "A country whose systematic search is still incomplete. A missing record there is not evidence that nothing happened.",
-    detail: "Each country page lists which source groups were searched, partly searched, blocked or not started, and through which date.",
+    detail: "Each country page lists the state of every source group (for example planned searches run, partly searched, source unavailable or not started) and through which date.",
   },
   {
     id: "sector-state",
@@ -104,7 +123,7 @@ export const GLOSSARY: GlossaryEntry[] = [
 /** "How this works": the method in six plain steps, shown at the top of the glossary. */
 export const HOW_IT_WORKS: { step: string; text: string }[] = [
   { step: "Open sources only", text: "Everything comes from public reporting: regulators, ministries, operators, news agencies and newspapers. Nothing classified, nothing private." },
-  { step: "A planned search per country", text: "Each country has a list of source groups to search. Each group's progress is shown in words: searched, partly searched, blocked, not started." },
+  { step: "A planned search per country", text: "Each country has a list of source groups to search. Each group's state is shown in words, such as planned searches run (not exhaustive), partly searched, source unavailable or not started." },
   { step: "Reviewed records", text: "A reported disruption becomes a record only if it passes a stated threshold and independent reviewers agree. Records are placed by first-level region at most, never at a facility's coordinates." },
   { step: "One index, one theatre", text: "Only the Russia, Belarus & Crimea theatre has an index. It measures exposure (capacity at recently disrupted sites), not output lost. Countries get no score." },
   { step: "Safeguards", text: "While attacks on a country's energy facilities are being reported, some detail is not published, such as a facility's current status. Such records still show their date, class and cause." },

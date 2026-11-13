@@ -18,7 +18,9 @@ import { Disclosure, ResearchPreviewTag } from "./Disclosure";
 import { downloadBlob, exportMapPng } from "../mapExport";
 import { fmtDate } from "../data";
 import { readerText } from "./readerText";
-import { collapseCovered, isCovered, laneChips } from "./homeModel";
+import { collapseCovered, isCovered } from "./homeModel";
+import { laneLine } from "./laneCoverage";
+import { LIST_ENTRY_NOTE, PLACEMENT_LABEL, listEntry, memberPlace } from "./placement";
 import { CountryLink, CoveredRunItem, fmtEpisodeDate } from "./feedItems";
 import "../styles/gulf.css";
 import { GlobalNavBar } from "./GlobalNav";
@@ -62,11 +64,11 @@ function EpisodeItem({ ep }: { ep: RecentEpisode }) {
         <CountryLink id={ep.system_id} name={ep.country} />
         <span className="small dim">{ep.classes.join(", ")} · {ep.causes.join(", ")}</span>
       </div>
-      {covered && <div className="small dim">Published under active-campaign safeguards — see the country page.</div>}
+      {covered && <div className="small dim"><span className="mono row-key" data-row={ep.episode_id}>{listEntry(ep.episode_id)}</span> · {LIST_ENTRY_NOTE}</div>}
       {ep.episode_name && <div className="small"><strong>{ep.episode_name}</strong> <span className="dim">({ep.records} records, one episode)</span></div>}
       <ul className="lane-list small">
         {ep.members.map((mm, i) => (
-          <li key={i}><span className="dim">{mm.region}: </span>
+          <li key={i}><span className="dim">{memberPlace(mm.region, mm.withheld)}: </span>
             {mm.withheld ? <span className="dim">Not summarised in this list while an attack campaign is active or recent. The country page gives the effect reported at the time; later status is not published anywhere.</span> : mm.effect_on_country_page ? <span className="dim">the reported effect and its sources are on the country page.</span> : (mm.effect ?? <span className="dim">no effect text</span>)}
           </li>
         ))}
@@ -260,7 +262,7 @@ export default function GroupView({ id }: { id: string }) {
                     {listed.map((s) => (
                       <li key={s.system_id}>
                         {/* Named for what it does: the table and the recent list below have
-                            buttons called just "Kuwait" that open the country page. */}
+                            buttons called just by the country's name that open the country page. */}
                         <button type="button" className={`member-btn${pointA3 === s.a3 ? " is-pointed" : ""}`} aria-pressed={sel?.a3 === s.a3}
                           aria-label={`${s.name}, show on the map`}
                           title={`${memberships(s)}. Select to highlight and zoom to it on the map.`}
@@ -451,7 +453,7 @@ export default function GroupView({ id }: { id: string }) {
               )}
               <div className="small dim">
                 {s.last_systematic_pass ? `Latest systematic research pass ${fmtDate(s.last_systematic_pass)}` : "No systematic research pass yet"}
-                {Object.keys(s.lane_states).length > 0 && `: ${laneChips(s.lane_states)}`}
+                {Object.keys(s.lane_states).length > 0 ? `. ${laneLine(s.lane_states)}` : "."}
               </div>
               {s.languages_required.length > 0 && (
                 <div className="small dim">Languages the search plan requires: {languageNames(s.languages_required)}. Used in at least one source group so far: {languageNames(s.languages_executed) || "none"}.</div>
@@ -468,8 +470,8 @@ export default function GroupView({ id }: { id: string }) {
             <p className="small dim">Date order only. No severity, size or country order. Most of these records were added as a historical
               backfill when the countries joined the site: a long list is a larger dataset, not a deteriorating region.
               A country with few records has few records found, which is not few disruptions.</p>
-            <p className="small dim feed-national-note">“National” in this list: a record covered by the attack-campaign safeguards
-              is shown here for the country as a whole. Its country page may still name a region and facility, where that country's
+            <p className="small dim feed-national-note">“{PLACEMENT_LABEL.national_safeguarded}” in this list: a record covered by the attack-campaign safeguards
+              is shown here for the country as a whole, with a list entry number instead of its own name. Its country page may still name a region and facility, where that country's
               records were published under the earlier rule (each card above says which rule applies).</p>
             <ol className="feed">
               {collapseCovered(ctx.recent.episodes.filter((ep) => shown.some((s) => s.system_id === ep.system_id))).map((row) => row.kind === "covered-run"

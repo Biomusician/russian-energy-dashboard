@@ -4,6 +4,7 @@ import { DISPUTED, NO_EVENTS, type Scale } from "./countryScale";
 import { fmtValue, type ContextRow, type EnergyContext } from "./context";
 import { inSentence } from "./countryCopy";
 import { fmtDate } from "../data";
+import { PLACEMENT_LABEL } from "./placement";
 
 /** The frame drawn into a country PNG.
  *
@@ -57,7 +58,7 @@ export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, 
         `That describes this dataset, not ${inSentence(sys.name)}` + (held > 0 ? `; ${held} candidate records are held back and not shown.` : reviewing ? "; additional candidates remain under review." : ".")
       : `No index. ${sys.event_summary.recorded_events} qualifying events in ${sys.event_summary.episodes} episodes ` +
         `(reporting: ${env}); ` +
-        `national or multi-region events not drawn: ${sys.event_summary.country_level}. Record reviewed ${sys.record_reviewed ? fmtDate(sys.record_reviewed) : "not yet"}.`,
+        `records marked ${PLACEMENT_LABEL.national} or ${PLACEMENT_LABEL.several_regions}, not drawn: ${sys.event_summary.country_level}. Record reviewed ${sys.record_reviewed ? fmtDate(sys.record_reviewed) : "not yet"}.`,
     pad, Math.round(74 * s));
 
   // Colour key: this country's own classes, so the picture cannot be read on another's scale.

@@ -6,10 +6,13 @@ against every served country system and against made-up lanes for the cases the 
 not contain, so the mutation campaign can catch a broken rule in the frontend, not only in the
 build. The rules:
 
+- the states are the build's own eight (`lane_summary_state`), counted exactly as the build counts
+  them, so every page that shows source-group states says the same thing;
 - a source that refused access is "Source unavailable", however much else the lane did;
-- a lane stopped by our own search allowance is never complete;
-- "Declared search complete" only where the lane's own execution says so, every required language
-  ran and the source was readable; a missing language is always shown;
+- a lane stopped by our own search allowance is never one of the three done states;
+- a done state only where the lane's own execution says so, every required language ran and the
+  source was readable, and the three never merge into one "complete"; a missing language is always
+  shown;
 - under the attack-campaign rule no count of candidates, held records or outcomes is rendered;
 - research coverage is kept apart from source health.
 """
@@ -20,6 +23,8 @@ import subprocess
 from pathlib import Path
 
 import pytest
+
+from pipeline import build_systems as B
 
 ROOT = Path(__file__).resolve().parent.parent
 GIT_ROOT = Path(os.environ.get("EDM_GIT_ROOT", ROOT))
@@ -97,6 +102,9 @@ def _served_systems():
     return out
 
 
+DONE = ("universe_searched", "current_through_latest_release", "declared_query_set_run")
+
+
 def _done(lane):
     """The build's own `_lane_done`, plus the language rule its validator enforces at build time."""
     return (lane["execution"] in ("enumerated_complete", "declared_search_complete")
@@ -118,8 +126,9 @@ def test_blocked_and_stopped_lanes_are_never_complete(tmp_path):
         _lane(),
     ]
     out = _run(lanes, tmp_path=tmp_path)
-    assert out["states"] == ["unavailable", "unavailable", "unavailable", "stopped", "stopped", "stopped",
-                             "archive_limit", "not_started", "complete"]
+    assert out["states"] == ["blocked_by_source", "blocked_by_source", "blocked_by_source",
+                             "stopped_by_search_limit", "stopped_by_search_limit", "stopped_by_search_limit",
+                             "partially_searched", "not_started", "declared_query_set_run"]
 
 
 @needs_node
@@ -132,7 +141,7 @@ def test_a_lane_missing_a_language_is_shown_missing_and_never_complete(tmp_path)
     ]
     out = _run(lanes, tmp_path=tmp_path)
     assert out["missing"] == [["fa"], ["ar"], ["ar"]]
-    assert "complete" not in out["states"]
+    assert not set(out["states"]) & set(DONE), out["states"]
 
 
 @needs_node
@@ -148,21 +157,23 @@ def test_every_served_system_maps_its_lanes_as_the_build_counts_them(tmp_path):
         lanes = {l["lane"]: l for l in newest["lanes"]}
         rf = sys["research_freshness"]
         if {r["lane"] for r in got["rows"]} == set(lanes):
-            assert got["counts"]["complete"] == rf["lanes_complete"], sid
-            assert got["counts"]["stopped"] == rf["lane_states"].get("stopped_by_search_limit", 0), sid
-            assert got["counts"]["unavailable"] == rf["lane_states"].get("blocked_by_source", 0), sid
+            # State for state, the counts every other page reads from the build.
+            assert {k: v for k, v in got["counts"].items() if v} == rf["lane_states"], sid
+            assert sum(got["counts"][k] for k in DONE) == rf["lanes_complete"], sid
         for r in got["rows"]:
             lane = lanes.get(r["lane"])
             if lane is None:
                 continue
             checked += 1
             if lane.get("source_window") == "inaccessible":
-                assert r["state"] == "unavailable", (sid, r)
+                assert r["state"] == "blocked_by_source", (sid, r)
             elif lane.get("stopped_by") == "search_limit":
-                assert r["state"] == "stopped", (sid, r)
-            assert (r["state"] == "complete") == _done(lane), (sid, r, lane.get("execution"))
-        assert got["summary"].startswith(f"{got['counts']['complete']} of {len(got['rows'])} "), sid
-        assert "%" not in got["summary"]
+                assert r["state"] == "stopped_by_search_limit", (sid, r)
+            assert r["state"] == B.lane_summary_state(lane), (sid, r)
+            assert (r["state"] in DONE) == _done(lane), (sid, r, lane.get("execution"))
+        n = len(got["rows"])
+        assert got["summary"].startswith(f"{n} source group{'' if n == 1 else 's'}: "), sid
+        assert "%" not in got["summary"] and "complete" not in got["summary"]
     assert checked > 0
 
 

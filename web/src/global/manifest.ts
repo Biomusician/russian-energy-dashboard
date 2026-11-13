@@ -801,17 +801,8 @@ export const RESEARCH_COMPLETENESS_LABEL: Record<string, string> = {
   never_systematic: "Targeted searches only, no systematic search yet",
 };
 
-/** What a lane's two dimensions mean to a reader. Computed by the build; never typed per lane. */
-export const LANE_STATE_LABEL: Record<string, string> = {
-  universe_searched: "All listed sources searched",
-  current_through_latest_release: "Searched through the publisher's latest release",
-  declared_query_set_run: "Planned searches run (not exhaustive)",
-  partially_searched: "Partly searched",
-  blocked_by_source: "Blocked by the source",
-  stopped_by_search_limit: "Stopped when the search limit was reached",
-  not_started: "Not started",
-  legacy: "Logged under the earlier format",
-};
+// A lane's reader state (LANE_STATE_LABEL and its counts) lives in laneCoverage.ts, the one
+// vocabulary every surface imports.
 
 export const LANE_EXECUTION_LABEL: Record<string, string> = {
   not_started: "Not started",

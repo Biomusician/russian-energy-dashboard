@@ -8,7 +8,7 @@ import {
 import { readerText } from "./readerText";
 import { inSentence } from "./countryCopy";
 import {
-  COVERAGE_STATES, COVERAGE_STATE_MEANING, COVERAGE_STATE_TEXT, UNIVERSE_TEXT, countStates, coverageSummary,
+  COVERAGE_STATES, COVERAGE_STATE_MEANING, LANE_STATE_LABEL, UNIVERSE_TEXT, countStates, coverageSummary,
   isCampaignRestricted, latestLanes, missingLanguages, passOutcomeText, reviewLine, workDone,
   type CoverageState, type LaneRow,
 } from "./laneCoverage";
@@ -35,7 +35,9 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
   const review = reviewLine(s);
   const today = localISODate(new Date());
   const owed = rf.completeness !== "complete" && rows.length > 0;
-  const shownStates = COVERAGE_STATES.filter((x) => x !== "earlier_format" || counts.earlier_format > 0);
+  // Every state is explained, so a reader can see what the groups here are not; the old-format
+  // state only where a group is in it.
+  const shownStates = COVERAGE_STATES.filter((x) => x !== "legacy" || counts.legacy > 0);
   const rc = s.recovery_coverage;
   const cq = s.citation_quality;
 
@@ -43,8 +45,9 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
     <section className="rc" aria-labelledby="rc-heading">
       <h2 id="rc-heading">Research coverage</h2>
       <p className="small rc-lead">How well has {inSentence(s.name)} actually been searched for disruptions? The search is
-        planned in <strong>lanes</strong>: a lane is one family of sources searched as a unit, such as one
-        ministry's statements or the national press. Other pages of this site call a lane a source group.</p>
+        planned in <strong>source groups</strong>: a source group is one family of sources searched as a unit, such as
+        one ministry's statements or the national press. Each group is in one of the states explained below, the same
+        states every page of this site uses.</p>
       <p className="small rc-distinct"><strong>Research coverage</strong> is how far the search for events got.{" "}
         <strong>Source health</strong>, under Sources &amp; data quality, describes the citations behind the events
         already published. Neither implies the other.</p>
@@ -56,7 +59,7 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
           <p className="small">Search period {fmtDate(rf.coverage_window[0])} – {fmtDate(rf.coverage_window[1])};
             last worked on {fmtDate(rf.last_systematic_pass)}.
             {rf.next_due && (owed
-              ? " The unfinished lanes are owed now, not in a year's time."
+              ? " The unfinished source groups are owed now, not in a year's time."
               : ` Next full search due ${fmtDate(rf.next_due)}${rf.next_due < today ? " (now due)" : ""}.`)}
           </p>
         )}
@@ -69,13 +72,13 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
 
       {rows.length > 0 && (<>
         <table className="lane-table rc-matrix">
-          <caption>Lane states at a glance</caption>
-          <thead><tr><th scope="col">Lane</th><th scope="col">How it is searched</th><th scope="col">State</th></tr></thead>
+          <caption>Source-group states at a glance</caption>
+          <thead><tr><th scope="col">Source group</th><th scope="col">How it is searched</th><th scope="col">State</th></tr></thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.lane.lane}>
                 <th scope="row">
-                  <button type="button" className="linkish mono" aria-label={`${r.lane.lane}: go to lane details`}
+                  <button type="button" className="linkish mono" aria-label={`${r.lane.lane}: go to source group details`}
                     onClick={() => document.getElementById(laneId(s.system_id, r.lane.lane))?.focus()}>
                     {r.lane.lane}
                   </button>
@@ -97,11 +100,12 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
               </div>
             ))}
           </dl>
-          <p className="small dim">No percentage or score is given on purpose: a lane waiting on a publisher and a
-            lane that ran a few of its searches are different shortfalls and do not add up to one number.</p>
+          <p className="small dim">No percentage, score or "complete" count is given on purpose: a group waiting on a
+            publisher, a group that ran a few of its searches and a group whose planned searches all ran are different
+            states and do not add up to one number.</p>
         </details>
 
-        <ol className="rc-lanes" aria-label="Lanes in detail">
+        <ol className="rc-lanes" aria-label="Source groups in detail">
           {rows.map((r) => <LaneCard key={r.lane.lane} row={r} systemId={s.system_id} newestPassDate={rf.last_systematic_pass} />)}
         </ol>
       </>)}
@@ -179,7 +183,9 @@ function LaneCard({ row, systemId, newestPassDate }: { row: LaneRow; systemId: s
   const missing = missingLanguages(l);
   const work = workDone(l);
   const span = Array.isArray(row.pass.window) ? row.pass.window : null;
-  const latestRelease = row.state === "complete" && l.source_window === "publisher_not_yet_released";
+  // A partly searched group whose publisher keeps only a recent window: said beside the state, which
+  // stays the one shared word.
+  const archiveLimit = row.state === "partially_searched" && l.source_window === "rolling_archive_gap";
   const headingId = `${laneId(systemId, l.lane)}-h`;
   return (
     <li className={`rc-lane rc-lane-${row.state}`} id={laneId(systemId, l.lane)} tabIndex={-1} aria-labelledby={headingId}>
@@ -189,7 +195,8 @@ function LaneCard({ row, systemId, newestPassDate }: { row: LaneRow; systemId: s
       </h3>
       <div className="rc-lane-state">
         <StateMark state={row.state} />
-        {latestRelease && <span className="small dim"> · through the publisher's latest release; later items are not yet published</span>}
+        {row.state === "current_through_latest_release" && <span className="small dim"> · later items are not yet published</span>}
+        {archiveLimit && <span className="small dim"> · the publisher keeps only a recent window, so older items could not be reached</span>}
       </div>
       <dl className="rc-facts">
         <div><dt>How it is searched</dt><dd>{labelFor(UNIVERSE_TEXT, l.universe_kind ?? "not recorded")}{work && <span className="dim"> · {work}</span>}</dd></div>
@@ -225,7 +232,7 @@ export function StateMark({ state }: { state: CoverageState }) {
   return (
     <span className={`rc-state rc-state-${state}`}>
       <StateIcon state={state} />
-      <span className="rc-state-text">{COVERAGE_STATE_TEXT[state]}</span>
+      <span className="rc-state-text">{LANE_STATE_LABEL[state]}</span>
     </span>
   );
 }
@@ -233,19 +240,21 @@ export function StateMark({ state }: { state: CoverageState }) {
 function StateIcon({ state }: { state: CoverageState }) {
   const common = { width: 14, height: 14, viewBox: "0 0 14 14", "aria-hidden": true, focusable: false, className: "rc-icon" } as const;
   switch (state) {
-    case "complete":      // filled circle
+    case "universe_searched":              // filled circle
       return <svg {...common}><circle cx="7" cy="7" r="5.5" fill="currentColor" /></svg>;
-    case "partial":       // half-filled circle
+    case "current_through_latest_release": // three-quarter filled circle: the rest is not yet released
+      return <svg {...common}><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M7 7 L7 2 A5 5 0 1 1 2 7 Z" fill="currentColor" /></svg>;
+    case "declared_query_set_run":         // ring with a dot: planned searches run, not a full list
+      return <svg {...common}><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="1.5" /><circle cx="7" cy="7" r="2.2" fill="currentColor" /></svg>;
+    case "partially_searched":             // half-filled circle
       return <svg {...common}><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M7 2 A5 5 0 0 0 7 12 Z" fill="currentColor" /></svg>;
-    case "not_started":   // empty circle
+    case "not_started":                    // empty circle
       return <svg {...common}><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>;
-    case "unavailable":   // crossed box
+    case "blocked_by_source":              // crossed box
       return <svg {...common}><rect x="2" y="2" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M4 4 L10 10 M10 4 L4 10" stroke="currentColor" strokeWidth="1.5" /></svg>;
-    case "stopped":       // filled square: stop
+    case "stopped_by_search_limit":        // filled square: stop
       return <svg {...common}><rect x="2.5" y="2.5" width="9" height="9" fill="currentColor" /></svg>;
-    case "archive_limit": // hollow diamond
-      return <svg {...common}><path d="M7 1.5 L12.5 7 L7 12.5 L1.5 7 Z" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>;
-    default:              // dotted ring: earlier format
+    default:                               // dotted ring: earlier format
       return <svg {...common}><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="1.5 2" /></svg>;
   }
 }

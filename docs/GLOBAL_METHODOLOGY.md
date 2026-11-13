@@ -887,6 +887,27 @@ allowance carries `stopped_by: search_limit` and cannot be complete. `universe_k
 `report_archive` or `declared_query_set`. Readers are told a state computed from these
 (`lane_summary_state`), never a percentage.
 
+**Reader terms (iteration 21).** A lane is a "source group" to a reader, and each state has one
+term, defined once in `web/src/global/laneCoverage.ts` and used on every surface (home, country
+header, Research coverage tab, Compare and its image, Gulf cards, glossary, data quality):
+
+| State | Reader term |
+|---|---|
+| `universe_searched` | Every published item read |
+| `current_through_latest_release` | Searched through the publisher's latest release |
+| `declared_query_set_run` | Planned searches run (not exhaustive) |
+| `partially_searched` | Partly searched |
+| `blocked_by_source` | Source unavailable |
+| `stopped_by_search_limit` | Stopped at this site's search limit |
+| `not_started` | Not started |
+| `legacy` | Logged in an earlier format |
+
+The first three are never summed into one "complete" or "finished" figure on a reader surface:
+a planned query set run in full is not an exhaustive search. A lane whose publisher keeps only a
+recent window is "Partly searched", with the reason beside it. Placement has the same rule: four
+terms (National; Several regions; One region; National, under safeguards), defined in
+`web/src/global/placement.ts`.
+
 ## Recovery coverage policy (iteration 18)
 
 Non-conflict records carry the observed report, or a sourced estimate labelled as an estimate, and

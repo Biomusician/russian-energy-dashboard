@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { loadWhatsNew, type WhatsNew as WhatsNewData, type WhatsNewChange } from "./manifest";
 import { navigate } from "./router";
+import { WHATS_NEW_ID, showWhatsNew } from "./GlobalNav";
 import { fmtDate } from "../data";
 import { localISODate } from "../freshness";
 import { readerText } from "./readerText";
@@ -21,6 +22,12 @@ export default function WhatsNew({ now }: { now?: Date } = {}) {
     loadWhatsNew().then((d) => { if (live) setData(d); }).catch(() => { if (live) setFailed(true); });
     return () => { live = false; };
   }, []);
+
+  // Arriving from the site bar's "What's new" (or a link to #whats-new): once the panel has its
+  // content, and so its final height, bring it into view.
+  useEffect(() => {
+    if ((data || failed) && window.location.hash === `#${WHATS_NEW_ID}`) showWhatsNew();
+  }, [data, failed]);
 
   const labels = new Map((data?.categories ?? []).map((c) => [c.id, c]));
   const age = data ? buildAgeText(data.comparison.current_as_of, localISODate(now ?? new Date())) : "";
@@ -44,8 +51,8 @@ export default function WhatsNew({ now }: { now?: Date } = {}) {
   };
 
   return (
-    <section className="panel global-note whats-new" aria-label="What's new in the data">
-      <h2 className="eyebrow">What's new in the data</h2>
+    <section id={WHATS_NEW_ID} className="panel global-note whats-new" aria-labelledby={`${WHATS_NEW_ID}-heading`}>
+      <h2 id={`${WHATS_NEW_ID}-heading`} className="eyebrow" tabIndex={-1}>What's new in the data</h2>
       {failed && <p className="small warn-text" role="alert">The list of changes could not be loaded. Each system's own page is unaffected.</p>}
       {data && !data.available && (
         <p className="small dim" title={data.unavailable_reason ?? undefined}>

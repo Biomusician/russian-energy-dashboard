@@ -4,9 +4,10 @@ import {
   type CountryBundle, type CountryEvent,
 } from "./manifest";
 import {
-  LINK_STATE_LABEL, PLACEMENT_LABEL, countLine, eventAnchor, headlinesAllowed, notEstablished, originLabel,
+  LINK_STATE_LABEL, countLine, eventAnchor, eventPlacement, headlinesAllowed, notEstablished, originLabel,
   originSummary, placementKind, plainBasis, roleVerdicts,
 } from "./evidence";
+import { PLACEMENT_LABEL } from "./placement";
 import { fmtDate } from "../data";
 import "../styles/country.css";
 
@@ -60,6 +61,7 @@ export function EventCard({ e, bundle, inEpisode = false, targeted = false }: {
   const recClass = e.recovery.kind ?? e.recovery.research_status;
   const ep = bundle.episodes.find((x) => x.episode_id === e.episode_id);
   const kind = placementKind(e, sys);
+  const place = eventPlacement(e, sys);
   const origins = originSummary(e);
   const headlines = headlinesAllowed(e, sys);
   const covered = !!e.publication;
@@ -90,9 +92,10 @@ export function EventCard({ e, bundle, inEpisode = false, targeted = false }: {
         <div>
           <dt>Placement</dt>
           <dd>
-            <span className="placement-level">{PLACEMENT_LABEL[kind]}</span>
+            <span className="placement-level">{PLACEMENT_LABEL[place]}</span>
             {kind === "region" && <>: {e.region_name}</>}
             {kind === "country_attack" && <span className="dim"> — published for the country as a whole, with no region or facility</span>}
+            {kind === "country_rule" && <span className="dim"> — every record of this country is kept for the country as a whole</span>}
             {kind === "national" && <span className="dim"> — not placed in one {unit}</span>}
             {kind !== "country_attack" && e.regions_affected.length > 0 && (
               <div className="dim">Regions affected: {e.regions_affected.map((c) => unitName(bundle, c)).join(", ")}</div>

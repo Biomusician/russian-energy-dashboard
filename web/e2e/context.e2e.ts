@@ -131,8 +131,9 @@ test.describe("world energy context", () => {
     await expect(page.getByText(/Recovery status is withheld for \d+ of \d+ records\s+while an attack campaign is active/)).toBeVisible();
     await app.open("?sys=cn");
     const ribbon = page.locator(".research-status");
-    await expect(ribbon).toContainText(/source groups finished/);
-    await expect(ribbon).toContainText(/research period/);
+    await expect(ribbon.locator(".lane-state-line")).toHaveText(/^\d+ source groups: .+\.$/);
+    await expect(ribbon).not.toContainText(/finished|declared complete/);
+    await expect(ribbon).toContainText(/Research period/);
   });
 
   test("events can be filtered, and a region can be chosen without the map", async ({ app, page }) => {

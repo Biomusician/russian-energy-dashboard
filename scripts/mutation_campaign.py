@@ -1160,13 +1160,13 @@ MUTATIONS += ITER20_MUTATIONS
 LANES = "web/src/global/laneCoverage.ts"
 RESEARCH_MUTATIONS = [
     ("a lane whose source refused access reads as complete",
-     [(LANES, _text('  if (win === "inaccessible") return "unavailable";', '  if (win === "inaccessible") return "complete";'))],
+     [(LANES, _text('  if (win === "inaccessible") return "blocked_by_source";', '  if (win === "inaccessible") return "declared_query_set_run";'))],
      "blocked_and_stopped_lanes_are_never_complete"),
     ("a lane stopped by the search allowance reads as complete",
-     [(LANES, _text('  if (lane.stopped_by === "search_limit") return "stopped";', '  if (lane.stopped_by === "search_limit") return "complete";'))],
+     [(LANES, _text('  if (lane.stopped_by === "search_limit") return "stopped_by_search_limit";', '  if (lane.stopped_by === "search_limit") return "declared_query_set_run";'))],
      "blocked_and_stopped_lanes_are_never_complete"),
     ("a lane that skipped a required language reads as complete",
-     [(LANES, _text(' && win !== "unknown" && missingLanguages(lane).length === 0) {', ' && win !== "unknown") {'))],
+     [(LANES, _text('  const doneOk = win !== "unknown" && missingLanguages(lane).length === 0;', '  const doneOk = win !== "unknown";'))],
      "missing_a_language"),
     ("source health is shown as research coverage",
      [("web/src/global/ResearchCoverage.tsx", _text(

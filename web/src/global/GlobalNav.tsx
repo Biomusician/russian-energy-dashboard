@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { loadManifest, type Manifest } from "./manifest";
-import { navigate, navigateGroup, navigateTo } from "./router";
+import { LOCATION_EVENT, navigate, navigateGroup, navigateTo } from "./router";
 import { GLOSSARY, HOW_IT_WORKS } from "./glossary";
 import {
   CONCEPT_ENTRIES, KIND_LABEL, VIEW_ENTRIES, groupEntries, loadTheatreRegions, loadedCountryRegions,
@@ -9,6 +9,7 @@ import {
 } from "./searchIndex";
 import { requestStartHere } from "./startHereMemory";
 import "../styles/home.css";
+import "../styles/sitebar.css";
 
 /** Navigation shared by every global view (iteration 21): a breadcrumb home, one search box,
  *  the glossary, "How to read this" and a copy-link control. One bar per view, so one `/`
@@ -35,7 +36,70 @@ export function howToRead() {
   else { requestStartHere(); navigate(null); }
 }
 
+/** The home panel that lists what changed since the previous build (WhatsNew.tsx). */
+export const WHATS_NEW_ID = "whats-new";
+
+/** Bring the What's new panel into view and give it focus. On the home page it is already there
+ *  (or about to be, once the page has loaded: WhatsNew does it then, from the URL's #whats-new);
+ *  from any other view this goes home first, as a new history entry so Back returns. */
+export function goWhatsNew() {
+  const hash = `#${WHATS_NEW_ID}`;
+  if (isHome()) {
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${hash}`);
+    showWhatsNew();
+  } else {
+    window.history.pushState(null, "", `${window.location.pathname}${hash}`);
+    window.dispatchEvent(new Event(LOCATION_EVENT));
+  }
+}
+
+/** Scroll the panel into view and move focus to its heading. False if it is not on the page yet. */
+export function showWhatsNew(): boolean {
+  const head = document.getElementById(`${WHATS_NEW_ID}-heading`);
+  if (!head) return false;
+  head.scrollIntoView?.({ block: "start" });
+  head.focus({ preventScroll: true });
+  return true;
+}
+
 export function GlobalNavBar({ trail, search = true, extra }: { trail: Crumb[]; search?: boolean; extra?: React.ReactNode }) {
+  // On a phone the secondary tools fold behind one "Menu" toggle, as the theatre's do behind "Tools":
+  // five stacked rows of buttons took a third of the screen. Search and the system picker stay out.
+  // On wider screens CSS hides the toggle and always shows the tools, so the flag matters only there.
+  const [open, setOpen] = useState(false);
+  const menuId = useId();
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const toggleRef = useRef<HTMLButtonElement | null>(null);
+
+  // Closing hides whatever had focus inside the menu, so focus goes back to the toggle first. A
+  // dialog opened from the menu then returns focus to the toggle, not to <body>.
+  const closeMenu = () => {
+    setOpen(false);
+    const t = toggleRef.current;
+    if (t && t.offsetParent !== null) t.focus();
+  };
+  const run = (f: () => void) => () => { if (open) closeMenu(); f(); };
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      // A modal opened from the menu handles its own Escape.
+      if (e.key !== "Escape" || document.querySelector("dialog[open]")) return;
+      e.preventDefault();
+      closeMenu();
+    };
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (!menuRef.current?.contains(t) && !toggleRef.current?.contains(t)) setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onDown);
+    };
+  }, [open]);  // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className="global-nav">
       <a className="product-home" href={window.location.pathname} onClick={(e) => go(e, "")}
@@ -43,10 +107,22 @@ export function GlobalNavBar({ trail, search = true, extra }: { trail: Crumb[]; 
       <Breadcrumb trail={trail} />
       <div className="global-nav-tools">
         {search && <GlobalSearch compact />}
-        <button className="ghost" type="button" onClick={howToRead}>How to read this</button>
-        <button className="ghost" type="button" onClick={() => openGlossary("how-it-works")}>How this works</button>
-        <button className="ghost" type="button" onClick={() => openGlossary()}>Glossary</button>
-        <CopyLinkButton />
+        <button ref={toggleRef} className="ghost nav-menu-toggle" type="button" aria-expanded={open} aria-controls={menuId}
+          onClick={() => setOpen((v) => !v)}>Menu</button>
+        <div id={menuId} ref={menuRef} className={`nav-menu${open ? " open" : ""}`}>
+          <a className="ghost nav-link" href={`${window.location.pathname}#${WHATS_NEW_ID}`}
+            onClick={(e) => {
+              if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+              e.preventDefault();
+              if (open) closeMenu();
+              goWhatsNew();
+            }}>What's new</a>
+          <button className="ghost" type="button" onClick={run(howToRead)}>How to read this</button>
+          <button className="ghost" type="button" onClick={run(() => openGlossary("how-it-works"))}>How this works</button>
+          <button className="ghost" type="button" onClick={run(() => openGlossary())}>Glossary</button>
+          {/* Stays open after copying, so its confirmation can be read. */}
+          <CopyLinkButton />
+        </div>
         {extra}
       </div>
       <GlossaryDialog />

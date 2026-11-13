@@ -185,7 +185,7 @@ test.describe("Gulf group", () => {
       expect(t).toContain("Records under active-campaign safeguards — see the country page");
       expect(t.replace(/\d{1,2} [A-Z][a-z]{2} \d{4}|[A-Z][a-z]{2} \d{4}/g, "")).not.toMatch(/\d/);
     }
-    await expect(feed.locator(".feed-national-note")).toContainText("“National” in this list");
+    await expect(feed.locator(".feed-national-note")).toContainText("“National, under safeguards” in this list");
     const dates = eps.map((e) => e.last_date);
     expect(dates).toEqual([...dates].sort().reverse());
     expect(g.recent.scope).not.toMatch(/\bfive\b/);

@@ -59,16 +59,22 @@ describe("recent feed", () => {
     const keyOnly = (n: number) => ep({ system_id: "kw", episode_id: `kw-row-${String(n).padStart(2, "0")}`,
       members: [{ date: "2026-03-01", date_precision: "day", region: "National", effect: null, effect_on_country_page: true, withheld: false }] });
     expect(isCovered(keyOnly(8))).toBe(false);
-    expect(placementOf(keyOnly(8)).level).not.toBe("National");
+    expect(placementOf(keyOnly(8)).kind).toBe("national");
+    expect(placementOf(keyOnly(8)).level).not.toMatch(/safeguard/);
     expect(collapseCovered([keyOnly(8), keyOnly(9), keyOnly(10)]).map((r) => r.kind)).toEqual(["item", "item", "item"]);
   });
 
-  it("places a covered item as National with no region, and others at the level the list carries", () => {
+  it("places a covered item as National, under safeguards, with no region, and others in the shared placement words", () => {
     expect(isCovered(covered("sa", 1))).toBe(true);
-    expect(placementOf(covered("sa", 1))).toEqual({ level: "National", names: [] });
-    expect(placementOf(ep({ system_id: "us", episode_id: "x" }))).toEqual({ level: "First-level region", names: ["Texas"] });
-    const multi = ep({ system_id: "us", episode_id: "y", members: [{ date: "d", date_precision: "day", region: "Multiple regions", effect: null, effect_on_country_page: false, withheld: false }] });
-    expect(placementOf(multi).level).toBe("Several regions");
+    expect(placementOf(covered("sa", 1))).toEqual({ level: "National, under safeguards", names: [], kind: "national_safeguarded" });
+    expect(placementOf(ep({ system_id: "us", episode_id: "x" }))).toEqual({ level: "One region", names: ["Texas"], kind: "one_region" });
+    const m = (region: string) => ({ date: "d", date_precision: "day", region, effect: null, effect_on_country_page: false, withheld: false });
+    expect(placementOf(ep({ system_id: "us", episode_id: "y", members: [m("Multiple regions")] })).level).toBe("Several regions");
+    expect(placementOf(ep({ system_id: "us", episode_id: "z", members: [m("National")] })).level).toBe("National");
+    // An episode of records in different places names each kind, and never calls itself one region.
+    expect(placementOf(ep({ system_id: "us", episode_id: "w", members: [m("National"), m("Tennessee")] })))
+      .toEqual({ level: "National + One region", names: ["Tennessee"], kind: null });
+    expect(placementOf(ep({ system_id: "us", episode_id: "v", members: [m("Ohio"), m("Iowa")] })).level).toBe("One region per record");
   });
 });
 

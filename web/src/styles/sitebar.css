@@ -1,0 +1,48 @@
+/* The shared site bar's tools (GlobalNav.tsx): the "What's new" entry and, on a phone, the "Menu"
+   disclosure that folds the secondary tools away. Built on theme.css tokens.
+
+   Wide screens: the toggle is hidden and the menu's own box disappears (display: contents), so its
+   buttons sit in the bar's row exactly as before. At 600 px and below the toggle shows and the
+   menu opens as a full-width column under the search and the system picker, which stay visible:
+   five stacked rows of buttons took about a third of a 390 px phone screen. */
+
+.global-nav .nav-link {
+  display: inline-flex; align-items: center; box-sizing: border-box;
+  background: transparent; border: 1px solid var(--line); color: var(--text-dim);
+  padding: 4px 9px; border-radius: var(--radius); font-size: 11px; font-family: var(--sans);
+  text-decoration: none; white-space: nowrap;
+}
+.global-nav .nav-link:hover, .global-nav .nav-link:focus-visible { border-color: var(--accent-dim); color: var(--accent); }
+
+.nav-menu-toggle { display: none; }
+.nav-menu { display: contents; }
+
+/* The heading a "What's new" jump lands on: focused for screen readers, not outlined for a mouse. */
+#whats-new-heading:focus:not(:focus-visible) { outline: none; }
+#whats-new { scroll-margin-top: 8px; }
+
+@media (max-width: 600px) {
+  .global-nav-tools { width: 100%; }
+  .global-nav-tools > .gsearch { order: 0; }
+  .global-nav .nav-menu-toggle { display: inline-flex; align-items: center; justify-content: center; order: 1; min-height: 44px; min-width: 44px; }
+  .global-nav .nav-menu-toggle[aria-expanded="true"] { border-color: var(--accent-dim); color: var(--accent); }
+  .global-nav-tools > .sys-switch { order: 2; flex: 1 1 0; min-width: 0; }
+  .global-nav-tools > .sys-switch .eyebrow { display: none; }
+  .global-nav-tools > .sys-switch select { width: 100%; min-height: 44px; }
+  .nav-menu { display: none; }
+  .nav-menu.open {
+    display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+    order: 3; flex-basis: 100%; padding: 2px 0 4px;
+  }
+  .nav-menu.open > button.ghost, .nav-menu.open > .nav-link { width: 100%; min-height: 44px; justify-content: flex-start; text-align: left; font-size: 12px; }
+  .nav-menu.open .copy-link { display: flex; flex-wrap: wrap; }
+  .nav-menu.open .copy-link button.ghost { width: 100%; text-align: left; font-size: 12px; }
+}
+
+@media (pointer: coarse) {
+  .global-nav .nav-link { min-height: 44px; }
+}
+
+@media print {
+  .nav-menu-toggle, .nav-menu { display: none !important; }
+}

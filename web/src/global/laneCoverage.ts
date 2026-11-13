@@ -1,10 +1,17 @@
-/** Lane states for the Research Coverage Explorer (ResearchCoverage.tsx): research coverage as a reader is told it.
+/** Research coverage as a reader is told it: the ONE vocabulary for source-group states, and the
+ *  lane logic of the Research Coverage tab (ResearchCoverage.tsx).
  *
- *  The question this answers is "how well has this country actually been searched?", lane by lane.
- *  A lane is one family of sources searched as a unit. Each lane already carries two independent
- *  dimensions in the served log: what the analyst did (`execution`) and what the source allows
- *  (`source_window`). This file turns them into one of a few categorical states, each shown as text
- *  plus a shape. Never a percentage, never a score, never a moral colour.
+ *  The question this answers is "how well has this country actually been searched?", group by
+ *  group. A source group ("lane" in the data) is one family of sources searched as a unit. Each
+ *  carries two independent dimensions in the served log: what the analyst did (`execution`) and
+ *  what the source allows (`source_window`). The build turns them into one of eight states
+ *  (`lane_summary_state` in pipeline/build_systems.py) and counts them; `coverageState` below is the
+ *  same rule, so the home page, the country header, the Research coverage tab, Compare and the Gulf
+ *  cards show one set of states in one set of words. Never a percentage, never a score, never a
+ *  moral colour, and never one word ("complete", "finished") for states that mean different
+ *  things: a planned set of searches run in full is not every published item read.
+ *
+ *  Every surface takes its words from here. Do not add a second label map elsewhere.
  *
  *  SELF-CONTAINED ON PURPOSE. Only type imports, which are erased, so the shipped file runs as it is
  *  under plain Node: the Python suite executes it against every served system (tests/
@@ -13,50 +20,99 @@
  */
 import type { CountrySystem, ResearchLane, ResearchPass } from "./manifest";
 
-export type CoverageState =
-  | "complete" | "partial" | "not_started" | "unavailable" | "stopped" | "archive_limit" | "earlier_format";
+/** What a reader calls a lane, everywhere. */
+export const SOURCE_GROUP = "source group";
+export const SOURCE_GROUPS = "source groups";
+export function sourceGroups(n: number): string {
+  return n === 1 ? SOURCE_GROUP : SOURCE_GROUPS;
+}
 
-/** The order the states are explained and counted in. */
+/** The build's eight states. */
+export type CoverageState =
+  | "universe_searched" | "current_through_latest_release" | "declared_query_set_run" | "partially_searched"
+  | "blocked_by_source" | "stopped_by_search_limit" | "not_started" | "legacy";
+
+/** The order the states are explained and counted in, on every surface. */
 export const COVERAGE_STATES: CoverageState[] = [
-  "complete", "partial", "not_started", "unavailable", "stopped", "archive_limit", "earlier_format",
+  "universe_searched", "current_through_latest_release", "declared_query_set_run", "partially_searched",
+  "blocked_by_source", "stopped_by_search_limit", "not_started", "legacy",
 ];
 
-export const COVERAGE_STATE_TEXT: Record<CoverageState, string> = {
-  complete: "Declared search complete",
-  partial: "Partial",
+/** The three states in which all of a group's planned work was done. They stay three: none of them
+ *  means every event was found, and a planned set of searches is not an exhaustive list. */
+export const DONE_STATES: CoverageState[] = ["universe_searched", "current_through_latest_release", "declared_query_set_run"];
+
+/** One reader term per state: as a label ("Partly searched") and, lower-cased, in a count. */
+export const LANE_STATE_LABEL: Record<CoverageState, string> = {
+  universe_searched: "Every published item read",
+  current_through_latest_release: "Searched through the publisher's latest release",
+  declared_query_set_run: "Planned searches run (not exhaustive)",
+  partially_searched: "Partly searched",
+  blocked_by_source: "Source unavailable",
+  stopped_by_search_limit: "Stopped at this site's search limit",
   not_started: "Not started",
-  unavailable: "Source unavailable",
-  stopped: "Stopped by search limit",
-  archive_limit: "Archive or listing limitation",
-  earlier_format: "Logged in an earlier format",
+  legacy: "Logged in an earlier format",
+};
+
+/** In a count, "5 planned searches run" reads as five searches when it means five source groups;
+ *  "with" keeps the number on the group. */
+const COUNT_PHRASE: Partial<Record<CoverageState, string>> = {
+  universe_searched: "with every published item read",
+  declared_query_set_run: "with planned searches run (not exhaustive)",
+  blocked_by_source: "with the source unavailable",
 };
 
 export const COVERAGE_STATE_MEANING: Record<CoverageState, string> = {
-  complete: "Every search or listing declared for this lane was run, in every language the lane requires. "
-    + "It means the declared sources were searched, not that nothing else happened.",
-  partial: "Some of the declared work was done and some was not; the lane's note says what is missing. "
-    + "A partial lane can be a truthful end state rather than unfinished work: where no complete public "
-    + "list of events exists, no amount of searching makes the record complete.",
-  not_started: "Declared in the research plan, but no search has been run in it yet.",
-  unavailable: "The source refused automated access or could not be read, for example a listing built by "
-    + "script in the browser. It was not worked around, so the source itself is unread, whatever else "
-    + "the lane ran.",
-  stopped: "This project's own search limit for the pass was reached before every declared search was run. "
+  universe_searched: "The source is a complete official list or a publisher's archive, and every item in it for the "
+    + "search period was listed or read, in every language the group requires. The list was read; that does not "
+    + "mean the list holds every event.",
+  current_through_latest_release: "Every item the publisher has released so far was read, in every language the group "
+    + "requires, but the publisher has not yet released the rest of the search period.",
+  declared_query_set_run: "Every search planned for this group was run, in every language it requires. No complete "
+    + "list of events exists for it, so the searches can miss what they did not ask for: run, not exhaustive.",
+  partially_searched: "Some of the planned work was done and some was not; the group's note says what is missing. "
+    + "This can be a truthful end state rather than unfinished work: where the publisher keeps only a recent window, "
+    + "or no complete public list of events exists, no amount of searching makes the record complete.",
+  blocked_by_source: "The source refused automated access or could not be read, for example a listing built by "
+    + "script in the browser. It was not worked around, so the source itself is unread, whatever else the group ran.",
+  stopped_by_search_limit: "This site's own search limit for the pass was reached before every planned search was run. "
     + "The limit is ours, not the publisher's: the remaining searches can still be run.",
-  archive_limit: "The publisher keeps only a recent window of items, or lists them in a way that cannot be "
-    + "read back to the start of the period, so older items could not be reached.",
-  earlier_format: "This lane was last logged before the current vocabulary existed and is shown as it was "
-    + "logged then.",
+  not_started: "Planned, but no search has been run in it yet.",
+  legacy: "This group was last logged before the current vocabulary existed and is shown as it was logged then.",
 };
 
-/** How a lane's universe is searched, in plain words. */
+function isState(k: string): k is CoverageState {
+  return (COVERAGE_STATES as string[]).includes(k);
+}
+
+/** "3 partly searched", "5 with planned searches run (not exhaustive)". The number counts source groups. */
+export function laneStatePhrase(state: string, n: number): string {
+  if (!isState(state)) return `${n} ${state.replace(/_/g, " ")}`;
+  return `${n} ${COUNT_PHRASE[state] ?? LANE_STATE_LABEL[state].toLowerCase()}`;
+}
+
+/** Counts by state as one line, in the fixed order; a state this file does not know follows, never
+ *  dropped. A state with no group is left out. */
+export function laneChips(states: Record<string, number>): string {
+  const known = COVERAGE_STATES.filter((k) => states[k]);
+  const extra = Object.keys(states).filter((k) => states[k] && !isState(k)).sort();
+  return [...known, ...extra].map((k) => laneStatePhrase(k, states[k])).join(" · ");
+}
+
+/** "6 source groups: 5 with planned searches run (not exhaustive) · 1 partly searched." The one
+ *  summary line, wherever a system's (or every country's) groups are summed up. */
+export function laneLine(states: Record<string, number>, total?: number): string {
+  const n = total ?? Object.values(states).reduce((a, b) => a + (Number(b) || 0), 0);
+  const chips = laneChips(states);
+  return chips ? `${n} ${sourceGroups(n)}: ${chips}.` : `${n} ${sourceGroups(n)}.`;
+}
+
+/** How a group's universe is searched, in plain words. */
 export const UNIVERSE_TEXT: Record<string, string> = {
   census: "A complete official list, read entry by entry",
   report_archive: "A publisher's archive of reports, read item by item",
   declared_query_set: "Planned searches; no complete list of events exists",
 };
-
-const COMPLETE_EXECUTION = ["enumerated_complete", "declared_search_complete"];
 
 function list(x: unknown): string[] {
   return Array.isArray(x) ? x.filter((v): v is string => typeof v === "string") : [];
@@ -68,27 +124,28 @@ export function missingLanguages(lane: ResearchLane): string[] {
   return list(lane.languages_required).filter((c) => !ran.has(c));
 }
 
-/** The state a reader is told for one lane.
+/** The state a reader is told for one lane: the build's `lane_summary_state`, rule for rule.
  *
- *  Order matters, and follows the build's own `lane_summary_state`: a source that refused access
- *  reads as unavailable however much else was done, and a lane stopped by our search limit is never
- *  complete. "Complete" is only ever what the lane's own execution says, and only when every
- *  required language ran and the source was readable. Anything else that is not one of the named
- *  shortfalls is partial: never promoted. */
+ *  Order matters: a source that refused access reads as unavailable however much else was done,
+ *  and a lane stopped by our search limit is never a done state. A done state is only ever what the
+ *  lane's own execution says, and, as a second line of defence behind the build's validator, only
+ *  when every required language ran and the source window is known. Anything else is partly
+ *  searched: never promoted. */
 export function coverageState(lane: ResearchLane): CoverageState {
   if (!lane.execution) {
-    return "earlier_format";
+    return "legacy";
   }
   const ex = lane.execution;
   const win = lane.source_window;
-  if (ex === "not_started") return win === "inaccessible" ? "unavailable" : "not_started";
-  if (win === "inaccessible") return "unavailable";
-  if (lane.stopped_by === "search_limit") return "stopped";
-  if (COMPLETE_EXECUTION.includes(ex) && win !== "unknown" && missingLanguages(lane).length === 0) {
-    return "complete";
+  if (ex === "not_started") return win === "inaccessible" ? "blocked_by_source" : "not_started";
+  if (win === "inaccessible") return "blocked_by_source";
+  if (lane.stopped_by === "search_limit") return "stopped_by_search_limit";
+  const doneOk = win !== "unknown" && missingLanguages(lane).length === 0;
+  if (ex === "enumerated_complete" && doneOk) {
+    return win === "publisher_not_yet_released" ? "current_through_latest_release" : "universe_searched";
   }
-  if (win === "rolling_archive_gap") return "archive_limit";
-  return "partial";
+  if (ex === "declared_search_complete" && doneOk) return "declared_query_set_run";
+  return "partially_searched";
 }
 
 export interface LaneRow {
@@ -123,27 +180,13 @@ export function countStates(rows: LaneRow[]): Record<CoverageState, number> {
   return out;
 }
 
-const CLAUSE: Record<Exclude<CoverageState, "complete">, string> = {
-  stopped: "stopped by the search limit",
-  unavailable: "with the source unavailable",
-  archive_limit: "limited by the source's archive or listing",
-  partial: "partial",
-  not_started: "not started",
-  earlier_format: "logged in an earlier format",
-};
-const CLAUSE_ORDER: Exclude<CoverageState, "complete">[] =
-  ["stopped", "unavailable", "archive_limit", "partial", "not_started", "earlier_format"];
-
-/** "2 of 9 lanes declared complete; 2 stopped by the search limit; …" — in words, never a ratio
- *  turned into a percentage. A state with no lane is left out rather than listed as zero, except the
- *  first clause, which is always stated. */
+/** The tab's summary line: the same line every other surface shows, from the same states. Counts
+ *  in words, never a ratio turned into a percentage, and no "N of M complete": the done states are
+ *  three different claims and are never added up into one. */
 export function coverageSummary(rows: LaneRow[], passCount: number): string {
   if (passCount === 0) return "No search has been run yet.";
-  if (rows.length === 0) return "No systematic search with declared lanes has been run yet: every search so far was targeted at named gaps and leads.";
-  const n = countStates(rows);
-  const parts = [`${n.complete} of ${rows.length} ${rows.length === 1 ? "lane" : "lanes"} declared complete`];
-  for (const s of CLAUSE_ORDER) if (n[s] > 0) parts.push(`${n[s]} ${CLAUSE[s]}`);
-  return parts.join("; ") + ".";
+  if (rows.length === 0) return "No systematic search with declared source groups has been run yet: every search so far was targeted at named gaps and leads.";
+  return laneLine(countStates(rows), rows.length);
 }
 
 /** True for a system under the attack-campaign publication rule. Any one signal is enough:

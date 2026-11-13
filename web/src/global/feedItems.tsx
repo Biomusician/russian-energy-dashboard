@@ -4,6 +4,7 @@ import { navigate } from "./router";
 import { prefetchOn } from "./prefetch";
 import type { RecentEpisode } from "./manifest";
 import type { FeedRow } from "./homeModel";
+import { PLACEMENT_LABEL } from "./placement";
 
 /** Pieces of the dated record lists that the home page and the Gulf littoral view both show.
  *  One wording and one layout for a run of campaign-covered records, wherever it appears. */
@@ -32,7 +33,7 @@ export function CountryLink({ id, name }: { id: string; name: string }) {
 }
 
 /** Wording for a campaign-covered record in a list that sets countries side by side. No count:
- *  a run of "National" rows is itself a tally of an attack campaign. */
+ *  a run of safeguarded rows is itself a tally of an attack campaign. */
 export const COVERED_RUN_TEXT = "Records under active-campaign safeguards — see the country page.";
 
 /** Consecutive covered records of one country, as one line (homeModel.collapseCovered). */
@@ -42,7 +43,7 @@ export function CoveredRunItem({ row }: { row: Extract<FeedRow, { kind: "covered
       <div className="feed-line">
         <span className="mono small">{fmtSpan(row.first_date, row.last_date, row.date_precision)}</span>
         <CountryLink id={row.system_id} name={row.country} />
-        <span className="feed-place small">National</span>
+        <span className="feed-place small">{PLACEMENT_LABEL.national_safeguarded}</span>
       </div>
       <div className="small dim">{row.classes.join(", ")} · {row.causes.join(", ")}</div>
       <div className="small">{COVERED_RUN_TEXT}</div>

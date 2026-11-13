@@ -135,11 +135,14 @@ describe("compareRows", () => {
     expect(rows.find((r) => r.id === "ctx_total_production")!.cells[0].kind).toBe("unavailable");
   });
 
-  it("puts lane states in the five words, never a percentage", () => {
+  it("puts source-group states in the shared words, one per state, never 'complete' and never a percentage", () => {
     const rows = compareRows(columns(["us", "sa", "qa"]), ctx, manifest);
-    for (const c of rows.find((r) => r.id === "lanes")!.cells) {
-      expect(c.text).toMatch(/declared complete .* partial .* not started .* stopped by search limit .* source unavailable/);
-      expect(c.text).not.toMatch(/%|per ?cent/);
+    const cells = rows.find((r) => r.id === "lanes")!.cells;
+    expect(cells.length).toBe(3);
+    for (const c of cells) {
+      expect(c.text).toMatch(/every published item read .* searched through the publisher's latest release .* planned searches run \(not exhaustive\) .* partly searched .* source unavailable .* stopped at this site's search limit .* not started/);
+      expect(c.text).not.toMatch(/%|per ?cent|complete|finished/i);
+      expect(c.lines!.join(" ")).not.toMatch(/complete|finished/i);
     }
   });
 
@@ -153,12 +156,12 @@ describe("compareRows", () => {
 
 describe("laneBuckets", () => {
   it("counts by bucket, keeps zeros, and never drops an unknown state", () => {
-    expect(laneBuckets({ universe_searched: 1, declared_query_set_run: 2, legacy: 1 })).toEqual([
-      { label: "declared complete", n: 3 }, { label: "partial", n: 0 }, { label: "not started", n: 0 },
-      { label: "stopped by search limit", n: 0 }, { label: "source unavailable", n: 0 },
-      { label: "logged under the earlier format", n: 1 },
+    expect(laneBuckets({ universe_searched: 1, declared_query_set_run: 2, legacy: 1 }).map((b) => [b.label, b.n])).toEqual([
+      ["every published item read", 1], ["searched through the publisher's latest release", 0],
+      ["planned searches run (not exhaustive)", 2], ["partly searched", 0], ["source unavailable", 0],
+      ["stopped at this site's search limit", 0], ["not started", 0], ["logged in an earlier format", 1],
     ]);
-    expect(laneBuckets(JSON.parse('{"__proto__": 3}')).map((b) => b.n)).toEqual([0, 0, 0, 0, 0, 3]);
+    expect(laneBuckets(JSON.parse('{"__proto__": 3}')).map((b) => b.n)).toEqual([0, 0, 0, 0, 0, 0, 0, 3]);
   });
 });
 

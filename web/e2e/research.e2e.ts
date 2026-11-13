@@ -28,8 +28,11 @@ function latest(passes: Pass[]): Map<string, Lane> {
   return out;
 }
 
-const STATES = ["Declared search complete", "Partial", "Not started", "Source unavailable",
-                "Stopped by search limit", "Archive or listing limitation"];
+// The same eight words every page uses (laneCoverage.ts); the old-format state only where present.
+const STATES = ["Every published item read", "Searched through the publisher's latest release",
+                "Planned searches run (not exhaustive)", "Partly searched", "Source unavailable",
+                "Stopped at this site's search limit", "Not started"];
+const DONE_TEXT = /Every published item read|Searched through the publisher's latest release|Planned searches run/;
 
 async function openResearch(app: App, id: string) {
   await app.open(`?sys=${id}`);
@@ -49,7 +52,8 @@ test.describe("Research coverage explorer", () => {
     await expect(rc.getByRole("heading", { name: "Research coverage", level: 2 })).toBeVisible();
     await expect(rc.locator(".rc-lane")).toHaveCount(lanes.size);
     await expect(rc.locator(".lane-table tbody tr")).toHaveCount(lanes.size);
-    await expect(rc.locator(".rc-summary-line")).toHaveText(/^\d+ of \d+ lanes? declared complete(; .+)?\.$/);
+    await expect(rc.locator(".rc-summary-line")).toHaveText(new RegExp(`^${lanes.size} source groups?: .+\\.$`));
+    await expect(rc.locator(".rc-summary-line")).not.toContainText(/complete|finished/);
 
     const newest = sys.research_log.passes.filter((p: Pass) => p.kind === "systematic").at(-1);
     if (newest.under_review) {
@@ -69,9 +73,9 @@ test.describe("Research coverage explorer", () => {
       const card = rc.locator(".rc-lane").filter({ has: page.locator(".rc-lane-id", { hasText: new RegExp(`^${id}$`) }) });
       const state = card.locator(".rc-lane-state .rc-state-text");
       if (l.source_window === "inaccessible") await expect(state).toHaveText("Source unavailable");
-      else if (l.stopped_by === "search_limit") await expect(state).toHaveText("Stopped by search limit");
+      else if (l.stopped_by === "search_limit") await expect(state).toHaveText("Stopped at this site's search limit");
       if (!["enumerated_complete", "declared_search_complete"].includes(l.execution ?? "")) {
-        await expect(state).not.toHaveText("Declared search complete");
+        await expect(state).not.toHaveText(DONE_TEXT);
       }
     }
     expect(app.errors).toEqual([]);
@@ -88,7 +92,7 @@ test.describe("Research coverage explorer", () => {
     // The legend: every state once, as text with its own shape.
     const legend = rc.locator(".rc-legend");
     for (const s of STATES) await expect(legend.locator("dt", { hasText: s })).toHaveCount(1);
-    await expect(legend).toContainText("A partial lane can be a truthful end state");
+    await expect(legend).toContainText("This can be a truthful end state");
     const shapes = await legend.locator("dt svg").evaluateAll((svgs) => svgs.map((s) => s.innerHTML));
     expect(new Set(shapes).size).toBe(shapes.length);
     // One colour for every state: the shapes are not a traffic light.
@@ -104,13 +108,16 @@ test.describe("Research coverage explorer", () => {
       await expect(card.locator("dt", { hasText: "Covered through" })).toBeVisible();
       const state = card.locator(".rc-lane-state .rc-state-text");
       if (l.source_window === "inaccessible") { await expect(state).toHaveText("Source unavailable"); blocked += 1; }
-      else if (l.stopped_by === "search_limit") { await expect(state).toHaveText("Stopped by search limit"); stopped += 1; }
+      else if (l.stopped_by === "search_limit") { await expect(state).toHaveText("Stopped at this site's search limit"); stopped += 1; }
       const missing = (l.languages_required ?? []).filter((x) => !(l.languages_executed ?? []).includes(x));
       await expect(card.locator(".rc-missing")).toHaveCount(missing.length ? 1 : 0);
     }
     expect(blocked + stopped).toBeGreaterThan(0);
     const n = sys.research_freshness;
-    await expect(rc.locator(".rc-summary-line")).toContainText(`${n.lanes_complete} of ${n.lanes_declared} lanes declared complete`);
+    // The tab's line is the country header's line: one vocabulary, the build's counts.
+    await expect(rc.locator(".rc-summary-line")).toHaveText(new RegExp(`^${n.lanes_declared} source groups: `));
+    const header = await page.locator(".research-status .lane-state-line").textContent();
+    await expect(rc.locator(".rc-summary-line")).toHaveText(header!);
     // No coverage percentage in the explorer's own summary and overview.
     await expect(rc.locator(".rc-overview")).not.toContainText("%");
     await expect(rc.locator(".lane-table")).not.toContainText("%");
@@ -124,7 +131,7 @@ test.describe("Research coverage explorer", () => {
 
     // Keyboard: an overview button moves focus to its lane card; the legend toggles from the keyboard.
     const first = [...lanes.keys()][0];
-    await rc.getByRole("button", { name: `${first}: go to lane details` }).focus();
+    await rc.getByRole("button", { name: `${first}: go to source group details` }).focus();
     await page.keyboard.press("Enter");
     await expect(rc.locator(".rc-lane").first()).toBeFocused();
     await legend.locator("summary").focus();
