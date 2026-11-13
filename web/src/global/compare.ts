@@ -1,3 +1,4 @@
+import { localDayOf } from "../freshness";
 import { fmtValue, rowForSystem, type EnergyContext } from "./context";
 import {
   CAMPAIGN_STATE_LABEL, ENVIRONMENT_LABEL, LANE_STATE_LABEL, labelFor,
@@ -5,6 +6,7 @@ import {
 } from "./manifest";
 import { MAX_COMPARE } from "./router";
 import { fmtDate } from "../data";
+import { laneChips } from "./homeModel";
 
 /** The comparison workspace's rows (iteration 21), apart from the page so a test can read them.
  *
@@ -171,7 +173,7 @@ function lanesCell(s: CountrySystem): Cell {
   }
   const buckets = laneBuckets(states);
   const words = buckets.map((b) => `${b.n} ${b.label}`);
-  const finer = Object.entries(states).map(([k, n]) => `${n} ${labelFor(LANE_STATE_LABEL, k).toLowerCase()}`).join("; ");
+  const finer = laneChips(states).split(" · ").join("; ");
   return value(words.join(" · "), `In the latest systematic pass, source groups by state: ${finer}.`, words);
 }
 
@@ -348,7 +350,7 @@ export function compareBriefLines(cols: CompareColumn[], rows: CompareRow[], ctx
     : "National context could not be loaded, so no national figure is shown.";
   return {
     title: `Comparing monitored systems: ${names.join(", ")}`,
-    sub: `Built ${fmtDate(built.slice(0, 10))}. ${ctxLine} Columns in the order chosen, never ranked.`,
+    sub: `Built ${fmtDate(localDayOf(built))}. ${ctxLine} Columns in the order chosen, never ranked.`,
     names,
     rows: rows.filter((r) => EXPORT_ROW_IDS.includes(r.id)).map((r) => {
       const unit = /^(.*) (\([^()]*\))$/.exec(r.label);
@@ -369,5 +371,5 @@ export function compareBriefLines(cols: CompareColumn[], rows: CompareRow[], ctx
 }
 
 export function compareFilename(cols: CompareColumn[], built: string): string {
-  return `energy-systems-compared-${cols.map((c) => c.entry.id).join("-")}-${built.slice(0, 10)}.png`;
+  return `energy-systems-compared-${cols.map((c) => c.entry.id).join("-")}-${localDayOf(built) ?? "undated"}.png`;
 }

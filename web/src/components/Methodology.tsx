@@ -1,5 +1,7 @@
+import { localDayOf } from "../freshness";
 import type { Bundle } from "../types";
 import { fmtDate, fmtNum, titleCase } from "../data";
+import { HEADLINE_SCALE } from "../briefing";
 
 /** In-app methodology. The brief asks for methodology to be visible in the product,
  *  not only in a repository file someone has to go find. Anything that would change
@@ -35,7 +37,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
           <div className="method-summary">
             <H>In short</H>
             <ul>
-              <li>The headline ({fmtNum(s.esdi, 1)}, on a 0–100 scale) is <b>exposure</b>: the share of tracked capacity at recently disrupted sites — not measured loss.</li>
+              <li>The headline ({fmtNum(s.esdi, 1)}, on a 0–100 scale) is <b>exposure</b>: {HEADLINE_SCALE} — not measured loss.</li>
               <li>Each event fades on a half-life set by recovery evidence: observed, then estimated, then a modelled assumption.</li>
               <li>Sectors without a capacity base ({s.sectors_uncovered.map(titleCase).join(", ") || "none"}) are left out and their weight shared, never counted as zero.</li>
               <li>{s.incidents_with_quantified_capacity} of {s.incident_total} events state a capacity effect; coverage of oil strikes is measured against a public benchmark, other sectors have none.</li>
@@ -371,7 +373,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
 
           <p style={{ color: "var(--text-faint)", marginTop: 18, lineHeight: 1.5 }}>
             Data as at {fmtDate(s.as_of)}; the dataset is rebuilt daily (last build{" "}
-            {fmtDate(s.build_time.slice(0, 10))}). Sources refresh at their own cadence,
+            {fmtDate(localDayOf(s.build_time))}). Sources refresh at their own cadence,
             not all daily — strike reporting continuously, the power-plant and grid
             inventories rarely, CREA economic figures monthly (each shown with its own
             reporting month), and curated incidents when a sourced update is added.

@@ -18,6 +18,9 @@ describe("readerText", () => {
   it("drops iteration labels a reader cannot follow", () => {
     expect(readerText("Blind reviewed (since iteration 17): three reviewers")).toBe("Blind reviewed: three reviewers");
     expect(readerText("iteration-19 Gulf research pass")).toBe("Gulf research pass");
+    // The home page's selection rule, as the manifest serves it.
+    expect(readerText("Seven Gulf states were added in iteration 19 as a geographic expansion alongside Saudi Arabia."))
+      .toBe("Seven Gulf states were added as a geographic expansion alongside Saudi Arabia.");
     expect(readerText("Compiled by the UAE lane (iteration 19, Wave A). Context only.")).toBe("Compiled by the UAE lane. Context only.");
     expect(readerText("Territories are outside this system's geography this iteration; their events are held."))
       .toBe("Territories are outside this system's geography; their events are held.");

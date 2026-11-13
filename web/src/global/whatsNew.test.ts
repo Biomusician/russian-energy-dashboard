@@ -77,8 +77,13 @@ describe("panel wording", () => {
   it("says when the theatre's index movement cannot be split between data and method", () => {
     const row = { system_id: "ru", name: "R", kind: "theatre", changes: [],
       index: { label: "Monitored-Area ESDI", before: 6.8, after: 6.69, separable: false } };
-    expect(indexText(row)).toBe("Monitored-Area ESDI 6.80 to 6.69. The method changed too, so the movement cannot be split between data and method.");
-    expect(indexText({ ...row, index: { ...row.index, separable: true } })).toBe("Monitored-Area ESDI 6.80 to 6.69.");
+    // Levels at the headline's one decimal (the decay does not support a second), the movement at two.
+    expect(indexText(row)).toBe("Monitored-Area ESDI 6.8 to 6.7 (−0.11). The method changed too, so the movement cannot be split between data and method.");
+    expect(indexText({ ...row, index: { ...row.index, separable: true } })).toBe("Monitored-Area ESDI 6.8 to 6.7 (−0.11).");
+    // Unchanged is decided on the movement, and the level is printed like the headline.
+    expect(indexText({ ...row, index: { ...row.index, before: 6.69 } })).toBe("Monitored-Area ESDI unchanged at 6.7.");
+    // A movement too small to show at one decimal still shows, at two.
+    expect(indexText({ ...row, index: { ...row.index, before: 6.66, separable: true } })).toBe("Monitored-Area ESDI 6.7 to 6.7 (+0.03).");
     expect(indexText({ ...row, index: undefined })).toBeNull();
   });
 });

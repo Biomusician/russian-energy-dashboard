@@ -3,7 +3,7 @@
  *  levels only. */
 
 import { daysBetween, fmtDate } from "../data";
-import type { RecentEpisode } from "./manifest";
+import { LANE_STATE_LABEL, labelFor, type RecentEpisode } from "./manifest";
 
 /** "today", "1 day ago", "12 days ago", on the reader's own calendar day. A date in the reader's
  *  future (their clock is behind the build's) gets no age rather than a negative one. */
@@ -74,4 +74,26 @@ export function collapseCovered(episodes: RecentEpisode[]): FeedRow[] {
     i = j;
   }
   return out;
+}
+
+// Every state the build can emit, so no lane vanishes from a summary line (iteration 19: a lane
+// stopped by the search allowance was counted in the total and named nowhere). The same order on
+// the home page and the Gulf cards.
+const LANE_ORDER = ["universe_searched", "current_through_latest_release", "declared_query_set_run",
+                    "partially_searched", "blocked_by_source", "stopped_by_search_limit", "not_started", "legacy"];
+
+/** "3 partly searched", "5 with planned searches run (not exhaustive)". The number counts source
+ *  groups. Two labels describe the searches rather than the group, and "5 planned searches run"
+ *  read as five searches when it meant five source groups; "with" keeps the number on the group. */
+export function laneStatePhrase(state: string, n: number): string {
+  const label = labelFor(LANE_STATE_LABEL, state).toLowerCase();
+  const describesSearches = state === "declared_query_set_run" || state === "universe_searched";
+  return `${n} ${describesSearches ? `with ${label}` : label}`;
+}
+
+/** Lane states as one line, in the fixed order above; unknown states follow, never dropped. */
+export function laneChips(states: Record<string, number>): string {
+  const known = LANE_ORDER.filter((k) => states[k]);
+  const extra = Object.keys(states).filter((k) => states[k] && !LANE_ORDER.includes(k)).sort();
+  return [...known, ...extra].map((k) => laneStatePhrase(k, states[k])).join(" · ");
 }

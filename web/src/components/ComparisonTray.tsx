@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Bundle } from "../types";
 import { fmtDelta, fmtNum, titleCase, windowRef } from "../data";
+import { fmtIndex } from "../indexText";
 import { severityColor } from "../palette";
 import { Sparkline } from "./ui";
 
@@ -63,7 +64,7 @@ export default function ComparisonTray({
                 </button>
                 <button className="compare-x" title="Remove" onClick={() => onRemove(code)}>×</button>
               </div>
-              <div className="num" style={{ fontSize: 22, color, lineHeight: 1.1 }}>{fmtNum(esdiNow, 1)}</div>
+              <div className="num" style={{ fontSize: 22, color, lineHeight: 1.1 }}>{fmtIndex(esdiNow)}</div>
               <div className="eyebrow" style={{ marginBottom: 4 }}>ESDI{occupied ? " · occupied" : ""}</div>
               <Sparkline values={(series ?? []).slice(0, step + 1)} markIndex={step} width={150} height={30} color={color} ariaLabel={`${snap?.name ?? code} ESDI trajectory`} />
               <div className="compare-kv" title={`Weekly series: compared with ${ref.comparisonDate}, ${ref.actualComparisonDays} days back.`}>

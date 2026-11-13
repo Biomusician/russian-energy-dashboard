@@ -134,6 +134,13 @@ export const METRIC_CAVEAT: Record<string, string> = {
   incidents: "Count of recorded events. Not a measure of severity or of capacity affected.",
 };
 
+/** What the headline's 0–100 measures, in METHODOLOGY §1's own terms: a SHARE, WEIGHTED by
+ *  evidence, cause and elapsed time. The ribbon used to say only "the share of tracked capacity at
+ *  recently disrupted sites", which reads as a plain capacity count. One string, so the ribbon and
+ *  the methodology panel cannot drift apart. */
+export const HEADLINE_SCALE =
+  "the share of tracked capacity at recently disrupted sites, weighted by evidence, cause and elapsed time";
+
 export const TRANSMISSION_CAVEAT =
   "Transmission disruption burden is an event-burden proxy, not percent of grid offline.";
 

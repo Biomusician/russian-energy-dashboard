@@ -39,6 +39,7 @@
 .source-gloss { font-style: italic; }
 
 .ev-inspector-toggle { margin-top: 6px; font-size: 11px; }
+.ev-permalink { margin-left: 10px; font-size: 11px; }
 .ev-inspector {
   margin-top: 6px; padding: 8px 10px; border-left: 2px solid var(--accent-dim);
   background: var(--bg-panel-2); border-radius: var(--radius);
@@ -85,7 +86,7 @@
 }
 
 @media print {
-  .ev-inspector-toggle, .ev-inspector-close { display: none; }
+  .ev-inspector-toggle, .ev-inspector-close, .ev-permalink { display: none; }
   /* A disclosure's label is content: printed as text even though other buttons are not. */
   button.disclosure-button { display: inline-block !important; }
 }

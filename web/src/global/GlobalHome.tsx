@@ -16,6 +16,7 @@ import { dated, recordLine } from "./homeModel";
 import { localISODate } from "../freshness";
 import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
 import { fmtDate, fmtNum } from "../data";
+import { readerText } from "./readerText";
 import "../styles/home.css";
 
 // The world map is below the fold and brings MapLibre with it: its own chunk, so the first screen
@@ -181,7 +182,7 @@ export default function GlobalHome() {
                 {manifest.selection.source}
               </a>.
             </p>
-            {manifest.selection.regional_rule && <p>{manifest.selection.regional_rule}</p>}
+            {manifest.selection.regional_rule && <p>{readerText(manifest.selection.regional_rule)}</p>}
             <p className="small">{manifest.selection.caveat}</p>
             <p className="small">
               The original Russia, Belarus &amp; Crimea theatre is the only system with an index. The countries are shown
@@ -227,6 +228,12 @@ function TheatreEntry({ s, today }: { s: ManifestSystem; today: string }) {
             <span className="small dim"> (scale 0 to 100) — {s.headline.meaning}</span>
           </p>
         )}
+        {/* The number sits above a row of cards that have none. Said here, beside it, so the row
+            does not read as a scale with one value filled in. */}
+        <p className="small dim theatre-entry-alone">
+          Built for this area alone. No country below has an index, so there is nothing on this page to set
+          this number against.
+        </p>
         <div className="small dim">Reporting: {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)} · {dated("Data as of", s.as_of, today)}</div>
       </div>
       <button className="home-action primary" onClick={() => navigate(s.id)} {...prefetchOn(s.id)}>Open {s.name}</button>

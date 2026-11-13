@@ -6,6 +6,7 @@ import {
   CLASS_COLOR, ESDI_DELTA_STOPS, SEVERITY_STOPS, ZERO_SHORT, zeroIsUnmeasured,
 } from "../palette";
 import { daysBetween, displayName, fmtDelta, fmtNum, loadContextLayer, loadPipelineRegistry, titleCase, windowRef } from "../data";
+import { fmtIndex } from "../indexText";
 import { iconImageId, prewarmIcons } from "../icons";
 import { AssetHoverCard } from "./AssetDetail";
 import { RouteDetail } from "./RouteDetail";
@@ -1367,7 +1368,7 @@ export default function MapPanel({
               <div className="kv" style={{ marginTop: 5 }}>
                 <span className="k">{metricLabel}</span>
                 <span className="v">
-                  {isDelta ? fmtDelta(hover.value) : filters.metric === "esdi" ? fmtNum(hover.value, 2) : hover.value}
+                  {isDelta ? fmtDelta(hover.value) : filters.metric === "esdi" ? fmtIndex(hover.value) : hover.value}
                 </span>
               </div>
               <div className="kv">

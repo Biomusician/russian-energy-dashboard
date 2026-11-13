@@ -8,7 +8,7 @@ import {
   FILTERED, MEMBER_RAMP, NEUTRAL, NO_DATA, OTHER, ZERO, collapseFeed, groupFill, memberColour, membersAlphabetical, metricFacts, specialValues,
 } from "./groupMap";
 import {
-  ENVIRONMENT_LABEL, LANE_STATE_LABEL, groupBySlug, languageNames, labelFor, loadGroupContext, loadManifest, loadWorld,
+  ENVIRONMENT_LABEL, groupBySlug, languageNames, labelFor, loadGroupContext, loadManifest, loadWorld,
   type GroupContext, type GroupSystem, type Manifest, type RecentEpisode,
 } from "./manifest";
 import { navigate } from "./router";
@@ -17,6 +17,7 @@ import { PanelBoundary } from "../components/ViewBoundary";
 import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
 import { downloadBlob, exportMapPng } from "../mapExport";
 import { fmtDate } from "../data";
+import { laneChips } from "./homeModel";
 import "../styles/gulf.css";
 import { GlobalNavBar } from "./GlobalNav";
 
@@ -65,7 +66,7 @@ function fmtEpisodeEnd(ep: RecentEpisode): string {
 }
 
 function laneLine(states: Record<string, number>): string {
-  return Object.entries(states).map(([k, n]) => `${n} ${labelFor(LANE_STATE_LABEL, k).toLowerCase()}`).join(" · ");
+  return laneChips(states);
 }
 
 function EpisodeItem({ ep }: { ep: RecentEpisode }) {
@@ -80,7 +81,7 @@ function EpisodeItem({ ep }: { ep: RecentEpisode }) {
       <ul className="lane-list small">
         {ep.members.map((mm, i) => (
           <li key={i}><span className="dim">{mm.region}: </span>
-            {mm.withheld ? <span className="dim">Not summarised in this list while an attack campaign is active or recent. The country page gives the effect reported at the time; later status is not published anywhere.</span> : mm.effect_on_country_page ? <span className="dim">Effect: on the country page.</span> : (mm.effect ?? <span className="dim">no effect text</span>)}
+            {mm.withheld ? <span className="dim">Not summarised in this list while an attack campaign is active or recent. The country page gives the effect reported at the time; later status is not published anywhere.</span> : mm.effect_on_country_page ? <span className="dim">the reported effect and its sources are on the country page.</span> : (mm.effect ?? <span className="dim">no effect text</span>)}
           </li>
         ))}
       </ul>

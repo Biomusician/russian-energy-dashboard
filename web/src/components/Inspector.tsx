@@ -26,7 +26,8 @@ import {
   fmtDate, fmtDelta, fmtNum, loadDataQuality, loadHistorySeries, loadLifecycle,
   loadRegionalExplanations, titleCase,
 } from "../data";
-import { assessFreshness } from "../freshness";
+import { assessFreshness, localDayOf } from "../freshness";
+import { excludedSectorEventsText } from "../indexText";
 import { severityColor } from "../palette";
 import { EvidenceChip, RecoveryLine, hostOf } from "./ui";
 
@@ -302,8 +303,8 @@ function HeadlineView({ bundle, onDrill }: { bundle: Bundle; onDrill: (t: Inspec
           {excluded.map((c) => (
             <p key={c.sector}>
               <strong>{taxonomy.sectors[c.sector] ?? titleCase(c.sector)}</strong> — {c.excluded_reason}.
-              {" "}Documented events in this sector exist and are <em>not</em> scored.
-              Excluded is not the same as zero.
+              {" "}{excludedSectorEventsText(bundle.snapshot.coverage_matrix?.[c.sector]?.event_count)}
+              {" "}Excluded is not the same as zero.
             </p>
           ))}
           {h.sensitivities.zero_assumption != null && (
@@ -812,10 +813,12 @@ function LineageBadge({ bc }: { bc: BuildChanges }) {
   const l = bc.lineage;
   if (!l) return null;
   const tone = l.mode === "production" ? "ok" : l.valid ? "dev" : "bad";
-  const label = l.mode === "production" ? "production ancestor"
-    : l.mode === "development" ? "development comparison"
-    : l.mode === "backward" ? "backwards comparison"
-    : "lineage unproven";
+  // Reader words for where the baseline came from; the build reference stays beside it, small,
+  // for anyone auditing the build.
+  const label = l.mode === "production" ? "compared with the previous published build"
+    : l.mode === "development" ? "compared from a development copy"
+    : l.mode === "backward" ? "compared with a later-dated build"
+    : "comparison not proven";
   return (
     <div className={`lineage ${tone}`}>
       <span className="flag">{label}</span>
@@ -826,13 +829,13 @@ function LineageBadge({ bc }: { bc: BuildChanges }) {
         </span>
       )}
       {l.previous_commit_subject && (
-        <p className="small">baseline: {l.previous_commit_subject}</p>
+        <p className="small">baseline build: {l.previous_commit_subject}</p>
       )}
       {l.reason && <p className="small">{l.reason}</p>}
       {l.worktree_payload_differs_from_baseline && (
         <p className="small">
-          The payload in this working tree differs from the committed baseline. The commit was
-          used; the local copy was not.
+          The files this build was made from differed from the published baseline; the comparison
+          used the published baseline, not the local copy.
         </p>
       )}
     </div>
@@ -885,9 +888,9 @@ function BuildLedgerView({
           </span>
         </div>
         <p className="small">
-          {bc.previous_as_of} → {bc.current_as_of}
+          Data as of {fmtDate(bc.previous_as_of)} → {fmtDate(bc.current_as_of)}
           {bc.as_of_direction === "backward" && " (evaluated at an EARLIER date)"}
-          {bc.previous_build && ` · built ${bc.previous_build.slice(0, 10)} → ${(bc.current_build ?? "").slice(0, 10)}`}
+          {bc.previous_build && ` · built ${fmtDate(localDayOf(bc.previous_build))} → ${fmtDate(localDayOf(bc.current_build))}`}
         </p>
         {bc.time_progression_only && (
           <p className="decay-note">{bc.time_progression_note}</p>

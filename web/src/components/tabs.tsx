@@ -5,6 +5,7 @@
 import { useMemo, useState } from "react";
 import type { Bundle, CoverageDetail, Incident, LiveDisruption, RegionSnapshot } from "../types";
 import { addDays, displayName, fmtDate, fmtDelta, fmtNum, inWindow, plural, titleCase, windowRef, withArticle } from "../data";
+import { fmtIndex } from "../indexText";
 import {
   ZERO_SHORT, classColor, evidence, severityColor, zeroIsUnmeasured,
 } from "../palette";
@@ -291,7 +292,7 @@ export function OverviewTab(p: TabProps) {
       <div className="tab-body">
         <TrajectorySpark series={bundle.national.esdi} dates={bundle.national.dates} step={step} />
         <Block title="Monitored-area picture">
-          <KV k="Disruption exposure (ESDI)" v={fmtNum(bundle.national.esdi[step], 1)} />
+          <KV k="Disruption exposure (ESDI)" v={fmtIndex(bundle.national.esdi[step])} />
           <KV k="Events to date" v={p.visibleIncidents.length} />
           {/* Timeline-linked count above, as-at-build count below: without the marker the pair
               reads as impossible when scrubbed into history (18 events, 52 impaired). */}
@@ -333,7 +334,7 @@ export function OverviewTab(p: TabProps) {
       )}
       <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--line-soft)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div className="num" style={{ fontSize: 32, color: isOccupied ? "var(--violet)" : severityColor(esdiNow) }}>{fmtNum(esdiNow, 1)}</div>
+          <div className="num" style={{ fontSize: 32, color: isOccupied ? "var(--violet)" : severityColor(esdiNow) }}>{fmtIndex(esdiNow)}</div>
           <div>
             <div className="eyebrow">Disruption exposure{isOccupied && " · occupied"}</div>
             <div style={{ fontSize: 11, color: "var(--text-dim)" }}>as at {fmtDate(currentDate)}</div>
@@ -359,7 +360,7 @@ export function OverviewTab(p: TabProps) {
       </Block>
 
       <Block title="Regional intensity vs national contribution">
-        <KV k="Contribution to national exposure" v={fmtNum(esdiNow, 1)} hint="this region's share of the national disrupted-capacity exposure" />
+        <KV k="Contribution to national exposure" v={fmtIndex(esdiNow)} hint="this region's share of the national disrupted-capacity exposure" />
         <KV
           k="Regional disruption intensity"
           v={region.regional_intensity?.composite != null ? fmtNum(region.regional_intensity.composite, 1) : "—"}
