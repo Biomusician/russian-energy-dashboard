@@ -1,0 +1,32 @@
+/* "What's new in the data" (iteration 21). Category tags are text in a neutral outline: a change's
+   cause is categorical, never a moral colour, so no category is red, amber or green. */
+
+.whats-new { max-width: none; }
+.whats-new .wn-system { border-top: 1px solid var(--line-soft); padding: 6px 0 4px; }
+.whats-new .wn-name, .whats-new .wn-heading { font-size: 13px; margin: 0 0 2px; font-weight: 600; }
+.whats-new summary { cursor: pointer; overflow-wrap: anywhere; }
+.whats-new details[open] > summary { margin-bottom: 4px; }
+.whats-new .wn-changes { list-style: none; margin: 0; padding: 0; }
+.whats-new .wn-change { margin: 3px 0 5px; overflow-wrap: anywhere; }
+.whats-new .wn-cat {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text);
+  background: var(--bg-inset);
+}
+/* Shape, not colour, marks the two kinds that are not about records at all. */
+.whats-new .wn-change[data-category="decay_only"] .wn-cat,
+.whats-new .wn-change[data-category="build_only"] .wn-cat { border-style: dashed; color: var(--text-dim); }
+.whats-new .wn-items { margin: 2px 0 0; padding-left: 16px; }
+.whats-new .wn-legend { margin-top: 8px; }
+.whats-new .wn-legend dl { margin: 4px 0 0; }
+.whats-new .wn-legend dt { font-weight: 600; margin-top: 4px; }
+.whats-new .wn-legend dd { margin: 0 0 0 0; color: var(--text-dim); }
+
+@media (max-width: 640px) {
+  .whats-new .wn-items { padding-left: 12px; }
+}

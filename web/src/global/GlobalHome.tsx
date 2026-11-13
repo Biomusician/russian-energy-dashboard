@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import SystemSwitcher from "./SystemSwitcher";
 import WorldContext from "./WorldContext";
+import WhatsNew from "./WhatsNew";
 import { DataQualityPanel, RecentEvidencePanel, laneChips } from "./GlobalPanels";
 import {
   ENVIRONMENT_LABEL, READINESS_LABEL, labelFor, loadManifest, loadWorld,
@@ -96,6 +97,7 @@ export default function GlobalHome() {
         </section>
 
         <RecentEvidencePanel />
+        <WhatsNew />
 
         {manifest && (
           <section className="panel global-note">

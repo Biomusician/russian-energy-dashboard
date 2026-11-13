@@ -678,3 +678,21 @@ state may be null until it is fetched.
   `recent.episodes[].episode_id` is a row key (`<system>-row-NN`). `systems[].role` is gone.
 - Queue records (local): `independent_review.confirmed` `{evidence, safety, taxonomy}`, required
   by the gate for a record of an iteration-19 or later pass.
+
+## Iteration 21 additions
+
+### What's new in the data
+
+- `global/whats_new.json` (`pipeline/whats_new.py`): `{schema_version, available, unavailable_reason,
+  comparison, categories[], order, note, global[], systems[], unchanged[]}`. `comparison` is
+  `{previous_as_of, current_as_of, mode, basis, note?}`; the previous build is the last committed
+  production build dated BEFORE this one (`lineage.previous_dated_build`), so a same-day rebuild
+  produces the same file. `categories` is the closed list of ten causes. A change is
+  `{category, notes[], items?, more?, event_dates?, all_predate_previous_build?, aggregated?}`; an
+  item is `{key, date, date_precision, region, class, fields?, recovery_kind?, evidence_date?}`,
+  with a row key (`<system>-change-NN`) and never an event id, effect, cause or facility. No count
+  anywhere: lists are capped and flagged `more`. A system under the campaign rule shows withdrawn or
+  held records as one `aggregated` sentence and no recovery change. `systems[]` is alphabetical and
+  lists only systems that changed; the theatre row adds `index {label, before, after, separable}`
+  or `unavailable`. `unchanged[]` is `{system_id, name}`. A non-current build writes
+  `available: false`, never an empty list.

@@ -156,6 +156,53 @@ def resolve(root, current_as_of):
     return payloads, lineage
 
 
+def previous_dated_build(root, current_as_of, max_commits=60):
+    """The last committed production build evaluated BEFORE `current_as_of`: (sha, lineage).
+
+    WHY NOT SIMPLY THE PREVIOUS COMMIT, as `resolve` does for the theatre's ledger. A second build
+    on the same day — a rerun, or a human commit followed by the bot — would compare against the
+    morning's build, report "nothing changed", and overwrite the useful "since yesterday" story
+    with an empty one. It would also make every same-day rerun look substantive to the refresh's
+    change detector, because the comparison itself moved. The last build dated before today is
+    the same answer however many times today is rebuilt.
+
+    `sha` is None when no such build can be proven; `lineage["reason"]` then says why.
+    """
+    lineage = {"source": "git", "production_branch": PRODUCTION_BRANCH, "baseline_ref": None,
+               "previous_commit": None, "previous_as_of": None, "on_production_branch": False,
+               "valid": False, "mode": "invalid", "reason": None}
+    if _git(root, "rev-parse", "--git-dir") is None:
+        lineage.update(source="none", reason="not a git repository, or git is unavailable")
+        return None, lineage
+    lineage["on_production_branch"] = _git(root, "rev-parse", "--abbrev-ref", "HEAD") == PRODUCTION_BRANCH
+    ref, sha = _resolve_baseline_ref(root)
+    if not sha:
+        lineage["reason"] = f"no production baseline: origin/{PRODUCTION_BRANCH} and {PRODUCTION_BRANCH} do not resolve"
+        return None, lineage
+    lineage["baseline_ref"] = ref
+    if _git(root, "merge-base", "--is-ancestor", sha, "HEAD") is None:
+        lineage["reason"] = (f"baseline {sha[:8]} is not an ancestor of HEAD; these builds are on "
+                             "diverged histories")
+        return None, lineage
+    log = _git(root, "log", f"-n{max_commits}", "--format=%H", sha, "--", f"{PAYLOAD_DIR}/snapshot.json")
+    for candidate in (log or "").split():
+        snap = _show_json(root, candidate, f"{PAYLOAD_DIR}/snapshot.json") or {}
+        as_of = snap.get("as_of")
+        # ISO calendar days compare correctly as text; both sides are full dates here.
+        if as_of and current_as_of and as_of < current_as_of:
+            lineage.update(previous_commit=candidate, previous_as_of=as_of, valid=True,
+                           mode="production" if lineage["on_production_branch"] else "development")
+            return candidate, lineage
+    lineage["reason"] = (f"no committed build dated before {current_as_of} in the last "
+                         f"{max_commits} payload commits")
+    return None, lineage
+
+
+def show_json(root, sha, relpath):
+    """One committed JSON file at `sha`, or None when it is absent or unreadable."""
+    return _show_json(root, sha, relpath)
+
+
 def worktree_differs(root, baseline_snapshot):
     """Whether the on-disk payload disagrees with the committed baseline.
 

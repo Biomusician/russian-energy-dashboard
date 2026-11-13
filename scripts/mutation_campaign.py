@@ -1152,6 +1152,34 @@ ITER20_MUTATIONS = [
 ]
 MUTATIONS += ITER20_MUTATIONS
 
+# Iteration 21: the global "What's new in the data" panel (pipeline/whats_new.py).
+ITER21_MUTATIONS = [
+    ("a historical backfill is labelled as dated since the previous build",
+     [("pipeline/whats_new.py", _text("            _anchor(d) < previous_as_of for d in dates)",
+                                      "            _anchor(d) >= previous_as_of for d in dates)"))],
+     "backfill or historical"),
+    ("the theatre's backfill judgement is replaced by 'current event'",
+     [("pipeline/whats_new.py", _text('all(r.get("record_class") == "historical_record_added" for r in added)',
+                                      'all(r.get("record_class") == "current_event" for r in added)'))],
+     "ledgers_own_backfill"),
+    ("a Gulf system's withdrawn or held records carry a count",
+     [("pipeline/whats_new.py", _text('out.append({"category": "records_withdrawn", "aggregated": True, "notes": [',
+                                      'out.append({"category": "records_withdrawn", "aggregated": True, "held": len(gone), "notes": ['))],
+     "held_in_a_campaign_system"),
+    ("a Gulf system's withdrawn or held records are listed one by one",
+     [("pipeline/whats_new.py", _text("        if is_restricted:\n            # Which records",
+                                      "        if False:\n            # Which records"))],
+     "held_in_a_campaign_system"),
+    ("time decay of the index is labelled a source event",
+     [("pipeline/whats_new.py", _text('return [{"category": "decay_only", "notes": [',
+                                      'return [{"category": "records_added", "notes": ['))],
+     "decay"),
+    ("the panel's file is not a declared artifact",
+     [("pipeline/artifacts.py", _text('                   "global/whats_new.json")', "                   )"))],
+     "declared_artifact"),
+]
+MUTATIONS += ITER21_MUTATIONS
+
 
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
@@ -1166,7 +1194,7 @@ def _sandbox():
 
 
 TEST_FILES = ("tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py",
-              "tests/test_iteration20.py")
+              "tests/test_iteration20.py", "tests/test_whats_new.py")
 
 
 def _run(box, k):
