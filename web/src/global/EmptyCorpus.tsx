@@ -54,7 +54,7 @@ export function EmptyCorpus({ bundle, ctx, onTab }: {
           )}
         </>
       )}
-      <button type="button" className="ghost" onClick={() => onTab("research")}>Open the Research coverage tab</button>
+      <button type="button" className="ghost" onClick={() => onTab("research")}>See what was searched</button>
 
       <h3 className="eyebrow">How {s.name} reports disruptions</h3>
       <p className="small"><strong>{labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}.</strong> {s.reporting_environment_text}</p>
@@ -74,7 +74,7 @@ export function EmptyCorpus({ bundle, ctx, onTab }: {
       <h3 className="eyebrow">Sources</h3>
       <p className="small">{used.length} registered sources were set up for this country, among them{" "}
         {used.slice(0, 4).map((x) => x.name).join("; ")}{used.length > 4 ? "; and others" : ""}.</p>
-      <button type="button" className="ghost" onClick={() => onTab("sources")}>Open Sources &amp; data quality</button>
+      <button type="button" className="ghost" onClick={() => onTab("sources")}>See the registered sources</button>
 
       <h3 className="eyebrow">Publication safeguards</h3>
       <ul className="small">

@@ -158,7 +158,7 @@ test.describe("a country with no published record", () => {
       // A region filter that could filter nothing is replaced by its reason.
       await expect(page.getByRole("combobox", { name: /^Choose a / })).toHaveCount(0);
       await expect(page.locator(".region-select-reason")).toBeVisible();
-      await panel.getByRole("button", { name: "Open the Research coverage tab" }).click();
+      await panel.getByRole("button", { name: "See what was searched" }).click();
       await expect(page.getByRole("heading", { name: "Research coverage" })).toBeVisible();
       await expect(page.locator(".recovery-coverage")).toHaveCount(0);
       checked += 1;
