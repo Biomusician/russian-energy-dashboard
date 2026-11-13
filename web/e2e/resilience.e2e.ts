@@ -328,13 +328,9 @@ test.describe("error boundaries: what validation cannot enumerate", () => {
     await page.route("**/data/global/recent_evidence.json", async (route) => {
       const res = await route.fetch();
       const d = await res.json();
-      // An episode name is printed as-is and not validated: an object there throws while rendering.
-      // (This used to corrupt a member's region, which validation now refuses at load, and which
-      // the redesigned list had in the meantime printed as "[object Object]" instead of throwing.)
-      const open = d.episodes.filter((e: { episode_id: string; members: { withheld: boolean }[] }) =>
-        !/-row-\d+$/.test(e.episode_id) && !e.members.some((m) => m.withheld));
-      expect(open.length).toBeGreaterThan(0);
-      for (const e of open) e.episode_name = { not: "a string" };
+      expect(d.episodes.length).toBeGreaterThan(0);
+      // The country name is rendered on every row and is not a container, so validation passes it.
+      d.episodes[0].country = { not: "a string" };
       await route.fulfill({ response: res, json: d });
     });
     await app.open("");
