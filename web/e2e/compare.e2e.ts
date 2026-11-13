@@ -177,8 +177,12 @@ test.describe("Compare systems", () => {
 
   test("an edit while a country is still loading never strands its column", async ({ app, page }) => {
     // Regression: an edit used to abort the slow load, and nothing started it again.
+    // The request is held open until the edits are done, so a slow machine cannot close the
+    // "still loading" window before the test has used it.
+    let release!: () => void;
+    const held = new Promise<void>((res) => { release = res; });
     await page.route("**/data/systems/us/system.json", async (r) => {
-      await new Promise((res) => setTimeout(res, 1500));
+      await held;
       await r.continue();
     });
     await openCompare(page, "?compare=us,ca");
@@ -186,6 +190,8 @@ test.describe("Compare systems", () => {
     await page.getByLabel("Add a system to compare").selectOption("sa");
     await page.getByRole("button", { name: "Move Canada left" }).click();
     await expect(page).toHaveURL(/[?&]compare=ca,us,sa$/);
+    await expect(row(page, "lanes").locator("td").nth(1)).toHaveText("Loading…");
+    release();
     await expect(row(page, "lanes").locator("td").nth(1)).toContainText("planned searches run (not exhaustive)", { timeout: 10_000 });
   });
 
