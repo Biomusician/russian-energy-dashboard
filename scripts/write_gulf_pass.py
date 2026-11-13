@@ -282,10 +282,11 @@ def pass_for(cc, commit):
                               "not worked in this pass keep their iteration-20 state and are marked carried forward; "
                               "inclusion clauses 1-7 read strictly; every published record reviewed blind by three "
                               "independent roles and confirmed on its final text")
-        entry["scope"] = (f"continuation of the iteration-19 pass: lanes as declared in {PLAN_DOC[cc]}, work order in "
-                          f"{CONTINUATION_PLAN}; each lane states its execution after both passes; inclusion clauses 1-7 "
-                          "read strictly; every published record reviewed blind by three independent roles and "
-                          "confirmed on its final text")
+        else:
+            entry["scope"] = (f"continuation of the iteration-19 pass: lanes as declared in {PLAN_DOC[cc]}, work order in "
+                              f"{CONTINUATION_PLAN}; each lane states its execution after both passes; inclusion clauses 1-7 "
+                              "read strictly; every published record reviewed blind by three independent roles and "
+                              "confirmed on its final text")
     for lane in lanes:
         problems = build_systems.lane_problems(lane, entry["window"])
         if problems:

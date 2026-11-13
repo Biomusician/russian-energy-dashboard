@@ -1573,3 +1573,19 @@ def test_every_mutation_in_the_campaign_still_has_its_anchor():
             except AssertionError as err:
                 stale.append(f"{name}: {err}")
     assert stale == []
+
+
+def test_each_gulf_continuation_pass_describes_its_own_scope():
+    """The iteration-21 pass once carried the iteration-20 scope sentence: an unconditional
+    assignment overwrote its own. Each continuation names the pass it continues."""
+    w = _load("write_gulf_pass")
+    checked = 0
+    for cc in sorted(w.PLAN_DOC):
+        log = json.loads((ROOT / "data" / "curated" / "systems" / cc / "research_log.json").read_text(encoding="utf-8"))
+        for p in log["passes"]:
+            if p["by"] == w.GULF_PASS_BY["21"]:
+                assert p["scope"].startswith("continuation of the iteration-20 pass"), f"{cc}: {p['scope'][:60]}"
+                checked += 1
+            elif p["by"] == w.GULF_PASS_BY["20"]:
+                assert p["scope"].startswith("continuation of the iteration-19 pass"), f"{cc}: {p['scope'][:60]}"
+    assert checked > 0
