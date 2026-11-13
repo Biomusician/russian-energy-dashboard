@@ -109,7 +109,12 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
         <ul className="small">{s.research_gaps.map((g, i) => <li key={i}>{plain(g)}</li>)}</ul>
       </>)}
 
-      {rc && (<>
+      {/* With no published record there is no recovery research or citation to describe: a list of
+          zeros would read as a finding. */}
+      {bundle.events.length === 0 && (
+        <p className="small dim rc-no-records">No record is published yet, so there is no recovery research and no citation to describe.</p>
+      )}
+      {rc && bundle.events.length > 0 && (<>
         <h3 className="eyebrow">Recovery research</h3>
         <p className="small dim">Whether a public report of a facility or service coming back was looked for, per
           published event. A separate question from the event search above.</p>
@@ -143,7 +148,7 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
         </table>
       </details>
 
-      {cq && (
+      {cq && bundle.events.length > 0 && (
         <aside className="rc-source-health" aria-labelledby="rc-sh-heading">
           <h3 id="rc-sh-heading" className="eyebrow rc-sh-head">Source health: the citations behind the published events</h3>
           <p className="small dim">Not part of research coverage. This describes the sources already cited, not how

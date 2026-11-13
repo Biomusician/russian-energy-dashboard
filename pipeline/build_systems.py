@@ -1067,6 +1067,18 @@ def review_problems(e, grandfathered):
 
 
 LINK_HEALTH = SYSTEMS_CURATED / "source_link_health.json"
+LINK_STATES = ("reachable", "redirected", "blocked", "dead", "error")
+
+
+def attach_link_states(events, states):
+    """Each citation's state at the last automated link check, where one was recorded (iteration
+    21), so a record can say which of its pages still load. Display only: a failed link says
+    nothing about the record, never decides inclusion and never enters a count. A citation never
+    checked carries no field, which the page reads as "not link-checked", never as reachable."""
+    for e in events:
+        for s in e["sources"]:
+            if states.get(s["url"]) in LINK_STATES:
+                s["link_check"] = states[s["url"]]
 
 
 def load_campaigns():
@@ -1633,6 +1645,7 @@ def build_system(system_id, admin1, admin0, as_of):
     if problems:
         raise ValueError(f"system {system_id}: " + "; ".join(problems))
     apply_publication_policy(system_id, events, campaigns)
+    attach_link_states(events, (read_json(LINK_HEALTH) if LINK_HEALTH.exists() else {}).get("link_states") or {})
     # An event dated after TODAY is a curation error and fails the build. An event dated after
     # the build's --as-of is not: a historical rebuild (the frozen 2026-08-28 regression) must
     # reconstruct the record as of that date, the way the theatre does, rather than refuse to

@@ -9,7 +9,11 @@ Writes two files:
   data/candidates/review20/link_check.json   per URL, local: state, checked_at, final address,
                                              whether it redirected, the page's own <title>, hash
   data/curated/systems/source_link_health.json   counts per country, and page-stated publication
-                                                 dates keyed by URL (only for pages that state one)
+                                                 dates keyed by URL (only for pages that state one),
+                                                 and each cited URL's state (iteration 21)
+
+`--states-only` adds the per-URL states of the last run to the public file, visiting no page and
+leaving its other keys untouched.
 
 States: reachable, redirected (reached at a different address), blocked (401, 402, 403, 429 or a
 bot challenge; never retried or worked around), dead (404, 410, DNS failure), error (timeout or
@@ -131,7 +135,7 @@ def _norm(u):
     return (p.netloc.lower().removeprefix("www."), p.path.rstrip("/"))
 
 
-def main():
+def cited_urls():
     urls = {}
     for sid in SYSTEMS:
         events = json.loads((ROOT / "data" / "curated" / "systems" / sid / "events.json").read_text(encoding="utf-8"))["events"]
@@ -140,7 +144,21 @@ def main():
                 urls.setdefault(s["url"], set()).add(sid)
             if e["recovery"].get("url"):
                 urls.setdefault(e["recovery"]["url"], set()).add(sid)
+    return urls
+
+
+def main():
+    urls = cited_urls()
     previous = json.loads(LOCAL.read_text(encoding="utf-8")) if LOCAL.exists() else {}
+    # --states-only: add each cited URL's state from the last run's local results to the public
+    # file, visiting nothing and leaving every other key as that run wrote it.
+    if "--states-only" in sys.argv:
+        if not previous or not PUBLIC.exists():
+            sys.exit(f"--states-only needs a previous run's results in {LOCAL} and {PUBLIC}")
+        public = json.loads(PUBLIC.read_text(encoding="utf-8"))
+        public["link_states"] = link_states(previous, urls)
+        PUBLIC.write_bytes((json.dumps(public, ensure_ascii=False, indent=1) + "\n").encode("utf-8"))
+        return
     # --retry-errors: keep every earlier answer except a failure to load, which is asked once more.
     retry_only = "--retry-errors" in sys.argv
     last_hit, results, refused = {}, {}, set()
@@ -183,6 +201,14 @@ def main():
             elif kind == "general_page":
                 r["state"], r["detail"] = "dead", "redirected to a home page or listing: the article is gone"
     LOCAL.write_bytes(json.dumps(results, ensure_ascii=False, indent=0).encode("utf-8"))
+    write_public(results, urls)
+
+
+def link_states(results, urls):
+    return dict(sorted((u, results[u]["state"]) for u in urls if u in results))
+
+
+def write_public(results, urls):
     counts = {}
     old_public = json.loads(PUBLIC.read_text(encoding="utf-8")) if PUBLIC.exists() else {}
     dates = dict(old_public.get("page_stated_dates") or {})
@@ -206,6 +232,10 @@ def main():
         "final_addresses": dict(sorted((u, clean_final(r["final_url"])) for u, r in results.items()
                                        if r.get("redirect_kind") == "canonical"
                                        and (u in urls or clean_final(r["final_url"]) in urls))),
+        # Each cited page's state at the last check, so a record can say which of its citations
+        # still load (iteration 21). The state only: no title, hash or final address leaves the
+        # local file.
+        "link_states": link_states(results, urls),
     }, ensure_ascii=False, indent=1) + "\n").encode("utf-8"))
     print("done", {k: sum(c[k] for c in counts.values()) for k in ("reachable", "redirected", "blocked", "dead", "error")}, file=sys.stderr)
 

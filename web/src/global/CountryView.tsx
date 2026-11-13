@@ -4,10 +4,15 @@ import SimpleMap from "./SimpleMap";
 import SystemSwitcher from "./SystemSwitcher";
 import ResearchCoverage from "./ResearchCoverage";
 import {
-  CALENDAR_LABEL, CAMPAIGN_STATE_LABEL, LANGUAGE_LABEL, languageNames, ENVIRONMENT_LABEL, READINESS_LABEL, dirFor, RECOVERY_KIND_LABEL, RECOVERY_LABEL, RESEARCH_COMPLETENESS_LABEL,
-  REVIEW_STATUS_LABEL, SECTOR_STATE_LABEL, LANE_STATE_LABEL, labelFor, type CountrySystem, type SourceEntry, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type Episode,
+  CAMPAIGN_STATE_LABEL, LANGUAGE_LABEL, languageNames, ENVIRONMENT_LABEL, READINESS_LABEL, RECOVERY_KIND_LABEL, RECOVERY_LABEL, RESEARCH_COMPLETENESS_LABEL,
+  SECTOR_STATE_LABEL, LANE_STATE_LABEL, labelFor, type CountrySystem, type SourceEntry, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type Episode,
   type ManifestSystem, type SourceHealth,
 } from "./manifest";
+import { EventCard, fmtEventDate } from "./EventCard";
+import { EmptyCorpus } from "./EmptyCorpus";
+import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
+import { NO_SCORE_NOT_ZERO, RESEARCH_PREVIEW_DEFINITION, RESEARCH_PREVIEW_LABEL, noScorePlain } from "./countryCopy";
+import { eventAnchor } from "./evidence";
 import { loadContext, rowForSystem, type EnergyContext } from "./context";
 import { NationalFigures } from "./WorldContext";
 import { LOCATION_EVENT, navigate, navigateCompare } from "./router";
@@ -38,11 +43,10 @@ function initialRegion(): string | null {
   return new URLSearchParams(window.location.search).get("r");
 }
 
-/** A month-precision date is shown as a month: printing "1 Apr" would invent a day. */
-function fmtEventDate(e: CountryEvent): string {
-  // Formatted from the string, never through the browser's Date parser (iteration 20).
-  const d = e.date_precision === "month" ? fmtDate(e.date.slice(0, 7)) : fmtDate(e.date);
-  return e.date_end ? `${d} – ${fmtDate(e.date_end)}` : d;
+/** `#ev-<key>` from the address, for a link to one record (see `eventAnchor`). */
+function initialAnchor(): string | null {
+  const h = window.location.hash.slice(1);
+  return h.startsWith("ev-") ? h : null;
 }
 
 export default function CountryView({ id }: { id: string }) {
@@ -122,8 +126,28 @@ export default function CountryView({ id }: { id: string }) {
   useEffect(() => {
     const q = new URLSearchParams({ sys: id });
     if (region) q.set("r", region);
-    window.history.replaceState(null, "", `${window.location.pathname}?${q.toString()}`);
+    // The record anchor survives: a link to one record must still point at it after this rewrite.
+    window.history.replaceState(null, "", `${window.location.pathname}?${q.toString()}${window.location.hash}`);
   }, [id, region]);
+
+  // A link to one record: show it in the full list, scroll it into view and mark it.
+  const [anchor, setAnchor] = useState<string | null>(initialAnchor);
+  useEffect(() => {
+    // A link to another record of the same country changes only the hash: no reload, no remount.
+    const onHash = () => setAnchor(initialAnchor());
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  const target = useMemo(() => (bundle && anchor
+    ? bundle.events.find((e) => eventAnchor(e, bundle.system.system_id) === anchor) ?? null : null), [bundle, anchor]);
+  useEffect(() => {
+    if (!target) return;
+    setRegion(null);
+    setTab("events");
+    // After the list has rendered.
+    const t = window.setTimeout(() => document.getElementById(anchor!)?.scrollIntoView({ block: "center" }), 0);
+    return () => window.clearTimeout(t);
+  }, [target, anchor]);
 
   const validRegion = useMemo(() => {
     if (!bundle || !region) return null;
@@ -209,7 +233,7 @@ export default function CountryView({ id }: { id: string }) {
       {/* On a phone the map comes before the full statements (iteration 20, §78). This line keeps
           the caveats in the first screen and leads to them. Hidden on wider screens. */}
       <p className="small phone-only phone-caveats">
-        {sys.maturity === "research_preview" && <><span className="badge research-partial">Research preview</span>{" "}</>}
+        {sys.maturity === "research_preview" && <><ResearchPreviewBadge />{" "}</>}
         {sys.campaign_state && sys.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && (
           <><span className="badge context-only-badge">Active-campaign safeguards apply</span>{" "}</>
         )}
@@ -278,11 +302,10 @@ export default function CountryView({ id }: { id: string }) {
       {(sys.maturity === "research_preview" || sys.campaign_state || sys.geography.precision_policy) && (
         <section className="panel global-note system-notices" aria-label="How to read this country">
           {sys.maturity === "research_preview" && (
-            <p className="small">
-              <span className="badge research-partial">Research preview</span>{" "}
-              {sys.name} was added recently and has had one first research pass. The systematic search is still
-              incomplete, so the absence of a record is not evidence that no disruption occurred. Sources were
-              searched for a limited time and some could not be read at all; the Research coverage tab says which.
+            <p className="small research-preview-statement">
+              {/* The one definition, stated in full where the page explains itself. */}
+              <span className="badge research-partial">{RESEARCH_PREVIEW_LABEL}</span>{" "}
+              {RESEARCH_PREVIEW_DEFINITION}
             </p>
           )}
           {sys.campaign_state && sys.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && (
@@ -302,10 +325,10 @@ export default function CountryView({ id }: { id: string }) {
           {sys.campaign_state && sys.campaign_state.state !== "NO_ACTIVE_CAMPAIGN"
             && sys.geography.precision_policy?.kinetic !== "country" && sys.event_summary.recorded_events > 0 && (
             <p className="small legacy-convention">
-              {sys.name} was onboarded before the newer rule for the Gulf countries, under which an attack record is
-              published for the country as a whole, with no facility or region. Its older published records keep the
-              earlier geography convention: an attack record here names its facility and its region. Whether that
-              changes is an open decision, set out in the Why no score tab.
+              {sys.name}'s older records keep an earlier convention: an attack record here names its facility and its
+              region. The newer Gulf country pages record an attack for the country as a whole, with no facility or
+              region. Pages that list several countries together show these records the newer way, as national
+              records with no facility, region or effect.
             </p>
           )}
         </section>
@@ -325,6 +348,16 @@ export default function CountryView({ id }: { id: string }) {
             attribution="Boundaries: Natural Earth (public domain), line of actual control. Events: cited public reporting."
             onMap={(m) => { mapRef.current = m; }}
           />
+          {/* A filter that cannot filter anything is replaced by the reason (iteration 21). */}
+          {sys.event_summary.placed_in_a_region === 0 ? (
+            <p className="small dim region-select-reason">
+              {sys.geography.precision_policy?.other === "country"
+                ? `Every record here is kept for the country as a whole, so there is no ${sys.geography.unit_label} filter.`
+                : sys.event_summary.recorded_events === 0
+                  ? `No records yet, so there is nothing to filter by ${sys.geography.unit_label}.`
+                  : `No record is placed in a single ${sys.geography.unit_label}, so there is nothing to filter by ${sys.geography.unit_label}.`}
+            </p>
+          ) : (
           <label className="small region-select">Show one {sys.geography.unit_label}{" "}
             <select aria-label={`Choose a ${sys.geography.unit_label}`} value={validRegion ?? ""}
               onChange={(e) => { setRegion(e.target.value || null); setTab("events"); }}>
@@ -336,6 +369,7 @@ export default function CountryView({ id }: { id: string }) {
                 .map((p) => <option key={p.code} value={p.code}>{p.name}</option>)}
             </select>
           </label>
+          )}
           <div className="map-legend-mini">
             <span className="eyebrow">Qualifying events recorded per {sys.geography.unit_label}</span>
             <span><i style={{ background: NO_EVENTS }} /> none recorded</span>
@@ -348,7 +382,7 @@ export default function CountryView({ id }: { id: string }) {
                 dataset, not a quiet country.</span>
             ) : (
               <span className="small dim">This country's own range, not a shared scale.
-                {" "}National or multi-region events listed but not drawn: {sys.event_summary.country_level}. What was reported and found — not a rate of disruption, and not comparable
+                {sys.event_summary.country_level > 0 && <>{" "}National or multi-region events listed but not drawn: {sys.event_summary.country_level}.</>} What was reported and found — not a rate of disruption, and not comparable
                 with any other country.</span>
             )}
             {sys.geography.precision_policy?.kinetic === "country" && sys.event_summary.recorded_events > 0 && (
@@ -372,6 +406,7 @@ export default function CountryView({ id }: { id: string }) {
             <EventsPanel
               events={events} region={validRegion} regionName={regionName}
               regionStatus={regionStatus} onClear={() => setRegion(null)} bundle={bundle}
+              ctx={ctx} onTab={setTab} target={target?.event_id ?? null}
             />
           )}
           {tab === "sectors" && <SectorsPanel bundle={bundle} />}
@@ -467,13 +502,24 @@ function CountryHeader({ name, id, wholeCountry, attacksWhole, children }: { nam
   );
 }
 
-function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle }: {
+function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle, ctx, onTab, target }: {
   events: CountryEvent[]; region: string | null; regionName: string | null;
   regionStatus: string | null; onClear: () => void; bundle: CountryBundle;
+  ctx: EnergyContext | null; onTab: (t: Tab) => void; target: string | null;
 }) {
   const unit = bundle.system.geography.unit_label;
   const [year, setYear] = useState("");
   const [cls, setCls] = useState("");
+  if (events.length === 0 && !region) {
+    return (
+      <div className="events-panel">
+        <h2>All reported events</h2>
+        <EmptyCorpus bundle={bundle} ctx={ctx} onTab={onTab} />
+      </div>
+    );
+  }
+  const years = [...new Set(events.map((e) => e.date.slice(0, 4)))].sort().reverse();
+  const classes = [...new Set(events.map((e) => e.asset_class))].sort();
   if (region && regionName) {
     const placed = events.filter((e) => e.region_code === region);
     // A multi-region event that names this region is listed here too, never counted here: the
@@ -496,14 +542,14 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
             were found in the sources monitored. It is not evidence that none occurred.</p>
         ) : null}
         <ol className="event-list">
-          {[...placed].reverse().map((e) => <EventItem key={e.event_id} e={e} bundle={bundle} />)}
+          {[...placed].reverse().map((e) => <EventCard key={e.event_id} e={e} bundle={bundle} targeted={e.event_id === target} />)}
         </ol>
         {shared.length > 0 && (
           <>
             <h3 className="eyebrow">Multi-region events that included {regionName}</h3>
             <p className="small dim">Listed, not counted on the map for this {unit}.</p>
             <ol className="event-list">
-              {[...shared].reverse().map((e) => <EventItem key={e.event_id} e={e} bundle={bundle} />)}
+              {[...shared].reverse().map((e) => <EventCard key={e.event_id} e={e} bundle={bundle} targeted={e.event_id === target} />)}
             </ol>
           </>
         )}
@@ -522,39 +568,42 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
   return (
     <div className="events-panel">
       <h2>All reported events</h2>
+      {/* A filter with one choice filters nothing: it is replaced by what it would have said. */}
       <div className="event-filters small">
-        <label>Year{" "}
-          <select aria-label="Filter events by year" value={year} onChange={(e) => setYear(e.target.value)}>
-            <option value="">All</option>
-            {[...new Set(events.map((e) => e.date.slice(0, 4)))].sort().reverse().map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </label>{" "}
-        <label>Type{" "}
-          <select aria-label="Filter events by infrastructure type" value={cls} onChange={(e) => setCls(e.target.value)}>
-            <option value="">All</option>
-            {[...new Set(events.map((e) => e.asset_class))].sort().map((c) => (
-              <option key={c} value={c}>{labelFor(bundle.system.taxonomy.asset_classes, c)}</option>
-            ))}
-          </select>
-        </label>
+        {years.length > 1 ? (
+          <label>Year{" "}
+            <select aria-label="Filter events by year" value={year} onChange={(e) => setYear(e.target.value)}>
+              <option value="">All</option>
+              {years.map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </label>
+        ) : <span className="dim">All records are from {years[0]}.</span>}{" "}
+        {classes.length > 1 ? (
+          <label>Type{" "}
+            <select aria-label="Filter events by infrastructure type" value={cls} onChange={(e) => setCls(e.target.value)}>
+              <option value="">All</option>
+              {classes.map((c) => (
+                <option key={c} value={c}>{labelFor(bundle.system.taxonomy.asset_classes, c)}</option>
+              ))}
+            </select>
+          </label>
+        ) : <span className="dim">All records are of one type: {labelFor(bundle.system.taxonomy.asset_classes, classes[0])}.</span>}
       </div>
       <p className="small dim">A record is a publicly reported event that meets the inclusion rule (Why no score tab): it is what was reported and found, not everything that happened.</p>
       {(year || cls) && (
         <ol className="event-list">
           {[...events].filter((e) => (!year || e.date.startsWith(year)) && (!cls || e.asset_class === cls))
             .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
-            .map((e) => <EventItem key={e.event_id} e={e} bundle={bundle} />)}
+            .map((e) => <EventCard key={e.event_id} e={e} bundle={bundle} targeted={e.event_id === target} />)}
         </ol>
       )}
       {!year && !cls && (<>
       {/* An empty page says what was searched and what is incomplete; the episode definition belongs
           beside episodes (iteration 20, §75). */}
-      <p className="small dim">{events.length === 0
-        ? "No qualifying records in the current reviewed corpus. The Research coverage tab says what was searched, in which languages, and what could not be read."
-        : `${events.length} records in ${bundle.episodes.length} episodes. An episode is one named hazard or one event a source explicitly identifies as common; a record linked to no other is an episode of one.`}</p>
+      <p className="small dim">{`${events.length} records in ${bundle.episodes.length} episodes. An episode is one named hazard or one event a source explicitly identifies as common; a record linked to no other is an episode of one.`}</p>
       <ol className="event-list">
         {rows.map((row) => row.kind === "event"
-          ? <EventItem key={row.e.event_id} e={row.e} bundle={bundle} />
+          ? <EventCard key={row.e.event_id} e={row.e} bundle={bundle} targeted={row.e.event_id === target} />
           : (
             <li key={row.ep.episode_id} className="episode-group">
               <div className="episode-head">
@@ -564,7 +613,7 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
               </div>
               <ol className="event-list">
                 {row.ep.event_ids.map((id) => eventById.get(id)).filter((e): e is CountryEvent => !!e)
-                  .map((e) => <EventItem key={e.event_id} e={e} bundle={bundle} inEpisode />)}
+                  .map((e) => <EventCard key={e.event_id} e={e} bundle={bundle} targeted={e.event_id === target} inEpisode />)}
               </ol>
             </li>
           ))}
@@ -576,7 +625,7 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
           <p className="small dim">National, offshore or multi-region events. They are listed, never
             counted against any single region.</p>
           <ol className="event-list">
-            {[...countryLevel].reverse().map((e) => <EventItem key={e.event_id} e={e} bundle={bundle} />)}
+            {[...countryLevel].reverse().map((e) => <EventCard key={e.event_id} e={e} bundle={bundle} targeted={e.event_id === target} />)}
           </ol>
         </>
       )}
@@ -607,78 +656,6 @@ function HeldLine({ sys }: { sys: CountryBundle["system"] }) {
       {held > 0 ? `${held} of them are not shown because a reviewer, the publication rules or an undecided rule question holds them back` : "none is held back"},
       and the rest were rejected, duplicates, out of scope or published. See the Research coverage tab.
     </span>
-  );
-}
-
-function recoveryText(e: CountryEvent): string {
-  const r = e.recovery;
-  if (r.research_status === "EVIDENCE_FOUND" && r.kind) return labelFor(RECOVERY_KIND_LABEL, r.kind);
-  return labelFor(RECOVERY_LABEL, r.research_status);
-}
-
-/** A first-level unit's name for a code, from the system's own regions; the code if unknown. */
-function unitName(bundle: CountryBundle, code: string): string {
-  const f = bundle.regions.features.find((x) => (x.properties as { code?: string } | null)?.code === code);
-  return ((f?.properties as { name?: string } | null)?.name) ?? code;
-}
-
-/** `inEpisode`: drawn inside its episode's group, which already names the episode. */
-function EventItem({ e, bundle, inEpisode = false }: { e: CountryEvent; bundle: CountryBundle; inEpisode?: boolean }) {
-  const tax = bundle.system.taxonomy;
-  const recClass = e.recovery.kind ?? e.recovery.research_status;
-  const ep = bundle.episodes.find((x) => x.episode_id === e.episode_id);
-  return (
-    <li className="event-item">
-      <div className="event-head">
-        <span className="mono small">{fmtEventDate(e)}</span>
-        <span className="small dim">{labelFor(tax.asset_classes, e.asset_class)} · {labelFor(tax.causes, e.cause)}</span>
-      </div>
-      <div className="event-title">{e.facility_name ?? e.region_name ?? bundle.system.name}</div>
-      <p className="small">{e.summary}</p>
-      {e.source_date_text && e.date_calendar && e.date_calendar !== "gregorian" && (
-        <p className="small dim">
-          Date in the source: <bdi lang={e.date_calendar === "solar_hijri" ? "fa" : "ar"}>{e.source_date_text}</bdi>{" "}
-          ({labelFor(CALENDAR_LABEL, e.date_calendar)}). {e.conversion_basis}
-        </p>
-      )}
-      {e.effect && <p className="small"><span className="dim">Reported effect: </span>{e.effect}</p>}
-      {e.regions_affected.length > 0 && (
-        <p className="small dim">Regions affected: {e.regions_affected.map((c) => unitName(bundle, c)).join(", ")}</p>
-      )}
-      {ep && ep.records > 1 && !inEpisode && (
-        <p className="small dim episode-note">Part of an episode: {ep.name} ({ep.records} records)</p>
-      )}
-      {(!ep || ep.records <= 1) && (
-        <p className="small dim episode-note">Standalone: not linked to any other record (an episode of one).</p>
-      )}
-      <p className="small">
-        <span className={`rec rec-${recClass.toLowerCase()}`}>{recoveryText(e)}</span>
-        {e.recovery.date && <span className="dim"> ({fmtDate(e.recovery.date)})</span>}
-        {e.recovery.evidence && <span className="dim"> — {e.recovery.evidence}</span>}
-      </p>
-      {e.publication && <p className="small dim withheld-note">{e.publication.note}</p>}
-      <p className="small dim review-note">
-        <span className={`review-${e.review.review_status}`}>{labelFor(REVIEW_STATUS_LABEL, e.review.review_status)}</span>
-        {e.review.review_status !== "legacy_single_review" && e.review.disposition === "corrected" && " · corrected on review"}
-      </p>
-      <p className="small sources">
-        {e.sources.map((s, i) => (
-          <a key={i} href={s.url} target="_blank" rel="noreferrer">{s.publisher ?? new URL(s.url).hostname}</a>
-        ))}
-        {/* A non-English source keeps its own headline, in its own script and direction, with a gloss. */}
-        {e.sources.filter((s) => s.title_original).map((s, i) => (
-          <span key={`t${i}`} className="source-title">
-            <bdi lang={s.language} dir={dirFor(s.language)}>{s.title_original}</bdi>
-            {s.title_en && <span className="dim"> ({s.title_en})</span>}
-            <span className="dim"> · {s.publisher}</span>
-          </span>
-        ))}
-        <span className="dim">{e.review.source_access === "not recorded by the research lane"
-          ? (e.review.review_status === "legacy_single_review"
-            ? "· whether these were read was not recorded"
-            : "· the researcher's reading was not recorded; the independent review opened them") : ""}</span>
-      </p>
-    </li>
   );
 }
 
@@ -785,7 +762,7 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
       </table>
       <p className="small dim">Re-check limits are display policy: they never decide whether an event
         is included and never enter a number.</p>
-      {s.source_health && <SourceHealthBlock h={s.source_health} />}
+      {s.source_health && bundle.events.length > 0 && <SourceHealthBlock h={s.source_health} />}
       <SourceBrowser bundle={bundle} ctx={ctx} />
       <p className="small research-coverage">
         <strong>{s.research_log.passes.length === 0 ? "No search has been run yet" : RESEARCH_COMPLETENESS_LABEL[s.research_freshness.completeness]}.</strong>{" "}
@@ -795,6 +772,11 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
             : "Every pass so far was targeted at named gaps and leads."}
       </p>
       <p className="small dim">{readerText(s.research_freshness.note)}</p>
+      {/* No published record: no recovery evidence and no review to total, and a row of zeros would
+          read as a finding (iteration 21). */}
+      {bundle.events.length === 0 ? (
+        <p className="small dim">No record is published yet, so there is no recovery evidence and no review to describe.</p>
+      ) : (<>
       <h3 className="eyebrow">Recovery evidence across the recorded events</h3>
       <p className="small dim recovery-meaning">"Recovery" on these pages means a cited public report
         that a facility or service came back, fully or partly. Nothing is modelled: with no such report
@@ -816,6 +798,7 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
         review was required.</p>
       <p className="small dim">{readerText(s.review_summary.note)}
         {unrecorded > 0 && ` For ${unrecorded} of ${bundle.events.length} events the researchers did not record whether they read the cited sources.`}</p>
+      </>)}
     </div>
   );
 }
@@ -957,58 +940,88 @@ function SourceBrowser({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyCont
   );
 }
 
+/** The best plain explanation on the site of why a country has no score (iteration 21): what the
+ *  score was built for and why it does not transfer, then why a missing score is not a zero, then
+ *  the technical detail for a reader who wants it. */
 function MethodPanel({ bundle }: { bundle: CountryBundle }) {
   const s = bundle.system;
   const unmet = s.onboarding_gate.filter((g) => g.status !== "met").length;
+  const legacy = s.campaign_state && s.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && s.geography.precision_policy?.kinetic !== "country";
   return (
-    <div>
+    <div className="why-no-score">
       <h2>Why no score</h2>
-      <p className="small">The disruption score was built for one strike campaign against one energy system; its
-            weights and recovery model do not transfer to this country's system, so applying it would mislead.
-            No score is shown, and that is not a score of zero.</p>
+      <p className="no-score-plain">{noScorePlain(s.name)}</p>
+      <h3>No score is not a score of zero</h3>
+      <p className="small">{NO_SCORE_NOT_ZERO}</p>
       <p className="small dim">{s.no_index_reason}</p>
-      <p className="small">Reporting environment — {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}:
-        {" "}{s.reporting_environment_text}</p>
-      <h3 className="eyebrow">Publication checklist</h3>
-      <p className="small dim">
-        {unmet === 0
-          ? "Every item of the publication checklist is met."
-          : s.maturity === "research_preview"
-            ? `Shown as a research preview (added recently, one first research pass): ${unmet} of ${s.onboarding_gate.length} items of the publication checklist are not met or only partly met.`
+      <h3>What this page shows instead</h3>
+      <ul className="small">
+        <li>Reported disruptions that meet the inclusion rule and have passed review, each with its sources.</li>
+        <li>For each sector, what state the evidence is in, and why.</li>
+        <li>The national energy picture, as context: it describes the size of the energy system, never how disrupted it is.</li>
+        <li>What the research searched, and what it could not read or has not reached yet.</li>
+      </ul>
+      <p className="small">How {s.name} reports disruptions — <Disclosure label={labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}
+        text={s.reporting_environment_text} className="linklike" />. That shapes what can be found here as much as what happened.</p>
+
+      <details className="small no-score-technical">
+        <summary>Technical detail: why the theatre method does not transfer</summary>
+        <p>The theatre index combines reported damage by sector, weighting each sector by its share of the monitored
+          capacity, lets each event's weight fade with a fixed half-life, and adds a measure of the power-transmission
+          network. Each of those parts was set for one theatre: its weights come from that infrastructure, the half-life
+          from how that campaign's damage was reported and repaired, and the transmission measure from that grid.</p>
+        <p>Here none of the three has a basis. There is no shared capacity denominator for the records, so a weight per
+          sector would be invented. Recovery evidence is uneven and, for attacked facilities under the campaign
+          safeguards, deliberately unpublished, so a fixed fading rate would stand in for evidence that does not exist.
+          Reporting rules differ between countries, so the same number would mean different things in each.</p>
+        <p>A sector can only carry a value once code computes one from evidence that supports it; until then every
+          sector says "tracked, not scored" or why it is unknown. The Sectors tab shows each one.</p>
+      </details>
+
+      <details className="small">
+        <summary>How a record is included</summary>
+        <p>{s.inclusion_threshold.rule}</p>
+        <ol>
+          {Object.entries(s.inclusion_threshold.clauses).map(([k, v]) => <li key={k} value={Number(k)}>{v}</li>)}
+        </ol>
+        <p className="dim">Inclusion rule version {s.inclusion_threshold.version}.</p>
+      </details>
+
+      <details className="small">
+        <summary>Publication checklist</summary>
+        <p className="dim">
+          {unmet === 0
+            ? "Every item of the publication checklist is met."
             : `${unmet} of ${s.onboarding_gate.length} items of the publication checklist are not met or only partly met; each says why below.`}
-      </p>
-      <table className="sector-table">
-        <tbody>
-          {s.onboarding_gate.map((g) => (
-            <tr key={g.item}>
-              <td className="small">{g.item}. {g.label}</td>
-              <td><span className={`badge gate-${g.status}`}>{g.status}</span></td>
-              <td className="small dim">{readerText(g.note)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <h3 className="eyebrow">Inclusion threshold (version {s.inclusion_threshold.version})</h3>
-      <p className="small">{s.inclusion_threshold.rule}</p>
-      <ol className="small">
-        {Object.entries(s.inclusion_threshold.clauses).map(([k, v]) => <li key={k} value={Number(k)}>{v}</li>)}
-      </ol>
-      <h3 className="eyebrow">Geography</h3>
-      <p className="small">{readerText(s.geography.note)}</p>
-      {s.geography.rulings.length > 0 && (
-        <ul className="small">{s.geography.rulings.map((r) => <li key={r.code}><span className="mono">{r.code}</span>: {readerText(r.note)}</li>)}</ul>
-      )}
-      {s.campaign_state && s.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && s.geography.precision_policy?.kinetic !== "country" && (
-        <p className="small">
-          Attack records here keep the convention this country was onboarded under: facility and region named. The
-          other Gulf countries publish attack records for the country as a whole. Whether this country's records move
-          to that rule while an attack campaign is recorded is an open decision for the project owner. Until it is
-          made, lists that set several countries side by side (the home page and the Gulf littoral overview) show
-          these records as country level, with no facility, region or effect, and every record's later status is
-          withheld here as everywhere.
         </p>
-      )}
-      <p className="small dim">Audits: {s.audit_docs.join(", ")} in the project repository.</p>
+        <table className="sector-table">
+          <tbody>
+            {s.onboarding_gate.map((g) => (
+              <tr key={g.item}>
+                <td className="small">{g.label}</td>
+                <td><span className={`badge gate-${g.status}`}>{g.status}</span></td>
+                <td className="small dim">{readerText(g.note)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
+
+      <details className="small">
+        <summary>How records are placed on the map</summary>
+        <p>{readerText(s.geography.note)}</p>
+        {s.geography.rulings.length > 0 && (
+          <ul>{s.geography.rulings.map((r) => <li key={r.code}>{readerText(r.note)}</li>)}</ul>
+        )}
+        {legacy && (
+          <p>
+            Attack records here keep the earlier convention of naming the facility and the region. The newer Gulf
+            country pages publish an attack record for the country as a whole. Lists that set several countries side
+            by side (the home page and the Gulf littoral overview) show these records the newer way, with no facility,
+            region or effect, and every attacked facility's later status is withheld here as everywhere.
+          </p>
+        )}
+      </details>
     </div>
   );
 }

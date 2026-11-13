@@ -14,6 +14,7 @@ import {
 import { navigate } from "./router";
 import { prefetchOn } from "./prefetch";
 import { PanelBoundary } from "../components/ViewBoundary";
+import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
 import { downloadBlob, exportMapPng } from "../mapExport";
 import { fmtDate } from "../data";
 import "../styles/gulf.css";
@@ -440,11 +441,10 @@ export default function GroupView({ id }: { id: string }) {
               <div className="small">
                 {s.gcc_member ? "GCC member" : "Not a GCC member"} · {s.opec_member ? "OPEC member" : "Not an OPEC member"}
               </div>
-              {s.maturity === "research_preview" && <div className="badge research-partial">Research preview</div>}
+              {s.maturity === "research_preview" && <div><ResearchPreviewBadge /></div>}
               {s.recovery_status_withheld && (
-                <div className="badge context-only-badge" title="While attacks on energy facilities are still being reported, or it is uncertain whether they have ended, an attack is published as an event but the facility's later repair, restart or operating status is not.">
-                  Later status of attacked facilities is not published
-                </div>
+                <div><Disclosure label="Later status of attacked facilities is not published" className="badge context-only-badge"
+                  text="While attacks on energy facilities are still being reported, or it is uncertain whether they have ended, an attack is published as an event but the facility's later repair, restart or operating status is not." /></div>
               )}
               <div className="sys-headline none"><span className="small">No index. Reviewed historical events and context only.</span></div>
               <div className="small dim">Reporting: {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}</div>

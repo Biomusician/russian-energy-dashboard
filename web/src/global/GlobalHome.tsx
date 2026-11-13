@@ -13,6 +13,7 @@ import { prefetchOn } from "./prefetch";
 import { PanelBoundary } from "../components/ViewBoundary";
 import { dated, recordLine } from "./homeModel";
 import { localISODate } from "../freshness";
+import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
 import { fmtDate, fmtNum } from "../data";
 import "../styles/home.css";
 
@@ -240,18 +241,19 @@ function SystemCard({ s, manifest, lastPass, today }: {
       <h2>{s.name}</h2>
       <div className="small">Country evidence system · <strong>No index</strong></div>
       <div className="home-tags">
-        {s.maturity === "research_preview" && (
-          <span className="home-tag home-tag-preview" title="The systematic search is still incomplete, so a missing record is not evidence that no disruption occurred.">Research preview</span>
-        )}
+        {/* Tap disclosures, not hover titles: a touch screen has no hover. */}
+        {s.maturity === "research_preview" && <ResearchPreviewBadge />}
         {region && <span className="home-tag home-tag-region">{region.label}</span>}
         {s.campaign_restricted && (
-          <span className="home-tag home-tag-safeguard" title="While attacks on energy facilities are being reported, some detail, such as a facility's later status, is not published.">Publication safeguards</span>
+          <Disclosure label="Publication safeguards" className="home-tag home-tag-safeguard"
+            text="While attacks on energy facilities are being reported, some detail, such as a facility's later status, is not published." />
         )}
       </div>
       {record && <div className="small">{record}</div>}
       <div className="small dim">{lastPass ? dated("Last researched", lastPass, today) : lastPass === null ? "No systematic search yet" : ""}</div>
-      <div className="small dim" title={manifest.reporting_environments[s.reporting_environment]}>
-        Reporting: {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}
+      <div className="small dim">
+        Reporting: <Disclosure label={labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}
+          text={manifest.reporting_environments[s.reporting_environment] ?? ""} className="linklike" />
       </div>
       <button className="ghost" onClick={() => navigate(s.id)} {...prefetchOn(s.id)}>Open {s.name}</button>
     </article>
