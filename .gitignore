@@ -38,3 +38,6 @@ data/candidates/*
 !data/candidates/README.md
 # Iteration 17: historical reconstructions are written here, never into data/processed.
 data/reconstruction/
+
+# Local safety copies of untracked working data (iteration 21).
+.backups/

@@ -1,40 +1,38 @@
-"""Link a git worktree to the main checkout's untracked toolchain (iteration 21).
+"""Give a git worktree the main checkout's untracked working files, by COPYING them (iteration 21).
 
     python scripts/link_worktree.py <worktree-path>
 
 A worktree has the tracked files only. The frontend needs web/node_modules, the pipeline reads
-data/raw, the local review queue is data/candidates, and the portable Node lives in tools/. Each is
-linked as a Windows directory junction, so nothing is copied and the main checkout stays the one
-place they live. Run from the main checkout. Treat data/candidates as read-only from a worktree.
+data/raw, and some tests read the local review queue in data/candidates. Each is copied in.
+
+NEVER LINK. The first version of this script made directory junctions, and removing the test
+worktree with `git worktree remove --force` followed them and deleted the main checkout's
+node_modules, data/raw, tools and the whole local review queue (2026-11-12). The queue was restored
+from a sandbox copy; a link would make every automatic worktree cleanup a repeat of that. A copy
+costs about 200 MB and cannot reach back into the main checkout.
+
+The portable Node is not copied: run it from the main checkout's tools/node by absolute path.
+The worktree's data/candidates is a snapshot. Never copy it back over the main queue.
 """
-import subprocess
+import shutil
 import sys
 from pathlib import Path
 
 MAIN = Path(__file__).resolve().parent.parent
-LINKS = ["web/node_modules", "data/raw", "data/candidates", "tools"]
+COPIES = ["web/node_modules", "data/raw", "data/candidates"]
 
 
 def main():
     tree = Path(sys.argv[1]).resolve()
-    for rel in LINKS:
+    if tree == MAIN:
+        raise SystemExit("refusing: that is the main checkout")
+    for rel in COPIES:
         src, dst = MAIN / rel, tree / rel
         if not src.exists():
             print(f"skip {rel}: not in the main checkout")
             continue
-        if dst.exists():
-            # A tracked README can make data/candidates exist already; only an empty or README-only
-            # directory is replaced by the link.
-            if dst.is_dir() and all(p.name == "README.md" for p in dst.iterdir()):
-                for p in dst.iterdir():
-                    p.unlink()
-                dst.rmdir()
-            else:
-                print(f"keep {rel}: already present")
-                continue
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        subprocess.run(["cmd", "/c", "mklink", "/J", str(dst), str(src)], check=True, capture_output=True)
-        print(f"linked {rel}")
+        shutil.copytree(src, dst, dirs_exist_ok=True, symlinks=False)
+        print(f"copied {rel}")
 
 
 if __name__ == "__main__":
