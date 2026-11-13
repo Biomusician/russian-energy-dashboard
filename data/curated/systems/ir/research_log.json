@@ -317,6 +317,164 @@
         "by": "iteration-19 Gulf research pass"
       },
       "under_review": true
+    },
+    {
+      "date": "2026-11-12",
+      "by": "iteration-21 Gulf continuation pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-12"
+      ],
+      "scope": "continuation of the iteration-19 pass: lanes as declared in docs/countries/IR_SYSTEMATIC_SWEEP.md, work order in docs/countries/GULF_CONTINUATION_PLAN_20.md; each lane states its execution after both passes; inclusion clauses 1-7 read strictly; every published record reviewed blind by three independent roles and confirmed on its final text",
+      "status": "partial",
+      "status_reason": "5 of 6 lanes executed as far as declared; the rest are stated per lane",
+      "outcome": {},
+      "plan": {
+        "document": "docs/countries/GULF_CONTINUATION_PLAN_20.md",
+        "commit": "c03bff6",
+        "lanes_from": "docs/countries/IR_SYSTEMATIC_SWEEP.md"
+      },
+      "lanes": [
+        {
+          "lane": "IR1",
+          "source_family": "Oil and gas, official: Ministry of Petroleum statements and its news service, via search",
+          "registry": [
+            "Ministry of Petroleum statements (SHANA), NIOC and NIGC"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "declared_search_complete",
+          "source_window": "no_census_exists",
+          "covered_through": "2026-11-11",
+          "languages_required": [
+            "fa"
+          ],
+          "languages_executed": [
+            "fa"
+          ],
+          "queries_declared": 12,
+          "queries_run": 12,
+          "items_enumerated": 11401,
+          "limitation": "At least one source in this lane refused automated access and was not worked around. The search tool gave little weight to year terms, so earlier years were reached mainly through publishers' own listings. The listings that could be read were read in part: by title, or for their newest pages only. Some declared documents were not read. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
+          "carried_forward": true
+        },
+        {
+          "lane": "IR2",
+          "source_family": "Refining and processing: the national refining company's news and notices",
+          "registry": [
+            "National Iranian Oil Refining and Distribution Company (NIORDC) news and notices"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "declared_search_complete",
+          "source_window": "no_census_exists",
+          "covered_through": "2026-11-11",
+          "languages_required": [
+            "fa"
+          ],
+          "languages_executed": [
+            "fa"
+          ],
+          "queries_declared": 6,
+          "queries_run": 6,
+          "items_enumerated": 2480,
+          "limitation": "At least one source in this lane refused automated access and was not worked around. At least one official listing is built by script in the browser and could not be read. The listings that could be read were read in part: by title, or for their newest pages only. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
+          "carried_forward": true
+        },
+        {
+          "lane": "IR3",
+          "source_family": "Electricity, official: Ministry of Energy and grid-operator statements, via search",
+          "registry": [
+            "Ministry of Energy, Tavanir and Iran Grid Management Company statements"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "inaccessible",
+          "covered_through": null,
+          "languages_required": [
+            "fa"
+          ],
+          "languages_executed": [
+            "fa"
+          ],
+          "queries_declared": 12,
+          "queries_run": 12,
+          "limitation": "At least one source in this lane refused automated access and was not worked around. Official statements were read as carried by other publishers, not on the issuing body's own site.",
+          "carried_forward": true
+        },
+        {
+          "lane": "IR4",
+          "source_family": "Persian-language media, inside and outside Iran",
+          "registry": [
+            "Iranian news agencies (IRNA, ISNA, Mehr, Tasnim, Fars)",
+            "Persian-language media outside Iran (Iran International, Radio Farda)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "declared_search_complete",
+          "source_window": "no_census_exists",
+          "covered_through": "2026-11-11",
+          "languages_required": [
+            "fa"
+          ],
+          "languages_executed": [
+            "fa"
+          ],
+          "queries_declared": 8,
+          "queries_run": 8,
+          "items_enumerated": 9244,
+          "limitation": "At least one official listing is built by script in the browser and could not be read. The listings that could be read were read in part: by title, or for their newest pages only. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
+          "carried_forward": true
+        },
+        {
+          "lane": "IR5",
+          "source_family": "International corroboration, via search",
+          "registry": [
+            "International news agencies and energy press (Reuters, AP, AFP, S&P Global)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "declared_search_complete",
+          "source_window": "no_census_exists",
+          "covered_through": "2026-11-11",
+          "languages_required": [
+            "en"
+          ],
+          "languages_executed": [
+            "en"
+          ],
+          "queries_declared": 10,
+          "queries_run": 10,
+          "limitation": "No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
+          "carried_forward": true
+        },
+        {
+          "lane": "IR6",
+          "source_family": "Attack and sabotage events: occurrence, date, class and effect at the time only",
+          "registry": [
+            "Iranian news agencies (IRNA, ISNA, Mehr, Tasnim, Fars)",
+            "International news agencies and energy press (Reuters, AP, AFP, S&P Global)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "declared_search_complete",
+          "source_window": "no_census_exists",
+          "covered_through": "2026-07-14",
+          "languages_required": [
+            "en",
+            "fa"
+          ],
+          "languages_executed": [
+            "en",
+            "fa"
+          ],
+          "queries_declared": 11,
+          "queries_run": 11,
+          "limitation": "The search tool gave little weight to year terms, so earlier years were reached mainly through publishers' own listings. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
+          "carried_forward": false
+        }
+      ],
+      "continues": {
+        "date": "2026-11-11",
+        "by": "iteration-20 Gulf continuation pass"
+      },
+      "under_review": false
     }
   ]
 }

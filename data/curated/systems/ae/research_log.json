@@ -237,6 +237,125 @@
         "by": "iteration-19 Gulf research pass"
       },
       "under_review": true
+    },
+    {
+      "date": "2026-11-12",
+      "by": "iteration-21 Gulf continuation pass",
+      "kind": "systematic",
+      "window": [
+        "2022-01-01",
+        "2026-11-12"
+      ],
+      "scope": "continuation of the iteration-19 pass: lanes as declared in docs/countries/AE_SYSTEMATIC_SWEEP.md, work order in docs/countries/GULF_CONTINUATION_PLAN_20.md; each lane states its execution after both passes; inclusion clauses 1-7 read strictly; every published record reviewed blind by three independent roles and confirmed on its final text",
+      "status": "partial",
+      "status_reason": "1 of 4 lanes executed as far as declared; the rest are stated per lane",
+      "outcome": {},
+      "plan": {
+        "document": "docs/countries/GULF_CONTINUATION_PLAN_20.md",
+        "commit": "c03bff6",
+        "lanes_from": "docs/countries/AE_SYSTEMATIC_SWEEP.md"
+      },
+      "lanes": [
+        {
+          "lane": "AE1",
+          "source_family": "National statements: Ministry of Energy and Infrastructure and federal statements as carried by the state news agency, via search",
+          "registry": [
+            "Ministry of Energy and Infrastructure and federal statements (WAM, Emirates News Agency)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "partial",
+          "source_window": "inaccessible",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 10,
+          "queries_run": 10,
+          "limitation": "Official statements were read as carried by other publishers, not on the issuing body's own site.",
+          "carried_forward": true
+        },
+        {
+          "lane": "AE2",
+          "source_family": "ADNOC group annual and integrated reports, read for incident occurrence",
+          "registry": [
+            "ADNOC group and listed subsidiaries (ADNOC Gas reports; ADX disclosures)"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "publisher_not_yet_released",
+          "covered_through": "2025-12-31",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 4,
+          "queries_run": 4,
+          "items_enumerated": 147,
+          "limitation": "At least one source in this lane refused automated access and was not worked around. At least one official listing is built by script in the browser and could not be read.",
+          "carried_forward": true
+        },
+        {
+          "lane": "AE3",
+          "source_family": "Electricity utilities and regulators: media releases and news listings",
+          "registry": [
+            "Electricity and water authorities (EWEC, DEWA, SEWA, Etihad Water and Electricity, Abu Dhabi Department of Energy)"
+          ],
+          "universe_kind": "report_archive",
+          "execution": "partial",
+          "source_window": "rolling_archive_gap",
+          "covered_through": "2026-11-05",
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 4,
+          "queries_run": 4,
+          "items_enumerated": 269,
+          "limitation": "Not run as far as declared in this pass.",
+          "carried_forward": true
+        },
+        {
+          "lane": "AE4",
+          "source_family": "Arabic and English media by year, via search",
+          "registry": [
+            "Arabic and English press and news agencies (Al-Ittihad, Al-Khaleej, Al-Bayan, The National, Gulf News, Khaleej Times, Reuters, S&P Global)"
+          ],
+          "universe_kind": "declared_query_set",
+          "execution": "declared_search_complete",
+          "source_window": "no_census_exists",
+          "covered_through": null,
+          "languages_required": [
+            "ar",
+            "en"
+          ],
+          "languages_executed": [
+            "ar",
+            "en"
+          ],
+          "queries_declared": 18,
+          "queries_run": 18,
+          "limitation": "At least one source in this lane refused automated access and was not worked around. No complete public list of events exists for this lane, so a search that finds nothing is not a year shown to be quiet.",
+          "carried_forward": false
+        }
+      ],
+      "continues": {
+        "date": "2026-11-11",
+        "by": "iteration-20 Gulf continuation pass"
+      },
+      "under_review": true
     }
   ]
 }

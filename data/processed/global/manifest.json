@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_time": "2026-11-12T13:48:46+00:00",
+  "build_time": "2026-11-13T03:15:50+00:00",
   "selection": {
     "rule": "The first five country systems are the five largest total primary energy producers in the world, excluding Russia: Canada, China, India, Saudi Arabia and the United States.",
     "source": "U.S. EIA International Energy Statistics, total primary energy production, 2024",
@@ -75,13 +75,13 @@
     "records_with_observed_recovery": 103,
     "records_with_recovery_estimate_only": 15,
     "records_reported_fully_back": 15,
-    "research_lanes_complete": 20,
+    "research_lanes_complete": 25,
     "research_lane_states": {
       "blocked_by_source": 16,
       "current_through_latest_release": 5,
-      "declared_query_set_run": 15,
-      "partially_searched": 17,
-      "stopped_by_search_limit": 12
+      "declared_query_set_run": 20,
+      "partially_searched": 18,
+      "stopped_by_search_limit": 6
     },
     "research_lanes": 65,
     "note": "Totals for the country systems together. Counts what was reported, found and reviewed, not what occurred; reporting environments differ, so no share of these totals belongs to any one country in a comparable way. The theatre is not included."

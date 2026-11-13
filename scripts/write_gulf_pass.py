@@ -32,11 +32,17 @@ import os  # noqa: E402
 PASS = os.environ.get("EDM_PASS", "19")
 SWEEP = ROOT / "data" / "candidates" / f"gulf{PASS}"
 SYS = ROOT / "data" / "curated" / "systems"
-PASS_DATE = "2026-11-11"
-GULF_PASS_BY = {"19": "iteration-19 Gulf research pass", "20": "iteration-20 Gulf continuation pass"}
+PASS_DATE = {"21": "2026-11-12"}.get(PASS, "2026-11-11")
+GULF_PASS_BY = {"19": "iteration-19 Gulf research pass", "20": "iteration-20 Gulf continuation pass",
+                "21": "iteration-21 Gulf continuation pass"}
 PASS_BY = GULF_PASS_BY[PASS]
-LANE_GLOB = {"19": "{cc}_*_lanes.json", "20": "{cc}_lanes20.json"}[PASS]
-CONTINUES = {"20": {"date": "2026-11-11", "by": "iteration-19 Gulf research pass"}}.get(PASS)
+LANE_GLOB = {"19": "{cc}_*_lanes.json", "20": "{cc}_lanes20.json", "21": "{cc}_lanes21.json"}[PASS]
+# Iteration 21 worked only the lanes its plan named (the ones the search allowance stopped, and SA4).
+# A lane file states a lane's cumulative state, so the newest entry replaces the earlier one, and a
+# lane nobody worked keeps its iteration-20 state, marked carried forward.
+CARRY_FROM = {"21": ROOT / "data" / "candidates" / "gulf20"}.get(PASS)
+CONTINUES = {"20": {"date": "2026-11-11", "by": "iteration-19 Gulf research pass"},
+             "21": {"date": "2026-11-11", "by": "iteration-20 Gulf continuation pass"}}.get(PASS)
 CONTINUATION_PLAN = "docs/countries/GULF_CONTINUATION_PLAN_20.md"
 PLAN_DOC = {cc: f"docs/countries/{cc.upper()}_SYSTEMATIC_SWEEP.md" for cc in ("ae", "bh", "iq", "ir", "kw", "om", "qa")}
 PLAN_DOC["sa"] = "docs/countries/SA_LANE_PASS_19.md"
@@ -99,6 +105,17 @@ def registry_for(cc):
 def logs_for(cc):
     out = {}
     for path in sorted(glob.glob(str(SWEEP / LANE_GLOB.format(cc=cc)))):
+        for lane in read(path).get("lanes", []):
+            out.setdefault(lane["lane"], []).append(lane)
+    return out
+
+
+def carried_for(cc):
+    """Lanes of the previous pass that this pass did not work (iteration 21 onward)."""
+    if not CARRY_FROM:
+        return {}
+    out = {}
+    for path in sorted(glob.glob(str(CARRY_FROM / "{cc}_lanes20.json".format(cc=cc)))):
         for lane in read(path).get("lanes", []):
             out.setdefault(lane["lane"], []).append(lane)
     return out
@@ -216,17 +233,19 @@ def pass_for(cc, commit):
     path = SYS / cc / "research_log.json"
     log = read(path)
     logs, reg = logs_for(cc), registry_for(cc)
+    carried = carried_for(cc)
     lanes = []
     for lid, kind, langs in plan_lanes(cc, commit):
         family, registry = reg[lid]["source_family"], reg[lid]["registry"]
-        if lid in logs:
-            body, stopped, raw = merged(logs[lid], kind, langs)
+        forward = lid not in logs and lid in carried
+        if lid in logs or forward:
+            body, stopped, raw = merged(logs[lid] if lid in logs else carried[lid], kind, langs)
         else:
             body, stopped, raw = {"universe_kind": kind, "execution": "not_started", "source_window": "unknown",
                                   "covered_through": None, "languages_required": langs, "languages_executed": []}, False, ""
         body = honest(body, stopped, raw)
         body["limitation"] = fixed_notes(raw, body, stopped)
-        body["carried_forward"] = False
+        body["carried_forward"] = forward
         lanes.append({"lane": lid, "source_family": family, "registry": registry, **body})
     outcome = {k: 0 for k in OUTCOMES}
     qpath = ROOT / "data" / "candidates" / f"{cc}.json"
@@ -257,6 +276,12 @@ def pass_for(cc, commit):
         # continuation plan, committed in the same commit before any search.
         entry["plan"] = {"document": CONTINUATION_PLAN, "commit": commit, "lanes_from": PLAN_DOC[cc]}
         entry["continues"] = CONTINUES
+        if CARRY_FROM:
+            entry["scope"] = (f"continuation of the iteration-20 pass: the remaining declared queries of lanes the shared "
+                              f"search allowance had stopped, and one archive lane, as declared in {PLAN_DOC[cc]}; lanes "
+                              "not worked in this pass keep their iteration-20 state and are marked carried forward; "
+                              "inclusion clauses 1-7 read strictly; every published record reviewed blind by three "
+                              "independent roles and confirmed on its final text")
         entry["scope"] = (f"continuation of the iteration-19 pass: lanes as declared in {PLAN_DOC[cc]}, work order in "
                           f"{CONTINUATION_PLAN}; each lane states its execution after both passes; inclusion clauses 1-7 "
                           "read strictly; every published record reviewed blind by three independent roles and "
