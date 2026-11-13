@@ -1,5 +1,5 @@
 {
- "checked": "2026-11-11",
+ "checked": "2026-11-12",
  "note": "One automated visit to each cited page. Blocked means the site refused an automated visitor, not that the page is gone. Redirects to a home page or listing count as gone; redirects to a bot check count as blocked.",
  "by_system": {
   "ca": {
@@ -10,16 +10,16 @@
    "error": 0
   },
   "cn": {
-   "reachable": 24,
+   "reachable": 21,
    "redirected": 0,
-   "blocked": 2,
+   "blocked": 1,
    "dead": 0,
    "error": 0
   },
   "in": {
-   "reachable": 24,
+   "reachable": 21,
    "redirected": 0,
-   "blocked": 3,
+   "blocked": 1,
    "dead": 1,
    "error": 0
   },
@@ -31,25 +31,25 @@
    "error": 0
   },
   "kw": {
-   "reachable": 10,
+   "reachable": 7,
    "redirected": 1,
    "blocked": 0,
    "dead": 0,
    "error": 1
   },
   "sa": {
-   "reachable": 8,
+   "reachable": 7,
    "redirected": 0,
    "blocked": 0,
    "dead": 0,
    "error": 0
   },
   "us": {
-   "reachable": 179,
+   "reachable": 164,
    "redirected": 0,
-   "blocked": 5,
+   "blocked": 4,
    "dead": 0,
-   "error": 2
+   "error": 7
   }
  },
  "page_stated_dates": {
@@ -72,9 +72,6 @@
   "https://en.wikipedia.org/wiki/Freeport_LNG": "2022-07-29",
   "https://en.wikipedia.org/wiki/January_13%E2%80%9316,_2024_North_American_winter_storm": "2024-01-16",
   "https://en.wikipedia.org/wiki/November_2024_Northeast_Pacific_bomb_cyclone": "2024-11-18",
-  "https://engine.online/news/operations-resume-at-most-indian-ports-638b": "2025-11-19",
-  "https://engine.online/news/several-indian-ports-brace-for-cyclone-dana-impact-636d": "2025-11-19",
-  "https://english.aawsat.com/business/5202369-kuwaits-al-zour-refinery-partially-shut-due-fire-iir-says": "2025-10-28",
   "https://english.aawsat.com/world/4457506-typhoon-doksuri-hits-china-destroys-power-lines": "2023-07-28",
   "https://foxbusiness.com/lifestyle/nicole-leaves-florida-customers-without-power": "2022-11-10",
   "https://gandernewsroom.com/local/crews-work-to-restore-power-to-more-than-300000-michigan-homes-businesses-after-storms/": "2024-08-28",
@@ -107,13 +104,11 @@
   "https://vocm.com/2025/02/13/newfoundland-transshipment-update/": "2025-02-13",
   "https://www.13abc.com/2023/04/28/production-resumes-cenovus-toledo-refinery-more-than-6-months-after-fatal-fire": "2023-04-28",
   "https://www.albayan.ae/world/arab/2024-08-18-1.4920507": "2024-08-18",
-  "https://www.aljarida.com/article/44344": "2023-11-12",
   "https://www.aljarida.com/article/66148": "2024-06-20",
   "https://www.aljarida.com/article/66241": "2024-06-21",
   "https://www.aljarida.com/article/72208": "2024-08-20",
   "https://www.aljarida.com/article/74438": "2024-09-11",
   "https://www.aljazeera.com/economy/2022/8/22/chinas-southwest-extends-power-curbs-amid-scorching-weather": "2022-08-22",
-  "https://www.aljazeera.com/news/2026/10/10/hurricane-isaias-leaves-two-dead-and-800000-without-power-in-us-southeast": "2026-10-10",
   "https://www.aljazeera.net/ebusiness/2022/1/23/العراق-بلدُ-الطاقة-يعاني-من-شح-في": "2022-01-23",
   "https://www.alraimedia.com/article/1691580": "2024-06-19",
   "https://www.alraimedia.com/article/1700746/محليات/أخبار-محلية/القطع-المبرمج-يعود-بسبب-الحرارة-والدراسة-والخلل": "2024-09-10",
@@ -125,10 +120,8 @@
   "https://www.cbc.ca/news/canada/edmonton/prairies-wildfires-oilsands-1.7549723": "2025-06-02",
   "https://www.cbc.ca/news/canada/montreal/hydro-qu%C3%A9bec-customers-without-power-1.6821747": "2023-04-25",
   "https://www.cbsnews.com/detroit/news/more-than-80k-dte-customers-without-power-amid-severe-weather-in-southeast-michigan/": "2023-07-26",
-  "https://www.cbsnews.com/detroit/news/power-outages-northern-michigan-weekend-storms/": "2025-03-30",
   "https://www.cbsnews.com/news/keystone-oil-pipeline-shut-down-north-dakota/": "2025-04-08",
   "https://www.cbsnews.com/texas/news/hundreds-of-thousands-without-power-after-powerful-storms-blow-through-north-texas": "2023-03-02",
-  "https://www.clickondetroit.com/weather/2023/03/04/dte-energy-says-95-of-220000-customers-who-lost-power-will-have-it-restored-by-end-of-monday": "2023-03-04",
   "https://www.coalage.com/features/teamwork-experience-and-perseverance-allow-allegheny-met-to-restart-operations/": "2025-10-28",
   "https://www.cp24.com/news/2025/04/01/power-outages-persist-in-hard-hit-areas-after-ontario-ice-storm/": "2025-04-01",
   "https://www.cp24.com/news/canada/2024/11/21/bomb-cyclone-batters-bc-cutting-roads-and-power-snapping-trees-like-gunshots/": "2024-11-21",
@@ -149,7 +142,6 @@
   "https://www.industrialinfo.com/iirenergy/industry-news/article/todays-refining-hotline-headlines--320193": "2023-05-01",
   "https://www.insurancejournal.com/news/international/2023/06/13/725000.htm": "2023-06-13",
   "https://www.insurancejournal.com/news/international/2025/06/03/826136.htm": "2025-06-03",
-  "https://www.kitco.com/news/off-the-wire/2023-05-09/chinas-halts-32-coal-mines-northwest-suspends-expansion-plans": "2023-05-09",
   "https://www.kitco.com/news/off-the-wire/2023-05-10/update-1-alberta-producers-restart-oil-and-gas-operations-wildfires": "2023-05-10",
   "https://www.local3news.com/local-news/update-tva-releases-internal-report-after-rolling-holiday-blackouts/article_c10bfd92-876d-11ed-96bb-5f6ec7f8bbe1.html": "2023-05-05",
   "https://www.mainepublic.org/environment-and-outdoors/2023-12-20/for-many-mainers-power-restoration-may-not-come-until-the-end-of-the-week": "2023-12-20",
@@ -167,10 +159,8 @@
   "https://www.noovo.info/nouvelle/panne-majeure-a-montreal-des-milliers-de-clients-dhydro-quebec-prives-de-courant.html": "2023-07-06",
   "https://www.noovo.info/nouvelle/panne-majeure-pres-de-500-000-quebecois-prives-delectricite-selon-hydro-quebec.html": "2023-04-25",
   "https://www.ogj.com/general-interest/article/55241321/bsee-22-of-gom-oil-production-shut-in-as-hurricane-rafael-churns-through-southern-gulf": "2024-11-07",
-  "https://www.ogj.com/refining-processing/article/55234995/pemex-halts-some-operations-following-fatal-blast-at-deer-park-refinery": "2024-10-11",
   "https://www.ogj.com/refining-processing/refining/article/14282111/bp-progresses-work-to-restart-whiting-refinery": "2022-08-31",
   "https://www.ogj.com/refining-processing/refining/operations/news/55374647/valeros-port-arthur-refinery-faces-uncertain-timeline-for-diesel-hydrotreater-rebuild": "2026-04-30",
-  "https://www.orissapost.com/cyclone-dana-great-danger-signal-number-10-issued-at-3-ports-in-odisha/": "2024-10-23",
   "https://www.pbs.org/newshour/nation/5-days-after-severe-ice-storm-some-in-michigan-still-lack-power": "2023-02-27",
   "https://www.power-eng.com/operations-maintenance/tva-lost-approximately-20-of-power-production-during-december-storm/": "2023-05-10",
   "https://www.qcintel.com/article/sinopec-s-shanghai-refinery-partially-resumes-after-june-fire-report-7831.html": "2022-08-12",
@@ -181,7 +171,6 @@
   "https://www.tdworld.com/disaster-response/news/55127087/centerpoint-energy-restores-power-to-more-than-98-of-impacted-customers": "2024-07-18",
   "https://www.tdworld.com/electric-utility-operations/news/55272546/oncor-responds-to-severe-storm-outages-with-assessment-and-restoration-efforts": "2025-03-05",
   "https://www.thepaper.cn/newsDetail_forward_19461853": "2022-08-15",
-  "https://www.thepaper.cn/newsDetail_forward_24406515": "2023-08-29",
   "https://www.thepaper.cn/newsDetail_forward_28901729": "2024-09-29",
   "https://www.thestar.com.my/news/world/2026/08/17/more-than-180000-without-power-in-hawaii-100-homes-damaged-as-lala-weakens-to-tropical-storm": "2026-08-17",
   "https://www.theweathernetwork.com/en/news/weather/forecasts/380-000-power-outages-after-major-ice-storm-cleanup-underway": "2025-03-30",
@@ -216,13 +205,11 @@
   "https://insurancejournal.com/news/national/2025/06/03/826136.htm": "https://www.insurancejournal.com/news/international/2025/06/03/826136.htm",
   "https://lngprime.com/?p=116661": "https://lngprime.com/americas/freeport-lng-terminal-in-texas-shut-down-due-to-hurricane-beryl/116661/",
   "https://ogj.com/general-interest/article/55241321/bsee-22-of-gom-oil-production-shut-in-as-hurricane-rafael-churns-through-southern-gulf": "https://www.ogj.com/general-interest/article/55241321/bsee-22-of-gom-oil-production-shut-in-as-hurricane-rafael-churns-through-southern-gulf",
-  "https://ogj.com/refining-processing/article/55234995/pemex-halts-some-operations-following-fatal-blast-at-deer-park-refinery": "https://www.ogj.com/refining-processing/article/55234995/pemex-halts-some-operations-following-fatal-blast-at-deer-park-refinery",
   "https://www.alraimedia.com/article/1691580": "https://www.alraimedia.com/article/1691580/%D9%85%D8%AD%D9%84%D9%8A%D8%A7%D8%AA/%D8%A3%D8%AE%D8%A8%D8%A7%D8%B1-%D9%85%D8%AD%D9%84%D9%8A%D8%A9/%D8%A7%D9%84%D9%83%D9%87%D8%B1%D8%A8%D8%A7%D8%A1-%D8%B9%D8%AF%D9%85-%D9%82%D8%AF%D8%B1%D8%A9-%D9%85%D8%AD%D8%B7%D8%A7%D8%AA-%D8%A7%D9%84%D8%AA%D9%88%D9%84%D9%8A%D8%AF-%D8%B9%D9%84%D9%89-%D8%A7%D8%B3%D8%AA%D9%8A%D9%81%D8%A7%D8%A1-%D8%A7%D9%84%D8%B7%D9%84%D8%A8-%D9%88%D8%B1%D8%A7%D8%A1-%D8%A7%D9%86%D9%82%D8%B7%D8%A7%D8%B9-%D8%A7%D9%84%D8%AA%D9%8A%D8%A7%D8%B1",
   "https://www.argusmedia.com/es/news/2373087-bp-toledo-refinery-shuts-down-after-fire-update-3": "https://www.argusmedia.com/es/news-and-insights/latest-market-news/2373087-bp-toledo-refinery-shuts-down-after-fire-update-3",
   "https://www.bicmagazine.com/api/amp/departments/operations/bp-restarting-whiting-indiana-refinery-production-units/": "https://www.bicmagazine.com/departments/operations/bp-restarting-whiting-indiana-refinery-production-units/",
   "https://www.cbc.ca/1.6821747": "https://www.cbc.ca/news/canada/montreal/hydro-qu%C3%A9bec-customers-without-power-1.6821747",
   "https://www.cbc.ca/1.7082405": "https://www.cbc.ca/news/canada/calgary/alberta-electricity-record-high-power-demand-aeso-1.7082405",
-  "https://www.cbsnews.com/amp/detroit/news/power-outages-northern-michigan-weekend-storms": "https://www.cbsnews.com/detroit/news/power-outages-northern-michigan-weekend-storms/",
   "https://www.enr.com/articles/55680-keystone-pipe-has-full-restart-after-14000-barrel-spill-dec-7": "https://www.enr.com/articles/55680-keystone-pipe-has-full-restart-after-14-000-barrel-spill-dec-7",
   "https://www.meteomedia.com/ca/nouvelles/article/arbres-deracines-toitures-abimees-et-140-000-pannes": "https://www.meteomedia.com/fr/nouvelles/meteo/previsions/arbres-deracines-toitures-abimees-et-140-000-pannes",
   "https://www.ogj.com/refining-processing/refining/article/14282111/bp-progresses-with-work-to-restart-whiting-refinery": "https://www.ogj.com/refining-processing/refining/article/14282111/bp-progresses-work-to-restart-whiting-refinery",
