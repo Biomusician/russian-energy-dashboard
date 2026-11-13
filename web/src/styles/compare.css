@@ -1,0 +1,46 @@
+/* The comparison workspace (iteration 21). Common-basis rows, national context and within-system
+   rows are told apart by a tag in words and by a rule style, never by a red/amber/green colour. */
+
+.compare-page .compare-intro p { margin: 0 0 6px; }
+.compare-picker { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.compare-picker p { margin: 0; }
+
+/* The page never scrolls sideways; the table does, inside its own box, with the first column held. */
+.compare-scroll { overflow-x: auto; max-width: 100%; border: 1px solid var(--line); border-radius: var(--radius); }
+.compare-scroll:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.compare-table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 720px; font-size: 12px; }
+.compare-table caption { text-align: left; padding: 6px 8px; caption-side: top; }
+.compare-table th, .compare-table td { text-align: left; vertical-align: top; padding: 8px; border-top: 1px solid var(--line-soft); }
+.compare-table thead th { background: var(--bg-panel-2); font-weight: 600; }
+.compare-table th[scope="row"], .compare-corner {
+  position: sticky; left: 0; z-index: 1; background: var(--bg-panel); width: 230px; min-width: 170px;
+  border-right: 1px solid var(--line);
+}
+.compare-colhead { min-width: 190px; }
+.compare-colhead a { color: var(--accent); font-size: 13px; }
+.compare-col-actions { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.compare-col-actions button.ghost { padding: 2px 8px; font-size: 11px; }
+
+.compare-group-head th { background: var(--bg-panel-2); font-weight: 500; position: static; }
+.compare-group-title { font-weight: 600; color: var(--text); }
+/* A group heading spans every column; held at the left edge so a phone reads it without scrolling. */
+.compare-group-inner { position: sticky; left: 8px; max-width: min(100%, calc(100vw - 72px)); }
+.compare-row-label { display: block; font-weight: 600; color: var(--text); }
+.compare-basis-tag { display: inline-block; margin-top: 3px; font-size: 10.5px; padding: 0 5px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--text-dim); }
+.compare-basis-tag.basis-common { border-color: var(--accent-dim); color: var(--accent); }
+.compare-basis-tag.basis-within { border-style: dashed; font-style: italic; }
+.compare-row-within td { border-top-style: dashed; color: var(--text-dim); }
+.compare-def, .compare-more { margin-top: 4px; font-size: 11px; color: var(--text-dim); font-weight: 400; }
+.compare-def summary, .compare-more summary { cursor: pointer; color: var(--text-faint); }
+.compare-def summary:focus-visible, .compare-more summary:focus-visible { outline: 2px solid var(--accent); }
+.compare-table td[data-kind="no_data"] .compare-cell-text,
+.compare-table td[data-kind="not_applicable"] .compare-cell-text,
+.compare-table td[data-kind="unavailable"] .compare-cell-text,
+.compare-table td[data-kind="loading"] .compare-cell-text { color: var(--text-faint); font-style: italic; }
+
+@media (max-width: 600px) {
+  .compare-table { min-width: 0; width: max-content; }
+  .compare-table th[scope="row"], .compare-corner { width: 128px; min-width: 128px; max-width: 128px; }
+  .compare-colhead, .compare-table td { min-width: 168px; max-width: 200px; }
+  .compare-scroll-cue { margin: 0 0 4px; color: var(--text-dim); }
+}

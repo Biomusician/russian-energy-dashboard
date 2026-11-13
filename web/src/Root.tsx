@@ -8,6 +8,7 @@ import GlobalHome from "./global/GlobalHome";
 const TheatreApp = lazy(() => import("./App"));
 const CountryView = lazy(() => import("./global/CountryView"));
 const GroupView = lazy(() => import("./global/GroupView"));
+const CompareView = lazy(() => import("./global/CompareView"));
 
 export default function Root() {
   const route = useRoute();
@@ -18,6 +19,8 @@ export default function Root() {
       {/* Keyed on the id so switching countries remounts cleanly and aborts the old load. */}
       {route.view === "country" && <CountryView key={route.id} id={route.id} />}
       {route.view === "group" && <GroupView key={route.id} id={route.id} />}
+      {/* Not keyed: an edit to the selection keeps the countries already loaded. */}
+      {route.view === "compare" && <CompareView ids={route.ids} />}
     </Suspense>
   );
 }

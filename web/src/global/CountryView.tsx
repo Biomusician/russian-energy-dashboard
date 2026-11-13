@@ -9,7 +9,7 @@ import {
 } from "./manifest";
 import { loadContext, rowForSystem, type EnergyContext } from "./context";
 import { NationalFigures } from "./WorldContext";
-import { navigate } from "./router";
+import { navigate, navigateCompare } from "./router";
 import { composeCountryFrame, countryFilename } from "./countryExport";
 import { DISPUTED, NO_EVENTS, fillFor, scaleFor, type Scale } from "./countryScale";
 import { downloadBlob, exportMapPng } from "../mapExport";
@@ -164,6 +164,8 @@ export default function CountryView({ id }: { id: string }) {
     <div className="global-page country-page">
       <CountryHeader name={sys.name} id={id} wholeCountry={sys.geography.precision_policy?.other === "country"}
                      attacksWhole={sys.geography.precision_policy?.kinetic === "country"}>
+        {/* Opens the comparison workspace with this country chosen; the reader adds the others there. */}
+        <button className="ghost" onClick={() => navigateCompare([id])} aria-label={`Compare ${sys.name} with other systems`}>Compare</button>
         <button className="ghost" onClick={runExport} disabled={exporting}>
           {exporting ? "Rendering…" : "Download PNG"}
         </button>
