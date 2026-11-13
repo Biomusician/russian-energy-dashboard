@@ -14,7 +14,8 @@ import { prefetchOn } from "./prefetch";
 import { PanelBoundary } from "../components/ViewBoundary";
 import { dated, recordLine } from "./homeModel";
 import { localISODate } from "../freshness";
-import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
+import { Disclosure } from "./Disclosure";
+import { RESEARCH_PREVIEW_DEFINITION, RESEARCH_PREVIEW_LABEL } from "./countryCopy";
 import { fmtDate, fmtNum } from "../data";
 import "../styles/home.css";
 
@@ -247,7 +248,10 @@ function SystemCard({ s, manifest, lastPass, today }: {
       <div className="small">Country evidence system · <strong>No index</strong></div>
       <div className="home-tags">
         {/* Tap disclosures, not hover titles: a touch screen has no hover. */}
-        {s.maturity === "research_preview" && <ResearchPreviewBadge />}
+        {s.maturity === "research_preview" && (
+          // The country page's definition, in the cards' neutral tag style: no status colour on a card.
+          <Disclosure label={RESEARCH_PREVIEW_LABEL} text={RESEARCH_PREVIEW_DEFINITION} className="home-tag home-tag-preview" />
+        )}
         {region && <span className="home-tag home-tag-region">{region.label}</span>}
         {s.campaign_restricted && (
           <Disclosure label="Publication safeguards" className="home-tag home-tag-safeguard"

@@ -289,7 +289,8 @@ test.describe("error boundaries: what validation cannot enumerate", () => {
       const res = await route.fetch();
       const d = await res.json();
       expect(d.episodes.length).toBeGreaterThan(0);
-      d.episodes[0].members[0].region = { not: "a string" };
+      // The country name is rendered on every row and is not a container, so validation passes it.
+      d.episodes[0].country = { not: "a string" };
       await route.fulfill({ response: res, json: d });
     });
     await app.open("");
