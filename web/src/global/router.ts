@@ -45,6 +45,8 @@ export function hrefFor(systemId: string | null): string {
 }
 
 const CHANGE = "edm:locationchange";
+/** Fired after navigate*(); with popstate, the two signals that the URL moved under a view. */
+export const LOCATION_EVENT = CHANGE;
 
 /** Move to another view, as a new history entry so Back returns to where the reader was. */
 export function navigate(systemId: string | null) {
@@ -56,6 +58,14 @@ export function navigate(systemId: string | null) {
 /** Open a regional overview, as a new history entry. */
 export function navigateGroup(slug: string) {
   window.history.pushState(null, "", `${window.location.pathname}?group=${encodeURIComponent(slug)}`);
+  window.dispatchEvent(new Event(CHANGE));
+}
+
+/** Open any view by its query string ("?sys=ir&r=IR-06", "?compare=", "" for home), as a new
+ *  history entry. Used by search results and breadcrumbs (iteration 21). */
+export function navigateTo(query: string) {
+  const q = query.replace(/^\?$/, "");
+  window.history.pushState(null, "", q ? `${window.location.pathname}${q.startsWith("?") ? q : `?${q}`}` : window.location.pathname);
   window.dispatchEvent(new Event(CHANGE));
 }
 

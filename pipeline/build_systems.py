@@ -1909,6 +1909,9 @@ def build_manifest(country_payloads, theatre_snapshot, build_time):
             "evidence_readiness": p["evidence_readiness"], "index": None, "headline": None,
             "reporting_environment": p["reporting_environment"],
             "as_of": p["as_of"],
+            # Iteration 21: the home card says when the record was last reviewed, or that there is
+            # no qualifying record yet (None). A date, never a count: nothing here can be ranked.
+            "record_reviewed": p["record_reviewed"],
             "bounds": p["geography"]["bounds"],
             "files": ["system.json", "events.json", "regions.geojson"],
         })

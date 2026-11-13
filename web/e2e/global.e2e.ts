@@ -25,9 +25,13 @@ test.describe("global home", () => {
     const m = await manifest(page);
     const cards = page.getByRole("article");
     await expect(cards).toHaveCount(m.systems.length);
+    // Iteration 21: the one indexed system first, as a different kind of view; then the country
+    // systems in the manifest's alphabetical order. Never an order by any figure.
     const names = await cards.locator("h2").allInnerTexts();
-    expect(names).toEqual(m.systems.map((s: { name: string }) => s.name));
-    expect(names).toEqual([...names].sort());
+    const theatre = m.systems.find((s: { kind: string }) => s.kind === "theatre").name;
+    const countries = m.systems.filter((s: { kind: string }) => s.kind === "country").map((s: { name: string }) => s.name);
+    expect(names).toEqual([theatre, ...countries]);
+    expect(countries).toEqual([...countries].sort());
     // The comparability statement is on the page, not in a tooltip.
     await expect(page.getByRole("note")).toContainText("not shown to be safer");
     // No event counts anywhere on the home page: a number per card reads as a league table.

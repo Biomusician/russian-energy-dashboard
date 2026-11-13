@@ -34,6 +34,10 @@ export interface SimpleMapProps {
   ariaLabel: string;
   attribution: string;
   onMap?: (m: maplibregl.Map | null) => void;
+  /** Iteration 21: on a scrolling page the wheel scrolls the page. The map zooms with Ctrl/⌘ and
+   *  the wheel, with the buttons, or with the plain wheel after the reader clicks into it, until
+   *  the pointer leaves. Touch needs two fingers to move the map. */
+  pageScrollsFirst?: boolean;
 }
 
 export default function SimpleMap(props: SimpleMapProps) {
@@ -54,8 +58,14 @@ export default function SimpleMap(props: SimpleMapProps) {
       maxZoom: 8,
       dragRotate: false,
       renderWorldCopies: false,
+      cooperativeGestures: !!props.pageScrollsFirst,
     });
     map.current = m;
+    if (props.pageScrollsFirst) {
+      // A click is a request to use the map: plain-wheel zoom until the pointer leaves it.
+      m.getCanvasContainer().addEventListener("mousedown", () => m.cooperativeGestures.disable());
+      m.getContainer().addEventListener("mouseleave", () => m.cooperativeGestures.enable());
+    }
     // The same readiness signal the theatre map publishes, so the browser tests can wait for a
     // genuinely drawn map rather than a timeout.
     const el = m.getContainer();

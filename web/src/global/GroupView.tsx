@@ -11,6 +11,7 @@ import {
 import { navigate } from "./router";
 import { downloadBlob, exportMapPng } from "../mapExport";
 import { fmtDate } from "../data";
+import { GlobalNavBar } from "./GlobalNav";
 
 /** A regional overview (iteration 19): the Gulf.
  *
@@ -135,6 +136,7 @@ export default function GroupView({ id }: { id: string }) {
     return (
       <div className="global-page">
         <header className="global-head"><h1 className="ribbon-title">Energy Disruption Monitor</h1><SystemSwitcher current={null} /></header>
+        <GlobalNavBar trail={[{ label: "Regional overview not found" }]} />
         <main className="global-main"><p className="warn-text" role="alert">There is no regional view called "{id}". <a href="?">Open the overview</a>.</p></main>
       </div>
     );
@@ -149,6 +151,7 @@ export default function GroupView({ id }: { id: string }) {
         </div>
         <SystemSwitcher current={null} group={id} />
       </header>
+      <GlobalNavBar trail={[{ label: group?.label ?? "Regional overview" }]} />
       <main className="global-main">
         {manifest && <p className="comparability" id="comparability" role="note">{manifest.comparability_statement}</p>}
         {ctx && (

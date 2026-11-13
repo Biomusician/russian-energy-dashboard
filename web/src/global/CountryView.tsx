@@ -9,12 +9,14 @@ import {
 } from "./manifest";
 import { loadContext, rowForSystem, type EnergyContext } from "./context";
 import { NationalFigures } from "./WorldContext";
-import { navigate } from "./router";
+import { LOCATION_EVENT, navigate } from "./router";
 import { composeCountryFrame, countryFilename } from "./countryExport";
 import { DISPUTED, NO_EVENTS, fillFor, scaleFor, type Scale } from "./countryScale";
 import { downloadBlob, exportMapPng } from "../mapExport";
 import { daysBetween, fmtDate } from "../data";
 import { readerText } from "./readerText";
+import { CountryNav } from "./GlobalNav";
+import { registerCountryRegions } from "./searchIndex";
 
 /** One country system (iteration 14).
  *
@@ -85,6 +87,28 @@ export default function CountryView({ id }: { id: string }) {
   useEffect(() => {
     document.title = `Energy Disruption Monitor — ${entry?.name ?? id.toUpperCase()}`;
   }, [entry, id]);
+
+  // This country's region names join the global search for the rest of the session: already
+  // loaded, so they cost nothing (iteration 21).
+  useEffect(() => {
+    if (!bundle) return;
+    const geo = bundle.system.geography as CountrySystem["geography"] & {
+      display_names?: Record<string, string>; unit_aliases?: Record<string, string[]> };
+    registerCountryRegions({
+      systemId: bundle.system.system_id, systemName: bundle.system.name, unitLabel: geo.unit_label,
+      units: bundle.regions.features.map((f) => ({ code: String(f.properties?.code ?? ""), name: String(f.properties?.name ?? "") }))
+        .filter((u) => u.code && u.name),
+      displayNames: geo.display_names, aliases: geo.unit_aliases,
+    });
+  }, [bundle]);
+
+  // A search result for a region of this same country moves the URL without remounting the view.
+  useEffect(() => {
+    const sync = () => setRegion(initialRegion());
+    window.addEventListener(LOCATION_EVENT, sync);
+    window.addEventListener("popstate", sync);
+    return () => { window.removeEventListener(LOCATION_EVENT, sync); window.removeEventListener("popstate", sync); };
+  }, []);
 
   // Region selection is shareable, like the theatre's.
   useEffect(() => {
@@ -410,6 +434,7 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
 
 function CountryHeader({ name, id, wholeCountry, attacksWhole, children }: { name: string; id: string; wholeCountry?: boolean; attacksWhole?: boolean; children?: React.ReactNode }) {
   return (
+    <>
     <header className="global-head">
       <div>
         <h1 className="ribbon-title">{name}</h1>
@@ -421,6 +446,8 @@ function CountryHeader({ name, id, wholeCountry, attacksWhole, children }: { nam
         <SystemSwitcher current={id} />
       </div>
     </header>
+    <CountryNav id={id} name={name} />
+    </>
   );
 }
 
