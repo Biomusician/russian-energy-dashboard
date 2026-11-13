@@ -355,7 +355,32 @@ immediately before the push confirmed it.
 
 ## 28. Production
 
-Recorded at release.
+| | |
+|---|---|
+| Start | local and `origin/main` both `e626df2` |
+| Release | `51eb9c6`, pushed 2026-11-12T12:58Z as a fast-forward of `e626df2`; CI success; GitHub deployment "Production" for `51eb9c6`, status success. The daily refresh then committed `5b68a82` on top. |
+
+- **Served bytes.** The manifest, every global payload, the snapshot and data-quality payloads, and
+  the events, system and regions payloads of all twelve country systems (44 files) were fetched from
+  production and compared with the release commit: all 44 identical.
+- **Safety scan of the production bytes**: 0 problems. It found no coordinate-like key and no
+  status, end date or recovery detail on any campaign-covered record. Abstracted attack records
+  carried no facility, operator, region, headline or method-naming address. There was no route
+  wording in a campaign system's citation address and no review reasoning. The regional payload
+  carried no held count.
+- **Production browser suite** (`E2E_BASE_URL` set to production; screenshot goldens excluded, as
+  they are tied to this machine's renderer): 202 passed, 1 skipped.
+  - Pages: the home page, the Gulf overview, all eight Gulf country pages, Russia, the United
+    States, Canada, China and India.
+  - Behaviour: keyboard routes, error containment, phone and tablet widths.
+  - Exports: the Gulf brief and the country images for Iran, Iraq, Qatar, the UAE, Oman and Saudi
+    Arabia.
+- **Mobile QA at 390 × 844** (home, Gulf, Iran, Iraq, Saudi Arabia): no sideways scroll. Each country
+  page puts its maturity, campaign badge, "no index" and record count in the first screen.
+- **Export QA.** The Kuwait and Iran (zero-record) images and the Gulf brief were downloaded from
+  production and read. Two gaps were found: the campaign caveat was missing from country images,
+  and the accounting convention was missing from the brief's production share. They were fixed
+  after the release in `3713096` and ship with the next release.
 
 ## 29. First unattended refresh
 
