@@ -252,6 +252,13 @@ function HeadlineView({ bundle, onDrill }: { bundle: Bundle; onDrill: (t: Inspec
           Each covered sector contributes its own value multiplied by its effective weight. The
           contributions below are the whole index — nothing else is added.
         </p>
+        {/* One precision for the headline everywhere a reader meets it. The decomposition needs
+            two decimals to add up visibly, so it says that is the only reason they are here. */}
+        <p className="small">
+          The headline reads <span className="mono">{fmtNum(h.value, 1)}</span>: it is published to
+          one decimal, because the modelled decay does not support a second. The parts below are
+          shown to two decimals only so that they visibly add up.
+        </p>
         <div className="contrib-list">
           {included.map((c) => (
             <button key={c.sector} className="contrib-row"
@@ -302,7 +309,7 @@ function HeadlineView({ bundle, onDrill }: { bundle: Bundle; onDrill: (t: Inspec
           {h.sensitivities.zero_assumption != null && (
             <p className="mono small">
               If the excluded sectors were assumed to be at zero disruption — an assumption known
-              to be false — the index would read {fmtNum(h.sensitivities.zero_assumption, 2)}.
+              to be false — the index would read {fmtNum(h.sensitivities.zero_assumption, 1)}.
             </p>
           )}
         </Block>
@@ -318,8 +325,8 @@ function HeadlineView({ bundle, onDrill }: { bundle: Bundle; onDrill: (t: Inspec
         <Block title="How much rests on one judgement">
           <p>
             Removing transmission — the sector scored against a chosen saturation constant rather
-            than a measured capacity base — gives {fmtNum(h.sensitivities.excluding_transmission, 2)}
-            {" "}against the published {fmtNum(h.value, 2)}.
+            than a measured capacity base — gives {fmtNum(h.sensitivities.excluding_transmission, 1)}
+            {" "}against the headline {fmtNum(h.value, 1)}.
           </p>
         </Block>
       )}

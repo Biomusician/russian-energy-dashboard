@@ -36,7 +36,7 @@ export default function Dossier({
     drawer = false, open = false, onCloseDrawer,
 bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSelect,
   selectedAsset, onClearAsset, assetStruck, assetAlsoHere, activeClasses,
-  compareRegions, onToggleCompare, onExplain, compare, onCompareChange, onCloseCompare,
+  compareRegions, onToggleCompare, onExplain, compare, onCompareChange, onCloseCompare, theatreName,
   lifecycleOpen, onCloseLifecycle, lifecycleEpisode, onSelectEpisode, onOpenLifecycle,
 }: {
   /** True when the dossier is presented as an overlay drawer rather than docked. */
@@ -63,6 +63,8 @@ bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSele
   /** Regions pinned to the comparison tray (§17), and the toggle for the current one. */
   compareRegions?: string[];
   onToggleCompare?: (code: string) => void;
+  /** The theatre's one reader-facing name (from the manifest), shown under the overview. */
+  theatreName?: string;
   /** Opens the Evidence Inspector (iteration 11 §2). A region's index is a composite like the
    *  headline, so it must be openable in the same way rather than only the national figure. */
   onExplain?: (t: InspectTarget) => void;
@@ -115,7 +117,7 @@ bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSele
         <div>
           <h2 style={{ fontSize: 13 }}>{region ? region.name : "Monitored-area picture"}</h2>
           <div className="eyebrow" style={{ marginTop: 3 }}>
-            {region ? `${region.district} · ${region.country === "RU" ? "Russia" : region.country === "BY" ? "Belarus" : "Ukraine (occupied)"}` : "Belarus, western Russia & Siberia + occupied Crimea"}
+            {region ? `${region.district} · ${region.country === "RU" ? "Russia" : region.country === "BY" ? "Belarus" : "Ukraine (occupied)"}` : `${theatreName ?? "Monitored area"} · administrative-region level`}
           </div>
         </div>
         {region && (

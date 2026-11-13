@@ -103,7 +103,10 @@ test.describe("map", () => {
     // not catch that if the width grew, so the height is checked against the viewport directly.
     expect(after!.height, "the map has no height in map focus").toBeGreaterThan(900 * 0.6);
     expect((await app.mapPixels()).distinct).toBeGreaterThan(20);
-    await app.button(/exit map focus/i).click();
+    // Iteration 21: Map focus is one of three views (Analyze · Map focus · Briefing); leaving it
+    // is choosing Analyze.
+    await expect(app.button(/^map focus$/i)).toHaveAttribute("aria-pressed", "true");
+    await app.button("Analyze", { exact: true }).click();
     await app.mapIdle();
     const back = await page.locator("[data-map-state]").boundingBox();
     expect(Math.round(back!.width)).toBe(Math.round(before!.width));
@@ -188,11 +191,14 @@ test.describe("iteration-17 UX defects", () => {
     await app.open();
     const m = await page.evaluate(() => {
       const r = (s: string) => document.querySelector(s)!.getBoundingClientRect();
-      return { ribbonBottom: r(".ribbon").bottom, toggleTop: r(".drawer-toggles").top,
-               strip: (document.querySelector(".ribbon-scroll") as HTMLElement).clientWidth };
+      return { ribbonBottom: r(".ribbon").bottom, toggleTop: r(".drawer-toggles").top };
     });
     expect(m.toggleTop).toBeGreaterThanOrEqual(m.ribbonBottom);
-    expect(m.strip, "the ribbon metric strip is squeezed to nothing").toBeGreaterThan(250);
+    // Iteration 21: at this width the sector/recovery strip folds behind a toggle instead of
+    // scrolling; opened, it must still have real width.
+    await app.button("Sector scores & recovery").click();
+    const strip = await page.evaluate(() => (document.querySelector(".ribbon-scroll") as HTMLElement).clientWidth);
+    expect(strip, "the ribbon metric strip is squeezed to nothing").toBeGreaterThan(250);
   });
 
   test("a drawer has one close control, Escape closes it and focus returns to its toggle", async ({ app, page }) => {

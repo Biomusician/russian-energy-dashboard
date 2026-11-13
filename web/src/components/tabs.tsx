@@ -4,7 +4,7 @@
 
 import { useMemo, useState } from "react";
 import type { Bundle, CoverageDetail, Incident, LiveDisruption, RegionSnapshot } from "../types";
-import { addDays, displayName, fmtDate, fmtDelta, fmtNum, inWindow, plural, titleCase, windowRef } from "../data";
+import { addDays, displayName, fmtDate, fmtDelta, fmtNum, inWindow, plural, titleCase, windowRef, withArticle } from "../data";
 import {
   ZERO_SHORT, classColor, evidence, severityColor, zeroIsUnmeasured,
 } from "../palette";
@@ -659,6 +659,9 @@ export function RecentTab(p: TabProps) {
     [p.bundle.snapshot.live_disruptions],
   );
   const regionName = (code: string | null) => (code ? p.bundle.snapshot.regions[code]?.name : null);
+  // The taxonomy's own label ("Oil pipeline"), not the key title-cased ("Pipeline Oil").
+  const classLabel = (cls: string | null) =>
+    (cls ? p.bundle.taxonomy.asset_classes[cls] : null) ?? titleCase(cls ?? "facility");
 
   const recent = useMemo(() => {
     const pool = p.selected
@@ -692,7 +695,7 @@ export function RecentTab(p: TabProps) {
               <span className="rc-title">{i.asset_name ?? "Unnamed facility"}</span>
               <span className="num" style={{ fontSize: 11, color: "var(--text-dim)" }}>{fmtDate(i.date)}</span>
             </div>
-            <div className="rc-region">{regionName(i.region_code) ?? "—"} · {titleCase(i.asset_class ?? "")}</div>
+            <div className="rc-region">{regionName(i.region_code) ?? "—"} · {classLabel(i.asset_class)}</div>
             <div className="rc-meta">
               <span className="tag" style={{ color: classColor(i.asset_class), borderColor: "var(--line)" }}>{titleCase(i.cause)}</span>
               <span className={`tag ${i.confidence}`}>{i.confidence}</span>
@@ -704,7 +707,7 @@ export function RecentTab(p: TabProps) {
                 </span>
               )}
             </div>
-            <div className="rc-summary">{summarise(i, regionName(i.region_code))}</div>
+            <div className="rc-summary">{summarise(i, regionName(i.region_code), classLabel(i.asset_class))}</div>
             {live && <RecoveryLine r={live.recovery} />}
             {i.sources.length > 0 && (
               <div className="src-list" style={{ marginTop: 6 }}>
@@ -722,7 +725,7 @@ export function RecentTab(p: TabProps) {
 }
 
 /** Deterministic one-line summary from structured fields. No generative prose. */
-function summarise(i: Incident, region: string | null): string {
+function summarise(i: Incident, region: string | null, classLabel: string): string {
   const cause = {
     kinetic_strike: "Reported kinetic strike",
     sabotage: "Reported sabotage",
@@ -732,12 +735,11 @@ function summarise(i: Incident, region: string | null): string {
     maintenance: "Scheduled maintenance",
     unknown: "Disruption of unknown cause",
   }[i.cause] ?? "Disruption";
-  const cls = titleCase(i.asset_class ?? "facility").toLowerCase();
   const loc = region ? ` in ${region}` : "";
   const conf = i.confidence === "confirmed" ? "corroborated by multiple sources"
     : i.confidence === "probable" ? "single-source reported"
     : "unconfirmed report";
-  return `${cause} affecting a ${cls}${loc}, ${fmtDate(i.date)} (${conf}).`;
+  return `${cause} affecting ${withArticle(classLabel)}${loc}, ${fmtDate(i.date)} (${conf}).`;
 }
 
 function hostname(url: string): string {

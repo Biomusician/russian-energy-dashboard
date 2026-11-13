@@ -1,18 +1,53 @@
-import SystemSwitcher from "../global/SystemSwitcher";
+import { useState } from "react";
 import type { Bundle } from "../types";
 import { fmtDate, fmtDelta, fmtNum } from "../data";
 import { assessFreshness } from "../freshness";
-import { reconstructionLabel } from "../briefing";
+import { TRANSMISSION_CAVEAT, reconstructionLabel } from "../briefing";
 import { severityColor } from "../palette";
-import { ExplainButton } from "./ui";
 import type { InspectTarget } from "./Inspector";
+import TheatreBar, { type TheatreTool } from "./TheatreBar";
+import type { TheatreMode } from "../theatreMode";
+import "../styles/theatre.css";
 
-/** National summary strip. Iteration 1 adds recovery headline metrics and consolidates
- *  the two denominator-less sectors (gas, coal) into one compact cell, so the ribbon
- *  leads with what it can actually measure without hiding what it cannot. */
+/** Plain-language reading of a sector's measurement basis, keyed on the basis the build itself
+ *  publishes for that sector (`explanations.sectors[key].basis`). Not a sector definition: it
+ *  says what KIND of number the cell is, so "transmission burden" stops being opaque jargon. */
+const BASIS_GLOSS: Record<string, { short: string; long: string }> = {
+  capacity_mtpa: {
+    short: "capacity share",
+    long: "Share of the tracked capacity base sitting at recently disrupted sites. Modelled exposure, not measured loss.",
+  },
+  capacity_mw: {
+    short: "capacity share",
+    long: "Share of the tracked capacity base sitting at recently disrupted sites. Modelled exposure, not measured loss.",
+  },
+  event_burden: {
+    short: "event-burden proxy",
+    long: `A count of disrupted substations and lines against a fixed saturation point. ${TRANSMISSION_CAVEAT}`,
+  },
+};
+
+/** The highest index value up to `step`, with its date. Null when the series has no value. */
+function peakTo(series: (number | null)[], dates: string[], step: number): { value: number; date: string } | null {
+  let best: { value: number; date: string } | null = null;
+  for (let i = 0; i <= step && i < series.length; i++) {
+    const v = series[i];
+    if (v == null) continue;
+    if (!best || v > best.value) best = { value: v, date: dates[i] };
+  }
+  return best;
+}
+
+/** National summary strip.
+ *
+ *  Reading order is the order a first-time analyst needs: where am I and how do I leave (the bar),
+ *  the headline and what it means, then how much of the picture is known — the two coverage
+ *  ratios, kept beside the headline at the same weight and never scrolled out of view — then the
+ *  per-sector scores and the recovery evidence. Labels are plain language and WRAP; nothing in
+ *  this header scrolls sideways or truncates. */
 export default function Ribbon({
   bundle, step, currentDate, onOpenMethodology, onExplain, onCompare, comparing,
-  onLifecycle, lifecycleOpen, onBriefing,
+  onLifecycle, lifecycleOpen, theatreName, mode, onMode,
 }: {
   bundle: Bundle;
   step: number;
@@ -29,8 +64,9 @@ export default function Ribbon({
    *  a ribbon entry there is no way to reach it while comparing. */
   onLifecycle?: () => void;
   lifecycleOpen?: boolean;
-  /** Enters Briefing Mode: presentation framing on top of map focus (P8). */
-  onBriefing?: () => void;
+  theatreName: string;
+  mode: TheatreMode;
+  onMode: (m: TheatreMode) => void;
 }) {
   const { national, snapshot, taxonomy } = bundle;
   // null, never 0, when the series has no value at this step: 0 would claim "measured, nothing
@@ -40,172 +76,192 @@ export default function Ribbon({
   const payloadReconstructed = (bundle.snapshot.history_concept?.mode ?? "current_build") !== "current_build";
   const coverage = snapshot.coverage;
   const rs = snapshot.recovery_stats;
+  const peak = peakTo(national.esdi, national.dates, step);
 
   const coveredSectors = snapshot.sectors_covered;
   const uncovered = snapshot.sectors_uncovered;
   const fresh = assessFreshness(snapshot.as_of, snapshot.publication_freshness, new Date());
+  // Phones only: the sector and recovery row folds behind one labelled toggle (CSS hides the
+  // toggle and always shows the row on wider screens).
+  const [detailOpen, setDetailOpen] = useState(false);
+  const explainHeadline = () => onExplain(isLatest ? { kind: "headline" } : { kind: "historical", step });
+
+  const tools: TheatreTool[] = [];
+  if (onCompare) tools.push({ label: "Compare dates", pressedLabel: "✓ comparing dates", onClick: onCompare, pressed: !!comparing });
+  if (onLifecycle) tools.push({ label: "Recovery lifecycle", pressedLabel: "✓ recovery lifecycle", onClick: onLifecycle, pressed: !!lifecycleOpen });
+  tools.push({ label: "Data quality", onClick: () => onExplain({ kind: "quality" }) });
+  tools.push({ label: "Methodology & caveats", onClick: onOpenMethodology });
 
   return (
-    <header className="ribbon">
-      <div className="ribbon-brand">
-        <h1 className="ribbon-title">Energy Disruption Monitor</h1>
-        <div className="ribbon-sub">Belarus, western Russia &amp; Siberia + occupied Crimea · admin-region level</div>
-        <SystemSwitcher current="ru" />
-        <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-          <button className="ghost" onClick={onOpenMethodology}>Methodology &amp; caveats</button>
-          <button className="ghost" onClick={() => onExplain({ kind: "quality" })}>
-            Data quality
-          </button>
-          {onCompare && (
-            <button className="ghost" aria-pressed={!!comparing} onClick={onCompare}>
-              {comparing ? "✓ comparing dates" : "Compare dates"}
-            </button>
-          )}
-          {onBriefing && (
-            <button className="ghost" onClick={onBriefing}>Briefing &amp; export</button>
-          )}
-          {onLifecycle && (
-            <button className="ghost" aria-pressed={!!lifecycleOpen} onClick={onLifecycle}>
-              {lifecycleOpen ? "✓ recovery lifecycle" : "Recovery lifecycle"}
-            </button>
-          )}
-        </div>
-      </div>
+    <header className={`ribbon theatre-ribbon${detailOpen ? " show-sectors" : ""}`}>
+      <TheatreBar name={theatreName} mode={mode} onMode={onMode} tools={tools} />
 
-      <div className="esdi-block">
-        <div className="esdi-value" style={{ color: esdi == null ? "var(--text-faint)" : severityColor(esdi) }}
-             title={esdi == null ? "No index value exists for this date." : undefined}>
-          {fmtNum(esdi, 1)}
-        </div>
-        <div className="esdi-meta">
-          <div className="eyebrow">Monitored-Area ESDI</div>
-          {/* P2: "live" used to mean nothing more than "the scrubber is at the last timeline
-              step", which is equally true of a payload that stopped rebuilding eleven days ago.
-              The word is now earned: it appears only when the build's own age is inside the
-              cadence the payload publishes. */}
-          <div style={{ fontSize: 11, color: "var(--text-dim)" }}>
-            {fmtDate(currentDate)}
-            {isLatest && !payloadReconstructed && (
-              <span style={{ color: fresh.level === "fresh" ? "var(--accent)" : "var(--amber)" }}>
-                {" "}· {fresh.shortLabel}
+      <div className="ribbon-metrics">
+        <section className="hl-block" aria-label="Headline">
+          <div className="esdi-value" style={{ color: esdi == null ? "var(--text-faint)" : severityColor(esdi) }}
+               title={esdi == null ? "No index value exists for this date." : undefined}>
+            {fmtNum(esdi, 1)}
+          </div>
+          <div className="esdi-meta">
+            <p className="hl-name">
+              <span className="eyebrow">Monitored-Area ESDI</span>
+              {/* The way into the Evidence Inspector sits ON the headline, in words a reader
+                  would use. The accessible name keeps "Explain the Monitored-Area ESDI" so the
+                  older label still finds it. */}
+              <button type="button" className="why-btn"
+                      aria-label="Why this number? Explain the Monitored-Area ESDI"
+                      onClick={explainHeadline}>
+                Why this number?
+              </button>
+            </p>
+            <p className="hl-scale" title="Belarus, the monitored Russian regions and occupied Crimea.">
+              0–100 exposure index: the share of tracked capacity at recently disrupted sites —
+              not measured loss.
+            </p>
+            {/* P2: "live" used to mean nothing more than "the scrubber is at the last timeline
+                step", which is equally true of a payload that stopped rebuilding eleven days ago.
+                The word is now earned: it appears only when the build's own age is inside the
+                cadence the payload publishes. */}
+            <p className="hl-date">
+              <span>
+                {fmtDate(currentDate)}
+                {isLatest && !payloadReconstructed && (
+                  <span style={{ color: fresh.level === "fresh" ? "var(--accent)" : "var(--amber)" }}>
+                    {" "}· {fresh.shortLabel}
+                  </span>
+                )}
               </span>
+              {peak && <span>peak to date <span className="num">{fmtNum(peak.value, 1)}</span> ({fmtDate(peak.date)})</span>}
+              <BuildDelta bundle={bundle} isLatest={isLatest} onExplain={onExplain} />
+            </p>
+            {/* Iteration 16: a past date on this ribbon is today's evidence evaluated at that date,
+                never what the dashboard published then. A shared `d=` link lands here, so the label
+                travels with the number rather than living only in exports. */}
+            {(!isLatest || payloadReconstructed) && (
+              <p className="reconstruction-tag" title="Today's code and evidence evaluated at this date. What the dashboard actually published on a date is under Compare dates → As published.">
+                {payloadReconstructed && isLatest
+                  ? bundle.snapshot.history_concept!.label
+                  : reconstructionLabel(currentDate)}
+              </p>
             )}
           </div>
-          {/* Iteration 16: a past date on this ribbon is today's evidence evaluated at that date,
-              never what the dashboard published then. A shared `d=` link lands here, so the label
-              travels with the number rather than living only in exports. */}
-          {(!isLatest || payloadReconstructed) && (
-            <div className="reconstruction-tag" title="Today's code and evidence evaluated at this date. What the dashboard actually published on a date is under Compare dates → As published.">
-              {payloadReconstructed && isLatest
-                ? bundle.snapshot.history_concept!.label
-                : reconstructionLabel(currentDate)}
-            </div>
-          )}
-          <div style={{ fontSize: 10.5, color: "var(--text-faint)", maxWidth: 180, lineHeight: 1.4 }}>
-            Belarus + monitored Russian regions + Crimea. Capacity at disrupted sites — not measured loss.
+        </section>
+
+        {/* The two coverage ratios: how much of the picture the headline can see. Same type size
+            as each other and pinned beside the headline at every width. */}
+        <section className="known-block" aria-label="How much is known">
+          <div className="known-item">
+            <span className="eyebrow" title="Oil-strike benchmark coverage">Oil-strike coverage</span>
+            {coverage ? (
+              <>
+                <span className="known-num num">
+                  {coverage.enumerated_in_this_dataset}
+                  <span className="dimmer"> / {coverage.reported_total_strikes}</span>
+                  <span className="dim"> ({Math.round(coverage.coverage_ratio * 100)}%)</span>
+                </span>
+                <span className="known-label" title={coverage.numerator_definition ?? undefined}>
+                  oil-sector strikes recorded, of the reported total; other sectors have no
+                  benchmark{coverage.total_events_all_sectors
+                    ? ` (${coverage.total_events_all_sectors} events in all)` : ""}.
+                </span>
+              </>
+            ) : (
+              <span className="known-label">benchmark unavailable</span>
+            )}
           </div>
-          <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-            <ExplainButton label="the Monitored-Area ESDI"
-                           onClick={() => onExplain(isLatest ? { kind: "headline" } : { kind: "historical", step })} />
-            <BuildDelta bundle={bundle} isLatest={isLatest} onExplain={onExplain} />
+          <div className="known-item">
+            <span className="eyebrow">Capacity quantified</span>
+            <span className="known-num num">
+              {snapshot.incidents_with_quantified_capacity}
+              <span className="dimmer"> of {snapshot.incident_total}</span>
+            </span>
+            <span className="known-label"
+                  title="The index measures exposure, not loss, because so few events state a capacity effect.">
+              events state how much capacity they removed.
+            </span>
+          </div>
+        </section>
+
+        <button type="button" className="ribbon-more-toggle" aria-expanded={detailOpen}
+                aria-controls="ribbon-detail" onClick={() => setDetailOpen((v) => !v)}>
+          {detailOpen ? "Hide sectors & recovery" : "Sector scores & recovery"}
+        </button>
+
+        {/* Sector scores, then recovery evidence. These WRAP onto a second line when the header is
+            narrow; they used to scroll sideways, and at 1600px the sector cells measured 0px wide. */}
+        <div className="ribbon-scroll" id="ribbon-detail">
+          <div className="sector-strip" role="group" aria-label="Sector scores in the index">
+            {coveredSectors.map((key) => {
+              const value = national.sectors[key]?.[step] ?? null;
+              const color = value == null ? "var(--text-faint)" : severityColor(value);
+              const basis = snapshot.explanations?.sectors?.[key]?.basis ?? null;
+              const gloss = basis ? BASIS_GLOSS[basis] : undefined;
+              const name = taxonomy.sectors[key] ?? key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className="sector-cell as-button"
+                  onClick={() => onExplain({ kind: "sector", sector: key })}
+                  title={gloss ? `${name}: ${gloss.long} Click to see how it is built.` : `Explain ${name}`}
+                  aria-label={`Explain ${name}: ${fmtNum(value, 1)}${gloss ? `, ${gloss.short}` : ""}`}
+                >
+                  <span className="sc-top">
+                    <span className="sc-name">{name}</span>
+                    <span className="num sc-value" style={{ color }}>{fmtNum(value, 1)}</span>
+                  </span>
+                  <span className="sector-bar"><i style={{ width: `${Math.min(100, value ?? 0)}%`, background: color }} /></span>
+                  {gloss && <span className="sc-basis">{gloss.short}</span>}
+                </button>
+              );
+            })}
+            {uncovered.length > 0 && (
+              <div className="sector-cell uncovered" title="No published capacity base, so these sectors are shown but not scored. Their weight is shared among the scored sectors; excluded is not zero.">
+                <span className="sc-top">
+                  <span className="sc-name">Not scored</span>
+                  <span className="sc-uncovered">{uncovered.map((s) => taxonomy.sectors[s] ?? s).join(", ")}</span>
+                </span>
+                <span className="sc-basis">no capacity base — excluded, not zero</span>
+              </div>
+            )}
+          </div>
+
+          {/* Recovery headline. §11: the headline is the national EVIDENCE COUNT, not the pooled
+              cross-class median — a 2-day terminal restart and a 205-day gas-plant repair are not
+              one repair time. These are as-at-build counts; only the ESDI follows the scrubber, so
+              the group says so once, in words, instead of on every label. */}
+          <div className="recovery-group" title="Counts as at the latest build — they do not follow the timeline scrubber; only the index does.">
+            <span className="rg-head">Recovery evidence · <span className="warn-text">latest build</span></span>
+            <div className="rg-stats">
+              <RecoveryStat value={rs.unresolved_count} color="var(--amber)"
+                            label="facilities with no restoration report (modelled)" />
+              <RecoveryStat
+                value={rs.observed_restoration_episodes}
+                color="var(--green)"
+                label="observed-restoration episodes"
+                title={rs.median_observed_restoration_days != null
+                  ? `Median ${rs.median_observed_restoration_days} days across all infrastructure types mixed — not a norm for any one sector. Per-type medians are in the Recovery tab.`
+                  : `Fewer than ${rs.min_median_episodes} episodes, too few for a pooled median.`}
+              />
+              <RecoveryStat value={rs.full_reconstitution_episodes} color="var(--green)"
+                            label="reconstitution episodes" />
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Recovery headline. §11: the headline is the national EVIDENCE COUNT, not the pooled
-          cross-class median — a 2-day terminal restart and a 205-day gas-plant repair are not
-          one repair time. The mixed median is shown only as a caveated sub-line, never the
-          lead number; per-class medians live in the Recovery tab. */}
-      {/* These three are as-at-build snapshot counts; only the ESDI to their left follows the
-          scrubber. Scrubbed to 2024 the ribbon otherwise showed a 2024 index beside 2026 recovery
-          counts with nothing to tell them apart — an arithmetically impossible reading. */}
-      <div className="ribbon-scroll">
-      <div className="esdi-block" style={{ gap: 20 }} title="Current as at the latest build — these do not follow the timeline scrubber.">
-        <RecoveryStat value={rs.unresolved_count} label="No restoration report (modelled)" color="var(--amber)" current />
-        <RecoveryStat
-          value={`${rs.observed_restoration_episodes}`}
-          label="Observed-restoration episodes"
-          sub={rs.median_observed_restoration_days != null
-            ? `mixed-infra median ${rs.median_observed_restoration_days}d — not a per-sector norm`
-            : `< ${rs.min_median_episodes} for a pooled median`}
-          color="var(--green)"
-          current
-        />
-        <RecoveryStat value={rs.full_reconstitution_episodes} label="Reconstitution episodes" color="var(--green)" current />
-      </div>
-
-      <div className="sector-strip">
-        {coveredSectors.map((key) => {
-          const value = national.sectors[key]?.[step] ?? null;
-          const color = value == null ? "var(--text-faint)" : severityColor(value);
-          return (
-            <button
-              key={key}
-              className="sector-cell as-button"
-              onClick={() => onExplain({ kind: "sector", sector: key })}
-              title={`Explain ${taxonomy.sectors[key] ?? key}`}
-            >
-              <div className="eyebrow">{taxonomy.sectors[key] ?? key}</div>
-              <div className="num" style={{ fontSize: 19, marginTop: 4, color }}>{fmtNum(value, 1)}</div>
-              <div className="sector-bar"><i style={{ width: `${Math.min(100, value ?? 0)}%`, background: color }} /></div>
-              <span className="cell-explain">explain</span>
-            </button>
-          );
-        })}
-        {uncovered.length > 0 && (
-          <div className="sector-cell uncovered" title="No published capacity base, so these sectors are shown but not scored.">
-            <div className="eyebrow">Unquantified</div>
-            <div style={{ fontSize: 12, marginTop: 6, color: "var(--text-dim)" }}>
-              {uncovered.map((s) => taxonomy.sectors[s] ?? s).join(", ")}
-            </div>
-            <div style={{ fontSize: 9.5, color: "var(--text-faint)", marginTop: 4 }}>no capacity base</div>
-          </div>
-        )}
-      </div>
-
-      <div className="ribbon-coverage">
-        <div className="eyebrow">Oil-strike benchmark coverage</div>
-        {coverage ? (
-          <>
-            <div className="num" style={{ fontSize: 17 }}>
-              {coverage.enumerated_in_this_dataset}
-              <span style={{ color: "var(--text-faint)", fontSize: 13 }}> / {coverage.reported_total_strikes}</span>
-              <span style={{ color: "var(--text-dim)", fontSize: 13 }}> ({Math.round(coverage.coverage_ratio * 100)}%)</span>
-            </div>
-            <div style={{ fontSize: 10, color: "var(--text-dim)", lineHeight: 1.4 }}
-                 title={coverage.numerator_definition ?? undefined}>
-              oil-sector strikes vs the reported oil-strike benchmark. Other sectors are
-              unbenchmarked{coverage.total_events_all_sectors
-                ? ` (${coverage.total_events_all_sectors} events across all sectors)` : ""}.
-            </div>
-          </>
-        ) : (
-          <div style={{ fontSize: 11, color: "var(--text-faint)" }}>benchmark unavailable</div>
-        )}
-        <div style={{ fontSize: 10, color: "var(--text-faint)" }}>
-          {snapshot.incidents_with_quantified_capacity} of {snapshot.incident_total} have quantified capacity effect
-        </div>
-      </div>
       </div>
     </header>
   );
 }
 
 function RecoveryStat({
-  value, label, sub, color, current,
+  value, label, title, color,
 }: {
-  value: React.ReactNode; label: string; sub?: string; color: string;
-  /** Marks a value that is as-at-build and does NOT follow the timeline scrubber. */
-  current?: boolean;
+  value: React.ReactNode; label: string; title?: string; color: string;
 }) {
   return (
-    <div className="esdi-meta" style={{ gap: 2 }}>
-      <div className="num" style={{ fontSize: 26, lineHeight: 1, color }}>{value}</div>
-      <div className="eyebrow" style={{ maxWidth: 96, lineHeight: 1.3 }}>
-        {label}
-        {current && <span style={{ color: "var(--amber)" }}> · latest build</span>}
-      </div>
-      {sub && <div style={{ fontSize: 9.5, color: "var(--text-faint)", fontFamily: "var(--mono)" }}>{sub}</div>}
+    <div className="rstat" title={title}>
+      <span className="num rstat-value" style={{ color }}>{value}</span>
+      <span className="rstat-label">{label}</span>
     </div>
   );
 }
