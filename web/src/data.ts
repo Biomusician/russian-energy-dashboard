@@ -76,6 +76,21 @@ export function loadBundle(): Promise<Bundle> {
   return bundlePromise;
 }
 
+// regions.json is read by two consumers: the theatre's bundle and the global search (which wants
+// the region names the first time the search box is focused). They share one request, so a reader
+// who searches on the home page and then opens the theatre does not download the file twice.
+// A failure is not kept, so the next caller retries.
+let regionsPromise: Promise<Bundle["regions"]> | null = null;
+
+export function loadRegionRows(): Promise<Bundle["regions"]> {
+  if (!regionsPromise) {
+    const p = grab<Bundle["regions"]>("regions.json");
+    regionsPromise = p;
+    p.catch(() => { if (regionsPromise === p) regionsPromise = null; });
+  }
+  return regionsPromise;
+}
+
 export function prefetchBundle(): void {
   loadBundle().catch(() => undefined);
 }
@@ -89,7 +104,7 @@ async function fetchBundle(): Promise<Bundle> {
     grab<Bundle["national"]>("index_national.json"),
     grab<Bundle["regional"]>("index_regional.json"),
     grab<Bundle["incidents"]>("incidents.json"),
-    grab<Bundle["regions"]>("regions.json"),
+    loadRegionRows(),
     grab<Bundle["assets"]>("assets.json"),
     grab<Bundle["taxonomy"]>("taxonomy.json"),
     grab<Bundle["regionsGeo"]>("regions.geojson"),

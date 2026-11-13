@@ -516,7 +516,10 @@ def _facility_attribution(prev_snap, curr_snap, rescaled_sectors, separable):
                 "attribution_exact": reason is None,
                 "non_additive_reason": reason,
             })
-    rows.sort(key=lambda r: (-abs(r["delta"]), r["sector"]))
+    # asset_id breaks ties: the rows come from a set, whose order changes with Python's per-process
+    # hash seed, so two runs of identical data emitted equal-delta facilities in different orders
+    # and a same-day rerun read as a substantive change (iteration 21 refresh simulation).
+    rows.sort(key=lambda r: (-abs(r["delta"]), r["sector"], r["asset_id"]))
     return rows
 
 
@@ -668,7 +671,19 @@ def build(root, curr_snap, curr_incidents, curr_assets):
     """
     from pipeline import lineage as lin
 
-    payloads, meta = lin.resolve(root, curr_snap.get("as_of"))
+    # The predecessor is the last build dated BEFORE this one, the rule What's new already uses.
+    # Comparing with the tip instead made every second build of a day (a rerun, or a human
+    # data commit after the bot) re-baseline onto that morning's build: the ledger flipped to
+    # "same date, nothing changed", which the refresh's change detector counted as a substantive
+    # difference, so the rerun committed and replaced the useful since-yesterday story with an
+    # empty one (iteration 21 refresh simulation). Every build of one day now gets one answer.
+    as_of = curr_snap.get("as_of")
+    dated_sha, dated = lin.previous_dated_build(root, as_of)
+    payloads, meta = lin.resolve(root, as_of, baseline_sha=dated_sha)
+    if not dated_sha and meta.get("valid"):
+        # The tip resolved, but no build dated before this one exists to compare with.
+        return unavailable(curr_snap, {**meta, "valid": False, "mode": "invalid", "reason": dated["reason"]},
+                           dated["reason"])
     if payloads:
         meta["worktree_payload_differs_from_baseline"] = lin.worktree_differs(
             root, payloads.get("snapshot.json"))

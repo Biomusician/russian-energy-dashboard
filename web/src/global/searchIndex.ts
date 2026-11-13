@@ -13,6 +13,7 @@
 import type { Manifest } from "./manifest";
 import { GLOSSARY } from "./glossary";
 import { matchScore, normalizeForSearch } from "./searchNormalize";
+import { loadRegionRows } from "../data";
 
 export type SearchKind = "system" | "group" | "view" | "region" | "concept";
 
@@ -139,17 +140,14 @@ export function searchEntries(entries: SearchEntry[], query: string, limit = 12)
 
 // ---- cheap region sources -------------------------------------------------------------------
 
-const BASE = `${import.meta.env.BASE_URL}data`;
 let theatrePromise: Promise<TheatreRegion[]> | null = null;
 
 /** The theatre's region list (about 17 kB), fetched once, on first use. A failure is not cached. */
 export function loadTheatreRegions(): Promise<TheatreRegion[]> {
   if (!theatrePromise) {
-    theatrePromise = fetch(`${BASE}/regions.json`, { cache: "no-cache" })
-      .then((r) => {
-        if (!r.ok) throw new Error(`regions: HTTP ${r.status}`);
-        return r.json();
-      })
+    // The same request the theatre's bundle uses (data.ts), so searching first and then opening the
+    // theatre downloads regions.json once.
+    theatrePromise = loadRegionRows()
       .then((rows: unknown) => {
         if (!Array.isArray(rows)) throw new Error("regions: not a list");
         return rows.filter((x) => x && typeof x.code === "string" && typeof x.name === "string")

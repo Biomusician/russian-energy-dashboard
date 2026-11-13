@@ -78,20 +78,21 @@ function summarise(reqs) {
   };
 }
 
-async function waitIdle(page) {
-  await page.waitForFunction(() => window.__perf.mapIdleAt != null, null, { timeout: 60_000 });
+async function waitIdle(page, map = true) {
+  // Compare draws no map, so for it "settled" means the network went quiet.
+  if (map) await page.waitForFunction(() => window.__perf.mapIdleAt != null, null, { timeout: 60_000 });
   // Let late, non-map loads (panels below the fold) finish so they are counted.
   await page.waitForLoadState("networkidle");
 }
 
-async function measureRoute(browser, query) {
+async function measureRoute(browser, query, map = true) {
   const ctx = await browser.newContext({ viewport: { width: 1600, height: 900 } });
   const page = await ctx.newPage();
   await page.addInitScript(INIT);
   const reqs = [];
   attach(page, reqs);
   await page.goto(`${BASE}/${query}`);
-  await waitIdle(page);
+  await waitIdle(page, map);
   const perf = await page.evaluate(() => window.__perf);
   await ctx.close();
   return { ...summarise(reqs), mapReadyMs: perf.mapIdleAt, maps: perf.mapsCreated,
@@ -120,13 +121,14 @@ async function measureSwitch(browser, from, to) {
 
 const median = (xs) => { const s = [...xs].sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
 
-const ROUTES = [["home", ""], ["gulf", "?group=gulf"], ["ir", "?sys=ir"], ["us", "?sys=us"], ["ru", "?sys=ru"]];
+const ROUTES = [["home", ""], ["gulf", "?group=gulf"], ["ir", "?sys=ir"], ["us", "?sys=us"], ["ru", "?sys=ru"],
+                ["compare us,ca,sa", "?compare=us,ca,sa", false]];
 
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 const report = {};
-for (const [name, q] of [...ROUTES, ["switch ir->sa", null]]) {
+for (const [name, q, map] of [...ROUTES, ["switch ir->sa", null]]) {
   const runs = [];
-  for (let i = 0; i < RUNS; i++) runs.push(q === null ? await measureSwitch(browser, "ir", "sa") : await measureRoute(browser, q));
+  for (let i = 0; i < RUNS; i++) runs.push(q === null ? await measureSwitch(browser, "ir", "sa") : await measureRoute(browser, q, map ?? true));
   const last = runs[runs.length - 1];
   report[name] = { ...last, mapReadyMs: median(runs.map((r) => r.mapReadyMs)), longTaskMs: median(runs.map((r) => r.longTaskMs)),
                    cls: median(runs.map((r) => r.cls)), mapReadyRuns: runs.map((r) => r.mapReadyMs) };

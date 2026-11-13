@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  dataQualityProblems, forgetLoads, geometryProblems, groupContextProblems, loadCountry, loadManifest, manifestProblems,
+  dataQualityProblems, forgetLoads, geometryProblems, groupContextProblems, loadCountry, loadCountrySystem, loadManifest, manifestProblems,
   once, recentProblems, sanitizeManifest, shapeProblems, type Manifest,
 } from "./manifest";
 
@@ -88,6 +88,12 @@ describe("malformed payloads are named", () => {
     expect(groupContextProblems({ ...g, recent: { episodes: [{}] } })).toEqual(["recent is malformed"]);
     expect(groupContextProblems("<html>").length).toBeGreaterThan(3);
     expect(recentProblems({ episodes: [{ system_id: "x", first_date: "2025", classes: [], causes: [], members: "x" }] })).toHaveLength(1);
+    // A region that is not text used to print as "[object Object]" in the home's recent list.
+    const served = read("global/recent_evidence.json");
+    expect(served.episodes.length).toBeGreaterThan(0);
+    const badRegion = structuredClone(served);
+    badRegion.episodes[0].members[0].region = { not: "a string" };
+    expect(recentProblems(badRegion)).toHaveLength(1);
     expect(dataQualityProblems({ ...read("global/data_quality.json"), systems: [{ name: "x" }] })).toHaveLength(1);
     expect(geometryProblems({ type: "FeatureCollection" })).toEqual(["features is not a list"]);
   });
@@ -130,6 +136,29 @@ describe("one request per file per page", () => {
     const broken = stubFetch({ ...files, [`${root}/events.json`]: { events: "x" } });
     await expect(loadCountry(entry)).rejects.toThrow(/malformed payload/);
     await expect(loadCountry(entry)).rejects.toThrow(/malformed payload/);
-    expect(broken).toHaveLength(6);
+    // The broken file is asked for again; the valid system.json beside it is kept (it is the same
+    // request the comparison uses, so it is not refetched for a sibling file's failure).
+    expect(broken.filter((p) => p.endsWith("events.json"))).toHaveLength(2);
+    expect(broken.filter((p) => p.endsWith("system.json"))).toHaveLength(1);
+    expect(broken).toHaveLength(5);
+  });
+
+  it("a country the comparison has read is not fetched again when its page opens, nor the reverse", async () => {
+    const entry = manifest.systems.find((s) => s.id === "us")!;
+    const root = rootOf(entry.root);
+    const files = { [`${root}/system.json`]: read(`${root}/system.json`), [`${root}/events.json`]: read(`${root}/events.json`),
+                    [`${root}/regions.geojson`]: read(`${root}/regions.geojson`) };
+    let calls = stubFetch(files);
+    const alone = await loadCountrySystem(entry);
+    const full = await loadCountry(entry);
+    expect(full.system).toBe(alone);
+    expect(calls.filter((p) => p.endsWith("system.json"))).toHaveLength(1);
+    expect(calls).toHaveLength(3);
+
+    forgetLoads();
+    calls = stubFetch(files);
+    await loadCountry(entry);
+    await loadCountrySystem(entry);
+    expect(calls).toHaveLength(3);
   });
 });

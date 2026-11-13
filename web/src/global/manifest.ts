@@ -485,8 +485,11 @@ export function loadManifest(): Promise<Manifest> {
 /** One country's three files, validated, fetched once per page. */
 export function loadCountry(entry: ManifestSystem): Promise<CountryBundle> {
   return once(`country:${entry.id}`, async () => {
+    // system.json goes through loadCountrySystem so a country the comparison has already read is
+    // not downloaded a second time when its page opens (and the reverse: a page opened first
+    // leaves the comparison nothing to fetch). Still in parallel with the other two files.
     const [system, events, regions] = await Promise.all([
-      getJson<CountrySystem>(`${entry.root}/system.json`),
+      loadCountrySystem(entry),
       getJson<{ events: CountryEvent[]; episodes?: Episode[] }>(`${entry.root}/events.json`),
       getJson<GeoJSON.FeatureCollection>(`${entry.root}/regions.geojson`),
     ]);
@@ -689,7 +692,8 @@ export function recentProblems(x: unknown): string[] {
     const ep = e as Record<string, unknown>;
     return !obj(e) || typeof ep.system_id !== "string" || typeof ep.first_date !== "string"
       || !Array.isArray(ep.classes) || !Array.isArray(ep.causes) || !Array.isArray(ep.members)
-      || (ep.members as unknown[]).some((m) => !obj(m));
+      // A member's region is printed as text; an object there rendered as "[object Object]".
+      || (ep.members as unknown[]).some((m) => !obj(m) || typeof (m as Record<string, unknown>).region !== "string");
   });
   return bad ? ["an episode lacks its date, classes, causes or members"] : [];
 }

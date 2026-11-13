@@ -75,8 +75,14 @@ def _run(lanes=(), systems=None, tmp_path=None):
     harness = tmp_path / "harness.mjs"
     harness.write_text(HARNESS, encoding="utf-8")
     payload = json.dumps({"lanes": list(lanes), "systems": systems or {}})
-    r = subprocess.run([NODE, str(harness), MODULE.as_uri()], input=payload, capture_output=True,
-                       text=True, encoding="utf-8")
+    # The module is TypeScript. Node 22.18+ strips types by default; 22.6-22.17 needs the flag, and
+    # without it the import fails with ERR_UNKNOWN_FILE_EXTENSION -- a FAILURE, not a skip, on
+    # whatever Node a CI runner happens to have on PATH, and this file runs in the step that gates
+    # the daily data commit. Older Nodes reject the flag outright: that is a missing tool, so skip.
+    r = subprocess.run([NODE, "--experimental-strip-types", "--no-warnings", str(harness), MODULE.as_uri()],
+                       input=payload, capture_output=True, text=True, encoding="utf-8")
+    if r.returncode != 0 and "bad option" in r.stderr:
+        pytest.skip(f"this Node cannot strip TypeScript types: {r.stderr.strip()[:120]}")
     assert r.returncode == 0, r.stderr
     return json.loads(r.stdout)
 

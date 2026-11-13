@@ -4205,6 +4205,144 @@ def test_a_baseline_dated_after_this_build_is_refused_as_a_production_comparison
     assert "never runs backwards" in meta["reason"]
 
 
+def _commit_build(root, as_of, esdi, message):
+    """Commit another build on top of a `_git_fixture` repo, as the refresh bot would."""
+    import subprocess
+    data = root / "web" / "public" / "data"
+    (data / "snapshot.json").write_text(json.dumps(
+        {"as_of": as_of, "build_time": f"{as_of}T05:20:00+00:00", "esdi": esdi}), encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True, capture_output=True)
+    subprocess.run(["git", "commit", "-qm", message], cwd=root, check=True, capture_output=True)
+    return subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, check=True, capture_output=True,
+                          text=True).stdout.strip()
+
+
+def test_every_build_of_one_day_compares_with_the_same_predecessor(tmp_path, monkeypatch):
+    """Iteration 21 refresh simulation. The morning bot committed the 09-01 build; a second build
+    that day (a rerun, or a human data commit) used to take that commit as its predecessor, flip
+    the ledger to "same date, nothing changed", read as a substantive change to the refresh, and
+    commit an empty story over the since-yesterday one. The predecessor is now the last build
+    dated before this one, the rule What's new uses."""
+    from pipeline import diff_builds
+    monkeypatch.delenv("PRODUCTION_REF", raising=False)
+    root = _git_fixture(tmp_path, committed_as_of="2026-08-31")
+    import subprocess
+    yesterday = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, check=True, capture_output=True,
+                               text=True).stdout.strip()
+    _commit_build(root, "2026-09-01", 17.0, "data: daily refresh 2026-09-01")
+    first = diff_builds.build(root, _led_snapshot(17.3, as_of="2026-09-01"), [], [])
+    again = diff_builds.build(root, _led_snapshot(17.3, as_of="2026-09-01"), [], [])
+    assert first["lineage"]["valid"] is True
+    assert first["previous_as_of"] == "2026-08-31"
+    assert first["esdi_before"] == 18.5
+    assert first["as_of_direction"] == "forward"
+    assert first["lineage"]["previous_commit"] == yesterday
+    # The disk holds this morning's COMMITTED build: not an experiment, so not flagged.
+    assert first["lineage"]["worktree_payload_differs_from_baseline"] is False
+    strip = lambda d: {k: v for k, v in d.items() if k != "lineage"} | {  # noqa: E731
+        "lineage": {k: v for k, v in d["lineage"].items() if k != "worktree_dirty"}}
+    assert strip(first) == strip(again)
+
+
+def test_an_uncommitted_build_on_disk_is_still_flagged_under_the_dated_baseline(tmp_path, monkeypatch):
+    from pipeline import diff_builds
+    monkeypatch.delenv("PRODUCTION_REF", raising=False)
+    root = _git_fixture(tmp_path, committed_as_of="2026-08-31")
+    _commit_build(root, "2026-09-01", 17.0, "data: daily refresh 2026-09-01")
+    (root / "web" / "public" / "data" / "snapshot.json").write_text(json.dumps(
+        {"as_of": "2026-01-01", "build_time": "2026-01-01T00:00:00+00:00", "esdi": 99.9}), encoding="utf-8")
+    led = diff_builds.build(root, _led_snapshot(17.3, as_of="2026-09-01"), [], [])
+    assert led["esdi_before"] == 18.5
+    assert led["lineage"]["worktree_payload_differs_from_baseline"] is True
+
+
+def test_with_no_build_dated_before_this_one_the_ledger_says_so(tmp_path, monkeypatch):
+    """The only committed build is today's: there is no predecessor, and comparing with today's
+    own build would be the same-date story again."""
+    from pipeline import diff_builds
+    monkeypatch.delenv("PRODUCTION_REF", raising=False)
+    root = _git_fixture(tmp_path, committed_as_of="2026-09-01")
+    led = diff_builds.build(root, _led_snapshot(17.3, as_of="2026-09-01"), [], [])
+    assert led["lineage"]["valid"] is False
+    assert led["esdi_delta"] is None
+    assert "dated before 2026-09-01" in led["unavailable_reason"]
+
+
+def test_facility_attribution_order_does_not_depend_on_the_hash_seed():
+    """Found by the iteration-21 refresh simulation: two runs of identical data ordered
+    equal-delta facilities differently (they come from a set), so a same-day rerun's ledger read as
+    a substantive change. Run in fresh interpreters under different PYTHONHASHSEEDs, since one
+    process has one seed and could not see the difference."""
+    import subprocess
+    import sys
+    code = (
+        "import json; from pipeline import diff_builds as D\n"
+        "ids = [f'asset-{c}' for c in 'qwertyuiopasdfghjklzxcvbnm']\n"
+        "prev = {'explanations': {'sectors': {'transmission': {'contributing': []}}}}\n"
+        "curr = {'explanations': {'sectors': {'transmission': {'value': 5, 'contributing': [\n"
+        "    {'asset_id': a, 'name': a, 'sector_points': 0.5} for a in ids]}}}}\n"
+        "print(json.dumps([r['asset_id'] for r in D._facility_attribution(prev, curr, set(), True)]))\n")
+    orders = set()
+    for seed in ("1", "2", "3", "4"):
+        r = subprocess.run([sys.executable, "-c", code], cwd=ROOT, capture_output=True, text=True,
+                           encoding="utf-8", env={**os.environ, "PYTHONHASHSEED": seed}, check=True)
+        orders.add(r.stdout.strip())
+    assert len(orders) == 1, "facility order changes with the hash seed"
+    assert json.loads(orders.pop()) == sorted(f"asset-{c}" for c in "qwertyuiopasdfghjklzxcvbnm")
+
+
+def _ci_fixture(tmp_path, monkeypatch):
+    """A repo with a committed payload in both emitted trees, one file nested like systems/<id>/."""
+    import subprocess
+    run = lambda *a: subprocess.run(["git", *a], cwd=tmp_path, capture_output=True, check=True)  # noqa: E731
+    run("init", "-q", "-b", "main")
+    run("config", "user.email", "t@example.org")
+    run("config", "user.name", "T")
+    for d in ("data/processed", "web/public/data"):
+        (tmp_path / d / "systems" / "us").mkdir(parents=True)
+        (tmp_path / d / "snapshot.json").write_text(json.dumps({"as_of": "2026-09-01", "build_time": "a"}), encoding="utf-8")
+        (tmp_path / d / "systems" / "us" / "system.json").write_text(
+            json.dumps({"events": 3, "build_time": "a"}), encoding="utf-8")
+    run("add", "-A")
+    run("commit", "-qm", "build")
+    ci = _load_ci_data_changed()
+    monkeypatch.setattr(ci, "ROOT", tmp_path)
+    return ci
+
+
+def test_the_change_detector_sees_a_change_that_exists_only_in_a_country_subtree(tmp_path, monkeypatch):
+    """It globbed only the top level of each emitted tree, so a rerun whose only real change was a
+    country's payload reported "no substantive change" and published nothing."""
+    ci = _ci_fixture(tmp_path, monkeypatch)
+    assert ci.substantive_change() is False
+    for d in ("data/processed", "web/public/data"):
+        (tmp_path / d / "systems" / "us" / "system.json").write_text(
+            json.dumps({"events": 4, "build_time": "a"}), encoding="utf-8")
+    assert ci.substantive_change() is True
+
+
+def test_the_change_detector_ignores_a_restamped_country_file(tmp_path, monkeypatch):
+    ci = _ci_fixture(tmp_path, monkeypatch)
+    for d in ("data/processed", "web/public/data"):
+        (tmp_path / d / "systems" / "us" / "system.json").write_text(
+            json.dumps({"events": 3, "build_time": "b"}), encoding="utf-8")
+    assert ci.substantive_change() is False
+    # A new nested file is a change too.
+    (tmp_path / "web/public/data/systems/us/events.json").write_text("[]", encoding="utf-8")
+    assert ci.substantive_change() is True
+
+
+@pytest.mark.skipif(not (PROCESSED / "build_changes.json").exists()
+                    or not (PROCESSED / "global" / "whats_new.json").exists(), reason="pipeline has not been run")
+def test_the_ledger_and_whats_new_name_the_same_predecessor():
+    """Two "since the last build" stories on one page must mean the same last build."""
+    led = json.loads((PROCESSED / "build_changes.json").read_text(encoding="utf-8"))
+    wn = json.loads((PROCESSED / "global" / "whats_new.json").read_text(encoding="utf-8"))
+    if not (led["lineage"].get("valid") and wn.get("available")):
+        pytest.skip("one of the two has no comparison in this build")
+    assert led["previous_as_of"] == wn["comparison"]["previous_as_of"]
+
+
 def test_a_first_build_says_so_instead_of_claiming_a_quiet_day():
     """Zero changes and no previous build are different facts."""
     from pipeline import diff_builds as D
