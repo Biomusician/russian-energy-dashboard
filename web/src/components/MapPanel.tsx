@@ -190,6 +190,9 @@ export default function MapPanel({
   const [ready, setReady] = useState(false);
   const [assetLayersReady, setAssetLayersReady] = useState(false);
   const [hover, setHover] = useState<HoverInfo | null>(null);
+  // Phones only (CSS shows the toggle below 640px): the legend's secondary keys fold away so the
+  // legend stops covering a quarter of a small map. The scale and the Crimea key always show.
+  const [legendOpen, setLegendOpen] = useState(false);
   const [assetHover, setAssetHover] = useState<{ x: number; y: number; asset: Asset; alsoHere: Asset[] } | null>(null);
   const [routeHover, setRouteHover] = useState<{ x: number; y: number; props: RouteProps } | null>(null);
   // Clicking a route opens the canonical detail panel (§16). The registry is fetched on the
@@ -344,6 +347,12 @@ export default function MapPanel({
       }),
       "bottom-right",
     );
+    // On a narrow map MapLibre draws the attribution in its compact form but starts it OPEN, and
+    // the open strip lay across the legend so neither could be read. Start it closed; the (i)
+    // button MapLibre provides opens it, so the attribution stays one tap away.
+    if (m.getContainer().clientWidth < 640) {
+      m.getContainer().querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
+    }
 
     m.on("load", () => {
       // The infrastructure SYMBOL layers are intentionally NOT added here. A symbol layer that
@@ -1262,7 +1271,7 @@ export default function MapPanel({
         </span>
       </div>
 
-      <div className="map-legend">
+      <div className={`map-legend${legendOpen ? " open" : ""}`}>
         <div className="eyebrow">{isDelta ? "Change in ESDI" : metricLabel}</div>
         <div className="legend-scale">
           {(isDelta ? ESDI_DELTA_STOPS : SEVERITY_STOPS).map(([stop, color]) => (
@@ -1305,6 +1314,7 @@ export default function MapPanel({
             filtered surface.
           </div>
         )}
+        <div className="legend-detail">
         {/* Route-quality key (§20). Rendered ONLY for qualities the built data actually
             contains, and only while a network layer is on — inventing a "generalized" swatch to
             fill out the legend would advertise a distinction the corpus does not make. */}
@@ -1332,6 +1342,11 @@ export default function MapPanel({
             Recorded events, sized by count, on the region centroid — activity, not current damage
           </span>
         </div>
+        </div>
+        <button type="button" className="legend-toggle" aria-expanded={legendOpen}
+                onClick={() => setLegendOpen((v) => !v)}>
+          {legendOpen ? "Fewer keys" : "All keys"}
+        </button>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5 }}>
           <span style={{ width: 16, height: 8, border: "1px dashed #a98bfa", background: "#2a2438", flex: "0 0 auto" }} />
           <span style={{ fontSize: 9.5, color: "var(--text-faint)" }}>Crimea — Ukraine, occupied (in index)</span>

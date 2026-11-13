@@ -94,7 +94,7 @@ export default function Briefing({
           {ctx.stalenessNote && <p className="brief-caveat">{ctx.stalenessNote}</p>}
           {ctx.filterNote && <p className="brief-caveat">{ctx.filterNote}</p>}
           <p className="brief-caveat">{ctx.caveat}</p>
-          {options.scopeNote && <p>{ctx.scopeNote}</p>}
+          {options.scopeNote && <p className="brief-scope">{ctx.scopeNote}</p>}
           {options.scopeNote && ctx.crimeaNote && <p>{ctx.crimeaNote}</p>}
           {/* §16: only present when lineage is provable. Absence is silent, never "no prior
               build" — that is a fact about a git repository, not an analytical finding. */}

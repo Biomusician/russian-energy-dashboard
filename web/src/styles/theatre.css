@@ -1,0 +1,359 @@
+/* The theatre's header, view switch, and first-viewport hierarchy (iteration 21).
+   Loaded with the theatre chunk only. Everything here is presentation: no rule hides an
+   analytical figure, and nothing in the header scrolls sideways or truncates. */
+
+/* ---------- frame: nothing may scroll the app sideways ----------
+   A closed drawer sits off-canvas to the right (translateX(101%)). With `overflow: hidden` that
+   off-canvas box still made #root programmatically scrollable: any scrollIntoView or focus into
+   the closed dossier slid the whole app ~400px left, hiding the filters rail and the system
+   picker. `clip` forbids scrolling altogether, and a closed drawer is also made unfocusable. */
+#root, .shell { overflow: clip; }
+
+html[data-layout="compact"] .dossier:not(.drawer-open),
+html[data-layout="narrow"] .dossier:not(.drawer-open),
+html[data-layout="narrow"] .filters:not(.drawer-open),
+html[data-mapfocus="on"] .dossier:not(.drawer-open),
+html[data-mapfocus="on"] .filters:not(.drawer-open) {
+  visibility: hidden;
+  /* Hide only after the slide-out has finished. */
+  transition: transform 160ms ease-out, visibility 0s linear 160ms;
+}
+html[data-layout="compact"] .dossier.drawer-open,
+html[data-layout="narrow"] .dossier.drawer-open,
+html[data-layout="narrow"] .filters.drawer-open,
+html[data-mapfocus="on"] .dossier.drawer-open,
+html[data-mapfocus="on"] .filters.drawer-open {
+  visibility: visible;
+  transition: transform 160ms ease-out, visibility 0s;
+}
+
+/* ---------- ribbon shell ---------- */
+.ribbon.theatre-ribbon {
+  flex-direction: column;
+  min-height: 0;
+  overflow: visible;
+}
+
+/* ---------- top bar: where am I, way home, view, tools ---------- */
+.theatre-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.tb-where { display: flex; align-items: baseline; gap: 12px; min-width: 0; flex-wrap: wrap; }
+.tb-title { font-size: 13px; letter-spacing: 0.01em; white-space: nowrap; }
+.tb-crumbs { display: flex; align-items: baseline; gap: 6px; font-size: 12px; min-width: 0; }
+.tb-crumbs a { color: var(--accent); text-decoration: none; }
+.tb-crumbs a:hover { text-decoration: underline; }
+.tb-sep { color: var(--text-faint); }
+.tb-here { color: var(--text); }
+
+.theatre-bar .sys-switch { flex-direction: row; align-items: center; gap: 6px; margin: 0; }
+.theatre-bar .sys-switch .eyebrow { white-space: nowrap; }
+.theatre-bar .sys-switch select { padding: 3px 6px; font-size: 12px; }
+
+.mode-switch {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-left: auto;
+}
+.mode-switch button {
+  background: transparent;
+  border: 0;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 11.5px;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mode-switch button + button { border-left: 1px solid var(--line); }
+.mode-switch button:hover { color: var(--text); }
+.mode-switch button[aria-pressed="true"] { background: var(--accent-dim); color: #eaf7fb; }
+.mode-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.mode-switch .ms-short { display: none; }
+
+.tb-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.tb-tools-toggle { display: none; }
+
+/* ---------- metrics row ---------- */
+.ribbon-metrics {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.hl-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 16px;
+  border-right: 1px solid var(--line);
+  flex: 0 1 440px;
+  min-width: 0;
+}
+.theatre-ribbon .esdi-value { font-size: 40px; }
+html[data-chrome="compact"] .theatre-ribbon .esdi-value { font-size: 34px; line-height: 1; }
+.theatre-ribbon .esdi-meta { gap: 3px; min-width: 0; }
+.theatre-ribbon .esdi-meta > p { margin: 0; }
+.hl-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.why-btn {
+  background: transparent;
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+  border-radius: var(--radius);
+  font: inherit;
+  font-size: 11px;
+  padding: 1px 7px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.why-btn:hover { background: #0c2b31; }
+.why-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.hl-scale { display: block; font-size: 11px; line-height: 1.4; color: var(--text-dim); }
+.hl-date { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 11px; color: var(--text-dim); }
+
+.known-block {
+  display: flex;
+  gap: 18px;
+  padding: 8px 16px;
+  border-right: 1px solid var(--line);
+  flex: 0 1 400px;
+  min-width: 0;
+}
+.known-item { display: flex; flex-direction: column; gap: 1px; flex: 1 1 0; min-width: 0; }
+/* Equal weight: both ratios share one size, and it is the headline's line-height class. */
+.known-num { font-size: 19px; line-height: 1.15; color: var(--text); }
+.known-num .dimmer { color: var(--text-faint); font-size: 14px; }
+.known-num .dim { color: var(--text-dim); font-size: 14px; }
+.known-label { font-size: 10.5px; line-height: 1.35; color: var(--text-dim); }
+
+/* ---------- sectors and recovery: wrap, never scroll ---------- */
+.theatre-ribbon .ribbon-scroll,
+html[data-chrome="compact"] .theatre-ribbon .ribbon-scroll {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  flex: 999 1 420px;
+  min-width: 0;
+  overflow: visible;
+}
+.theatre-ribbon .sector-strip {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 0 1 auto;
+  overflow: visible;
+  align-items: stretch;
+}
+.theatre-ribbon .sector-cell,
+html[data-chrome="compact"] .theatre-ribbon .sector-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 118px;
+  padding: 6px 11px 5px;
+  border-right: 1px solid var(--line-soft);
+  text-align: left;
+  font: inherit;
+}
+.sc-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.sc-name { font-size: 11px; color: var(--text-dim); line-height: 1.25; }
+.sc-value { font-size: 16px; line-height: 1.1; }
+.sc-basis { font-size: 10px; color: var(--text-faint); line-height: 1.25; }
+.sc-uncovered { font-size: 12px; color: var(--text-dim); }
+.theatre-ribbon .sector-cell.uncovered { opacity: 0.6; max-width: 170px; }
+.theatre-ribbon .sector-bar { margin-top: 2px; height: 3px; display: block; }
+
+/* One line under the sector scores where it fits; it wraps (never scrolls) where it does not. */
+.recovery-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 14px;
+  padding: 4px 11px 6px;
+  flex: 1 1 100%;
+  min-width: 0;
+  border-top: 1px solid var(--line-soft);
+}
+.rg-head { font-size: 10.5px; color: var(--text-faint); }
+.rg-stats { display: flex; flex-wrap: wrap; gap: 2px 16px; }
+.rstat { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+.rstat-value { font-size: 15px; line-height: 1.2; }
+.rstat-label { font-size: 11px; line-height: 1.3; color: var(--text-dim); }
+
+/* ---------- withheld facility status (active campaign) ---------- */
+.withheld-status { display: block; font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+.withheld-status summary {
+  cursor: pointer;
+  display: inline-block;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--amber);
+  border-radius: var(--radius);
+  padding: 1px 7px;
+  color: var(--text-dim);
+}
+.withheld-status summary::-webkit-details-marker { display: none; }
+.withheld-status[open] summary { margin-bottom: 4px; }
+.withheld-status .withheld-note { display: block; line-height: 1.45; }
+
+/* ---------- Briefing on screen: the frame replaces the map's working overlays ----------
+   The presentation frame carries the title, caveat and (when included) the scope note, so the
+   camera presets, drawer toggles and the map's own scope note stop drawing underneath it. The
+   map scope note is hidden only while the frame shows the scope note itself. */
+html[data-briefing="on"] .camera-controls,
+html[data-briefing="on"] .drawer-toggles { display: none; }
+.shell:has(.brief-foot .brief-scope) .map-scope-note { display: none; }
+/* Beats the drawer-toggle offset rule (`.shell:has(...)`), which still matches while the
+   toggles are hidden. */
+html[data-briefing="on"] .shell .maplibregl-ctrl-top-left { margin-top: 70px; }
+/* The controls sit on the map, not over the timeline scrubber; the on-screen frame leaves room
+   for them. Neither affects the exported image, which is drawn from the frame's data. */
+html[data-briefing="on"] .brief-controls { grid-area: map; bottom: 10px; right: 12px; }
+html[data-briefing="on"] .briefing-frame { padding-bottom: 54px; }
+html[data-briefing="on"] .brief-panel { grid-area: map; }
+/* The legend moves to the top right, under the frame's header, so the footer caveats never sit
+   on top of it. */
+html[data-briefing="on"] .map-legend { top: 72px; right: 12px; left: auto; bottom: auto; }
+
+/* ---------- medium widths: tools fold behind one toggle ---------- */
+@media (max-width: 1279px) {
+  .tb-tools-toggle {
+    display: inline-block;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+    border-radius: var(--radius);
+    font: inherit;
+    font-size: 11.5px;
+    padding: 4px 10px;
+    cursor: pointer;
+  }
+  .tb-tools-toggle[aria-expanded="true"] { border-color: var(--accent-dim); color: var(--accent); }
+  .tb-tools {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 10px;
+    z-index: 70;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+    min-width: 200px;
+  }
+  .tb-tools.open { display: flex; }
+  .tb-tools button.ghost { text-align: left; padding: 7px 10px; font-size: 12px; }
+}
+
+/* ---------- phones ---------- */
+@media (max-width: 640px) {
+  .theatre-bar { padding: 6px 12px; gap: 6px 8px; }
+  .tb-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .tb-where { flex: 1 1 auto; }
+  .theatre-bar .sys-switch { flex: 1 1 150px; min-width: 0; }
+  .theatre-bar .sys-switch .eyebrow { display: none; }
+  .theatre-bar .sys-switch select { width: 100%; }
+  .mode-switch { margin-left: 0; }
+  .mode-switch button { padding: 4px 8px; }
+  .mode-switch .ms-long { display: none; }
+  .mode-switch .ms-short { display: inline; }
+  .tb-tools-toggle { order: 2; }
+  .tb-where { order: 1; }
+  .theatre-bar .sys-switch { order: 3; }
+  .mode-switch { order: 4; }
+
+  .hl-block { flex: 1 1 100%; max-width: none; border-right: 0; padding: 6px 12px; gap: 10px; }
+  .theatre-ribbon .esdi-value,
+  html[data-chrome="compact"] .theatre-ribbon .esdi-value { font-size: 30px; }
+  .known-block { flex: 1 1 100%; max-width: none; border-right: 0; border-top: 1px solid var(--line-soft); padding: 6px 12px; gap: 12px; }
+  .known-num { font-size: 17px; }
+  .theatre-ribbon .sector-cell { min-width: 0; flex: 1 1 30%; }
+  .hl-scale { font-size: 10.5px; }
+  /* On a phone the two ratios keep their numbers and names at equal weight; the explanatory
+     line moves to the tooltip and to Methodology's summary, so the map keeps the screen. */
+  .known-label { display: none; }
+  .known-block { padding: 5px 12px; }
+  .hl-block .eyebrow { letter-spacing: 0.1em; }
+}
+.ribbon-more-toggle { display: none; }
+/* Below 1500px the header cannot hold the headline, both ratios AND the sector row on one line
+   (at 1440 they wrapped to a ~210px header). The sector and recovery row folds behind a toggle. */
+@media (max-width: 1499px) {
+  .theatre-ribbon .ribbon-scroll,
+  html[data-chrome="compact"] .theatre-ribbon .ribbon-scroll { display: none; }
+  .theatre-ribbon.show-sectors .ribbon-scroll,
+  html[data-chrome="compact"] .theatre-ribbon.show-sectors .ribbon-scroll {
+    display: flex; flex-basis: 100%; border-top: 1px solid var(--line-soft);
+  }
+  .ribbon-more-toggle {
+    display: block;
+    align-self: center;
+    margin: 6px 12px;
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--accent);
+    font: inherit;
+    font-size: 11.5px;
+    padding: 4px 9px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .ribbon-more-toggle::after { content: " ▾"; }
+  .ribbon-more-toggle[aria-expanded="true"]::after { content: " ▴"; }
+}
+
+/* ---------- map overlays on a phone ---------- */
+@media (max-width: 640px) {
+  .camera-controls,
+  html[data-chrome="compact"] .camera-controls {
+    flex-wrap: nowrap;
+    right: 12px;
+    max-width: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .camera-controls button.ghost { white-space: nowrap; }
+  .map-scope-note,
+  html[data-chrome="compact"] .map-scope-note { top: 88px; margin-top: 0 !important; max-width: min(260px, calc(100% - 24px)); }
+  .map-legend { max-width: 210px; padding: 7px 9px; }
+  .map-legend .legend-scale > i { width: 22px; }
+  .map-legend:not(.open) .legend-detail { display: none; }
+}
+.legend-toggle { display: none; }
+@media (max-width: 640px) {
+  .legend-toggle {
+    display: inline-block;
+    pointer-events: auto;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--accent);
+    border-radius: var(--radius);
+    font: inherit;
+    font-size: 10.5px;
+    padding: 1px 6px;
+    margin-top: 5px;
+    cursor: pointer;
+  }
+}
+
+@media (max-width: 640px) {
+  .ribbon-more-toggle {
+    flex: 1 1 100%;
+    margin: 0;
+    border: 0;
+    border-top: 1px solid var(--line-soft);
+    border-radius: 0;
+    padding: 5px 12px;
+  }
+}

@@ -25,6 +25,8 @@ import type { HistorySeries, LifecyclePayload } from "./types";
 import ComparisonTray from "./components/ComparisonTray";
 import { useLayoutMode } from "./useLayoutMode";
 import { LayoutChrome } from "./components/LayoutChrome";
+import { useTheatreName } from "./components/TheatreBar";
+import { modeOf, type TheatreMode } from "./theatreMode";
 
 /** Choropleth surfaces. The two "esdi_delta" surfaces are a DIVERGING change view (§14-15):
  *  how much a region's exposure index rose or fell over the trailing window, never a claim of
@@ -139,6 +141,23 @@ export default function App() {
     setExportError(null);
     setExportResult(null);
   };
+  // The three views (Analyze · Map focus · Briefing) are derived from the two booleans above, so
+  // the mode switch adds no new state. It deliberately touches nothing that the URL mirrors —
+  // selection, filters, date, camera, comparison tray — so a mode change can never alter a link.
+  const switchMode = (target: TheatreMode) => {
+    if (target === "brief") {
+      if (!briefing) enterBriefing();
+      return;
+    }
+    // Leaving briefing restores the panels the reader had; the target then sets map focus.
+    if (briefing) exitBriefing();
+    setMapFocus(target === "focus");
+  };
+
+  // One reader-facing name for the theatre, from the manifest, in the header and the tab title.
+  const theatreName = useTheatreName();
+  useEffect(() => { document.title = `Energy Disruption Monitor — ${theatreName}`; }, [theatreName]);
+
   // Region comparison tray (§17): up to three pinned regions; a fourth pushes out the oldest.
   const [compareRegions, setCompareRegions] = useState<string[]>(initial.compare ?? []);
   const toggleCompare = (code: string) =>
@@ -534,13 +553,6 @@ export default function App() {
       <LayoutChrome
         mode={layoutMode}
         mapFocus={mapFocus}
-        onToggleMapFocus={() => {
-          // Briefing Mode sits on top of map focus. Dropping the floor out from under it left
-          // the briefing frame over a restored three-column grid, and the later "Exit briefing"
-          // then fought the reader by restoring the focus state they had just turned off.
-          if (briefing) exitBriefing();
-          else setMapFocus((v) => !v);
-        }}
         filtersIsDrawer={filtersIsDrawer}
         dossierIsDrawer={dossierIsDrawer}
         filtersOpen={filtersOpen}
@@ -567,7 +579,9 @@ export default function App() {
         comparing={!!compare}
         onLifecycle={() => setLifecycleOpen((v) => !v)}
         lifecycleOpen={lifecycleOpen}
-        onBriefing={enterBriefing}
+        theatreName={theatreName}
+        mode={modeOf(mapFocus, briefing)}
+        onMode={switchMode}
       />
       <Filters
         drawer={filtersIsDrawer}
@@ -631,6 +645,7 @@ export default function App() {
         onOpenLifecycle={() => setLifecycleOpen(true)}
         compareRegions={compareRegions}
         onToggleCompare={toggleCompare}
+        theatreName={theatreName}
       />
       <Timeline
         bundle={bundle}

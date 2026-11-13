@@ -1309,6 +1309,37 @@ ITER21_HOME_MUTATIONS = [
 ]
 MUTATIONS += ITER21_HOME_MUTATIONS
 
+# Iteration 21: theatre UX rules (tests/test_iteration21_theatre_ux.py; behaviour in
+# web/e2e/theatre-ux.e2e.ts).
+ITER21_MUTATIONS = [
+    ("a withheld row shows a status chip",
+     [("web/src/components/ui.tsx", _text(
+         "  if (statusWithheld(r)) return <WithheldStatus note={r.publication_note!} />;\n", ""))],
+     "withheld_row_shows_no_status_chip"),
+    ("the withheld line carries the modelled status",
+     [("web/src/components/ui.tsx", _text(
+         "      <summary>Status withheld</summary>",
+         '      <summary>Status withheld</summary><EvidenceChip kind="modelled" />'))],
+     "withheld_row_shows_no_status_chip"),
+    ("the Why-this-number path loses the inspector link",
+     [("web/src/components/Ribbon.tsx", _text("onClick={explainHeadline}>", "onClick={onOpenMethodology}>"))],
+     "why_this_number_opens_the_inspector"),
+    ("the Why-this-number path opens today's decomposition for a past date",
+     [("web/src/components/Ribbon.tsx", _text(
+         'onExplain(isLatest ? { kind: "headline" } : { kind: "historical", step })',
+         'onExplain({ kind: "headline" })'))],
+     "why_this_number_opens_the_inspector"),
+    ("a mode switch drops URL state",
+     [("web/src/App.tsx", _text(
+         '    if (briefing) exitBriefing();\n    setMapFocus(target === "focus");',
+         '    if (briefing) exitBriefing();\n    setSelected(null);\n    setMapFocus(target === "focus");'))],
+     "mode_switch_keeps_url_state"),
+    ("closed drawers can scroll the app sideways again",
+     [("web/src/styles/theatre.css", _text("#root, .shell { overflow: clip; }", "#root, .shell { overflow: hidden; }"))],
+     "closed_drawers_cannot_scroll_the_app"),
+]
+MUTATIONS += ITER21_MUTATIONS
+
 
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
@@ -1323,7 +1354,7 @@ def _sandbox():
 
 
 TEST_FILES = ("tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py",
-              "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py", "tests/test_compare.py", "tests/test_iteration21_performance.py", "tests/test_iteration21_home.py")
+              "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py", "tests/test_compare.py", "tests/test_iteration21_performance.py", "tests/test_iteration21_home.py", "tests/test_iteration21_theatre_ux.py")
 
 
 def _run(box, k):

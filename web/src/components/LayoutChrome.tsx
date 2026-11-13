@@ -34,7 +34,6 @@ function useFocusReturn(open: boolean, panelId: string, toggle: React.RefObject<
 export function LayoutChrome({
   mode,
   mapFocus,
-  onToggleMapFocus,
   filtersIsDrawer,
   dossierIsDrawer,
   filtersOpen,
@@ -47,7 +46,6 @@ export function LayoutChrome({
 }: {
   mode: LayoutMode;
   mapFocus: boolean;
-  onToggleMapFocus: () => void;
   filtersIsDrawer: boolean;
   dossierIsDrawer: boolean;
   filtersOpen: boolean;
@@ -104,16 +102,9 @@ export function LayoutChrome({
             {hasSelection ? "Dossier" : "Overview"}
           </button>
         )}
-        {/* Visible control is mandatory, not just the shortcut — a demo operator should not have
-            to know a keybinding. The shortcut is a convenience on top. */}
-        <button
-          className="drawer-btn"
-          aria-pressed={mapFocus}
-          title="Maximise the map (M)"
-          onClick={onToggleMapFocus}
-        >
-          {mapFocus ? "Exit map focus" : "Map focus"}
-        </button>
+        {/* Map focus moved to the view switch in the header (Analyze · Map focus · Briefing),
+            beside the Briefing it underlies. Its tooltip here promised an "M" shortcut that was
+            never wired up. */}
       </div>
 
       <span className="sr-only" aria-live="polite">

@@ -201,6 +201,17 @@ export function titleCase(key: string): string {
     .replace(/\b\w+/g, (w) => ACRONYMS[w.toLowerCase()] ?? w.charAt(0).toUpperCase() + w.slice(1));
 }
 
+/** "an oil refinery", "an LNG terminal", "a gas processing site": a taxonomy label inside a
+ *  sentence, with the right article. The Recent tab printed "a oil terminal / storage" and
+ *  "a pipeline oil". Labels that end in an activity rather than a thing get "site". */
+export function withArticle(label: string): string {
+  // Keep acronyms (LNG); lower-case the rest so the label reads inside a sentence.
+  let phrase = label.split(" ").map((w) => (/^[A-Z]{2,}$/.test(w) ? w : w.toLowerCase())).join(" ");
+  if (/(processing|generation)$/.test(phrase)) phrase += " site";
+  const vowel = /^[aeiou]/.test(phrase) || /^(LNG|LPG)\b/.test(phrase);
+  return `${vowel ? "an" : "a"} ${phrase}`;
+}
+
 /** "1 event" / "2 events" — an unconditional plural is a small tell that nobody read the output. */
 export function plural(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`;

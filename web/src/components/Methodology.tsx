@@ -1,5 +1,5 @@
 import type { Bundle } from "../types";
-import { fmtDate, titleCase } from "../data";
+import { fmtDate, fmtNum, titleCase } from "../data";
 
 /** In-app methodology. The brief asks for methodology to be visible in the product,
  *  not only in a repository file someone has to go find. Anything that would change
@@ -30,6 +30,18 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
         </div>
 
         <div style={{ padding: "14px 18px", lineHeight: 1.65, fontSize: 12.5, color: "var(--text-dim)" }}>
+          {/* The five things a first-time reader needs, before the detail. Each restates a section
+              below; none adds a claim of its own. */}
+          <div className="method-summary">
+            <H>In short</H>
+            <ul>
+              <li>The headline ({fmtNum(s.esdi, 1)}, on a 0–100 scale) is <b>exposure</b>: the share of tracked capacity at recently disrupted sites — not measured loss.</li>
+              <li>Each event fades on a half-life set by recovery evidence: observed, then estimated, then a modelled assumption.</li>
+              <li>Sectors without a capacity base ({s.sectors_uncovered.map(titleCase).join(", ") || "none"}) are left out and their weight shared, never counted as zero.</li>
+              <li>{s.incidents_with_quantified_capacity} of {s.incident_total} events state a capacity effect; coverage of oil strikes is measured against a public benchmark, other sectors have none.</li>
+              <li>Public sources only, aggregated to administrative region. Crimea is shown as occupied Ukrainian territory and included in the index as an analytic choice.</li>
+            </ul>
+          </div>
           <H>What the index measures</H>
           <p>
             The Energy System Disruption Exposure Index answers one question: <em>what
@@ -81,7 +93,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
               {s.denominator_basis?.electric_generation_mw && (
                 <div style={{ color: "var(--amber)", marginTop: 3 }}>
                   Known limitation: this is a <b>{s.denominator_basis.electric_generation_mw.census_vintage}</b> census
-                  from {s.denominator_basis.electric_generation_mw.source}, frozen {s.denominator_basis.electric_generation_mw.source_frozen}.
+                  from {s.denominator_basis.electric_generation_mw.source}, frozen {fmtDate(s.denominator_basis.electric_generation_mw.source_frozen)}.
                   It {s.denominator_basis.electric_generation_mw.known_bias}. This is a
                   <b> known material limitation</b>, not a rounding detail: a realistic correction
                   shifts the published second decimal both today and across the series (max ~0.029
@@ -219,9 +231,9 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
                     recovery evidence.{" "}
                   </>
                 )}
-                Halving and doubling the horizons moves the headline between <b>{lo}</b> and{" "}
-                <b>{hi}</b>, against a declared {h.declared_esdi}:{" "}
-                {h.sweep.map((r) => `${r.refinery_horizon_days}d→${r.esdi}`).join(", ")}. A
+                Halving and doubling the horizons moves the headline between <b>{fmtNum(lo, 1)}</b> and{" "}
+                <b>{fmtNum(hi, 1)}</b>, against a declared {fmtNum(h.declared_esdi, 1)}:{" "}
+                {h.sweep.map((r) => `${r.refinery_horizon_days} days → ${fmtNum(r.esdi, 1)}`).join(", ")}. A
                 sensitivity, not a tuning knob — the declared horizons are unchanged, and what
                 narrows this range is recovery evidence, not a better guess.
               </p>
@@ -313,7 +325,9 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
           <H>Scope boundary</H>
           <p>
             This models publicly reported damage to energy infrastructure, aggregated to
-            administrative region. It holds no operational status for individual FACILITIES. Major export pipelines carry publicly reported physical and commercial-flow status as dated, sourced intervals — that is public structural reporting, not a live feed., no
+            administrative region. It holds no operational status for individual facilities.
+            Major export pipelines carry publicly reported physical and commercial-flow status as
+            dated, sourced intervals — public structural reporting, not a live feed. There is no
             vulnerability or gap assessment, and no ranking of undamaged assets. Facility
             positions are published permanent locations or administrative centroids, never
             inferred from reporting. Range-to-target data present in one upstream source is

@@ -109,9 +109,43 @@ const STATUS_LABEL: Record<string, string> = {
   unknown: "Unknown",
 };
 
+/** Whether a record's CURRENT facility status is withheld under the active-campaign policy.
+ *
+ *  The pipeline attaches a publication note to every campaign record scored on the modelled
+ *  horizon. Where nothing has been released (still "impaired" or unknown) the note says the
+ *  current status is withheld; where released evidence is old enough to show, the note dates it.
+ *  Only the first case is "withheld" here — the second shows its released, dated status. */
+export function statusWithheld(r: RecoveryState): boolean {
+  return Boolean(r.publication_note) && !r.resolved
+    && (r.recovery_status == null || r.recovery_status === "impaired" || r.recovery_status === "unknown");
+}
+
+/** The whole recovery line for a withheld record: nothing else.
+ *
+ *  It used to print "MODELLED · Impaired · impaired 33 d · modelled horizon ~100 d" beside the
+ *  withheld note, and a first-time reader took that as the facility's current condition — the
+ *  very thing the note says is not published. The modelled decay is an input to the index and
+ *  is explained in the Evidence Inspector; it is not a status, so it is not shown per facility. */
+function WithheldStatus({ note }: { note: string }) {
+  return (
+    <details className="rc-recovery withheld-status" onClick={(e) => e.stopPropagation()}>
+      <summary>Status withheld</summary>
+      <span className="withheld-note">
+        {note} This dashboard does not publish the current condition of a facility during an
+        active campaign. How the facility counts in the index is explained in the Evidence
+        Inspector.
+      </span>
+    </details>
+  );
+}
+
 /** Compact recovery line: observed / estimated / modelled, always tagged, and never
  *  presenting a partial restart or a low-confidence estimate as full recovery. */
 export function RecoveryLine({ r }: { r: RecoveryState }) {
+  if (statusWithheld(r)) return <WithheldStatus note={r.publication_note!} />;
+  // A dated publication note: the status shown is released, historical evidence. Anything that
+  // describes the facility NOW (impairment age, the modelled horizon, an estimate) is withheld.
+  const releasedOnly = Boolean(r.publication_note);
   const kind = r.scoring_evidence_kind;
   if (r.resolved) {
     return (
@@ -125,10 +159,10 @@ export function RecoveryLine({ r }: { r: RecoveryState }) {
   }
   return (
     <div className="rc-recovery">
-      <EvidenceChip kind={kind} />
+      {!releasedOnly && <EvidenceChip kind={kind} />}
       <span style={{ color: "var(--text-dim)" }}>{STATUS_LABEL[r.recovery_status] ?? r.recovery_status}</span>
       {r.recovery_kind && <RecoveryKind kind={r.recovery_kind} />}
-      {r.impairment_age_days != null && (
+      {!releasedOnly && r.impairment_age_days != null && (
         <span style={{ color: "var(--text-dim)" }}>impaired {r.impairment_age_days} d</span>
       )}
       {r.recovery_status === "partial_restart" && r.partial_operations_resumed_at && (
@@ -136,7 +170,7 @@ export function RecoveryLine({ r }: { r: RecoveryState }) {
           partial restart {fmtDate(r.partial_operations_resumed_at)} — not full reconstitution
         </span>
       )}
-      {r.estimate_days?.central != null && (
+      {!releasedOnly && r.estimate_days?.central != null && (
         <span style={{ color: r.estimate_days.used_for_scoring ? "var(--amber)" : "var(--text-faint)" }}>
           est. ~{r.estimate_days.central} d
           {r.estimate_days.lower != null && r.estimate_days.upper != null &&
@@ -144,7 +178,7 @@ export function RecoveryLine({ r }: { r: RecoveryState }) {
           {!r.estimate_days.used_for_scoring && " · low conf, not scored"}
         </span>
       )}
-      {kind === "modelled" && r.recovery_status !== "partial_restart" && !r.estimate_days && (
+      {!releasedOnly && kind === "modelled" && r.recovery_status !== "partial_restart" && !r.estimate_days && (
         <span style={{ color: "var(--text-faint)" }}>
           modelled horizon ~{r.reconstitution_horizon_days} d (assumption)
         </span>
