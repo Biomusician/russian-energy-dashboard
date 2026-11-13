@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_time": "2026-11-12T13:48:46+00:00",
+  "build_time": "2026-11-13T13:10:03+00:00",
   "selection": {
     "rule": "The first five country systems are the five largest total primary energy producers in the world, excluding Russia: Canada, China, India, Saudi Arabia and the United States.",
     "source": "U.S. EIA International Energy Statistics, total primary energy production, 2024",
@@ -106,7 +106,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "media_only",
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-13",
       "bounds": [
         50.38,
         25.58,
@@ -132,7 +132,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "mixed_regulatory",
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-13",
       "bounds": [
         -141.01,
         41.67,
@@ -158,7 +158,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "media_only",
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-13",
       "bounds": [
         73.6,
         15.78,
@@ -184,7 +184,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "mixed_regulatory",
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-13",
       "bounds": [
         68.14,
         6.75,
@@ -217,7 +217,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "conflict_restricted",
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-13",
       "bounds": [
         44.01,
         25.06,
@@ -250,7 +250,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "corporate_disclosure",
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-13",
       "bounds": [
         38.77,
         29.06,
@@ -283,7 +283,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "corporate_disclosure",
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-13",
       "bounds": [
         46.53,
         28.53,
@@ -316,7 +316,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "corporate_disclosure",
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-13",
       "bounds": [
         51.98,
         16.64,
@@ -348,7 +348,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "corporate_disclosure",
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-13",
       "bounds": [
         50.75,
         24.56,
@@ -372,13 +372,13 @@
         "name": "Monitored-Area ESDI"
       },
       "headline": {
-        "value": 6.69,
-        "as_of": "2026-11-12",
+        "value": 6.58,
+        "as_of": "2026-11-13",
         "label": "Monitored-Area ESDI",
         "meaning": "Capacity at disrupted sites, not measured loss."
       },
       "reporting_environment": "conflict_restricted",
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-13",
       "files": [
         "snapshot.json"
       ]
@@ -404,7 +404,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "corporate_disclosure",
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-13",
       "bounds": [
         34.57,
         16.37,
@@ -438,7 +438,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "corporate_disclosure",
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-13",
       "bounds": [
         51.57,
         22.62,
@@ -468,7 +468,7 @@
       "index": null,
       "headline": null,
       "reporting_environment": "mandatory_regulatory",
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-13",
       "bounds": [
         -187.52,
         18.91,
