@@ -8,7 +8,7 @@ import {
   type CompareColumn, type CompareRow, type RowBasis,
 } from "./compare";
 import { canvasPng, drawCompareFrame } from "./compareExport";
-import { downloadBlob } from "../mapExport";
+import { downloadBlob } from "../download";
 import { fmtDate } from "../data";
 import "../styles/compare.css";
 

@@ -96,3 +96,24 @@ def test_shape_validation_covers_what_the_views_read_unguarded():
     assert "validated<GroupContext>(path, groupContextProblems)" in manifest
     assert "validated<GeoJSON.FeatureCollection>(\"global/world.geojson\", geometryProblems)" in manifest
     assert "manifestProblems(m)" in _function_body(manifest, "export function loadManifest(")
+
+
+def test_a_view_without_a_map_never_imports_the_map_library():
+    """mapExport.ts imports MapLibre (about 1 MB). The comparison imported `downloadBlob` from it and
+    so downloaded the whole map library to save a PNG; the save helpers live in download.ts."""
+    compare = _read("global/CompareView.tsx")
+    assert 'from "../download"' in compare
+    assert "mapExport" not in compare and "maplibre" not in compare
+    download = _read("download.ts")
+    assert "export function downloadBlob(" in download and "maplibre" not in download
+
+
+def test_shared_files_have_one_request_whoever_asks_first():
+    """Measured on the integrated build: the comparison and a country page each fetched system.json,
+    and the search and the theatre each fetched regions.json."""
+    manifest = _read("global/manifest.ts")
+    assert "loadCountrySystem(entry)" in _function_body(manifest, "export function loadCountry(")
+    search = _read("global/searchIndex.ts")
+    assert "loadRegionRows()" in search and "fetch(" not in search
+    data = _read("data.ts")
+    assert "loadRegionRows()," in _function_body(data, "async function fetchBundle(")

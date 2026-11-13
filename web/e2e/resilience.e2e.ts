@@ -134,6 +134,46 @@ test.describe("what each route fetches", () => {
     const cls = await page.evaluate(() => (window as unknown as { __cls: number }).__cls);
     expect(cls).toBeLessThan(0.05);
   });
+
+  // Release red team (iteration 21, wave 2): the regressions below were measured on the integrated
+  // build with scripts/measure-routes.mjs and a journey probe, after the eight features merged.
+
+  test("the comparison draws no map, so it never downloads the map library", async ({ page }) => {
+    const scripts: string[] = [];
+    page.on("request", (r) => { if (r.resourceType() === "script") scripts.push(new URL(r.url()).pathname); });
+    await page.goto("/?compare=us,ca,sa");
+    await expect(page.locator(".compare-colhead > a").first()).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    expect(scripts.some((s) => /CompareView/.test(s)), "the comparison's own chunk never loaded: this test proved nothing").toBe(true);
+    // Measured before the fix: 1,053 kB of MapLibre, fetched only for a save-file helper.
+    expect(scripts.filter((s) => /maplibre/i.test(s))).toEqual([]);
+  });
+
+  test("a country the comparison has read is not fetched again when its page opens", async ({ app, page }) => {
+    const seen = recordData(page);
+    await page.goto("/?compare=us,ca");
+    await expect(page.locator(".compare-colhead > a").first()).toBeVisible();
+    await expect.poll(() => seen.filter((p) => p === "systems/us/system.json").length).toBe(1);
+    await picker(page).selectOption("us");
+    await expect(page.getByRole("heading", { name: "United States", level: 1 })).toBeVisible();
+    await app.mapIdle();
+    expect(seen.filter((p) => p === "global/manifest.json"), "the page reloaded, so the cache was never in play").toHaveLength(1);
+    expect(seen).toContain("systems/us/events.json");
+    expect(seen.filter((p) => p === "systems/us/system.json")).toHaveLength(1);
+  });
+
+  test("searching on the home and then opening the theatre fetches the region list once", async ({ app, page }) => {
+    const seen = recordData(page);
+    await app.open("");
+    const regions = page.waitForResponse("**/data/regions.json");
+    await page.getByLabel(/Search systems, regions and terms/).first().focus();
+    await regions;
+    await picker(page).selectOption("ru");
+    await app.mapIdle();
+    await expect(page.locator(".ribbon")).toContainText("ESDI");
+    expect(seen).toContain("incidents.json");
+    expect(seen.filter((p) => p === "regions.json")).toHaveLength(1);
+  });
 });
 
 test.describe("a broken file costs only the view that reads it", () => {
@@ -288,8 +328,13 @@ test.describe("error boundaries: what validation cannot enumerate", () => {
     await page.route("**/data/global/recent_evidence.json", async (route) => {
       const res = await route.fetch();
       const d = await res.json();
-      expect(d.episodes.length).toBeGreaterThan(0);
-      d.episodes[0].members[0].region = { not: "a string" };
+      // An episode name is printed as-is and not validated: an object there throws while rendering.
+      // (This used to corrupt a member's region, which validation now refuses at load, and which
+      // the redesigned list had in the meantime printed as "[object Object]" instead of throwing.)
+      const open = d.episodes.filter((e: { episode_id: string; members: { withheld: boolean }[] }) =>
+        !/-row-\d+$/.test(e.episode_id) && !e.members.some((m) => m.withheld));
+      expect(open.length).toBeGreaterThan(0);
+      for (const e of open) e.episode_name = { not: "a string" };
       await route.fulfill({ response: res, json: d });
     });
     await app.open("");
