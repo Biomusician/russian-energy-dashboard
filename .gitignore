@@ -41,3 +41,4 @@ data/reconstruction/
 
 # Local safety copies of untracked working data (iteration 21).
 .backups/
+web/e2e-results*.txt
