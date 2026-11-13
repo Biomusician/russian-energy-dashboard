@@ -1,6 +1,7 @@
 import { fillFitted } from "./canvasText";
 import { fmtValue } from "./context";
 import type { GroupContext } from "./manifest";
+import { MEMBER_RAMP } from "./groupMap";
 
 /** The frame drawn into a regional brief PNG (iteration 19). An image travels without the page,
  *  so what it is and is not is written into the pixels: national totals, one year, one source,
@@ -11,8 +12,12 @@ const DIM = "#93a5b3";
 const BAND = "rgba(7, 9, 12, 0.9)";
 const SANS = '"Inter", system-ui, sans-serif';
 
+/** The brief always frames the whole group, clear of its title band, key and footer, whatever the
+ *  reader had zoomed to or selected on the page: a brief about eight countries is not about one. */
+export const GROUP_BRIEF_FIT_PADDING = { top: 112, right: 470, bottom: 98, left: 32 };
+
 /** The text lines of the brief, apart from the drawing so a test can read them. */
-export function groupBriefLines(ctx: GroupContext, metricId: string): { title: string; sub: string; rows: string[]; foot: string[] } {
+export function groupBriefLines(ctx: GroupContext, metricId: string): { title: string; sub: string; rows: string[]; key: string; foot: string[] } {
   const m = ctx.metrics[metricId];
   const src = ctx.sources[m.source_id];
   const r = ctx.region[metricId];
@@ -22,6 +27,8 @@ export function groupBriefLines(ctx: GroupContext, metricId: string): { title: s
     rows: ctx.systems.map((s) => `${s.name}: ${fmtValue(s.values[metricId], m.unit)}`
       + `${s.gcc_member ? " · GCC" : ""}${s.opec_member ? " · OPEC" : ""}`
       + `${s.maturity === "research_preview" ? " · research preview" : ""}`),
+    // The colours need their key in the image itself; it says what they are not on the same line.
+    key: "smaller to larger, within this group (not an order of importance)",
     foot: [
       // The share travels on the same line as what it is not, because the image travels without the
       // page (iteration 20, owner question D-24).
@@ -62,13 +69,24 @@ export function composeGroupFrame(map: HTMLCanvasElement, ctx: GroupContext, met
   const kx = W - pad - kw;
   let ky = Math.round(130 * s);
   c.fillStyle = BAND;
-  c.fillRect(kx - Math.round(12 * s), ky - Math.round(24 * s), kw + Math.round(12 * s), Math.round((lines.rows.length * 24 + 20) * s));
+  c.fillRect(kx - Math.round(12 * s), ky - Math.round(24 * s), kw + Math.round(12 * s), Math.round((lines.rows.length * 24 + 56) * s));
   c.font = `${Math.round(15 * s)}px ${SANS}`;
   c.fillStyle = INK;
   for (const row of lines.rows) {
     fit(row, kx, ky);
     ky += Math.round(24 * s);
   }
+  // The colour key: the map's own five classes, then what they mean.
+  ky += Math.round(10 * s);
+  const sw = Math.round(14 * s);
+  MEMBER_RAMP.forEach((col, i) => {
+    c.fillStyle = col;
+    c.fillRect(kx + i * (sw + Math.round(2 * s)), ky - sw + Math.round(2 * s), sw, sw);
+  });
+  c.fillStyle = DIM;
+  c.font = `${Math.round(13 * s)}px ${SANS}`;
+  const kText = kx + MEMBER_RAMP.length * (sw + Math.round(2 * s)) + Math.round(6 * s);
+  fillFitted(c, lines.key, kText, ky, W - kText - pad);
 
   const fh = Math.round(82 * s);
   c.fillStyle = BAND;

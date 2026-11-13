@@ -1171,10 +1171,33 @@ RESEARCH_MUTATIONS = [
          'className="eyebrow rc-sh-head">Research coverage: the citations behind the published events</h3>'))],
      "kept_apart_from_source_health"),
     ("a campaign system's pass history shows its held count",
-     [(LANES, _text("  if (restricted) {\n    return p.under_review", "  if (restricted && false) {\n    return p.under_review"))],
+     [(LANES, _text("  if (restricted) {\n    // \"Remain under review\"", "  if (restricted && false) {\n    // \"Remain under review\""))],
      "render_no_count_from_the_research_outcome"),
 ]
 MUTATIONS += RESEARCH_MUTATIONS
+
+# Iteration 21: the regional overview's map, member list and brief.
+GULF_MAP_MUTATIONS = [
+    ("a chosen figure's definition is hidden",
+     [("web/src/global/GroupView.tsx", _text('<p className="metric-definition small">{facts.definition}</p>',
+                                             '<p className="metric-definition small"></p>'))],
+     "iter21_gulf_metric_definition"),
+    ("the regional map opens coloured by a metric",
+     [("web/src/global/GroupView.tsx", _text("const colourBy = metric && ctx?.metrics[metric] ? metric : null;",
+                                             "const colourBy = metric && ctx?.metrics[metric] ? metric : (ctx ? Object.keys(ctx.metrics)[0] : null);"))],
+     "iter21_gulf_default_map"),
+    ("the member list is sorted by a figure",
+     [("web/src/global/groupMap.ts", _text('a.name.localeCompare(b.name, "en")',
+                                           "(b.values[Object.keys(b.values)[0]] ?? 0) - (a.values[Object.keys(a.values)[0]] ?? 0)"))],
+     "iter21_gulf_member_list"),
+    ("the accounting convention is dropped beside the figure",
+     [("web/src/global/groupMap.ts", _text("accounting: ctx.accounting_convention ?? null,", "accounting: null,"))],
+     "iter21_gulf_accounting"),
+    ("the regional brief keeps the reader's selection mark",
+     [("web/src/global/GroupView.tsx", _text("const clean = withoutHighlight(style);", "const clean = style;"))],
+     "iter21_gulf_brief_drops"),
+]
+MUTATIONS += GULF_MAP_MUTATIONS
 
 
 def _sandbox():
@@ -1190,7 +1213,7 @@ def _sandbox():
 
 
 TEST_FILES = ("tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py",
-              "tests/test_iteration20.py", "tests/test_research_coverage.py")
+              "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py")
 
 
 def _run(box, k):
