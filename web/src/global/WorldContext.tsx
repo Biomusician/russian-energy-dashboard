@@ -316,12 +316,15 @@ export default function WorldContext({ world, worldError, manifest, ctx, ctxErro
               : "World map. Monitored systems are highlighted; select one to open it."}
             attribution="Energy data: U.S. EIA International Energy Statistics. Boundaries: Natural Earth (public domain), line of actual control. Crimea is drawn as Ukrainian territory under Russian occupation."
             onMap={(m) => { mapRef.current = m; }}
+            pageScrollsFirst
           />
         ) : (
           <div className="simple-map placeholder">{worldError ? "Map unavailable" : "Loading map…"}</div>
         )}
         <div className="map-hover-line small mono" aria-live="off">{hover ?? " "}</div>
       </div>
+      <p className="small dim map-wheel-hint">Scrolling moves the page. To zoom, hold Ctrl (⌘ on a Mac) while scrolling, use
+        the + and − buttons, or click the map first. On a touch screen, move the map with two fingers.</p>
       {mode && ctx ? (
         <div className="map-legend-mini" aria-label="Map legend">
           <span className="legend-title"><strong>{mode.title}</strong> <span className="dim">({mode.unitNote})</span></span>

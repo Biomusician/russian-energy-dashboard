@@ -1,5 +1,5 @@
-import { Suspense, lazy, useEffect } from "react";
-import { useRoute, type Route } from "./global/router";
+import { Suspense, lazy, useEffect, useLayoutEffect } from "react";
+import { routeFor, useRoute, type Route } from "./global/router";
 import GlobalHome from "./global/GlobalHome";
 import { ViewBoundary } from "./components/ViewBoundary";
 import { importCountryView, importGroupView, importTheatre, prefetchRoute } from "./global/prefetch";
@@ -26,11 +26,31 @@ function describe(route: Route): { key: string; label: string; cleanHref?: strin
   }
 }
 
+/** The tab title a route starts with (iteration 21: it stayed "overview" after opening the
+ *  theatre). A view that knows more, such as a country's name, refines it in its own effect. */
+export function defaultTitle(route: ReturnType<typeof routeFor>): string {
+  const base = "Energy Disruption Monitor";
+  switch (route.view) {
+    case "home": return `${base} — overview`;
+    case "theatre": return `${base} — Russia, Belarus & Crimea`;
+    case "group": return `${base} — regional overview`;
+    case "country": return `${base} — country system`;
+    case "compare": return `${base} — compare systems`;
+    default: return base;
+  }
+}
+
 export default function Root() {
   const route = useRoute();
   // Start the route's data now, in parallel with its chunk, rather than after the view mounts.
   useEffect(() => { prefetchRoute(route); }, [route]);
   const view = describe(route);
+  // A layout effect runs before every view's ordinary effects, so a view's own, more specific
+  // title always wins, and every route change still resets a stale one.
+  // Keyed on the view and id, not the route object: a search that only changes a country's
+  // selected region must not reset that country's own title.
+  const routeKey = `${route.view}:${"id" in route ? route.id : ""}`;
+  useLayoutEffect(() => { document.title = defaultTitle(route); }, [routeKey]);  // eslint-disable-line react-hooks/exhaustive-deps
   return (
     // Keyed on the route: a failure stays with the view that failed, and any other view mounts
     // with a fresh boundary. Every route rendered inside is contained, including ones added later.

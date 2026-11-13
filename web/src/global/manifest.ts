@@ -30,6 +30,9 @@ export interface ManifestSystem {
   maturity?: "monitored" | "research_preview";
   /** Recovery status is withheld here while an attack campaign is active, recent or uncertain. */
   campaign_restricted?: boolean;
+  /** Iteration 21. Newest review date of the country's published records; null = no qualifying
+   *  record yet. Absent in older builds and for the theatre. A date, never a count. */
+  record_reviewed?: string | null;
 }
 
 /** A named set of systems: navigation and filtering only, never a scored unit. */

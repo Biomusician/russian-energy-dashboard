@@ -1281,6 +1281,34 @@ ITER21_PERF_MUTATIONS = [
 ]
 MUTATIONS += ITER21_PERF_MUTATIONS
 
+# Iteration 21: the global home. Each breaks one rule of the home cards, their order, or the
+# Start-here memory, and must be caught by tests/test_iteration21_home.py.
+ITER21_HOME_MUTATIONS = [
+    ("a home card shows an event count",
+     [("web/src/global/GlobalHome.tsx", _text(
+         "      {record && <div className=\"small\">{record}</div>}\n",
+         "      {record && <div className=\"small\">{record}</div>}\n      <div className=\"small\">{s.files.length} events</div>\n"))],
+     "card_reads_no_count"),
+    ("the home page is sorted by a figure",
+     [("web/src/global/GlobalHome.tsx", _text(
+         "const countries = manifest?.systems.filter((s) => s.kind === \"country\" && inFilter(s)) ?? [];",
+         "const countries = (manifest?.systems.filter((s) => s.kind === \"country\" && inFilter(s)) ?? [])"
+         ".sort((a, b) => (b.record_reviewed ?? \"\").localeCompare(a.record_reviewed ?? \"\"));"))],
+     "never_reorders_systems"),
+    ("a home card shows a held count",
+     [("web/src/global/GlobalHome.tsx", _text(
+         "      {record && <div className=\"small\">{record}</div>}\n",
+         "      {record && <div className=\"small\">{record}</div>}\n"
+         "      {s.campaign_restricted && <div className=\"small\">{manifest.corpus?.records} held for review</div>}\n"))],
+     "card_reads_no_count"),
+    ("the Start-here memory crashes when storage throws",
+     [("web/src/global/startHereMemory.ts", _text(
+         "  try {\n    return getStorage()?.getItem(START_HERE_KEY) === \"1\";\n  } catch {\n    return false;\n  }\n",
+         "  return getStorage()?.getItem(START_HERE_KEY) === \"1\";\n"))],
+     "storage_failure_escape"),
+]
+MUTATIONS += ITER21_HOME_MUTATIONS
+
 
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
@@ -1295,7 +1323,7 @@ def _sandbox():
 
 
 TEST_FILES = ("tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py",
-              "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py", "tests/test_compare.py", "tests/test_iteration21_performance.py")
+              "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py", "tests/test_compare.py", "tests/test_iteration21_performance.py", "tests/test_iteration21_home.py")
 
 
 def _run(box, k):
