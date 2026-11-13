@@ -178,8 +178,8 @@ export default function GroupView({ id }: { id: string }) {
   if (manifest && !group) {
     return (
       <div className="global-page">
-        <header className="global-head"><h1 className="ribbon-title">Energy Disruption Monitor</h1><SystemSwitcher current={null} /></header>
-        <GlobalNavBar trail={[{ label: "Regional overview not found" }]} />
+        <header className="site-head"><GlobalNavBar trail={[{ label: "Regional overview not found" }]} extra={<SystemSwitcher current={null} />} /></header>
+        <div className="page-title"><h1 className="ribbon-title">Regional overview not found</h1></div>
         <main className="global-main"><p className="warn-text" role="alert">There is no regional view called "{id}". <a href="?">Open the overview</a>.</p></main>
       </div>
     );
@@ -187,14 +187,15 @@ export default function GroupView({ id }: { id: string }) {
 
   return (
     <div className="global-page group-page">
-      <header className="global-head">
+      <header className="site-head">
+        <GlobalNavBar trail={[{ label: group?.label ?? "Regional overview" }]} extra={<SystemSwitcher current={null} group={id} />} />
+      </header>
+      <div className="page-title">
         <div>
           <h1 className="ribbon-title">{group?.label ?? "Regional"} overview</h1>
-          <div className="ribbon-sub">Energy Disruption Monitor · national energy context and reviewed historical events · open sources only</div>
+          <div className="ribbon-sub">National energy context and reviewed historical events · open sources only</div>
         </div>
-        <SystemSwitcher current={null} group={id} />
-      </header>
-      <GlobalNavBar trail={[{ label: group?.label ?? "Regional overview" }]} />
+      </div>
       <main className="global-main">
         {ctx && (
           <section className="group-top" aria-label="What this view is">

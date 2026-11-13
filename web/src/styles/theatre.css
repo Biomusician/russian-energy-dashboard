@@ -382,3 +382,12 @@ html:not([data-briefing="on"]) .mapwrap:has(.maplibregl-ctrl-attrib:not(.maplibr
   html[data-layout] #root { height: auto; min-height: 100vh; }
   html[data-layout] .shell { height: auto; min-height: 100vh; grid-template-rows: auto auto minmax(340px, 1fr) auto; }
 }
+
+/* Phone: the scale line keeps its weighting clause for screen readers only, so the header stays
+   under a third of the screen; "Why this number?" gives the whole definition. */
+@media (max-width: 600px) {
+  .hl-scale-weight {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+}

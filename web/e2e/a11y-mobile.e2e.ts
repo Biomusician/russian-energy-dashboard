@@ -76,7 +76,7 @@ test.describe("phone width: nothing off the side", () => {
 // exempt by design (they reach 24 px, the AA size); see styles/touch.css.
 const PRIMARY = [
   ".global-nav-tools button", ".gsearch input", ".global-page .sys-switch select", ".home-action", ".sys-card button.ghost",
-  ".start-here button", ".global-head .head-actions button", ".country-side .tabs button", ".ev-inspector-toggle",
+  ".start-here button", ".page-title .head-actions button", ".country-side .tabs button", ".ev-inspector-toggle",
   ".member-btn", ".compare-col-actions button", ".compare-picker select", ".map-tool",
   ".drawer-btn", ".legend-toggle", ".camera-controls button", "button.play",
   ".maplibregl-ctrl-zoom-in", ".maplibregl-ctrl-zoom-out",
@@ -187,7 +187,8 @@ test.describe("landmarks, headings and names", () => {
       const nav = await page.getByRole("navigation", { name: "Breadcrumb" }).boundingBox();
       const map = await page.locator("[data-map-state]").boundingBox();
       const head = await page.getByRole("heading", { level: 1 }).boundingBox();
-      expect(nav!.y).toBeGreaterThan(head!.y);
+      // One header per page: the site bar comes first, then the page title (iteration 21).
+      expect(nav!.y, "the site bar should precede the page title").toBeLessThan(head!.y);
       expect(nav!.y, "the breadcrumb and search fell below the map").toBeLessThan(map!.y);
       expect(map!.y, "the map starts below the first screen").toBeLessThan(PHONE.height - 150);
       checked++;

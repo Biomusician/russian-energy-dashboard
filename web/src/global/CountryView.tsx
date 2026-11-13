@@ -18,7 +18,7 @@ import { loadContext, rowForSystem, type EnergyContext } from "./context";
 import { NationalFigures } from "./WorldContext";
 import { LOCATION_EVENT, navigate, navigateCompare } from "./router";
 import { PanelBoundary } from "../components/ViewBoundary";
-import { composeCountryFrame, countryFilename } from "./countryExport";
+import { COUNTRY_EXPORT_FIT_PADDING, composeCountryFrame, countryFilename } from "./countryExport";
 import { DISPUTED, NO_EVENTS, fillFor, scaleFor, type Scale } from "./countryScale";
 import { downloadBlob, exportMapPng } from "../mapExport";
 import { daysBetween, fmtDate } from "../data";
@@ -208,6 +208,7 @@ export default function CountryView({ id }: { id: string }) {
       const national = ctx ?? await loadContext().catch(() => null);
       const res = await exportMapPng({
         source: m, width: 1600, height: 900, pixelRatio: 1,
+        fit: { bounds: sys.geography.view_bounds ?? sys.geography.bounds, padding: COUNTRY_EXPORT_FIT_PADDING },
         compose: (c) => composeCountryFrame(c, sys, scale, national ? { row: rowForSystem(national, sys.system_id), ctx: national } : null),
       });
       downloadBlob(res.blob, countryFilename(sys));
@@ -338,7 +339,9 @@ export default function CountryView({ id }: { id: string }) {
       )}
 
       <div className="country-body">
-        <section className="country-map" aria-label="Map">
+        {/* With no record placed in any region the map shows geography only: it stays, smaller, so the
+            records and the reason come first instead of a full-height empty map. */}
+        <section className={`country-map${sys.event_summary.placed_in_a_region === 0 ? " is-unplaced" : ""}`} aria-label="Map">
           <SimpleMap
             data={bundle.regions}
             bounds={sys.geography.view_bounds ?? sys.geography.bounds}
@@ -490,18 +493,19 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
 function CountryHeader({ name, id, wholeCountry, attacksWhole, children }: { name: string; id: string; wholeCountry?: boolean; attacksWhole?: boolean; children?: React.ReactNode }) {
   return (
     <>
-    <header className="global-head">
+    {/* One header per page: the site bar (home, breadcrumb, tools, system picker), then the page's
+        own title and actions as plain content. Two stacked bars cost a phone a third of its screen. */}
+    <header className="site-head">
+      <CountryNav id={id} name={name} extra={<SystemSwitcher current={id} />} />
+    </header>
+    <div className="page-title">
       <div>
         <h1 className="ribbon-title">{name}</h1>
-        <div className="ribbon-sub">Energy Disruption Monitor · reported major disruptions{wholeCountry ? ", recorded for the country as a whole"
+        <div className="ribbon-sub">Reported major disruptions{wholeCountry ? ", recorded for the country as a whole"
           : attacksWhole ? " by first-level region; attacks recorded for the country as a whole" : " by first-level region"}</div>
       </div>
-      <div className="head-actions">
-        {children}
-        <SystemSwitcher current={id} />
-      </div>
-    </header>
-    <CountryNav id={id} name={name} />
+      {children && <div className="head-actions">{children}</div>}
+    </div>
     </>
   );
 }

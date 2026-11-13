@@ -146,3 +146,21 @@
 @media print {
   .global-nav, .home-actions, .gsearch, .start-here { display: none !important; }
 }
+
+/* ---- one header per page (iteration 21) ----
+   The site bar is the page's only <header>; a view's title and its own actions follow as plain
+   content, not as a second bar. */
+.site-head { flex: none; }
+.page-title {
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 8px 16px; flex-wrap: wrap;
+  padding: 14px 16px 2px; flex: none; min-width: 0;
+}
+.page-title .ribbon-title { margin: 0; }
+.page-title .ribbon-sub { margin-top: 2px; }
+.page-title .head-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+@media (max-width: 600px) {
+  .page-title { padding: 10px 16px 0; }
+}
+@media print {
+  .page-title { background: #fff !important; color: #000 !important; }
+}

@@ -3,7 +3,7 @@ import type { Bundle } from "../types";
 import { fmtDate, fmtDelta, fmtNum } from "../data";
 import { buildDeltaTitle, fmtIndex } from "../indexText";
 import { assessFreshness } from "../freshness";
-import { HEADLINE_SCALE, TRANSMISSION_CAVEAT, reconstructionLabel } from "../briefing";
+import { HEADLINE_SHARE, HEADLINE_WEIGHTING, TRANSMISSION_CAVEAT, reconstructionLabel } from "../briefing";
 import { severityColor } from "../palette";
 import type { InspectTarget } from "./Inspector";
 import TheatreBar, { type TheatreTool } from "./TheatreBar";
@@ -117,7 +117,7 @@ export default function Ribbon({
             </p>
             <p className="hl-scale" title="Belarus, the monitored Russian regions and occupied Crimea.">
               {/* METHODOLOGY §1 in one line: a share, weighted, and exposure rather than loss. */}
-              0–100 exposure index: {HEADLINE_SCALE} — not measured loss.
+              0–100 exposure index: {HEADLINE_SHARE}<span className="hl-scale-weight">, {HEADLINE_WEIGHTING}</span> — not measured loss.
             </p>
             {/* P2: "live" used to mean nothing more than "the scrubber is at the last timeline
                 step", which is equally true of a payload that stopped rebuilding eleven days ago.

@@ -91,14 +91,14 @@ export function countryTrail(manifest: Manifest | null, id: string, name: string
 }
 
 /** The bar for a country page, with the trail worked out from the (cached) manifest. */
-export function CountryNav({ id, name }: { id: string; name: string }) {
+export function CountryNav({ id, name, extra }: { id: string; name: string; extra?: React.ReactNode }) {
   const [manifest, setManifest] = useState<Manifest | null>(null);
   useEffect(() => {
     let live = true;
     loadManifest().then((m) => { if (live) setManifest(m); }).catch(() => undefined);
     return () => { live = false; };
   }, []);
-  return <GlobalNavBar trail={countryTrail(manifest, id, name)} />;
+  return <GlobalNavBar trail={countryTrail(manifest, id, name)} extra={extra} />;
 }
 
 // ---- copy link --------------------------------------------------------------------------------

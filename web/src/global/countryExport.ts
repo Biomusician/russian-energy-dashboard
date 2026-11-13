@@ -2,6 +2,8 @@ import { DIM, INK, SANS, fillFitted } from "./canvasText";
 import { ENVIRONMENT_LABEL, labelFor, type CountrySystem } from "./manifest";
 import { DISPUTED, NO_EVENTS, type Scale } from "./countryScale";
 import { fmtValue, type ContextRow, type EnergyContext } from "./context";
+import { inSentence } from "./countryCopy";
+import { fmtDate } from "../data";
 
 /** The frame drawn into a country PNG.
  *
@@ -12,6 +14,12 @@ import { fmtValue, type ContextRow, type EnergyContext } from "./context";
  */
 
 const BAND = "rgba(7, 9, 12, 0.88)";
+
+/** The country export frames the country itself, clear of the title band (96 px), the footer (up to
+ *  78 px) and the colour key at top right (about 354 px wide). Copying the reader's camera tied the
+ *  image to the shape of the reader's window: a short phone-width map left a small country as a few
+ *  unshaded pixels in a 1600x900 frame, and the blank-capture check refused it (iteration 21). */
+export const COUNTRY_EXPORT_FIT_PADDING = { top: 112, right: 380, bottom: 100, left: 32 };
 
 export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, scale: Scale,
                                     national?: { row: ContextRow | null; ctx: EnergyContext } | null): HTMLCanvasElement {
@@ -46,10 +54,10 @@ export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, 
   fit(
     sys.event_summary.recorded_events === 0
       ? `No index. No qualifying records in the current reviewed corpus (reporting: ${env}). ` +
-        `That describes this dataset, not ${sys.name}` + (held > 0 ? `; ${held} candidate records are held back and not shown.` : reviewing ? "; additional candidates remain under review." : ".")
+        `That describes this dataset, not ${inSentence(sys.name)}` + (held > 0 ? `; ${held} candidate records are held back and not shown.` : reviewing ? "; additional candidates remain under review." : ".")
       : `No index. ${sys.event_summary.recorded_events} qualifying events in ${sys.event_summary.episodes} episodes ` +
         `(reporting: ${env}); ` +
-        `national or multi-region events not drawn: ${sys.event_summary.country_level}. Record reviewed ${sys.record_reviewed}.`,
+        `national or multi-region events not drawn: ${sys.event_summary.country_level}. Record reviewed ${sys.record_reviewed ? fmtDate(sys.record_reviewed) : "not yet"}.`,
     pad, Math.round(74 * s));
 
   // Colour key: this country's own classes, so the picture cannot be read on another's scale.

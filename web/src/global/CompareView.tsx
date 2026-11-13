@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import SystemSwitcher from "./SystemSwitcher";
+import { GlobalNavBar } from "./GlobalNav";
 import { loadContext, type EnergyContext } from "./context";
 import { loadCountrySystem, loadManifest, type CountrySystem, type Manifest } from "./manifest";
 import { MAX_COMPARE, hrefFor, navigate, navigateCompare } from "./router";
@@ -104,16 +105,18 @@ export default function CompareView({ ids }: { ids: string[] }) {
 
   return (
     <div className="global-page compare-page">
-      <header className="global-head">
+      <header className="site-head">
+        <GlobalNavBar trail={[{ label: "Compare systems" }]} extra={<SystemSwitcher current={null} />} />
+      </header>
+      <div className="page-title">
         <div>
           <h1 className="ribbon-title">Compare systems</h1>
-          <div className="ribbon-sub">Energy Disruption Monitor · research state and national context, side by side · open sources only</div>
+          <div className="ribbon-sub">Research state and national context, side by side · open sources only</div>
         </div>
         <div className="head-actions">
           <button className="ghost" onClick={runExport} disabled={cols.length < 2}>Download comparison (PNG)</button>
-          <SystemSwitcher current={null} />
         </div>
-      </header>
+      </div>
       <main className="global-main">
         <section className="panel global-note compare-intro" aria-label="What this comparison is">
           <p>

@@ -56,3 +56,14 @@
 @media print {
   .map-tools, .map-empty-note { display: none !important; }
 }
+
+/* No record placed in any region: geography only, so the map does not take the first screen. */
+.country-map.is-unplaced { min-height: 0; align-self: start; }
+.country-map.is-unplaced > .simple-map-shell { min-height: 260px; }
+.country-map.is-unplaced > .simple-map-shell .simple-map-stage { min-height: 240px; }
+.country-map.is-unplaced .simple-map { min-height: 240px; }
+@media (max-width: 900px) {
+  .country-map.is-unplaced > .simple-map-shell { min-height: 260px; }
+  .country-map.is-unplaced > .simple-map-shell .simple-map-stage { min-height: 240px; }
+  .country-map.is-unplaced .simple-map { min-height: 240px; }
+}

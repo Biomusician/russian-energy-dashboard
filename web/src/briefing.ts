@@ -138,8 +138,11 @@ export const METRIC_CAVEAT: Record<string, string> = {
  *  evidence, cause and elapsed time. The ribbon used to say only "the share of tracked capacity at
  *  recently disrupted sites", which reads as a plain capacity count. One string, so the ribbon and
  *  the methodology panel cannot drift apart. */
-export const HEADLINE_SCALE =
-  "the share of tracked capacity at recently disrupted sites, weighted by evidence, cause and elapsed time";
+// METHODOLOGY §1, in two parts so a phone can show the share and keep the weighting for screen
+// readers and "Why this number?" without the header outgrowing its height.
+export const HEADLINE_SHARE = "the share of tracked capacity at recently disrupted sites";
+export const HEADLINE_WEIGHTING = "weighted by evidence, cause and elapsed time";
+export const HEADLINE_SCALE = `${HEADLINE_SHARE}, ${HEADLINE_WEIGHTING}`;
 
 export const TRANSMISSION_CAVEAT =
   "Transmission disruption burden is an event-burden proxy, not percent of grid offline.";
