@@ -1,3 +1,4 @@
+import { useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { Bundle } from "../types";
 import { fmtDate, fmtNum, titleCase } from "../data";
 
@@ -6,11 +7,51 @@ import { fmtDate, fmtNum, titleCase } from "../data";
  *  how a number should be read belongs here. */
 export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClose: () => void }) {
   const s = bundle.snapshot;
+  // Iteration 21: this modal used to leave focus on the button behind it, ignore Escape, and let
+  // Tab walk into the page it covers. Same contract as the Evidence Inspector: focus moves in on
+  // open, stays inside, Escape closes, and focus returns to whatever opened it.
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const openerRef = useRef<Element | null>(null);
+  useEffect(() => {
+    openerRef.current = document.activeElement;
+    panelRef.current?.focus();
+    return () => {
+      const el = openerRef.current;
+      if (el instanceof HTMLElement && document.contains(el)) el.focus();
+    };
+  }, []);
+  const onKeyDown = (e: ReactKeyboardEvent) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      onClose();
+      return;
+    }
+    if (e.key !== "Tab") return;
+    const root = panelRef.current;
+    if (!root) return;
+    const items = [...root.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), summary,'
+      + ' textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+      .filter((el) => el.offsetParent !== null || el === document.activeElement);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    const active = document.activeElement;
+    if (e.shiftKey && (active === first || active === root)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Methodology and caveats"
+      onKeyDown={onKeyDown}
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, background: "rgba(3,5,7,0.78)",
@@ -18,6 +59,9 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
       }}
     >
       <div
+        ref={panelRef}
+        tabIndex={-1}
+        className="method-panel"
         onClick={(e) => e.stopPropagation()}
         style={{
           background: "var(--bg-panel)", border: "1px solid var(--line)", borderRadius: 4,

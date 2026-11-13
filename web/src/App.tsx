@@ -550,19 +550,6 @@ export default function App() {
       {/* P2: first element in the grid, so a reader cannot have taken in the headline before
           learning the headline is weeks old. */}
       <StalenessNotice snapshot={bundle.snapshot} />
-      <LayoutChrome
-        mode={layoutMode}
-        mapFocus={mapFocus}
-        filtersIsDrawer={filtersIsDrawer}
-        dossierIsDrawer={dossierIsDrawer}
-        filtersOpen={filtersOpen}
-        dossierOpen={dossierOpen}
-        onToggleFilters={() => setFiltersOpen((v) => !v)}
-        onToggleDossier={() => setDossierOpen((v) => !v)}
-        onCloseDrawers={() => { setFiltersOpen(false); setDossierOpen(false); }}
-        activeFilterCount={activeFilterCount}
-        hasSelection={Boolean(selected || selectedAsset)}
-      />
       <Ribbon
         bundle={bundle}
         step={step}
@@ -582,6 +569,22 @@ export default function App() {
         theatreName={theatreName}
         mode={modeOf(mapFocus, briefing)}
         onMode={switchMode}
+      />
+      {/* After the ribbon in the DOM, so Tab reaches the page title and header before the drawer
+          toggles that sit on the map below it (iteration 21). Its controls are absolutely placed
+          in the map's grid area with their own z-index, so the source order changes nothing drawn. */}
+      <LayoutChrome
+        mode={layoutMode}
+        mapFocus={mapFocus}
+        filtersIsDrawer={filtersIsDrawer}
+        dossierIsDrawer={dossierIsDrawer}
+        filtersOpen={filtersOpen}
+        dossierOpen={dossierOpen}
+        onToggleFilters={() => setFiltersOpen((v) => !v)}
+        onToggleDossier={() => setDossierOpen((v) => !v)}
+        onCloseDrawers={() => { setFiltersOpen(false); setDossierOpen(false); }}
+        activeFilterCount={activeFilterCount}
+        hasSelection={Boolean(selected || selectedAsset)}
       />
       <Filters
         drawer={filtersIsDrawer}

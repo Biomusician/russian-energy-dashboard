@@ -197,7 +197,7 @@ export default function CompareView({ ids }: { ids: string[] }) {
                         </div>
                       </th>
                     </tr>
-                    {rows.filter((r) => r.basis === g).map((r) => <RowView key={r.id} row={r} />)}
+                    {rows.filter((r) => r.basis === g).map((r) => <RowView key={r.id} row={r} names={cols.map((c) => c.entry.name)} />)}
                   </tbody>
                 ))}
               </table>
@@ -216,7 +216,10 @@ export default function CompareView({ ids }: { ids: string[] }) {
 const NO_INDEX_NOTE = "No index is not a zero. The one index on this site belongs to a single monitored area and is " +
   "built for it alone; it is not comparable with any other system, so its value is not shown here.";
 
-function RowView({ row }: { row: CompareRow }) {
+/** `names`: the column systems, so each "Definition" and "More" carries hidden words saying which
+ *  row and column it belongs to. Fifteen identical "Definition" buttons are useless in a screen
+ *  reader's list of controls (iteration 21). */
+function RowView({ row, names }: { row: CompareRow; names: string[] }) {
   return (
     <tr className={`compare-row compare-row-${row.basis}`} data-row={row.id}>
       <th scope="row">
@@ -225,7 +228,7 @@ function RowView({ row }: { row: CompareRow }) {
           {row.basis === "common" ? "Common basis" : row.basis === "context" ? "Same source and year" : "Within this system"}
         </span>
         <details className="compare-def">
-          <summary>Definition</summary>
+          <summary>Definition<span className="sr-only"> of {row.label}</span></summary>
           <span>{row.basisNote}</span>
         </details>
       </th>
@@ -234,7 +237,7 @@ function RowView({ row }: { row: CompareRow }) {
           <span className="compare-cell-text">{cell.text}</span>
           {cell.detail && (
             <details className="compare-more">
-              <summary>More</summary>
+              <summary>More<span className="sr-only"> on {row.label}{names[i] ? `, ${names[i]}` : ""}</span></summary>
               <span>{cell.detail}</span>
             </details>
           )}

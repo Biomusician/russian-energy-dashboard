@@ -1,0 +1,72 @@
+/* Touch targets (iteration 21, mobile + accessibility pass).
+
+   On a phone, or any coarse pointer, every primary control is at least 44 x 44 CSS px, the size a
+   fingertip can hit without also hitting its neighbour (WCAG 2.5.5). Measured before this file:
+   the shared navigation buttons were 25 px tall, the country tabs 25, "Open Canada" 25, the theatre's
+   view switch 24, the map's own zoom buttons 29, the timeline play button 30.
+
+   Small labels that explain themselves inside a line of text (the research-preview badge, the
+   reporting-environment link) keep their size but reach 24 px, the AA minimum (WCAG 2.5.8).
+
+   Loaded once, globally, from main.tsx. Only min-height/min-width are set, which no feature
+   stylesheet sets on these controls, so the order in which the lazily loaded feature stylesheets
+   arrive cannot undo it. Desktop with a mouse is unchanged. */
+
+@media (max-width: 600px), (pointer: coarse) {
+  /* ---- shared navigation, home, country, Gulf and compare pages ---- */
+  .global-page button.ghost,
+  .global-page select,
+  .global-page .home-action,
+  .global-page .member-btn,
+  .global-nav .product-home,
+  .global-nav .breadcrumb a,
+  .glossary-head button.ghost,
+  .gsearch input {
+    min-height: 44px;
+  }
+  .global-page button.ghost { min-width: 44px; }
+  .global-nav .product-home,
+  .global-nav .breadcrumb a { display: inline-flex; align-items: center; }
+
+  /* Inline explanations and disclosures: the AA size, so a line of text does not become a list. */
+  .explain-btn,
+  .disclosure-button.badge,
+  .disclosure-button.home-tag,
+  .global-page summary {
+    min-height: 24px;
+  }
+  .global-page summary { display: list-item; padding: 3px 0; }
+
+  /* ---- the theatre ---- */
+  .drawer-btn,
+  .mode-switch button,
+  .tb-tools-toggle,
+  .tb-tools button.ghost,
+  .why-btn,
+  .ribbon-more-toggle,
+  .legend-toggle,
+  .camera-controls button.ghost,
+  .theatre-bar .sys-switch select,
+  .filters button.ghost,
+  .filters select.ghost,
+  .filters .search-input,
+  .dossier button.ghost,
+  .drawer-close button {
+    min-height: 44px;
+  }
+  .mode-switch button, .drawer-btn { min-width: 44px; }
+  button.play { width: 44px; height: 44px; }
+  .maplibregl-ctrl-group button { width: 44px; height: 44px; }
+  .maplibregl-ctrl-group button .maplibregl-ctrl-icon { background-size: 30px 30px; }
+
+  /* The map's top row moves down by the taller drawer toggles, as theme.css does for 26 px ones,
+     and the scope note sits below the (now 44 px) camera presets rather than under them. */
+  .shell:has(.drawer-toggles:not(.right) .drawer-btn) .maplibregl-ctrl-top-left { margin-top: 56px; }
+  .shell:has(.drawer-toggles:not(.right) .drawer-btn) .camera-controls { top: 64px; left: 64px; }
+  .shell:has(.drawer-toggles.right .drawer-btn) .map-scope-note { margin-top: 104px; }
+}
+/* On a phone theatre.css places the scope note by `top` (with margin-top forced to 0); move that
+   anchor below the taller preset row the same way. */
+@media (max-width: 640px) {
+  .shell:has(.drawer-toggles.right .drawer-btn) .map-scope-note { top: 124px; }
+}

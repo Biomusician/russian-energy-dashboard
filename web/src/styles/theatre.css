@@ -357,3 +357,27 @@ html[data-briefing="on"] .map-legend { top: 72px; right: 12px; left: auto; botto
     padding: 5px 12px;
   }
 }
+
+/* Iteration 21 (a11y): the region search had no focus ring, only a faint border change. */
+.search-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* The legend sits above the attribution strip whenever MapLibre draws the strip in full (map wider
+   than 640 px). Anchored at 12 px it was drawn across "Boundaries & rivers: Natural Earth..." at
+   every desktop and tablet width, and neither could be read (iteration 21). Below 640 px the
+   attribution is the (i) button, closed until asked for, and the legend stays at the foot. */
+.mapwrap:has(.maplibregl-ctrl-attrib:not(.maplibregl-compact)) .map-legend { bottom: 52px; }
+
+/* ---------- short viewports: the page scrolls, the map keeps a usable height ----------
+   Iteration 21 (mobile/a11y). At 200% browser zoom on a 1440x900 screen the viewport is 720x450
+   CSS px, and a phone held sideways is ~390 px tall. The ribbon and timeline cost the same
+   absolute height there as anywhere, so the fixed-height shell left the map ~190 px and the map
+   legend, anchored to the map's foot, was drawn over the ribbon's coverage figures. Below this
+   height the document scrolls instead and the map row never drops under 340 px. #root keeps
+   `overflow: clip`, so nothing can scroll the app sideways (the bug the rule at the top of this
+   file fixed); only the vertical axis opens. */
+@media (max-height: 520px) {
+  html[data-layout] { height: auto; overflow-x: hidden; overflow-y: auto; }
+  html[data-layout] body { height: auto; overflow: visible; }
+  html[data-layout] #root { height: auto; min-height: 100vh; }
+  html[data-layout] .shell { height: auto; min-height: 100vh; grid-template-rows: auto auto minmax(340px, 1fr) auto; }
+}

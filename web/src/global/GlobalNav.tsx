@@ -355,15 +355,17 @@ export function GlossaryDialog() {
       </section>
       <h3 className="eyebrow glossary-terms-head">Terms, alphabetical</h3>
       <div className="glossary-list">
+        {/* <article>, not a labelled <section>: twelve "region" landmarks inside one dialog made a
+            screen reader's landmark list longer than the glossary itself (iteration 21). */}
         {GLOSSARY.map((g) => (
-          <section key={g.id} id={`gl-${g.id}`} className={`glossary-entry${focusId === g.id ? " focused" : ""}`} aria-labelledby={`gl-${g.id}-t`}>
+          <article key={g.id} id={`gl-${g.id}`} className={`glossary-entry${focusId === g.id ? " focused" : ""}`} aria-labelledby={`gl-${g.id}-t`}>
             <h3 id={`gl-${g.id}-t`} tabIndex={-1}>{g.term}</h3>
             <p>{g.plain}</p>
             <details open={focusId === g.id || undefined}>
-              <summary className="small">More detail</summary>
+              <summary className="small">More detail<span className="sr-only"> on {g.term}</span></summary>
               <p className="small dim">{g.detail}</p>
             </details>
-          </section>
+          </article>
         ))}
       </div>
     </dialog>

@@ -6,7 +6,9 @@ import { navigate, navigateGroup } from "./router";
 /** "Start here": six things a first-time reader needs, on the page rather than in a modal.
  *  Dismissing it is remembered in this browser only; "How to read this" brings it back. */
 export default function StartHere({ gulfSlug, gulfLabel }: { gulfSlug: string | null; gulfLabel: string | null }) {
-  const [open, setOpen] = useState(() => takeStartHereRequest() || !readDismissed());
+  // Whether another view asked for the panel ("How to read this"), read once on mount.
+  const [requested] = useState(() => takeStartHereRequest());
+  const [open, setOpen] = useState(() => requested || !readDismissed());
   const [note, setNote] = useState("");
   const headRef = useRef<HTMLHeadingElement | null>(null);
 
@@ -24,9 +26,11 @@ export default function StartHere({ gulfSlug, gulfLabel }: { gulfSlug: string | 
     return () => window.removeEventListener(START_HERE_EVENT, reopen);
   }, []);
 
-  // Opened from another view: move focus to it so the reader lands on what they asked for.
+  // Opened from another view: move focus to it so the reader lands on what they asked for. Only
+  // then: on a first visit, focus taken here skipped the page title, search and navigation, and a
+  // screen reader started reading mid-page (iteration 21).
   useEffect(() => {
-    if (open && document.activeElement === document.body) headRef.current?.focus();
+    if (requested && open && document.activeElement === document.body) headRef.current?.focus();
   }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const dismiss = () => {

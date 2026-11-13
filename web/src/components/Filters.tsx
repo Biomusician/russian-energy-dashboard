@@ -320,8 +320,12 @@ function Group({
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
         <div className="eyebrow">{title}</div>
         <div style={{ display: "flex", gap: 4 }}>
-          <button className="ghost" style={{ padding: "1px 6px", fontSize: 10 }} onClick={() => onAll(true)}>all</button>
-          <button className="ghost" style={{ padding: "1px 6px", fontSize: 10 }} onClick={() => onAll(false)}>none</button>
+          {/* Named with their group: three pairs of bare "all" / "none" were indistinguishable
+              in a screen reader's list of controls (iteration 21). */}
+          <button className="ghost" style={{ padding: "1px 6px", fontSize: 10 }} onClick={() => onAll(true)}
+                  aria-label={`all: ${title}`}>all</button>
+          <button className="ghost" style={{ padding: "1px 6px", fontSize: 10 }} onClick={() => onAll(false)}
+                  aria-label={`none: ${title}`}>none</button>
         </div>
       </div>
       {keys.map((k) => (
