@@ -7,6 +7,7 @@ import {
   type Manifest, type ManifestSystem,
 } from "./manifest";
 import { navigate, navigateGroup } from "./router";
+import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
 import { fmtDate, fmtNum } from "../data";
 
 /** The global home (iteration 14).
@@ -143,11 +144,7 @@ function SystemCard({ s, manifest }: { s: ManifestSystem; manifest: Manifest }) 
       <div className={`badge readiness-${s.evidence_readiness.toLowerCase()}`}>
         {READINESS_LABEL[s.evidence_readiness]}
       </div>
-      {s.maturity === "research_preview" && (
-        <div className="badge research-partial" title="Research preview: the systematic search is still incomplete, so the absence of a record is not evidence that no disruption occurred.">
-          Research preview
-        </div>
-      )}
+      {s.maturity === "research_preview" && <div><ResearchPreviewBadge /></div>}
       {s.headline ? (
         <div className="sys-headline">
           <span className="num">{fmtNum(s.headline.value, 1)}</span>{" "}
@@ -159,8 +156,9 @@ function SystemCard({ s, manifest }: { s: ManifestSystem; manifest: Manifest }) 
           <span className="small">No index — reported events and context only</span>
         </div>
       )}
-      <div className="small dim" title={manifest.reporting_environments[s.reporting_environment]}>
-        Reporting: {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}
+      <div className="small dim">
+        Reporting: <Disclosure label={labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}
+          text={manifest.reporting_environments[s.reporting_environment] ?? ""} className="linklike" />
       </div>
       <div className="small dim">Site rebuilt {fmtDate(s.as_of)}</div>
       <button className="ghost" onClick={() => navigate(s.id)}>Open {s.name}</button>

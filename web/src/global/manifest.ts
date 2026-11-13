@@ -395,7 +395,9 @@ export interface CountryEvent {
   sources: { url: string; publisher?: string; date?: string; language?: string;
              source_role?: string; opened?: boolean | null;
              /** A non-English source's own headline and an English gloss (iteration 19). */
-             title_original?: string; title_en?: string }[];
+             title_original?: string; title_en?: string;
+             /** The page's state at the last automated link check (iteration 21); absent if never checked. */
+             link_check?: "reachable" | "redirected" | "blocked" | "dead" | "error" }[];
   /** Present when the source dated the event in another calendar: what it wrote, and how it was converted. */
   source_date_text?: string;
   date_calendar?: "gregorian" | "solar_hijri" | "hijri";

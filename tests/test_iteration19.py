@@ -1195,7 +1195,9 @@ def test_the_gulf_view_states_what_it_is_not_and_never_says_zero_disruptions():
     assert "0 disruptions" not in text and "no disruptions" not in text.lower()
     country = (ROOT / "web" / "src" / "global" / "CountryView.tsx").read_text(encoding="utf-8")
     assert "No qualifying records in the current reviewed corpus" in country
-    assert "Research preview" in country and "CAMPAIGN_STATE_LABEL" in country
+    # Since iteration 21 the label and its one definition live in countryCopy.ts.
+    copy = (ROOT / "web" / "src" / "global" / "countryCopy.ts").read_text(encoding="utf-8")
+    assert '"Research preview"' in copy and "RESEARCH_PREVIEW_LABEL" in country and "CAMPAIGN_STATE_LABEL" in country
 
 
 @needs_payload

@@ -24,7 +24,7 @@ PY = sys.executable
 
 COPY_DIRS = ("pipeline", "scripts", "tests", "methodology", "data/curated", "data/processed",
              "web/public/data", "web/src", "docs")
-COPY_FILES = ("pyproject.toml", "data/raw/ne_10m_admin_1.geojson", "data/raw/ne_50m_admin_0.geojson",
+COPY_FILES = ("pyproject.toml", "web/package.json", "data/raw/ne_10m_admin_1.geojson", "data/raw/ne_50m_admin_0.geojson",
               "CLAUDE.md", "README.md")
 
 
@@ -1152,6 +1152,35 @@ ITER20_MUTATIONS = [
 ]
 MUTATIONS += ITER20_MUTATIONS
 
+# Iteration 21: the country page's event card and Evidence Inspector. The TypeScript mirror of the
+# origin rule is run in Node against the Python rule (tests/test_iteration21_country.py).
+EVIDENCE_TS = "web/src/global/evidence.ts"
+ITER21_COUNTRY_MUTATIONS = [
+    ("the card's origin count becomes a count of addresses",
+     [(EVIDENCE_TS, _text("    if (o) out.add(o);\n", "    if (o) out.add(s.url);\n"))],
+     "counts_origins"),
+    ("a wire story republished by two outlets counts as two origins",
+     [(EVIDENCE_TS, _text("if (words.includes(` ${key} `)) return `wire:${name}`;",
+                          "if (words.includes(` ${key} `)) return `wire:${name}:${domain}`;"))],
+     "counts_origins_as_the_pipeline_does_on_constructed"),
+    ("Wikipedia counts as an originating statement on the card",
+     [(EVIDENCE_TS, _text('if (DISCOVERY_ONLY_DOMAINS.includes(domain) || publisher.includes("wikipedia")) return null;',
+                          "if (false) return null;"))],
+     "counts_origins"),
+    ("an empty country page says 0 disruptions",
+     [("web/src/global/countryCopy.ts", _text(
+         '"No qualifying records in the current reviewed corpus — this is not evidence that no disruption occurred."',
+         '"0 disruptions in the current reviewed corpus."'))],
+     "empty_country_page"),
+    ("a campaign-covered record shows its headline",
+     [(EVIDENCE_TS, _text("  if (e.publication) return false;\n", "  if (false) return false;\n"))],
+     "no_headline_is_allowed"),
+    ("the card renders a headline without the campaign guard",
+     [("web/src/global/EventCard.tsx", _text("{headlines && s.title_original && (", "{s.title_original && ("))],
+     "no_headline_is_allowed"),
+]
+MUTATIONS += ITER21_COUNTRY_MUTATIONS
+
 
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
@@ -1166,7 +1195,7 @@ def _sandbox():
 
 
 TEST_FILES = ("tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py",
-              "tests/test_iteration20.py")
+              "tests/test_iteration20.py", "tests/test_iteration21_country.py")
 
 
 def _run(box, k):

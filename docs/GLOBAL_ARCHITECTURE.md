@@ -134,6 +134,32 @@ downloads neither. MapLibre (1 MB) is shared and loaded by whichever view draws 
 monitored system the same. A country view puts "No index" where the theatre shows its ESDI, with
 the reason. Its choropleth classes come from that country's own range (never a scale shared across countries), and the legend prints the numbers and says the colour is recorded events, not a rate of disruption. Recovery is labelled by kind (full restart, partial, service restored, estimate, nothing lost). The event record's review date is shown apart from the rebuild date, with a stale notice past a declared limit, and the eight-point onboarding gate is published with each item's status. The PNG export draws the count, reporting environment, colour key and caveats into the image.
 
+**Event cards and the Evidence Inspector (iteration 21).** `global/EventCard.tsx` draws one record:
+date, infrastructure class, cause, reported effect, placement level (region, national or
+multi-region, country-level attack record, or recorded for the country as a whole) and its
+citations one per line. "N cited pages · M originating statements" is computed per record by
+`global/evidence.ts`, a TypeScript mirror of `source_origin` / `event_origins` in
+`pipeline/build_systems.py`; `tests/test_iteration21_country.py` runs it in Node against the
+Python rule on every served record, and vitest recomputes each system's `source_health` totals. The
+inspector (rendered only while open; Escape closes it) answers, in plain words, why the record is
+included, where the report came from, how many independent originating statements support it,
+what it does not establish, and its review state. Under active-campaign safeguards it shows no
+headline, no capacity figure and no later status. Each citation carries `link_check`, its state at
+the last automated link check, from `link_states` in `data/curated/systems/source_link_health.json`
+(written by `scripts/check_source_links.py`; `--states-only` adds it from the last local run
+without visiting any page). A page with no published record leads with `EMPTY_CORPUS_LEAD`
+(`global/EmptyCorpus.tsx`); the research-preview definition and the "Why no score" copy live once in
+`global/countryCopy.ts`, and every badge is a click/tap disclosure (`global/Disclosure.tsx`).
+
+**Record anchors.** A card has `id="ev-<event id>"`, so `?sys=<country>#ev-<event id>` opens the
+full list at that record (also on a hash change). A record published under active-campaign
+safeguards gets an anchor only when its id is the opaque one the build gives attack records under
+a country-level rule (`<system>-<date>-<class>-attack-<token>`). Saudi Arabia's covered records
+keep ids that name the facility, and the served record carries no other stable key that names
+nothing (the feeds' `<system>-row-NN` keys are list positions), so those records have no anchor;
+giving them one needs a build-time opaque key. `eventAnchor()` in `global/evidence.ts` is the one
+implementation.
+
 ## Tests
 
 - **Python** (`tests/test_pipeline.py`, "Iteration 14" sections): registry order, manifest

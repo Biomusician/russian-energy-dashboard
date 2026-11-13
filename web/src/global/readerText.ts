@@ -18,6 +18,8 @@ const RULES: [RegExp, string][] = [
   [new RegExp(FILE, "g"), "the published research plan"],
   // "(since iteration 17)", "(iteration 19, Wave A)"
   [/\s*\((?:since\s+)?iteration[- ]\d+[^)]*\)/g, ""],
+  // "outside this system's geography this iteration;" (iteration 21): a release label, not a date
+  [/\s+(?:in |for )?this iteration\b/g, ""],
   // a pass signed "iteration-19 Gulf research pass" reads "Gulf research pass"; its date is beside it
   [/^iteration-\d+\s+/, ""],
   [/\bthis agent's first search\b/g, "the first search of this source group"],

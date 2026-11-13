@@ -19,7 +19,9 @@ import { defineConfig, devices } from "@playwright/test";
  */
 
 const BASE = process.env.E2E_BASE_URL;
-const PORT = 4178;
+// E2E_PORT lets parallel checkouts each serve their own build: with reuseExistingServer, a shared
+// port would silently test whichever build answered first.
+const PORT = Number(process.env.E2E_PORT ?? 4178);
 
 export default defineConfig({
   testDir: "./e2e",

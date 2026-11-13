@@ -19,6 +19,8 @@ describe("readerText", () => {
     expect(readerText("Blind reviewed (since iteration 17): three reviewers")).toBe("Blind reviewed: three reviewers");
     expect(readerText("iteration-19 Gulf research pass")).toBe("Gulf research pass");
     expect(readerText("Compiled by the UAE lane (iteration 19, Wave A). Context only.")).toBe("Compiled by the UAE lane. Context only.");
+    expect(readerText("Territories are outside this system's geography this iteration; their events are held."))
+      .toBe("Territories are outside this system's geography; their events are held.");
   });
 
   it("states the research tools in plain words, never drops the limitation", () => {

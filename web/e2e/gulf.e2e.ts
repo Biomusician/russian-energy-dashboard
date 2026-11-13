@@ -477,8 +477,10 @@ test.describe("Iteration 20 page rules", () => {
 
   test("Saudi Arabia's older convention is stated plainly, and only where it applies", async ({ app, page }) => {
     await app.open("?sys=sa");
-    await expect(page.locator(".legacy-convention")).toContainText("was onboarded before the newer rule for the Gulf countries");
-    await expect(page.locator(".legacy-convention")).toContainText("Why no score tab");
+    // Iteration 21: said in plain terms, with no internal process language.
+    await expect(page.locator(".legacy-convention")).toContainText("older records keep an earlier convention");
+    await expect(page.locator(".legacy-convention")).toContainText("record an attack for the country as a whole");
+    await expect(page.locator(".legacy-convention")).not.toContainText(/decision|owner|iteration|onboard/i);
     for (const id of ["kw", "bh", "us"]) {
       await app.open(`?sys=${id}`);
       await expect(page.locator(".legacy-convention")).toHaveCount(0);
