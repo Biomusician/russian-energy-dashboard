@@ -285,6 +285,7 @@ export default function CountryView({ id }: { id: string }) {
             fill={fillFor(scale) as maplibregl.ExpressionSpecification}
             onPick={(code) => { setRegion((cur) => (cur === code ? null : code)); setTab("events"); }}
             ariaLabel={`Map of ${sys.name} by ${sys.geography.unit_label}. Select one to list its events.`}
+            emptyMessage={scale.thresholds.length === 0 ? `No record is placed in any ${sys.geography.unit_label}, so nothing is shaded. An unshaded map is not a quiet country.` : null}
             attribution="Boundaries: Natural Earth (public domain), line of actual control. Events: cited public reporting."
             onMap={(m) => { mapRef.current = m; }}
           />

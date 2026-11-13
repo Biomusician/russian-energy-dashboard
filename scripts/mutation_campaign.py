@@ -1152,6 +1152,29 @@ ITER20_MUTATIONS = [
 ]
 MUTATIONS += ITER20_MUTATIONS
 
+# Iteration 21: the regional overview's map, member list and brief.
+GULF_MAP_MUTATIONS = [
+    ("a chosen figure's definition is hidden",
+     [("web/src/global/GroupView.tsx", _text('<p className="metric-definition small">{facts.definition}</p>',
+                                             '<p className="metric-definition small"></p>'))],
+     "iter21_gulf_metric_definition"),
+    ("the regional map opens coloured by a metric",
+     [("web/src/global/GroupView.tsx", _text("const colourBy = metric && ctx?.metrics[metric] ? metric : null;",
+                                             "const colourBy = metric && ctx?.metrics[metric] ? metric : (ctx ? Object.keys(ctx.metrics)[0] : null);"))],
+     "iter21_gulf_default_map"),
+    ("the member list is sorted by a figure",
+     [("web/src/global/groupMap.ts", _text('a.name.localeCompare(b.name, "en")',
+                                           "(b.values[Object.keys(b.values)[0]] ?? 0) - (a.values[Object.keys(a.values)[0]] ?? 0)"))],
+     "iter21_gulf_member_list"),
+    ("the accounting convention is dropped beside the figure",
+     [("web/src/global/groupMap.ts", _text("accounting: ctx.accounting_convention ?? null,", "accounting: null,"))],
+     "iter21_gulf_accounting"),
+    ("the regional brief keeps the reader's selection mark",
+     [("web/src/global/GroupView.tsx", _text("const clean = withoutHighlight(style);", "const clean = style;"))],
+     "iter21_gulf_brief_drops"),
+]
+MUTATIONS += GULF_MAP_MUTATIONS
+
 
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
@@ -1166,7 +1189,7 @@ def _sandbox():
 
 
 TEST_FILES = ("tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py",
-              "tests/test_iteration20.py")
+              "tests/test_iteration20.py", "tests/test_iter21_gulf_map.py")
 
 
 def _run(box, k):

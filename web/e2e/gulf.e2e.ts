@@ -175,7 +175,17 @@ test.describe("Gulf group", () => {
       await expect(feed).toContainText("No qualifying records in the current reviewed corpus for this region");
       return;
     }
-    await expect(feed.locator(".feed-item")).toHaveCount(eps.length);
+    // Consecutive safeguarded episodes of one country fold into one line (iteration 21), so the list
+    // can be shorter than the payload, never longer, and a folded line carries no count.
+    const items = await feed.locator(".feed-item").count();
+    expect(items).toBeGreaterThan(0);
+    expect(items).toBeLessThanOrEqual(eps.length);
+    const folded = feed.locator(".feed-safeguarded");
+    for (const t of await folded.allInnerTexts()) {
+      expect(t).toContain("records under active-campaign safeguards");
+      expect(t.replace(/\d{1,2} [A-Z][a-z]{2} \d{4}|[A-Z][a-z]{2} \d{4}/g, "")).not.toMatch(/\d/);
+    }
+    await expect(feed.locator(".feed-national-note")).toContainText("“National” in this list");
     const dates = eps.map((e) => e.last_date);
     expect(dates).toEqual([...dates].sort().reverse());
     expect(g.recent.scope).not.toMatch(/five/);
@@ -445,7 +455,12 @@ test.describe("Gulf responsive", () => {
         expect(box!.width).toBeGreaterThan(w * 0.5);
         expect(box!.height).toBeGreaterThan(200);
         await expect(page.getByRole("combobox", { name: "Monitored system" })).toBeVisible();
-        if (w <= 600) {
+        if (q === "?group=gulf") {
+          // Iteration 21: the overview's caveat line is visible at every width, above the map, and the
+          // full comparability statement is one click below it.
+          await expect(page.locator(".group-caveat-line")).toBeVisible();
+          await expect(page.locator(".comparability")).toHaveCount(1);
+        } else if (w <= 600) {
           // Iteration 20 (§78): on a phone the map starts in the first screen, a compact caveat line
           // above it leads to the full statements, and the comparability statement is still on the page.
           const top = await page.locator("[data-map-state]").evaluate((el) => el.getBoundingClientRect().top + window.scrollY);

@@ -37,6 +37,11 @@ export interface ExportRequest {
    *  decides what an image must say. Without it the file is a bare choropleth — which is exactly
    *  what shipped before, and exactly what must not. */
   compose?: (mapCanvas: HTMLCanvasElement) => HTMLCanvasElement;
+  /** Frame these bounds instead of copying the live camera. A brief about a whole group must not
+   *  inherit a reader's zoom onto one member, which would read as a focus on that member. */
+  fit?: { bounds: [number, number, number, number]; padding: maplibregl.PaddingOptions };
+  /** Adjust the copied style, e.g. to drop the reader's own selection marks. */
+  transformStyle?: (style: maplibregl.StyleSpecification) => maplibregl.StyleSpecification;
 }
 
 export interface ExportResult {
@@ -132,7 +137,7 @@ export async function exportMapPng(req: ExportRequest): Promise<ExportResult> {
   const { source, width, height } = req;
   const pixelRatio = req.pixelRatio ?? Math.max(1, Math.min(2, window.devicePixelRatio || 1));
 
-  const style = source.getStyle();
+  const style = req.transformStyle ? req.transformStyle(source.getStyle()) : source.getStyle();
   const container = offscreenContainer(width, height);
   let map: maplibregl.Map | null = null;
   try {
@@ -144,11 +149,10 @@ export async function exportMapPng(req: ExportRequest): Promise<ExportResult> {
       // ignored — which would produce a blank export with no error anywhere.
       canvasContextAttributes: { preserveDrawingBuffer: true, antialias: true },
       // Copy the live camera exactly rather than re-deriving a view, so what the reader saw is
-      // what they get.
-      center: source.getCenter(),
-      zoom: source.getZoom(),
-      bearing: source.getBearing(),
-      pitch: source.getPitch(),
+      // what they get -- unless the caller asks for a fixed frame.
+      ...(req.fit
+        ? { bounds: req.fit.bounds, fitBoundsOptions: { padding: req.fit.padding } }
+        : { center: source.getCenter(), zoom: source.getZoom(), bearing: source.getBearing(), pitch: source.getPitch() }),
       interactive: false,
       attributionControl: false,
       fadeDuration: 0,

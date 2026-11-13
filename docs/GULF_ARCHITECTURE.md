@@ -169,3 +169,30 @@ that sits around the records and that no gate read. Each is now a rule with a te
   used to drop.
 
 `docs/ITERATION_19_REVIEW.md` §24 lists what the reviews found that was not changed, and why.
+
+## The overview page and its map (iteration 21)
+
+- **First screen.** A one-line purpose, a caveat line (national context only, not comparable, no
+  index) linking to the full notes, then the map with its metric and membership controls on its top
+  edge and, beside it, the figure's facts and the member list. The comparability statement and
+  "How to read this view" follow the map.
+- **Neutral default.** Until a reader chooses a figure, every member has one fill (distinct from
+  other countries) and a white outline, and the map says "Geography only — choose a national
+  figure to colour the map". `groupMap.ts` holds the colours, the member order and the facts.
+- **A chosen figure explains itself**: definition, year, unit, source and the accounting
+  convention appear beside the control whenever the map is coloured.
+- **Members** are listed alphabetically. Pointing or focusing highlights a member on the map;
+  choosing one selects it and zooms to the manifest's own box for it (no box, no zoom). A tap on
+  the map selects too, and the selection panel holds the "Open" button, so nothing is hover-only.
+- **Legend categories never merge**: member in view, member outside the GCC/OPEC filter, other
+  countries, selected, and, when they occur, zero and no data, each with its own swatch.
+- **The brief** (`groupExport.ts`) always frames the whole group, colours every member whatever the
+  page's filter shows, and drops the reader's selection and hover marks
+  (`SimpleMap.withoutHighlight`). A highlighted country in an image that travels alone would read
+  as the one that matters. It now draws its own colour key.
+- **The regional feed** folds consecutive episodes of one country whose every record is under the
+  campaign safeguards into one line, with dates and kinds but no count, and says in one line why a
+  record reads "National" here while its country page may name a region.
+- **SimpleMap** (shared by every global map) has HTML zoom/reset controls of 44px, credits as text
+  under the map, an optional empty-state note, and an optional "Same data as a table" link. No
+  symbol layers, tiles or glyphs.

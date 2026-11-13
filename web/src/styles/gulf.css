@@ -1,0 +1,85 @@
+/* The regional (Gulf littoral) overview.
+ *
+ * First screen: the purpose line, the caveat line, then the stage -- controls across the top, the
+ * map, and beside it the figure's facts and the member list. On a phone the same order stacks:
+ * controls, facts (once a figure is chosen), a one-row member strip, then the map. */
+
+.group-top { display: flex; flex-direction: column; gap: 4px; max-width: 1100px; }
+.group-purpose { margin: 0; font-size: 13.5px; line-height: 1.45; }
+.group-caveat-line { margin: 0; color: var(--text-dim); border-left: 3px solid var(--amber); padding: 2px 0 2px 8px; }
+
+.group-context { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.group-stage {
+  display: grid; gap: 6px 14px; min-width: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  grid-template-areas: "controls side" "map side";
+  align-items: start;
+}
+/* The controls sit on the map's top edge, so the line on the map and the control that answers it
+   read as one thing. While the map is uncoloured the metric control is the accented one. */
+.group-controls {
+  grid-area: controls; align-items: center; padding: 6px 8px; margin: 0;
+  background: var(--bg-panel); border: 1px solid var(--line); border-bottom: 0;
+}
+.group-controls.is-neutral select[aria-label="Regional map metric"] { border-color: var(--accent-dim); box-shadow: 0 0 0 1px var(--accent-dim); }
+.group-map-col .global-map-wrap { border: 1px solid var(--line); border-top: 0; }
+.map-state-note { border-color: var(--accent-dim); }
+.group-brief-row { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 4px 0; }
+.group-brief-row .group-brief-btn { min-height: 44px; font-size: 12px; }
+.group-side { grid-area: side; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.group-map-col { grid-area: map; display: flex; flex-direction: column; min-width: 0; }
+
+/* The map takes what the first screen has left, within sane limits. */
+.group-page .group-map-wrap { height: clamp(320px, calc(100vh - 300px), 600px); }
+.group-page .group-map-wrap > .simple-map-shell { max-width: none; }
+
+.metric-facts { padding: 10px 12px; border: 1px solid var(--line); margin: 0; }
+.metric-facts h3 { margin: 0 0 6px; font-size: 13.5px; }
+.metric-facts-empty { border-style: dashed; line-height: 1.45; }
+.metric-facts-list { display: grid; grid-template-columns: 1fr; gap: 2px; margin: 0 0 6px; }
+.metric-facts-list > div { display: flex; gap: 8px; }
+.metric-facts-list dt { color: var(--text-faint); min-width: 52px; }
+.metric-facts-list dd { margin: 0; }
+.metric-definition, .metric-accounting { margin: 4px 0 0; line-height: 1.45; }
+
+.member-list ul { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.member-list-head { margin: 0; }
+.member-list-note { margin: 2px 0 0; line-height: 1.4; }
+.member-btn {
+  width: 100%; min-height: 44px; padding: 4px 10px; text-align: left; cursor: pointer;
+  background: var(--bg-inset); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius);
+  font: 500 13px/1.2 var(--sans);
+}
+.member-btn:hover, .member-btn.is-pointed { border-color: #9beaf7; border-style: dashed; }
+.member-btn[aria-pressed="true"] { border: 2px solid #2ad4ee; background: #0c2b31; color: #eaf7fb; }
+.member-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.member-detail { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between;
+                 padding: 8px 10px; border: 1px solid var(--accent-dim); font-size: 12.5px; }
+.member-detail-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.member-detail-actions button.ghost { min-height: 44px; font-size: 12px; }
+.member-detail-hint { margin: 2px 0; }
+
+.group-notes { display: flex; flex-direction: column; gap: 6px; max-width: 1100px; }
+.group-table-head { margin: 6px 0 0; font-size: 14px; }
+.map-legend-mini .legend-ramp i { margin-right: 1px; }
+
+@media (max-width: 900px) {
+  .group-stage { grid-template-columns: minmax(0, 1fr); grid-template-areas: "controls" "side" "map"; }
+  .group-page .group-map-wrap { height: clamp(300px, 46vh, 420px); }
+}
+
+@media (max-width: 600px) {
+  .group-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .group-controls label { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .group-controls select { width: 100%; min-height: 40px; }
+  .group-side { gap: 6px; }
+  /* Before a figure is chosen the legend already says "geography only"; the empty box would only
+     push the map down. */
+  .metric-facts-empty { display: none; }
+  .member-list-note { display: none; }
+  /* One row the reader can swipe, inside itself: the page never scrolls sideways. */
+  .member-list ul { display: flex; overflow-x: auto; gap: 6px; padding-bottom: 2px; scroll-snap-type: x proximity; }
+  .member-list li { flex: 0 0 auto; scroll-snap-align: start; }
+  .member-btn { width: auto; white-space: nowrap; }
+}
