@@ -181,7 +181,7 @@ export function EventCard({ e, bundle, inEpisode = false, targeted = false }: {
 }
 
 /** Plain answers about one record. Rendered only while open, so a closed card carries none of it. */
-function EvidenceInspector({ id, e, bundle, onClose }: {
+export function EvidenceInspector({ id, e, bundle, onClose }: {
   id: string; e: CountryEvent; bundle: CountryBundle; onClose: () => void;
 }) {
   const sys = bundle.system;

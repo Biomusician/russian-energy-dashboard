@@ -631,6 +631,13 @@ test.describe("Gulf red team", () => {
     await expect(page.locator(".group-table tfoot td").nth(1)).not.toContainText("% of world");
     await expect(context).not.toContainText("A descriptive annual figure");
     await expect(row.locator("td").nth(3)).not.toHaveText(/^0\b/);
+    // Coloured by that figure and chosen from the member list, the member says "no data" there too.
+    const metric = Object.keys(g.metrics)[0];
+    await page.getByLabel("Regional map metric").selectOption(metric);
+    await page.getByRole("navigation", { name: "Members" }).getByRole("button", { name: new RegExp(`^${first.name}\\b`) }).click();
+    const detail = page.getByRole("status", { name: "Selected member" });
+    await expect(detail).toContainText(`${g.metrics[metric].label}: no data`);
+    await expect(detail).not.toContainText(/: 0 /);
   });
 
   test("the regional brief draws the payload's own figures, order and refusals into the image", async ({ app, page }) => {

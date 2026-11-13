@@ -221,6 +221,10 @@ test.describe("a broken file costs only the view that reads it", () => {
       m.corpus = "corrupt";
       m.systems[0].aliases = 7;
       m.systems[0].bounds = ["x"];
+      // The theatre's bounds are read by nothing on these pages, so that fault alone proved nothing
+      // (iteration 21 test-architecture red team). The Gulf overview reads each member's bounds to
+      // frame the map and to offer "Zoom to": a dropped box offers no zoom and still draws the map.
+      m.systems.find((s: { id: string }) => s.id === "kw").bounds = ["x"];
       await route.fulfill({ response: res, json: m });
     });
     await app.open("");
@@ -228,6 +232,14 @@ test.describe("a broken file costs only the view that reads it", () => {
     const m = await page.evaluate(() => fetch("/data/global/manifest.json").then((r) => r.json()));
     await expect(page.getByRole("article")).toHaveCount(m.systems.length);
     await restStillWorks(page, app);
+    await page.goto("/?group=gulf");
+    await app.mapIdle();
+    await page.getByRole("navigation", { name: "Members" }).getByRole("button", { name: /^Kuwait\b/ }).click();
+    await expect(page.getByRole("status", { name: "Selected member" })).toContainText("Kuwait");
+    await expect(page.getByRole("button", { name: "Zoom to Kuwait" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Zoom to Qatar" })).toHaveCount(0);
+    await page.getByRole("navigation", { name: "Members" }).getByRole("button", { name: /^Qatar\b/ }).click();
+    await expect(page.getByRole("button", { name: "Zoom to Qatar" })).toBeVisible();
   });
 
   test("a malformed manifest: the home says so and offers the theatre, which still works", async ({ app, page }) => {

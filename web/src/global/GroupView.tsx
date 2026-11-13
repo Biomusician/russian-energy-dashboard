@@ -53,7 +53,7 @@ function briefStyle(style: maplibregl.StyleSpecification, ctx: GroupContext, met
   return { ...clean, layers: clean.layers.map((l) => (l.id === "fill" && l.type === "fill" ? { ...l, paint: { ...l.paint, "fill-color": fill } } : l)) };
 }
 
-function EpisodeItem({ ep }: { ep: RecentEpisode }) {
+export function EpisodeItem({ ep }: { ep: RecentEpisode }) {
   const covered = isCovered(ep);
   return (
     <li className="feed-item">
@@ -260,7 +260,7 @@ export default function GroupView({ id }: { id: string }) {
                     {listed.map((s) => (
                       <li key={s.system_id}>
                         {/* Named for what it does: the table and the recent list below have
-                            buttons called just "Kuwait" that open the country page. */}
+                            buttons called just by the country's name that open the country page. */}
                         <button type="button" className={`member-btn${pointA3 === s.a3 ? " is-pointed" : ""}`} aria-pressed={sel?.a3 === s.a3}
                           aria-label={`${s.name}, show on the map`}
                           title={`${memberships(s)}. Select to highlight and zoom to it on the map.`}

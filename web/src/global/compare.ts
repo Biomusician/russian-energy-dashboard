@@ -372,6 +372,24 @@ export function compareBriefLines(cols: CompareColumn[], rows: CompareRow[], ctx
   };
 }
 
+/** Why the comparison cannot be exported yet, or null when it can. An image drawn while a column
+ *  still says "Loading" would travel with that word in it as if it were a finding. */
+export function exportBlocker(cols: CompareColumn[], ctxLoaded: boolean, ctxFailed: boolean): string | null {
+  if (cols.length < 2) return "Choose at least two systems first.";
+  if (cols.some((c) => c.status === "loading") || (!ctxLoaded && !ctxFailed)) return "Still loading; try again in a moment.";
+  return null;
+}
+
+/** The reader's order with column `i` swapped with its neighbour in direction `d`. Off either end,
+ *  the order is unchanged. */
+export function moveColumn(ids: string[], i: number, d: -1 | 1): string[] {
+  const j = i + d;
+  if (i < 0 || j < 0 || i >= ids.length || j >= ids.length) return [...ids];
+  const next = [...ids];
+  [next[i], next[j]] = [next[j], next[i]];
+  return next;
+}
+
 export function compareFilename(cols: CompareColumn[], built: string): string {
   return `energy-systems-compared-${cols.map((c) => c.entry.id).join("-")}-${localDayOf(built) ?? "undated"}.png`;
 }

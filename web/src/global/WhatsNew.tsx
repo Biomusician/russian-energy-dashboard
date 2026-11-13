@@ -21,7 +21,11 @@ export default function WhatsNew({ now }: { now?: Date } = {}) {
     loadWhatsNew().then((d) => { if (live) setData(d); }).catch(() => { if (live) setFailed(true); });
     return () => { live = false; };
   }, []);
+  return <WhatsNewPanel data={data} failed={failed} now={now} />;
+}
 
+/** The panel for a loaded (or failed) file, apart from the loading so a test can render it. */
+export function WhatsNewPanel({ data, failed, now }: { data: WhatsNewData | null; failed: boolean; now?: Date }) {
   const labels = new Map((data?.categories ?? []).map((c) => [c.id, c]));
   const age = data ? buildAgeText(data.comparison.current_as_of, localISODate(now ?? new Date())) : "";
 
