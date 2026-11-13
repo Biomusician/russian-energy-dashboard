@@ -31,7 +31,7 @@ export function recordLine(recordReviewed: string | null | undefined, today: str
  *  by side it carries "National" and a row key instead of its own id and place.
  *
  *  Read from the members' `withheld` flag, never from the row key: the Gulf littoral list gives
- *  every row a key, campaign-covered or not, so a key alone would label a Kuwaiti grid fault as
+ *  every row a key, campaign-covered or not, so a key alone would label an ordinary grid fault as
  *  an attack-campaign record. On the home list the two agree row for row. */
 export function isCovered(ep: RecentEpisode): boolean {
   return ep.members.some((m) => m.withheld);

@@ -458,8 +458,8 @@ export default function GroupView({ id }: { id: string }) {
         {ctx?.recent && (
           <section className="panel global-note recent-evidence" aria-label="Recent reviewed events in this region">
             <h2 className="eyebrow">Reviewed events in this region, newest first</h2>
-            <p className="small dim">Date order only. No severity, size or country order. Most of these records came from a historical
-              search run when the countries were added: a long list is a larger dataset, not a deteriorating region.
+            <p className="small dim">Date order only. No severity, size or country order. Most of these records were added as a historical
+              backfill when the countries joined the site: a long list is a larger dataset, not a deteriorating region.
               A country with few records has few records found, which is not few disruptions.</p>
             <p className="small dim feed-national-note">“National” in this list: a record covered by the attack-campaign safeguards
               is shown here for the country as a whole. Its country page may still name a region and facility, where that country's
