@@ -9,6 +9,8 @@ import {
   type GroupContext, type GroupSystem, type Manifest, type RecentEpisode,
 } from "./manifest";
 import { navigate } from "./router";
+import { prefetchOn } from "./prefetch";
+import { PanelBoundary } from "../components/ViewBoundary";
 import { downloadBlob, exportMapPng } from "../mapExport";
 import { fmtDate } from "../data";
 
@@ -56,6 +58,7 @@ export default function GroupView({ id }: { id: string }) {
   const [ctx, setCtx] = useState<GroupContext | null>(null);
   const [ctxFailed, setCtxFailed] = useState(false);
   const [world, setWorld] = useState<GeoJSON.FeatureCollection | null>(null);
+  const [worldFailed, setWorldFailed] = useState(false);
   const [metric, setMetric] = useState<string | null>(null);
   const [subset, setSubset] = useState<"all" | "gcc" | "opec">("all");
   const [hover, setHover] = useState<string | null>(null);
@@ -63,18 +66,19 @@ export default function GroupView({ id }: { id: string }) {
   const mapRef = useRef<maplibregl.Map | null>(null);
 
   useEffect(() => {
-    const ctl = new AbortController();
+    let live = true;
     loadManifest().then((m) => {
+      if (!live) return;
       setManifest(m);
       const found = groupBySlug(m, id);
       // The manifest names the context file; the view never builds a path from the URL.
       if (found?.group.context) {
-        loadGroupContext(found.group.context, ctl.signal).then(setCtx)
-          .catch(() => { if (!ctl.signal.aborted) setCtxFailed(true); });
+        loadGroupContext(found.group.context).then((c) => { if (live) setCtx(c); })
+          .catch(() => { if (live) setCtxFailed(true); });
       }
-    }).catch(() => setCtxFailed(true));
-    loadWorld(ctl.signal).then(setWorld).catch(() => undefined);
-    return () => ctl.abort();
+    }).catch(() => { if (live) setCtxFailed(true); });
+    loadWorld().then((w) => { if (live) setWorld(w); }).catch(() => { if (live) setWorldFailed(true); });
+    return () => { live = false; };
   }, [id]);
 
   const group = manifest ? groupBySlug(manifest, id)?.group : undefined;
@@ -184,6 +188,7 @@ export default function GroupView({ id }: { id: string }) {
         )}
         {ctxFailed && <p className="warn-text" role="alert">The regional context could not be loaded. Each country's own page still works.</p>}
 
+        <PanelBoundary label="The regional energy context">
         {ctx && m && metricId && (
           <section aria-label="Regional energy context" className="world-context">
             <div className="section-head">
@@ -225,7 +230,7 @@ export default function GroupView({ id }: { id: string }) {
                   attribution="Boundaries: Natural Earth (public domain), line of actual control. Countries only: no facilities, routes or incident points."
                   onMap={(mm) => { mapRef.current = mm; }}
                 />
-              ) : <div className="simple-map placeholder">Loading map…</div>}
+              ) : <div className="simple-map placeholder">{worldFailed ? "Map unavailable. The table below has every figure." : "Loading map…"}</div>}
               <div className="map-hover-line small mono" aria-live="off">{hover ?? " "}</div>
             </div>
             {colourBy ? (
@@ -258,7 +263,7 @@ export default function GroupView({ id }: { id: string }) {
                 <tbody>
                   {shown.map((s) => (
                     <tr key={s.system_id}>
-                      <td><button className="linklike" onClick={() => navigate(s.system_id)}>{s.name}</button></td>
+                      <td><button className="linklike" onClick={() => navigate(s.system_id)} {...prefetchOn(s.system_id)}>{s.name}</button></td>
                       <td className="small">{s.gcc_member ? "member" : "not a member"}</td>
                       <td className="small">{s.opec_member ? "member" : "not a member"}</td>
                       {Object.entries(ctx.metrics).map(([k, x]) => <td key={k} className="mono small">{fmtValue(s.values[k], x.unit)}</td>)}
@@ -297,6 +302,7 @@ export default function GroupView({ id }: { id: string }) {
             </details>
           </section>
         )}
+        </PanelBoundary>
 
         <h2 className="level-head">Monitored systems in this view</h2>
         <section aria-label="Monitored systems in this view" className="sys-cards">
@@ -328,11 +334,12 @@ export default function GroupView({ id }: { id: string }) {
               {s.languages_required.length > 0 && (
                 <div className="small dim">Languages the search plan requires: {languageNames(s.languages_required)}. Used in at least one source group so far: {languageNames(s.languages_executed) || "none"}.</div>
               )}
-              <button className="ghost" onClick={() => navigate(s.system_id)}>Open {s.name}</button>
+              <button className="ghost" onClick={() => navigate(s.system_id)} {...prefetchOn(s.system_id)}>Open {s.name}</button>
             </article>
           ))}
         </section>
 
+        <PanelBoundary label="The recent list">
         {ctx?.recent && (
           <section className="panel global-note recent-evidence" aria-label="Recent reviewed events in this region">
             <h2 className="eyebrow">Reviewed events in this region, newest first</h2>
@@ -344,7 +351,7 @@ export default function GroupView({ id }: { id: string }) {
                 <li key={`${ep.system_id}:${ep.episode_id}`} className="feed-item">
                   <div className="event-head">
                     <span className="mono small">{fmtEpisodeDate(ep)}</span>
-                    <button className="linklike small" onClick={() => navigate(ep.system_id)}>{ep.country}</button>
+                    <button className="linklike small" onClick={() => navigate(ep.system_id)} {...prefetchOn(ep.system_id)}>{ep.country}</button>
                     <span className="small dim">{ep.classes.join(", ")} · {ep.causes.join(", ")}</span>
                   </div>
                   {ep.episode_name && <div className="small"><strong>{ep.episode_name}</strong> <span className="dim">({ep.records} records, one episode)</span></div>}
@@ -361,6 +368,7 @@ export default function GroupView({ id }: { id: string }) {
             </ol>
           </section>
         )}
+        </PanelBoundary>
       </main>
     </div>
   );

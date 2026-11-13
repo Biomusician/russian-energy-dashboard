@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type maplibregl from "maplibre-gl";
 import SimpleMap from "./SimpleMap";
 import {
-  ELEC_FUELS, ROLE_LABEL, UNIT_SHORT, fmtValue, loadContext, mixShares, modesFor,
+  ELEC_FUELS, ROLE_LABEL, UNIT_SHORT, fmtValue, mixShares, modesFor,
   type ContextRow, type EnergyContext, type MapMode,
 } from "./context";
 import { composeContextFrame, contextFilename } from "./contextExport";
@@ -198,24 +198,19 @@ function CountrySearch({ ctx, onContext, aliases }: {
   );
 }
 
-export default function WorldContext({ world, worldError, manifest }: {
+/** `ctx` and `ctxError` come from the page, which waits for the context file before it draws this
+ *  section: loading it here as well drew the section once without it and then moved everything
+ *  below when it arrived (iteration 21). */
+export default function WorldContext({ world, worldError, manifest, ctx, ctxError }: {
   world: GeoJSON.FeatureCollection | null; worldError: string | null; manifest: Manifest | null;
+  ctx: EnergyContext | null; ctxError: string | null;
 }) {
-  const [ctx, setCtx] = useState<EnergyContext | null>(null);
-  const [ctxError, setCtxError] = useState<string | null>(null);
   const [modeId, setModeId] = useState<string | null>(null);
   const [cardA3, setCardA3] = useState<string | null>(null);
   const [hover, setHover] = useState<string | null>(null);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const mapRef = useRef<maplibregl.Map | null>(null);
-
-  useEffect(() => {
-    let live = true;
-    loadContext().then((c) => { if (live) setCtx(c); })
-      .catch((e) => { if (live) setCtxError(e instanceof Error ? e.message : String(e)); });
-    return () => { live = false; };
-  }, []);
 
   const modes = useMemo(() => (ctx ? modesFor(ctx) : []), [ctx]);
   const mode: MapMode | null = modes.find((m) => m.id === modeId) ?? modes[0] ?? null;

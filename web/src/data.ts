@@ -62,7 +62,25 @@ export async function grabOptional<T>(name: string, fallback: T): Promise<T> {
   }
 }
 
-export async function loadBundle(): Promise<Bundle> {
+// One theatre load per page (iteration 21): started by prefetchRoute as soon as the theatre's route
+// is known, in parallel with the theatre's own code, and picked up by App when it mounts. A failure
+// is not kept, so a retry fetches again.
+let bundlePromise: Promise<Bundle> | null = null;
+
+export function loadBundle(): Promise<Bundle> {
+  if (!bundlePromise) {
+    const p = fetchBundle();
+    bundlePromise = p;
+    p.catch(() => { if (bundlePromise === p) bundlePromise = null; });
+  }
+  return bundlePromise;
+}
+
+export function prefetchBundle(): void {
+  loadBundle().catch(() => undefined);
+}
+
+async function fetchBundle(): Promise<Bundle> {
   const [
     snapshot, national, regional, incidents, regions, assets, taxonomy,
     regionsGeo, linesGeo, contextLand, contextBorders, ocean,

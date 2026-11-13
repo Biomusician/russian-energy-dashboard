@@ -10,6 +10,7 @@ import {
 import { loadContext, rowForSystem, type EnergyContext } from "./context";
 import { NationalFigures } from "./WorldContext";
 import { navigate } from "./router";
+import { PanelBoundary } from "../components/ViewBoundary";
 import { composeCountryFrame, countryFilename } from "./countryExport";
 import { DISPUTED, NO_EVENTS, fillFor, scaleFor, type Scale } from "./countryScale";
 import { downloadBlob, exportMapPng } from "../mapExport";
@@ -53,14 +54,20 @@ export default function CountryView({ id }: { id: string }) {
   const [ctx, setCtx] = useState<EnergyContext | null>(null);
   const [ctxFailed, setCtxFailed] = useState(false);
 
-  // National context is a separate file: if it fails, the country's own record is untouched.
+  // National context is a separate file: if it fails, the country's own record is untouched. It is
+  // read only by the context and sources tabs and the PNG brief, so it is fetched when one of those
+  // is opened, not with the page (iteration 21: 160 KB the default view never showed).
+  const needsCtx = tab === "context" || tab === "sources";
   useEffect(() => {
+    if (!needsCtx) return;
     let live = true;
+    setCtxFailed(false);
     loadContext().then((c) => { if (live) setCtx(c); }).catch(() => { if (live) setCtxFailed(true); });
     return () => { live = false; };
-  }, []);
+  }, [needsCtx]);
 
-  // Load this country, abandoning any load still in flight for the previous one.
+  // Load this country. A reader who has already moved on never sees the answer: the view is keyed
+  // on the id, and `ctl` marks this mount as left.
   useEffect(() => {
     const ctl = new AbortController();
     setBundle(null);
@@ -72,7 +79,7 @@ export default function CountryView({ id }: { id: string }) {
         if (!e) throw new Error(`"${id}" is not a monitored country system.`);
         if (ctl.signal.aborted) return null;
         setEntry(e);
-        return loadCountry(e, ctl.signal);
+        return loadCountry(e);
       })
       .then((b) => { if (b && !ctl.signal.aborted) setBundle(b); })
       .catch((err) => {
@@ -147,9 +154,11 @@ export default function CountryView({ id }: { id: string }) {
     setExporting(true);
     setExportMsg(null);
     try {
+      // The brief carries the national figures; without the context file it is drawn without them.
+      const national = ctx ?? await loadContext().catch(() => null);
       const res = await exportMapPng({
         source: m, width: 1600, height: 900, pixelRatio: 1,
-        compose: (c) => composeCountryFrame(c, sys, scale, ctx ? { row: rowForSystem(ctx, sys.system_id), ctx } : null),
+        compose: (c) => composeCountryFrame(c, sys, scale, national ? { row: rowForSystem(national, sys.system_id), ctx: national } : null),
       });
       downloadBlob(res.blob, countryFilename(sys));
       setExportMsg(`Exported ${res.width}×${res.height}.`);
@@ -329,6 +338,8 @@ export default function CountryView({ id }: { id: string }) {
               </button>
             ))}
           </div>
+          {/* Keyed on the tab: a tab that fails costs that tab, and the others still open. */}
+          <PanelBoundary key={tab} label={`The ${TAB_LABEL[tab]} tab`}>
           {tab === "events" && (
             <EventsPanel
               events={events} region={validRegion} regionName={regionName}
@@ -340,6 +351,7 @@ export default function CountryView({ id }: { id: string }) {
           {tab === "research" && <ResearchPanel bundle={bundle} />}
           {tab === "sources" && <SourcesPanel bundle={bundle} ctx={ctx} />}
           {tab === "method" && <MethodPanel bundle={bundle} />}
+          </PanelBoundary>
           {exportMsg && <p className="small" role="status">{exportMsg}</p>}
         </section>
       </div>

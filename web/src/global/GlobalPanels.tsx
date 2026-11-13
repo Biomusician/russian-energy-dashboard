@@ -4,6 +4,7 @@ import {
   type DataQuality, type RecentEvidence, type RecentEpisode,
 } from "./manifest";
 import { navigate } from "./router";
+import { prefetchOn } from "./prefetch";
 import { daysBetween, fmtDate } from "../data";
 import { readerText } from "./readerText";
 
@@ -58,7 +59,7 @@ export function RecentEvidencePanel() {
               <li key={`${ep.system_id}:${ep.episode_id}`} className="feed-item">
                 <div className="event-head">
                   <span className="mono small">{fmtEpisodeDate(ep)}</span>
-                  <button className="linklike small" onClick={() => navigate(ep.system_id)}>{ep.country}</button>
+                  <button className="linklike small" onClick={() => navigate(ep.system_id)} {...prefetchOn(ep.system_id)}>{ep.country}</button>
                   <span className="small dim">{ep.classes.join(", ")} · {ep.causes.join(", ")}</span>
                 </div>
                 {ep.episode_name && <div className="small"><strong>{ep.episode_name}</strong> <span className="dim">({ep.records} records, one episode)</span></div>}
