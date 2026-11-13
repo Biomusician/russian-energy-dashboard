@@ -1,4 +1,4 @@
-import { fillFitted } from "./canvasText";
+import { DIM, INK, SANS, fillFitted } from "./canvasText";
 import { ENVIRONMENT_LABEL, labelFor, type CountrySystem } from "./manifest";
 import { DISPUTED, NO_EVENTS, type Scale } from "./countryScale";
 import { fmtValue, type ContextRow, type EnergyContext } from "./context";
@@ -11,10 +11,7 @@ import { fmtValue, type ContextRow, type EnergyContext } from "./context";
  *  this in iteration 11; this is the same rule for a view with no headline number.
  */
 
-const INK = "#d4dfea";
-const DIM = "#93a5b3";
 const BAND = "rgba(7, 9, 12, 0.88)";
-const SANS = '"Inter", system-ui, sans-serif';
 
 export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, scale: Scale,
                                     national?: { row: ContextRow | null; ctx: EnergyContext } | null): HTMLCanvasElement {

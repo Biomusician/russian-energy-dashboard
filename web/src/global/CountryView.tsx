@@ -11,7 +11,7 @@ import {
 import { EventCard, fmtEventDate } from "./EventCard";
 import { EmptyCorpus } from "./EmptyCorpus";
 import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
-import { NO_SCORE_NOT_ZERO, RESEARCH_PREVIEW_DEFINITION, RESEARCH_PREVIEW_LABEL, noScorePlain } from "./countryCopy";
+import { NO_SCORE_NOT_ZERO, RESEARCH_PREVIEW_DEFINITION, RESEARCH_PREVIEW_LABEL, inSentence, noScorePlain } from "./countryCopy";
 import { eventAnchor } from "./evidence";
 import { loadContext, rowForSystem, type EnergyContext } from "./context";
 import { NationalFigures } from "./WorldContext";
@@ -266,7 +266,7 @@ export default function CountryView({ id }: { id: string }) {
             <div className="small">
               {/* Never "0 disruptions": nothing found in a search that has barely started is not a finding. */}
               <strong>No qualifying records in the current reviewed corpus.</strong> That describes this
-              dataset, not {sys.name}: it does not mean nothing happened. Reporting environment:{" "}
+              dataset, not {inSentence(sys.name)}: it does not mean nothing happened. Reporting environment:{" "}
               {labelFor(ENVIRONMENT_LABEL, sys.reporting_environment)}.
               {sys.campaign_state && sys.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && (
                 <> Attacks are reported in the news; a record is published only once a reported event meets the
@@ -961,7 +961,7 @@ function MethodPanel({ bundle }: { bundle: CountryBundle }) {
         <li>The national energy picture, as context: it describes the size of the energy system, never how disrupted it is.</li>
         <li>What the research searched, and what it could not read or has not reached yet.</li>
       </ul>
-      <p className="small">How {s.name} reports disruptions — <Disclosure label={labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}
+      <p className="small">How {inSentence(s.name)} reports disruptions — <Disclosure label={labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}
         text={s.reporting_environment_text} className="linklike" />. That shapes what can be found here as much as what happened.</p>
 
       <details className="small no-score-technical">

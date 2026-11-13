@@ -1,14 +1,11 @@
-import { fillFitted } from "./canvasText";
+import { DIM, INK, SANS, fillFitted } from "./canvasText";
 import type { EnergyContext, MapMode } from "./context";
 
 /** The frame drawn into a world-context PNG. An image travels without the page, so the caveats
  *  are in the pixels: what the colour is, its year and source, which systems are monitored, and
  *  that a coloured country is not a monitored one (iteration 18). */
 
-const INK = "#d4dfea";
-const DIM = "#93a5b3";
 const BAND = "rgba(7, 9, 12, 0.88)";
-const SANS = '"Inter", system-ui, sans-serif';
 
 export function composeContextFrame(map: HTMLCanvasElement, ctx: EnergyContext, mode: MapMode,
                                     monitored: string[]): HTMLCanvasElement {

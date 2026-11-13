@@ -7,6 +7,12 @@
 
 export const RESEARCH_PREVIEW_LABEL = "Research preview";
 
+/** A country's name inside a sentence: "How the United States reports", not "How United States
+ *  reports". Headings and lists keep the bare name. */
+export function inSentence(name: string): string {
+  return /^United /.test(name) ? `the ${name}` : name;
+}
+
 export const RESEARCH_PREVIEW_DEFINITION =
   "A research preview is a country added recently whose systematic search is still incomplete: some source "
   + "groups have not been fully searched and some sources could not be read at all, so the absence of a record is "

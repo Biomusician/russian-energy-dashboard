@@ -62,7 +62,7 @@ describe("readerText", () => {
     const FORBIDDEN = new RegExp([
       String.raw`\biteration\b`, String.raw`\biteration-\d`, String.raw`\bpayloads?\b`,
       String.raw`\b[\w-]+\.(?:md|py|csv)\b`, "§", String.raw`\bD-\d{2}\b`, "open decision", "project owner",
-      String.raw`\bowner (?:approval|rules|decides|accepts)`, String.raw`\bonboard`, "search allowance",
+      String.raw`\bowner (?:approval|rules|decides|accepts|decision)`, String.raw`\bonboard`, "search allowance",
       "WebFetch", "this agent", "two-dimension", String.raw`\b[a-z]+_[a-z_]+\b`,
       String.raw`\b(?:MODELLED|SCORED|EXPERIMENTAL|SYSTEMATIC|TARGETED|PARTIAL|CONTEXT ONLY|CONTEXT_ONLY|NOT_RESEARCHED)\b`,
     ].join("|"));

@@ -63,6 +63,8 @@ const RULES: [RegExp, string | ((m: string) => string)][] = [
   [/\bproposed, awaiting owner approval\b/g, "proposed, not yet approved"],
   [/\buntil the owner (?:rules|decides)\b/g, "until a ruling is made"],
   [/\bif the owner accepts it\b/g, "if it is accepted"],
+  [/\bpending an owner decision\b/g, "pending a decision"],
+  [/\bowner decision\b/g, "decision"],
 
   // Vocabulary keys and shouted labels a reader would have to decode
   [/ in the two-dimension vocabulary/g, " in the current vocabulary"],

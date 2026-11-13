@@ -1,3 +1,9 @@
+/** The export images' shared text palette: one definition, so a country, Gulf, Compare and world
+ *  image cannot drift apart in ink or face. Band opacity and panel colours stay with each frame. */
+export const INK = "#d4dfea";
+export const DIM = "#93a5b3";
+export const SANS = '"Inter", system-ui, sans-serif';
+
 /** Draw one line of text into an export image, shrinking the font until it fits `maxWidth`.
  *
  *  Iteration 20. The export frames were laid out against the fonts on the machine that built them;

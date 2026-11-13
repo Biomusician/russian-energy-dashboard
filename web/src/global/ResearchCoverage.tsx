@@ -5,6 +5,7 @@ import {
   type CountryBundle,
 } from "./manifest";
 import { readerText } from "./readerText";
+import { inSentence } from "./countryCopy";
 import {
   COVERAGE_STATES, COVERAGE_STATE_MEANING, COVERAGE_STATE_TEXT, UNIVERSE_TEXT, countStates, coverageSummary,
   isCampaignRestricted, latestLanes, missingLanguages, passOutcomeText, reviewLine, workDone,
@@ -40,7 +41,7 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
   return (
     <section className="rc" aria-labelledby="rc-heading">
       <h2 id="rc-heading">Research coverage</h2>
-      <p className="small rc-lead">How well has {s.name} actually been searched for disruptions? The search is
+      <p className="small rc-lead">How well has {inSentence(s.name)} actually been searched for disruptions? The search is
         planned in <strong>lanes</strong>: a lane is one family of sources searched as a unit, such as one
         ministry's statements or the national press. Other pages of this site call a lane a source group.</p>
       <p className="small rc-distinct"><strong>Research coverage</strong> is how far the search for events got.{" "}

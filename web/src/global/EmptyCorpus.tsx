@@ -3,7 +3,7 @@ import {
 } from "./manifest";
 import { rowForSystem, type EnergyContext } from "./context";
 import { NationalFigures } from "./WorldContext";
-import { EMPTY_CORPUS_LEAD } from "./countryCopy";
+import { EMPTY_CORPUS_LEAD, inSentence } from "./countryCopy";
 import { readerText } from "./readerText";
 import { fmtDate } from "../data";
 import "../styles/country.css";
@@ -32,7 +32,7 @@ export function EmptyCorpus({ bundle, ctx, onTab }: {
     <div className="empty-corpus" aria-label="No qualifying records">
       <p className="empty-lead">{EMPTY_CORPUS_LEAD}</p>
       <p className="small">Nothing on this page has passed the inclusion rule and review yet. That describes this
-        dataset, not {s.name}.</p>
+        dataset, not {inSentence(s.name)}.</p>
 
       <h3 className="eyebrow">What was searched</h3>
       {passes.length === 0 ? (
@@ -56,7 +56,7 @@ export function EmptyCorpus({ bundle, ctx, onTab }: {
       )}
       <button type="button" className="ghost" onClick={() => onTab("research")}>See what was searched</button>
 
-      <h3 className="eyebrow">How {s.name} reports disruptions</h3>
+      <h3 className="eyebrow">How {inSentence(s.name)} reports disruptions</h3>
       <p className="small"><strong>{labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}.</strong> {s.reporting_environment_text}</p>
 
       <h3 className="eyebrow">National context</h3>

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { ageText, collapseCovered, isCovered, placementOf, recordLine } from "./homeModel";
 import { readDismissed, writeDismissed, START_HERE_KEY } from "./startHereMemory";
 import type { RecentEpisode } from "./manifest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 function ep(over: Partial<RecentEpisode> & { system_id: string; episode_id: string }): RecentEpisode {
   return {
@@ -48,16 +50,17 @@ describe("recent feed", () => {
     expect(JSON.stringify(run)).not.toMatch(/row-0[123]|"records"|"count"|"n"/);
   });
 
-  // The one fold the home page and the Gulf littoral view both use. A row key alone marks a covered
-  // record: the Gulf feed carries some whose members are not individually withheld.
-  it("never folds across countries or over an item that is not covered, and treats a row key as covered", () => {
+  // The one fold the home page and the Gulf littoral view both use. The Gulf list gives every row a
+  // key, so a key alone is not a covered record: only a withheld member is.
+  it("never folds across countries or over an item that is not covered, and a row key alone is not covered", () => {
     expect(collapseCovered([covered("sa", 1), covered("kw", 2), ep({ system_id: "sa", episode_id: "sa-x" })])
       .map((r) => r.kind)).toEqual(["item", "item", "item"]);
     expect(collapseCovered([])).toEqual([]);
     const keyOnly = (n: number) => ep({ system_id: "kw", episode_id: `kw-row-${String(n).padStart(2, "0")}`,
       members: [{ date: "2026-03-01", date_precision: "day", region: "National", effect: null, effect_on_country_page: true, withheld: false }] });
-    expect(isCovered(keyOnly(8))).toBe(true);
-    expect(collapseCovered([keyOnly(8), keyOnly(9), keyOnly(10)]).map((r) => r.kind)).toEqual(["covered-run"]);
+    expect(isCovered(keyOnly(8))).toBe(false);
+    expect(placementOf(keyOnly(8)).level).not.toBe("National");
+    expect(collapseCovered([keyOnly(8), keyOnly(9), keyOnly(10)]).map((r) => r.kind)).toEqual(["item", "item", "item"]);
   });
 
   it("places a covered item as National with no region, and others at the level the list carries", () => {
@@ -66,6 +69,26 @@ describe("recent feed", () => {
     expect(placementOf(ep({ system_id: "us", episode_id: "x" }))).toEqual({ level: "First-level region", names: ["Texas"] });
     const multi = ep({ system_id: "us", episode_id: "y", members: [{ date: "d", date_precision: "day", region: "Multiple regions", effect: null, effect_on_country_page: false, withheld: false }] });
     expect(placementOf(multi).level).toBe("Several regions");
+  });
+});
+
+describe("the served lists", () => {
+  const read = (f: string) => JSON.parse(readFileSync(join(__dirname, "..", "..", "public", "data", "global", f), "utf-8"));
+
+  it("home: a covered item is exactly one the build gave a row key", () => {
+    const eps = read("recent_evidence.json").episodes as RecentEpisode[];
+    expect(eps.length).toBeGreaterThan(0);
+    for (const ep of eps) expect(isCovered(ep), ep.episode_id).toBe(/-row-\d+$/.test(ep.episode_id));
+  });
+
+  it("Gulf littoral: only withheld records fold, though every row carries a key", () => {
+    const eps = read("gulf.json").recent.episodes as RecentEpisode[];
+    expect(eps.length).toBeGreaterThan(0);
+    expect(eps.every((ep) => /-row-\d+$/.test(ep.episode_id))).toBe(true);
+    const shownAlone = new Set(collapseCovered(eps).flatMap((r) => (r.kind === "item" ? [r.ep.episode_id] : [])));
+    const open = eps.filter((ep) => !ep.members.some((m) => m.withheld));
+    expect(open.length).toBeGreaterThan(0);
+    for (const ep of open) expect(shownAlone.has(ep.episode_id), ep.episode_id).toBe(true);
   });
 });
 

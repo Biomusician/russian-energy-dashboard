@@ -1,4 +1,4 @@
-import { fillFitted } from "./canvasText";
+import { DIM, INK, SANS, fillFitted } from "./canvasText";
 import type { CompareBrief } from "./compare";
 
 /** The comparison PNG (iteration 21). There is no map: the image is the table, and like every export
@@ -8,10 +8,7 @@ import type { CompareBrief } from "./compare";
 const BG = "#07090c";
 const PANEL = "#0d1218";
 const LINE = "#1b2530";
-const INK = "#d4dfea";
-const DIM = "#93a5b3";
 const ACCENT = "#2ad4ee";
-const SANS = '"Inter", system-ui, sans-serif';
 
 export const COMPARE_PNG = { width: 1600, height: 900 } as const;
 

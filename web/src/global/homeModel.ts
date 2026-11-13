@@ -28,9 +28,13 @@ export function recordLine(recordReviewed: string | null | undefined, today: str
 }
 
 /** A record published under an attack campaign's safeguards. In a list that sets countries side
- *  by side it carries "National" and a row key instead of its own id and place. */
+ *  by side it carries "National" and a row key instead of its own id and place.
+ *
+ *  Read from the members' `withheld` flag, never from the row key: the Gulf littoral list gives
+ *  every row a key, campaign-covered or not, so a key alone would label a Kuwaiti grid fault as
+ *  an attack-campaign record. On the home list the two agree row for row. */
 export function isCovered(ep: RecentEpisode): boolean {
-  return /-row-\d+$/.test(ep.episode_id) || ep.members.some((m) => m.withheld);
+  return ep.members.some((m) => m.withheld);
 }
 
 /** How precisely an item is placed, in words. Region names are given only where the list itself
