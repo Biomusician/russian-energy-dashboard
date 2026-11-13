@@ -20,8 +20,14 @@ const RULES: [RegExp, string | ((m: string) => string)][] = [
   [new RegExp(String.raw`\s*See\s+${FILE}[^.]*\.`, "g"), ""],
   // "work order in docs/countries/GULF_CONTINUATION_PLAN_20.md" is a second plan reference in one sentence
   [new RegExp(String.raw`,?\s*work order in ${FILE}`, "g"), ""],
-  // a file name left inside a sentence: "lanes as declared in docs/countries/AE_SYSTEMATIC_SWEEP.md"
-  [new RegExp(FILE, "g"), "the published research plan"],
+  // a file name left inside a sentence: "lanes as declared in docs/countries/AE_SYSTEMATIC_SWEEP.md" names a
+  // country's research plan; any other ("published in docs/GENERATION_DENOMINATOR_AUDIT.md") is documentation
+  [new RegExp(String.raw`${PATH}[A-Z]{2}_[A-Z0-9_]*(?:SWEEP|PLAN|PASS|COMPLETION)[A-Z0-9_]*\.md`, "g"), "the published research plan"],
+  [new RegExp(FILE, "g"), "the project documentation"],
+  // a build detail in brackets: "(history_series.json, or a pipeline run with --as-of)"
+  [/\s*\([^()]*(?:\.json\b|\.csv\b|pipeline run)[^()]*\)/g, ""],
+  // "its observed reconstitution is carried in recovery.csv"
+  [/\b[\w/.-]+\.csv\b/g, "a project data file"],
   // a plan clause cited bare: "(plan A.1: no census source; ...)" keeps its reason, drops the number
   [/\bplan [A-Z]\.\d+:\s*/g, ""],
 
@@ -35,6 +41,8 @@ const RULES: [RegExp, string | ((m: string) => string)][] = [
   // "continuation of the iteration-19 pass"
   [/\bthe iteration-\d+ pass\b/g, "the earlier pass"],
   // "iteration 17's finding", "iteration-16 dispositions", "since iteration 17", "Iteration 20 added"
+  // "contributes to the monitored-area index since iteration 4": the index state is what matters
+  [/\bindex since iteration \d+\b/g, "index"],
   // "Seven Gulf states were added in iteration 19 as a geographic expansion"
   [/\badded in iteration \d+\b/g, "added later"],
   [/\biteration \d+'s\b/g, "an earlier pass's"],

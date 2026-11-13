@@ -27,6 +27,7 @@ import {
   loadRegionalExplanations, titleCase,
 } from "../data";
 import { assessFreshness } from "../freshness";
+import { readerText } from "../global/readerText";
 import { severityColor } from "../palette";
 import { EvidenceChip, RecoveryLine, hostOf } from "./ui";
 
@@ -376,7 +377,7 @@ function SectorView({
       </Block>
 
       <Block title="What this figure cannot tell you" tone="warn">
-        <ul className="tight">{e.limitations.map((l, i) => <li key={i}>{l}</li>)}</ul>
+        <ul className="tight">{e.limitations.map((l, i) => <li key={i}>{readerText(l)}</li>)}</ul>
       </Block>
 
       {e.saturation_sweep && e.saturation_sweep.length > 0 && (
@@ -741,7 +742,7 @@ function IncidentView({
             Sources disagree about this event. The disagreement is preserved rather than resolved.
           </p>
         )}
-        {inc.notes && <p>{inc.notes}</p>}
+        {inc.notes && <p>{readerText(inc.notes)}</p>}
         <LifecycleLink episodeId={episodeId} onOpenLifecycle={onOpenLifecycle} />
       </Block>
 
@@ -1207,7 +1208,7 @@ function DataQualityView({
         {dq.cannot_tell_you.map((c) => (
           <div key={c.question} className="cannot">
             <h4>{c.question}</h4>
-            <p>{c.answer}</p>
+            <p>{readerText(c.answer)}</p>
           </div>
         ))}
       </Block>
@@ -1309,7 +1310,7 @@ function SourceCard({ src }: { src: SourceRecord }) {
         <p className="small warn-text">{src.release_gap_note}</p>
       )}
       {src.limitations.length > 0 && (
-        <ul className="tight">{src.limitations.map((l, i) => <li key={i}>{l}</li>)}</ul>
+        <ul className="tight">{src.limitations.map((l, i) => <li key={i}>{readerText(l)}</li>)}</ul>
       )}
       {src.url && (
         <p className="small">

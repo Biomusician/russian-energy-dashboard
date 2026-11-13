@@ -9,7 +9,7 @@
 import { useEffect, useRef, useState } from "react";
 import SystemSwitcher from "../global/SystemSwitcher";
 import { loadManifest } from "../global/manifest";
-import { navigate } from "../global/router";
+import { compareHref, navigate, navigateCompare } from "../global/router";
 import { MODES, MODE_LABEL, type TheatreMode } from "../theatreMode";
 
 /** The theatre's reader-facing name. Read from the manifest so the header, the system picker
@@ -123,6 +123,15 @@ export default function TheatreBar({
             {t.pressed && t.pressedLabel ? t.pressedLabel : t.label}
           </button>
         ))}
+        {/* A route, not a panel: a real link so it can be opened in a new tab. Home and the country
+            pages already lead to Compare; this was the one page without a way there. */}
+        <a className="tb-link" href={compareHref([])}
+           onClick={(e) => {
+             if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+             e.preventDefault(); setToolsOpen(false); navigateCompare([]);
+           }}>
+          Compare systems
+        </a>
       </div>
     </div>
   );

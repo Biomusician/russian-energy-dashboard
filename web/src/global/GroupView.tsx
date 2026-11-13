@@ -14,7 +14,7 @@ import {
 import { navigate } from "./router";
 import { prefetchOn } from "./prefetch";
 import { PanelBoundary } from "../components/ViewBoundary";
-import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
+import { Disclosure, ResearchPreviewTag } from "./Disclosure";
 import { downloadBlob, exportMapPng } from "../mapExport";
 import { fmtDate } from "../data";
 import { readerText } from "./readerText";
@@ -428,7 +428,7 @@ export default function GroupView({ id }: { id: string }) {
               <div className="small">
                 {s.gcc_member ? "GCC member" : "Not a GCC member"} · {s.opec_member ? "OPEC member" : "Not an OPEC member"}
               </div>
-              {s.maturity === "research_preview" && <div><ResearchPreviewBadge /></div>}
+              {s.maturity === "research_preview" && <div><ResearchPreviewTag /></div>}
               {s.recovery_status_withheld && (
                 <div><Disclosure label="Later status of attacked facilities is not published" className="badge context-only-badge"
                   text="While attacks on energy facilities are still being reported, or it is uncertain whether they have ended, an attack is published as an event but the facility's later repair, restart or operating status is not." /></div>

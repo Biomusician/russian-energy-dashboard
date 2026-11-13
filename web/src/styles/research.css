@@ -8,8 +8,11 @@
 .rc .rc-distinct { margin: 6px 0 10px; padding: 6px 8px; border-left: 2px solid var(--line); color: var(--text-dim); line-height: 1.45; }
 .rc .rc-distinct strong { color: var(--text); font-weight: 600; }
 
-.rc-summary { border: 1px solid var(--line); background: var(--bg-panel-2); padding: 8px 10px; margin: 8px 0 12px; }
-.rc-summary p { margin: 3px 0; line-height: 1.45; }
+/* Not .rc-summary: the theatre's incident cards (theme.css) own that name, and a shared class
+   leaked this box onto them once this sheet had loaded. */
+.rc-overview { border: 1px solid var(--line); background: var(--bg-panel-2); padding: 8px 10px; margin: 8px 0 12px;
+  color: var(--text-dim); line-height: 1.5; }
+.rc-overview p { margin: 3px 0; line-height: 1.45; }
 .rc-summary-line { font-size: 13px; font-weight: 600; color: var(--text); }
 .rc-review { color: var(--text); }
 

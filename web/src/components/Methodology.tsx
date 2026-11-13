@@ -1,5 +1,6 @@
 import type { Bundle } from "../types";
 import { fmtDate, fmtNum, titleCase } from "../data";
+import { readerText } from "../global/readerText";
 
 /** In-app methodology. The brief asks for methodology to be visible in the product,
  *  not only in a repository file someone has to go find. Anything that would change
@@ -265,7 +266,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
                   </p>
                 )}
                 <p style={{ color: "var(--text-faint)", fontSize: 10.5, fontStyle: "italic" }}>
-                  Red-team verdict: {t.red_team_verdict}
+                  Red-team verdict: {readerText(t.red_team_verdict)}
                 </p>
               </>
             );

@@ -46,13 +46,19 @@ describe("readerText", () => {
       .toBe("The pass reached its search limit before every declared query was run.");
     expect(readerText("proposed, awaiting owner approval")).toBe("proposed, not yet approved");
     expect(readerText("Partial by construction (plan A.1: no census source)")).toBe("Partial by construction (no census source)");
+    expect(readerText("The measured effect is published in docs/GENERATION_DENOMINATOR_AUDIT.md."))
+      .toBe("The measured effect is published in the project documentation.");
+    expect(readerText("That is the reconstruction (history_series.json, or a pipeline run with --as-of)."))
+      .toBe("That is the reconstruction.");
+    expect(readerText("contributes to the monitored-area index since iteration 4)")).toBe("contributes to the monitored-area index)");
     expect(readerText("Compiled by the UAE source-audit lane. CONTEXT ONLY: never a scoring input."))
       .toBe("Compiled by the UAE source audit. Context only: never a scoring input.");
   });
 
-  // Every served prose string of every country system, read as a page shows it. A prose string is
+  // Served prose, read as a page shows it: every country system, the shared home and Gulf files, and
+  // the theatre fields its panels pass through readerText. A prose string is
   // one with spaces: enum values (state keys) and ids are labelled by the components, not shown raw.
-  it("no developer term survives in any country system's served text", () => {
+  it("no developer term survives in the served text a page shows: every country, the shared files, the theatre panels", () => {
     const FORBIDDEN = new RegExp([
       String.raw`\biteration\b`, String.raw`\biteration-\d`, String.raw`\bpayloads?\b`,
       String.raw`\b[\w-]+\.(?:md|py|csv)\b`, "§", String.raw`\bD-\d{2}\b`, "open decision", "project owner",
@@ -80,6 +86,16 @@ describe("readerText", () => {
       walk(JSON.parse(readFileSync(join(global, f), "utf-8")), "", f);
     }
     expect(checked).toBeGreaterThan(countryChecked);
+    const globalChecked = checked;
+    // the theatre's served prose that its panels show through readerText
+    const data = join(__dirname, "..", "..", "public", "data");
+    const read = (f: string) => JSON.parse(readFileSync(join(data, f), "utf-8"));
+    walk(read("data_quality.json"), "", "theatre data_quality");
+    walk((read("incidents.json") as { notes?: string }[]).map((i) => i.notes ?? ""), "notes", "theatre incidents");
+    walk(read("recovery_lifecycle.json").temporal_model, "", "theatre lifecycle");
+    walk(read("snapshot.json").transmission_sensitivity?.red_team_verdict ?? "", "verdict", "theatre snapshot");
+    walk(read("history_series.json").semantics ?? {}, "", "theatre history");
+    expect(checked).toBeGreaterThan(globalChecked);
     expect(survivors).toEqual([]);
 
     function walk(x: unknown, key: string, where: string): void {

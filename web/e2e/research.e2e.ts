@@ -112,7 +112,7 @@ test.describe("Research coverage explorer", () => {
     const n = sys.research_freshness;
     await expect(rc.locator(".rc-summary-line")).toContainText(`${n.lanes_complete} of ${n.lanes_declared} lanes declared complete`);
     // No coverage percentage in the explorer's own summary and overview.
-    await expect(rc.locator(".rc-summary")).not.toContainText("%");
+    await expect(rc.locator(".rc-overview")).not.toContainText("%");
     await expect(rc.locator(".lane-table")).not.toContainText("%");
 
     // Research coverage and source health stay apart, and say so.
@@ -120,7 +120,7 @@ test.describe("Research coverage explorer", () => {
     const sh = rc.locator(".rc-source-health");
     await expect(sh.getByRole("heading")).toHaveText(/^Source health/);
     await expect(sh).toContainText("Not part of research coverage.");
-    await expect(rc.locator(".rc-lanes .rc-source-health, .rc-summary .rc-source-health")).toHaveCount(0);
+    await expect(rc.locator(".rc-lanes .rc-source-health, .rc-overview .rc-source-health")).toHaveCount(0);
 
     // Keyboard: an overview button moves focus to its lane card; the legend toggles from the keyboard.
     const first = [...lanes.keys()][0];

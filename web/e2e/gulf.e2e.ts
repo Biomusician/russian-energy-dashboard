@@ -188,7 +188,7 @@ test.describe("Gulf group", () => {
     await expect(feed.locator(".feed-national-note")).toContainText("“National” in this list");
     const dates = eps.map((e) => e.last_date);
     expect(dates).toEqual([...dates].sort().reverse());
-    expect(g.recent.scope).not.toMatch(/five/);
+    expect(g.recent.scope).not.toMatch(/\bfive\b/);
     expect(await feed.innerText()).not.toMatch(ROUTES);
   });
 

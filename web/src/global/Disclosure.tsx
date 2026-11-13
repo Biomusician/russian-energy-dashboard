@@ -22,3 +22,9 @@ export function Disclosure({ label, text, className = "" }: { label: string; tex
 export function ResearchPreviewBadge() {
   return <Disclosure label={RESEARCH_PREVIEW_LABEL} text={RESEARCH_PREVIEW_DEFINITION} className="badge research-partial" />;
 }
+
+/** The same disclosure on a card that sits beside other countries' cards (home, Gulf littoral):
+ *  the neutral tag style, because a status colour on side-by-side cards reads as a ranking. */
+export function ResearchPreviewTag() {
+  return <Disclosure label={RESEARCH_PREVIEW_LABEL} text={RESEARCH_PREVIEW_DEFINITION} className="home-tag home-tag-preview" />;
+}

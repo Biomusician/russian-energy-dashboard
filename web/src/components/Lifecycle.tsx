@@ -23,6 +23,7 @@ import { FAMILY_LABEL, fmtDate, fmtNum, loadLifecycle, resolvePoint, titleCase }
 import { Sparkline, hostOf } from "./ui";
 import type { InspectTarget } from "./Inspector";
 import type { CompareState } from "./Comparison";
+import { readerText } from "../global/readerText";
 
 const STAGE_LABEL: Record<string, string> = {
   disruption: "Disruption",
@@ -433,7 +434,7 @@ function TemporalModel({ data }: { data: LifecyclePayload }) {
   return (
     <section className="cmp-block">
       <h3>Four dates, and which of them exist</h3>
-      <p className="small">{data.temporal_model.warning}</p>
+      <p className="small">{readerText(data.temporal_model.warning)}</p>
       <dl className="kv">
         {data.temporal_model.concepts.map((c) => (
           <span key={c.field}>
@@ -442,7 +443,7 @@ function TemporalModel({ data }: { data: LifecyclePayload }) {
               <span className={`flag ${c.available ? "" : "unknown-stage"}`}>
                 {c.available ? "available" : "not available"}
               </span>
-              <p className="small">{c.note}</p>
+              <p className="small">{readerText(c.note)}</p>
             </dd>
           </span>
         ))}

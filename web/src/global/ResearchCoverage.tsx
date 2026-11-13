@@ -47,7 +47,7 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
         <strong>Source health</strong>, under Sources &amp; data quality, describes the citations behind the events
         already published. Neither implies the other.</p>
 
-      <div className="rc-summary">
+      <div className="rc-overview">
         <p className="rc-summary-line">{coverageSummary(rows, passes.length)}</p>
         {review && <p className="small rc-review">{review}</p>}
         {rf.coverage_window && rf.last_systematic_pass && (

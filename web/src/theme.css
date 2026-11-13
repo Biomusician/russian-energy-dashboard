@@ -335,11 +335,8 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 /* Compact chrome on short viewports. Nothing analytical is removed: the sector strip becomes
    horizontally scrollable rather than dropping cells. */
 html[data-chrome="compact"] .ribbon { min-height: 0; }
-html[data-chrome="compact"] .ribbon-brand { padding: 6px 12px; min-width: 178px; }
 html[data-chrome="compact"] .ribbon-title { font-size: 12px; }
 html[data-chrome="compact"] .ribbon-sub { display: none; }
-html[data-chrome="compact"] .esdi-block { padding: 5px 12px; }
-html[data-chrome="compact"] .esdi-value { font-size: 26px; }
 html[data-chrome="compact"] .ribbon-scroll { overflow-x: auto; overflow-y: hidden; }
 html[data-chrome="compact"] .ribbon-scroll::-webkit-scrollbar { height: 4px; }
 
@@ -356,30 +353,8 @@ html[data-chrome="compact"] .ribbon-scroll::-webkit-scrollbar { height: 4px; }
 .ribbon-scroll::-webkit-scrollbar { height: 5px; }
 .ribbon-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
 
-.ribbon-brand {
-  padding: 12px 18px;
-  border-right: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-width: 260px;
-}
-/* Iteration 17: content-sized, the brand took 564px at 1024 and left the metric strip 113px for
-   507px of content, clipped mid-word. Measured at 1024: a 380px brand costs the ribbon 11px of
-   height (its button row wraps once) and gives the strip 297px. Only where the layout is narrow:
-   on wider screens the buttons fit on one line and capping would make the ribbon taller. */
-html[data-layout="narrow"] .ribbon-brand { flex: 0 1 380px; }
-
 .ribbon-title { font-size: 14px; letter-spacing: 0.01em; }
 .ribbon-sub { color: var(--text-dim); font-size: 11px; margin-top: 3px; }
-
-.esdi-block {
-  padding: 12px 20px;
-  border-right: 1px solid var(--line);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
 
 .esdi-value {
   font-family: var(--mono);
@@ -416,16 +391,6 @@ html[data-layout="narrow"] .ribbon-brand { flex: 0 1 380px; }
 }
 .sector-bar > i { display: block; height: 100%; }
 
-.ribbon-coverage {
-  padding: 12px 18px;
-  border-left: 1px solid var(--line);
-  min-width: 190px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-}
-
 /* ---------- controls ---------- */
 
 .ctl-group { padding: 10px var(--pad) 14px; border-bottom: 1px solid var(--line-soft); }
@@ -461,8 +426,6 @@ html[data-layout="narrow"] .ribbon-brand { flex: 0 1 380px; }
 .precision-key .pk-swatch { width: 20px; height: 20px; flex: none; display: inline-flex; }
 .precision-key .pk-swatch svg { width: 20px; height: 20px; display: block; }
 .check .tally { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--text-faint); }
-
-.btn-row { display: flex; gap: 6px; padding: 8px var(--pad); }
 
 button.ghost {
   background: transparent;
@@ -720,7 +683,6 @@ html[data-chrome="compact"] .timeline {
 }
 html[data-chrome="compact"] .tl-date { font-size: 14px; }
 html[data-chrome="compact"] .tl-controls { min-width: 186px; gap: 8px; }
-html[data-chrome="compact"] .tl-sub { display: none; }
 
 .tl-controls { display: flex; align-items: center; gap: 10px; min-width: 232px; }
 
@@ -1119,19 +1081,14 @@ html[data-chrome="compact"] .sector-cell > div[style*="font-size: 19"] {
 }
 html[data-chrome="compact"] .sector-bar { margin-top: 3px; height: 2px; }
 
-html[data-chrome="compact"] .ribbon-coverage { padding: 4px 12px; max-width: 300px; }
-html[data-chrome="compact"] .ribbon-coverage .num { font-size: 14px !important; }
 /* The prose stays present and fully readable on hover; it just stops setting the row height. */
-html[data-chrome="compact"] .ribbon-coverage > div:not(.eyebrow):not(.num),
-html[data-chrome="compact"] .esdi-meta > div:not(.eyebrow),
-html[data-chrome="compact"] .rstat-sub {
+html[data-chrome="compact"] .esdi-meta > div:not(.eyebrow) {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-html[data-chrome="compact"] .esdi-block { padding: 4px 12px; }
 html[data-chrome="compact"] .esdi-value { font-size: 24px; line-height: 1.05; }
 
 /* The sparkline is decoration next to the scrubber; it does not need 91px on a 720px screen. */
@@ -1146,10 +1103,6 @@ html[data-chrome="compact"] .tl-chart > div:last-child { display: none; }
    The scope note measured 268x218 on a 1067x504 map — 11% of the workspace, permanently. It is
    important text, so it is not deleted: on a constrained map it collapses to a marker that
    expands on hover or focus. */
-.map-scope-note.collapsible {
-  max-width: 268px;
-  transition: max-height 140ms ease-out;
-}
 html[data-chrome="compact"] .map-scope-note {
   max-width: 214px;
   max-height: 34px;
@@ -1182,8 +1135,6 @@ html[data-chrome="compact"] .camera-controls::-webkit-scrollbar { display: none;
 
 /* Legend: keep the scale, fold the explanatory rows away until asked for. */
 html[data-chrome="compact"] .map-legend { max-width: 260px; }
-html[data-chrome="compact"] .map-legend .legend-note { display: none; }
-html[data-chrome="compact"] .map-legend:hover .legend-note { display: block; }
 
 /* ---------- comparison tray (hotfix §17) ----------
    The tray was offset by a hard-coded `margin-left: 300px` tied to the filters rail's presumed
@@ -1422,21 +1373,6 @@ button.linkish:hover { text-decoration: underline; }
 .sector-cell.as-button:hover { background: rgba(255, 255, 255, 0.04); }
 .sector-cell.as-button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
-.cell-explain {
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  font-size: 9px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  opacity: 0;
-  transition: opacity 120ms ease-out;
-}
-.sector-cell.as-button:hover .cell-explain,
-.sector-cell.as-button:focus-visible .cell-explain { opacity: 1; color: var(--accent); }
-/* Touch input has no hover, so the hint would never appear. Show it permanently there. */
-@media (hover: none) { .cell-explain { opacity: 1; } }
 
 /* ---------- change ledger (iteration 11 §7-§10) ---------- */
 
@@ -2112,3 +2048,9 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
   .country-page > .country-body { order: -1; }
   .phone-caveats .badge { margin-right: 4px; }
 }
+
+/* Card tags beside other countries' cards (home and Gulf littoral; iteration 21). One neutral hue;
+   the border shape carries the difference. Region and safeguard variants stay in home.css. */
+.home-tag { display: inline-block; font-size: 10.5px; padding: 1px 7px; border-radius: 10px; color: var(--text-dim);
+  border: 1px solid var(--line); }
+.home-tag-preview { border-style: dashed; border-color: var(--text-faint); }

@@ -183,6 +183,22 @@ test.describe("the view switch: Analyze · Map focus · Briefing", () => {
     });
   }
 
+  for (const [name, size] of SIZES) {
+    test(`${name}: the tools lead to Compare, as home and the country pages do`, async ({ app, page }) => {
+      await page.setViewportSize(size);
+      await app.open();
+      await openTools(app, page);
+      const link = page.locator("#theatre-tools").getByRole("link", { name: "Compare systems" });
+      await expect(link).toBeVisible();
+      await expect(link).toHaveAttribute("href", "?compare=");
+      await link.click();
+      await expect(page).toHaveURL(/\?compare=$/);
+      await expect(page.getByRole("heading", { name: "Compare systems" })).toBeVisible();
+      await page.goBack();
+      await expect(page.locator(".theatre-bar")).toBeVisible();
+    });
+  }
+
   test("phone: the tools fold behind one toggle and still open their panels", async ({ app, page }) => {
     await page.setViewportSize(PHONE);
     await app.open();

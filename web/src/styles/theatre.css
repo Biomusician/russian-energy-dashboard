@@ -80,6 +80,10 @@ html[data-mapfocus="on"] .filters.drawer-open {
 .mode-switch .ms-short { display: none; }
 
 .tb-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+/* The one link among the tool buttons, drawn like them (button.ghost in theme.css). */
+.tb-link { border: 1px solid var(--line); color: var(--text-dim); padding: 4px 9px; border-radius: var(--radius);
+  font-size: 11px; font-family: var(--sans); text-decoration: none; }
+.tb-link:hover, .tb-link:focus-visible { border-color: var(--accent-dim); color: var(--accent); }
 .tb-tools-toggle { display: none; }
 
 /* ---------- metrics row ---------- */
@@ -252,37 +256,33 @@ html[data-briefing="on"] .map-legend { top: 72px; right: 12px; left: auto; botto
     min-width: 200px;
   }
   .tb-tools.open { display: flex; }
-  .tb-tools button.ghost { text-align: left; padding: 7px 10px; font-size: 12px; }
+  .tb-tools button.ghost, .tb-tools .tb-link { text-align: left; padding: 7px 10px; font-size: 12px; }
 }
 
 /* ---------- phones ---------- */
 @media (max-width: 640px) {
   .theatre-bar { padding: 6px 12px; gap: 6px 8px; }
   .tb-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .tb-where { flex: 1 1 auto; }
-  .theatre-bar .sys-switch { flex: 1 1 150px; min-width: 0; }
+  .tb-where { flex: 1 1 auto; order: 1; }
+  .theatre-bar .sys-switch { flex: 1 1 150px; min-width: 0; order: 3; }
   .theatre-bar .sys-switch .eyebrow { display: none; }
   .theatre-bar .sys-switch select { width: 100%; }
-  .mode-switch { margin-left: 0; }
+  .mode-switch { margin-left: 0; order: 4; }
   .mode-switch button { padding: 4px 8px; }
   .mode-switch .ms-long { display: none; }
   .mode-switch .ms-short { display: inline; }
   .tb-tools-toggle { order: 2; }
-  .tb-where { order: 1; }
-  .theatre-bar .sys-switch { order: 3; }
-  .mode-switch { order: 4; }
 
   .hl-block { flex: 1 1 100%; max-width: none; border-right: 0; padding: 6px 12px; gap: 10px; }
   .theatre-ribbon .esdi-value,
   html[data-chrome="compact"] .theatre-ribbon .esdi-value { font-size: 30px; }
-  .known-block { flex: 1 1 100%; max-width: none; border-right: 0; border-top: 1px solid var(--line-soft); padding: 6px 12px; gap: 12px; }
+  .known-block { flex: 1 1 100%; max-width: none; border-right: 0; border-top: 1px solid var(--line-soft); padding: 5px 12px; gap: 12px; }
   .known-num { font-size: 17px; }
   .theatre-ribbon .sector-cell { min-width: 0; flex: 1 1 30%; }
   .hl-scale { font-size: 10.5px; }
   /* On a phone the two ratios keep their numbers and names at equal weight; the explanatory
      line moves to the tooltip and to Methodology's summary, so the map keeps the screen. */
   .known-label { display: none; }
-  .known-block { padding: 5px 12px; }
   .hl-block .eyebrow { letter-spacing: 0.1em; }
 }
 .ribbon-more-toggle { display: none; }

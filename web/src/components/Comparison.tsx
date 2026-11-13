@@ -24,6 +24,7 @@ import {
   loadProductionHistory, resolvePoint, titleCase,
 } from "../data";
 import type { InspectTarget } from "./Inspector";
+import { readerText } from "../global/readerText";
 
 export type CompareMode = "A" | "B" | "delta";
 /** Which historical question the workspace answers. Defaults to the reconstruction. */
@@ -323,7 +324,7 @@ export default function Comparison({
             </span>
           ))}
         </dl>
-        <p className="small warn-text">{history.semantics.what_this_does_not_answer}</p>
+        <p className="small warn-text">{readerText(history.semantics.what_this_does_not_answer)}</p>
       </section>
     </div>
   );
