@@ -5,7 +5,7 @@ import { loadContext, type EnergyContext } from "./context";
 import { loadCountrySystem, loadManifest, type CountrySystem, type Manifest } from "./manifest";
 import { MAX_COMPARE, hrefFor, navigate, navigateCompare } from "./router";
 import {
-  compareBriefLines, compareFilename, compareRows, resolveCompare, MATURITY_DEFINITION,
+  compareBriefLines, compareFilename, compareRows, exportBlocker, moveColumn, resolveCompare, MATURITY_DEFINITION,
   type CompareColumn, type CompareRow, type RowBasis,
 } from "./compare";
 import { canvasPng, drawCompareFrame } from "./compareExport";
@@ -82,15 +82,11 @@ export default function CompareView({ ids }: { ids: string[] }) {
   const addable = (manifest?.systems ?? []).filter((s) => !chosen.includes(s.id));
 
   const edit = (next: string[]) => { setExportMsg(null); navigateCompare(next, true); };
-  const move = (i: number, d: -1 | 1) => {
-    const next = [...chosen];
-    [next[i], next[i + d]] = [next[i + d], next[i]];
-    edit(next);
-  };
+  const move = (i: number, d: -1 | 1) => edit(moveColumn(chosen, i, d));
 
   const runExport = async () => {
-    if (!manifest || cols.length < 2) { setExportMsg("Choose at least two systems first."); return; }
-    if (cols.some((c) => c.status === "loading") || (!ctx && !ctxFailed)) { setExportMsg("Still loading; try again in a moment."); return; }
+    const blocked = manifest ? exportBlocker(cols, ctx !== null, ctxFailed) : "Choose at least two systems first.";
+    if (blocked || !manifest) { setExportMsg(blocked); return; }
     try {
       const brief = compareBriefLines(cols, rows, ctx, manifest.build_time);
       const blob = await canvasPng(drawCompareFrame(brief));

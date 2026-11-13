@@ -14,7 +14,7 @@ const CompareView = lazy(() => import("./global/CompareView"));
 
 /** What the error boundary calls a view, and its address without saved state. A route this does not
  *  name still gets a boundary, under the generic label. */
-function describe(route: Route): { key: string; label: string; cleanHref?: string } {
+export function describe(route: Route): { key: string; label: string; cleanHref?: string } {
   switch (route.view) {
     case "home": return { key: "home", label: "The overview" };
     case "theatre": return { key: "theatre", label: "The Russia, Belarus & Crimea view", cleanHref: "?sys=ru" };

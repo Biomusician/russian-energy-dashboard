@@ -55,7 +55,7 @@ function briefStyle(style: maplibregl.StyleSpecification, ctx: GroupContext, met
   return { ...clean, layers: clean.layers.map((l) => (l.id === "fill" && l.type === "fill" ? { ...l, paint: { ...l.paint, "fill-color": fill } } : l)) };
 }
 
-function EpisodeItem({ ep }: { ep: RecentEpisode }) {
+export function EpisodeItem({ ep }: { ep: RecentEpisode }) {
   const covered = isCovered(ep);
   return (
     <li className="feed-item">
