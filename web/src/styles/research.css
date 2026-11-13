@@ -1,0 +1,69 @@
+/* Research coverage explorer (country systems).
+   One neutral colour for every state: the shape and the words carry the meaning, never a
+   green/amber/red. Lanes are cards at every width because the detail panel is narrow
+   (320-420px) on a desktop and full width on a phone. */
+
+.rc h2 { margin-bottom: 4px; }
+.rc .rc-lead { margin: 4px 0; line-height: 1.45; }
+.rc .rc-distinct { margin: 6px 0 10px; padding: 6px 8px; border-left: 2px solid var(--line); color: var(--text-dim); line-height: 1.45; }
+.rc .rc-distinct strong { color: var(--text); font-weight: 600; }
+
+.rc-summary { border: 1px solid var(--line); background: var(--bg-panel-2); padding: 8px 10px; margin: 8px 0 12px; }
+.rc-summary p { margin: 3px 0; line-height: 1.45; }
+.rc-summary-line { font-size: 13px; font-weight: 600; color: var(--text); }
+.rc-review { color: var(--text); }
+
+.rc-state { display: inline-flex; align-items: center; gap: 5px; color: var(--text); white-space: normal; }
+.rc-icon { flex: none; color: var(--text); }
+.rc-state-text { font-weight: 500; }
+
+.rc-matrix { width: 100%; border-collapse: collapse; font-size: 12px; margin: 4px 0 10px; }
+.rc-matrix caption { text-align: left; color: var(--text-faint); font-size: 11px; padding-bottom: 4px; }
+.rc-matrix th, .rc-matrix td { text-align: left; vertical-align: top; padding: 5px 6px 5px 0; border-top: 1px solid var(--line-soft); }
+.rc-matrix thead th { color: var(--text-faint); font-weight: 500; font-size: 11px; }
+.rc-matrix tbody th { font-weight: 500; white-space: nowrap; }
+.rc-matrix tbody td:nth-child(2) { color: var(--text-dim); }
+
+.rc-legend { border: 1px solid var(--line-soft); padding: 6px 8px; margin: 0 0 12px; font-size: 11.5px; }
+.rc-legend summary { cursor: pointer; color: var(--text-dim); }
+.rc-legend summary:focus-visible, .rc-finding summary:focus-visible, .rc-history summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.rc-legend dl { margin: 6px 0; }
+.rc-legend-row { padding: 4px 0; border-top: 1px solid var(--line-soft); }
+.rc-legend-row:first-child { border-top: 0; }
+.rc-legend dt { margin: 0 0 2px; }
+.rc-legend dd { margin: 0 0 0 19px; color: var(--text-dim); line-height: 1.45; }
+
+.rc-lanes { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.rc-lane { border: 1px solid var(--line); padding: 8px 10px; min-width: 0; overflow-wrap: anywhere; }
+.rc-lane:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.rc-lane-head { font-size: 12.5px; font-weight: 500; margin: 0 0 4px; line-height: 1.4; }
+.rc-lane-id { color: var(--text-dim); margin-right: 2px; }
+.rc-lane-state { margin: 2px 0 6px; font-size: 12px; }
+.rc-facts { margin: 0; display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; }
+.rc-facts > div { display: grid; grid-template-columns: minmax(96px, 34%) minmax(0, 1fr); gap: 8px; }
+.rc-facts dt { color: var(--text-faint); }
+.rc-facts dd { margin: 0; line-height: 1.4; }
+.rc-missing { display: flex; align-items: center; gap: 4px; margin-top: 2px; font-weight: 600; color: var(--text); }
+.rc-note { margin: 6px 0 0; color: var(--text-dim); line-height: 1.45; }
+.rc-note-label { color: var(--text-faint); }
+.rc-finding { margin-top: 4px; color: var(--text-dim); }
+.rc-finding summary { cursor: pointer; }
+.rc-finding p { margin: 4px 0 0; line-height: 1.45; }
+
+.rc-log { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 6px; }
+.rc-log th, .rc-log td { text-align: left; vertical-align: top; padding: 5px 6px 5px 0; border-top: 1px solid var(--line-soft); overflow-wrap: anywhere; }
+.rc-log th { color: var(--text-faint); font-weight: 500; }
+
+/* Source health is a different question: set apart by a dashed rule and its own heading. */
+.rc-source-health { margin-top: 14px; padding-top: 8px; border-top: 1px dashed var(--line); }
+
+/* On a phone the label column narrows and each fact stacks under its label. */
+@media (max-width: 480px) {
+  .rc-facts > div { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .rc-facts dt { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+}
+
+@media print {
+  .rc-summary, .rc-lane, .rc-legend { background: #fff !important; border-color: #999 !important; }
+  .rc-state, .rc-icon, .rc-summary-line, .rc-missing { color: #000 !important; }
+}

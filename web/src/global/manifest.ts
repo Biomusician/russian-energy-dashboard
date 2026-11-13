@@ -248,6 +248,8 @@ export interface ResearchLane {
   limitation?: string | null;
   finding?: string | null;
   carried_forward?: boolean;
+  /** Set when the pass's own search allowance ran out in this lane; the lane is then never complete. */
+  stopped_by?: "search_limit" | null;
 }
 
 export interface CitationQuality {
@@ -507,6 +509,20 @@ export function shapeProblems(system: unknown, events: unknown, regions?: unknow
   }
   const log = s.research_log as Record<string, unknown> | undefined;
   if (!obj(log) || !Array.isArray(log!.passes)) out.push("research_log.passes is not a list");
+  // The research coverage explorer reads each pass's date, kind and window, and each lane's id,
+  // without a guard (iteration 21). Lists inside a lane are guarded where they are read.
+  else if ((log!.passes as unknown[]).some((p) => {
+    const q = p as Record<string, unknown>;
+    return !obj(p) || typeof q.date !== "string" || typeof q.kind !== "string" || !Array.isArray(q.window)
+      || (q.lanes !== undefined && !(Array.isArray(q.lanes)
+        && (q.lanes as unknown[]).every((l) => obj(l) && typeof (l as Record<string, unknown>).lane === "string")));
+  })) out.push("a research pass lacks its date, kind or window, or has a lane without an id");
+  const rcv = s.recovery_coverage as Record<string, unknown> | undefined;
+  if (rcv !== undefined && rcv !== null && !(obj(rcv) && obj(rcv.unresearched_by_class))) out.push("recovery_coverage is malformed");
+  const cq = s.citation_quality as Record<string, unknown> | undefined;
+  if (cq !== undefined && cq !== null && !(obj(cq) && obj(cq.languages) && obj(cq.event_date_precision))) {
+    out.push("citation_quality is malformed");
+  }
   if (!Array.isArray(e.events)) out.push("events is not a list");
   return out;
 }

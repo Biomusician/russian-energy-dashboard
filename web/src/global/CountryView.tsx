@@ -2,10 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type maplibregl from "maplibre-gl";
 import SimpleMap from "./SimpleMap";
 import SystemSwitcher from "./SystemSwitcher";
+import ResearchCoverage from "./ResearchCoverage";
 import {
   CALENDAR_LABEL, CAMPAIGN_STATE_LABEL, LANGUAGE_LABEL, languageNames, ENVIRONMENT_LABEL, READINESS_LABEL, dirFor, RECOVERY_KIND_LABEL, RECOVERY_LABEL, RESEARCH_COMPLETENESS_LABEL,
-  REVIEW_STATUS_LABEL, SECTOR_STATE_LABEL, LANE_EXECUTION_LABEL, LANE_STATE_LABEL, LANE_WINDOW_LABEL, labelFor, type CountrySystem, type SourceEntry, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type Episode,
-  type ManifestSystem, type ResearchLane, type ResearchPass, type SourceHealth,
+  REVIEW_STATUS_LABEL, SECTOR_STATE_LABEL, LANE_STATE_LABEL, labelFor, type CountrySystem, type SourceEntry, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type Episode,
+  type ManifestSystem, type SourceHealth,
 } from "./manifest";
 import { loadContext, rowForSystem, type EnergyContext } from "./context";
 import { NationalFigures } from "./WorldContext";
@@ -337,7 +338,7 @@ export default function CountryView({ id }: { id: string }) {
           )}
           {tab === "sectors" && <SectorsPanel bundle={bundle} />}
           {tab === "context" && <ContextPanel bundle={bundle} ctx={ctx} ctxFailed={ctxFailed} />}
-          {tab === "research" && <ResearchPanel bundle={bundle} />}
+          {tab === "research" && <ResearchCoverage bundle={bundle} />}
           {tab === "sources" && <SourcesPanel bundle={bundle} ctx={ctx} />}
           {tab === "method" && <MethodPanel bundle={bundle} />}
           {exportMsg && <p className="small" role="status">{exportMsg}</p>}
@@ -704,104 +705,6 @@ function ContextPanel({ bundle, ctx, ctxFailed }: { bundle: CountryBundle; ctx: 
         </tbody>
       </table>
       {p.as_of_note && <p className="small dim">{readerText(p.as_of_note)}</p>}
-    </div>
-  );
-}
-
-function laneDisplay(l: ResearchLane): string {
-  const q = l.queries_declared != null ? `${l.queries_run ?? 0} of ${l.queries_declared} declared queries` : null;
-  const items = l.items_enumerated != null ? `${l.items_enumerated}${l.items_in_universe != null ? ` of ${l.items_in_universe}` : ""} items listed or read` : null;
-  return [q, items].filter(Boolean).join("; ");
-}
-
-/** Known gaps generated from lane states, so this cannot drift from the log. */
-function ResearchPanel({ bundle }: { bundle: CountryBundle }) {
-  const s = bundle.system;
-  const rf = s.research_freshness;
-  const passes = s.research_log.passes.filter((p) => p.kind === "systematic");
-  const newest: ResearchPass | undefined = passes[passes.length - 1];
-  const lanes = newest?.lanes ?? [];
-  const v2 = lanes.filter((l) => l.execution);
-  const rc = s.recovery_coverage;
-  const cq = s.citation_quality;
-  const languages = [...new Set(v2.flatMap((l) => l.languages_required ?? []))].sort();
-  const gaps = v2.filter((l) => l.limitation);
-  return (
-    <div>
-      <h2>Research coverage</h2>
-      <p className="small">Two questions kept apart for every lane: how far the analyst got, and what the publisher has made
-        available. A fully executed procedure is not complete knowledge: events the sources never reported are still missing.</p>
-      <p className="small dim">Events can date back to 2022, but systematic research for this country began
-        {rf.first_systematic_pass ? ` on ${fmtDate(rf.first_systematic_pass)}` : " later"}. Older records were found afterwards, not monitored as they happened.</p>
-      <p className="small">Reporting environment: <strong>{labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}</strong>. {s.reporting_environment_text}</p>
-      {s.source_families && <p className="small">Source families cited: {Object.values(s.source_families.labels).join(", ") || "none"}. <span className="dim">{s.source_families.note}</span></p>}
-      {languages.length > 0 && <p className="small">Languages the research plan requires: {languageNames(languages)}.
-        {" "}{(() => {
-          const short = v2.filter((l) => (l.languages_required ?? []).some((x) => !(l.languages_executed ?? []).includes(x))).map((l) => l.lane);
-          return short.length ? `${short.join(", ")} did not run in every required language.` : "Every source group ran in every language it requires.";
-        })()}</p>}
-      <table className="sector-table lane-table">
-        <thead><tr><th>Lane</th><th>What the analyst did</th><th>What the source allows</th><th>Furthest date reached</th></tr></thead>
-        <tbody>
-          {v2.map((l) => (
-            <tr key={l.lane}>
-              <td className="small"><span className="mono">{l.lane}</span><div className="dim">{l.source_family}</div></td>
-              <td className="small">{labelFor(LANE_EXECUTION_LABEL, l.execution ?? "")}<div className="dim">{laneDisplay(l)}</div></td>
-              <td className="small">{labelFor(LANE_WINDOW_LABEL, l.source_window ?? "")}</td>
-              <td className="small">{l.covered_through ? fmtDate(l.covered_through) : "not reached"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <h3 className="eyebrow">Known gaps, from the source groups above</h3>
-      <ul className="small">{gaps.map((l) => <li key={l.lane}><span className="mono">{l.lane}</span>: {readerText(l.limitation)}</li>)}</ul>
-      {s.research_gaps.length > 0 && (<>
-        <h3 className="eyebrow">Other gaps</h3>
-        <ul className="small">{s.research_gaps.map((g, i) => <li key={i}>{g}</li>)}</ul>
-      </>)}
-      {v2.some((l) => l.finding) && (<>
-        <h3 className="eyebrow">Findings about the sources</h3>
-        <ul className="small">{v2.filter((l) => l.finding).map((l) => <li key={l.lane}><span className="mono">{l.lane}</span>: {readerText(l.finding)}</li>)}</ul>
-      </>)}
-      {rc && (<>
-        <h3 className="eyebrow">Recovery research</h3>
-        <ul className="small recovery-coverage">
-          <li>Observed report of recovery: {rc.observed}</li>
-          <li>Sourced estimate only: {rc.estimate}</li>
-          {rc.other_statement > 0 && <li>Statement that supply was unaffected or nothing was lost: {rc.other_statement}</li>}
-          <li>Researched, no public evidence: {rc.researched_no_public_evidence}</li>
-          <li>Not yet researched: {rc.not_researched}</li>
-          {rc.withheld_active_campaign > 0 && <li>Status withheld while an attack campaign is active: {rc.withheld_active_campaign}</li>}
-        </ul>
-        {Object.keys(rc.unresearched_by_class).length > 0 && (
-          <p className="small dim">Still to research: {Object.entries(rc.unresearched_by_class).map(([k, n]) => `${n} ${labelFor(s.taxonomy.asset_classes, k).toLowerCase()}`).join(", ")}.</p>
-        )}
-        <p className="small dim">{rc.policy}</p>
-      </>)}
-      {cq && (<>
-        <h3 className="eyebrow">Citations behind the published events</h3>
-        <ul className="small citation-quality">
-          <li>{cq.citations} citations; {cq.with_publication_date} carry a publication date stated by the source.</li>
-          <li>Languages: {Object.entries(cq.languages).map(([k, n]) => `${LANGUAGE_LABEL[k] ?? k} ${n}`).join(", ")}.</li>
-          <li>Event dates: {Object.entries(cq.event_date_precision).map(([k, n]) => `${n} to the ${k}`).join(", ")}.</li>
-          {cq.link_check && <li>Automated link check, {fmtDate(cq.link_check_date ?? "")}: {cq.link_check.reachable} reachable, {cq.link_check.redirected} redirected, {cq.link_check.blocked} refused the check, {cq.link_check.dead} gone, {cq.link_check.error} failed to load.</li>}
-        </ul>
-        {cq.link_check_note && <p className="small dim">{cq.link_check_note}</p>}
-      </>)}
-      <details className="small"><summary>Earlier passes, as they were logged</summary>
-        <table className="sector-table research-log">
-          <thead><tr><th>Pass</th><th>Status then</th><th>Outcome</th></tr></thead>
-          <tbody>
-            {s.research_log.passes.map((p) => (
-              <tr key={`${p.date}-${p.by}`}>
-                <td className="small">{fmtDate(p.date)}<div className="dim">{readerText(p.by)}</div></td>
-                <td className="small">{p.kind === "targeted" ? "targeted search" : p.status}{p.status_reason && <div className="dim">{readerText(p.status_reason)}</div>}</td>
-                <td className="small">{Object.entries(p.outcome).map(([k, n]) => `${k.replace(/_/g, " ")} ${n}`).join(" · ")}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </details>
     </div>
   );
 }
