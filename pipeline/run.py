@@ -779,6 +779,15 @@ def main():
     from pipeline import build_systems
     build_systems.build(snapshot)
 
+    # What changed since the last published build, for every system at once (iteration 21). Read
+    # from the published payloads just written and the committed previous build, so it can only
+    # describe what a reader could see; a non-current build has no published predecessor.
+    from pipeline import whats_new
+    write_json(outputs.processed() / "global" / "whats_new.json",
+               whats_new.build(ROOT, outputs.processed(), snapshot, incidents, assets)
+               if outputs.grants("production_ledger") else
+               whats_new.unavailable(f"a {args.mode} build has no published predecessor", snapshot["as_of"]))
+
 
     # Single source of truth for headline numbers (§2) — regenerated every CURRENT build so no
     # doc drifts. A reconstruction or fixture neither mirrors nor rewrites CURRENT_STATE: the plan

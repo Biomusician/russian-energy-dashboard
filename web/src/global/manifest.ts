@@ -880,3 +880,88 @@ export function languageNames(codes: Iterable<string>): string {
 export function labelFor(map: Record<string, string>, key: string): string {
   return Object.prototype.hasOwnProperty.call(map, key) ? map[key] : key.replace(/_/g, " ");
 }
+
+// ---- what's new in the data (iteration 21) -----------------------------------------------------
+
+/** One record as the panel shows it: never an id, an effect, a cause or a facility. */
+export interface WhatsNewItem {
+  key: string;
+  date: string | null;
+  date_precision: string;
+  region: string;
+  class: string;
+  fields?: string[];
+  recovery_kind?: string;
+  evidence_date?: string | null;
+}
+
+export interface WhatsNewChange {
+  category: string;
+  notes: string[];
+  items?: WhatsNewItem[];
+  more?: boolean;
+  event_dates?: [string, string] | null;
+  all_predate_previous_build?: boolean;
+  /** A campaign system's withdrawn or held records: one sentence, nothing countable. */
+  aggregated?: boolean;
+}
+
+export interface WhatsNewSystem {
+  system_id: string;
+  name: string;
+  kind: string;
+  changes: WhatsNewChange[];
+  index?: { label: string; before: number | null; after: number | null; separable: boolean };
+  unavailable?: string;
+}
+
+export interface WhatsNew {
+  schema_version: number;
+  available: boolean;
+  unavailable_reason: string | null;
+  comparison: { previous_as_of: string | null; current_as_of: string | null; mode: string;
+                basis: string | null; note?: string };
+  categories: { id: string; label: string; meaning: string }[];
+  order: string;
+  note: string;
+  global: WhatsNewChange[];
+  systems: WhatsNewSystem[];
+  unchanged: { system_id: string; name: string }[];
+}
+
+/** The parts of the panel's file the component reads without a guard. A malformed file is refused
+ *  at load, so the panel says it could not be loaded instead of throwing during render. */
+export function whatsNewShapeProblems(d: unknown): string[] {
+  const obj = (x: unknown): x is Record<string, unknown> => typeof x === "object" && x !== null && !Array.isArray(x);
+  const strs = (x: unknown) => Array.isArray(x) && x.every((s) => typeof s === "string");
+  if (!obj(d)) return ["not an object"];
+  const out: string[] = [];
+  if (typeof d.available !== "boolean") out.push("available is not a boolean");
+  if (!obj(d.comparison)) out.push("comparison is missing");
+  if (!Array.isArray(d.categories) || !d.categories.every((c) => obj(c) && typeof c.id === "string"
+      && typeof c.label === "string" && typeof c.meaning === "string")) out.push("categories is malformed");
+  if (!Array.isArray(d.unchanged) || !d.unchanged.every((u) => obj(u) && typeof u.system_id === "string"
+      && typeof u.name === "string")) out.push("unchanged is malformed");
+  const known = new Set(Array.isArray(d.categories) ? d.categories.map((c) => (obj(c) ? c.id : null)) : []);
+  const change = (c: unknown) => obj(c) && typeof c.category === "string" && known.has(c.category) && strs(c.notes)
+    && (c.items === undefined || (Array.isArray(c.items) && c.items.every((it) => obj(it)
+        && typeof it.key === "string" && typeof it.region === "string" && typeof it.class === "string"
+        && (it.fields === undefined || strs(it.fields)))))
+    && (c.event_dates === undefined || c.event_dates === null || strs(c.event_dates));
+  if (!Array.isArray(d.global) || !d.global.every(change)) out.push("global is malformed");
+  if (!Array.isArray(d.systems) || !d.systems.every((s) => obj(s) && typeof s.system_id === "string"
+      && typeof s.name === "string" && Array.isArray(s.changes) && s.changes.every(change))) {
+    out.push("systems is malformed");
+  }
+  return out;
+}
+
+export function loadWhatsNew(): Promise<WhatsNew> {
+  // Validated inside once(): a refused file rejects, is not kept, and is asked for again.
+  return once("global/whats_new.json", async () => {
+    const d = await getJson<unknown>("global/whats_new.json");
+    const bad = whatsNewShapeProblems(d);
+    if (bad.length) throw new Error(`global/whats_new.json: malformed (${bad.join(", ")})`);
+    return d as WhatsNew;
+  });
+}

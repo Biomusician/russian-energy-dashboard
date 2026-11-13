@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import SystemSwitcher from "./SystemSwitcher";
 import StartHere from "./StartHere";
+import WhatsNew from "./WhatsNew";
 import { DataQualityPanel, RecentEvidencePanel, laneChips } from "./GlobalPanels";
 import { GlobalNavBar, GlobalSearch, openGlossary } from "./GlobalNav";
 import {
@@ -161,6 +162,10 @@ export default function GlobalHome() {
 
         <PanelBoundary label="Recent evidence">
           <RecentEvidencePanel />
+        </PanelBoundary>
+
+        <PanelBoundary label="What's new in the data">
+          <WhatsNew />
         </PanelBoundary>
 
         <PanelBoundary label="Data quality">

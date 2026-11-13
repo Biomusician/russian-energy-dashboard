@@ -924,6 +924,7 @@ iteration 19 on. They add to the canonical summary above and loosen nothing in i
 | **Headlines** | An original-language headline is shown only with its English gloss, and only if neither states later status, weighs a facility or names one the record does not. | `import_candidates._source` |
 | **Regional view** | National annual totals, memberships and a date-ordered list. No score, rank, count per member or trend. In the list a campaign-covered record is the country's and a row carries a row key, never a country's own record id. | `gulf_context.validate_extra`; `build_systems.recent_evidence`; frontend tests |
 | **Empty record** | "No qualifying records in the current reviewed corpus", never "0 disruptions". | `CountryView`; `gulf.e2e.ts` |
+| **What's new** | Changes since the last published build are named by cause from a closed list: a backfill is "new published records" with the event dates, a rule change is never a country improving, the theatre's daily decay is never a source event. No counts. A campaign system's record appears as the aggregating surfaces publish it (date, class, "National", row key); its withdrawn or held records are one sentence with no count or date; its recovery changes are not shown. Built from published payloads only, never the candidate queue. | `whats_new.py`; `tests/test_whats_new.py`; `whatsnew.e2e.ts` |
 
 **Residual risk, stated.** A published citation leads to a public news page, and for an attack
 record that page names what the record does not: the release safety review opened the cited pages
