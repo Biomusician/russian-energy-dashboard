@@ -19,7 +19,9 @@ import { defineConfig, devices } from "@playwright/test";
  */
 
 const BASE = process.env.E2E_BASE_URL;
-const PORT = 4178;
+// E2E_PORT lets several checkouts (worktrees) run the suite at once without one reusing another's
+// preview server, which would silently test the wrong build (iteration 21).
+const PORT = Number(process.env.E2E_PORT ?? 4178);
 
 export default defineConfig({
   testDir: "./e2e",
