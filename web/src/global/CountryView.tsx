@@ -231,6 +231,8 @@ export default function CountryView({ id }: { id: string }) {
         <button className="ghost" onClick={() => window.print()}>Print / PDF</button>
       </CountryHeader>
 
+      {/* One main landmark per view: everything below the shared header and navigation bar. */}
+      <main className="country-main">
       {/* On a phone the map comes before the full statements (iteration 20, §78). This line keeps
           the caveats in the first screen and leads to them. Hidden on wider screens. */}
       <p className="small phone-only phone-caveats">
@@ -419,6 +421,7 @@ export default function CountryView({ id }: { id: string }) {
           {exportMsg && <p className="small" role="status">{exportMsg}</p>}
         </section>
       </div>
+      </main>
     </div>
   );
 }

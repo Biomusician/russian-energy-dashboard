@@ -53,9 +53,18 @@ export default function TheatreBar({
   const [toolsOpen, setToolsOpen] = useState(false);
   const toolsRef = useRef<HTMLDivElement | null>(null);
 
+  const toggleRef = useRef<HTMLButtonElement | null>(null);
+  // Closing the folded menu hides the button that had focus. Without this the focus fell to
+  // <body>, and a panel opened from the menu then had nothing to return focus to (iteration 21).
+  const closeTools = () => {
+    const inMenu = !!toolsRef.current?.contains(document.activeElement);
+    setToolsOpen(false);
+    if (inMenu && toggleRef.current && toggleRef.current.offsetParent !== null) toggleRef.current.focus();
+  };
+
   useEffect(() => {
     if (!toolsOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setToolsOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeTools(); };
     const onDown = (e: MouseEvent) => {
       const t = e.target as Node;
       if (toolsRef.current && !toolsRef.current.contains(t)
@@ -103,6 +112,7 @@ export default function TheatreBar({
       </div>
 
       <button
+        ref={toggleRef}
         type="button"
         className="tb-tools-toggle"
         aria-expanded={toolsOpen}
@@ -118,7 +128,7 @@ export default function TheatreBar({
             type="button"
             className="ghost"
             aria-pressed={t.pressed}
-            onClick={() => { setToolsOpen(false); t.onClick(); }}
+            onClick={() => { closeTools(); t.onClick(); }}
           >
             {t.pressed && t.pressedLabel ? t.pressedLabel : t.label}
           </button>

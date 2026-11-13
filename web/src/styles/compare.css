@@ -30,6 +30,9 @@
 .compare-basis-tag.basis-common { border-color: var(--accent-dim); color: var(--accent); }
 .compare-basis-tag.basis-within { border-style: dashed; font-style: italic; }
 .compare-row-within td { border-top-style: dashed; color: var(--text-dim); }
+/* A cell holds its own visually hidden label text ("More on ..., Canada"). Without a positioned
+   cell that absolutely placed text escaped the sideways scroller and widened the whole page. */
+.compare-table td { position: relative; }
 .compare-def, .compare-more { margin-top: 4px; font-size: 11px; color: var(--text-dim); font-weight: 400; }
 .compare-def summary, .compare-more summary { cursor: pointer; color: var(--text-faint); }
 .compare-def summary:focus-visible, .compare-more summary:focus-visible { outline: 2px solid var(--accent); }

@@ -184,7 +184,8 @@ export default function Ribbon({
         </section>
 
         <button type="button" className="ribbon-more-toggle" aria-expanded={detailOpen}
-                aria-controls="ribbon-detail" onClick={() => setDetailOpen((v) => !v)}>
+                aria-controls="ribbon-detail" onClick={() => setDetailOpen((v) => !v)}
+                onKeyDown={(e) => { if (e.key === "Escape" && detailOpen) { e.preventDefault(); e.stopPropagation(); setDetailOpen(false); } }}>
           {detailOpen ? "Hide sectors & recovery" : "Sector scores & recovery"}
         </button>
 

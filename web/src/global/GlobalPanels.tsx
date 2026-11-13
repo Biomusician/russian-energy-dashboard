@@ -169,7 +169,8 @@ export function DataQualityPanel({ data, failed, manifest, today }: {
           <summary className="small">Recovery evidence by infrastructure class, monitored countries together</summary>
           <p className="small dim">{data.recovery_by_class.note}</p>
           <table className="sector-table">
-            <thead><tr><th>Class</th><th>Reported as</th><th>Cases</th><th>Days to report</th></tr></thead>
+            <caption className="sr-only">Recovery evidence by infrastructure class, monitored countries together</caption>
+            <thead><tr><th scope="col">Class</th><th scope="col">Reported as</th><th scope="col">Cases</th><th scope="col">Days to report</th></tr></thead>
             <tbody>
               {data.recovery_by_class.rows.map((r) => (
                 <tr key={`${r.class}-${r.kind}`}>

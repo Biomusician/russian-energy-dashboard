@@ -10,7 +10,8 @@ export function Disclosure({ label, text, className = "" }: { label: string; tex
   return (
     <span className="disclosure">
       <button type="button" className={`disclosure-button ${className}`} aria-expanded={open} aria-controls={id}
-              onClick={() => setOpen((o) => !o)}>
+              onClick={() => setOpen((o) => !o)}
+              onKeyDown={(e) => { if (e.key === "Escape" && open) { e.preventDefault(); e.stopPropagation(); setOpen(false); } }}>
         {label}<span className="disclosure-mark" aria-hidden="true">{open ? " −" : " ?"}</span>
       </button>
       {open && <span id={id} role="note" className="disclosure-text small">{text}</span>}

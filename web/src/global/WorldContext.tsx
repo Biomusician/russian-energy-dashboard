@@ -131,6 +131,7 @@ function NationalTable({ ctx, partly, onContext, systemNames }: { ctx: EnergyCon
       <p className="small dim">One source, one year ({ctx.comparison_year}). Alphabetical by default; choose a column to
         sort by that national figure. "No data" is not zero. Energy production says nothing about disruption or importance.</p>
       <table className="sector-table national-table">
+        <caption className="sr-only">National energy figures, {ctx.comparison_year}, one source; choose a column heading to sort</caption>
         <thead>
           <tr>
             <th aria-sort={sort ? "none" : "ascending"}><button className="linklike" onClick={() => setSort(null)}>Country</button></th>

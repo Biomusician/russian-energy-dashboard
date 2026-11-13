@@ -213,6 +213,9 @@ export default function GroupView({ id }: { id: string }) {
         <PanelBoundary label="The regional energy context">
         {ctx && m && metricId && (
           <section aria-label="Regional energy context" className="group-context">
+            {/* The section's own heading, for the heading outline only: its h3s ("National figures")
+                otherwise followed the page's h1 directly (iteration 21). The map says it visually. */}
+            <h2 className="sr-only">Regional energy context</h2>
             <div className="group-stage">
               <div className={`group-controls map-control-row${colourBy ? "" : " is-neutral"}`}>
                 <label className="small">Colour the map by{" "}
@@ -255,7 +258,10 @@ export default function GroupView({ id }: { id: string }) {
                   <ul onKeyDown={(e) => { if (e.key === "Escape") setSelA3(null); }}>
                     {listed.map((s) => (
                       <li key={s.system_id}>
+                        {/* Named for what it does: the table and the recent list below have
+                            buttons called just "Kuwait" that open the country page. */}
                         <button type="button" className={`member-btn${pointA3 === s.a3 ? " is-pointed" : ""}`} aria-pressed={sel?.a3 === s.a3}
+                          aria-label={`${s.name}, show on the map`}
                           title={`${memberships(s)}. Select to highlight and zoom to it on the map.`}
                           onMouseEnter={() => setPointA3(s.a3)} onMouseLeave={() => setPointA3(null)}
                           onFocus={() => setPointA3(s.a3)} onBlur={() => setPointA3(null)}

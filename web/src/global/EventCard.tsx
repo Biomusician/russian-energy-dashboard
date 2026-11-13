@@ -66,6 +66,7 @@ export function EventCard({ e, bundle, inEpisode = false, targeted = false }: {
   const unit = sys.geography.unit_label;
   // Null for a campaign-covered record whose id could name a facility: no anchor, so no link.
   const anchor = eventAnchor(e, sys.system_id);
+  const title = e.facility_name ?? e.region_name ?? sys.name;
   return (
     <li className={`event-item event-card placement-${kind}${targeted ? " targeted" : ""}`}
         id={anchor ?? undefined}>
@@ -76,7 +77,7 @@ export function EventCard({ e, bundle, inEpisode = false, targeted = false }: {
           <span className="event-tag">{labelFor(tax.causes, e.cause)}</span>
         </span>
       </div>
-      <div className="event-title">{e.facility_name ?? e.region_name ?? sys.name}</div>
+      <div className="event-title">{title}</div>
       <p className="small event-summary">{e.summary}</p>
       {e.source_date_text && e.date_calendar && e.date_calendar !== "gregorian" && (
         <p className="small dim">
@@ -162,10 +163,14 @@ export function EventCard({ e, bundle, inEpisode = false, targeted = false }: {
           it: an analyst citing one record had no way to get its address. A plain link, so it can be
           copied, opened or bookmarked without a clipboard permission. Placed BEFORE the toggle so the toggle's
           next Tab stop stays its own panel. */}
-      {anchor && <a className="ev-permalink" href={`#${anchor}`}>Link to this record</a>}
+      {anchor && <a className="ev-permalink" href={`#${anchor}`}>Link to this record<span className="sr-only">: {title}, {fmtEventDate(e)}</span></a>}
+      {/* The hidden words make each toggle's name unique: a screen reader's list of buttons
+          otherwise reads "Evidence inspector" a hundred times. Only what the card already shows. */}
       <button ref={toggleRef} type="button" className="ghost ev-inspector-toggle" aria-expanded={open}
-              aria-controls={panelId} onClick={() => setOpen((o) => !o)}>
+              aria-controls={panelId} onClick={() => setOpen((o) => !o)}
+              onKeyDown={(ev) => { if (ev.key === "Escape" && open) { ev.preventDefault(); ev.stopPropagation(); setOpen(false); } }}>
         {open ? "Close evidence inspector" : "Evidence inspector"}
+        <span className="sr-only">: {title}, {fmtEventDate(e)}</span>
       </button>
       {open && (
         <EvidenceInspector id={panelId} e={e} bundle={bundle}

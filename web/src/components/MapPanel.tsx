@@ -1315,7 +1315,7 @@ export default function MapPanel({
             filtered surface.
           </div>
         )}
-        <div className="legend-detail">
+        <div className="legend-detail" id="map-legend-detail">
         {/* Route-quality key (§20). Rendered ONLY for qualities the built data actually
             contains, and only while a network layer is on — inventing a "generalized" swatch to
             fill out the legend would advertise a distinction the corpus does not make. */}
@@ -1344,8 +1344,9 @@ export default function MapPanel({
           </span>
         </div>
         </div>
-        <button type="button" className="legend-toggle" aria-expanded={legendOpen}
-                onClick={() => setLegendOpen((v) => !v)}>
+        <button type="button" className="legend-toggle" aria-expanded={legendOpen} aria-controls="map-legend-detail"
+                onClick={() => setLegendOpen((v) => !v)}
+                onKeyDown={(e) => { if (e.key === "Escape" && legendOpen) { e.preventDefault(); e.stopPropagation(); setLegendOpen(false); } }}>
           {legendOpen ? "Fewer keys" : "All keys"}
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5 }}>

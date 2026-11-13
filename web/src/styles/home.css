@@ -102,6 +102,9 @@
 .home-tags { display: flex; flex-wrap: wrap; gap: 5px; }
 .home-tag-region { border-radius: 2px; }
 .home-tag-safeguard { border-style: double; border-width: 3px; padding: 0 6px; }
+/* A tag that is also a disclosure button: the button rule's `font: inherit` loaded later and drew
+   "Publication safeguards" at body size beside its 10.5px neighbours (iteration 21). */
+.disclosure-button.home-tag { font-size: 10.5px; }
 
 /* ---- data quality as questions ---- */
 .dq-questions { margin: 6px 0; }
