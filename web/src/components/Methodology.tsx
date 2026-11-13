@@ -188,7 +188,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
                   Capacities are structured bcm/y fields, never parsed from prose at scoring time.
                 </p>
                 <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
-                  <b>Iteration-7 decision: stays experimental.</b> A defensible headline sub-sector
+                  <b>Decision: stays experimental.</b> A defensible headline sub-sector
                   would need a matched external denominator and internally comparable capacities;
                   an open-source census found neither — no all-Russia/AOI gas-processing capacity
                   total exists, and the census mixes design nameplate (Orenburg, Astrakhan) with
@@ -277,7 +277,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
               <b>Oil-strike benchmark coverage ≈ {Math.round(s.coverage.coverage_ratio * 100)}%</b>:{" "}
               {s.coverage.enumerated_in_this_dataset} enumerated oil-sector strikes vs the{" "}
               {s.coverage.reported_total_strikes} reported strikes on Russian oil facilities. The
-              numerator and denominator are the same oil-strike universe — earlier iterations
+              numerator and denominator are the same oil-strike universe — earlier versions
               divided <i>all</i> energy events ({s.coverage.total_events_all_sectors} across all
               sectors) by this oil-only benchmark, which overstated coverage; that is corrected.
               Other sectors have no known-total benchmark and are shown as unbenchmarked, never a

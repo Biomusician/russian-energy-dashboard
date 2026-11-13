@@ -1,4 +1,4 @@
-import type { GroupContext, GroupSystem, RecentEpisode } from "./manifest";
+import type { GroupContext, GroupSystem } from "./manifest";
 
 /** The regional map's colours, order and figure facts, apart from the view so a test can read them.
  *
@@ -88,38 +88,4 @@ export function metricFacts(ctx: GroupContext, metricId: string): MetricFacts | 
 export function specialValues(systems: GroupSystem[], metricId: string, inView: (s: GroupSystem) => boolean): { zero: boolean; noData: boolean } {
   const shown = systems.filter(inView);
   return { zero: shown.some((s) => s.values[metricId] === 0), noData: shown.some((s) => s.values[metricId] == null) };
-}
-
-/** One line of the regional feed: an episode as it is, or a run of one country's safeguarded ones. */
-export type FeedItem =
-  | { kind: "episode"; key: string; ep: RecentEpisode }
-  | { kind: "safeguarded"; key: string; system_id: string; country: string; newest: RecentEpisode; oldest: RecentEpisode;
-      classes: string[]; causes: string[] };
-
-const safeguarded = (ep: RecentEpisode) => ep.members.length > 0 && ep.members.every((mm) => mm.withheld);
-
-/** Consecutive episodes of one country whose every record is under the campaign safeguards say the
- *  same thing row after row, so they become one line. The line carries dates and kinds but never
- *  how many: a count in a list of several countries is a figure to compare. Order is kept. */
-export function collapseFeed(episodes: RecentEpisode[]): FeedItem[] {
-  const out: FeedItem[] = [];
-  let run: RecentEpisode[] = [];
-  const flush = () => {
-    if (run.length === 1) out.push({ kind: "episode", key: `${run[0].system_id}:${run[0].episode_id}`, ep: run[0] });
-    else if (run.length > 1) {
-      const uniq = (xs: string[]) => [...new Set(xs)];
-      out.push({ kind: "safeguarded", key: `${run[0].system_id}:${run[0].episode_id}:run`, system_id: run[0].system_id,
-                 country: run[0].country, newest: run[0], oldest: run[run.length - 1],
-                 classes: uniq(run.flatMap((e) => e.classes)), causes: uniq(run.flatMap((e) => e.causes)) });
-    }
-    run = [];
-  };
-  for (const ep of episodes) {
-    if (safeguarded(ep) && (run.length === 0 || run[0].system_id === ep.system_id)) { run.push(ep); continue; }
-    flush();
-    if (safeguarded(ep)) run.push(ep);
-    else out.push({ kind: "episode", key: `${ep.system_id}:${ep.episode_id}`, ep });
-  }
-  flush();
-  return out;
 }

@@ -180,9 +180,9 @@ test.describe("Gulf group", () => {
     const items = await feed.locator(".feed-item").count();
     expect(items).toBeGreaterThan(0);
     expect(items).toBeLessThanOrEqual(eps.length);
-    const folded = feed.locator(".feed-safeguarded");
+    const folded = feed.locator(".covered-run");
     for (const t of await folded.allInnerTexts()) {
-      expect(t).toContain("records under active-campaign safeguards");
+      expect(t).toContain("Records under active-campaign safeguards — see the country page");
       expect(t.replace(/\d{1,2} [A-Z][a-z]{2} \d{4}|[A-Z][a-z]{2} \d{4}/g, "")).not.toMatch(/\d/);
     }
     await expect(feed.locator(".feed-national-note")).toContainText("“National” in this list");

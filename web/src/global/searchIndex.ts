@@ -48,7 +48,7 @@ export function makeEntry(e: Omit<SearchEntry, "folded">): SearchEntry {
 export function systemEntries(m: Manifest): SearchEntry[] {
   return m.systems.map((s) => makeEntry({
     key: `system:${s.id}`, kind: "system", label: s.name,
-    sub: s.kind === "theatre" ? "Indexed theatre"
+    sub: s.kind === "theatre" ? "Monitored area · has an index"
       : `Country system · no index${s.maturity === "research_preview" ? " · research preview" : ""}`,
     terms: [s.name, ...(s.aliases ?? [])],
     action: { type: "system", id: s.id },

@@ -138,7 +138,7 @@ describe("compareRows", () => {
   it("puts lane states in the five words, never a percentage", () => {
     const rows = compareRows(columns(["us", "sa", "qa"]), ctx, manifest);
     for (const c of rows.find((r) => r.id === "lanes")!.cells) {
-      expect(c.text).toMatch(/declared complete .* partial .* not started .* stopped by search allowance .* source unavailable/);
+      expect(c.text).toMatch(/declared complete .* partial .* not started .* stopped by search limit .* source unavailable/);
       expect(c.text).not.toMatch(/%|per ?cent/);
     }
   });
@@ -155,7 +155,7 @@ describe("laneBuckets", () => {
   it("counts by bucket, keeps zeros, and never drops an unknown state", () => {
     expect(laneBuckets({ universe_searched: 1, declared_query_set_run: 2, legacy: 1 })).toEqual([
       { label: "declared complete", n: 3 }, { label: "partial", n: 0 }, { label: "not started", n: 0 },
-      { label: "stopped by search allowance", n: 0 }, { label: "source unavailable", n: 0 },
+      { label: "stopped by search limit", n: 0 }, { label: "source unavailable", n: 0 },
       { label: "logged under the earlier format", n: 1 },
     ]);
     expect(laneBuckets(JSON.parse('{"__proto__": 3}')).map((b) => b.n)).toEqual([0, 0, 0, 0, 0, 3]);

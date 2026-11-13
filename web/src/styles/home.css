@@ -107,12 +107,6 @@
 .home-tag-region { border-radius: 2px; }
 .home-tag-safeguard { border-style: double; border-width: 3px; padding: 0 6px; }
 
-/* ---- recent evidence ---- */
-.feed-line { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
-.feed-country { color: var(--accent); font-size: 12px; }
-.feed-place { color: var(--text); }
-.covered-run { border-left: 2px dashed var(--line); padding-left: 8px; }
-
 /* ---- data quality as questions ---- */
 .dq-questions { margin: 6px 0; }
 .dq-questions dt { font-weight: 600; font-size: 12.5px; margin-top: 10px; }

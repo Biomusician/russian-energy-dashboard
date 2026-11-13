@@ -307,7 +307,7 @@ export default function WorldContext({ world, worldError, manifest, ctx, ctxErro
               // The figure belongs to the country; Crimea has no national figure of its own.
               const occupied = p.status === "occupied";
               const name = occupied ? `${row?.name ?? "Ukraine"} (national figure)` : String(p.name ?? p.a3);
-              const where = p.system_id ? (occupied ? "Crimea: monitored within the Russia theatre, select to open" : "monitored, select to open")
+              const where = p.system_id ? (occupied ? "Crimea: monitored in the Russia, Belarus & Crimea view, select to open" : "monitored, select to open")
                 : row?.system_id ? "outside the monitored area" : "context only, not monitored";
               setHover(`${name}${value ? `: ${value}` : ""} · ${where}`);
             }}
@@ -330,12 +330,12 @@ export default function WorldContext({ world, worldError, manifest, ctx, ctxErro
           <span className="legend-title"><strong>{mode.title}</strong> <span className="dim">({mode.unitNote})</span></span>
           {mode.legend.map((l) => <span key={l.label}><i style={{ background: l.color }} />{l.label}</span>)}
           <span className="legend-monitored"><i className="outline-swatch" /> Thick outline: systematically monitored. Colour says nothing about monitoring.</span>
-          <span className="small dim">Crimea is Ukrainian, occupied, and monitored within the Russia theatre; only the monitored parts of Russia are outlined.</span>
+          <span className="small dim">Crimea is Ukrainian, occupied, and monitored in the Russia, Belarus &amp; Crimea view; only the monitored parts of Russia are outlined.</span>
         </div>
       ) : (
         <div className="map-legend-mini">
           <span><i style={{ background: MONITORED_FALLBACK }} /> monitored system (same colour for all — not a measure)</span>
-          <span><i style={{ background: OCCUPIED }} /> Crimea: Ukrainian, occupied; monitored within the Russia theatre</span>
+          <span><i style={{ background: OCCUPIED }} /> Crimea: Ukrainian, occupied; monitored in the Russia, Belarus &amp; Crimea view</span>
         </div>
       )}
       {exportMsg && <p className="small" role="status">{exportMsg}</p>}

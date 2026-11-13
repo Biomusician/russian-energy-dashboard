@@ -174,9 +174,9 @@ function Unavailable() {
     <div className="empty" style={{ padding: 24 }}>
       <div className="eyebrow">Explanation unavailable</div>
       <p style={{ lineHeight: 1.6, color: "var(--text-dim)" }}>
-        This build's data payload predates the explanation emitter, so there is nothing to
+        This version of the data predates the regional explanations, so there is nothing to
         decompose. The published numbers are still valid — the trace behind them is not
-        available in this payload.
+        included in it.
       </p>
     </div>
   );
@@ -831,8 +831,8 @@ function LineageBadge({ bc }: { bc: BuildChanges }) {
       {l.reason && <p className="small">{l.reason}</p>}
       {l.worktree_payload_differs_from_baseline && (
         <p className="small">
-          The payload in this working tree differs from the committed baseline. The commit was
-          used; the local copy was not.
+          The local copy of the data differs from the committed baseline. The committed version
+          was used; the local copy was not.
         </p>
       )}
     </div>
@@ -848,8 +848,8 @@ function BuildLedgerView({
       <div className="empty" style={{ padding: 24 }}>
         <div className="eyebrow">No comparison available</div>
         <p style={{ lineHeight: 1.6, color: "var(--text-dim)" }}>
-          This payload carries no change ledger, so there is nothing to compare this build
-          against. That is not the same as a build in which nothing changed.
+          This version of the data carries no change ledger, so there is nothing to compare this
+          build against. That is not the same as a build in which nothing changed.
         </p>
       </div>
     );
@@ -885,9 +885,9 @@ function BuildLedgerView({
           </span>
         </div>
         <p className="small">
-          {bc.previous_as_of} → {bc.current_as_of}
+          {fmtDate(bc.previous_as_of)} → {fmtDate(bc.current_as_of)}
           {bc.as_of_direction === "backward" && " (evaluated at an EARLIER date)"}
-          {bc.previous_build && ` · built ${bc.previous_build.slice(0, 10)} → ${(bc.current_build ?? "").slice(0, 10)}`}
+          {bc.previous_build && ` · built ${fmtDate(bc.previous_build.slice(0, 10))} → ${fmtDate((bc.current_build ?? "").slice(0, 10))}`}
         </p>
         {bc.time_progression_only && (
           <p className="decay-note">{bc.time_progression_note}</p>
@@ -898,7 +898,7 @@ function BuildLedgerView({
         {!bc.input_fingerprints_comparable && (
           <p className="small">
             The baseline build carries no input fingerprint, so "nothing changed" cannot be
-            proven for it — only that nothing turned up in the payloads compared here.
+            proven for it — only that nothing turned up in the data compared here.
           </p>
         )}
         {!bc.attribution_separable && bc.non_separable_reason && (
@@ -1090,7 +1090,7 @@ function DataQualityView({
     return (
       <Block title="Quality report unavailable" tone="warn">
         <p className="lede">
-          This payload carries no quality report. That is not a clean bill of health — it means
+          This version of the data carries no quality report. That is not a clean bill of health — it means
           the freshness and limitation data was not emitted by the build that produced it.
         </p>
       </Block>
@@ -1380,7 +1380,7 @@ function HistoricalView({ bundle, step }: { bundle: Bundle; step: number }) {
 
       <Block title="Facility-level detail is not available for a past date" tone="warn">
         <p>
-          The pipeline emits contributing-facility detail for the latest build only. Rebuilding
+          Contributing-facility detail is published for the latest data only. Rebuilding
           it here from today's records would let evidence gathered since this date shape what is
           presented as the picture on it — the one failure that would invalidate every historical
           view in this product. The sector decomposition above is exact; below it, nothing is

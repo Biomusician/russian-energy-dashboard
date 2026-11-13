@@ -7,7 +7,7 @@ import {
 import { readerText } from "./readerText";
 import {
   COVERAGE_STATES, COVERAGE_STATE_MEANING, COVERAGE_STATE_TEXT, UNIVERSE_TEXT, countStates, coverageSummary,
-  isCampaignRestricted, laneNote, latestLanes, missingLanguages, passOutcomeText, reviewLine, workDone,
+  isCampaignRestricted, latestLanes, missingLanguages, passOutcomeText, reviewLine, workDone,
   type CoverageState, type LaneRow,
 } from "./laneCoverage";
 
@@ -42,7 +42,7 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
       <h2 id="rc-heading">Research coverage</h2>
       <p className="small rc-lead">How well has {s.name} actually been searched for disruptions? The search is
         planned in <strong>lanes</strong>: a lane is one family of sources searched as a unit, such as one
-        ministry's statements or the national press.</p>
+        ministry's statements or the national press. Other pages of this site call a lane a source group.</p>
       <p className="small rc-distinct"><strong>Research coverage</strong> is how far the search for events got.{" "}
         <strong>Source health</strong>, under Sources &amp; data quality, describes the citations behind the events
         already published. Neither implies the other.</p>
@@ -106,7 +106,7 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
 
       {s.research_gaps.length > 0 && (<>
         <h3 className="eyebrow">Other known gaps</h3>
-        <ul className="small">{s.research_gaps.map((g, i) => <li key={i}>{plain(g)}</li>)}</ul>
+        <ul className="small">{s.research_gaps.map((g, i) => <li key={i}>{readerText(g)}</li>)}</ul>
       </>)}
 
       {/* With no published record there is no recovery research or citation to describe: a list of
@@ -129,7 +129,7 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
         {Object.keys(rc.unresearched_by_class).length > 0 && (
           <p className="small dim">Still to research: {Object.entries(rc.unresearched_by_class).map(([k, n]) => `${n} ${labelFor(s.taxonomy.asset_classes, k).toLowerCase()}`).join(", ")}.</p>
         )}
-        <p className="small dim">{rc.policy}</p>
+        <p className="small dim">{readerText(rc.policy)}</p>
       </>)}
 
       <details className="small rc-history">
@@ -139,8 +139,8 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
           <tbody>
             {passes.map((p, i) => (
               <tr key={`${p.date}-${p.by}-${i}`}>
-                <td>{fmtDate(p.date)}<div className="dim">{plain(p.by)}</div></td>
-                <td>{p.kind === "targeted" ? "targeted search" : `systematic, ${p.status}`}{p.status_reason && <div className="dim">{plain(p.status_reason)}</div>}</td>
+                <td>{fmtDate(p.date)}<div className="dim">{readerText(p.by)}</div></td>
+                <td>{p.kind === "targeted" ? "targeted search" : `systematic, ${p.status}`}{p.status_reason && <div className="dim">{readerText(p.status_reason)}</div>}</td>
                 <td>{passOutcomeText(p, restricted, p === newestSystematic)}</td>
               </tr>
             ))}
@@ -159,17 +159,11 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
             <li>Event dates: {Object.entries(cq.event_date_precision).map(([k, n]) => `${n} to the ${k}`).join(", ") || "none"}.</li>
             {cq.link_check && <li>Automated link check, {fmtDate(cq.link_check_date ?? "")}: {cq.link_check.reachable} reachable, {cq.link_check.redirected} redirected, {cq.link_check.blocked} refused the check, {cq.link_check.dead} gone, {cq.link_check.error} failed to load.</li>}
           </ul>
-          {cq.link_check_note && <p className="small dim">{plain(cq.link_check_note)}</p>}
+          {cq.link_check_note && <p className="small dim">{readerText(cq.link_check_note)}</p>}
         </aside>
       )}
     </section>
   );
-}
-
-/** Logged provenance as a reader sees it: references removed first, then internal pass numbering
- *  and vocabulary keys put into words. No fact changes. */
-function plain(s: string | null | undefined): string {
-  return laneNote(readerText(s));
 }
 
 function laneId(systemId: string, lane: string): string {
@@ -189,7 +183,7 @@ function LaneCard({ row, systemId, newestPassDate }: { row: LaneRow; systemId: s
     <li className={`rc-lane rc-lane-${row.state}`} id={laneId(systemId, l.lane)} tabIndex={-1} aria-labelledby={headingId}>
       <h3 id={headingId} className="rc-lane-head">
         <span className="mono rc-lane-id">{l.lane}</span>{" "}
-        <span className="rc-family">{l.source_family ? plain(l.source_family) : "Source family not recorded"}</span>
+        <span className="rc-family">{l.source_family ? readerText(l.source_family) : "Source family not recorded"}</span>
       </h3>
       <div className="rc-lane-state">
         <StateMark state={row.state} />
@@ -213,11 +207,11 @@ function LaneCard({ row, systemId, newestPassDate }: { row: LaneRow; systemId: s
           <div><dt>Logged in</dt><dd>The pass of {fmtDate(row.pass.date)}{l.carried_forward ? ", carried forward with no new work" : ""}</dd></div>
         )}
       </dl>
-      {l.limitation && <p className="small rc-note"><span className="rc-note-label">What limited it:</span> {plain(l.limitation)}</p>}
+      {l.limitation && <p className="small rc-note"><span className="rc-note-label">What limited it:</span> {readerText(l.limitation)}</p>}
       {l.finding && (
         <details className="small rc-finding">
           <summary>What the search learned about the source</summary>
-          <p>{plain(l.finding)}</p>
+          <p>{readerText(l.finding)}</p>
         </details>
       )}
     </li>

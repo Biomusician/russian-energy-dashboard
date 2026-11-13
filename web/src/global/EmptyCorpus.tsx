@@ -27,7 +27,7 @@ export function EmptyCorpus({ bundle, ctx, onTab }: {
   const used = s.sources.filter((x) => !x.role.startsWith("rejected"));
   const row = ctx ? rowForSystem(ctx, s.system_id) : null;
   const campaign = s.campaign_state && s.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" ? s.campaign_state : null;
-  const gaps = [...lanes.filter((l) => l.limitation).map((l) => readerText(l.limitation)), ...s.research_gaps];
+  const gaps = [...lanes.filter((l) => l.limitation).map((l) => readerText(l.limitation)), ...s.research_gaps.map(readerText)];
   return (
     <div className="empty-corpus" aria-label="No qualifying records">
       <p className="empty-lead">{EMPTY_CORPUS_LEAD}</p>

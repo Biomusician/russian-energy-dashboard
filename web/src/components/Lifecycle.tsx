@@ -102,7 +102,7 @@ export default function Lifecycle({
       <div className="empty" style={{ padding: 24 }}>
         <div className="eyebrow">Lifecycle unavailable</div>
         <p style={{ lineHeight: 1.6, color: "var(--text-dim)" }}>
-          This payload carries no recovery lifecycle. That is not a finding about recovery — it
+          This version of the data carries no recovery lifecycle. That is not a finding about recovery — it
           means the build did not emit one.
         </p>
       </div>

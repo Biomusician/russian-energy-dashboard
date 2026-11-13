@@ -57,7 +57,7 @@ export default function StartHere({ gulfSlug, gulfLabel }: { gulfSlug: string | 
             <li><strong>National energy context is not disruption.</strong> Production and consumption figures describe an
               energy system; they say nothing about damage or importance.</li>
             <li><strong>Maps mean different things by view.</strong> The world map is coloured by a national energy figure;
-              a country map is coloured by where records were placed; the theatre map shows exposure. Each map's legend says which.</li>
+              a country map is coloured by where records were placed; the Russia, Belarus &amp; Crimea map shows exposure. Each map's legend says which.</li>
           </ol>
           <div className="start-here-next">
             <span className="small dim">What to open next:</span>

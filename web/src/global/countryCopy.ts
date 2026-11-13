@@ -18,7 +18,7 @@ export const EMPTY_CORPUS_LEAD =
 
 /** The plain first paragraph of "Why no score". */
 export function noScorePlain(country: string): string {
-  return `The disruption score on the Russia-theatre page was designed for one conflict and one energy system. `
+  return `The disruption score on the Russia, Belarus & Crimea page was designed for one conflict and one energy system. `
     + `Its weights, and its assumptions about how quickly damaged infrastructure comes back, do not transfer to `
     + `${country}. Showing that score here would imply a precision this evidence does not have, so no score is `
     + `calculated for this country.`;

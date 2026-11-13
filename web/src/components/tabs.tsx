@@ -49,7 +49,7 @@ function genBasisHint(bundle: Bundle): string | undefined {
   if (!b) return undefined;
   return `${b.source} — ${b.census_vintage}. ${b.known_bias ?? ""} `
     + "Regional generation intensity is computed against this base, so it carries the same "
-    + "vintage limitation. See docs/GENERATION_DENOMINATOR_AUDIT.md.";
+    + "vintage limitation. The denominator audit in the project documentation gives the detail.";
 }
 
 function KV({ k, v, hint }: { k: string; v: React.ReactNode; hint?: string }) {
@@ -197,7 +197,7 @@ export function WhatChangedTab(p: TabProps) {
             reporting that as zero restorations would be a confident wrong answer. */}
         {!bundle.snapshot.recovery_events ? (
           <Note warn>
-            Restoration evidence is unavailable in this data payload — not zero. Reload in a moment;
+            Restoration evidence is unavailable in this version of the data — not zero. Reload in a moment;
             if it persists the dataset predates the recovery-evidence log.
           </Note>
         ) : newRecovery.length === 0 ? (
@@ -1191,9 +1191,9 @@ export function CostsTab(p: TabProps) {
 
       {withCost.length === 0 ? (
         <div className="empty">
-          No repair-cost figures are yet ingested from public sources. The schema supports
-          <code> reported</code>, <code> estimated (low/high)</code> and <code> basis</code>
-          fields per incident; they populate as sourced figures become available.
+          No repair-cost figures have yet been collected from public sources. Each incident has room
+          for a reported cost, an estimated range (low/high) and its basis; they fill in as sourced
+          figures become available.
         </div>
       ) : (
         withCost.map((i) => (
@@ -1216,11 +1216,11 @@ export function CostsTab(p: TabProps) {
         {["Reported repair cost", "Estimated repair-cost range", "Export / revenue effect", "Civilian economic consequence"].map((label) => (
           <div className="kv" key={label}>
             <span className="k">{label}</span>
-            <span className="v null">schema ready · unpopulated</span>
+            <span className="v null">ready · no figures yet</span>
           </div>
         ))}
       </Block>
-      <Note>See docs/COST_SOURCES.md for candidate open sources and their access constraints.</Note>
+      <Note>Candidate open sources for these costs, and their access constraints, are listed in the project documentation.</Note>
     </div>
   );
 }

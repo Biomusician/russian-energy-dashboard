@@ -48,6 +48,18 @@ describe("recent feed", () => {
     expect(JSON.stringify(run)).not.toMatch(/row-0[123]|"records"|"count"|"n"/);
   });
 
+  // The one fold the home page and the Gulf littoral view both use. A row key alone marks a covered
+  // record: the Gulf feed carries some whose members are not individually withheld.
+  it("never folds across countries or over an item that is not covered, and treats a row key as covered", () => {
+    expect(collapseCovered([covered("sa", 1), covered("kw", 2), ep({ system_id: "sa", episode_id: "sa-x" })])
+      .map((r) => r.kind)).toEqual(["item", "item", "item"]);
+    expect(collapseCovered([])).toEqual([]);
+    const keyOnly = (n: number) => ep({ system_id: "kw", episode_id: `kw-row-${String(n).padStart(2, "0")}`,
+      members: [{ date: "2026-03-01", date_precision: "day", region: "National", effect: null, effect_on_country_page: true, withheld: false }] });
+    expect(isCovered(keyOnly(8))).toBe(true);
+    expect(collapseCovered([keyOnly(8), keyOnly(9), keyOnly(10)]).map((r) => r.kind)).toEqual(["covered-run"]);
+  });
+
   it("places a covered item as National with no region, and others at the level the list carries", () => {
     expect(isCovered(covered("sa", 1))).toBe(true);
     expect(placementOf(covered("sa", 1))).toEqual({ level: "National", names: [] });

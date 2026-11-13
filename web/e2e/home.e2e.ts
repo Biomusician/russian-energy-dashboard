@@ -6,7 +6,7 @@ import type { Page } from "@playwright/test";
  * Values come from the payload the page loaded, never typed in here.
  */
 
-const ACTIONS = ["Search systems", /Explore the Gulf littoral/, /Compare systems/, /Russia theatre \(indexed\)/];
+const ACTIONS = ["Search systems", /Explore the Gulf littoral/, /Compare systems/, /Russia, Belarus & Crimea \(indexed\)/];
 const SEARCH = /Search systems, regions and terms/;
 
 async function manifest(page: Page) {
@@ -45,7 +45,7 @@ test.describe("home first screen", () => {
 
   test("the four actions go where they say, and Back returns home each time", async ({ app, page }) => {
     await app.open("");
-    await action(page, /Russia theatre/).click();
+    await action(page, /Russia, Belarus & Crimea \(indexed\)/).click();
     await expect(page).toHaveURL(/[?&]sys=ru\b/);
     await page.goBack();
     await expect(page.getByRole("heading", { name: "Energy Disruption Monitor", level: 1 })).toBeVisible();
@@ -101,7 +101,7 @@ test.describe("home first screen", () => {
   test("tab title follows the route", async ({ app, page }) => {
     await app.open("");
     await expect(page).toHaveTitle(/overview/);
-    await action(page, /Russia theatre/).click();
+    await action(page, /Russia, Belarus & Crimea \(indexed\)/).click();
     await expect(page).toHaveURL(/sys=ru/);
     await expect(page).not.toHaveTitle(/overview/);
     await page.goBack();

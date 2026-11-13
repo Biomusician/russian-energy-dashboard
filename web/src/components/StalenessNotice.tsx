@@ -10,6 +10,7 @@
  */
 
 import { assessFreshness, type FreshnessAssessment } from "../freshness";
+import { fmtDate } from "../data";
 import type { Snapshot } from "../types";
 
 export default function StalenessNotice({ snapshot, now }: {
@@ -41,7 +42,7 @@ export default function StalenessNotice({ snapshot, now }: {
         <>
           {" "}
           <span className="staleness-age">
-            ({f.days} {f.days === 1 ? "day" : "days"} since {snapshot.as_of})
+            ({f.days} {f.days === 1 ? "day" : "days"} since {fmtDate(snapshot.as_of)})
           </span>
         </>
       )}

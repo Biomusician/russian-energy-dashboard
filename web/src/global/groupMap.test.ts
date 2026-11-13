@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-  FILTERED, MEMBER_RAMP, NEUTRAL, NO_DATA, OTHER, ZERO, collapseFeed, groupFill, membersAlphabetical, metricFacts, specialValues,
+  FILTERED, MEMBER_RAMP, NEUTRAL, NO_DATA, OTHER, ZERO, groupFill, membersAlphabetical, metricFacts, specialValues,
 } from "./groupMap";
-import type { GroupContext, GroupSystem, RecentEpisode } from "./manifest";
+import type { GroupContext, GroupSystem } from "./manifest";
 
 const sys = (id: string, name: string, v: number | null, gcc = true): GroupSystem => ({
   system_id: id, name, a3: id.toUpperCase(), gcc_member: gcc, opec_member: !gcc, maturity: "research_preview",
@@ -71,35 +71,5 @@ describe("the figure's facts", () => {
       sourceUrl: "https://example.org", release: "2026-10-16", accounting: "Nuclear by heat, renewables by electricity.",
     });
     expect(metricFacts(ctx, "missing")).toBeNull();
-  });
-});
-
-describe("the regional feed", () => {
-  const ep = (sid: string, id: string, withheld: boolean, date: string): RecentEpisode => ({
-    system_id: sid, country: sid.toUpperCase(), episode_id: id, episode_name: null, basis: "b", records: 1,
-    first_date: date, last_date: date, date_precision: "day", classes: ["refinery"], causes: ["attack"],
-    members: [{ date, date_precision: "day", region: "National", effect: null, effect_on_country_page: !withheld, withheld }],
-    more_members: 0,
-  });
-
-  it("folds a run of one country's safeguarded episodes into one line with no count", () => {
-    const eps = [ep("sa", "1", true, "2026-04-08"), ep("sa", "2", true, "2026-03-02"), ep("sa", "3", true, "2026-02-23"),
-                 ep("iq", "4", false, "2025-12-23"), ep("sa", "5", true, "2025-01-01"), ep("kw", "6", true, "2024-01-01"),
-                 ep("kw", "7", true, "2023-01-01")];
-    const items = collapseFeed(eps);
-    expect(items.map((i) => i.kind)).toEqual(["safeguarded", "episode", "episode", "safeguarded"]);
-    const first = items[0];
-    if (first.kind !== "safeguarded") throw new Error("expected a folded run");
-    expect(first.newest.first_date).toBe("2026-04-08");
-    expect(first.oldest.first_date).toBe("2026-02-23");
-    // No number of records travels with the folded line.
-    expect(JSON.stringify({ ...first, newest: null, oldest: null })).not.toMatch(/\b3\b/);
-    expect(Object.keys(first).sort()).toEqual(["causes", "classes", "country", "key", "kind", "newest", "oldest", "system_id"]);
-  });
-
-  it("never folds across countries or over an episode that is not safeguarded", () => {
-    const eps = [ep("sa", "1", true, "2026-04-08"), ep("kw", "2", true, "2026-03-02"), ep("sa", "3", false, "2026-02-23")];
-    expect(collapseFeed(eps).map((i) => i.kind)).toEqual(["episode", "episode", "episode"]);
-    expect(collapseFeed([])).toEqual([]);
   });
 });

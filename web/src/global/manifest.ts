@@ -251,7 +251,7 @@ export interface ResearchLane {
   limitation?: string | null;
   finding?: string | null;
   carried_forward?: boolean;
-  /** Set when the pass's own search allowance ran out in this lane; the lane is then never complete. */
+  /** Set when the pass's own search limit was reached in this lane; the lane is then never complete. */
   stopped_by?: "search_limit" | null;
 }
 
@@ -808,10 +808,18 @@ export const LANE_STATE_LABEL: Record<string, string> = {
   declared_query_set_run: "Planned searches run (not exhaustive)",
   partially_searched: "Partly searched",
   blocked_by_source: "Blocked by the source",
-  stopped_by_search_limit: "Stopped when the search allowance ran out",
+  stopped_by_search_limit: "Stopped when the search limit was reached",
   not_started: "Not started",
   legacy: "Logged under the earlier format",
 };
+
+/** Lane states in one line, in a fixed order from finished to not started: "3 partly searched · 1 not started". */
+const LANE_ORDER = ["universe_searched", "current_through_latest_release", "declared_query_set_run",
+                    "partially_searched", "blocked_by_source", "stopped_by_search_limit", "not_started", "legacy"];
+
+export function laneChips(states: Record<string, number>): string {
+  return LANE_ORDER.filter((k) => states[k]).map((k) => `${states[k]} ${labelFor(LANE_STATE_LABEL, k).toLowerCase()}`).join(" · ");
+}
 
 export const LANE_EXECUTION_LABEL: Record<string, string> = {
   not_started: "Not started",

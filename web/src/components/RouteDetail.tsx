@@ -17,7 +17,7 @@
  */
 
 import type { PipelineConnection, PipelineEntity, PipelineStatusRecord } from "../types";
-import { fmtNum, titleCase } from "../data";
+import { fmtDate, fmtNum, titleCase } from "../data";
 
 /** What each status kind actually asserts. Spelled out because the distinction is the point. */
 const STATUS_KIND_LABEL: Record<string, { label: string; hint: string }> = {
@@ -149,7 +149,7 @@ export function RouteDetail({
                 {records.map((r, i) => (
                   <div key={i} style={{ fontSize: 9.5, color: i === 0 ? "var(--text-dim)" : "var(--text-faint)", lineHeight: 1.4, paddingLeft: 2 }}>
                     {fmtInterval(r)} — {titleCase(r.status_value)}
-                    {r.source_date ? ` · ${r.source_date === r.observed_at ? "recorded" : "source"} ${r.source_date}` : ""}
+                    {r.source_date ? ` · ${r.source_date === r.observed_at ? "recorded" : "source"} ${fmtDate(r.source_date)}` : ""}
                     {r.note ? ` · ${r.note}` : ""}
                   </div>
                 ))}
