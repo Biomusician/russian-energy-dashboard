@@ -24,6 +24,7 @@ import {
   loadProductionHistory, resolvePoint, titleCase,
 } from "../data";
 import type { InspectTarget } from "./Inspector";
+import { readerText } from "../global/readerText";
 
 export type CompareMode = "A" | "B" | "delta";
 /** Which historical question the workspace answers. Defaults to the reconstruction. */
@@ -77,8 +78,8 @@ export default function Comparison({
       <div className="empty" style={{ padding: 24 }}>
         <div className="eyebrow">Comparison unavailable</div>
         <p style={{ lineHeight: 1.6, color: "var(--text-dim)" }}>
-          This payload carries no historical series, so there is nothing to compare. Rebuilding
-          the dataset will produce one.
+          This version of the data carries no historical series, so there is nothing to compare. The
+          next data rebuild will produce one.
         </p>
       </div>
     );
@@ -323,7 +324,7 @@ export default function Comparison({
             </span>
           ))}
         </dl>
-        <p className="small warn-text">{history.semantics.what_this_does_not_answer}</p>
+        <p className="small warn-text">{readerText(history.semantics.what_this_does_not_answer)}</p>
       </section>
     </div>
   );
@@ -347,7 +348,7 @@ function PublishedComparison({ published, a, b, onChange }: {
   if (!published || !published.entries.length) {
     return (
       <div className="semantics-note published-unavailable">
-        As-published history is not available in this payload
+        As-published history is not available in this version of the data
         {published?.unavailable_reason ? `: ${published.unavailable_reason}` : "."}
       </div>
     );

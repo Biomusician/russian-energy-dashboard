@@ -38,7 +38,7 @@ describe("lane state mapping", () => {
     expect(coverageState(lane({ execution: "partial", source_window: "inaccessible", stopped_by: "search_limit" }))).toBe("unavailable");
   });
 
-  it("a lane stopped by the search allowance is never complete", () => {
+  it("a lane stopped by the search limit is never complete", () => {
     expect(coverageState(lane({ execution: "partial", stopped_by: "search_limit" }))).toBe("stopped");
     expect(coverageState(lane({ execution: "declared_search_complete", stopped_by: "search_limit" }))).toBe("stopped");
     expect(coverageState(lane({ execution: "partial", source_window: "rolling_archive_gap", stopped_by: "search_limit" }))).toBe("stopped");
@@ -84,7 +84,7 @@ describe("lane state mapping", () => {
   it("the summary is words and counts, never a percentage", () => {
     const rows = latestLanes([pass({ lanes: [lane({ lane: "A" }), lane({ lane: "B", execution: "partial", stopped_by: "search_limit" }),
       lane({ lane: "C", execution: "partial", source_window: "inaccessible" })] })]);
-    expect(coverageSummary(rows, 1)).toBe("1 of 3 lanes declared complete; 1 stopped by the search allowance; 1 with the source unavailable.");
+    expect(coverageSummary(rows, 1)).toBe("1 of 3 lanes declared complete; 1 stopped by the search limit; 1 with the source unavailable.");
     expect(coverageSummary([], 0)).toBe("No search has been run yet.");
     expect(coverageSummary([], 2)).toMatch(/targeted/);
   });

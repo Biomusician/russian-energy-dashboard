@@ -2,58 +2,19 @@ import { localDayOf } from "../freshness";
 import { useEffect, useMemo, useState } from "react";
 import {
   ENVIRONMENT_LABEL, LANE_WINDOW_LABEL, labelFor, loadRecentEvidence,
-  type DataQuality, type Manifest, type RecentEvidence, type RecentEpisode,
+  type DataQuality, type Manifest, type RecentEvidence,
 } from "./manifest";
-import { navigate } from "./router";
-import { prefetchOn } from "./prefetch";
 import { daysBetween, fmtDate } from "../data";
 import { readerText } from "./readerText";
 import { collapseCovered, dated, laneChips, placementOf, type FeedRow } from "./homeModel";
+import { CountryLink, CoveredRunItem, fmtEpisodeDate } from "./feedItems";
 import { openGlossary } from "./GlobalNav";
+
 
 /** Recent evidence and Data Quality on the global home (iteration 18; rewritten iteration 21). */
 
-function fmtSpan(first: string, last: string, precision: string): string {
-  // From the string itself: a browser's Date parser reads "2026-04" differently across engines.
-  if (precision === "month") {
-    const a = fmtDate(first.slice(0, 7));
-    const b = fmtDate(last.slice(0, 7));
-    return a === b ? a : `${a} – ${b}`;
-  }
-  return first === last ? fmtDate(first) : `${fmtDate(first)} – ${fmtDate(last)}`;
-}
-
-function fmtEpisodeDate(ep: RecentEpisode): string {
-  return fmtSpan(ep.first_date, ep.last_date, ep.date_precision);
-}
-
-function countryHref(id: string): string {
-  return `?sys=${encodeURIComponent(id)}`;
-}
-
-function CountryLink({ id, name }: { id: string; name: string }) {
-  return (
-    <a className="feed-country" href={countryHref(id)} {...prefetchOn(id)}
-      onClick={(e) => { if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey) { e.preventDefault(); navigate(id); } }}>
-      {name}
-    </a>
-  );
-}
-
 function FeedItem({ row }: { row: FeedRow }) {
-  if (row.kind === "covered-run") {
-    return (
-      <li className="feed-item covered-run">
-        <div className="feed-line">
-          <span className="mono small">{fmtSpan(row.first_date, row.last_date, row.date_precision)}</span>
-          <CountryLink id={row.system_id} name={row.country} />
-          <span className="feed-place small">National</span>
-        </div>
-        <div className="small dim">{row.classes.join(", ")} · {row.causes.join(", ")}</div>
-        <div className="small">Records under active-campaign safeguards — see the country page.</div>
-      </li>
-    );
-  }
+  if (row.kind === "covered-run") return <CoveredRunItem row={row} />;
   const ep = row.ep;
   const place = placementOf(ep);
   const covered = place.level === "National";
@@ -124,9 +85,6 @@ export function RecentEvidencePanel() {
   );
 }
 
-// The lane summary lives in homeModel (pure, tested); re-exported for the home page's import.
-export { laneChips };
-
 /** Data quality as the separate questions a reader actually has. Process and vintage only; no
  *  disruption count appears here, and nothing is ranked. */
 export function DataQualityPanel({ data, failed, manifest, today }: {
@@ -171,7 +129,7 @@ export function DataQualityPanel({ data, failed, manifest, today }: {
             <p className="small">Reporting environment: {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}.
               Source families cited: {Object.values(s.source_families).join(", ") || "none"}.
               Newest systematic search {fmtDate(s.last_systematic_pass)}; first {fmtDate(s.first_systematic_pass)}.</p>
-            {[["Blocked by the source", blocked], ["Stopped when the search allowance ran out", stopped], ["Publisher has not yet released the rest", waiting], ["Partly searched or not started", partial]].map(([title, ls]) => (
+            {[["Blocked by the source", blocked], ["Stopped when the search limit was reached", stopped], ["Publisher has not yet released the rest", waiting], ["Partly searched or not started", partial]].map(([title, ls]) => (
               (ls as typeof blocked).length > 0 && (
                 <div key={title as string}>
                   <div className="eyebrow">{title as string}</div>

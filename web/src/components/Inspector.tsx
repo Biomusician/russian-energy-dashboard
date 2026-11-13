@@ -28,6 +28,7 @@ import {
 } from "../data";
 import { assessFreshness, localDayOf } from "../freshness";
 import { excludedSectorEventsText } from "../indexText";
+import { readerText } from "../global/readerText";
 import { severityColor } from "../palette";
 import { EvidenceChip, RecoveryLine, hostOf } from "./ui";
 
@@ -175,9 +176,9 @@ function Unavailable() {
     <div className="empty" style={{ padding: 24 }}>
       <div className="eyebrow">Explanation unavailable</div>
       <p style={{ lineHeight: 1.6, color: "var(--text-dim)" }}>
-        This build's data payload predates the explanation emitter, so there is nothing to
+        This version of the data predates the regional explanations, so there is nothing to
         decompose. The published numbers are still valid — the trace behind them is not
-        available in this payload.
+        included in it.
       </p>
     </div>
   );
@@ -377,7 +378,7 @@ function SectorView({
       </Block>
 
       <Block title="What this figure cannot tell you" tone="warn">
-        <ul className="tight">{e.limitations.map((l, i) => <li key={i}>{l}</li>)}</ul>
+        <ul className="tight">{e.limitations.map((l, i) => <li key={i}>{readerText(l)}</li>)}</ul>
       </Block>
 
       {e.saturation_sweep && e.saturation_sweep.length > 0 && (
@@ -742,7 +743,7 @@ function IncidentView({
             Sources disagree about this event. The disagreement is preserved rather than resolved.
           </p>
         )}
-        {inc.notes && <p>{inc.notes}</p>}
+        {inc.notes && <p>{readerText(inc.notes)}</p>}
         <LifecycleLink episodeId={episodeId} onOpenLifecycle={onOpenLifecycle} />
       </Block>
 
@@ -851,8 +852,8 @@ function BuildLedgerView({
       <div className="empty" style={{ padding: 24 }}>
         <div className="eyebrow">No comparison available</div>
         <p style={{ lineHeight: 1.6, color: "var(--text-dim)" }}>
-          This payload carries no change ledger, so there is nothing to compare this build
-          against. That is not the same as a build in which nothing changed.
+          This version of the data carries no change ledger, so there is nothing to compare this
+          build against. That is not the same as a build in which nothing changed.
         </p>
       </div>
     );
@@ -901,7 +902,7 @@ function BuildLedgerView({
         {!bc.input_fingerprints_comparable && (
           <p className="small">
             The baseline build carries no input fingerprint, so "nothing changed" cannot be
-            proven for it — only that nothing turned up in the payloads compared here.
+            proven for it — only that nothing turned up in the data compared here.
           </p>
         )}
         {!bc.attribution_separable && bc.non_separable_reason && (
@@ -1093,7 +1094,7 @@ function DataQualityView({
     return (
       <Block title="Quality report unavailable" tone="warn">
         <p className="lede">
-          This payload carries no quality report. That is not a clean bill of health — it means
+          This version of the data carries no quality report. That is not a clean bill of health — it means
           the freshness and limitation data was not emitted by the build that produced it.
         </p>
       </Block>
@@ -1210,7 +1211,7 @@ function DataQualityView({
         {dq.cannot_tell_you.map((c) => (
           <div key={c.question} className="cannot">
             <h4>{c.question}</h4>
-            <p>{c.answer}</p>
+            <p>{readerText(c.answer)}</p>
           </div>
         ))}
       </Block>
@@ -1312,7 +1313,7 @@ function SourceCard({ src }: { src: SourceRecord }) {
         <p className="small warn-text">{src.release_gap_note}</p>
       )}
       {src.limitations.length > 0 && (
-        <ul className="tight">{src.limitations.map((l, i) => <li key={i}>{l}</li>)}</ul>
+        <ul className="tight">{src.limitations.map((l, i) => <li key={i}>{readerText(l)}</li>)}</ul>
       )}
       {src.url && (
         <p className="small">
@@ -1383,7 +1384,7 @@ function HistoricalView({ bundle, step }: { bundle: Bundle; step: number }) {
 
       <Block title="Facility-level detail is not available for a past date" tone="warn">
         <p>
-          The pipeline emits contributing-facility detail for the latest build only. Rebuilding
+          Contributing-facility detail is published for the latest data only. Rebuilding
           it here from today's records would let evidence gathered since this date shape what is
           presented as the picture on it — the one failure that would invalidate every historical
           view in this product. The sector decomposition above is exact; below it, nothing is

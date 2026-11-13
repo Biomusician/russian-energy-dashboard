@@ -186,7 +186,7 @@ def test_the_research_preview_definition_lives_in_one_module():
         assert "the systematic search is still incomplete" not in text, path.name
         assert not re.search(r'title="Research preview', text), path.name
         if "research_preview" in text and path.name != "Disclosure.tsx":
-            assert "ResearchPreviewBadge" in text or "RESEARCH_PREVIEW_DEFINITION" in text, path.name
+            assert re.search(r"ResearchPreview(Badge|Tag)|RESEARCH_PREVIEW_DEFINITION", text), path.name
 
 
 def test_country_page_copy_carries_no_internal_process_language():

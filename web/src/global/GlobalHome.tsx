@@ -2,7 +2,7 @@ import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import SystemSwitcher from "./SystemSwitcher";
 import StartHere from "./StartHere";
 import WhatsNew from "./WhatsNew";
-import { DataQualityPanel, RecentEvidencePanel, laneChips } from "./GlobalPanels";
+import { DataQualityPanel, RecentEvidencePanel } from "./GlobalPanels";
 import { GlobalNavBar, GlobalSearch, openGlossary } from "./GlobalNav";
 import {
   ENVIRONMENT_LABEL, labelFor, loadDataQuality, loadManifest, loadWorld,
@@ -12,10 +12,9 @@ import { loadContext, type EnergyContext } from "./context";
 import { navigate, navigateGroup, navigateTo } from "./router";
 import { prefetchOn } from "./prefetch";
 import { PanelBoundary } from "../components/ViewBoundary";
-import { dated, recordLine } from "./homeModel";
+import { dated, laneChips, recordLine } from "./homeModel";
 import { localISODate } from "../freshness";
-import { Disclosure } from "./Disclosure";
-import { RESEARCH_PREVIEW_DEFINITION, RESEARCH_PREVIEW_LABEL } from "./countryCopy";
+import { Disclosure, ResearchPreviewTag } from "./Disclosure";
 import { fmtDate, fmtNum } from "../data";
 import { readerText } from "./readerText";
 import "../styles/home.css";
@@ -107,7 +106,7 @@ export default function GlobalHome() {
               ? <a className="home-action" href={`?group=${gulf.slug}`} onClick={(e) => { e.preventDefault(); navigateGroup(gulf.slug as string); }}>Explore the {gulf.label} →</a>
               : <span className="home-action disabled">Regional overview loading…</span>}
             <a className="home-action" href="?compare=" onClick={(e) => { e.preventDefault(); navigateTo("?compare="); }}>Compare systems →</a>
-            <a className="home-action primary" href="?sys=ru" onClick={(e) => { e.preventDefault(); navigate("ru"); }}>Russia theatre (indexed) →</a>
+            <a className="home-action primary" href="?sys=ru" onClick={(e) => { e.preventDefault(); navigate("ru"); }}>Russia, Belarus &amp; Crimea (indexed) →</a>
           </nav>
           {manifest && <p className="comparability compact" role="note">{manifest.comparability_statement}</p>}
           {error && !manifest && (
@@ -178,13 +177,13 @@ export default function GlobalHome() {
           <section className="panel global-note" aria-labelledby="why-head">
             <h2 id="why-head" className="home-h2">Why these systems, and how this works</h2>
             <p>
-              {manifest.selection.rule} Source:{" "}
+              {readerText(manifest.selection.rule)} Source:{" "}
               <a href={manifest.selection.source_url} target="_blank" rel="noreferrer">
                 {manifest.selection.source}
               </a>.
             </p>
             {manifest.selection.regional_rule && <p>{readerText(manifest.selection.regional_rule)}</p>}
-            <p className="small">{manifest.selection.caveat}</p>
+            <p className="small">{readerText(manifest.selection.caveat)}</p>
             <p className="small">
               The original Russia, Belarus &amp; Crimea theatre is the only system with an index. The countries are shown
               with reported major disruptions and energy-system context: the index's weights and recovery model were built
@@ -206,7 +205,7 @@ export default function GlobalHome() {
               {" "}{manifest.corpus.registry_sources} sources are on the countries' check lists: the regulators, ministries,
               operators and other publishers that are re-read on a schedule.
             </p>
-            <p className="small dim">{manifest.corpus.note}</p>
+            <p className="small dim">{readerText(manifest.corpus.note)}</p>
           </section>
         )}
       </main>
@@ -255,10 +254,7 @@ function SystemCard({ s, manifest, lastPass, today }: {
       <div className="small">Country evidence system · <strong>No index</strong></div>
       <div className="home-tags">
         {/* Tap disclosures, not hover titles: a touch screen has no hover. */}
-        {s.maturity === "research_preview" && (
-          // The country page's definition, in the cards' neutral tag style: no status colour on a card.
-          <Disclosure label={RESEARCH_PREVIEW_LABEL} text={RESEARCH_PREVIEW_DEFINITION} className="home-tag home-tag-preview" />
-        )}
+        {s.maturity === "research_preview" && <ResearchPreviewTag />}
         {region && <span className="home-tag home-tag-region">{region.label}</span>}
         {s.campaign_restricted && (
           <Disclosure label="Publication safeguards" className="home-tag home-tag-safeguard"

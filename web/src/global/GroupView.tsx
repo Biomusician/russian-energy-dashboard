@@ -5,7 +5,7 @@ import SystemSwitcher from "./SystemSwitcher";
 import { fmtValue } from "./context";
 import { GROUP_BRIEF_FIT_PADDING, composeGroupFrame } from "./groupExport";
 import {
-  FILTERED, MEMBER_RAMP, NEUTRAL, NO_DATA, OTHER, ZERO, collapseFeed, groupFill, memberColour, membersAlphabetical, metricFacts, specialValues,
+  FILTERED, MEMBER_RAMP, NEUTRAL, NO_DATA, OTHER, ZERO, groupFill, memberColour, membersAlphabetical, metricFacts, specialValues,
 } from "./groupMap";
 import {
   ENVIRONMENT_LABEL, groupBySlug, languageNames, labelFor, loadGroupContext, loadManifest, loadWorld,
@@ -14,10 +14,12 @@ import {
 import { navigate } from "./router";
 import { prefetchOn } from "./prefetch";
 import { PanelBoundary } from "../components/ViewBoundary";
-import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
+import { Disclosure, ResearchPreviewTag } from "./Disclosure";
 import { downloadBlob, exportMapPng } from "../mapExport";
 import { fmtDate } from "../data";
-import { laneChips } from "./homeModel";
+import { readerText } from "./readerText";
+import { collapseCovered, isCovered, laneChips } from "./homeModel";
+import { CountryLink, CoveredRunItem, fmtEpisodeDate } from "./feedItems";
 import "../styles/gulf.css";
 import { GlobalNavBar } from "./GlobalNav";
 
@@ -51,32 +53,16 @@ function briefStyle(style: maplibregl.StyleSpecification, ctx: GroupContext, met
   return { ...clean, layers: clean.layers.map((l) => (l.id === "fill" && l.type === "fill" ? { ...l, paint: { ...l.paint, "fill-color": fill } } : l)) };
 }
 
-function fmtEpisodeDate(ep: RecentEpisode): string {
-  // From the string itself: a browser's Date parser reads "2026-04" differently across engines.
-  if (ep.date_precision === "month") return fmtDate(ep.first_date.slice(0, 7));
-  return ep.first_date === ep.last_date ? fmtDate(ep.first_date) : `${fmtDate(ep.first_date)} – ${fmtDate(ep.last_date)}`;
-}
-
-function fmtEpisodeStart(ep: RecentEpisode): string {
-  return fmtDate(ep.date_precision === "month" ? ep.first_date.slice(0, 7) : ep.first_date);
-}
-
-function fmtEpisodeEnd(ep: RecentEpisode): string {
-  return fmtDate(ep.date_precision === "month" ? ep.last_date.slice(0, 7) : ep.last_date);
-}
-
-function laneLine(states: Record<string, number>): string {
-  return laneChips(states);
-}
-
 function EpisodeItem({ ep }: { ep: RecentEpisode }) {
+  const covered = isCovered(ep);
   return (
     <li className="feed-item">
       <div className="event-head">
         <span className="mono small">{fmtEpisodeDate(ep)}</span>
-        <button className="linklike small" onClick={() => navigate(ep.system_id)} {...prefetchOn(ep.system_id)}>{ep.country}</button>
+        <CountryLink id={ep.system_id} name={ep.country} />
         <span className="small dim">{ep.classes.join(", ")} · {ep.causes.join(", ")}</span>
       </div>
+      {covered && <div className="small dim">Published under active-campaign safeguards — see the country page.</div>}
       {ep.episode_name && <div className="small"><strong>{ep.episode_name}</strong> <span className="dim">({ep.records} records, one episode)</span></div>}
       <ul className="lane-list small">
         {ep.members.map((mm, i) => (
@@ -364,19 +350,19 @@ export default function GroupView({ id }: { id: string }) {
                   “Gulf” alone, which on this site also names the United States Gulf coast.</p>
                 <p className="small"><strong>Gulf littoral, GCC and OPEC are three different things.</strong></p>
                 <ul className="small group-kinds">
-                  <li><strong>{ctx.label}{ctx.member_names ? `: ${ctx.member_names.join(", ")}` : ""}.</strong> {ctx.note}</li>
-                  <li><strong>{ctx.memberships.gcc.label}{ctx.memberships.gcc.member_names ? `: ${ctx.memberships.gcc.member_names.join(", ")}` : ""}.</strong> {ctx.memberships.gcc.note}
-                    {ctx.memberships.gcc.basis && <span className="dim"> {ctx.memberships.gcc.basis}</span>}</li>
-                  <li><strong>{ctx.memberships.opec.label}{ctx.memberships.opec.member_names ? `: ${ctx.memberships.opec.member_names.join(", ")}` : ""}.</strong> {ctx.memberships.opec.note}</li>
+                  <li><strong>{ctx.label}{ctx.member_names ? `: ${ctx.member_names.join(", ")}` : ""}.</strong> {readerText(ctx.note)}</li>
+                  <li><strong>{ctx.memberships.gcc.label}{ctx.memberships.gcc.member_names ? `: ${ctx.memberships.gcc.member_names.join(", ")}` : ""}.</strong> {readerText(ctx.memberships.gcc.note)}
+                    {ctx.memberships.gcc.basis && <span className="dim"> {readerText(ctx.memberships.gcc.basis)}</span>}</li>
+                  <li><strong>{ctx.memberships.opec.label}{ctx.memberships.opec.member_names ? `: ${ctx.memberships.opec.member_names.join(", ")}` : ""}.</strong> {readerText(ctx.memberships.opec.note)}</li>
                 </ul>
                 <p className="small"><strong>No country here has an index or a score.</strong> The one index on this site was built
                   for a single attack campaign elsewhere, and its weights and assumptions do not carry over. A missing index is not a zero.</p>
                 <p className="small"><strong>Countries are recorded under two rules.</strong> In the systems added most recently an attack is
                   recorded for the country as a whole, with no region, facility or operator, because in a small or concentrated
                   system a region and a kind of facility together can name one site. A system added earlier still places attacks
-                  by region and names the facility; whether to bring its older records under the newer rule is an open decision.
+                  by region and names the facility, and keeps that convention for its records for now.
                   Each card below says which rule applies.</p>
-                <p className="small dim">{ctx.not_built}</p>
+                <p className="small dim">{readerText(ctx.not_built)}</p>
               </details>
             </div>
 
@@ -408,7 +394,7 @@ export default function GroupView({ id }: { id: string }) {
                         const r = ctx.region[k];
                         return (
                           <td key={k} className="mono small">
-                            {r.value == null ? <span className="dim">not summed: {r.reason}</span>
+                            {r.value == null ? <span className="dim">not summed: {readerText(r.reason)}</span>
                               : <>{fmtValue(r.value, x.unit)}{r.world_share != null && <span className="dim"> · {Math.round(r.world_share * 1000) / 10}% of world</span>}</>}
                           </td>
                         );
@@ -442,7 +428,7 @@ export default function GroupView({ id }: { id: string }) {
               <div className="small">
                 {s.gcc_member ? "GCC member" : "Not a GCC member"} · {s.opec_member ? "OPEC member" : "Not an OPEC member"}
               </div>
-              {s.maturity === "research_preview" && <div><ResearchPreviewBadge /></div>}
+              {s.maturity === "research_preview" && <div><ResearchPreviewTag /></div>}
               {s.recovery_status_withheld && (
                 <div><Disclosure label="Later status of attacked facilities is not published" className="badge context-only-badge"
                   text="While attacks on energy facilities are still being reported, or it is uncertain whether they have ended, an attack is published as an event but the facility's later repair, restart or operating status is not." /></div>
@@ -458,7 +444,7 @@ export default function GroupView({ id }: { id: string }) {
               )}
               <div className="small dim">
                 {s.last_systematic_pass ? `Latest systematic research pass ${fmtDate(s.last_systematic_pass)}` : "No systematic research pass yet"}
-                {Object.keys(s.lane_states).length > 0 && `: ${laneLine(s.lane_states)}`}
+                {Object.keys(s.lane_states).length > 0 && `: ${laneChips(s.lane_states)}`}
               </div>
               {s.languages_required.length > 0 && (
                 <div className="small dim">Languages the search plan requires: {languageNames(s.languages_required)}. Used in at least one source group so far: {languageNames(s.languages_executed) || "none"}.</div>
@@ -473,22 +459,15 @@ export default function GroupView({ id }: { id: string }) {
           <section className="panel global-note recent-evidence" aria-label="Recent reviewed events in this region">
             <h2 className="eyebrow">Reviewed events in this region, newest first</h2>
             <p className="small dim">Date order only. No severity, size or country order. Most of these records were added as a historical
-              backfill when the countries were onboarded: a long list is a larger dataset, not a deteriorating region.
+              backfill when the countries joined the site: a long list is a larger dataset, not a deteriorating region.
               A country with few records has few records found, which is not few disruptions.</p>
             <p className="small dim feed-national-note">“National” in this list: a record covered by the attack-campaign safeguards
               is shown here for the country as a whole. Its country page may still name a region and facility, where that country's
               records were published under the earlier rule (each card above says which rule applies).</p>
             <ol className="feed">
-              {collapseFeed(ctx.recent.episodes.filter((ep) => shown.some((s) => s.system_id === ep.system_id))).map((item) => item.kind === "safeguarded" ? (
-                <li key={item.key} className="feed-item feed-safeguarded">
-                  <div className="event-head">
-                    <span className="mono small">{fmtEpisodeStart(item.oldest)} – {fmtEpisodeEnd(item.newest)}</span>
-                    <button className="linklike small" onClick={() => navigate(item.system_id)} {...prefetchOn(item.system_id)}>{item.country}</button>
-                    <span className="small dim">{item.classes.join(", ")} · {item.causes.join(", ")}</span>
-                  </div>
-                  <div className="small dim">National: records under active-campaign safeguards in this period, not summarised in this list. See the country page.</div>
-                </li>
-              ) : <EpisodeItem key={item.key} ep={item.ep} />)}
+              {collapseCovered(ctx.recent.episodes.filter((ep) => shown.some((s) => s.system_id === ep.system_id))).map((row) => row.kind === "covered-run"
+                ? <CoveredRunItem key={row.key} row={row} />
+                : <EpisodeItem key={`${row.ep.system_id}:${row.ep.episode_id}`} ep={row.ep} />)}
               {ctx.recent.episodes.length === 0 && <li className="small dim">No qualifying records in the current reviewed corpus for this region.</li>}
             </ol>
           </section>

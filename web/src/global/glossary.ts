@@ -76,7 +76,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     term: "Research coverage vs source health",
     aliases: ["coverage", "source health", "research state", "lanes", "source groups"],
     plain: "Research coverage says how much of the planned search for events has been done. Source health says whether the registered sources were checked on schedule. One does not imply the other.",
-    detail: "Research is organised in source groups (for example one regulator's notices). Each group is shown as searched, searched through the publisher's latest release, partly searched, blocked by the source, stopped when the search allowance ran out, or not started. These are shown as words, never as a percentage, and differ from country to country.",
+    detail: "Research is organised in source groups (for example one regulator's notices). Each group is shown as searched, searched through the publisher's latest release, partly searched, blocked by the source, stopped when the search limit was reached, or not started. These are shown as words, never as a percentage, and differ from country to country.",
   },
   {
     id: "research-preview",
@@ -96,7 +96,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     id: "transmission-burden",
     term: "Transmission burden",
     aliases: ["transmission", "grid", "substations", "power lines"],
-    plain: "In the Russia theatre, the transmission part of the index counts recently disrupted substations and lines, weighted by voltage. It is a count of disrupted equipment, not a share of the grid out of service.",
+    plain: "In Russia, Belarus & Crimea, the transmission part of the index counts recently disrupted substations and lines, weighted by voltage. It is a count of disrupted equipment, not a share of the grid out of service.",
     detail: "No open source gives a transmission capacity base, so the count is scored against a fixed saturation point (eight weighted concurrent disruptions reach the top of the scale). The network map is context; it is not the base of this measure.",
   },
 ];

@@ -1,0 +1,9 @@
+/* Dated record lists: the home page's recent evidence and the Gulf littoral view's reviewed events.
+   Imported by global/feedItems.tsx, so either page has these rules whichever is opened first. */
+.feed { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 520px; overflow-y: auto; }
+.feed-item { border-bottom: 1px solid var(--line-soft); padding-bottom: 6px; }
+.feed-item .event-head { display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.feed-line { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.feed-country { color: var(--accent); font-size: 12px; }
+.feed-place { color: var(--text); }
+.covered-run { border-left: 2px dashed var(--line); padding-left: 8px; }

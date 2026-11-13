@@ -5,6 +5,7 @@ import {
   type CountrySystem, type Manifest, type ManifestSystem,
 } from "./manifest";
 import { MAX_COMPARE } from "./router";
+import { RESEARCH_PREVIEW_DEFINITION, RESEARCH_PREVIEW_LABEL } from "./countryCopy";
 import { fmtDate } from "../data";
 import { laneChips } from "./homeModel";
 
@@ -66,9 +67,7 @@ export interface CompareRow {
 /** National context shown here: the figures every country has on the same definition. */
 export const CONTEXT_METRICS = ["total_production", "crude_production", "gas_production", "electricity_generation"] as const;
 
-export const MATURITY_DEFINITION =
-  "A research preview was added recently and its systematic search has not yet run as far as its plan declares, " +
-  "so the absence of a record is not evidence that no disruption occurred. Monitored means it has left that stage; " +
+export const MATURITY_DEFINITION = `${RESEARCH_PREVIEW_DEFINITION} Monitored means a country has left that stage; ` +
   "its search can still be partial, as the source-group row shows.";
 
 export const NO_INDEX_MEANING = "No index is not a zero.";
@@ -82,7 +81,7 @@ export const LANE_BUCKETS: { label: string; states: string[] }[] = [
   { label: "declared complete", states: ["universe_searched", "current_through_latest_release", "declared_query_set_run"] },
   { label: "partial", states: ["partially_searched"] },
   { label: "not started", states: ["not_started"] },
-  { label: "stopped by search allowance", states: ["stopped_by_search_limit"] },
+  { label: "stopped by search limit", states: ["stopped_by_search_limit"] },
   { label: "source unavailable", states: ["blocked_by_source"] },
 ];
 
@@ -281,7 +280,7 @@ export function compareRows(cols: CompareColumn[], ctx: EnergyContext | null, ma
       cells: cols.map(indexCell) },
     { id: "maturity", label: "Research maturity", basis: "common", basisNote: MATURITY_DEFINITION,
       cells: cols.map((c) => c.entry.kind === "theatre" ? notApplicable(THEATRE_OWN)
-        : c.entry.maturity === "research_preview" ? value("Research preview", undefined, ["Research preview"])
+        : c.entry.maturity === "research_preview" ? value(RESEARCH_PREVIEW_LABEL, undefined, [RESEARCH_PREVIEW_LABEL])
           : c.entry.maturity === "monitored" ? value("Monitored", undefined, ["Monitored"])
             : { kind: "no_data", text: "Not stated", lines: ["Not stated"] }) },
     { id: "last_pass", label: "Latest systematic research pass", basis: "common",

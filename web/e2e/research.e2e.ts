@@ -6,7 +6,7 @@ import { test, expect, type App } from "./fixtures";
  * "How well has this country actually been searched?" Each lane (one family of sources searched as
  * a unit) is shown as it stands in its latest pass, with a categorical state as text plus a shape.
  * Every expectation below is derived from the payload the page itself loaded; what is fixed is the
- * behaviour: blocked sources read "Source unavailable", a lane stopped by the search allowance is
+ * behaviour: blocked sources read "Source unavailable", a lane stopped by the search limit is
  * never complete, missing languages are named, no percentage, and under the attack-campaign rule no
  * count of candidates, held records or outcomes.
  */
@@ -29,7 +29,7 @@ function latest(passes: Pass[]): Map<string, Lane> {
 }
 
 const STATES = ["Declared search complete", "Partial", "Not started", "Source unavailable",
-                "Stopped by search allowance", "Archive or listing limitation"];
+                "Stopped by search limit", "Archive or listing limitation"];
 
 async function openResearch(app: App, id: string) {
   await app.open(`?sys=${id}`);
@@ -69,7 +69,7 @@ test.describe("Research coverage explorer", () => {
       const card = rc.locator(".rc-lane").filter({ has: page.locator(".rc-lane-id", { hasText: new RegExp(`^${id}$`) }) });
       const state = card.locator(".rc-lane-state .rc-state-text");
       if (l.source_window === "inaccessible") await expect(state).toHaveText("Source unavailable");
-      else if (l.stopped_by === "search_limit") await expect(state).toHaveText("Stopped by search allowance");
+      else if (l.stopped_by === "search_limit") await expect(state).toHaveText("Stopped by search limit");
       if (!["enumerated_complete", "declared_search_complete"].includes(l.execution ?? "")) {
         await expect(state).not.toHaveText("Declared search complete");
       }
@@ -104,7 +104,7 @@ test.describe("Research coverage explorer", () => {
       await expect(card.locator("dt", { hasText: "Covered through" })).toBeVisible();
       const state = card.locator(".rc-lane-state .rc-state-text");
       if (l.source_window === "inaccessible") { await expect(state).toHaveText("Source unavailable"); blocked += 1; }
-      else if (l.stopped_by === "search_limit") { await expect(state).toHaveText("Stopped by search allowance"); stopped += 1; }
+      else if (l.stopped_by === "search_limit") { await expect(state).toHaveText("Stopped by search limit"); stopped += 1; }
       const missing = (l.languages_required ?? []).filter((x) => !(l.languages_executed ?? []).includes(x));
       await expect(card.locator(".rc-missing")).toHaveCount(missing.length ? 1 : 0);
     }
@@ -112,7 +112,7 @@ test.describe("Research coverage explorer", () => {
     const n = sys.research_freshness;
     await expect(rc.locator(".rc-summary-line")).toContainText(`${n.lanes_complete} of ${n.lanes_declared} lanes declared complete`);
     // No coverage percentage in the explorer's own summary and overview.
-    await expect(rc.locator(".rc-summary")).not.toContainText("%");
+    await expect(rc.locator(".rc-overview")).not.toContainText("%");
     await expect(rc.locator(".lane-table")).not.toContainText("%");
 
     // Research coverage and source health stay apart, and say so.
@@ -120,7 +120,7 @@ test.describe("Research coverage explorer", () => {
     const sh = rc.locator(".rc-source-health");
     await expect(sh.getByRole("heading")).toHaveText(/^Source health/);
     await expect(sh).toContainText("Not part of research coverage.");
-    await expect(rc.locator(".rc-lanes .rc-source-health, .rc-summary .rc-source-health")).toHaveCount(0);
+    await expect(rc.locator(".rc-lanes .rc-source-health, .rc-overview .rc-source-health")).toHaveCount(0);
 
     // Keyboard: an overview button moves focus to its lane card; the legend toggles from the keyboard.
     const first = [...lanes.keys()][0];

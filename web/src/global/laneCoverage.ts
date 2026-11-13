@@ -26,7 +26,7 @@ export const COVERAGE_STATE_TEXT: Record<CoverageState, string> = {
   partial: "Partial",
   not_started: "Not started",
   unavailable: "Source unavailable",
-  stopped: "Stopped by search allowance",
+  stopped: "Stopped by search limit",
   archive_limit: "Archive or listing limitation",
   earlier_format: "Logged in an earlier format",
 };
@@ -41,7 +41,7 @@ export const COVERAGE_STATE_MEANING: Record<CoverageState, string> = {
   unavailable: "The source refused automated access or could not be read, for example a listing built by "
     + "script in the browser. It was not worked around, so the source itself is unread, whatever else "
     + "the lane ran.",
-  stopped: "This project's own search allowance for the pass ran out before every declared search was run. "
+  stopped: "This project's own search limit for the pass was reached before every declared search was run. "
     + "The limit is ours, not the publisher's: the remaining searches can still be run.",
   archive_limit: "The publisher keeps only a recent window of items, or lists them in a way that cannot be "
     + "read back to the start of the period, so older items could not be reached.",
@@ -71,7 +71,7 @@ export function missingLanguages(lane: ResearchLane): string[] {
 /** The state a reader is told for one lane.
  *
  *  Order matters, and follows the build's own `lane_summary_state`: a source that refused access
- *  reads as unavailable however much else was done, and a lane stopped by our allowance is never
+ *  reads as unavailable however much else was done, and a lane stopped by our search limit is never
  *  complete. "Complete" is only ever what the lane's own execution says, and only when every
  *  required language ran and the source was readable. Anything else that is not one of the named
  *  shortfalls is partial: never promoted. */
@@ -124,7 +124,7 @@ export function countStates(rows: LaneRow[]): Record<CoverageState, number> {
 }
 
 const CLAUSE: Record<Exclude<CoverageState, "complete">, string> = {
-  stopped: "stopped by the search allowance",
+  stopped: "stopped by the search limit",
   unavailable: "with the source unavailable",
   archive_limit: "limited by the source's archive or listing",
   partial: "partial",
@@ -134,7 +134,7 @@ const CLAUSE: Record<Exclude<CoverageState, "complete">, string> = {
 const CLAUSE_ORDER: Exclude<CoverageState, "complete">[] =
   ["stopped", "unavailable", "archive_limit", "partial", "not_started", "earlier_format"];
 
-/** "2 of 9 lanes declared complete; 2 stopped by the search allowance; …" — in words, never a ratio
+/** "2 of 9 lanes declared complete; 2 stopped by the search limit; …" — in words, never a ratio
  *  turned into a percentage. A state with no lane is left out rather than listed as zero, except the
  *  first clause, which is always stated. */
 export function coverageSummary(rows: LaneRow[], passCount: number): string {
@@ -195,22 +195,4 @@ export function workDone(lane: ResearchLane): string {
     parts.push(`${lane.items_enumerated.toLocaleString("en-GB")}${of} items listed or read`);
   }
   return parts.join("; ");
-}
-
-// Lane notes are fixed sentences or logged provenance. These rewrite only the project's internal
-// references (pass numbering, vocabulary keys) into words a reader can follow; no fact changes.
-const NOTE_RULES: [RegExp, string][] = [
-  [/\biteration \d+'s\b/g, "an earlier pass's"],
-  [/\biteration-\d+\b/g, "earlier-pass"],
-  [/\biteration \d+\b/g, "an earlier pass"],
-  [/\benumerated_complete\b/g, "fully enumerated"],
-  [/\bdeclared_search_complete\b/g, "declared search complete"],
-  [/\bThe execution value\b/g, "This state"],
-  [/\bthe two-dimension name\b/g, "the current name"],
-];
-
-export function laneNote(s: string | null | undefined): string {
-  let out = s ?? "";
-  for (const [re, to] of NOTE_RULES) out = out.replace(re, to);
-  return out;
 }

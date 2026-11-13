@@ -12,7 +12,7 @@ import {
 import { EventCard, fmtEventDate } from "./EventCard";
 import { EmptyCorpus } from "./EmptyCorpus";
 import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
-import { NO_SCORE_NOT_ZERO, RESEARCH_PREVIEW_DEFINITION, RESEARCH_PREVIEW_LABEL, noScorePlain } from "./countryCopy";
+import { NO_SCORE_NOT_ZERO, RESEARCH_PREVIEW_DEFINITION, RESEARCH_PREVIEW_LABEL, inSentence, noScorePlain } from "./countryCopy";
 import { eventAnchor } from "./evidence";
 import { loadContext, rowForSystem, type EnergyContext } from "./context";
 import { NationalFigures } from "./WorldContext";
@@ -267,7 +267,7 @@ export default function CountryView({ id }: { id: string }) {
             <div className="small">
               {/* Never "0 disruptions": nothing found in a search that has barely started is not a finding. */}
               <strong>No qualifying records in the current reviewed corpus.</strong> That describes this
-              dataset, not {sys.name}: it does not mean nothing happened. Reporting environment:{" "}
+              dataset, not {inSentence(sys.name)}: it does not mean nothing happened. Reporting environment:{" "}
               {labelFor(ENVIRONMENT_LABEL, sys.reporting_environment)}.
               {sys.campaign_state && sys.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && (
                 <> Attacks are reported in the news; a record is published only once a reported event meets the
@@ -313,7 +313,7 @@ export default function CountryView({ id }: { id: string }) {
             <p className="small">
               <span className="badge context-only-badge">Active-campaign publication safeguards apply</span>{" "}
               <strong>{labelFor(CAMPAIGN_STATE_LABEL, sys.campaign_state.state)}.</strong>{" "}
-              {sys.campaign_state.basis} Checked {fmtDate(sys.campaign_state.checked)}. While that holds, an attack
+              {readerText(sys.campaign_state.basis)} Checked {fmtDate(sys.campaign_state.checked)}. While that holds, an attack
               is recorded as having happened, with its date, the kind of infrastructure and the effect reported at
               the time. Whether a facility has been repaired, restarted or is operating is not published.
             </p>
@@ -717,7 +717,7 @@ function ContextPanel({ bundle, ctx, ctxFailed }: { bundle: CountryBundle; ctx: 
               <td className="mono">{typeof m.value === "number" ? m.value.toLocaleString("en-GB") : m.value ?? "—"}</td>
               <td className="small">{m.unit}{m.year ? ` · ${m.year}` : ""}
                 <div className="dim">{m.url ? <a href={m.url} target="_blank" rel="noreferrer">{m.source}</a> : m.source}</div>
-                {m.basis && <div className="dim">Basis: {m.basis}</div>}
+                {m.basis && <div className="dim">Basis: {readerText(m.basis)}</div>}
                 {m.note && <div className="dim">{readerText(m.note)}</div>}
               </td>
             </tr>
@@ -749,7 +749,7 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
               <tr key={x.name}>
                 <td>{x.name}</td>
                 <td className="small">{x.role}</td>
-                <td className="small dim">{x.licence}</td>
+                <td className="small dim">{readerText(x.licence)}</td>
                 <td className="small">
                   {x.last_checked ? fmtDate(x.last_checked) : "never"}
                   {x.publication_cadence && <div className="dim">Publishes: {x.publication_cadence}</div>}
@@ -831,7 +831,7 @@ function SourceHealthBlock({ h }: { h: SourceHealth }) {
           not opened, {h.opened.not_recorded} not recorded.</li>
         <li>{h.dated} of {h.citations} citations carry their own publication date. Languages: {langs}.</li>
       </ul>
-      <p className="small dim">{h.note}</p>
+      <p className="small dim">{readerText(h.note)}</p>
     </div>
   );
 }
@@ -962,14 +962,14 @@ function MethodPanel({ bundle }: { bundle: CountryBundle }) {
         <li>The national energy picture, as context: it describes the size of the energy system, never how disrupted it is.</li>
         <li>What the research searched, and what it could not read or has not reached yet.</li>
       </ul>
-      <p className="small">How {s.name} reports disruptions — <Disclosure label={labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}
+      <p className="small">How {inSentence(s.name)} reports disruptions — <Disclosure label={labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}
         text={s.reporting_environment_text} className="linklike" />. That shapes what can be found here as much as what happened.</p>
 
       <details className="small no-score-technical">
-        <summary>Technical detail: why the theatre method does not transfer</summary>
-        <p>The theatre index combines reported damage by sector, weighting each sector by its share of the monitored
+        <summary>Technical detail: why the Russia, Belarus &amp; Crimea method does not transfer</summary>
+        <p>The Russia, Belarus &amp; Crimea index combines reported damage by sector, weighting each sector by its share of the monitored
           capacity, lets each event's weight fade with a fixed half-life, and adds a measure of the power-transmission
-          network. Each of those parts was set for one theatre: its weights come from that infrastructure, the half-life
+          network. Each of those parts was set for that one area: its weights come from that infrastructure, the half-life
           from how that campaign's damage was reported and repaired, and the transmission measure from that grid.</p>
         <p>Here none of the three has a basis. There is no shared capacity denominator for the records, so a weight per
           sector would be invented. Recovery evidence is uneven and, for attacked facilities under the campaign
@@ -981,9 +981,9 @@ function MethodPanel({ bundle }: { bundle: CountryBundle }) {
 
       <details className="small">
         <summary>How a record is included</summary>
-        <p>{s.inclusion_threshold.rule}</p>
+        <p>{readerText(s.inclusion_threshold.rule)}</p>
         <ol>
-          {Object.entries(s.inclusion_threshold.clauses).map(([k, v]) => <li key={k} value={Number(k)}>{v}</li>)}
+          {Object.entries(s.inclusion_threshold.clauses).map(([k, v]) => <li key={k} value={Number(k)}>{readerText(v)}</li>)}
         </ol>
         <p className="dim">Inclusion rule version {s.inclusion_threshold.version}.</p>
       </details>

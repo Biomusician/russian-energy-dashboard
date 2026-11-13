@@ -1,4 +1,4 @@
-import { fillFitted } from "./canvasText";
+import { DIM, INK, SANS, fillFitted } from "./canvasText";
 import { fmtValue } from "./context";
 import type { GroupContext } from "./manifest";
 import { MEMBER_RAMP } from "./groupMap";
@@ -7,10 +7,7 @@ import { MEMBER_RAMP } from "./groupMap";
  *  so what it is and is not is written into the pixels: national totals, one year, one source,
  *  no facilities, no routes, and no status of anything. */
 
-const INK = "#d4dfea";
-const DIM = "#93a5b3";
 const BAND = "rgba(7, 9, 12, 0.9)";
-const SANS = '"Inter", system-ui, sans-serif';
 
 /** The brief always frames the whole group, clear of its title band, key and footer, whatever the
  *  reader had zoomed to or selected on the page: a brief about eight countries is not about one. */

@@ -4,6 +4,7 @@
 import type { Incident, RecoveryState } from "../types";
 import { CAUSE_COLOR, evidence, severityColor } from "../palette";
 import { fmtDate, fmtNum, titleCase } from "../data";
+import { readerText } from "../global/readerText";
 
 /** A dependency-free inline SVG sparkline (§18-19). Draws a value series as a filled line with
  *  the current scrubber position marked, so the dossier shows a trajectory at a glance rather
@@ -254,7 +255,7 @@ export function EventRow({
       )}
       {incident.notes && (
         <div style={{ fontSize: 10.5, color: "var(--text-dim)", marginTop: 4, lineHeight: 1.45 }}>
-          {incident.notes}
+          {readerText(incident.notes)}
         </div>
       )}
       {incident.sources.length > 0 ? (

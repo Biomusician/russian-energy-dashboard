@@ -7,6 +7,12 @@
 
 export const RESEARCH_PREVIEW_LABEL = "Research preview";
 
+/** A country's name inside a sentence: "How the United States reports", not "How United States
+ *  reports". Headings and lists keep the bare name. */
+export function inSentence(name: string): string {
+  return /^United /.test(name) ? `the ${name}` : name;
+}
+
 export const RESEARCH_PREVIEW_DEFINITION =
   "A research preview is a country added recently whose systematic search is still incomplete: some source "
   + "groups have not been fully searched and some sources could not be read at all, so the absence of a record is "
@@ -18,7 +24,7 @@ export const EMPTY_CORPUS_LEAD =
 
 /** The plain first paragraph of "Why no score". */
 export function noScorePlain(country: string): string {
-  return `The disruption score on the Russia-theatre page was designed for one conflict and one energy system. `
+  return `The disruption score on the Russia, Belarus & Crimea page was designed for one conflict and one energy system. `
     + `Its weights, and its assumptions about how quickly damaged infrastructure comes back, do not transfer to `
     + `${country}. Showing that score here would imply a precision this evidence does not have, so no score is `
     + `calculated for this country.`;

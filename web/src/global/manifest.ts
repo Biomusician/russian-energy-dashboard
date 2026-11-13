@@ -251,7 +251,7 @@ export interface ResearchLane {
   limitation?: string | null;
   finding?: string | null;
   carried_forward?: boolean;
-  /** Set when the pass's own search allowance ran out in this lane; the lane is then never complete. */
+  /** Set when the pass's own search limit was reached in this lane; the lane is then never complete. */
   stopped_by?: "search_limit" | null;
 }
 
@@ -808,7 +808,7 @@ export const LANE_STATE_LABEL: Record<string, string> = {
   declared_query_set_run: "Planned searches run (not exhaustive)",
   partially_searched: "Partly searched",
   blocked_by_source: "Blocked by the source",
-  stopped_by_search_limit: "Stopped when the search allowance ran out",
+  stopped_by_search_limit: "Stopped when the search limit was reached",
   not_started: "Not started",
   legacy: "Logged under the earlier format",
 };
