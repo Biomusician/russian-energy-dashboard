@@ -432,56 +432,93 @@ export interface CountryBundle {
   regions: GeoJSON.FeatureCollection;
 }
 
-let manifestPromise: Promise<Manifest> | null = null;
+// ---- loading: one request per file per page (iteration 21) ----------------------------------
+//
+// Every view and panel asks for what it needs and the same file is never fetched twice in a page:
+// the home, the Gulf overview and the switcher in every header all want the manifest, and a reader
+// going home -> Gulf -> home used to download the 430 KB world map three times. A failure is NOT
+// kept, so the next caller retries; a validated result is kept for the life of the page, which is
+// right for files that change only when the site is rebuilt.
+//
+// No abort signal reaches the shared request. A view that is left simply ignores the answer (each
+// view checks that it is still the one on screen), and the finished download is then ready if the
+// reader comes back.
 
-/** The manifest, fetched once per page. A failure is not cached: the next call retries. */
-export function loadManifest(): Promise<Manifest> {
-  if (!manifestPromise) {
-    manifestPromise = fetch(`${BASE}/global/manifest.json`, { cache: "no-cache" })
-      .then((r) => {
-        if (!r.ok) throw new Error(`manifest: HTTP ${r.status}`);
-        return r.json() as Promise<Manifest>;
-      })
-      .catch((err) => {
-        manifestPromise = null;
-        throw err;
-      });
-  }
-  return manifestPromise;
+const loads = new Map<string, Promise<unknown>>();
+
+export function once<T>(key: string, load: () => Promise<T>): Promise<T> {
+  const held = loads.get(key) as Promise<T> | undefined;
+  if (held) return held;
+  const p = load();
+  loads.set(key, p);
+  p.catch(() => { if (loads.get(key) === p) loads.delete(key); });
+  return p;
 }
 
-async function getJson<T>(path: string, signal: AbortSignal): Promise<T> {
-  const r = await fetch(`${BASE}/${path}`, { signal, cache: "no-cache" });
+/** Test seam: forget every held request. */
+export function forgetLoads() {
+  loads.clear();
+}
+
+async function getJson<T>(path: string): Promise<T> {
+  const r = await fetch(`${BASE}/${path}`, { cache: "no-cache" });
   if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`);
   return r.json() as Promise<T>;
 }
 
-/** One country's three files. Aborting `signal` abandons the load, so a slow response for the
- *  country the reader just left can never land on the one they moved to. */
-export async function loadCountry(entry: ManifestSystem, signal: AbortSignal): Promise<CountryBundle> {
-  const [system, events, regions] = await Promise.all([
-    getJson<CountrySystem>(`${entry.root}/system.json`, signal),
-    getJson<{ events: CountryEvent[]; episodes?: Episode[] }>(`${entry.root}/events.json`, signal),
-    getJson<GeoJSON.FeatureCollection>(`${entry.root}/regions.geojson`, signal),
-  ]);
-  if (system.system_id !== entry.id) {
-    throw new Error(`${entry.root}/system.json describes ${system.system_id}, not ${entry.id}`);
-  }
-  const bad = shapeProblems(system, events, regions);
-  if (bad.length) throw new Error(`${entry.root}: malformed payload (${bad.join(", ")})`);
-  return { system, events: events.events, episodes: events.episodes ?? [], regions };
+/** The manifest, fetched once per page. A malformed one is refused here, so every view fails as
+ *  "the system list is unavailable" instead of throwing while it renders. */
+export function loadManifest(): Promise<Manifest> {
+  return once("global/manifest.json", async () => {
+    const m = await getJson<Manifest>("global/manifest.json");
+    const bad = manifestProblems(m);
+    if (bad.length) throw new Error(`manifest malformed (${bad.join(", ")})`);
+    return sanitizeManifest(m);
+  });
+}
+
+/** One country's three files, validated, fetched once per page. */
+export function loadCountry(entry: ManifestSystem): Promise<CountryBundle> {
+  return once(`country:${entry.id}`, async () => {
+    const [system, events, regions] = await Promise.all([
+      getJson<CountrySystem>(`${entry.root}/system.json`),
+      getJson<{ events: CountryEvent[]; episodes?: Episode[] }>(`${entry.root}/events.json`),
+      getJson<GeoJSON.FeatureCollection>(`${entry.root}/regions.geojson`),
+    ]);
+    if (system.system_id !== entry.id) {
+      throw new Error(`${entry.root}/system.json describes ${system.system_id}, not ${entry.id}`);
+    }
+    const bad = shapeProblems(system, events, regions);
+    if (bad.length) throw new Error(`${entry.root}: malformed payload (${bad.join(", ")})`);
+    return { system, events: events.events, episodes: events.episodes ?? [], regions };
+  });
+}
+
+/** Start loading a country before the reader opens it: on an explicit hover or focus of a link to
+ *  it, never for every system at once. Silent: the view's own load reports any failure, and a
+ *  failed prefetch is not kept, so the view retries. */
+export function prefetchCountry(id: string): void {
+  loadManifest()
+    .then((m) => {
+      const e = m.systems.find((s) => s.id === id && s.kind === "country");
+      return e ? loadCountry(e) : undefined;
+    })
+    .catch(() => undefined);
 }
 
 /** One country's system.json alone (iteration 21), for a view that describes a system without its
  *  events or map. Refused on the same terms as a full load. */
-export async function loadCountrySystem(entry: ManifestSystem, signal: AbortSignal): Promise<CountrySystem> {
-  const system = await getJson<CountrySystem>(`${entry.root}/system.json`, signal);
-  if (system.system_id !== entry.id) {
-    throw new Error(`${entry.root}/system.json describes ${system.system_id}, not ${entry.id}`);
-  }
-  const bad = shapeProblems(system, { events: [] });
-  if (bad.length) throw new Error(`${entry.root}: malformed payload (${bad.join(", ")})`);
-  return system;
+export function loadCountrySystem(entry: ManifestSystem): Promise<CountrySystem> {
+  // Validated inside once(): a refused file rejects, and a rejection is never kept, so it is retried.
+  return once(`system:${entry.id}`, async () => {
+    const system = await getJson<CountrySystem>(`${entry.root}/system.json`);
+    if (system.system_id !== entry.id) {
+      throw new Error(`${entry.root}/system.json describes ${system.system_id}, not ${entry.id}`);
+    }
+    const bad = shapeProblems(system, { events: [] });
+    if (bad.length) throw new Error(`${entry.root}: malformed payload (${bad.join(", ")})`);
+    return system;
+  });
 }
 
 /** The parts of a country payload the view reads without a guard. A malformed one is refused at
@@ -529,23 +566,173 @@ export function shapeProblems(system: unknown, events: unknown, regions?: unknow
       || (q.lanes !== undefined && !(Array.isArray(q.lanes)
         && (q.lanes as unknown[]).every((l) => obj(l) && typeof (l as Record<string, unknown>).lane === "string")));
   })) out.push("a research pass lacks its date, kind or window, or has a lane without an id");
-  const rcv = s.recovery_coverage as Record<string, unknown> | undefined;
-  if (rcv !== undefined && rcv !== null && !(obj(rcv) && obj(rcv.unresearched_by_class))) out.push("recovery_coverage is malformed");
-  const cq = s.citation_quality as Record<string, unknown> | undefined;
-  if (cq !== undefined && cq !== null && !(obj(cq) && obj(cq.languages) && obj(cq.event_date_precision))) {
-    out.push("citation_quality is malformed");
-  }
   if (!Array.isArray(e.events)) out.push("events is not a list");
+  // Iteration 21: the rest of what the page reads without a guard, found by reading every
+  // `.map`/`Object.entries` in the country view and its export.
+  const field = (block: unknown, key: string) => (obj(block) ? (block as Record<string, unknown>)[key] : undefined);
+  if (typeof s.evidence_readiness !== "string") out.push("evidence_readiness is missing");
+  if (obj(s.profile) && !Array.isArray(field(s.profile, "metrics"))) out.push("profile.metrics is not a list");
+  if (obj(s.inclusion_threshold) && !obj(field(s.inclusion_threshold, "clauses"))) out.push("inclusion_threshold.clauses is missing");
+  const box = (b: unknown) => Array.isArray(b) && b.length === 4 && b.every((x) => typeof x === "number" && Number.isFinite(x));
+  if (obj(s.geography) && !box(field(s.geography, "view_bounds")) && !box(field(s.geography, "bounds"))) {
+    out.push("geography.bounds is not a box");
+  }
+  if (obj(log) && Array.isArray(log!.passes) && (log!.passes as unknown[]).some((p) => !obj(p) || !obj((p as Record<string, unknown>).outcome))) {
+    out.push("a research pass lacks its outcome");
+  }
+  // Optional blocks, read unguarded inside when present.
+  const optional: [string, string[]][] = [
+    ["source_families", ["labels"]],
+    ["citation_quality", ["languages", "event_date_precision"]],
+    ["recovery_coverage", ["unresearched_by_class"]],
+  ];
+  for (const [k, inner] of optional) {
+    const b = s[k];
+    if (b !== undefined && b !== null && !(obj(b) && inner.every((i) => obj(field(b, i))))) out.push(`${k} is malformed`);
+  }
+  if (regions !== undefined && obj(regions) && Array.isArray((regions as Record<string, unknown>).features)
+      && ((regions as Record<string, unknown>).features as unknown[]).some((f) => !obj(f))) {
+    out.push("a region feature is not an object");
+  }
   return out;
 }
 
+/** The parts of the manifest every view reads without a guard. A required part missing refuses the
+ *  manifest; an optional part that is malformed is dropped by `sanitizeManifest` instead, so a bad
+ *  corpus total costs one panel, not the system list (iteration 21). */
+export function manifestProblems(x: unknown): string[] {
+  const m = (x ?? {}) as Record<string, unknown>;
+  const obj = (v: unknown) => typeof v === "object" && v !== null && !Array.isArray(v);
+  const out: string[] = [];
+  if (!Array.isArray(m.systems) || m.systems.length === 0) {
+    out.push("systems is not a list");
+  } else if ((m.systems as unknown[]).some((s) => {
+    const r = s as Record<string, unknown>;
+    return !obj(s) || typeof r.id !== "string" || typeof r.name !== "string" || typeof r.root !== "string"
+      || (r.kind !== "theatre" && r.kind !== "country") || typeof r.evidence_readiness !== "string"
+      || typeof r.reporting_environment !== "string";
+  })) {
+    out.push("a system lacks its id, name, kind, root, readiness or reporting environment");
+  }
+  const sel = m.selection as Record<string, unknown> | undefined;
+  if (!obj(sel) || typeof sel!.rule !== "string" || typeof sel!.source_url !== "string") out.push("selection is missing");
+  if (!obj(m.reporting_environments)) out.push("reporting_environments is missing");
+  return out;
+}
+
+/** Drop optional manifest parts that would throw where they are read. Never invents a value. */
+export function sanitizeManifest(m: Manifest): Manifest {
+  const obj = (v: unknown) => typeof v === "object" && v !== null && !Array.isArray(v);
+  const strings = (v: unknown) => Array.isArray(v) && v.every((s) => typeof s === "string");
+  const box = (b: unknown) => Array.isArray(b) && b.length === 4 && b.every((x) => typeof x === "number" && Number.isFinite(x));
+  const out: Manifest = { ...m };
+  if (out.corpus !== undefined && !obj(out.corpus)) delete out.corpus;
+  if (out.groups !== undefined) {
+    const kept: Record<string, ManifestGroup> = {};
+    if (obj(out.groups)) {
+      for (const [id, g] of Object.entries(out.groups)) {
+        if (obj(g) && typeof g.label === "string" && strings(g.members)) kept[id] = g;
+      }
+    }
+    out.groups = kept;
+  }
+  out.systems = m.systems.map((s) => {
+    const t: ManifestSystem = { ...s };
+    if (t.aliases !== undefined && !strings(t.aliases)) delete t.aliases;
+    if (t.regional_groups !== undefined && !strings(t.regional_groups)) delete t.regional_groups;
+    if (t.bounds !== undefined && !box(t.bounds)) delete t.bounds;
+    if (t.headline !== null && t.headline !== undefined && !(obj(t.headline) && typeof t.headline.value === "number")) t.headline = null;
+    return t;
+  });
+  return out;
+}
+
+/** The parts of a regional context file the overview reads without a guard (iteration 21). */
+export function groupContextProblems(x: unknown): string[] {
+  const c = (x ?? {}) as Record<string, unknown>;
+  const obj = (v: unknown) => typeof v === "object" && v !== null && !Array.isArray(v);
+  const out: string[] = [];
+  if (!obj(c.metrics) || Object.keys(c.metrics as object).length === 0
+      || Object.values(c.metrics as object).some((m) => !obj(m) || typeof (m as Record<string, unknown>).label !== "string")) {
+    out.push("metrics is missing");
+  }
+  if (!Array.isArray(c.systems) || (c.systems as unknown[]).some((s) => {
+    const r = s as Record<string, unknown>;
+    return !obj(s) || typeof r.system_id !== "string" || typeof r.a3 !== "string" || !obj(r.values)
+      || !obj(r.lane_states) || !Array.isArray(r.languages_required) || !Array.isArray(r.languages_executed);
+  })) {
+    out.push("a system lacks its id, values, lane states or languages");
+  }
+  const ms = c.memberships as Record<string, unknown> | undefined;
+  if (!obj(ms) || !obj(ms!.gcc) || !obj(ms!.opec)) out.push("memberships is missing");
+  if (!obj(c.region) || (obj(c.metrics) && Object.keys(c.metrics as object).some((k) => !obj((c.region as Record<string, unknown>)?.[k])))) {
+    out.push("region totals are missing");
+  }
+  if (!obj(c.sources)) out.push("sources is missing");
+  if (c.member_names !== undefined && !Array.isArray(c.member_names)) out.push("member_names is not a list");
+  const rec = c.recent as Record<string, unknown> | undefined;
+  if (rec !== undefined && rec !== null && !(obj(rec) && recentProblems(rec).length === 0)) out.push("recent is malformed");
+  return out;
+}
+
+/** The recent-evidence list, on the home and inside a regional context (iteration 21). */
+export function recentProblems(x: unknown): string[] {
+  const r = (x ?? {}) as Record<string, unknown>;
+  const obj = (v: unknown) => typeof v === "object" && v !== null && !Array.isArray(v);
+  if (!Array.isArray(r.episodes)) return ["episodes is not a list"];
+  const bad = (r.episodes as unknown[]).some((e) => {
+    const ep = e as Record<string, unknown>;
+    return !obj(e) || typeof ep.system_id !== "string" || typeof ep.first_date !== "string"
+      || !Array.isArray(ep.classes) || !Array.isArray(ep.causes) || !Array.isArray(ep.members)
+      || (ep.members as unknown[]).some((m) => !obj(m));
+  });
+  return bad ? ["an episode lacks its date, classes, causes or members"] : [];
+}
+
+/** The data-quality summary on the home (iteration 21). */
+export function dataQualityProblems(x: unknown): string[] {
+  const d = (x ?? {}) as Record<string, unknown>;
+  const obj = (v: unknown) => typeof v === "object" && v !== null && !Array.isArray(v);
+  const out: string[] = [];
+  if (!obj(d.context_vintage)) out.push("context_vintage is missing");
+  if (!Array.isArray(d.systems) || (d.systems as unknown[]).some((s) => {
+    const r = s as Record<string, unknown>;
+    return !obj(s) || !Array.isArray(r.lanes) || !Array.isArray(r.sources_checked) || !obj(r.lane_states) || !obj(r.source_families)
+      || (r.lanes as unknown[]).some((l) => !obj(l));
+  })) {
+    out.push("a system lacks its lanes, sources or states");
+  }
+  const rb = d.recovery_by_class as Record<string, unknown> | undefined;
+  if (!obj(rb) || !Array.isArray(rb!.rows)) out.push("recovery_by_class.rows is not a list");
+  return out;
+}
+
+/** Map polygons (the world, or a country's regions): a feature list of objects. Anything else is
+ *  refused before MapLibre sees it. */
+export function geometryProblems(x: unknown): string[] {
+  const fc = (x ?? {}) as Record<string, unknown>;
+  if (!Array.isArray(fc.features)) return ["features is not a list"];
+  return (fc.features as unknown[]).some((f) => typeof f !== "object" || f === null) ? ["a feature is not an object"] : [];
+}
+
+/** Fetch a file once, refusing it if `problems` finds anything: a refused file fails like a missing
+ *  one, as "could not be loaded", and never reaches a component half-formed. */
+function validated<T>(path: string, problems: (x: unknown) => string[]): Promise<T> {
+  return once(path, async () => {
+    const x = await getJson<T>(path);
+    const bad = problems(x);
+    if (bad.length) throw new Error(`${path}: malformed (${bad.join(", ")})`);
+    return x;
+  });
+}
+
 export function loadRecentEvidence(): Promise<RecentEvidence> {
-  return getJson<RecentEvidence>("global/recent_evidence.json", new AbortController().signal);
+  return validated<RecentEvidence>("global/recent_evidence.json", recentProblems);
 }
 
 /** A regional overview's context file, named by the manifest (`groups.<id>.context`). */
-export function loadGroupContext(path: string, signal: AbortSignal): Promise<GroupContext> {
-  return getJson<GroupContext>(path, signal);
+export function loadGroupContext(path: string): Promise<GroupContext> {
+  return validated<GroupContext>(path, groupContextProblems);
 }
 
 /** The group a `?group=` slug names, or null. Own keys only: a slug is reader input. */
@@ -557,11 +744,11 @@ export function groupBySlug(m: Manifest, slug: string): { id: string; group: Man
 }
 
 export function loadDataQuality(): Promise<DataQuality> {
-  return getJson<DataQuality>("global/data_quality.json", new AbortController().signal);
+  return validated<DataQuality>("global/data_quality.json", dataQualityProblems);
 }
 
-export async function loadWorld(signal: AbortSignal): Promise<GeoJSON.FeatureCollection> {
-  return getJson<GeoJSON.FeatureCollection>("global/world.geojson", signal);
+export function loadWorld(): Promise<GeoJSON.FeatureCollection> {
+  return validated<GeoJSON.FeatureCollection>("global/world.geojson", geometryProblems);
 }
 
 // ---- display vocabulary ---------------------------------------------------------------------

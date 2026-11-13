@@ -6,7 +6,10 @@ import {
   ENVIRONMENT_LABEL, READINESS_LABEL, labelFor, loadManifest, loadWorld,
   type Manifest, type ManifestSystem,
 } from "./manifest";
+import { loadContext, type EnergyContext } from "./context";
 import { navigate, navigateGroup } from "./router";
+import { prefetchOn } from "./prefetch";
+import { PanelBoundary } from "../components/ViewBoundary";
 import { fmtDate, fmtNum } from "../data";
 
 /** The global home (iteration 14).
@@ -26,14 +29,27 @@ export default function GlobalHome() {
   const [world, setWorld] = useState<GeoJSON.FeatureCollection | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [groupFilter, setGroupFilter] = useState("all");
+  // Whether the manifest and the national context have each arrived or failed. The page body waits
+  // for both: each inserted a block above the map when it landed, and together they moved the whole
+  // first screen (measured layout shift 0.86 before iteration 21). The map, the largest file, draws
+  // into a box of fixed size and does not wait.
+  const [manifestSettled, setManifestSettled] = useState(false);
+  const [ctxSettled, setCtxSettled] = useState(false);
+  const [ctx, setCtx] = useState<EnergyContext | null>(null);
+  const [ctxError, setCtxError] = useState<string | null>(null);
 
   useEffect(() => {
-    const ctl = new AbortController();
-    loadManifest().then(setManifest).catch((e) => setError(String(e)));
-    loadWorld(ctl.signal).then(setWorld).catch((e) => {
-      if (!ctl.signal.aborted) setError(String(e));
+    let live = true;
+    loadManifest().then((m) => { if (live) setManifest(m); })
+      .catch((e) => { if (live) setError(String(e)); })
+      .finally(() => { if (live) setManifestSettled(true); });
+    loadContext().then((c) => { if (live) setCtx(c); })
+      .catch((e) => { if (live) setCtxError(e instanceof Error ? e.message : String(e)); })
+      .finally(() => { if (live) setCtxSettled(true); });
+    loadWorld().then((w) => { if (live) setWorld(w); }).catch((e) => {
+      if (live) setError(String(e));
     });
-    return () => ctl.abort();
+    return () => { live = false; };
   }, []);
 
   useEffect(() => { document.title = "Energy Disruption Monitor — overview"; }, []);
@@ -57,6 +73,9 @@ export default function GlobalHome() {
         <SystemSwitcher current={null} />
       </header>
 
+      {!(manifestSettled && ctxSettled) ? (
+        <main className="global-main"><p className="dim" role="status">Loading…</p></main>
+      ) : (
       <main className="global-main">
         {manifest && (
           <p className="comparability" role="note">{manifest.comparability_statement}</p>
@@ -74,7 +93,9 @@ export default function GlobalHome() {
           unmonitored country has no disruption record here, which is not the same as no disruptions.
         </p>
 
-        <WorldContext world={world} worldError={error} manifest={manifest} />
+        <PanelBoundary label="The world energy map">
+          <WorldContext world={world} worldError={error} manifest={manifest} ctx={ctx} ctxError={ctxError} />
+        </PanelBoundary>
 
         <h2 className="level-head">Monitored systems</h2>
         {groups.length > 0 && (
@@ -91,11 +112,15 @@ export default function GlobalHome() {
             {filterGroup && <span className="small dim">{filterGroup.note}</span>}
           </div>
         )}
-        <section aria-label="Monitored systems" className="sys-cards">
-          {manifest && cards.map((s) => <SystemCard key={s.id} s={s} manifest={manifest} />)}
-        </section>
+        <PanelBoundary label="The list of monitored systems">
+          <section aria-label="Monitored systems" className="sys-cards">
+            {manifest && cards.map((s) => <SystemCard key={s.id} s={s} manifest={manifest} />)}
+          </section>
+        </PanelBoundary>
 
-        <RecentEvidencePanel />
+        <PanelBoundary label="Recent evidence">
+          <RecentEvidencePanel />
+        </PanelBoundary>
 
         {manifest && (
           <section className="panel global-note">
@@ -116,8 +141,11 @@ export default function GlobalHome() {
             </p>
           </section>
         )}
-        <DataQualityPanel />
+        <PanelBoundary label="Data quality">
+          <DataQualityPanel />
+        </PanelBoundary>
         {manifest?.corpus && (
+          <PanelBoundary label="The country record totals">
           <section className="panel global-note corpus-totals" aria-label="Country record, all countries together">
             <h2 className="eyebrow">The country record so far, all {manifest.corpus.countries} countries together</h2>
             <p className="small">
@@ -130,8 +158,10 @@ export default function GlobalHome() {
             </p>
             <p className="small dim">{manifest.corpus.note}</p>
           </section>
+          </PanelBoundary>
         )}
       </main>
+      )}
     </div>
   );
 }
@@ -163,7 +193,7 @@ function SystemCard({ s, manifest }: { s: ManifestSystem; manifest: Manifest }) 
         Reporting: {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}
       </div>
       <div className="small dim">Site rebuilt {fmtDate(s.as_of)}</div>
-      <button className="ghost" onClick={() => navigate(s.id)}>Open {s.name}</button>
+      <button className="ghost" onClick={() => navigate(s.id)} {...prefetchOn(s.id)}>Open {s.name}</button>
     </article>
   );
 }

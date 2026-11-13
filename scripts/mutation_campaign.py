@@ -1250,6 +1250,37 @@ ITER21_COMPARE_MUTATIONS = [
 ]
 MUTATIONS += ITER21_COMPARE_MUTATIONS
 
+# Iteration 21: route performance and failure containment. The browser tests in
+# web/e2e/resilience.e2e.ts catch each of these too; these guards are the ones this sandbox can run.
+ITER21_PERF_MUTATIONS = [
+    ("the views lose their error boundary",
+     [("web/src/Root.tsx", _text('<ViewBoundary key={view.key} label={view.label} cleanHref={view.cleanHref} home={route.view === "home"}>', "<>")),
+      ("web/src/Root.tsx", _text("</ViewBoundary>", "</>"))],
+     "every_route_renders_inside_a_view_boundary"),
+    ("a failed view's boundary carries over into the next view",
+     [("web/src/Root.tsx", _text("<ViewBoundary key={view.key} ", "<ViewBoundary "))],
+     "every_route_renders_inside_a_view_boundary"),
+    ("the manifest is fetched again by every caller",
+     [("web/src/global/manifest.ts", _text('return once("global/manifest.json", async () => {', "return (async () => {")),
+      ("web/src/global/manifest.ts", _text("    return sanitizeManifest(m);\n  });\n}", "    return sanitizeManifest(m);\n  })();\n}"))],
+     "every_global_loader_goes_through"),
+    ("a failed request is kept, so a broken file never loads again",
+     [("web/src/global/manifest.ts", _text("  p.catch(() => { if (loads.get(key) === p) loads.delete(key); });\n", "  p.catch(() => undefined);\n"))],
+     "every_global_loader_goes_through"),
+    ("a broken country payload hovered on the home becomes an unhandled rejection",
+     [("web/src/global/manifest.ts", _text("      return e ? loadCountry(e) : undefined;\n    })\n    .catch(() => undefined);",
+                                           "      return e ? loadCountry(e) : undefined;\n    });"))],
+     "prefetch_never_reports"),
+    ("a home panel failure takes the whole home down",
+     [("web/src/global/GlobalHome.tsx", _text('        <PanelBoundary label="Recent evidence">\n          <RecentEvidencePanel />\n        </PanelBoundary>',
+                                              "        <RecentEvidencePanel />"))],
+     "home_panels_each_have_their_own_boundary"),
+    ("the regional context is drawn without validation",
+     [("web/src/global/manifest.ts", _text("validated<GroupContext>(path, groupContextProblems)", "validated<GroupContext>(path, () => [])"))],
+     "shape_validation_covers"),
+]
+MUTATIONS += ITER21_PERF_MUTATIONS
+
 
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
@@ -1264,7 +1295,7 @@ def _sandbox():
 
 
 TEST_FILES = ("tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py",
-              "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py", "tests/test_compare.py")
+              "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py", "tests/test_compare.py", "tests/test_iteration21_performance.py")
 
 
 def _run(box, k):

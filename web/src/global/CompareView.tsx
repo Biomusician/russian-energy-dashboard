@@ -63,7 +63,7 @@ export default function CompareView({ ids }: { ids: string[] }) {
     for (const entry of resolved.columns) {
       if (entry.kind !== "country" || started.current.has(entry.id)) continue;
       started.current.add(entry.id);
-      loadCountrySystem(entry, signal)
+      loadCountrySystem(entry)
         .then((system) => setLoaded((l) => ({ ...l, [entry.id]: { status: "loaded", system } })))
         .catch(() => {
           if (!signal.aborted) setLoaded((l) => ({ ...l, [entry.id]: { status: "failed", system: null } }));
