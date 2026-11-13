@@ -1467,7 +1467,13 @@ PASS_SCOPE = (r"inclusion clauses 1-7 as written; lanes and queries declared bef
               r"|continuation of the iteration-19 pass: lanes as declared in docs/countries/[A-Z0-9_]+\.md, work order in "
               r"docs/countries/GULF_CONTINUATION_PLAN_20\.md; each lane states its execution after both passes; inclusion "
               r"clauses 1-7 read strictly; every published record reviewed blind by three independent roles and confirmed "
-              r"on its final text")
+              r"on its final text"
+              # Iteration 21: the second continuation, for the lanes the allowance stopped.
+              r"|continuation of the iteration-20 pass: the remaining declared queries of lanes the shared search "
+              r"allowance had stopped, and one archive lane, as declared in docs/countries/[A-Z0-9_]+\.md; lanes not "
+              r"worked in this pass keep their iteration-20 state and are marked carried forward; inclusion clauses 1-7 "
+              r"read strictly; every published record reviewed blind by three independent roles and confirmed on its "
+              r"final text")
 
 
 @needs_payload
