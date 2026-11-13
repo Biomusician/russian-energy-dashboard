@@ -40,7 +40,7 @@ def test_every_route_renders_inside_a_view_boundary_keyed_on_the_route():
 
 def test_the_home_panels_each_have_their_own_boundary():
     home = _read("global/GlobalHome.tsx")
-    for panel in ("<WorldContext", "<RecentEvidencePanel", "<DataQualityPanel", 'className="sys-cards"'):
+    for panel in ("<WorldContext", "<RecentEvidencePanel", "<WhatsNew", "<DataQualityPanel", 'className="home-systems"'):
         at = home.index(panel)
         opened = home.rfind("<PanelBoundary", 0, at)
         closed = home.rfind("</PanelBoundary>", 0, at)
