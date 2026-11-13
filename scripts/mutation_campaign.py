@@ -1152,6 +1152,30 @@ ITER20_MUTATIONS = [
 ]
 MUTATIONS += ITER20_MUTATIONS
 
+# The Research Coverage Explorer. The lane logic is the shipped TypeScript, executed under Node by
+# tests/test_research_coverage.py, so these break the frontend rule itself, not a copy of it.
+LANES = "web/src/global/laneCoverage.ts"
+RESEARCH_MUTATIONS = [
+    ("a lane whose source refused access reads as complete",
+     [(LANES, _text('  if (win === "inaccessible") return "unavailable";', '  if (win === "inaccessible") return "complete";'))],
+     "blocked_and_stopped_lanes_are_never_complete"),
+    ("a lane stopped by the search allowance reads as complete",
+     [(LANES, _text('  if (lane.stopped_by === "search_limit") return "stopped";', '  if (lane.stopped_by === "search_limit") return "complete";'))],
+     "blocked_and_stopped_lanes_are_never_complete"),
+    ("a lane that skipped a required language reads as complete",
+     [(LANES, _text(' && win !== "unknown" && missingLanguages(lane).length === 0) {', ' && win !== "unknown") {'))],
+     "missing_a_language"),
+    ("source health is shown as research coverage",
+     [("web/src/global/ResearchCoverage.tsx", _text(
+         'className="eyebrow rc-sh-head">Source health: the citations behind the published events</h3>',
+         'className="eyebrow rc-sh-head">Research coverage: the citations behind the published events</h3>'))],
+     "kept_apart_from_source_health"),
+    ("a campaign system's pass history shows its held count",
+     [(LANES, _text("  if (restricted) {\n    return p.under_review", "  if (restricted && false) {\n    return p.under_review"))],
+     "render_no_count_from_the_research_outcome"),
+]
+MUTATIONS += RESEARCH_MUTATIONS
+
 
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
@@ -1166,7 +1190,7 @@ def _sandbox():
 
 
 TEST_FILES = ("tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py",
-              "tests/test_iteration20.py")
+              "tests/test_iteration20.py", "tests/test_research_coverage.py")
 
 
 def _run(box, k):
