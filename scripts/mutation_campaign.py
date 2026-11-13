@@ -891,9 +891,12 @@ ITER20_MUTATIONS = [
      [("pipeline/build_systems.py", _text("or not eid.startswith(\n                    f\"{system_id}-{e.get('date')}-{e.get('asset_class', '').replace('_', '-')}-attack-\"):",
                                           "or False:"))],
      "opaque_id_names_the_class"),
+    # Iteration 21 (safety red team): no lane-written id is kept at all, strict form or not.
     ("the import keeps a lane-written id with free-text middle words",
-     [("scripts/import_candidates.py", _text(' and r["candidate_id"].startswith(prefix):', ':'))],
-     "lane_written_id_is_kept_only"),
+     [("scripts/import_candidates.py", _text('    material = f"{system_id}|{r[\'candidate_id\']}".encode("utf-8")\n',
+                                             '    if "-attack-" in r["candidate_id"]:\n        return r["candidate_id"]\n'
+                                             '    material = f"{system_id}|{r[\'candidate_id\']}".encode("utf-8")\n'))],
+     "lane_written_id_is_never_kept"),
     ("the build trusts the import to strip a campaign record's headline",
      [("pipeline/build_systems.py", _text('        if any(s.get("title_original") or s.get("title_en") for s in e["sources"]):\n            problems.append',
                                           '        if False:\n            problems.append')),
@@ -1399,6 +1402,52 @@ ITER21_MUTATIONS = [
 MUTATIONS += ITER21_MUTATIONS
 
 
+# Iteration 21 safety red team (tests/test_iteration21_safety.py): opaque ids, the committed
+# link-health file, What's new re-review notes and held-record wording under the campaign rule.
+SA_GAP = ("Non-conflict incidents remain thin: Saudi outage reporting found states residents affected rather than "
+          "customers, so the customer threshold usually cannot be shown met.")
+ITER21_SAFETY_MUTATIONS = [
+    ("an opaque id's token is the unkeyed hash of the queue id",
+     [("scripts/import_candidates.py", _text("hmac.new(key or opaque_key(), material, hashlib.sha256).hexdigest()[:6]",
+                                             'hashlib.sha1(r["candidate_id"].encode("utf-8")).hexdigest()[:6]'))],
+     "cannot_be_matched_by_hashing"),
+    ("the build accepts a lane's own numbering as an opaque token",
+     [("pipeline/build_systems.py", _text('            elif not re.fullmatch(OPAQUE_TOKEN, eid.rsplit("-attack-", 1)[1]):',
+                                          '            elif False:'))],
+     "token_is_not_the_keyed_hash"),
+    ("the build no longer checks the committed link-health file",
+     [("pipeline/build_systems.py", _text("        problems = link_health_problems(read_json(LINK_HEALTH), curated)",
+                                          "        problems = []"))],
+     "build_runs_the_link_health_gate"),
+    ("a withdrawn record's citation may stay in the link-health states",
+     [("pipeline/build_systems.py", _text('    for key in ("link_states", "page_stated_dates"):', "    for key in ():"))],
+     "withdrawn_records_citation_left or unpublished_address"),
+    ("a withdrawn record's citation may stay in a country's link-check count",
+     [("pipeline/build_systems.py", _text("        elif sum(counts.values()) > len(per_system[sid]):", "        elif False:"))],
+     "withdrawn_records_citation_left"),
+    ("What's new announces a re-review in a campaign system",
+     [("pipeline/whats_new.py", _text('    if not is_restricted and (curr_sys.get("record_reviewed") or "")',
+                                      '    if (curr_sys.get("record_reviewed") or "")'))],
+     "re_review_of_a_campaign_record"),
+    ("a campaign system's re-review shows as a build-only change",
+     [("pipeline/whats_new.py", _text('"publication_policy", "record_reviewed")', '"publication_policy")'))],
+     "re_review_of_a_campaign_record"),
+    ("the held-wording gate is not applied to campaign systems",
+     [("pipeline/build_systems.py", _text("        problems += held_wording_problems(doc, research_log)", "        pass"))],
+     "held_wording_gate_to_campaign_systems_only"),
+    ("a campaign system's stated gap counts a held record again",
+     [("data/curated/systems/sa/system.json", _text(
+         SA_GAP, "Non-conflict incidents remain thin: one 2024 power outage is reported in residents, not customers, "
+                 "and is held rather than converted."))],
+     "no_campaign_system_states_a_held_record"),
+    ("the held-wording rule sees only the word withheld",
+     [("pipeline/build_systems.py", _text(r'HELD_WORDING = re.compile(r"\b(held|holds?|withheld|candidates?|on hold)\b", re.I)',
+                                          r'HELD_WORDING = re.compile(r"\b(withheld)\b", re.I)'))],
+     "held_count_in_a_campaign"),
+]
+MUTATIONS += ITER21_SAFETY_MUTATIONS
+
+
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
     for d in COPY_DIRS:
@@ -1412,7 +1461,7 @@ def _sandbox():
 
 
 TEST_FILES = ("tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py",
-              "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py", "tests/test_compare.py", "tests/test_iteration21_performance.py", "tests/test_iteration21_home.py", "tests/test_iteration21_theatre_ux.py", "tests/test_iteration21_country.py", "tests/test_whats_new.py")
+              "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py", "tests/test_compare.py", "tests/test_iteration21_performance.py", "tests/test_iteration21_home.py", "tests/test_iteration21_theatre_ux.py", "tests/test_iteration21_country.py", "tests/test_whats_new.py", "tests/test_iteration21_safety.py")
 
 
 def _run(box, k):

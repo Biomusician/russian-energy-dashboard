@@ -235,6 +235,10 @@ MATURITY = ("monitored", "research_preview")
 # Id of a kinetic record where policy puts such records at country level: date, class, a counter or
 # hash. It names no facility, because an id travels into feeds, ledgers and review files.
 OPAQUE_ID = r"{cc}-\d{{4}}-\d{{2}}(-\d{{2}})?-[a-z-]+-attack-[0-9a-z]{{1,6}}"
+# The token the import writes: six hex digits of a keyed hash (safety red team, iteration 21). A
+# counter ("-attack-2") says a sibling candidate of the same date and class exists, held or not,
+# and an unkeyed hash of a queue id that names the plant can be matched by guessing names.
+OPAQUE_TOKEN = r"[0-9a-f]{6}"
 RECOVERY_FIELDS = ("research_status", "kind", "date", "evidence", "url")
 # WITHHELD_ACTIVE_CAMPAIGN is a PUBLICATION state, not a research result: the record belongs to a
 # kinetic campaign that is still active, so its facility-specific recovery status is not published
@@ -481,6 +485,25 @@ LANE_SUMMARY_STATES = ("stopped_by_search_limit", "universe_searched", "current_
 # the committed log of such a system carries no counts either: they are in the local
 # data/candidates/research_outcomes.json, and the public log has `under_review` only.
 PUBLIC_OUTCOME_UNDER_CAMPAIGN = ()
+
+
+# Prose that tells a reader of a held or candidate record. Under the campaign rule the served log
+# says only whether review continues (`under_review`); a stated gap such as "one 2024 outage ... is
+# held" is a count and a description of a held record all the same (safety red team, iteration 21).
+HELD_WORDING = re.compile(r"\b(held|holds?|withheld|candidates?|on hold)\b", re.I)
+_PASS_PROSE = ("scope", "status_reason")
+_LANE_PROSE = ("finding", "reason", "limitation", "status", "source_family")
+
+
+def held_wording_problems(doc, research_log):
+    """Held-record wording in a campaign system's stated gaps and served research prose."""
+    texts = [("research gap", g) for g in doc.get("research_gaps") or []]
+    for p in research_log.get("passes", []):
+        texts += [(f"pass {p.get('date')} {k}", p.get(k)) for k in _PASS_PROSE]
+        for lane in p.get("lanes") or []:
+            texts += [(f"pass {p.get('date')} lane {lane.get('lane')} {k}", lane.get(k)) for k in _LANE_PROSE]
+    return [f"{where} speaks of held or candidate records under the campaign rule ({m.group(0)!r})"
+            for where, t in texts if isinstance(t, str) for m in [HELD_WORDING.search(t)] if m]
 
 
 def public_research_log(research_log, restricted):
@@ -1081,6 +1104,44 @@ def attach_link_states(events, states):
                 s["link_check"] = states[s["url"]]
 
 
+def link_health_problems(health, all_events):
+    """The committed link-health file may speak only of citations the build publishes.
+
+    Safety red team, iteration 21. The check script reads the curated records when it runs and the
+    file is committed as it was then. A record withdrawn or held afterwards (under the campaign
+    rule, "which and how many are not shown") would leave its citation's address in `link_states`,
+    `page_stated_dates` or `final_addresses`, and one more citation in its country's count: a
+    reader setting the file beside the served records could name the record the panel hides, and
+    for an older system the address names the facility. `all_events` is {sid: (name, events, _)}."""
+    published, per_system = set(), {}
+    for sid, (_, events, _eps) in all_events.items():
+        urls = set()
+        for e in events:
+            urls |= {s["url"] for s in e.get("sources") or [] if s.get("url")}
+            if (e.get("recovery") or {}).get("url"):
+                urls.add(e["recovery"]["url"])
+        per_system[sid] = urls
+        published |= urls
+    out = []
+    for key in ("link_states", "page_stated_dates"):
+        for url in sorted(set(health.get(key) or {}) - published):
+            out.append(f"source_link_health {key}: {url} is not a citation of any published record")
+    # A record may cite either end of a redirect: the import judges an opaque address by where it lands.
+    for short, final in sorted((health.get("final_addresses") or {}).items()):
+        if short not in published and final not in published:
+            out.append(f"source_link_health final_addresses: {short} is a redirect no published record cites at either end")
+    for url, state in (health.get("link_states") or {}).items():
+        if state not in LINK_STATES:
+            out.append(f"source_link_health link_states: {url} has state {state!r}, not a bare state")
+    for sid, counts in (health.get("by_system") or {}).items():
+        if sid not in per_system:
+            out.append(f"source_link_health by_system: {sid} is not a country system")
+        elif sum(counts.values()) > len(per_system[sid]):
+            out.append(f"source_link_health by_system: {sid} counts {sum(counts.values())} checked citations "
+                       f"but publishes {len(per_system[sid])}: a withdrawn or held record's citation is counted")
+    return out
+
+
 def load_campaigns():
     return read_json(CAMPAIGNS)
 
@@ -1243,6 +1304,9 @@ def precision_problems(system_id, doc, events):
             if not re.fullmatch(OPAQUE_ID.format(cc=system_id), eid) or not eid.startswith(
                     f"{system_id}-{e.get('date')}-{e.get('asset_class', '').replace('_', '-')}-attack-"):
                 out.append(f"{eid}: a kinetic record under a country-level policy needs an opaque id")
+            elif not re.fullmatch(OPAQUE_TOKEN, eid.rsplit("-attack-", 1)[1]):
+                out.append(f"{eid}: an opaque id's token is the import's keyed hash, never a lane's own "
+                           "numbering, which counts the candidates beside the record")
             for s in e.get("sources", []):
                 if method_in_address(s.get("url")):
                     out.append(f"{eid}: a citation address states how the attack was carried out")
@@ -1642,6 +1706,8 @@ def build_system(system_id, admin1, admin0, as_of):
     if (doc.get("geography") or {}).get("precision_policy"):
         problems += nuclear_problems(profile, events) + route_problems(events)
         problems += [f"{e['event_id']}: {why}" for e in events for why in [not_a_physical_event(e)] if why]
+    if ((campaigns.get("system_states") or {}).get(system_id) or {}).get("state") in RESTRICTING_STATES:
+        problems += held_wording_problems(doc, research_log)
     if problems:
         raise ValueError(f"system {system_id}: " + "; ".join(problems))
     apply_publication_policy(system_id, events, campaigns)
@@ -2127,6 +2193,14 @@ def build(theatre_snapshot):
     for sid in systems.COUNTRY_SYSTEMS:
         ev = read_json(outputs.processed() / systems.root(sid) / "events.json")
         all_events[sid] = (payloads[sid]["name"], ev["events"], ev["episodes"])
+    if LINK_HEALTH.exists():
+        # Judged against the curated records, the ones the import let through: a historical rebuild
+        # leaves out records dated after its as-of, which are still published today.
+        curated = {sid: (None, read_json(SYSTEMS_CURATED / sid / "events.json")["events"], None)
+                   for sid in systems.COUNTRY_SYSTEMS}
+        problems = link_health_problems(read_json(LINK_HEALTH), curated)
+        if problems:
+            raise ValueError("; ".join(problems))
     restricted = frozenset(sid for sid, p in payloads.items() if (p["campaign_state"] or {}).get("state") in RESTRICTING_STATES)
     write_json(outputs.processed() / "global" / "recent_evidence.json", recent_evidence(all_events, restricted=restricted))
     write_json(outputs.processed() / "global" / "data_quality.json", data_quality(payloads, all_events, context))

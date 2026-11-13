@@ -257,7 +257,7 @@ def test_occurrence_wording_is_not_mistaken_for_status(text):
 # --- precision: admin-1 is a maximum -------------------------------------------------------------
 
 def _event(**kw):
-    base = {"event_id": "kw-2026-03-refinery-attack-1", "cause": "kinetic_strike", "date": "2026-03", "asset_class": "refinery",
+    base = {"event_id": "kw-2026-03-refinery-attack-3f9a2c", "cause": "kinetic_strike", "date": "2026-03", "asset_class": "refinery",
             "geography_precision": "country", "region_code": None, "regions_affected": [],
             "facility_name": None, "facility_name_local": None, "operator": None}
     return {**base, **kw}
@@ -364,11 +364,13 @@ POLICY = {"kinetic": "country", "reason": "r"}
 def test_the_import_gate_gives_a_kinetic_record_an_id_that_names_nothing():
     imp = _load("import_candidates")
     r = _candidate(candidate_id="kw-2026-03-12-example-refinery-strike")
-    oid = imp.opaque_id("kw", r)
+    oid = imp.opaque_id("kw", r, key=b"test-key")
     assert re.fullmatch(B.OPAQUE_ID.format(cc="kw"), oid), oid
+    assert re.fullmatch(B.OPAQUE_TOKEN, oid.rsplit("-attack-", 1)[1]), oid
     assert "example" not in oid
-    assert imp.opaque_id("kw", r) == oid, "stable for the life of the record"
-    assert imp.opaque_id("kw", _candidate()) == "kw-2026-03-12-refinery-attack-1", "an already opaque id is kept"
+    assert imp.opaque_id("kw", r, key=b"test-key") == oid, "stable for the life of the record"
+    # A lane's own numbering is never kept: "-attack-1" would say how many siblings exist.
+    assert imp.opaque_id("kw", _candidate(), key=b"test-key") != "kw-2026-03-12-refinery-attack-1"
 
 
 def test_the_import_gate_holds_a_record_that_names_its_facility_in_text():
@@ -827,7 +829,7 @@ def test_an_address_naming_any_region_the_operator_or_the_method_is_not_publishe
 
 
 def test_the_build_refuses_method_wording_and_headlines_on_a_record_published_without_its_place():
-    ev = _event(event_id="kw-2026-03-12-refinery-attack-1", date="2026-03-12", cause="kinetic_strike", geography_precision="country",
+    ev = _event(event_id="kw-2026-03-12-refinery-attack-3f9a2c", date="2026-03-12", cause="kinetic_strike", geography_precision="country",
                 region_code=None, summary="An attack was reported on a refinery in Kuwait.")
     ev["sources"] = [{"url": "https://example.org/news/missile-strike-reported", "publisher": "P", "date": "2026-03-12"}]
     doc = {"geography": {"precision_policy": {"kinetic": "country", "reason": "x" * 70}}}
@@ -1354,7 +1356,7 @@ def test_an_attack_record_published_for_the_country_is_its_own_episode():
     """A declared episode's name and id are written by hand and pass no text rule."""
     system = {"geography": {"precision_policy": {"kinetic": "country", "reason": "r"}}}
     src = [{"url": "https://example.org/a", "publisher": "P", "date": "2026-03-20"}]
-    events = [_event(event_id=f"kw-2026-03-2{i}-refinery-attack-{i}", date=f"2026-03-2{i}", sources=src, hazard_name=None,
+    events = [_event(event_id=f"kw-2026-03-2{i}-refinery-attack-3f9a2{i}", date=f"2026-03-2{i}", sources=src, hazard_name=None,
                      summary="An attack was reported on a refinery in Kuwait.") for i in (0, 1)]
     for e in events:
         e["episode_id"] = e["event_id"]
