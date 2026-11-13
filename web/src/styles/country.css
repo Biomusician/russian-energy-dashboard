@@ -80,6 +80,9 @@
 
 .region-select-reason { margin: 6px 0; }
 
+/* The header's one-line research-coverage summary: the size and spacing of the list it replaced. */
+.research-status .lane-state-line { margin: 4px 0; font-size: 11.5px; }
+
 /* The page's own filters ("Show one state", "Year", "Type") look like every other select on the
    site rather than the browser's default control. */
 .region-select select, .event-filters select {

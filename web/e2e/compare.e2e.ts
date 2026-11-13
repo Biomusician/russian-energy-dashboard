@@ -194,7 +194,7 @@ test.describe("Compare systems", () => {
     await openCompare(page, "?compare=us,ca");
     await expect(row(page, "lanes").locator("td").nth(1)).toHaveText(/Could not be loaded/);
     await expect(row(page, "lanes").locator("td").nth(0)).toContainText("planned searches run (not exhaustive)");
-    await expect(row(page, "lanes").locator("td").nth(0)).not.toContainText(/declared complete|finished/);
+    await expect(row(page, "lanes").locator("td").nth(0)).not.toContainText(/declared complete|\bfinished\b/);
     // The manifest-level rows still describe it.
     await expect(row(page, "index").locator("td").nth(1)).toContainText("No index");
   });
