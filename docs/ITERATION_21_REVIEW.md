@@ -425,4 +425,209 @@ enter the curated corpus, so the file names no unpublished citation.
 this run nearly every page reported a change, because news pages rotate advertising and related
 links. The flag stays local and is not used as evidence that an article was edited.
 
-<!-- SECTIONS 19-31 at release -->
+## 19. Data and model changes
+
+No score, weight, half-life, sector definition or inclusion rule changed. The headline moved only
+with time and the daily data.
+
+| Change | Where | Why |
+|---|---|---|
+| `record_reviewed` on each manifest country entry (a date, or null) | `pipeline/build_systems.py` | Home cards say when the newest published record was reviewed |
+| New payload `global/whats_new.json`, registered in `artifacts.GLOBAL_PAYLOADS` | `pipeline/whats_new.py` | What changed, by cause, from published payloads only (§3) |
+| `lineage.previous_dated_build`: the last committed build dated before this one | `pipeline/lineage.py` | One baseline per day; any number of same-day rebuilds produce identical output |
+| The theatre ledger `build_changes.json` uses the same dated baseline | `pipeline/diff_builds.py` | A second build of the day re-baselined onto the morning's commit and published an empty story over the since-yesterday one (§27) |
+| Facility attribution ties break on asset id | `pipeline/diff_builds.py` | Row order followed the hash seed, so two builds of identical data differed |
+| `link_check` on each served citation; curated `link_states` keyed by address | `scripts/check_source_links.py`, `pipeline/build_systems.py` | Per-citation link state in the Evidence Inspector (§11, §18) |
+| Home index-card meaning text | `pipeline/build_systems.py` | Now carries the weighting from METHODOLOGY §1 |
+| Opaque attack id token: six hex digits of an HMAC keyed by a local secret; the build refuses any other form | `scripts/import_candidates.py`, `pipeline/build_systems.py` | An unkeyed hash could be reversed by guessing facility names (§24) |
+| New build gates `link_health_problems` and `held_wording_problems` | `pipeline/build_systems.py` | §24 |
+| One Saudi research-gap sentence reworded | `data/curated/systems/sa/system.json` | It described a held record (§24) |
+| Research log entries for pass 21 in six Gulf systems | `data/curated/systems/<id>/research_log.json` | §17 |
+
+<!-- LEAD: theatre status wording changes to served strings, if any -->
+
+## 20. Tests
+
+<!-- LEAD: final counts at the release gate -->
+
+## 21. Mutations
+
+<!-- LEAD: final campaign result -->
+
+## 22. First-time-user review
+
+The 20-task pass of §2 was repeated on the integrated build (`8bf2160`), on desktop and phone, by an
+evaluator who had not built any of it.
+
+| Result | Before (production, iteration 20) | After (`8bf2160`) |
+|---|---|---|
+| Obvious | 6 | 13 |
+| Findable | 12 | 7 |
+| Not stated | 1 | 0 |
+| Misleading | 1 | 0 |
+
+The misleading status chip was gone and "what should I click next?" was answered on the first screen.
+The pass ranked five remaining problems. All five were then worked:
+
+1. **The theatre's recovery wording still read like facility status** ("awaiting reconstitution",
+   "impairment age", "impaired"), and the home "What is withheld?" named only the Gulf states although
+   the theatre also has a withholding rule. <!-- LEAD: outcome of the wave-3 theatre pass -->
+2. **Research-coverage vocabulary drifted** between surfaces, and "declared complete" in the Compare
+   PNG overstated thoroughness. Fixed with one vocabulary module (§6).
+3. **Five labels for "not placed in one region".** Fixed with one placement vocabulary (§7).
+4. **What's new was buried.** It is now in the site bar (§4). It still lists kinds of change, not the
+   records changed; linking each change to its records is in §31.
+5. **Phone leftovers:** the country header was five rows (now about three, behind a Menu), the
+   selects were unstyled (fixed), the theatre's ratio captions are hidden on phones (kept, to stay
+   within the header cap), maps show no loading indicator for two to three seconds (open, §31).
+
+Engineering-demo leftovers it named: the raw row key (now "list entry N"), the redundant "Search
+systems" button (removed), theatre jargon and process text <!-- LEAD: theatre pass outcome -->.
+
+## 23. Analyst red team
+
+| Finding | Status |
+|---|---|
+| A single record could not be cited: the anchor existed but nothing showed it | Fixed: "Link to this record" on every anchored card |
+| The Compare PNG lacked the caveat that a larger national figure does not mean a more important country | Fixed |
+| A UTC build date beside a local "as of" date read as a future date | Fixed: dates computed on the reader's calendar |
+| The build ledger showed developer wording ("production ancestor", ISO dates) | Fixed |
+| Recent evidence said "by event date" but sorts by an episode's latest date | Wording fixed |
+| The Gulf event list ended items with a placeholder | Wording fixed; linking each to its record is open |
+| Country pages cannot filter events by class or date; Compare has no CSV export | Open: new features (§31) |
+
+The Kuwait task worked end to end: three records, every source linked, the inspector answering its
+questions.
+
+## 24. Safety red team
+
+The safety red team tried to infer campaign-sensitive information from the new surfaces, using only
+the public app and committed files. No surface exposed facility status, the region, facility or
+operator of an abstracted record, or an incident coordinate, and none ranked systems. It found four
+inference paths, all fixed with a gate, a test and a mutant:
+
+| Surface | Finding | Fix |
+|---|---|---|
+| Record anchors and opaque attack ids | **Latent leak** (no abstracted attack record is published yet). The id token was an unkeyed hash of the queue id, and many queue ids contain a facility word, so hashing guesses at the published date and class could recover the facility. Lane-numbered tokens also said that a sibling candidate existed | Keyed HMAC token from a local secret that never leaves the machine; the build refuses any token that is not six hex digits |
+| Curated link-health file | **No gate existed.** Every address in it was published, but a record withdrawn after a check would leave its address, which for Saudi Arabia names the facility | Build gate: no unpublished address, no unexplained redirect, no per-system count above the published citations |
+| What's new | **Partial.** Per-record review changes were hidden for campaign systems, but a system-level line still announced a re-review | Suppressed for campaign systems |
+| Saudi research gap | **Live rule breach**, re-surfaced by the new Research coverage tab: a sentence described a held record | Reworded; a new gate checks the gap and log prose of every campaign system |
+
+Tried and blocked: matching What's new dates against country pages; row keys across builds; Compare
+cells and PNG; the search index; the empty-corpus page; the Gulf member list and brief; theatre
+withheld rows; every PNG export; the Gulf research logs. A final-artifact scan of every served file
+and the built bundle found no incident coordinate, range field, campaign held count, route wording or
+reference to a local file.
+
+The lead also checked, before merging per-citation link state, that every address in the curated file
+is cited by a published record; held records never enter the curated corpus.
+
+## 25. Methodology red team
+
+| Finding | Status |
+|---|---|
+| A live but tiny value showed "0.0" (§9) | Fixed: "<0.1" |
+| "Why this number?" claimed documented unscored coal events; there are none | Fixed from the build's own count |
+| What's new showed the index at two decimals against the Inspector's one | Fixed |
+| The theatre scale line left out the weighting in METHODOLOGY §1 | Fixed: one shared string |
+| The ribbon and What's new compare against different earlier builds and seemed to disagree | Wording fixed: the ribbon's tooltip names its baseline and points to the other. Two baselines kept (§29) |
+| Compare's "declared complete" bucket contradicted "(not exhaustive)" elsewhere | Fixed by the one vocabulary (§6) |
+| What's new says only "scoring method or campaign classification changed" for the theatre, without saying which | Open (§31) |
+| A served coal limitations string still says documented strikes are not scored | Open; not rendered anywhere found (§31) |
+
+Also confirmed: "No index" never renders as 0; "Not on this basis" stays distinct from "no data";
+unknown, not applicable and not yet researched stay distinct; nothing is ordered by a figure.
+
+## 26. Test-architecture red team
+
+<!-- LEAD: handoff pending -->
+
+## 27. Release engineering
+
+**Integration.** Eight feature branches were built in separate checkouts, each on its own preview
+port, and merged one at a time with tests between merges. Conflicts were resolved by union unless the
+features disagreed; the notable ones were the route switch (Compare placed inside the per-route error
+boundary), the home and Gulf layouts (one feature's layout plus the other's boundaries and prefetch),
+one shared lane-chip helper where two had been written, and the curated link-health file (rebuilt from
+the current check rather than either branch's copy). Wave-2 red teams and two wave-3 fix passes then
+ran against the integrated tree.
+
+**Incident.** Early in the iteration, removing a test checkout whose dependency folders were
+directory junctions deleted the main checkout's `node_modules`, raw-data cache and local review queue.
+The queue was restored from a same-day copy and replayed from the known scripts; all twelve country
+systems re-imported byte-identical to the committed build. Checkouts now copy those folders and never
+link them.
+
+**The daily refresh path** (found by the release red team, all fixed and tested):
+
+| Defect | Fix |
+|---|---|
+| A second build on the same day re-baselined the theatre ledger onto the morning's commit; the change detector then reported a change and the bot would commit an empty story over the since-yesterday one. The committed payload had this shape | Ledger uses the dated baseline, the same rule as What's new |
+| Facility attribution order followed the hash seed | Deterministic tie-break |
+| `ci_data_changed.py` read only top-level files, so a change confined to `global/` or a country folder never published | Recursive scan |
+| A frontend-reading pytest could block the bot on runners whose Node lacks type stripping | Flag passed, clean skip on old Node; CI's Python job pins Node 22 |
+| Frontend source checks sat in the publication gate, so a frontend refactor could freeze publication | Marked repository hygiene; CI still runs them |
+| `staging_paths.py` printed CRLF on Windows, so local staging added nothing | Bare LF |
+
+A simulation in a scratch clone (bot build, same-day rerun, next-day build) confirmed: a same-day
+rerun is byte-identical after normalisation and the detector says no change; the next day both the
+ledger and What's new name the previous day's build.
+
+<!-- LEAD: release gate table and moving-main integration -->
+
+## 28. Production
+
+<!-- LEAD: at release -->
+
+## 29. Remaining owner decisions
+
+**Unchanged and still the owner's** (OWNER_DECISION_MATRIX_20 is authoritative; conservative current
+behaviour stays in force):
+
+- **D-11 / D-33, Saudi harmonisation.** Option B remains: Saudi Arabia keeps its older convention, its
+  records are not migrated to the newer Gulf form, and the country page says so plainly (§7).
+- **D-34** old public history and old deployments, **D-35** methodology re-bases, **D-36**
+  event-total interpretation, **D-37** EEA-3 interpretation, and **Release Rule A**: unruled.
+
+**New this iteration, raised by the safety red team:**
+
+- Should campaign systems keep showing per-record review dates (`reviewed_at`, the home card's
+  `record_reviewed`)? They have been public since iteration 14; hiding them is a product decision.
+- Should Saudi Arabia's superseded lane findings, which mention a 2022 record no longer published,
+  stay in the served research log? The current UI does not render superseded lanes.
+
+**Decided by the lead, not owner decisions** (recorded so they can be revisited):
+
+- The theatre header controls stay at 24 px, which meets the WCAG 2.2 AA target-size minimum; 44 px
+  broke the tested cap that keeps the header under 31% of a phone screen. Controls on the map are
+  44 px.
+- Citation links keep their publisher names (WCAG 2.4.4, purpose from context).
+- Two "since" baselines are kept: the ribbon compares with the previous build, What's new with the
+  previous dated build; the ribbon's tooltip names both.
+- The theatre headline keeps its severity colour; the home card uses the neutral accent.
+- "National" covers both whole-country and safeguarded records in What's new, because What's new
+  cannot tell them apart without saying more than the aggregating surfaces do.
+
+## 30. Remaining research gaps
+
+- After the continuation pass (§17) no Gulf lane is stopped by the search allowance, but many remain
+  "partly searched" or "source unavailable" because the sources refuse automated readers or keep only a
+  recent window. Those are statements about the sources, not unfinished work.
+- The Saudi OPEC-archive lane has not run its required English-language pass; the archive refused
+  access.
+- Bahrain, Iran, Oman, Qatar and the UAE have no published record. That is not evidence that no
+  disruption occurred, and the pages say so.
+- Per-citation link state is from one automated visit; the PHMSA report generator returned server
+  errors, so those citations read as unchecked rather than dead.
+
+## 31. Recommended next iteration
+
+1. **What's new at record level** for non-campaign systems: link each change to the records it
+   affected, using the country-page anchors, and say which of method or classification changed for the
+   theatre.
+2. **Event filters and CSV export** on country pages and Compare (analyst red team).
+3. **A map loading indicator**; theatre and country maps are blank for two to three seconds.
+4. **Split the theatre's 2.4 MB line file** so its map can draw before all of it arrives.
+5. **The owner decisions in §29**, especially Saudi harmonisation and review dates on campaign systems.
+6. Retire the served coal limitations string that no surface renders, after confirming no consumer
+   reads it.
