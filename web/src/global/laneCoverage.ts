@@ -156,13 +156,17 @@ export function isCampaignRestricted(sys: Pick<CountrySystem, "research_log" | "
 }
 
 export const UNDER_REVIEW_TEXT = "Additional candidates remain under review and are not shown.";
+export const WAS_UNDER_REVIEW_TEXT = "Candidates were under review when this pass was logged; none is shown.";
 
 /** What one pass found, for the pass history. Under the campaign policy no count of any kind is
  *  given, whatever the log carries: beside a short list of published attack records, a count of
  *  candidates looked at or held is a hint of the campaign's scale. */
-export function passOutcomeText(p: ResearchPass, restricted: boolean): string {
+export function passOutcomeText(p: ResearchPass, restricted: boolean, current = true): string {
   if (restricted) {
-    return p.under_review ? UNDER_REVIEW_TEXT : "Counts are not published for this country while attacks on energy facilities are reported.";
+    // "Remain under review" is a claim about now, so only the newest systematic pass may make it;
+    // an older pass's flag is history, said in the past tense.
+    if (p.under_review) return current ? UNDER_REVIEW_TEXT : WAS_UNDER_REVIEW_TEXT;
+    return "Counts are not published for this country while attacks on energy facilities are reported.";
   }
   const o = p.outcome && typeof p.outcome === "object" ? p.outcome : {};
   const parts = Object.entries(o).map(([k, n]) => `${k.replace(/_/g, " ")} ${n}`);

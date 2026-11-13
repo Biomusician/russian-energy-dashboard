@@ -184,3 +184,12 @@ describe("every served country system", () => {
     expect(checked).toBeGreaterThan(0);
   });
 });
+
+describe("pass history tense", () => {
+  it("only the newest systematic pass says candidates remain under review", () => {
+    const p = { date: "2026-11-11", kind: "systematic", by: "x", under_review: true } as unknown as Parameters<typeof passOutcomeText>[0];
+    expect(passOutcomeText(p, true, true)).toMatch(/remain under review/);
+    expect(passOutcomeText(p, true, false)).not.toMatch(/remain/);
+    expect(passOutcomeText(p, true, false)).toMatch(/were under review when this pass was logged/);
+  });
+});

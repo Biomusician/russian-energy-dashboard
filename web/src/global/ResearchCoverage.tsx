@@ -25,6 +25,7 @@ import {
 export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) {
   const s = bundle.system;
   const passes = s.research_log.passes;
+  const newestSystematic = passes.filter((p) => p.kind === "systematic").at(-1);
   const rf = s.research_freshness;
   const rows = latestLanes(passes);
   const counts = countStates(rows);
@@ -135,7 +136,7 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
               <tr key={`${p.date}-${p.by}-${i}`}>
                 <td>{fmtDate(p.date)}<div className="dim">{plain(p.by)}</div></td>
                 <td>{p.kind === "targeted" ? "targeted search" : `systematic, ${p.status}`}{p.status_reason && <div className="dim">{plain(p.status_reason)}</div>}</td>
-                <td>{passOutcomeText(p, restricted)}</td>
+                <td>{passOutcomeText(p, restricted, p === newestSystematic)}</td>
               </tr>
             ))}
           </tbody>
