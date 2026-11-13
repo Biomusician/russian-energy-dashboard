@@ -26,6 +26,8 @@ export function groupBriefLines(ctx: GroupContext, metricId: string): { title: s
       // The share travels on the same line as what it is not, because the image travels without the
       // page (iteration 20, owner question D-24).
       r.value != null ? `All ${ctx.systems.length} together: ${fmtValue(r.value, m.unit)}${r.world_share != null ? `, ${Math.round(r.world_share * 1000) / 10}% of the world total (a descriptive annual share for the group, not an order of importance or exposure)` : ""}.`
+        // A share of an energy total depends on how nuclear and renewables are counted (iteration 20).
+        + (m.unit === "quadrillion Btu" && r.world_share != null ? " EIA accounting: nuclear counted by its heat, wind, solar and hydro by their electricity." : "")
         : `Not summed: ${r.reason}.`,
       "Countries in alphabetical order. No index is published for any of them. Event counts are not comparable between countries.",
       "National context only: no facilities, no routes or shipping, no current status of any facility. Energy Disruption Monitor · boundaries: Natural Earth (line of actual control).",

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { groupBriefLines } from "./groupExport";
+import { exportCampaignLine } from "./countryExport";
 import { dirFor, groupBySlug, type GroupContext, type Manifest } from "./manifest";
 
 const manifest = {
@@ -77,6 +78,22 @@ describe("the regional brief", () => {
     const row = groupBriefLines(c, "crude_production").rows[0].toLowerCase();
     expect(row).toContain("no data");
     expect(row).not.toMatch(/: 0\b/);
+  });
+});
+
+describe("export caveats", () => {
+  it("a country under the campaign policy says so in its image; one without does not", () => {
+    expect(exportCampaignLine({ campaign_state: { state: "UNCERTAIN", checked: "x", basis: "b" } })).toContain("Active-campaign safeguards apply");
+    expect(exportCampaignLine({ campaign_state: { state: "NO_ACTIVE_CAMPAIGN", checked: "x", basis: "b" } })).toBeNull();
+    expect(exportCampaignLine({ campaign_state: null })).toBeNull();
+  });
+  it("a share of an energy total carries the accounting convention", () => {
+    const c = ctx();
+    c.metrics.total_production = { label: "Total primary energy production", unit: "quadrillion Btu", definition: "d", year: 2024, source_id: "eia" };
+    c.region.total_production = { value: 90.3, world_share: 0.149, reason: null };
+    for (const s of c.systems) s.values.total_production = 1;
+    expect(groupBriefLines(c, "total_production").foot[0]).toContain("nuclear counted by its heat");
+    expect(groupBriefLines(c, "crude_production").foot[0]).not.toContain("nuclear");
   });
 });
 

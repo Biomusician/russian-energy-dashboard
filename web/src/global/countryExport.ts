@@ -73,11 +73,14 @@ export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, 
     fit(label, kx + Math.round(22 * s), ky);
   }
 
-  const fh = Math.round(58 * s);
+  // The page's campaign badge travels with the image too (iteration 20, production export QA).
+  const campaign = exportCampaignLine(sys);
+  const fh = Math.round((campaign ? 78 : 58) * s);
   c.fillStyle = BAND;
   c.fillRect(0, H - fh, W, fh);
   c.fillStyle = DIM;
   c.font = `${Math.round(13 * s)}px ${SANS}`;
+  if (campaign) fit(campaign, pad, H - Math.round(54 * s));
   fit("What was reported and found, not a rate of disruption. Counts reflect this country's " +
              "reporting rules; not comparable across countries; never ranked.", pad, H - Math.round(34 * s));
   const nat = national?.row
@@ -86,6 +89,13 @@ export function composeCountryFrame(map: HTMLCanvasElement, sys: CountrySystem, 
   fit(`${nat}Energy Disruption Monitor · open sources · boundaries: Natural Earth (line of actual control)`,
              pad, H - Math.round(14 * s));
   return out;
+}
+
+/** The campaign caveat for an exported image, or null where no campaign applies. Same condition
+ *  as the page's "Active-campaign safeguards apply" badge. */
+export function exportCampaignLine(sys: Pick<CountrySystem, "campaign_state">): string | null {
+  if (!sys.campaign_state || sys.campaign_state.state === "NO_ACTIVE_CAMPAIGN") return null;
+  return "Active-campaign safeguards apply: no restart, recovery or operating status of an attacked facility is published.";
 }
 
 export function countryFilename(sys: CountrySystem): string {
