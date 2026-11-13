@@ -69,6 +69,14 @@ jobs:
         with:
           python-version: "3.13"
 
+      # A few tests run the shipped TypeScript under Node (tests/test_research_coverage.py,
+      # tests/test_iteration21_country.py). On a Node that cannot strip types they skip, so
+      # without a pinned Node this job could go green having run none of them. The refresh job
+      # deliberately does not install Node: there those tests run on the runner's own Node or skip.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Install test dependency
         run: pip install pytest
 

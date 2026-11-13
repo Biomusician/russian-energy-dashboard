@@ -48,16 +48,21 @@ def normalise(text: str) -> str:
 def _head_version(relpath: str):
     """The committed version of a file, or None if it is new (not in HEAD)."""
     r = subprocess.run(["git", "show", f"HEAD:{relpath}"],
-                       capture_output=True, text=True, encoding="utf-8")
+                       cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
     return r.stdout if r.returncode == 0 else None
 
 
 def substantive_change() -> bool:
     for d in EMITTED_DIRS:
-        for fp in sorted(Path(d).glob("*")):
+        # Recursive. This used to read only the top level, so everything under global/ and
+        # systems/<id>/ — the thirteen country systems, the world map, What's new — was invisible
+        # to it: a rerun whose only real change was a reviewed country record (a human commit of
+        # curated data, then a manual refresh the same day) reported "no substantive change" and
+        # never published. The removal check below was already recursive; the two now agree.
+        for fp in sorted((ROOT / d).rglob("*")):
             if not fp.is_file():
                 continue
-            rel = fp.as_posix()
+            rel = fp.relative_to(ROOT).as_posix()
             head = _head_version(rel)
             if head is None:
                 print(f"substantive: new file {rel}")

@@ -72,11 +72,16 @@ def _show_json(root, sha, relpath):
         return None
 
 
-def resolve(root, current_as_of):
+def resolve(root, current_as_of, baseline_sha=None):
     """Find the baseline build. Returns (payloads, lineage) — payloads is None when invalid.
 
     `lineage` is always returned, and always says why: a ledger that cannot prove what it is
     comparing against must be able to display that fact rather than a plausible delta.
+
+    `baseline_sha` names the commit to compare against instead of the production ref's tip. The
+    change ledger passes `previous_dated_build`'s answer, so every build of one day compares with
+    the same predecessor (see that function). It must be reachable from the production ref; the
+    ancestry check below still applies to it.
     """
     lineage = {
         "source": "git",
@@ -111,6 +116,8 @@ def resolve(root, current_as_of):
             f"no production baseline: neither PRODUCTION_REF, origin/{PRODUCTION_BRANCH} "
             f"nor {PRODUCTION_BRANCH} resolves to a commit")
         return None, lineage
+    if baseline_sha:
+        sha = baseline_sha
 
     lineage["baseline_ref"] = ref
     lineage["previous_commit"] = sha
@@ -204,10 +211,17 @@ def show_json(root, sha, relpath):
 
 
 def worktree_differs(root, baseline_snapshot):
-    """Whether the on-disk payload disagrees with the committed baseline.
+    """Whether the on-disk payload is a build nobody committed: it disagrees with the committed
+    baseline AND with the payload committed at HEAD.
 
     Reported, never acted on. It is the signal that someone has a frozen or experimental build
     sitting in the worktree — exactly the artefact that must not become a baseline.
+
+    WHY HEAD AS WELL. With the dated baseline the ledger's predecessor can be older than HEAD: a
+    second build on one day compares with yesterday's build while the disk still holds this
+    morning's committed one. That is not an experiment, and flagging it would print "the payload
+    in this working tree differs" on a clean refresh runner — and make the rerun's ledger differ
+    from the morning's, which is the empty-commit problem the dated baseline exists to remove.
     """
     path = root / PAYLOAD_DIR / "snapshot.json"
     if not path.is_file() or not baseline_snapshot:
@@ -217,5 +231,8 @@ def worktree_differs(root, baseline_snapshot):
             disk = json.load(fh)
     except (OSError, ValueError):
         return None
-    return (disk.get("as_of"), disk.get("build_time")) != (
-        baseline_snapshot.get("as_of"), baseline_snapshot.get("build_time"))
+    stamp = lambda s: (s.get("as_of"), s.get("build_time"))  # noqa: E731
+    if stamp(disk) == stamp(baseline_snapshot):
+        return False
+    head = _show_json(root, "HEAD", f"{PAYLOAD_DIR}/snapshot.json")
+    return not (head and stamp(disk) == stamp(head))

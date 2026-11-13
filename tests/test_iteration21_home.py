@@ -10,6 +10,7 @@ failure escape; and the manifest carries each country's review date as a date, n
 import json
 import re
 from pathlib import Path
+import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 WEB_SRC = ROOT / "web" / "src" / "global"
@@ -33,6 +34,7 @@ def _function_body(text, name):
 CARD_FIELDS = {"id", "name", "maturity", "campaign_restricted", "record_reviewed", "reporting_environment"}
 
 
+@pytest.mark.repo_hygiene
 def test_a_country_card_reads_no_count_score_or_held_figure():
     body = _function_body(_code(WEB_SRC / "GlobalHome.tsx"), "SystemCard")
     read = set(re.findall(r"\bs\.(\w+)", body))
@@ -44,11 +46,13 @@ def test_a_country_card_reads_no_count_score_or_held_figure():
                          body, re.I), "a card shows a count, a score or a held figure"
 
 
+@pytest.mark.repo_hygiene
 def test_the_theatre_entry_reads_no_count_or_held_figure():
     body = _function_body(_code(WEB_SRC / "GlobalHome.tsx"), "TheatreEntry")
     assert not re.search(r"\.length\b|\bcorpus\b|\bheld\b|\bwithheld\b|\bevent_count\b|\brecords\b", body, re.I)
 
 
+@pytest.mark.repo_hygiene
 def test_the_home_page_never_reorders_systems():
     """The manifest's order is alphabetical by name. The home page filters it, never sorts it: an
     order by any figure (a date, a count, a size) is a ranking."""
@@ -58,6 +62,7 @@ def test_the_home_page_never_reorders_systems():
         "the home page re-orders systems"
 
 
+@pytest.mark.repo_hygiene
 def test_start_here_memory_never_lets_a_storage_failure_escape():
     code = _code(WEB_SRC / "startHereMemory.ts")
     funcs = re.findall(r"(?ms)^(?:export )?function (\w+)\(.*?^\}", code)
@@ -96,6 +101,7 @@ def test_the_manifest_carries_each_countrys_review_date_and_null_for_no_record()
         assert not [k for k, v in s.items() if isinstance(v, (int, float)) and not isinstance(v, bool)], s["id"]
 
 
+@pytest.mark.repo_hygiene
 def test_reader_copy_on_the_new_surfaces_has_no_build_vocabulary():
     for name in ("GlobalHome.tsx", "GlobalNav.tsx", "StartHere.tsx", "glossary.ts", "GlobalPanels.tsx"):
         strings = re.findall(r'"([^"\n]{12,})"|>([^<>{}\n]{12,})<', _code(WEB_SRC / name))
@@ -104,6 +110,7 @@ def test_reader_copy_on_the_new_surfaces_has_no_build_vocabulary():
         assert not re.search(r"\biteration\b|\bpayload\b|\bpipeline\b|\.json\b|\bD-\d\d\b", text, re.I), name
 
 
+@pytest.mark.repo_hygiene
 def test_search_folds_only_for_matching():
     """The search must never show its folded form: results render the entry's own label and the
     term as written."""

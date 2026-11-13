@@ -8,6 +8,11 @@ so a refactor that quietly drops it fails here first.
 
 import re
 from pathlib import Path
+import pytest
+
+# Frontend-source guards: assertions about web/src, not about the payload being published, so
+# they are repo_hygiene (pyproject.toml) -- ci.yml runs them, the refresh gate does not.
+pytestmark = pytest.mark.repo_hygiene
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "web" / "src"

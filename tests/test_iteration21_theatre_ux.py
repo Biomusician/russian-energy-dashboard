@@ -29,6 +29,7 @@ def _body(text, start, end="\n}\n"):
 
 # --- withheld facility status -----------------------------------------------------------------
 
+@pytest.mark.repo_hygiene
 def test_withheld_row_shows_no_status_chip():
     ui = _src("components/ui.tsx")
     line = _body(ui, "export function RecoveryLine(")
@@ -62,6 +63,7 @@ def test_every_withheld_record_is_caught_by_the_frontend_predicate():
 
 # --- "Why this number?" -----------------------------------------------------------------------
 
+@pytest.mark.repo_hygiene
 def test_why_this_number_opens_the_inspector():
     ribbon = _src("components/Ribbon.tsx")
     m = re.search(r'<button type="button" className="why-btn"(.*?)</button>', ribbon, re.S)
@@ -83,6 +85,7 @@ URL_STATE_SETTERS = ("setSelected", "setSelectedAsset", "setFilters", "setCamera
                      "setCompareRegions", "setCompare(", "replaceState", "pushState", "setFlyTarget")
 
 
+@pytest.mark.repo_hygiene
 def test_mode_switch_keeps_url_state():
     app = _src("App.tsx")
     switch = _body(app, "const switchMode = (target: TheatreMode) => {", "\n  };\n")
@@ -97,6 +100,7 @@ def test_mode_switch_keeps_url_state():
     assert "onMode={switchMode}" in app
 
 
+@pytest.mark.repo_hygiene
 def test_mode_switch_keeps_the_names_links_and_tests_use():
     mode = _src("theatreMode.ts")
     assert 'label: "Map focus"' in mode and 'label: "Briefing & export"' in mode and 'label: "Analyze"' in mode
@@ -104,6 +108,7 @@ def test_mode_switch_keeps_the_names_links_and_tests_use():
 
 # --- the app frame cannot be scrolled sideways ------------------------------------------------
 
+@pytest.mark.repo_hygiene
 def test_closed_drawers_cannot_scroll_the_app():
     css = _src("styles/theatre.css")
     assert re.search(r"#root,\s*\.shell\s*\{\s*overflow:\s*clip;\s*\}", css), \

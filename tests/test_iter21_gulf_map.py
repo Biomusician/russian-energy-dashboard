@@ -34,6 +34,7 @@ def _facts_panel(view):
     return m.group(0)
 
 
+@pytest.mark.repo_hygiene
 def test_iter21_gulf_metric_definition_beside_the_control():
     facts = _function_body(_src("groupMap.ts"), "metricFacts")
     for field in ("definition: m.definition", "year: m.year", "unit: m.unit", "source: src?.name"):
@@ -44,6 +45,7 @@ def test_iter21_gulf_metric_definition_beside_the_control():
     assert re.search(r'className="metric-definition[^"]*">\{facts\.definition\}</p>', panel)
 
 
+@pytest.mark.repo_hygiene
 def test_iter21_gulf_accounting_convention_beside_every_figure():
     facts = _function_body(_src("groupMap.ts"), "metricFacts")
     assert "accounting: ctx.accounting_convention" in facts
@@ -61,6 +63,7 @@ def test_iter21_gulf_payload_gives_every_metric_a_definition_and_states_its_acco
     assert g.get("accounting_convention", "").strip()
 
 
+@pytest.mark.repo_hygiene
 def test_iter21_gulf_default_map_is_geography_only():
     view = _src("GroupView.tsx")
     assert "const [metric, setMetric] = useState<string | null>(null);" in view
@@ -72,6 +75,7 @@ def test_iter21_gulf_default_map_is_geography_only():
     assert 'note={colourBy ? null : "Geography only' in view
 
 
+@pytest.mark.repo_hygiene
 def test_iter21_gulf_member_list_is_alphabetical():
     order = _function_body(_src("groupMap.ts"), "membersAlphabetical")
     assert "a.name.localeCompare(b.name" in order
@@ -81,6 +85,7 @@ def test_iter21_gulf_member_list_is_alphabetical():
     assert "{listed.map((s) => (" in view
 
 
+@pytest.mark.repo_hygiene
 def test_iter21_gulf_brief_drops_the_readers_selection():
     view = _src("GroupView.tsx")
     run = re.search(r"const runExport = async \(\) => \{.*?\n  \};", view, re.S)
