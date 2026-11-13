@@ -206,3 +206,43 @@ the architecture described above is:
 - **Routes.** `?group=gulf` opens the regional view. `sys` wins if both are present.
 
 The daily refresh builds all thirteen systems from curated files and does no research.
+
+## Iteration 21: the product layer
+
+No system, score or data class was added. The frontend gained the features a reader uses to work
+with what is already published; the pipeline gained one derived file and two served fields. The
+account is [ITERATION_21_REVIEW.md](ITERATION_21_REVIEW.md); what changed in the architecture is:
+
+- **Routes.** `?compare=a,b,c` opens the comparison workspace (2 to 4 systems in the reader's order;
+  `sys` and `group` win over it). `?help=glossary` opens the glossary on load. Record anchors are
+  `?sys=<id>#ev-<event_id>`; a campaign-covered record gets one only when its id is the build's
+  opaque form, so no shared link carries a facility's name.
+- **One request per file per page.** `once()` in `web/src/global/manifest.ts` holds every load
+  (manifest, country bundle, world, group context, recent evidence, data quality, What's new,
+  one system for Compare). Validation runs inside it, so a refused file rejects, is not kept, and
+  is asked for again. Loaders take no abort signal; views ignore late answers.
+- **Prefetch.** `web/src/global/prefetch.ts` starts a route's data with its code chunk, and a
+  system's files on hover or focus of a link to it. Home never loads a country payload.
+- **Failure stays local.** `components/ViewBoundary.tsx`: a boundary per route (keyed, so a failure
+  never follows the reader to the next view) and one per panel or tab. Its fallback keeps the
+  system picker and a way home.
+- **One header per page.** The site bar (`GlobalNavBar`: home link, breadcrumb, search, How to read
+  this, How this works, Glossary, Copy view link, system picker) is the page's only `<header>`; a
+  view's title and actions follow as plain content.
+- **Reader text.** Every served free-text string a component renders passes through
+  `readerText()`, which removes developer vocabulary (iteration numbers, file names, enum keys,
+  owner-decision phrasing). A vitest walks every served prose field and fails on a survivor.
+- **Derived, not duplicated.** Compare reads the manifest, the national context and each chosen
+  system's `system.json`; it has no file of its own. The Research Coverage tab reads the research
+  log already served.
+- **`global/whats_new.json`** (`pipeline/whats_new.py`, registered in `pipeline/artifacts.py`):
+  categories of change since the last committed build dated before the current one
+  (`lineage.previous_dated_build`), so same-day rebuilds produce identical bytes. No counts, no
+  event ids, no link targets; under the campaign policy a system's records appear only as the
+  aggregating surfaces already show them.
+- **Served fields.** `record_reviewed` on manifest country entries; `link_check` (the last automated
+  visit's state) on every served citation, from `data/curated/systems/source_link_health.json →
+  link_states`. The build refuses a link-health file that names an unpublished address.
+- **Opaque record ids.** `scripts/import_candidates.py` derives an abstracted attack record's token
+  from a keyed hash (the key stays in the local review queue), and the build refuses any token that
+  is not six hex digits, so an id cannot be reproduced by hashing guessed facility names.
