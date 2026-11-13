@@ -1199,6 +1199,57 @@ GULF_MAP_MUTATIONS = [
 ]
 MUTATIONS += GULF_MAP_MUTATIONS
 
+# Iteration 21: the comparison workspace. Caught by tests/test_compare.py at the source; the same
+# rules are tested in the browser and in vitest, which this pytest-only harness cannot run.
+CMP = "web/src/global/compare.ts"
+CMP_VIEW = "web/src/global/CompareView.tsx"
+ROUTER = "web/src/global/router.ts"
+ITER21_COMPARE_MUTATIONS = [
+    ("the comparison gains an event-count row",
+     [(CMP, _text('    { id: "reporting", label: "Reporting environment", basis: "within",',
+                  '    { id: "events", label: "Recorded events", basis: "common", basisNote: "",\n'
+                  '      cells: cols.map((c) => value(String(c.system?.event_summary.recorded_events))) },\n'
+                  '    { id: "reporting", label: "Reporting environment", basis: "within",'))],
+     "compare_rows_are_declared or compare_never_reads_a_tally"),
+    ("the comparison columns are sorted by a figure",
+     [(CMP_VIEW, _text("  const cols: CompareColumn[] = (resolved?.columns ?? []).map((entry) => {",
+                       "  const cols: CompareColumn[] = [...(resolved?.columns ?? [])].sort((a, b) => (b.bounds?.[2] ?? 0) - (a.bounds?.[2] ?? 0)).map((entry) => {"))],
+     "compare_never_sorts"),
+    ("the compared systems are re-ordered by name",
+     [(CMP, _text("return { columns: known.slice(0, MAX_COMPARE),",
+                  "return { columns: [...known].sort((a, b) => a.name.localeCompare(b.name)).slice(0, MAX_COMPARE),"))],
+     "compare_never_sorts"),
+    ("a missing national figure becomes zero in the comparison",
+     [(CMP, _text("row.values[metric] : null;", "row.values[metric] ?? 0 : 0;"))],
+     "compare_missing_figure_stays_missing"),
+    ("a missing national figure loses its no-data cell",
+     [(CMP, _text('if (v == null) return { kind: "no_data", text: "no data"', 'if (v === undefined) return { kind: "no_data", text: "no data"'))],
+     "compare_missing_figure_stays_missing"),
+    ("no index renders as zero in the comparison",
+     [(CMP, _text('return value("No index", col.system?.no_index_reason', 'return value(String(col.entry.headline?.value ?? 0), col.system?.no_index_reason'))],
+     "compare_no_index_is_words or compare_never_reads_a_tally"),
+    ("the theatre's index value is set beside systems with none",
+     [(CMP, _text("return value(`Has its own index (${col.entry.index.name}), not comparable`,",
+                  "return value(`Index ${col.entry.headline?.value}`,"))],
+     "compare_never_reads_a_tally"),
+    ("the comparison export drops its not-comparable caveat",
+     [(CMP, _text("      EXPORT_NOT_COMPARABLE,\n", ""))],
+     "compare_export_carries"),
+    ("the comparison export drops its research-coverage caveat",
+     [(CMP, _text("Research coverage differs by system and is incomplete everywhere: ", ""))],
+     "compare_export_carries"),
+    ("the compare selection is dropped from the URL (route)",
+     [(ROUTER, _text('if (p.has("compare")) return', 'if (false) return'))],
+     "compare_selection_lives_in_the_url"),
+    ("the compare selection is dropped from the URL (link)",
+     [(ROUTER, _text(".slice(0, MAX_COMPARE).map(encodeURIComponent)", ".slice(0, 0).map(encodeURIComponent)"))],
+     "compare_selection_lives_in_the_url"),
+    ("a compare edit is not written to the URL",
+     [(CMP_VIEW, _text("navigateCompare(next, true)", "void next"))],
+     "compare_selection_lives_in_the_url"),
+]
+MUTATIONS += ITER21_COMPARE_MUTATIONS
+
 
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
@@ -1213,7 +1264,7 @@ def _sandbox():
 
 
 TEST_FILES = ("tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py",
-              "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py")
+              "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py", "tests/test_compare.py")
 
 
 def _run(box, k):

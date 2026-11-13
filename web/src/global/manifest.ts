@@ -472,6 +472,18 @@ export async function loadCountry(entry: ManifestSystem, signal: AbortSignal): P
   return { system, events: events.events, episodes: events.episodes ?? [], regions };
 }
 
+/** One country's system.json alone (iteration 21), for a view that describes a system without its
+ *  events or map. Refused on the same terms as a full load. */
+export async function loadCountrySystem(entry: ManifestSystem, signal: AbortSignal): Promise<CountrySystem> {
+  const system = await getJson<CountrySystem>(`${entry.root}/system.json`, signal);
+  if (system.system_id !== entry.id) {
+    throw new Error(`${entry.root}/system.json describes ${system.system_id}, not ${entry.id}`);
+  }
+  const bad = shapeProblems(system, { events: [] });
+  if (bad.length) throw new Error(`${entry.root}: malformed payload (${bad.join(", ")})`);
+  return system;
+}
+
 /** The parts of a country payload the view reads without a guard. A malformed one is refused at
  *  load, so it fails as "this system could not be loaded" and the others stay usable, instead
  *  of throwing during render and taking the whole dashboard down (iteration 17, §65). */
