@@ -1,8 +1,9 @@
 import { useState } from "react";
 import type { Bundle } from "../types";
 import { fmtDate, fmtDelta, fmtNum } from "../data";
+import { buildDeltaTitle, fmtIndex } from "../indexText";
 import { assessFreshness } from "../freshness";
-import { TRANSMISSION_CAVEAT, reconstructionLabel } from "../briefing";
+import { HEADLINE_SCALE, TRANSMISSION_CAVEAT, reconstructionLabel } from "../briefing";
 import { severityColor } from "../palette";
 import type { InspectTarget } from "./Inspector";
 import TheatreBar, { type TheatreTool } from "./TheatreBar";
@@ -115,8 +116,8 @@ export default function Ribbon({
               </button>
             </p>
             <p className="hl-scale" title="Belarus, the monitored Russian regions and occupied Crimea.">
-              0–100 exposure index: the share of tracked capacity at recently disrupted sites —
-              not measured loss.
+              {/* METHODOLOGY §1 in one line: a share, weighted, and exposure rather than loss. */}
+              0–100 exposure index: {HEADLINE_SCALE} — not measured loss.
             </p>
             {/* P2: "live" used to mean nothing more than "the scrubber is at the last timeline
                 step", which is equally true of a payload that stopped rebuilding eleven days ago.
@@ -204,11 +205,11 @@ export default function Ribbon({
                   className="sector-cell as-button"
                   onClick={() => onExplain({ kind: "sector", sector: key })}
                   title={gloss ? `${name}: ${gloss.long} Click to see how it is built.` : `Explain ${name}`}
-                  aria-label={`Explain ${name}: ${fmtNum(value, 1)}${gloss ? `, ${gloss.short}` : ""}`}
+                  aria-label={`Explain ${name}: ${fmtIndex(value)}${gloss ? `, ${gloss.short}` : ""}`}
                 >
                   <span className="sc-top">
                     <span className="sc-name">{name}</span>
-                    <span className="num sc-value" style={{ color }}>{fmtNum(value, 1)}</span>
+                    <span className="num sc-value" style={{ color }}>{fmtIndex(value)}</span>
                   </span>
                   <span className="sector-bar"><i style={{ width: `${Math.min(100, value ?? 0)}%`, background: color }} /></span>
                   {gloss && <span className="sc-basis">{gloss.short}</span>}
@@ -298,7 +299,7 @@ function BuildDelta({
     <button
       className="explain-btn build-delta"
       onClick={() => onExplain({ kind: "build" })}
-      title="What changed since the previous build"
+      title={buildDeltaTitle(bc.previous_build)}
     >
       <span className={bc.esdi_delta > 0 ? "up" : bc.esdi_delta < 0 ? "down" : ""}>
         {fmtDelta(bc.esdi_delta)}

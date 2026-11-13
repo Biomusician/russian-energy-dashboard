@@ -1,3 +1,4 @@
+import { localISODate } from "../freshness";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type maplibregl from "maplibre-gl";
 import SimpleMap from "./SimpleMap";
@@ -194,7 +195,7 @@ export default function CountryView({ id }: { id: string }) {
   // The reader's clock, like the theatre's freshness notice: the record is curated by hand and
   // does not change when the site rebuilds, so the warning must not depend on the build date.
   const reviewAge = sys.record_reviewed
-    ? daysBetween(sys.record_reviewed, new Date().toISOString().slice(0, 10)) : null;
+    ? daysBetween(sys.record_reviewed, localISODate(new Date())) : null;
   const stale = reviewAge != null && reviewAge > sys.review_freshness_days;
 
   const runExport = async () => {
@@ -441,7 +442,7 @@ function staleSources(sources: SourceEntry[], today: string): SourceEntry[] {
  *  current, and was the event search systematic? "Sources current, research incomplete" is a
  *  normal, non-contradictory state. */
 function ResearchStatus({ sys }: { sys: CountrySystem }) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localISODate(new Date());
   const rf = sys.research_freshness;
   const used = sys.sources.filter((x) => !x.role.startsWith("rejected"));
   const late = staleSources(used, today);
@@ -733,7 +734,7 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
   const rec = s.event_summary.recovery_research;
   const kinds = Object.entries(s.event_summary.recovery_kinds).filter(([, n]) => n > 0);
   const unrecorded = bundle.events.filter((e) => e.review.source_access === "not recorded by the research lane").length;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localISODate(new Date());
   return (
     <div>
       <h2>Sources &amp; data quality</h2>

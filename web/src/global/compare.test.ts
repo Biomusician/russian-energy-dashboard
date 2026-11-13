@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
-  COMPARE_ROW_IDS, EXPORT_NOT_COMPARABLE, compareBriefLines, compareFilename, compareRows, laneBuckets, resolveCompare,
+  COMPARE_ROW_IDS, EXPORT_CONTEXT_CAVEAT, EXPORT_NOT_COMPARABLE, compareBriefLines, compareFilename, compareRows, laneBuckets, resolveCompare,
   type CompareColumn,
 } from "./compare";
 import { fmtValue, type EnergyContext } from "./context";
@@ -177,6 +177,12 @@ describe("compareBriefLines", () => {
     expect(foot).toContain("No index is not a zero.");
     expect(b.foot).toContain(EXPORT_NOT_COMPARABLE);
     expect(EXPORT_NOT_COMPARABLE).toBe("Not comparable: event counts; this is context and research state only.");
+    // The context rows travel with the page's "a larger figure is not more important" caveat.
+    expect(b.foot).toContain(EXPORT_CONTEXT_CAVEAT);
+    expect(EXPORT_CONTEXT_CAVEAT).toMatch(/not a more important or more disrupted country/);
+    // No context loaded, no context rows, so no context caveat either.
+    expect(compareBriefLines(cols, compareRows(cols, null, manifest), null, manifest.build_time).foot)
+      .not.toContain(EXPORT_CONTEXT_CAVEAT);
   });
 
   it("draws research state and context rows only, with no within-system row", () => {

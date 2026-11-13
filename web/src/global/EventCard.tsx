@@ -64,9 +64,11 @@ export function EventCard({ e, bundle, inEpisode = false, targeted = false }: {
   const headlines = headlinesAllowed(e, sys);
   const covered = !!e.publication;
   const unit = sys.geography.unit_label;
+  // Null for a campaign-covered record whose id could name a facility: no anchor, so no link.
+  const anchor = eventAnchor(e, sys.system_id);
   return (
     <li className={`event-item event-card placement-${kind}${targeted ? " targeted" : ""}`}
-        id={eventAnchor(e, sys.system_id) ?? undefined}>
+        id={anchor ?? undefined}>
       <div className="event-head">
         <span className="event-date mono">{fmtEventDate(e)}</span>
         <span className="event-tags">
@@ -156,6 +158,11 @@ export function EventCard({ e, bundle, inEpisode = false, targeted = false }: {
         )}
       </div>
 
+      {/* The anchor already existed and "Copy view link" keeps it, but nothing on the page exposed
+          it: an analyst citing one record had no way to get its address. A plain link, so it can be
+          copied, opened or bookmarked without a clipboard permission. Placed BEFORE the toggle so the toggle's
+          next Tab stop stays its own panel. */}
+      {anchor && <a className="ev-permalink" href={`#${anchor}`}>Link to this record</a>}
       <button ref={toggleRef} type="button" className="ghost ev-inspector-toggle" aria-expanded={open}
               aria-controls={panelId} onClick={() => setOpen((o) => !o)}>
         {open ? "Close evidence inspector" : "Evidence inspector"}

@@ -98,6 +98,7 @@
 .theatre-entry h2 { margin: 0; font-size: 17px; }
 .theatre-headline { margin: 0; font-size: 13px; }
 .theatre-headline .num { font-size: 22px; color: var(--accent); }
+.theatre-entry-alone { margin: 0; }
 .home-card { gap: 5px; }
 .home-tags { display: flex; flex-wrap: wrap; gap: 5px; }
 /* One neutral hue; the border shape carries the difference. */

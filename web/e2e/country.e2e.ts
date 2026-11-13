@@ -217,6 +217,27 @@ test.describe("record anchors", () => {
     // A hand-made link carrying the id finds nothing and marks nothing.
     await app.open(`?sys=sa#ev-${covered[0].event_id}`);
     await expect(page.locator(".event-card.targeted")).toHaveCount(0);
+    // And no covered card offers a link to itself.
+    for (let i = 0; i < covered.length; i++) await expect(cards.nth(i).locator(".ev-permalink")).toHaveCount(0);
+  });
+
+  test("every anchored card offers a visible link to itself, and following it lands on the record", async ({ app, page }) => {
+    await app.open("?sys=kw");
+    const cards = page.locator(".event-card[id]");
+    const n = await cards.count();
+    expect(n).toBeGreaterThan(0);
+    for (let i = 0; i < n; i++) {
+      const id = await cards.nth(i).getAttribute("id");
+      await expect(cards.nth(i).locator("a.ev-permalink")).toHaveAttribute("href", `#${id}`);
+    }
+    const last = cards.nth(n - 1);
+    const id = await last.getAttribute("id");
+    await last.locator("a.ev-permalink").click();
+    expect(new URL(page.url()).hash).toBe(`#${id}`);
+    expect(new URL(page.url()).searchParams.get("sys")).toBe("kw");
+    // The copied address opens the page at that record.
+    await app.open(`?sys=kw#${id}`);
+    await expect(page.locator(`#${id}`)).toHaveClass(/targeted/);
   });
 });
 

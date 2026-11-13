@@ -1972,7 +1972,7 @@ def build_manifest(country_payloads, theatre_snapshot, build_time):
                 "index": {"id": "esdi", "name": "Monitored-Area ESDI"},
                 "headline": {"value": theatre_snapshot["esdi"], "as_of": theatre_snapshot["as_of"],
                              "label": "Monitored-Area ESDI",
-                             "meaning": "Capacity at disrupted sites, not measured loss."},
+                             "meaning": "Share of tracked capacity at recently disrupted sites, weighted by evidence, cause and elapsed time; not measured loss."},
                 "reporting_environment": "conflict_restricted",
                 "as_of": theatre_snapshot["as_of"],
                 "files": ["snapshot.json"],

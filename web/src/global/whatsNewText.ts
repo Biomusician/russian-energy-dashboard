@@ -1,4 +1,5 @@
-import { daysBetween, fmtDate, fmtNum } from "../data";
+import { daysBetween, fmtDate } from "../data";
+import { indexMoveText } from "../indexText";
 import type { WhatsNewChange, WhatsNewItem, WhatsNewSystem } from "./manifest";
 
 /** Reader-facing text for the "What's new in the data" panel (iteration 21). Pure, so the
@@ -45,7 +46,5 @@ export function itemText(it: WhatsNewItem): string {
 export function indexText(row: WhatsNewSystem): string | null {
   const ix = row.index;
   if (!ix || ix.before == null || ix.after == null) return null;
-  if (ix.before === ix.after) return `${ix.label} unchanged at ${fmtNum(ix.after, 2)}.`;
-  const base = `${ix.label} ${fmtNum(ix.before, 2)} to ${fmtNum(ix.after, 2)}.`;
-  return ix.separable ? base : `${base} The method changed too, so the movement cannot be split between data and method.`;
+  return indexMoveText(ix.label, ix.before, ix.after, ix.separable);
 }

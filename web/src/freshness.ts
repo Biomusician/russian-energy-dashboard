@@ -77,6 +77,19 @@ export function localISODate(now: Date): string {
   return `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`;
 }
 
+/** The calendar day a build timestamp falls on for the reader, as YYYY-MM-DD.
+ *
+ *  `build_time` is UTC. Slicing its first ten characters printed "Built 13 Nov" to a reader whose
+ *  own calendar still said 12 Nov (a build at 04:21 UTC), beside "data as of 12 Nov": it read as a
+ *  build dated in the future. A plain YYYY-MM-DD is already a calendar day and is returned as is
+ *  (parsing it as a Date would put it at UTC midnight and move it a day west of Greenwich). */
+export function localDayOf(timestamp: string | null | undefined): string | null {
+  if (!timestamp) return null;
+  if (ISO_DAY.test(timestamp)) return timestamp;
+  const t = new Date(timestamp);
+  return Number.isNaN(t.getTime()) ? null : localISODate(t);
+}
+
 function plural(n: number): string {
   return n === 1 ? "day" : "days";
 }

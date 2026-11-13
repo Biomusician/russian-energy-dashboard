@@ -1,3 +1,4 @@
+import { localDayOf } from "../freshness";
 import { fmtValue, rowForSystem, type EnergyContext } from "./context";
 import {
   CAMPAIGN_STATE_LABEL, ENVIRONMENT_LABEL, LANE_STATE_LABEL, labelFor,
@@ -5,6 +6,7 @@ import {
 } from "./manifest";
 import { MAX_COMPARE } from "./router";
 import { fmtDate } from "../data";
+import { laneChips } from "./homeModel";
 
 /** The comparison workspace's rows (iteration 21), apart from the page so a test can read them.
  *
@@ -171,7 +173,7 @@ function lanesCell(s: CountrySystem): Cell {
   }
   const buckets = laneBuckets(states);
   const words = buckets.map((b) => `${b.n} ${b.label}`);
-  const finer = Object.entries(states).map(([k, n]) => `${n} ${labelFor(LANE_STATE_LABEL, k).toLowerCase()}`).join("; ");
+  const finer = laneChips(states).split(" · ").join("; ");
   return value(words.join(" · "), `In the latest systematic pass, source groups by state: ${finer}.`, words);
 }
 
@@ -328,6 +330,7 @@ export const EXPORT_ROW_IDS: CompareRowId[] = ["view_type", "as_of", "index", "m
   "safeguards", "placement", "ctx_total_production", "ctx_crude_production", "ctx_gas_production", "ctx_electricity_generation"];
 
 export const EXPORT_NOT_COMPARABLE = "Not comparable: event counts; this is context and research state only.";
+export const EXPORT_CONTEXT_CAVEAT = "National energy figures are context: a larger figure is not a more important or more disrupted country.";
 
 export interface CompareBrief {
   title: string;
@@ -348,7 +351,7 @@ export function compareBriefLines(cols: CompareColumn[], rows: CompareRow[], ctx
     : "National context could not be loaded, so no national figure is shown.";
   return {
     title: `Comparing monitored systems: ${names.join(", ")}`,
-    sub: `Built ${fmtDate(built.slice(0, 10))}. ${ctxLine} Columns in the order chosen, never ranked.`,
+    sub: `Built ${fmtDate(localDayOf(built))}. ${ctxLine} Columns in the order chosen, never ranked.`,
     names,
     rows: rows.filter((r) => EXPORT_ROW_IDS.includes(r.id)).map((r) => {
       const unit = /^(.*) (\([^()]*\))$/.exec(r.label);
@@ -363,11 +366,13 @@ export function compareBriefLines(cols: CompareColumn[], rows: CompareRow[], ctx
       "Research coverage differs by system and is incomplete everywhere: a missing record is not evidence that nothing happened, and a research preview's search has not yet run as far as planned.",
       `${NO_INDEX_MEANING} The one index on this site belongs to a single monitored area, is built for it alone and is not comparable, so no index value is shown here.`,
       EXPORT_NOT_COMPARABLE,
+      // The page says this above the context rows; the image travels without the page.
+      ...(ctx ? [EXPORT_CONTEXT_CAVEAT] : []),
       `Energy Disruption Monitor · open sources${ctx ? ` · ${ctx.source.attribution}` : ""}`,
     ],
   };
 }
 
 export function compareFilename(cols: CompareColumn[], built: string): string {
-  return `energy-systems-compared-${cols.map((c) => c.entry.id).join("-")}-${built.slice(0, 10)}.png`;
+  return `energy-systems-compared-${cols.map((c) => c.entry.id).join("-")}-${localDayOf(built) ?? "undated"}.png`;
 }

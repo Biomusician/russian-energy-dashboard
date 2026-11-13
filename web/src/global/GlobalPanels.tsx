@@ -1,13 +1,14 @@
+import { localDayOf } from "../freshness";
 import { useEffect, useMemo, useState } from "react";
 import {
-  ENVIRONMENT_LABEL, LANE_STATE_LABEL, LANE_WINDOW_LABEL, labelFor, loadRecentEvidence,
+  ENVIRONMENT_LABEL, LANE_WINDOW_LABEL, labelFor, loadRecentEvidence,
   type DataQuality, type Manifest, type RecentEvidence, type RecentEpisode,
 } from "./manifest";
 import { navigate } from "./router";
 import { prefetchOn } from "./prefetch";
 import { daysBetween, fmtDate } from "../data";
 import { readerText } from "./readerText";
-import { collapseCovered, dated, placementOf, type FeedRow } from "./homeModel";
+import { collapseCovered, dated, laneChips, placementOf, type FeedRow } from "./homeModel";
 import { openGlossary } from "./GlobalNav";
 
 /** Recent evidence and Data Quality on the global home (iteration 18; rewritten iteration 21). */
@@ -96,7 +97,7 @@ export function RecentEvidencePanel() {
       {data && (
         <>
           <p className="small"><strong>Newest is not worst, and a country with no item here is not a quiet country.</strong>{" "}
-            <span className="dim">Newest first, by event date. {data.scope} {readerText(data.note)}</span></p>
+            <span className="dim">Newest first, by the latest date in each item (its end date where one is reported, so a long episode sits where it ended). {data.scope} {readerText(data.note)}</span></p>
           <div className="map-control-row">
             <label className="small">Country{" "}
               <select aria-label="Filter recent evidence by country" value={country} onChange={(e) => setCountry(e.target.value)}>
@@ -123,21 +124,16 @@ export function RecentEvidencePanel() {
   );
 }
 
-// Every state the build can emit, so no lane vanishes from a summary line (iteration 19: a lane
-// stopped by the search allowance was counted in the total and named nowhere).
-const LANE_ORDER = ["universe_searched", "current_through_latest_release", "declared_query_set_run",
-                    "partially_searched", "blocked_by_source", "stopped_by_search_limit", "not_started", "legacy"];
-
-export function laneChips(states: Record<string, number>): string {
-  return LANE_ORDER.filter((k) => states[k]).map((k) => `${states[k]} ${labelFor(LANE_STATE_LABEL, k).toLowerCase()}`).join(" · ");
-}
+// The lane summary lives in homeModel (pure, tested); re-exported for the home page's import.
+export { laneChips };
 
 /** Data quality as the separate questions a reader actually has. Process and vintage only; no
  *  disruption count appears here, and nothing is ranked. */
 export function DataQualityPanel({ data, failed, manifest, today }: {
   data: DataQuality | null; failed: boolean; manifest: Manifest | null; today: string;
 }) {
-  const buildDay = manifest?.build_time?.slice(0, 10) ?? null;
+  // The reader's calendar day, not the UTC one: a build at 04:21 UTC is still yesterday in the Americas.
+  const buildDay = localDayOf(manifest?.build_time);
   const safeguarded = (manifest?.systems ?? []).filter((s) => s.campaign_restricted);
   return (
     <section className="panel global-note data-quality-panel" aria-label="Data quality">

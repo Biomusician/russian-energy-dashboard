@@ -1,3 +1,4 @@
+import { localISODate } from "../freshness";
 import "../styles/research.css";
 import { fmtDate } from "../data";
 import {
@@ -31,7 +32,7 @@ export default function ResearchCoverage({ bundle }: { bundle: CountryBundle }) 
   const counts = countStates(rows);
   const restricted = isCampaignRestricted(s);
   const review = reviewLine(s);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localISODate(new Date());
   const owed = rf.completeness !== "complete" && rows.length > 0;
   const shownStates = COVERAGE_STATES.filter((x) => x !== "earlier_format" || counts.earlier_format > 0);
   const rc = s.recovery_coverage;
