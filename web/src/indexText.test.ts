@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { buildDeltaTitle, excludedSectorEventsText, fmtIndex, indexMoveText } from "./indexText";
 import { localDayOf } from "./freshness";
-import { laneChips, laneStatePhrase } from "./global/homeModel";
+import { LANE_STATE_LABEL, laneChips, laneLine, laneStatePhrase } from "./global/laneCoverage";
 
 /** Iteration 21 methodology red team: display rules that keep the theatre's numbers honest. */
 
@@ -95,9 +95,15 @@ describe("laneStatePhrase — the number counts source groups, not searches", ()
     expect(laneStatePhrase("declared_query_set_run", 5)).toBe("5 with planned searches run (not exhaustive)");
     expect(laneStatePhrase("declared_query_set_run", 1)).not.toMatch(/^1 planned searches/);
     expect(laneStatePhrase("partially_searched", 2)).toBe("2 partly searched");
+    expect(LANE_STATE_LABEL.declared_query_set_run).toBe("Planned searches run (not exhaustive)");
   });
   it("orders states the same way everywhere and drops none", () => {
     expect(laneChips({ blocked_by_source: 1, declared_query_set_run: 3, mystery_state: 2 }))
-      .toBe("3 with planned searches run (not exhaustive) · 1 blocked by the source · 2 mystery state");
+      .toBe("3 with planned searches run (not exhaustive) · 1 with the source unavailable · 2 mystery state");
+  });
+  it("sums a system up in one line with its total of source groups, never 'N of M complete'", () => {
+    expect(laneLine({ declared_query_set_run: 5, partially_searched: 1 }, 6))
+      .toBe("6 source groups: 5 with planned searches run (not exhaustive) · 1 partly searched.");
+    expect(laneLine({ not_started: 1 })).toBe("1 source group: 1 not started.");
   });
 });

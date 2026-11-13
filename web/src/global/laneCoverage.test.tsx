@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import ResearchCoverage from "./ResearchCoverage";
 import { shapeProblems, type CountryBundle, type CountrySystem, type ResearchLane, type ResearchPass } from "./manifest";
 import {
-  COVERAGE_STATE_TEXT, coverageState, coverageSummary, countStates, isCampaignRestricted, latestLanes,
+  DONE_STATES, LANE_STATE_LABEL, coverageState, laneStatePhrase, coverageSummary, countStates, isCampaignRestricted, latestLanes,
   missingLanguages, passOutcomeText, reviewLine,
 } from "./laneCoverage";
 
@@ -31,43 +31,50 @@ const text = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/&#x27;/g, 
 
 describe("lane state mapping", () => {
   it("a source that refused access is Source unavailable, whatever the analyst did", () => {
-    expect(coverageState(lane({ execution: "partial", source_window: "inaccessible" }))).toBe("unavailable");
-    expect(coverageState(lane({ execution: "not_started", source_window: "inaccessible" }))).toBe("unavailable");
-    // The build refuses this combination; the reader is still never told "complete".
-    expect(coverageState(lane({ execution: "declared_search_complete", source_window: "inaccessible" }))).toBe("unavailable");
-    expect(coverageState(lane({ execution: "partial", source_window: "inaccessible", stopped_by: "search_limit" }))).toBe("unavailable");
+    expect(coverageState(lane({ execution: "partial", source_window: "inaccessible" }))).toBe("blocked_by_source");
+    expect(coverageState(lane({ execution: "not_started", source_window: "inaccessible" }))).toBe("blocked_by_source");
+    // The build refuses this combination; the reader is still never told the searches ran.
+    expect(coverageState(lane({ execution: "declared_search_complete", source_window: "inaccessible" }))).toBe("blocked_by_source");
+    expect(coverageState(lane({ execution: "partial", source_window: "inaccessible", stopped_by: "search_limit" }))).toBe("blocked_by_source");
+    expect(LANE_STATE_LABEL.blocked_by_source).toBe("Source unavailable");
   });
 
-  it("a lane stopped by the search limit is never complete", () => {
-    expect(coverageState(lane({ execution: "partial", stopped_by: "search_limit" }))).toBe("stopped");
-    expect(coverageState(lane({ execution: "declared_search_complete", stopped_by: "search_limit" }))).toBe("stopped");
-    expect(coverageState(lane({ execution: "partial", source_window: "rolling_archive_gap", stopped_by: "search_limit" }))).toBe("stopped");
+  it("a lane stopped by the search limit is never a done state", () => {
+    expect(coverageState(lane({ execution: "partial", stopped_by: "search_limit" }))).toBe("stopped_by_search_limit");
+    expect(coverageState(lane({ execution: "declared_search_complete", stopped_by: "search_limit" }))).toBe("stopped_by_search_limit");
+    expect(coverageState(lane({ execution: "partial", source_window: "rolling_archive_gap", stopped_by: "search_limit" }))).toBe("stopped_by_search_limit");
   });
 
-  it("complete only when the lane's own execution says so", () => {
-    expect(coverageState(lane({}))).toBe("complete");
-    expect(coverageState(lane({ universe_kind: "census", execution: "enumerated_complete", source_window: "publisher_not_yet_released" }))).toBe("complete");
+  it("a done state only when the lane's own execution says so, and the three done states stay apart", () => {
+    expect(coverageState(lane({}))).toBe("declared_query_set_run");
+    expect(coverageState(lane({ universe_kind: "census", execution: "enumerated_complete", source_window: "publisher_not_yet_released" }))).toBe("current_through_latest_release");
+    expect(coverageState(lane({ universe_kind: "census", execution: "enumerated_complete", source_window: "current_through_end_date" }))).toBe("universe_searched");
     for (const win of ["current_through_end_date", "no_census_exists", "publisher_not_yet_released", "unknown"]) {
-      expect(coverageState(lane({ execution: "partial", source_window: win }))).toBe("partial");
+      expect(coverageState(lane({ execution: "partial", source_window: win }))).toBe("partially_searched");
     }
-    expect(coverageState(lane({ execution: "enumerated_complete", source_window: "unknown" }))).toBe("partial");
+    expect(coverageState(lane({ execution: "enumerated_complete", source_window: "unknown" }))).toBe("partially_searched");
     expect(coverageState(lane({ execution: "not_started", source_window: "no_census_exists" }))).toBe("not_started");
-    expect(coverageState(lane({ execution: "partial", source_window: "rolling_archive_gap" }))).toBe("archive_limit");
-    expect(coverageState({ lane: "OLD", status: "complete" })).toBe("earlier_format");
+    // An archive limit is a reason, said beside "Partly searched", not a ninth state.
+    expect(coverageState(lane({ execution: "partial", source_window: "rolling_archive_gap" }))).toBe("partially_searched");
+    expect(coverageState({ lane: "OLD", status: "complete" })).toBe("legacy");
+    // No reader term says "complete" or "finished": a planned search set run in full has limits.
+    // (The exact wording is pinned in indexText.test.ts, outside this folder's copy lint.)
+    for (const k of DONE_STATES) expect(LANE_STATE_LABEL[k]).not.toMatch(/complete|finished/i);
+    expect(LANE_STATE_LABEL.current_through_latest_release).toBe("Searched through the publisher's latest release");
   });
 
   it("a missing language is detected, and blocks complete", () => {
     const l = lane({ languages_required: ["en", "fa"], languages_executed: ["en"] });
     expect(missingLanguages(l)).toEqual(["fa"]);
-    expect(coverageState(l)).toBe("partial");
+    expect(coverageState(l)).toBe("partially_searched");
     expect(missingLanguages(lane({ languages_required: ["ar", "en"], languages_executed: ["en", "ar"] }))).toEqual([]);
     expect(missingLanguages(lane({ languages_required: ["ar"], languages_executed: undefined }))).toEqual(["ar"]);
     const html = render(synthetic({ lanes: [l] }));
     expect(text(html)).toContain("Not run in: Persian");
-    expect(html).toContain('class="rc-lane rc-lane-partial"');
-    expect(html).not.toContain("rc-lane-complete");
-    // The overview row says Partial, in words.
-    expect(text(html.slice(html.indexOf("<tbody>"), html.indexOf("</tbody>")))).toContain(COVERAGE_STATE_TEXT.partial);
+    expect(html).toContain('class="rc-lane rc-lane-partially_searched"');
+    expect(html).not.toContain("rc-lane-declared_query_set_run");
+    // The overview row says Partly searched, in words.
+    expect(text(html.slice(html.indexOf("<tbody>"), html.indexOf("</tbody>")))).toContain(LANE_STATE_LABEL.partially_searched);
   });
 
   it("each lane is read from the latest pass that logged it; a same-day continuation wins", () => {
@@ -78,13 +85,14 @@ describe("lane state mapping", () => {
       pass({ date: "2026-11-11", kind: "targeted", lanes: [lane({ lane: "B" })] }),
     ];
     const rows = latestLanes(passes);
-    expect(rows.map((r) => [r.lane.lane, r.state, r.pass.date])).toEqual([["B", "partial", "2026-11-03"], ["A", "stopped", "2026-11-10"]]);
+    expect(rows.map((r) => [r.lane.lane, r.state, r.pass.date])).toEqual([["B", "partially_searched", "2026-11-03"], ["A", "stopped_by_search_limit", "2026-11-10"]]);
   });
 
   it("the summary is words and counts, never a percentage", () => {
     const rows = latestLanes([pass({ lanes: [lane({ lane: "A" }), lane({ lane: "B", execution: "partial", stopped_by: "search_limit" }),
       lane({ lane: "C", execution: "partial", source_window: "inaccessible" })] })]);
-    expect(coverageSummary(rows, 1)).toBe("1 of 3 lanes declared complete; 1 stopped by the search limit; 1 with the source unavailable.");
+    expect(coverageSummary(rows, 1)).toBe(`3 source groups: ${laneStatePhrase("declared_query_set_run", 1)} · 1 with the source unavailable · 1 stopped at this site's search limit.`);
+    expect(coverageSummary(rows, 1)).not.toMatch(/complete|finished| of 3/);
     expect(coverageSummary([], 0)).toBe("No search has been run yet.");
     expect(coverageSummary([], 2)).toMatch(/targeted/);
   });
@@ -143,15 +151,14 @@ describe("every served country system", () => {
       // While every lane sits in the newest pass, the reader's counts are the build's counts.
       if (rows.every((r) => r.pass === newest)) {
         expect(rows.length).toBe(rf.lanes_declared);
-        expect(n.complete).toBe(rf.lanes_complete);
-        expect(n.stopped).toBe(rf.lane_states?.stopped_by_search_limit ?? 0);
-        expect(n.unavailable).toBe(rf.lane_states?.blocked_by_source ?? 0);
-        expect(n.not_started).toBe(rf.lane_states?.not_started ?? 0);
+        // State for state, the same counts the home page and Compare read from the build.
+        for (const [k, v] of Object.entries(n)) expect(v, k).toBe(rf.lane_states?.[k] ?? 0);
+        expect(DONE_STATES.reduce((a, k) => a + n[k], 0)).toBe(rf.lanes_complete);
       }
       for (const r of rows) {
-        if (r.lane.source_window === "inaccessible") expect(r.state).toBe("unavailable");
-        if (r.lane.stopped_by === "search_limit" && r.lane.source_window !== "inaccessible") expect(r.state).toBe("stopped");
-        if (r.state === "complete") {
+        if (r.lane.source_window === "inaccessible") expect(r.state).toBe("blocked_by_source");
+        if (r.lane.stopped_by === "search_limit" && r.lane.source_window !== "inaccessible") expect(r.state).toBe("stopped_by_search_limit");
+        if (DONE_STATES.includes(r.state)) {
           expect(["enumerated_complete", "declared_search_complete"]).toContain(r.lane.execution);
           expect(missingLanguages(r.lane)).toEqual([]);
         }

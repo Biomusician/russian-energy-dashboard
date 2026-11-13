@@ -1,13 +1,14 @@
 import { localDayOf } from "../freshness";
 import { fmtValue, rowForSystem, type EnergyContext } from "./context";
 import {
-  CAMPAIGN_STATE_LABEL, ENVIRONMENT_LABEL, LANE_STATE_LABEL, labelFor,
+  CAMPAIGN_STATE_LABEL, ENVIRONMENT_LABEL, labelFor,
   type CountrySystem, type Manifest, type ManifestSystem,
 } from "./manifest";
 import { MAX_COMPARE } from "./router";
 import { RESEARCH_PREVIEW_DEFINITION, RESEARCH_PREVIEW_LABEL } from "./countryCopy";
 import { fmtDate } from "../data";
-import { laneChips } from "./homeModel";
+import { COVERAGE_STATES, COVERAGE_STATE_MEANING, LANE_STATE_LABEL, laneStatePhrase, type CoverageState } from "./laneCoverage";
+import { PLACEMENT_LABEL } from "./placement";
 
 /** The comparison workspace's rows (iteration 21), apart from the page so a test can read them.
  *
@@ -76,27 +77,33 @@ const GENERIC_NO_INDEX =
   "Only one monitored area on this site has a disruption index. Its weights and recovery assumptions were designed " +
   "for that area and are not transferred to other countries. No index is not a zero.";
 
-/** Lane states in the five words a reader can compare. The finer state stays in the detail. */
-export const LANE_BUCKETS: { label: string; states: string[] }[] = [
-  { label: "declared complete", states: ["universe_searched", "current_through_latest_release", "declared_query_set_run"] },
-  { label: "partial", states: ["partially_searched"] },
-  { label: "not started", states: ["not_started"] },
-  { label: "stopped by search limit", states: ["stopped_by_search_limit"] },
-  { label: "source unavailable", states: ["blocked_by_source"] },
-];
+/** Source-group states, one bucket per state, in the words every other page uses (laneCoverage.ts).
+ *  The three states in which a group's planned work was done stay apart: "every published item
+ *  read" and "planned searches run (not exhaustive)" are different claims, and one word for both
+ *  ("complete") overstated how thorough a planned search is. "Logged in an earlier format" is
+ *  shown only where a system has such a group. */
+export const LANE_BUCKETS: { state: string; label: string }[] = COVERAGE_STATES
+  .filter((k) => k !== "legacy")
+  .map((k) => ({ state: k, label: LANE_STATE_LABEL[k].toLowerCase() }));
 
-/** Counts per bucket in a fixed order, zeros included so every column names the same categories.
- *  A state outside the five (an older log format) is kept under its own label, never dropped. */
-export function laneBuckets(states: Record<string, number>): { label: string; n: number }[] {
-  // A state the pass does not list has no lanes in it: here zero is a count, not a missing figure.
+function knownState(k: string): k is CoverageState {
+  return (COVERAGE_STATES as string[]).includes(k);
+}
+
+/** Counts per state in a fixed order, zeros included so every column names the same states. A
+ *  state outside the list (an older log format, or one this page does not know) is kept, never dropped. */
+export function laneBuckets(states: Record<string, number>): { state: string; label: string; n: number }[] {
+  // A state the pass does not list has no groups in it: here zero is a count, not a missing figure.
   const own = (k: string) => {
     const n = Object.prototype.hasOwnProperty.call(states, k) ? Number(states[k]) : NaN;
     return Number.isFinite(n) ? n : 0;
   };
-  const known = new Set(LANE_BUCKETS.flatMap((b) => b.states));
-  const out = LANE_BUCKETS.map((b) => ({ label: b.label, n: b.states.reduce((a, k) => a + own(k), 0) }));
+  const listed = new Set(LANE_BUCKETS.map((b) => b.state));
+  const out = LANE_BUCKETS.map((b) => ({ ...b, n: own(b.state) }));
   for (const k of Object.keys(states)) {
-    if (!known.has(k) && own(k) > 0) out.push({ label: labelFor(LANE_STATE_LABEL, k).toLowerCase(), n: own(k) });
+    if (!listed.has(k) && own(k) > 0) {
+      out.push({ state: k, label: knownState(k) ? LANE_STATE_LABEL[k].toLowerCase() : k.replace(/_/g, " "), n: own(k) });
+    }
   }
   return out;
 }
@@ -171,9 +178,11 @@ function lanesCell(s: CountrySystem): Cell {
     return value("No source groups logged yet", "No systematic pass has declared its source groups yet.", ["No source groups logged yet"]);
   }
   const buckets = laneBuckets(states);
-  const words = buckets.map((b) => `${b.n} ${b.label}`);
-  const finer = laneChips(states).split(" · ").join("; ");
-  return value(words.join(" · "), `In the latest systematic pass, source groups by state: ${finer}.`, words);
+  const words = buckets.map((b) => laneStatePhrase(b.state, b.n));
+  // What each state present here means, so "planned searches run" is never read as exhaustive.
+  const meanings = buckets.filter((b) => b.n > 0).map((b) => b.state).filter(knownState)
+    .map((k) => `${LANE_STATE_LABEL[k]}: ${COVERAGE_STATE_MEANING[k]}`);
+  return value(words.join(" · "), ["In the latest systematic pass.", ...meanings].join(" "), words);
 }
 
 function safeguardsCell(col: CompareColumn): Cell {
@@ -197,17 +206,18 @@ function placementCell(col: CompareColumn): Cell {
       const pp = s.geography.precision_policy;
       const unit = s.geography.unit_label;
       if (pp?.kinetic === "country" && pp?.other === "country") {
-        return value("Country as a whole, for every record", "No record is placed below the country.", ["Country as a whole"]);
+        return value(`${PLACEMENT_LABEL.national}, for every record`, "No record is placed below the country.",
+          [`${PLACEMENT_LABEL.national}, for every record`]);
       }
       if (pp?.kinetic === "country") {
-        return value(`Attack records: country as a whole. Other records: ${unit} at most`,
-          "An attack or sabotage record has no region, facility or operator. Other records are placed no more precisely than a first-level region.",
-          ["Attacks: country as a whole", `Other records: ${unit} at most`]);
+        return value(`Attack records: ${PLACEMENT_LABEL.national_safeguarded.toLowerCase()}. Other records: ${PLACEMENT_LABEL.one_region.toLowerCase()} (${unit}) at most`,
+          "An attack or sabotage record has no region, facility or operator. Other records are placed no more precisely than one first-level region.",
+          [`Attacks: ${PLACEMENT_LABEL.national_safeguarded.toLowerCase()}`, `Other records: ${PLACEMENT_LABEL.one_region.toLowerCase()} at most`]);
       }
-      // Some systems call their first-level unit simply "region"; "First-level region (region)" says nothing.
+      // Some systems call their first-level unit simply "region"; "One region (region)" says nothing.
       const named = unit && unit !== "region" ? ` (${unit})` : "";
-      return value(`First-level region${named} at most`, "No record is placed more precisely than a first-level region.",
-        [`First-level region${named} at most`]);
+      return value(`${PLACEMENT_LABEL.one_region}${named} at most`, "No record is placed more precisely than one first-level region.",
+        [`${PLACEMENT_LABEL.one_region}${named} at most`]);
     });
 }
 

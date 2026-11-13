@@ -6,7 +6,7 @@ import SystemSwitcher from "./SystemSwitcher";
 import ResearchCoverage from "./ResearchCoverage";
 import {
   CAMPAIGN_STATE_LABEL, LANGUAGE_LABEL, languageNames, ENVIRONMENT_LABEL, READINESS_LABEL, RECOVERY_KIND_LABEL, RECOVERY_LABEL, RESEARCH_COMPLETENESS_LABEL,
-  SECTOR_STATE_LABEL, LANE_STATE_LABEL, labelFor, type CountrySystem, type SourceEntry, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type Episode,
+  SECTOR_STATE_LABEL, labelFor, type CountrySystem, type SourceEntry, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type Episode,
   type ManifestSystem, type SourceHealth,
 } from "./manifest";
 import { EventCard, fmtEventDate } from "./EventCard";
@@ -14,6 +14,8 @@ import { EmptyCorpus } from "./EmptyCorpus";
 import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
 import { NO_SCORE_NOT_ZERO, RESEARCH_PREVIEW_DEFINITION, RESEARCH_PREVIEW_LABEL, inSentence, noScorePlain } from "./countryCopy";
 import { eventAnchor } from "./evidence";
+import { laneLine } from "./laneCoverage";
+import { PLACEMENT_LABEL } from "./placement";
 import { loadContext, rowForSystem, type EnergyContext } from "./context";
 import { NationalFigures } from "./WorldContext";
 import { LOCATION_EVENT, navigate, navigateCompare } from "./router";
@@ -331,8 +333,8 @@ export default function CountryView({ id }: { id: string }) {
             <p className="small legacy-convention">
               {sys.name}'s older records keep an earlier convention: an attack record here names its facility and its
               region. The newer Gulf country pages record an attack for the country as a whole, with no facility or
-              region. Pages that list several countries together show these records the newer way, as national
-              records with no facility, region or effect.
+              region. Pages that list several countries together show these records the newer way, as
+              “{PLACEMENT_LABEL.national_safeguarded}”, with no facility, region or effect.
             </p>
           )}
         </section>
@@ -388,7 +390,7 @@ export default function CountryView({ id }: { id: string }) {
                 dataset, not a quiet country.</span>
             ) : (
               <span className="small dim">This country's own range, not a shared scale.
-                {sys.event_summary.country_level > 0 && <>{" "}National or multi-region events listed but not drawn: {sys.event_summary.country_level}.</>} What was reported and found — not a rate of disruption, and not comparable
+                {sys.event_summary.country_level > 0 && <>{" "}Records marked {PLACEMENT_LABEL.national} or {PLACEMENT_LABEL.several_regions}, listed but not drawn: {sys.event_summary.country_level}.</>} What was reported and found — not a rate of disruption, and not comparable
                 with any other country.</span>
             )}
             {sys.geography.precision_policy?.kinetic === "country" && sys.event_summary.recorded_events > 0 && (
@@ -462,17 +464,14 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
         <span className={`badge research-${rf.completeness}`}>
           {sys.research_log.passes.length === 0 ? "No search has been run yet" : RESEARCH_COMPLETENESS_LABEL[rf.completeness]}
         </span>
-        {/* Separate counts, not "3 of 9": a lane waiting on a publisher and a lane barely begun are not the same shortfall. */}
+        {/* Separate counts by state, never "3 of 9 finished": a group waiting on a publisher, a group
+            barely begun and a planned search set run in full are different states (laneCoverage.ts). */}
         {rf.lane_states && Object.keys(rf.lane_states).length > 0 && (
-          <ul className="lane-state-list">
-            {Object.entries(rf.lane_states).map(([k, n]) => (
-              <li key={k}><span className="mono">{n}</span> {n === 1 ? "source group" : "source groups"}: {labelFor(LANE_STATE_LABEL, k).toLowerCase()}</li>
-            ))}
-          </ul>
+          <p className="lane-state-line">{laneLine(rf.lane_states, rf.lanes_declared)}</p>
         )}
         {rf.last_systematic_pass && rf.coverage_window && (
-          <span className="dim"> · research period {fmtDate(rf.coverage_window[0])} – {fmtDate(rf.coverage_window[1])};
-            last worked on {fmtDate(rf.last_systematic_pass)}; {rf.lanes_complete} of {rf.lanes_declared} source groups finished{overdue ? " (a new pass is due)" : ""}</span>
+          <span className="dim">Research period {fmtDate(rf.coverage_window[0])} – {fmtDate(rf.coverage_window[1])};
+            last worked on {fmtDate(rf.last_systematic_pass)}{overdue ? "; a new pass is due" : ""}.</span>
         )}
       </div>
       <div className="eyebrow">Source health <span className="dim">· whether the registered sources were checked on schedule</span></div>
@@ -554,7 +553,7 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
         </ol>
         {shared.length > 0 && (
           <>
-            <h3 className="eyebrow">Multi-region events that included {regionName}</h3>
+            <h3 className="eyebrow">{PLACEMENT_LABEL.several_regions}: records that included {regionName}</h3>
             <p className="small dim">Listed, not counted on the map for this {unit}.</p>
             <ol className="event-list">
               {[...shared].reverse().map((e) => <EventCard key={e.event_id} e={e} bundle={bundle} targeted={e.event_id === target} />)}
@@ -630,8 +629,8 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
       {countryLevel.length > 0 && (
         <>
           <h3 className="eyebrow">Not placed in one {unit}</h3>
-          <p className="small dim">National, offshore or multi-region events. They are listed, never
-            counted against any single region.</p>
+          <p className="small dim">Records marked {PLACEMENT_LABEL.national} (including offshore) or {PLACEMENT_LABEL.several_regions}.
+            They are listed, never counted against any single region.</p>
           <ol className="event-list">
             {[...countryLevel].reverse().map((e) => <EventCard key={e.event_id} e={e} bundle={bundle} targeted={e.event_id === target} />)}
           </ol>

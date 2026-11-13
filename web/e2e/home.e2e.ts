@@ -6,7 +6,8 @@ import type { Page } from "@playwright/test";
  * Values come from the payload the page loaded, never typed in here.
  */
 
-const ACTIONS = ["Search systems", /Explore the Gulf littoral/, /Compare systems/, /Russia, Belarus & Crimea \(indexed\)/];
+// No "Search systems" action: the search box above the actions is the search (iteration 21 review).
+const ACTIONS = [/Explore the Gulf littoral/, /Compare systems/, /Russia, Belarus & Crimea \(indexed\)/];
 const SEARCH = /Search systems, regions and terms/;
 
 async function manifest(page: Page) {
@@ -24,7 +25,7 @@ function action(page: Page, name: string | RegExp) {
 
 test.describe("home first screen", () => {
   for (const [w, h] of [[1600, 900], [390, 844]] as const) {
-    test(`at ${w}x${h} the purpose, the search and all four actions are on the first screen`, async ({ app, page }) => {
+    test(`at ${w}x${h} the purpose, the search and all three actions are on the first screen`, async ({ app, page }) => {
       await page.setViewportSize({ width: w, height: h });
       await app.open("");
       await expect(page.getByRole("heading", { name: "Energy Disruption Monitor", level: 1 })).toBeInViewport();
@@ -43,7 +44,7 @@ test.describe("home first screen", () => {
     });
   }
 
-  test("the four actions go where they say, and Back returns home each time", async ({ app, page }) => {
+  test("the three actions go where they say, and Back returns home each time", async ({ app, page }) => {
     await app.open("");
     await action(page, /Russia, Belarus & Crimea \(indexed\)/).click();
     await expect(page).toHaveURL(/[?&]sys=ru\b/);
@@ -53,8 +54,7 @@ test.describe("home first screen", () => {
     await expect(page).toHaveURL(/[?&]group=gulf\b/);
     await page.goBack();
     await expect(action(page, /Compare systems/)).toHaveAttribute("href", "?compare=");
-    await action(page, "Search systems").click();
-    await expect(page.getByRole("combobox", { name: SEARCH })).toBeFocused();
+    await expect(page.getByRole("navigation", { name: "Main actions" }).getByRole("button", { name: "Search systems" })).toHaveCount(0);
   });
 
   test("cards: indexed theatre first, countries alphabetical, no count, no score, no status colour", async ({ app, page }) => {

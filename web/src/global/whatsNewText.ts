@@ -1,6 +1,7 @@
 import { daysBetween, fmtDate } from "../data";
 import { indexMoveText } from "../indexText";
 import type { WhatsNewChange, WhatsNewItem, WhatsNewSystem } from "./manifest";
+import { itemPlace } from "./placement";
 
 /** Reader-facing text for the "What's new in the data" panel (iteration 21). Pure, so the
  *  wording that carries the panel's distinctions is tested without a browser. */
@@ -33,7 +34,7 @@ export function changeSummary(c: WhatsNewChange): string {
 }
 
 export function itemText(it: WhatsNewItem): string {
-  let s = `${recordDate(it.date)} · ${it.region} · ${it.class}`;
+  let s = `${recordDate(it.date)} · ${itemPlace(it.region)} · ${it.class}`;
   if (it.fields?.length) s += ` — corrected: ${it.fields.join(", ")}`;
   if (it.recovery_kind) {
     s += ` — ${it.recovery_kind}`;

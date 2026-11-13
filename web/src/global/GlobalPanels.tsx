@@ -6,7 +6,9 @@ import {
 } from "./manifest";
 import { daysBetween, fmtDate } from "../data";
 import { readerText } from "./readerText";
-import { collapseCovered, dated, laneChips, placementOf, type FeedRow } from "./homeModel";
+import { collapseCovered, dated, placementOf, type FeedRow } from "./homeModel";
+import { LANE_STATE_LABEL, laneLine } from "./laneCoverage";
+import { LIST_ENTRY_NOTE, listEntry } from "./placement";
 import { CountryLink, CoveredRunItem, fmtEpisodeDate } from "./feedItems";
 import { openGlossary } from "./GlobalNav";
 
@@ -17,18 +19,18 @@ function FeedItem({ row }: { row: FeedRow }) {
   if (row.kind === "covered-run") return <CoveredRunItem row={row} />;
   const ep = row.ep;
   const place = placementOf(ep);
-  const covered = place.level === "National";
+  const covered = place.kind === "national_safeguarded";
   return (
     <li className="feed-item">
       <div className="feed-line">
         <span className="mono small">{fmtEpisodeDate(ep)}</span>
         <CountryLink id={ep.system_id} name={ep.country} />
         <span className="feed-place small">{place.level}{place.names.length > 0 && <span className="dim">: {place.names.join(", ")}</span>}</span>
-        {covered && <span className="mono small dim" title="A neutral row key, used instead of the record's own name in lists that set countries side by side">row {ep.episode_id}</span>}
+        {covered && <span className="mono small dim row-key" data-row={ep.episode_id}>{listEntry(ep.episode_id)}</span>}
       </div>
       <div className="small dim">{ep.classes.join(", ")} · {ep.causes.join(", ")}</div>
       {ep.episode_name && <div className="small">{ep.episode_name} <span className="dim">(one episode)</span></div>}
-      {covered && <div className="small dim">Published under active-campaign safeguards — see the country page.</div>}
+      {covered && <div className="small dim">{LIST_ENTRY_NOTE}</div>}
     </li>
   );
 }
@@ -78,7 +80,7 @@ export function RecentEvidencePanel() {
             {shown.length === 0 && <li className="small dim">Nothing in the recent list matches these filters.</li>}
           </ol>
           <p className="small dim">Each item opens its country's page, where the full record, its sources and its review are listed.{" "}
-            <button className="linklike" type="button" onClick={() => openGlossary("publication-safeguard")}>What “National” means</button></p>
+            <button className="linklike" type="button" onClick={() => openGlossary("placement")}>What “National”, “Several regions” and “One region” mean</button></p>
         </>
       )}
     </section>
@@ -124,12 +126,12 @@ export function DataQualityPanel({ data, failed, manifest, today }: {
           <details key={s.system_id} className="dq-system">
             <summary>
               <strong>{s.name}</strong>{" "}
-              <span className="small dim">{laneChips(s.lane_states)}</span>
+              <span className="small dim">{laneLine(s.lane_states)}</span>
             </summary>
             <p className="small">Reporting environment: {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}.
               Source families cited: {Object.values(s.source_families).join(", ") || "none"}.
               Newest systematic search {fmtDate(s.last_systematic_pass)}; first {fmtDate(s.first_systematic_pass)}.</p>
-            {[["Blocked by the source", blocked], ["Stopped when the search limit was reached", stopped], ["Publisher has not yet released the rest", waiting], ["Partly searched or not started", partial]].map(([title, ls]) => (
+            {[[LANE_STATE_LABEL.blocked_by_source, blocked], [LANE_STATE_LABEL.stopped_by_search_limit, stopped], ["Publisher has not yet released the rest", waiting], [`${LANE_STATE_LABEL.partially_searched} or ${LANE_STATE_LABEL.not_started.toLowerCase()}`, partial]].map(([title, ls]) => (
               (ls as typeof blocked).length > 0 && (
                 <div key={title as string}>
                   <div className="eyebrow">{title as string}</div>

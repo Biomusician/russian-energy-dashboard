@@ -1,6 +1,7 @@
 import {
-  CAMPAIGN_STATE_LABEL, ENVIRONMENT_LABEL, LANE_STATE_LABEL, labelFor, languageNames, type CountryBundle,
+  CAMPAIGN_STATE_LABEL, ENVIRONMENT_LABEL, labelFor, languageNames, type CountryBundle,
 } from "./manifest";
+import { laneLine } from "./laneCoverage";
 import { rowForSystem, type EnergyContext } from "./context";
 import { NationalFigures } from "./WorldContext";
 import { EMPTY_CORPUS_LEAD, inSentence } from "./countryCopy";
@@ -46,11 +47,7 @@ export function EmptyCorpus({ bundle, ctx, onTab }: {
             {required.length > 0 && <>Languages the plan requires: {languageNames(required)}.</>}
           </p>
           {rf.lane_states && Object.keys(rf.lane_states).length > 0 && (
-            <ul className="small">
-              {Object.entries(rf.lane_states).map(([k, n]) => (
-                <li key={k}>{n} {n === 1 ? "source group" : "source groups"}: {labelFor(LANE_STATE_LABEL, k).toLowerCase()}</li>
-              ))}
-            </ul>
+            <p className="small">{laneLine(rf.lane_states, rf.lanes_declared)}</p>
           )}
         </>
       )}
