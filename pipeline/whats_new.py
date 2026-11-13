@@ -272,7 +272,7 @@ def _pass_key(x):
     return (x.get("date"), x.get("by"), x.get("kind"))
 
 
-def _system_level_changes(prev_sys, curr_sys):
+def _system_level_changes(prev_sys, curr_sys, is_restricted=False):
     """Research, link-health, rule and context changes read from the system document."""
     notes = {k: [] for k in ("research_coverage", "link_health", "methodology", "national_context")}
     old_passes = {_pass_key(x) for x in (prev_sys.get("research_log") or {}).get("passes") or []}
@@ -294,7 +294,10 @@ def _system_level_changes(prev_sys, curr_sys):
         notes["research_coverage"].append(
             "Now a research preview: the systematic search is incomplete." if curr_sys.get("maturity") == "research_preview"
             else "No longer a research preview.")
-    if (curr_sys.get("record_reviewed") or "") > (prev_sys.get("record_reviewed") or ""):
+    # Under the campaign rule a re-review is hidden record by record (_record_changes); announcing
+    # it here for the whole system would say the same thing, with its date (safety red team,
+    # iteration 21). A new record moves this date too, and "new published records" says that.
+    if not is_restricted and (curr_sys.get("record_reviewed") or "") > (prev_sys.get("record_reviewed") or ""):
         notes["research_coverage"].append(
             f"Published records were re-reviewed; the latest review is dated {_day(curr_sys.get('record_reviewed'))}.")
     ps = {s.get("sector"): s.get("state") for s in prev_sys.get("sectors") or []}
@@ -345,7 +348,7 @@ _NOT_THIS_SYSTEM = ("as_of", "inclusion_threshold", "stale_policies")
 # recovery block, its review, the count of withheld records). They must not surface even as a
 # "wording changed" line, so the build-only comparison does not see them there.
 _CAMPAIGN_HIDDEN_EVENT = ("recovery", "review", "publication")
-_CAMPAIGN_HIDDEN_SYSTEM = ("event_summary", "recovery_coverage", "publication_policy")
+_CAMPAIGN_HIDDEN_SYSTEM = ("event_summary", "recovery_coverage", "publication_policy", "record_reviewed")
 
 
 def _comparable(side, is_restricted):
@@ -371,7 +374,7 @@ def country_changes(sid, prev, curr, previous_as_of):
     out = _record_changes((prev.get("events") or {}).get("events") or [],
                           (curr.get("events") or {}).get("events") or [],
                           previous_as_of, is_restricted, labels)
-    out += _system_level_changes(prev.get("system") or {}, curr.get("system") or {})
+    out += _system_level_changes(prev.get("system") or {}, curr.get("system") or {}, is_restricted)
     if not out and _comparable(prev, is_restricted) != _comparable(curr, is_restricted):
         out.append({"category": "build_only",
                     "notes": ["Wording or presentation changed; no record, rule or context changed."]})

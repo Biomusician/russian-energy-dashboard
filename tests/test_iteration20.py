@@ -529,11 +529,11 @@ def _single_site_doc(classes):
 
 def test_an_attack_record_of_a_class_the_country_has_one_site_of_is_refused():
     doc = _single_site_doc({"lng_terminal": {"basis": "one complex"}})
-    attack = {"event_id": "qa-2026-03-01-lng-terminal-attack-1", "date": "2026-03-01", "cause": "kinetic_strike",
+    attack = {"event_id": "qa-2026-03-01-lng-terminal-attack-3f9a2c", "date": "2026-03-01", "cause": "kinetic_strike",
               "asset_class": "lng_terminal", "geography_precision": "country", "region_code": None,
               "regions_affected": [], "episode_id": None}
     assert any("one site of" in p for p in B.precision_problems("qa", doc, [attack]))
-    other = {**attack, "asset_class": "power_plant", "event_id": "qa-2026-03-01-power-plant-attack-1"}
+    other = {**attack, "asset_class": "power_plant", "event_id": "qa-2026-03-01-power-plant-attack-3f9a2c"}
     assert B.precision_problems("qa", doc, [other]) == []
     accident = {**attack, "event_id": "qa-2024-01-01-fire", "cause": "technical"}
     assert B.precision_problems("qa", doc, [accident]) == []
@@ -829,7 +829,7 @@ def test_an_original_headline_must_be_in_its_language_script():
 # --- test-architecture red team survivors -------------------------------------------------------------
 
 def _attack(**kw):
-    e = {"event_id": "kw-2026-03-12-refinery-attack-1", "date": "2026-03-12", "date_precision": "day",
+    e = {"event_id": "kw-2026-03-12-refinery-attack-3f9a2c", "date": "2026-03-12", "date_precision": "day",
          "asset_class": "refinery", "cause": "kinetic_strike", "geography_precision": "country",
          "region_code": None, "regions_affected": [], "facility_name": None, "facility_name_local": None,
          "operator": None, "summary": "A refinery was reported attacked.", "effect": None,
@@ -849,11 +849,13 @@ def test_an_abstracted_attack_record_refuses_either_headline_and_method_text():
     assert any("how the attack was carried out" in p for p in B.precision_problems("kw", _KW, [told]))
 
 
-def test_a_lane_written_id_is_kept_only_in_the_strict_form():
+def test_a_lane_written_id_is_never_kept_even_in_the_strict_form():
     imp = _load("import_candidates")
     r = {"date": "2026-03-12", "asset_class": "refinery"}
-    assert imp.opaque_id("kw", {**r, "candidate_id": "kw-2026-03-12-refinery-attack-1"}) == "kw-2026-03-12-refinery-attack-1"
-    free = imp.opaque_id("kw", {**r, "candidate_id": "kw-2026-03-12-example-site-attack-1"})
+    # Safety red team, iteration 21: a kept "-attack-1" counts the candidates beside it.
+    kept = imp.opaque_id("kw", {**r, "candidate_id": "kw-2026-03-12-refinery-attack-1"}, key=b"k")
+    assert kept != "kw-2026-03-12-refinery-attack-1" and kept.startswith("kw-2026-03-12-refinery-attack-")
+    free = imp.opaque_id("kw", {**r, "candidate_id": "kw-2026-03-12-example-site-attack-1"}, key=b"k")
     assert free.startswith("kw-2026-03-12-refinery-attack-") and "example" not in free
 
 

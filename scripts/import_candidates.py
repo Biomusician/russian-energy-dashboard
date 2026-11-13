@@ -36,8 +36,11 @@ record against its sources, not the world. Every imported event says how it was 
 """
 
 import hashlib
+import hmac
 import json
+import os
 import re
+import secrets
 import sys
 from pathlib import Path
 from urllib.parse import unquote
@@ -467,16 +470,32 @@ def _withheld_recovery():
             "evidence": None, "url": None}
 
 
-def opaque_id(system_id, r):
-    """An id that names no facility, stable for the life of the record: date, class and four hex
-    digits of the queue id's hash."""
-    # A lane that already wrote an opaque id keeps it, so reviews and edits refer to one name, but
-    # only in the strict form: date and class. A lane's own middle words ("...-upstream-production-
-    # attack-1") are free text and can name a site (test-architecture red team, iteration 20).
-    prefix = f"{system_id}-{r['date']}-{r['asset_class'].replace('_', '-')}-attack-"
-    if re.fullmatch(build_systems.OPAQUE_ID.format(cc=system_id), r["candidate_id"]) and r["candidate_id"].startswith(prefix):
-        return r["candidate_id"]
-    tag = hashlib.sha1(r["candidate_id"].encode("utf-8")).hexdigest()[:4]
+# The secret behind every opaque id. It lives beside the queue it protects (data/candidates is never
+# committed) and is exactly as durable: losing it changes the ids once, losing the queue loses more.
+OPAQUE_KEY = ROOT / "data" / "candidates" / "opaque_id.key"
+
+
+def opaque_key():
+    if os.environ.get("EDM_OPAQUE_ID_KEY"):
+        return os.environ["EDM_OPAQUE_ID_KEY"].encode("utf-8")
+    if not OPAQUE_KEY.exists():
+        OPAQUE_KEY.parent.mkdir(parents=True, exist_ok=True)
+        OPAQUE_KEY.write_bytes((secrets.token_hex(32) + "\n").encode("utf-8"))
+    return OPAQUE_KEY.read_bytes().strip()
+
+
+def opaque_id(system_id, r, key=None):
+    """An id that names no facility, stable for the life of the record: date, class and six hex
+    digits of a KEYED hash of the queue id.
+
+    Safety red team, iteration 21. The token used to be the first four digits of sha1(queue id),
+    and a lane's own strict-form id ("...-refinery-attack-2") was kept as written. Queue ids name
+    the facility about four times in ten, so anyone with a list of a country's plants could hash
+    guesses at the public date and class until one matched; and a kept "-attack-2" says a
+    sibling candidate of the same date and class exists, held or not. A key the public never sees
+    closes the first, and never keeping a lane's numbering closes the second."""
+    material = f"{system_id}|{r['candidate_id']}".encode("utf-8")
+    tag = hmac.new(key or opaque_key(), material, hashlib.sha256).hexdigest()[:6]
     return f"{system_id}-{r['date']}-{r['asset_class'].replace('_', '-')}-attack-{tag}"
 
 
