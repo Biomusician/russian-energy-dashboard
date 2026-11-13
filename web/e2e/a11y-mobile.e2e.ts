@@ -75,12 +75,15 @@ test.describe("phone width: nothing off the side", () => {
 // The controls a reader uses to move around and act. Inline explanations inside a sentence are
 // exempt by design (they reach 24 px, the AA size); see styles/touch.css.
 const PRIMARY = [
-  ".global-nav-tools button", ".gsearch input", ".sys-switch select", ".home-action", ".sys-card button.ghost",
+  ".global-nav-tools button", ".gsearch input", ".global-page .sys-switch select", ".home-action", ".sys-card button.ghost",
   ".start-here button", ".global-head .head-actions button", ".country-side .tabs button", ".ev-inspector-toggle",
   ".member-btn", ".compare-col-actions button", ".compare-picker select", ".map-tool",
-  ".drawer-btn", ".mode-switch button", ".tb-tools-toggle", ".why-btn", ".ribbon-more-toggle", ".legend-toggle",
-  ".camera-controls button", "button.play", ".maplibregl-ctrl-zoom-in", ".maplibregl-ctrl-zoom-out",
+  ".drawer-btn", ".legend-toggle", ".camera-controls button", "button.play",
+  ".maplibregl-ctrl-zoom-in", ".maplibregl-ctrl-zoom-out",
 ].join(", ");
+// The theatre header's controls: 24 px (AA), not 44, because the header's height is capped so the
+// map keeps a phone screen (theatre-ux.e2e.ts asserts the cap). See styles/touch.css.
+const THEATRE_HEADER = [".mode-switch button", ".tb-tools-toggle", ".theatre-bar .sys-switch select", ".why-btn", ".ribbon-more-toggle"].join(", ");
 
 test.describe("phone width: 44 px touch targets", () => {
   for (const q of VIEWS.filter((v) => v !== "?help=glossary")) {
@@ -103,6 +106,18 @@ test.describe("phone width: 44 px touch targets", () => {
       expect(r.small).toEqual([]);
     });
   }
+
+  test("the theatre header's controls reach 24 px and the header stays under a third of the screen", async ({ page }) => {
+    await page.setViewportSize(PHONE);
+    await openView(page, "?sys=ru");
+    const heights = await page.locator(THEATRE_HEADER).evaluateAll((els) => els
+      .filter((e) => getComputedStyle(e).display !== "none")
+      .map((e) => Math.min(e.getBoundingClientRect().height, e.getBoundingClientRect().width)));
+    expect(heights.length).toBeGreaterThanOrEqual(5);
+    for (const h of heights) expect(h).toBeGreaterThanOrEqual(23.5);
+    const header = (await page.locator(".theatre-ribbon").boundingBox())!;
+    expect(header.height).toBeLessThan(PHONE.height * 0.31);
+  });
 
   test("inline disclosures reach the 24 px AA minimum", async ({ page }) => {
     await page.setViewportSize(PHONE);

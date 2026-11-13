@@ -364,8 +364,9 @@ html[data-briefing="on"] .map-legend { top: 72px; right: 12px; left: auto; botto
 /* The legend sits above the attribution strip whenever MapLibre draws the strip in full (map wider
    than 640 px). Anchored at 12 px it was drawn across "Boundaries & rivers: Natural Earth..." at
    every desktop and tablet width, and neither could be read (iteration 21). Below 640 px the
-   attribution is the (i) button, closed until asked for, and the legend stays at the foot. */
-.mapwrap:has(.maplibregl-ctrl-attrib:not(.maplibregl-compact)) .map-legend { bottom: 52px; }
+   attribution is the (i) button, closed until asked for, and the legend stays at the foot.
+   Briefing places the legend at the top right itself, so it is left alone there. */
+html:not([data-briefing="on"]) .mapwrap:has(.maplibregl-ctrl-attrib:not(.maplibregl-compact)) .map-legend { bottom: 52px; }
 
 /* ---------- short viewports: the page scrolls, the map keeps a usable height ----------
    Iteration 21 (mobile/a11y). At 200% browser zoom on a 1440x900 screen the viewport is 720x450

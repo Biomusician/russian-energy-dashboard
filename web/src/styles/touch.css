@@ -2,8 +2,9 @@
 
    On a phone, or any coarse pointer, every primary control is at least 44 x 44 CSS px, the size a
    fingertip can hit without also hitting its neighbour (WCAG 2.5.5). Measured before this file:
-   the shared navigation buttons were 25 px tall, the country tabs 25, "Open Canada" 25, the theatre's
-   view switch 24, the map's own zoom buttons 29, the timeline play button 30.
+   the shared navigation buttons were 25 px tall, the country tabs 25, "Open Canada" 25, the
+   map's own zoom buttons 29, the timeline play button 30, the Layers/Overview drawer toggles 26.
+   The theatre's header is the one deliberate exception (see below).
 
    Small labels that explain themselves inside a line of text (the research-preview badge, the
    reporting-environment link) keep their size but reach 24 px, the AA minimum (WCAG 2.5.8).
@@ -39,14 +40,9 @@
 
   /* ---- the theatre ---- */
   .drawer-btn,
-  .mode-switch button,
-  .tb-tools-toggle,
   .tb-tools button.ghost,
-  .why-btn,
-  .ribbon-more-toggle,
   .legend-toggle,
   .camera-controls button.ghost,
-  .theatre-bar .sys-switch select,
   .filters button.ghost,
   .filters select.ghost,
   .filters .search-input,
@@ -54,7 +50,21 @@
   .drawer-close button {
     min-height: 44px;
   }
-  .mode-switch button, .drawer-btn { min-width: 44px; }
+  .drawer-btn { min-width: 44px; }
+
+  /* The theatre header is the exception, on purpose. It is a fixed app shell whose height is
+     capped (the header must stay under 31% of a phone screen, so the map keeps the screen; a
+     tested rule). At 44 px its six controls took the header from ~250 to 331 px of an 844 px
+     phone. Its controls get the AA 24 px instead; the controls ON the map, which cost the
+     header nothing, get the full 44. */
+  .mode-switch button,
+  .tb-tools-toggle,
+  .theatre-bar .sys-switch select,
+  .why-btn,
+  .ribbon-more-toggle {
+    min-height: 24px;
+  }
+  .mode-switch button { min-width: 44px; }
   button.play { width: 44px; height: 44px; }
   .maplibregl-ctrl-group button { width: 44px; height: 44px; }
   .maplibregl-ctrl-group button .maplibregl-ctrl-icon { background-size: 30px 30px; }
