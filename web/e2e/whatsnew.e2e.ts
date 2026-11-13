@@ -105,7 +105,8 @@ test.describe("what's new in the data", () => {
     await ru.locator("summary").click();
     await panel.locator('.wn-system[data-system="sa"] summary').click();
     await expect(ru.locator(".wn-cat")).toHaveText(["Index moved by time decay only"]);
-    await expect(ru).toContainText("Monitored-Area ESDI 6.80 to 6.69.");
+    // Levels at the headline's one decimal, the movement at two (methodology red team, iteration 21).
+    await expect(ru).toContainText("Monitored-Area ESDI 6.8 to 6.7 (−0.11).");
     await expect(ru).not.toContainText("New published records");
     const sa = panel.locator('.wn-system[data-system="sa"]');
     await expect(sa).toContainText("dated 1 Mar 2022 to 1 May 2024. All dated before the previous build: the record catching up, not new disruption.");

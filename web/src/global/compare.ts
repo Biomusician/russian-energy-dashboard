@@ -330,6 +330,7 @@ export const EXPORT_ROW_IDS: CompareRowId[] = ["view_type", "as_of", "index", "m
   "safeguards", "placement", "ctx_total_production", "ctx_crude_production", "ctx_gas_production", "ctx_electricity_generation"];
 
 export const EXPORT_NOT_COMPARABLE = "Not comparable: event counts; this is context and research state only.";
+export const EXPORT_CONTEXT_CAVEAT = "National energy figures are context: a larger figure is not a more important or more disrupted country.";
 
 export interface CompareBrief {
   title: string;
@@ -365,6 +366,8 @@ export function compareBriefLines(cols: CompareColumn[], rows: CompareRow[], ctx
       "Research coverage differs by system and is incomplete everywhere: a missing record is not evidence that nothing happened, and a research preview's search has not yet run as far as planned.",
       `${NO_INDEX_MEANING} The one index on this site belongs to a single monitored area, is built for it alone and is not comparable, so no index value is shown here.`,
       EXPORT_NOT_COMPARABLE,
+      // The page says this above the context rows; the image travels without the page.
+      ...(ctx ? [EXPORT_CONTEXT_CAVEAT] : []),
       `Energy Disruption Monitor · open sources${ctx ? ` · ${ctx.source.attribution}` : ""}`,
     ],
   };

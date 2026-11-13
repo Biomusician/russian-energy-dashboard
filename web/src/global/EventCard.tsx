@@ -158,14 +158,15 @@ export function EventCard({ e, bundle, inEpisode = false, targeted = false }: {
         )}
       </div>
 
+      {/* The anchor already existed and "Copy view link" keeps it, but nothing on the page exposed
+          it: an analyst citing one record had no way to get its address. A plain link, so it can be
+          copied, opened or bookmarked without a clipboard permission. Placed BEFORE the toggle so the toggle's
+          next Tab stop stays its own panel. */}
+      {anchor && <a className="ev-permalink" href={`#${anchor}`}>Link to this record</a>}
       <button ref={toggleRef} type="button" className="ghost ev-inspector-toggle" aria-expanded={open}
               aria-controls={panelId} onClick={() => setOpen((o) => !o)}>
         {open ? "Close evidence inspector" : "Evidence inspector"}
       </button>
-      {/* The anchor already existed and "Copy view link" keeps it, but nothing on the page exposed
-          it: an analyst citing one record had no way to get its address. A plain link, so it can be
-          copied, opened or bookmarked without a clipboard permission. */}
-      {anchor && <a className="ev-permalink" href={`#${anchor}`}>Link to this record</a>}
       {open && (
         <EvidenceInspector id={panelId} e={e} bundle={bundle}
           onClose={() => { setOpen(false); toggleRef.current?.focus(); }} />

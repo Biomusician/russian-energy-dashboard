@@ -97,7 +97,7 @@ export function RecentEvidencePanel() {
       {data && (
         <>
           <p className="small"><strong>Newest is not worst, and a country with no item here is not a quiet country.</strong>{" "}
-            <span className="dim">Newest first, by event date. {data.scope} {readerText(data.note)}</span></p>
+            <span className="dim">Newest first, by the latest date in each item (its end date where one is reported, so a long episode sits where it ended). {data.scope} {readerText(data.note)}</span></p>
           <div className="map-control-row">
             <label className="small">Country{" "}
               <select aria-label="Filter recent evidence by country" value={country} onChange={(e) => setCountry(e.target.value)}>

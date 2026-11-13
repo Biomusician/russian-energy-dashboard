@@ -133,6 +133,14 @@ test.describe("the headline and what it means", () => {
       Object.values(snap.explanations.sectors as Record<string, { basis: string }>)
         .filter((e) => e.basis === "event_burden").length);
     await expect(strip).toContainText("excluded, not zero");
+    // A scored sector with a live value never reads "0.0" (electric generation sits at 0.03).
+    for (let i = 0; i < snap.sectors_covered.length; i++) {
+      const v: number = snap.sectors[snap.sectors_covered[i]];
+      if (v > 0) await expect(cells.nth(i).locator(".sc-value")).not.toHaveText("0.0");
+    }
+    // The scale line says what METHODOLOGY §1 says: a weighted share, not measured loss.
+    await expect(page.locator(".hl-scale")).toContainText("weighted by evidence, cause and elapsed time");
+    await expect(page.locator(".hl-scale")).toContainText("not measured loss");
 
     await page.setViewportSize({ width: 1024, height: 768 });
     await expect(strip).toBeHidden();

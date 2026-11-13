@@ -39,7 +39,7 @@
 .source-gloss { font-style: italic; }
 
 .ev-inspector-toggle { margin-top: 6px; font-size: 11px; }
-.ev-permalink { margin-left: 10px; font-size: 11px; }
+.ev-permalink { margin-right: 10px; font-size: 11px; }
 .ev-inspector {
   margin-top: 6px; padding: 8px 10px; border-left: 2px solid var(--accent-dim);
   background: var(--bg-panel-2); border-radius: var(--radius);
