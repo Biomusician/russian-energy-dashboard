@@ -71,7 +71,7 @@ export default function ComparisonTray({
                 <span>90-day change</span><span className="num" style={{ color: changeColor }}>{fmtDelta(change)}</span>
               </div>
               <div className="compare-kv"><span>Events to date</span><span className="num">{snap?.incident_count ?? 0}</span></div>
-              <div className="compare-kv"><span>Unresolved</span><span className="num">{snap?.unresolved_count ?? 0}</span></div>
+              <div className="compare-kv" title="Reported disruptions with no restoration report by the status cut-off; counted at the publication date. Not facilities known to be down now."><span>No restoration report</span><span className="num">{snap?.unresolved_count ?? 0}</span></div>
               <div className="compare-kv">
                 <span>Top sector</span>
                 <span className="num" style={{ fontSize: 11 }}>{topSector ? `${titleCase(topSector[0])} ${fmtNum(topSector[1], 1)}` : "—"}</span>

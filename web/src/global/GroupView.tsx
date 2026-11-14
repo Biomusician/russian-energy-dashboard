@@ -260,7 +260,7 @@ export default function GroupView({ id }: { id: string }) {
                     {listed.map((s) => (
                       <li key={s.system_id}>
                         {/* Named for what it does: the table and the recent list below have
-                            buttons called just "Kuwait" that open the country page. */}
+                            buttons called just by the country's name that open its page. */}
                         <button type="button" className={`member-btn${pointA3 === s.a3 ? " is-pointed" : ""}`} aria-pressed={sel?.a3 === s.a3}
                           aria-label={`${s.name}, show on the map`}
                           title={`${memberships(s)}. Select to highlight and zoom to it on the map.`}

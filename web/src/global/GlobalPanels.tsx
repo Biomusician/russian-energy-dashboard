@@ -9,6 +9,7 @@ import { readerText } from "./readerText";
 import { collapseCovered, dated, laneChips, placementOf, type FeedRow } from "./homeModel";
 import { CountryLink, CoveredRunItem, fmtEpisodeDate } from "./feedItems";
 import { openGlossary } from "./GlobalNav";
+import { theatreDelayLine } from "../statusDelay";
 
 
 /** Recent evidence and Data Quality on the global home (iteration 18; rewritten iteration 21). */
@@ -93,6 +94,7 @@ export function DataQualityPanel({ data, failed, manifest, today }: {
   // The reader's calendar day, not the UTC one: a build at 04:21 UTC is still yesterday in the Americas.
   const buildDay = localDayOf(manifest?.build_time);
   const safeguarded = (manifest?.systems ?? []).filter((s) => s.campaign_restricted);
+  const theatreLine = theatreDelayLine(manifest);
   return (
     <section className="panel global-note data-quality-panel" aria-label="Data quality">
       <h2 className="home-h2">Data freshness and quality</h2>
@@ -151,8 +153,9 @@ export function DataQualityPanel({ data, failed, manifest, today }: {
         <dt>What is withheld?</dt>
         <dd className="small">{safeguarded.length
           ? `While attacks on energy facilities are being reported, some detail is not published for: ${safeguarded.map((s) => s.name).join(", ")}.`
-          : "No system is under publication safeguards."}{" "}
-          <span className="dim">The record still shows its date, class and cause; the facility's later status is not published.</span></dd>
+          : "No country system is under publication safeguards."}{" "}
+          <span className="dim">The record still shows its date, class and cause; the facility's later status is not published.</span>
+          {theatreLine && <><br /><span className="theatre-delay">{theatreLine}</span></>}</dd>
 
         <dt>Can countries be compared?</dt>
         <dd className="small">No. Countries report under very different rules, so counts and dates are not comparable between

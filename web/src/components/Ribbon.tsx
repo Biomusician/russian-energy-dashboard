@@ -5,6 +5,7 @@ import { buildDeltaTitle, fmtIndex } from "../indexText";
 import { assessFreshness } from "../freshness";
 import { HEADLINE_SHARE, HEADLINE_WEIGHTING, TRANSMISSION_CAVEAT, reconstructionLabel } from "../briefing";
 import { severityColor } from "../palette";
+import { noReportMeaning } from "../statusDelay";
 import type { InspectTarget } from "./Inspector";
 import TheatreBar, { type TheatreTool } from "./TheatreBar";
 import type { TheatreMode } from "../theatreMode";
@@ -232,11 +233,12 @@ export default function Ribbon({
               cross-class median — a 2-day terminal restart and a 205-day gas-plant repair are not
               one repair time. These are as-at-build counts; only the ESDI follows the scrubber, so
               the group says so once, in words, instead of on every label. */}
-          <div className="recovery-group" title="Counts as at the latest build — they do not follow the timeline scrubber; only the index does.">
-            <span className="rg-head">Recovery evidence · <span className="warn-text">latest build</span></span>
+          <div className="recovery-group" title="Counted at the publication date — these do not follow the timeline scrubber; only the index does.">
+            <span className="rg-head">Recovery evidence · <span className="warn-text">not timeline-linked</span></span>
             <div className="rg-stats">
               <RecoveryStat value={rs.unresolved_count} color="var(--amber)"
-                            label="facilities with no restoration report (modelled)" />
+                            label="with no restoration report by the cut-off"
+                            title={noReportMeaning(snapshot.as_of, snapshot.campaign_policy)} />
               <RecoveryStat
                 value={rs.observed_restoration_episodes}
                 color="var(--green)"

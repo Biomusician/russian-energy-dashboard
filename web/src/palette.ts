@@ -126,9 +126,11 @@ export const ZERO_SHORT: Record<string, string> = {
   // Deliberately not "nothing recorded": a region with recorded history whose events have
   // decayed below the scoring cutoff lands here, and "Chuvash · 1 events · nothing recorded"
   // is a sentence contradicting itself two words earlier.
-  NO_RECORDED_IMPAIRMENT: "no impairment contributing on this date",
-  IMPAIRMENT_ONLY_IN_UNCOVERED_SECTOR: "impaired only in a sector the index cannot score",
-  COVERED_IMPAIRMENT_WITH_NO_CAPACITY_FIGURE: "impaired, but no capacity figure to measure it against",
+  // Not "impaired" either (iteration 21): in a rankings row that word read as a statement that
+  // the region's facilities are damaged now.
+  NO_RECORDED_IMPAIRMENT: "no reported disruption still weighs on the index on this date",
+  IMPAIRMENT_ONLY_IN_UNCOVERED_SECTOR: "disruption reported only in a sector the index cannot score",
+  COVERED_IMPAIRMENT_WITH_NO_CAPACITY_FIGURE: "disruption reported, but no capacity figure to measure it against",
   COVERED_SECTOR_SIGNAL_ROUNDS_TO_ZERO: "a real contribution too small to show at two decimals",
   NOT_APPLICABLE: "not defined here: no sector has a usable denominator",
 };

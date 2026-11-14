@@ -102,8 +102,10 @@ export function Bar({
   );
 }
 
+// "impaired" is the model's state for a disruption with no restoration report. Shown as
+// "Impaired" it read as an observed operating status (iteration 21 first-time-user review).
 const STATUS_LABEL: Record<string, string> = {
-  impaired: "Impaired",
+  impaired: "No restoration report",
   partial_restart: "Partial restart",
   substantially_restored: "Substantially restored",
   fully_reconstituted: "Fully reconstituted",
@@ -164,7 +166,7 @@ export function RecoveryLine({ r }: { r: RecoveryState }) {
       <span style={{ color: "var(--text-dim)" }}>{STATUS_LABEL[r.recovery_status] ?? r.recovery_status}</span>
       {r.recovery_kind && <RecoveryKind kind={r.recovery_kind} />}
       {!releasedOnly && r.impairment_age_days != null && (
-        <span style={{ color: "var(--text-dim)" }}>impaired {r.impairment_age_days} d</span>
+        <span style={{ color: "var(--text-dim)" }}>{r.impairment_age_days} d since disruption</span>
       )}
       {r.recovery_status === "partial_restart" && r.partial_operations_resumed_at && (
         <span style={{ color: "var(--amber)" }}>

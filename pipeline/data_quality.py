@@ -466,9 +466,9 @@ def cannot_tell_you(snapshot, explanations):
         items.append({
             "question": "Whether a specific facility has actually been repaired",
             "answer": (
-                f"Usually not. {rs['unresolved_count']} impairments have no observed resolution, "
-                "so their decline over time is modelled decay, not evidence of repair. Where a "
-                "restoration WAS observed, the record says so and the evidence kind travels with "
+                f"Usually not. {rs['unresolved_count']} reported disruptions have no published "
+                "restoration report, so their decline over time is modelled decay, not evidence "
+                "of repair. Where a restoration WAS observed, the record says so and the evidence kind travels with "
                 "the number."),
             "basis": "recovery_stats",
         })

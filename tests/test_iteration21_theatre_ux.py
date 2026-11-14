@@ -122,3 +122,30 @@ def test_theatre_has_one_reader_facing_name():
     index = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
     assert "Western Russia & Belarus" not in index
     assert "document.title = `Energy Disruption Monitor — ${theatreName}`" in _src("App.tsx")
+
+
+# --- the status-delay rule is stated, never implied away --------------------------------------
+
+def test_manifest_carries_the_theatre_status_delay_from_the_snapshot_policy():
+    """The home page states the theatre's delay from the manifest (it does not load the theatre
+    snapshot). The figure comes from the snapshot's campaign policy, and is null without one."""
+    from pipeline import build_systems as B
+    snap = {"esdi": 1.0, "as_of": "2026-11-13",
+            "campaign_policy": {"applied": True, "evidence_embargo_days": 45}}
+    assert B._theatre_status_delay(snap) == 45
+    assert B._theatre_status_delay({**snap, "campaign_policy": {"applied": False}}) is None
+    assert B._theatre_status_delay({"esdi": 1.0, "as_of": "2026-11-13"}) is None
+
+
+def test_theatre_recovery_labels_carry_no_operating_status_wording():
+    """A first-time reader took these for a list of facilities down now (iteration 21)."""
+    text = _src("components/tabs.tsx") + _src("components/Ribbon.tsx") + _src("palette.ts")
+    checked = 0
+    for phrase in ("awaiting reconstitution", "Median impairment age", "latest build",
+                   "impaired, but no capacity figure", "Counted, never named", "no figures yet",
+                   "generated deterministically", "Unresolved disruptions"):
+        assert phrase not in text, phrase
+        checked += 1
+    assert checked > 0
+    assert "Full AOI</button>" not in _src("components/MapPanel.tsx")
+    assert "Recovery lifecycle explorer</button>" not in _src("components/Dossier.tsx")

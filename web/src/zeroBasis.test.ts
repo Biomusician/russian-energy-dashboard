@@ -35,7 +35,9 @@ describe("every kind of zero has words of its own", () => {
   it("never describes an unmeasured zero as an absence of damage", () => {
     for (const basis of ALL) {
       if (zeroIsUnmeasured(basis)) {
-        expect(ZERO_SHORT[basis]).toMatch(/impaired|not defined/);
+        expect(ZERO_SHORT[basis]).toMatch(/disruption reported|not defined/);
+        // Never an operating status: "impaired" read as "damaged now" (iteration 21).
+        expect(ZERO_SHORT[basis]).not.toMatch(/impair/i);
         expect(ZERO_SHORT[basis]).not.toMatch(/nothing/);
       }
     }

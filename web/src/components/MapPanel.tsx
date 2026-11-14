@@ -1241,7 +1241,7 @@ export default function MapPanel({
       ))}
 
       <div className="camera-controls">
-        <button className="ghost" onClick={() => flyTo(AOI_BOUNDS)}>Full AOI</button>
+        <button className="ghost" onClick={() => flyTo(AOI_BOUNDS)} title="Frame the whole monitored area">Whole area</button>
         <button className="ghost" onClick={() => flyTo(WEST_BOUNDS)}>West / Black Sea</button>
         <button className="ghost" onClick={() => flyTo(NETWORK_BOUNDS)}
                 title="Frame the Russia–Europe oil &amp; gas trunk network context">
@@ -1249,8 +1249,8 @@ export default function MapPanel({
         </button>
         {currentActivityBounds && (
           <button className="ghost" onClick={() => flyTo(currentActivityBounds)}
-                  title="Fit the administrative regions with unresolved disruption">
-            Current activity
+                  title="Frame the regions with a reported disruption and no restoration report by the status cut-off. Not a map of facilities down now.">
+            Regions with no report
           </button>
         )}
       </div>
