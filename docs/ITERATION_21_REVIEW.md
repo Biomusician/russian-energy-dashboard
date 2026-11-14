@@ -501,7 +501,7 @@ Release gate, on the integrated tree (theatre pass and the day's refresh merged,
 | vitest | 275 passed (22 files) | 453 passed (36 files) |
 | TypeScript | clean | clean |
 | Vite build | succeeds | succeeds (the existing large-chunk warning for the map library) |
-| Playwright (local preview, including accessibility and structure checks) | 205 passed, 1 skipped | 396 passed, 1 skipped |
+| Playwright (local preview, including accessibility and structure checks) | 205 passed, 1 skipped | 396 passed, 1 skipped; 399 with the wide-font tests of §28 |
 | Refresh-gated pytest in the next-day simulation | 1,034 passed, 4 skipped, 24 deselected | 1,138 passed, 42 skipped, 57 deselected |
 
 The extra skips in the simulation are the tests that run the shipped TypeScript through esbuild; a
@@ -711,7 +711,7 @@ same-day bot commit. A fetch immediately before the push found
 | pytest (full) | 1,235 passed, 2 skipped |
 | Publication / safety gate (the bot's `-m "not repo_hygiene and not needs_raw_cache"`) | inside the full run; separately in the simulation, 1,138 passed |
 | vitest, TypeScript, Vite build | 453 passed; clean; succeeds |
-| Playwright, full (accessibility, phone, structure goldens) | 396 passed, 1 skipped |
+| Playwright, full (accessibility, phone, structure goldens) | 396 passed, 1 skipped (then the three wide-font tests of §28, and the theatre and phone specs re-run: 86 passed) |
 | Mutation campaign | 376 mutants, 376 caught, 0 survived, 0 invalid anchors, 0 errors, 0 baselines not green |
 | Final-artifact safety scan (served JSON, every system) | 0 problems |
 | Held-name scan (served files, built bundle, docs changed this iteration, against every unpublished queue name and id) | 0 real hits; 10 substring hits examined, all false (an ordinary word, a published name or id containing a held one, a non-campaign lane's published search plan) |
@@ -732,7 +732,33 @@ bot's real fetch succeeded the same day (`b3bbe5e`).
 
 ## 28. Production
 
-<!-- LEAD: at release -->
+| | |
+|---|---|
+| Start | local `51eb9c6`; `origin/main` `5b68a82` (daily refresh), later `b3bbe5e` (daily refresh, merged) |
+| First push | `e8a6aef`, 2026-11-14T01:20Z, a fast-forward of `b3bbe5e`. CI: python and frontend success, **e2e failure**; Production deployment success |
+| Fix push | `ef5f4f4` and this section (below) |
+
+**What CI caught that the local gate did not.** Three layout caps failed on CI's Linux runner and
+passed on this machine: the theatre header at 1024 × 768 (241 px against a 238 px cap) and at
+390 × 844 (267 against 262), and the phone briefing's footer caveats drawn over the legend. The
+runner has none of the font stack (Inter, Segoe UI, Roboto) and falls back to DejaVu Sans, which is
+wider; the layout had a few pixels of slack in the Windows font and none in a wider one. Readers on
+Linux would have seen the same, so this was a product defect, not a test artefact. Reproduced
+locally by forcing Verdana (DejaVu's widths): 245 px and 270 px, matching CI to within 4 px.
+
+The fix makes the header tolerate font width rather than tuning it to one machine: the system picker
+grows into the space left instead of claiming its widest option, the headline and ratio blocks have
+flexible bases, and on phones the date line is slightly smaller and reads "peak" with "to date" in the
+text and tooltip; in phone briefing the legend drops its "All keys" button, as briefing already drops
+the map's working controls. With a wide font the header is now 177 px at 1024 and 252 px on a phone,
+and the briefing caveats clear the legend by 32 px. Three new e2e tests measure all of this in a wide
+font on any machine; all three fail on the previous layout. No screenshot golden moved.
+
+The production deployment of `e8a6aef` was live during this: served data identical to the release
+commit, safety scans clean, the new wording in the bundle (below). The defect it carried was the
+layout tightness above, on Linux fonts only.
+
+<!-- LEAD: production verification of the fix push -->
 
 ## 29. Remaining owner decisions
 
