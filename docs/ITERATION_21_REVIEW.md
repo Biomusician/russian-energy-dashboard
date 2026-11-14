@@ -736,7 +736,8 @@ bot's real fetch succeeded the same day (`b3bbe5e`).
 |---|---|
 | Start | local `51eb9c6`; `origin/main` `5b68a82` (daily refresh), later `b3bbe5e` (daily refresh, merged) |
 | First push | `e8a6aef`, 2026-11-14T01:20Z, a fast-forward of `b3bbe5e`. CI: python and frontend success, **e2e failure**; Production deployment success |
-| Fix push | `ef5f4f4` and this section (below) |
+| Fix push | `0fa30fd` (the font fix `ef5f4f4` and its review note): CI python, frontend and e2e success; Production deployment success |
+| Export fix push | `fbd070e` and this section: see below |
 
 **What CI caught that the local gate did not.** Three layout caps failed on CI's Linux runner and
 passed on this machine: the theatre header at 1024 × 768 (241 px against a 238 px cap) and at
@@ -758,7 +759,44 @@ The production deployment of `e8a6aef` was live during this: served data identic
 commit, safety scans clean, the new wording in the bundle (below). The defect it carried was the
 layout tightness above, on Linux fonts only.
 
-<!-- LEAD: production verification of the fix push -->
+**Production verification of `0fa30fd`.**
+
+- Served bytes: the manifest, every global payload, the snapshot and data-quality payloads, and the
+  events, system and regions payloads of all twelve country systems (45 files) fetched from
+  production and compared with the commit: all 45 identical. The same comparison on `e8a6aef`: 45 of
+  45.
+- Safety scan of the production bytes: 0 problems (no coordinate-like key; no status, end date or
+  recovery detail on a campaign-covered record; abstracted attack records without facility,
+  operator, region, headline or method-naming address; no route wording; no held count).
+- The production bundle carries the iteration-21 theatre wording and none of the old phrases.
+- Production browser suite (`E2E_BASE_URL` set to production; screenshot goldens excluded, as they
+  are tied to this machine's renderer): 396 passed, 1 skipped.
+
+**Production first-time-user pass and export QA**, by an evaluator who had built none of it, on
+desktop and phone, eight tasks: 5 obvious, 3 findable, none not stated or misleading. Compare showed
+no ranking; the Kuwait Evidence Inspector answered every question; What's new named the 12 November
+build; no page scrolled sideways on a phone. It found one serious defect and several smaller ones:
+
+- **The theatre's exported PNG had no choropleth.** The exporter rebuilt the map from its style,
+  which does not carry the feature state the theatre colours its regions by, so every region came
+  out at the lowest colour under a legend showing the full scale. The defect dates from the first PNG
+  export (iteration 11); every export test since checked only that the image was not blank, which
+  halos and borders satisfied. The exported legend also lacked the halo key ("activity, not current
+  damage") and the Crimea key. **Fixed in `fbd070e`**: the exporter copies the regions' values and
+  selection, the legend carries both keys, and a browser test compares the export's shaded share with
+  the live map's (it fails on the old exporter: 0.006 against 0.022).
+- **The Recovery tab's badge** showed the whole area's count beside a selected region's own counts.
+  Fixed: hidden while a region is selected, with a tooltip saying what it counts.
+- The rest are open (§31): a scope note that opens only on hover or tap, two overlaps in briefing,
+  Crimea under the export footer at the default camera, figures in the Recovery tab that need a line
+  each, and small export caveat gaps. Nothing exposed facility status, routes, shipping or targeting.
+
+The release gate for `fbd070e`: tsc clean, vitest 454, full Playwright 400 passed and 1 skipped
+(then the theatre, Russia and history specs on the final exporter, 67 passed), full pytest 1,235
+passed and 2 skipped, mutation campaign from mutant 269 (every mutant aimed at a changed file and all
+after it) 107 of 107 caught, no invalid anchor.
+
+<!-- LEAD: production verification of fbd070e -->
 
 ## 29. Remaining owner decisions
 
@@ -812,3 +850,13 @@ behaviour stays in force):
 5. **The owner decisions in §29**, especially Saudi harmonisation and review dates on campaign systems.
 6. Retire the served coal limitations string that no surface renders, after confirming no consumer
    reads it.
+7. **Leftovers from the production first-time-user pass (§28):** the theatre map's scope note is
+   collapsed to one clipped line and opens only on hover or tap, not from the keyboard; in briefing
+   the zoom control sits on the frame's subtitle on desktop and the briefing buttons on the map
+   attribution; Crimea sits partly under the export's caveat footer at the default camera; the
+   Recovery tab's figures (no restoration reports beside observed-restoration episodes, a class at
+   "24/24 with no report" beside a median of four) need one line each saying what they count; country
+   images lack the page's "Research preview" caveat; the Gulf brief shows an ISO release date and its
+   download button explains itself only after a click. One phrasing on the Kuwait page explains
+   national-only placement by where facility classes are concentrated; it names nothing, but is worth
+   a safety reading.
