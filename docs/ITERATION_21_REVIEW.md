@@ -270,7 +270,36 @@ No score, weight or meaning changed. The work was to make the existing figures r
 - **Phone:** stacked header within its height cap, compact legend with "All keys", attribution behind
   its own button, presets on one row.
 
-<!-- LEAD: theatre status wording pass (wave 3) -->
+**Recovery wording (wave 3).** The after-pass evaluator still read the recovery block as "these
+Russian facilities are down now". The figures were right; the words were facility-status words.
+The rule behind them is that, while attacks on energy facilities are being reported, a restoration
+report is used only once it is 60 days old (`campaign_policy.evidence_embargo_days` in the
+snapshot). A "no report" count therefore means no public restoration report dated on or before the
+status cut-off; the facility may already be working. Every surface now says that:
+
+| Before | After |
+|---|---|
+| Facilities awaiting reconstitution | No restoration report by the cut-off |
+| Median impairment age | Median days since disruption, no report |
+| Unresolved disruptions | No restoration report by the cut-off, with one shared meaning sentence |
+| Reconstitution backlog | Modelled reconstitution backlog, "an assumption, not a report of any facility" |
+| "Impaired · impaired 54 d" | "No restoration report · 54 d since disruption" |
+| Current activity (camera preset) | Regions with no report, "not a map of facilities down now" |
+| "impaired, but no capacity figure" (rankings, zero notes, Inspector) | "disruption reported, but no capacity figure" |
+| Planned economic indicators / "ready · no figures yet" | Economic figures not yet available, with the reason |
+
+The meaning sentence, the cut-off date and the delay come from one module (`web/src/statusDelay.ts`)
+reading the served policy, so the wording cannot drift from the rule. The home "What is withheld?"
+now has a theatre line; it reads the delay from a new manifest field (`status_delay_days`), because
+the home page does not load the theatre snapshot.
+
+**A real bug found on the way.** With a region selected (for example Samara Oblast) the Recovery tab
+showed the whole area's tiles and the whole area's facility list, including other regions'
+facilities, under the region's name. The Repair-burden tab did the same for three national figures.
+The Recovery tab now heads its pooled figures "whole monitored area · not filtered to <region>",
+lists only the region's facilities (with an empty state saying no evidence is not a statement about
+current condition), and area-wide repair figures carry "· all regions". A Playwright test pins it,
+including that another region's facility is absent.
 
 ## 10. Maps
 
@@ -444,7 +473,8 @@ with time and the daily data.
 | One Saudi research-gap sentence reworded | `data/curated/systems/sa/system.json` | It described a held record (§24) |
 | Research log entries for pass 21 in six Gulf systems | `data/curated/systems/<id>/research_log.json` | §17 |
 
-<!-- LEAD: theatre status wording changes to served strings, if any -->
+| `status_delay_days` on the theatre's manifest entry, from the snapshot's campaign policy (null when no policy applies) | `pipeline/build_systems.py` | The home "What is withheld?" theatre line states the delay without loading the 283 kB snapshot (§9) |
+| Zero notes and the data-quality "cannot tell you" answer reworded from "impairment" to "reported disruption with no published restoration report" | `pipeline/explain.py`, `pipeline/data_quality.py` | §9; text only, the index and every count unchanged |
 
 ## 20. Tests
 
@@ -471,7 +501,9 @@ The pass ranked five remaining problems. All five were then worked:
 
 1. **The theatre's recovery wording still read like facility status** ("awaiting reconstitution",
    "impairment age", "impaired"), and the home "What is withheld?" named only the Gulf states although
-   the theatre also has a withholding rule. <!-- LEAD: outcome of the wave-3 theatre pass -->
+   the theatre also has a withholding rule. Fixed: every recovery count is
+   now worded as "no restoration report by the cut-off" with the delay rule beside it, and the home
+   panel has a theatre line (§9). The pass also found and fixed a region-filter bug in the Recovery tab.
 2. **Research-coverage vocabulary drifted** between surfaces, and "declared complete" in the Compare
    PNG overstated thoroughness. Fixed with one vocabulary module (§6).
 3. **Five labels for "not placed in one region".** Fixed with one placement vocabulary (§7).
@@ -482,7 +514,8 @@ The pass ranked five remaining problems. All five were then worked:
    within the header cap), maps show no loading indicator for two to three seconds (open, §31).
 
 Engineering-demo leftovers it named: the raw row key (now "list entry N"), the redundant "Search
-systems" button (removed), theatre jargon and process text <!-- LEAD: theatre pass outcome -->.
+systems" button (removed), theatre jargon and process text (reworded in the same pass: "Full AOI", "Recovery
+ lifecycle explorer" and the generator note on summaries now read in plain words, §9).
 
 ## 23. Analyst red team
 
@@ -540,7 +573,41 @@ unknown, not applicable and not yet researched stay distinct; nothing is ordered
 
 ## 26. Test-architecture red team
 
-<!-- LEAD: handoff pending -->
+The test-architecture red team asked one question of every new surface: if this behaviour broke, would
+any test notice? It wrote 95 behavioural mutants against the shipped TypeScript and Python (changes
+to what the code does, not to strings a test happens to grep). **36 survived every layer** before it
+added tests. The most serious:
+
+| Mutant | What broke and nothing noticed |
+|---|---|
+| C04 | Compare's safeguards row said "No" for an UNCERTAIN Gulf campaign system |
+| C05 | Compare said a country-level system placed its attack records by region |
+| C06 | A lane blocked by its source was counted as searched to completion |
+| R01–R03 | The research-coverage pages dropped the campaign signal (state, policy, under review) |
+| T01, T02, T05 | Theatre rows showed modelled status for withheld records |
+| E08–E10 | An unchecked citation read as reachable; the build could mark every citation reachable |
+| W06, W07, W11, W13, W14 | What's new: a restricted system's changes, a diverged baseline, ordering by size of change |
+| P04, P07, P09, P10 | Error boundaries that did not contain, failed requests kept in the cache |
+
+Of the other 59, 14 were caught by pytest, 38 only by vitest and 8 only by Playwright. That matters
+because the mutation campaign runs pytest alone, so a behaviour guarded only by vitest or a browser
+test was invisible to it. The team added `tests/test_iteration21_testarch.py` (45 tests) and `web/src/global/testarch.test.tsx`,
+which load the shipped TypeScript through esbuild and Node, so pytest now catches 90 of the 95.
+**81** were registered in the campaign (`ITER21_TESTARCH_MUTATIONS`); the rest were already
+caught by existing pytest, or were folded together when the code they targeted was merged. To make the behaviour
+testable it exported a few pure helpers (`exportBlocker` and `moveColumn` in `compare.ts`, the
+`WhatsNewPanel` view split from its loader, `EpisodeItem`, `EvidenceInspector`).
+
+It also fixed a resilience e2e whose premise had gone stale (the injected bounds fault had to move to
+a system that still has bounds) and one test fixture that named a real facility.
+
+Its tests were then ported to the single coverage and placement vocabulary that landed in parallel
+(§6, §7), and six mutant anchors re-written to the new code. Run on main after that merge, the 81
+were all caught.
+
+**Weak spots it left, honestly:** mutant 257 (every country sharing one error-boundary key) is caught
+only by a source-text guard, not by behaviour; mutant 263 is caught through the count of a
+manifest's files rather than the files themselves.
 
 ## 27. Release engineering
 
