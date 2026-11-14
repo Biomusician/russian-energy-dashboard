@@ -796,7 +796,13 @@ The release gate for `fbd070e`: tsc clean, vitest 454, full Playwright 400 passe
 passed and 2 skipped, mutation campaign from mutant 269 (every mutant aimed at a changed file and all
 after it) 107 of 107 caught, no invalid anchor.
 
-<!-- LEAD: production verification of fbd070e -->
+**Production verification of `91c3136`** (the export fix `fbd070e` and the review note above,
+pushed as a fast-forward; CI python, frontend and e2e success; Production deployment success):
+served bytes 45 of 45 identical to the commit; safety scan of the production bytes 0 problems; the
+bundle carries the exported halo key and the Recovery badge change; the Russia and theatre browser
+specs run against production, including the export-shading test, 59 passed.
+
+This is the iteration-21 release. A later commit holding only this paragraph changes no served file.
 
 ## 29. Remaining owner decisions
 
