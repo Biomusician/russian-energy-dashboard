@@ -21,12 +21,17 @@ const TABS: {
   label: string;
   Comp: (p: TabProps) => React.ReactElement;
   badge?: (p: TabProps) => number | null;
+  badgeTitle?: string;
 }[] = [
   { key: "Overview", label: "Overview", Comp: OverviewTab },
   { key: "WhatChanged", label: "What changed", Comp: WhatChangedTab },
   { key: "Rankings", label: "Rankings", Comp: RankingsTab },
   { key: "Recent", label: "Recent", Comp: RecentTab, badge: (p) => Math.min(10, p.visibleIncidents.length) },
-  { key: "Reconstitution", label: "Recovery", Comp: ReconstitutionTab, badge: (p) => p.bundle.snapshot.recovery_stats.unresolved_count },
+  // The count is the whole area's. Beside a selected region's "Recent" count it read as that
+  // region's own (iteration-21 production FTU pass), so it shows only when no region is selected.
+  { key: "Reconstitution", label: "Recovery", Comp: ReconstitutionTab,
+    badge: (p) => (p.selected ? null : p.bundle.snapshot.recovery_stats.unresolved_count),
+    badgeTitle: "Disruptions with no restoration report by the status cut-off, whole monitored area" },
   { key: "Effects", label: "Effects", Comp: EffectsTab },
   { key: "Costs", label: "Repair burden", Comp: CostsTab },
   { key: "Sources", label: "Sources", Comp: SourcesTab },
@@ -201,7 +206,7 @@ bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSele
               onClick={() => setTab(t.key)}
             >
               {t.label}
-              {badge != null && badge > 0 && <span className="badge">{badge}</span>}
+              {badge != null && badge > 0 && <span className="badge" title={t.badgeTitle}>{badge}</span>}
             </button>
           );
         })}

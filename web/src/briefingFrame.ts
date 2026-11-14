@@ -327,14 +327,25 @@ export function drawBriefingFrame(
 function drawLegend(
   c: CanvasRenderingContext2D, W: number, footTop: number, s: number, ctx0: BriefingContext,
 ) {
-  const w = Math.round(260 * s);
   const h = Math.round(14 * s);
   const pad = Math.round(28 * s);
+  // The live legend's other two keys travel too. Without the halo key the red circles, the
+  // loudest mark in the picture, could read as damage; without the Crimea key the dashed unit
+  // was unexplained (iteration-21 production export QA).
+  const keys: { text: string; swatch: "halo" | "crimea" }[] = [
+    { text: HALO_KEY, swatch: "halo" },
+    ...(ctx0.crimeaNote ? [{ text: CRIMEA_KEY, swatch: "crimea" as const }] : []),
+  ];
+  const keyH = Math.round(17 * s);
+  const swatchW = Math.round(22 * s);
+  c.font = `${Math.round(10.5 * s)}px ${SANS}`;
+  const keyW = Math.max(0, ...keys.map((k) => c.measureText(k.text).width + swatchW));
+  const w = Math.max(Math.round(260 * s), Math.ceil(keyW));
   const x = W - pad - w;
-  const y = footTop - Math.round(58 * s);
+  const y = footTop - Math.round(58 * s) - keys.length * keyH;
 
   band(c, x - Math.round(10 * s), y - Math.round(22 * s),
-       w + Math.round(20 * s), h + Math.round(50 * s));
+       w + Math.round(20 * s), h + Math.round(50 * s) + keys.length * keyH);
 
   c.font = `600 ${Math.round(10.5 * s)}px ${SANS}`;
   c.fillStyle = FAINT;
@@ -354,4 +365,35 @@ function drawLegend(
   c.textAlign = "right";
   c.fillText("high", x + w, y + h + Math.round(14 * s));
   c.textAlign = "left";
+
+  let ky = y + h + Math.round(14 * s) + keyH;
+  for (const k of keys) {
+    const cy = ky - Math.round(4 * s);
+    if (k.swatch === "halo") {
+      c.beginPath();
+      c.arc(x + Math.round(7 * s), cy, Math.round(6 * s), 0, Math.PI * 2);
+      c.fillStyle = "rgba(240, 83, 74, 0.14)";
+      c.fill();
+      c.lineWidth = Math.max(1, Math.round(s));
+      c.strokeStyle = "#f0534a";
+      c.stroke();
+    } else {
+      const sw = Math.round(16 * s);
+      const sh = Math.round(8 * s);
+      c.fillStyle = "#2a2438";
+      c.fillRect(x, cy - sh / 2, sw, sh);
+      c.setLineDash([Math.round(3 * s), Math.round(2 * s)]);
+      c.lineWidth = Math.max(1, Math.round(s));
+      c.strokeStyle = "#a98bfa";
+      c.strokeRect(x, cy - sh / 2, sw, sh);
+      c.setLineDash([]);
+    }
+    c.fillStyle = DIM;
+    c.fillText(k.text, x + swatchW, ky);
+    ky += keyH;
+  }
 }
+
+/** The same words as the live legend's keys (MapPanel), so the picture and the page agree. */
+export const HALO_KEY = "Recorded events, sized by count, on the region centroid — activity, not current damage";
+export const CRIMEA_KEY = "Crimea — Ukraine, occupied (in index)";

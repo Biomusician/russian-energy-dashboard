@@ -42,6 +42,11 @@ export interface ExportRequest {
   fit?: { bounds: [number, number, number, number]; padding: maplibregl.PaddingOptions };
   /** Adjust the copied style, e.g. to drop the reader's own selection marks. */
   transformStyle?: (style: maplibregl.StyleSpecification) => maplibregl.StyleSpecification;
+  /** Feature state to copy from the live map. `getStyle()` carries layers and sources but not
+   *  feature state, and the theatre colours its regions by feature state: without this every
+   *  region came out at the lowest colour under a legend showing the full scale (found by the
+   *  iteration-21 production export QA; the defect dates from the first PNG export). */
+  featureStates?: { source: string; ids: (string | number)[]; keys: string[] }[];
 }
 
 export interface ExportResult {
@@ -158,6 +163,30 @@ export async function exportMapPng(req: ExportRequest): Promise<ExportResult> {
       fadeDuration: 0,
       pixelRatio,
     });
+
+    if (req.featureStates?.length) {
+      const target = map;
+      // Feature state can be set only once the copied sources exist; the copy then triggers a
+      // repaint that the idle wait below covers.
+      await new Promise<void>((resolve) => {
+        // Never hang the export on a map that will not load; the idle wait below reports that.
+        const timer = window.setTimeout(() => { target.off("load", copy); resolve(); }, IDLE_TIMEOUT_MS);
+        function copy() {
+          window.clearTimeout(timer);
+          for (const fs of req.featureStates!) {
+            for (const id of fs.ids) {
+              const live = source.getFeatureState({ source: fs.source, id }) as Record<string, unknown>;
+              const picked: Record<string, unknown> = {};
+              for (const k of fs.keys) if (live[k] !== undefined) picked[k] = live[k];
+              if (Object.keys(picked).length) target.setFeatureState({ source: fs.source, id }, picked);
+            }
+          }
+          resolve();
+        }
+        if (target.isStyleLoaded()) copy();
+        else target.once("load", copy);
+      });
+    }
 
     await whenIdle(map, IDLE_TIMEOUT_MS);
 

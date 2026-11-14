@@ -11,7 +11,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { drawBriefingFrame } from "./briefingFrame";
+import { CRIMEA_KEY, drawBriefingFrame, HALO_KEY } from "./briefingFrame";
 import { DEFAULT_OPTIONS, type BriefingContext, type BriefingOptions } from "./briefing";
 
 /** Records every string drawn, and enough geometry to tell a footer from a header. */
@@ -30,6 +30,14 @@ function recorder() {
     // Proportional enough that wrapping actually happens at realistic widths.
     measureText: (t: string) => ({ width: t.length * 8 }),
     createLinearGradient: () => ({ addColorStop: () => {} }),
+    lineWidth: 1,
+    strokeStyle: "",
+    beginPath: () => {},
+    arc: () => {},
+    fill: () => {},
+    stroke: () => {},
+    strokeRect: () => {},
+    setLineDash: () => {},
   };
   return { ctx, texts, rects };
 }
@@ -280,6 +288,17 @@ describe("the legend checkbox actually draws a legend", () => {
     expect(on.drawn).toContain("low");
     expect(on.drawn).toContain("high");
     expect(on.drawn).toContain("ENERGY SYSTEM DISRUPTION EXPOSURE INDEX");
+  });
+
+  it("carries the live legend's halo and Crimea keys, so red circles never read as damage", () => {
+    // Iteration-21 production export QA: the image had the colour ramp only.
+    const on = draw(CTX, { ...DEFAULT_OPTIONS, legend: true }).drawn;
+    expect(on).toContain(HALO_KEY);
+    expect(HALO_KEY).toContain("activity, not current damage");
+    expect(on).toContain(CRIMEA_KEY);
+    const noCrimea = draw({ ...CTX, crimeaNote: null }, { ...DEFAULT_OPTIONS, legend: true }).drawn;
+    expect(noCrimea).toContain(HALO_KEY);
+    expect(noCrimea).not.toContain(CRIMEA_KEY);
   });
 
   it("draws nothing when switched off", () => {

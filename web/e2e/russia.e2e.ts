@@ -156,6 +156,53 @@ test.describe("export", () => {
   });
 });
 
+/** Share of sampled pixels in a PNG drawn in a choropleth colour above the lowest stop: teal
+ *  (the 0.5 and 1.5 stops) or amber. The lowest stop and the dark background are grey-blue, so
+ *  they never count; nor do the faint red halos. */
+async function shadedShare(page: import("@playwright/test").Page, png: Buffer) {
+  const b64 = png.toString("base64");
+  return page.evaluate(async (b64) => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${b64}`;
+    await img.decode();
+    const c = document.createElement("canvas");
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    const ctx = c.getContext("2d")!;
+    ctx.drawImage(img, 0, 0);
+    const d = ctx.getImageData(0, 0, c.width, c.height).data;
+    let n = 0;
+    let hit = 0;
+    for (let i = 0; i < d.length; i += 4 * 5) {
+      const r = d[i], g = d[i + 1], b = d[i + 2];
+      n++;
+      const teal = g > 70 && b > 70 && g - r > 40 && b - r > 40;
+      const amber = r > 120 && g > 90 && b < 70;
+      if (teal || amber) hit++;
+    }
+    return hit / n;
+  }, b64);
+}
+
+test.describe("export keeps the choropleth", () => {
+  test("the PNG carries the regions' exposure colours, not only the legend's", async ({ app, page }) => {
+    // Iteration-21 production export QA: the export copied the style but not the feature state
+    // the regions are coloured by, so every region came out at the lowest colour while the legend
+    // showed the whole scale. The live map is the reference: the export must carry its shading.
+    await app.open();
+    await app.mapIdle();
+    const live = await shadedShare(page, await page.locator("[data-map-state] canvas").first().screenshot());
+    test.skip(live < 0.002, "no region above the lowest stop today; nothing to compare");
+    await app.button(/briefing & export/i).click();
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      app.button(/download png/i).click(),
+    ]);
+    const exported = await shadedShare(page, readBytes((await download.path())!));
+    expect(exported, `live map ${live.toFixed(4)}, export ${exported.toFixed(4)}`).toBeGreaterThan(live * 0.4);
+  });
+});
+
 test.describe("responsive", () => {
   for (const [w, h] of [[1024, 768], [430, 932]] as const) {
     test(`at ${w}x${h} the page does not scroll sideways and the map is visible`, async ({ app, page }) => {

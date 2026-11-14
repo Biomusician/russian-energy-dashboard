@@ -417,6 +417,8 @@ test.describe("recovery figures say what is known, and whose they are", () => {
     await app.open(`?sys=ru&r=${region.code}`);
     const panel = page.locator("#dossier-panel");
     await expect(panel.locator(".section-head h2").first()).toHaveText(region.name);
+    // The tab's count is the whole area's, so it is not shown beside a region's own counts.
+    await expect(panel.getByRole("tab", { name: /recovery/i }).locator(".badge")).toHaveCount(0);
     await panel.getByRole("tab", { name: /recovery/i }).click();
     const scope = panel.locator(".recovery-scope");
     await expect(scope).toContainText("whole monitored area");

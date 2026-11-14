@@ -488,6 +488,9 @@ export default function App() {
         size, canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio);
       const res = await exportMapPng({
         source: map, ...dims,
+        // The choropleth lives in feature state, which a copied style does not carry. Hover is
+        // left behind: it is where the pointer was, not something the reader chose.
+        featureStates: [{ source: "regions", ids: (bundle?.regions ?? []).map((r) => r.code), keys: ["value", "selected"] }],
         // The framing is drawn INTO the image. On screen it is DOM sitting over the map; in a
         // file it has to be pixels, or the reader gets a coloured map of Russia with nothing
         // saying it measures exposure rather than damage.
