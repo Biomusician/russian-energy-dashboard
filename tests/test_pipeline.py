@@ -2602,8 +2602,14 @@ def test_transmission_sensitivity_exposes_theatre_concentration():
         # decayed far enough the rounding dominated and the build published 101.3%.
         assert t["top_region_share_pct"] is not None and 0 < t["top_region_share_pct"] <= 100
         # ...and it must still be the largest theatre's share, not merely a number under 100.
-        shares = [100 * r["burden"] / t["raw_burden"] for r in t["per_region_saturated"]]
-        assert t["top_region_share_pct"] == pytest.approx(min(100.0, max(shares)), abs=0.2)
+        # The share is computed from exact burdens; the table publishes them to 3 dp. A fixed
+        # tolerance failed on 14 Nov 2026 once decay made the burdens small (0.155 / 0.281 reads
+        # 55.2% against an exact 54.9%), so the bound is what the published precision allows.
+        top = max(r["burden"] for r in t["per_region_saturated"])
+        h = 0.0005  # half a unit in the 3rd decimal
+        lo = 100 * max(0.0, top - h) / (t["raw_burden"] + h)
+        hi = min(100.0, 100 * (top + h) / max(t["raw_burden"] - h, 1e-9))
+        assert lo - 0.05 <= t["top_region_share_pct"] <= hi + 0.05, (t["top_region_share_pct"], lo, hi)
         # per-region burdens sum to the raw burden.
         assert sum(r["burden"] for r in t["per_region_saturated"]) == pytest.approx(t["raw_burden"], abs=0.02)
 

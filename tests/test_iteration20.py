@@ -860,10 +860,14 @@ def test_a_lane_written_id_is_never_kept_even_in_the_strict_form():
 
 
 def test_an_opaque_id_names_the_class_and_date_never_a_facility():
-    named = _attack(event_id="kw-2026-03-12-mina-abdullah-refinery-attack-1")
-    assert any("opaque id" in p for p in B.precision_problems("kw", _KW, [named]))
-    wrong_date = _attack(event_id="kw-2026-03-11-refinery-attack-1")
-    assert any("opaque id" in p for p in B.precision_problems("kw", _KW, [wrong_date]))
+    # The tokens are valid keyed-hash form, so only the date-and-class rule can refuse these ids.
+    # With "-attack-1" the iteration-21 token rule ("an opaque id's token ...") answered first and
+    # hid a disabled date-and-class check from this test.
+    def refused(eid):
+        return any("needs an opaque id" in p for p in B.precision_problems("kw", _KW, [_attack(event_id=eid)]))
+    assert not refused("kw-2026-03-12-refinery-attack-3fa9c1")
+    assert refused("kw-2026-03-12-mina-abdullah-refinery-attack-3fa9c1")
+    assert refused("kw-2026-03-11-refinery-attack-3fa9c1")
 
 
 def _covered(**kw):
