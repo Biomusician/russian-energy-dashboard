@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-11-14T00:06:23+00:00",
+  "build_time": "2026-11-14T12:14:52+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -9,22 +9,22 @@
     },
     {
       "name": "build_changes.json",
-      "bytes": 8115,
+      "bytes": 8575,
       "optional": false
     },
     {
       "name": "data_quality.json",
-      "bytes": 26630,
+      "bytes": 26561,
       "optional": false
     },
     {
       "name": "explanations_regional.json",
-      "bytes": 104808,
+      "bytes": 104992,
       "optional": false
     },
     {
       "name": "history_series.json",
-      "bytes": 92431,
+      "bytes": 92429,
       "optional": false
     },
     {
@@ -34,12 +34,12 @@
     },
     {
       "name": "index_national.json",
-      "bytes": 12534,
+      "bytes": 12533,
       "optional": false
     },
     {
       "name": "index_regional.json",
-      "bytes": 586789,
+      "bytes": 586790,
       "optional": false
     },
     {
@@ -59,7 +59,7 @@
     },
     {
       "name": "recovery_lifecycle.json",
-      "bytes": 110536,
+      "bytes": 110537,
       "optional": false
     },
     {
@@ -74,7 +74,7 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 283272,
+      "bytes": 283643,
       "optional": false
     },
     {
@@ -84,7 +84,7 @@
     },
     {
       "name": "assets_lines.geojson",
-      "bytes": 2387510,
+      "bytes": 2387474,
       "optional": false
     },
     {
@@ -94,7 +94,7 @@
     },
     {
       "name": "context_gas_network.geojson",
-      "bytes": 1604793,
+      "bytes": 1605422,
       "optional": true
     },
     {
