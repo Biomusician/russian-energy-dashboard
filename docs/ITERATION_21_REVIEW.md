@@ -1,7 +1,5 @@
 # Iteration 21 review: from instrument to product
 
-<!-- status: in-progress -->
-
 Iteration 21 added no country, no score and no new kind of data. It turned the dashboard into a
 product people can use: one first screen that says what the site is and what to open next, search,
 navigation that always leads home, a safe comparison workspace, a research-coverage explorer, a
@@ -12,7 +10,24 @@ except where a figure is the point of a finding.
 
 **The short version.**
 
-<!-- LEAD: fill at release -->
+- **A newcomer can now use it.** On the same twenty tasks, the first-time-user pass went from 6
+  obvious, 12 findable, 1 not stated and 1 misleading on the iteration-20 site to 13 obvious, 7
+  findable and none not stated or misleading (§2, §22).
+- **Nothing published changed meaning.** No country, score, weight or record was added or removed;
+  every country system serves the same records as at the iteration-20 release. The theatre's lower
+  index is time decay: rebuilt as of 12 November it gives the iteration-20 value exactly (§27).
+- **The theatre no longer reads as a list of facilities that are down.** Its recovery counts say "no
+  restoration report by the cut-off" with the 60-day delay rule beside them, and a region filter bug
+  that showed other regions' facilities under a selected region's name was fixed (§9).
+- **One vocabulary per concept.** Research coverage, placement and the status delay each come from
+  one module, so Compare, country pages, the home page and the glossary cannot drift apart (§6, §7).
+- **Safer, with four inference paths closed** by the safety red team: keyed opaque ids, a link-health
+  gate, no re-review line for campaign systems, and a reworded Saudi research gap (§24).
+- **Better tested where it matters.** The test-architecture red team found 36 behaviours no test
+  watched; the campaign grew from 234 to 376 mutants. The release gate then caught two more gaps
+  itself, one of which would have stopped tomorrow's automatic refresh (§20, §21).
+- **Still the owner's:** Saudi harmonisation (D-11 / D-33), D-34 to D-37, Release Rule A, and two new
+  questions about campaign systems (§29).
 
 ---
 
@@ -478,11 +493,52 @@ with time and the daily data.
 
 ## 20. Tests
 
-<!-- LEAD: final counts at the release gate -->
+Release gate, on the integrated tree (theatre pass and the day's refresh merged, payloads rebuilt):
+
+| Suite | Iteration 20 release | Iteration 21 release |
+|---|---|---|
+| pytest (full) | 1,074 passed, 2 skipped | 1,235 passed, 2 skipped |
+| vitest | 275 passed (22 files) | 453 passed (36 files) |
+| TypeScript | clean | clean |
+| Vite build | succeeds | succeeds (the existing large-chunk warning for the map library) |
+| Playwright (local preview, including accessibility and structure checks) | 205 passed, 1 skipped | 396 passed, 1 skipped |
+| Refresh-gated pytest in the next-day simulation | 1,034 passed, 4 skipped, 24 deselected | 1,138 passed, 42 skipped, 57 deselected |
+
+The extra skips in the simulation are the tests that run the shipped TypeScript through esbuild; a
+fresh clone has no `node_modules`, and they skip rather than fail. The bot's runner is in the same
+position, so CI's own Python job (which installs Node) is where they run.
+
+New test files: `tests/test_iteration21_{home,country,theatre_ux,safety,performance,testarch}.py`
+and the vitest and Playwright specs beside each feature.
+
+**Two gaps the release gate itself found**, both fixed in the tests, not the code:
+
+- **The bot would have stopped tomorrow.** In the next-day simulation (14 November),
+  `test_transmission_sensitivity_exposes_theatre_concentration` failed: it recomputed the top
+  theatre's share from burdens published to three decimals and allowed a fixed ±0.2 points. Decay
+  had made the burdens small (0.155 of 0.281), so rounding alone moved the recomputed share to 55.2%
+  against the exact, published 54.9%. The published figure was right; the tolerance would have
+  failed on some day as decay continued, and the refresh would have stopped publishing. The bound is
+  now what the published precision allows.
+- **A safety mutant survived.** "An opaque id may name the facility" (iteration 20) survived the
+  first full campaign: the iteration-21 token rule's message also contains "opaque id", and the test's
+  ids failed that rule first, so a disabled date-and-class check went unnoticed. The test now uses
+  ids with a valid token and matches the rule's own message.
 
 ## 21. Mutations
 
-<!-- LEAD: final campaign result -->
+376 mutants at release (234 at the start of the iteration):
+
+- 61 written by the feature agents with their features (Compare, research coverage, What's new,
+  evidence inspector, home, safety gates, release paths).
+- 81 from the test-architecture red team (§26), each a behaviour that had no test before it.
+
+The first full run on the integrated tree caught 375. The survivor, an iteration-20 safety mutant,
+was a real test gap opened by an iteration-21 rule (§20); it was closed with a stronger test, never
+by deleting the mutant.
+
+Release gate: **376 mutants, 376 caught, 0 survived, 0 invalid anchors, 0 errors, 0 baselines not
+green.**
 
 ## 22. First-time-user review
 
@@ -640,7 +696,39 @@ A simulation in a scratch clone (bot build, same-day rerun, next-day build) conf
 rerun is byte-identical after normalisation and the detector says no change; the next day both the
 ledger and What's new name the previous day's build.
 
-<!-- LEAD: release gate table and moving-main integration -->
+**Moving main.** The daily refresh committed `b3bbe5e` (13 November) to `origin/main` while the
+iteration ran. It touched only generated payloads and `CURRENT_STATE.md`; it was merged, the
+conflicting generated files were rebuilt from source rather than chosen from either side, and both
+change stories were checked to name the 12 November build as their dated baseline, not the
+same-day bot commit. A fetch immediately before the push found
+`origin/main` still at `b3bbe5e`, so the release is a fast-forward of it.
+
+**Release gate (§118 of the brief), on the release tree:**
+
+| Gate | Result |
+|---|---|
+| Current-date pipeline build | ESDI 6.58 as of 13 November, 184 events, 13 systems |
+| pytest (full) | 1,235 passed, 2 skipped |
+| Publication / safety gate (the bot's `-m "not repo_hygiene and not needs_raw_cache"`) | inside the full run; separately in the simulation, 1,138 passed |
+| vitest, TypeScript, Vite build | 453 passed; clean; succeeds |
+| Playwright, full (accessibility, phone, structure goldens) | 396 passed, 1 skipped |
+| Mutation campaign | 376 mutants, 376 caught, 0 survived, 0 invalid anchors, 0 errors, 0 baselines not green |
+| Final-artifact safety scan (served JSON, every system) | 0 problems |
+| Held-name scan (served files, built bundle, docs changed this iteration, against every unpublished queue name and id) | 0 real hits; 10 substring hits examined, all false (an ordinary word, a published name or id containing a held one, a non-campaign lane's published search plan) |
+| Staging from the artifact contract, `verify_staged.py` | passes |
+| Historical reconstruction | as of 12 November 6.69 and as of 11 November 6.80, the iteration-20 values to the hundredth: no code change moved the index. An older date (March 2024) could not be rebuilt locally, because its pinned article revision is not in the local raw cache |
+| Russia regression | sector values and event total unchanged except by time decay |
+| Country-system regression | all twelve built; served records unchanged except `as_of`, the new `link_check` and the theatre's `status_delay_days` |
+| Next-day refresh simulation | below |
+
+**Next-day simulation.** A fresh clone of the release tree, the clock moved to 14 November, the
+bot's steps from `refresh.yml`. The bot build names the 13 November build as both baselines;
+`ci_data_changed.py` reports a change; staging and `verify_staged.py` pass; the commit is made. A
+same-day rerun is byte-identical after normalisation and the detector says no change. The
+refresh-gated tests found the tolerance defect in §20; with it fixed they pass. One note: in a fresh
+clone with no raw cache the build refetches OpenStreetMap, and Overpass answered with 429, 502 and
+504; the simulation was stopped rather than retried and re-run on a copy of the local cache. The
+bot's real fetch succeeded the same day (`b3bbe5e`).
 
 ## 28. Production
 
