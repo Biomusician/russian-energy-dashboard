@@ -252,6 +252,37 @@ test.describe("the view switch: Analyze · Map focus · Briefing", () => {
   }
 });
 
+// The release of iteration 21 passed every layout cap here and failed three of them on CI, whose
+// Linux runner has none of the stack's fonts and falls back to a wider one (DejaVu Sans). Verdana
+// has DejaVu's widths and is on Windows; where it is absent the rule falls back to the system sans,
+// which on Linux is DejaVu itself. Either way the header is measured in a wide font.
+const WIDE_FONT = ":root { --sans: Verdana, 'DejaVu Sans', sans-serif !important; }";
+
+test.describe("the layout holds in a wide fallback font", () => {
+  for (const [w, h] of [[1024, 768], [390, 844]] as const) {
+    test(`at ${w}x${h} the header stays under its cap`, async ({ app, page }) => {
+      await page.setViewportSize({ width: w, height: h });
+      await app.open();
+      await page.addStyleTag({ content: WIDE_FONT });
+      const height = await page.evaluate(() => document.querySelector(".theatre-ribbon")!.getBoundingClientRect().height);
+      expect(height).toBeLessThan(h * 0.31);
+    });
+  }
+
+  test("phone briefing keeps the footer caveats off the legend", async ({ app, page }) => {
+    await page.setViewportSize(PHONE);
+    await app.open();
+    await page.addStyleTag({ content: WIDE_FONT });
+    await openTools(app, page);
+    await page.getByRole("group", { name: "View" }).getByRole("button", { name: "Briefing & export" }).click();
+    await expect(page.locator(".briefing-frame")).toBeVisible();
+    await expect(page.locator(".brief-foot")).toContainText("Crimea is internationally recognised");
+    const legend = (await page.locator(".map-legend").boundingBox())!;
+    const foot = (await page.locator(".brief-foot").boundingBox())!;
+    expect(overlap(legend, foot), "the footer caveats sit on the legend").toBe(false);
+  });
+});
+
 test.describe("phone map overlays", () => {
   test("the legend and the attribution no longer cover each other, and both open on demand", async ({ app, page }) => {
     await page.setViewportSize(PHONE);

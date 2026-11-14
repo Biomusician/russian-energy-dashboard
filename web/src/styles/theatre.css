@@ -240,6 +240,13 @@ html[data-briefing="on"] .map-legend { top: 72px; right: 12px; left: auto; botto
     cursor: pointer;
   }
   .tb-tools-toggle[aria-expanded="true"] { border-color: var(--accent-dim); color: var(--accent); }
+  /* Wrapping is decided on each item's basis, before anything shrinks, so a select sized by its
+     longest option pushed the view switch onto a second row whenever the font ran wide (CI's
+     Linux fallback font, iteration-21 release: a 241 px header at 1024 against a 238 px cap).
+     The picker starts small and grows into what is left; its name stays as aria-label. */
+  .theatre-bar .sys-switch { flex: 1 1 140px; min-width: 0; max-width: 240px; }
+  .theatre-bar .sys-switch .eyebrow { display: none; }
+  .theatre-bar .sys-switch select { width: 100%; min-width: 0; }
   .tb-tools {
     display: none;
     position: absolute;
@@ -284,8 +291,20 @@ html[data-briefing="on"] .map-legend { top: 72px; right: 12px; left: auto; botto
      line moves to the tooltip and to Methodology's summary, so the map keeps the screen. */
   .known-label { display: none; }
   .hl-block .eyebrow { letter-spacing: 0.1em; }
+  /* The date line must hold the freshness label and the peak on one row at 303 px in any font:
+     with a wide fallback font "peak to date" pushed the peak to its own line and the header past
+     its cap (iteration-21 release). The full phrase stays in the text and the tooltip. */
+  .hl-date { font-size: 10.5px; }
+  .peak-long { display: none; }
 }
 .ribbon-more-toggle { display: none; }
+/* Between phone and wide desktop the headline, both ratios and the sector toggle share one row.
+   Fixed 440 px and 400 px bases left so little room that a wider font sent the toggle to a row of
+   its own; the bases are now flexible and the old widths are the maximum. */
+@media (min-width: 641px) and (max-width: 1499px) {
+  .hl-block { flex: 1 1 360px; max-width: 440px; }
+  .known-block { flex: 1 1 320px; max-width: 400px; }
+}
 /* Below 1500px the header cannot hold the headline, both ratios AND the sector row on one line
    (at 1440 they wrapped to a ~210px header). The sector and recovery row folds behind a toggle. */
 @media (max-width: 1499px) {
@@ -356,6 +375,17 @@ html[data-briefing="on"] .map-legend { top: 72px; right: 12px; left: auto; botto
     border-radius: 0;
     padding: 5px 12px;
   }
+}
+
+/* Briefing on a phone: the frame's head, the legend and the footer caveats share a map area about
+   460 px tall, and the caveats cleared the legend by 3 px in the Windows font and overlapped it in
+   a wider one (iteration-21 release). Briefing is a presentation view and already drops the map's
+   working controls, so the legend keeps its scale and Crimea key but not its "All keys" button,
+   and the footer's fade starts closer to its text. */
+@media (max-width: 640px) {
+  html[data-briefing="on"] .legend-toggle,
+  html[data-briefing="on"] .map-legend .legend-detail { display: none; }
+  html[data-briefing="on"] .brief-foot { padding-top: 14px; }
 }
 
 /* Iteration 21 (a11y): the region search had no focus ring, only a faint border change. */

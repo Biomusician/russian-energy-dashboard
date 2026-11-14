@@ -133,7 +133,7 @@ export default function Ribbon({
                   </span>
                 )}
               </span>
-              {peak && <span>peak to date <span className="num">{fmtNum(peak.value, 1)}</span> ({fmtDate(peak.date)})</span>}
+              {peak && <span title="The highest value of the index to date">peak<span className="peak-long"> to date</span> <span className="num">{fmtNum(peak.value, 1)}</span> ({fmtDate(peak.date)})</span>}
               <BuildDelta bundle={bundle} isLatest={isLatest} onExplain={onExplain} />
             </p>
             {/* Iteration 16: a past date on this ribbon is today's evidence evaluated at that date,
