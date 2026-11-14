@@ -342,6 +342,15 @@ test.describe("home lists", () => {
                      "What is observed and what is modelled?", "What is withheld?", "Can countries be compared?"]) {
       await expect(panel.getByText(q)).toBeVisible();
     }
+    // The theatre is under an active campaign too: its status-delay rule has its own line, with
+    // the number read from the served manifest when the build carries it (iteration 21).
+    const manifest = await page.evaluate(async () => (await fetch("/data/global/manifest.json")).json());
+    const theatre = manifest.systems.find((s: { kind: string }) => s.kind === "theatre");
+    const line = panel.locator(".theatre-delay");
+    await expect(line).toContainText(theatre.name);
+    await expect(line).toContainText("never shows whether a facility is working now");
+    await expect(line).toContainText(typeof theatre.status_delay_days === "number"
+      ? `only once it is ${theatre.status_delay_days} days old` : "only after a delay");
     await expect(page.locator(".corpus-totals")).toContainText("sources are on the countries' check lists");
   });
 

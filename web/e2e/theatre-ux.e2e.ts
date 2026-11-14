@@ -146,7 +146,10 @@ test.describe("the headline and what it means", () => {
     await expect(strip).toBeHidden();
     await page.getByRole("button", { name: "Sector scores & recovery" }).click();
     await expect(strip).toBeVisible();
-    await expect(page.locator(".recovery-group")).toContainText("latest build");
+    // Not "latest build" (iteration 21): repeated on every recovery figure it read as "these
+    // facilities, now". What the marker means is that the counts do not follow the scrubber.
+    await expect(page.locator(".recovery-group")).toContainText("not timeline-linked");
+    await expect(page.locator(".recovery-group")).not.toContainText("latest build");
   });
 });
 
@@ -352,6 +355,91 @@ test.describe("withheld facility status (active campaign)", () => {
       expect(s).not.toMatch(/\ba [aeiou]/i);
       expect(s).not.toMatch(/pipeline oil|pipeline gas/i);
     }
+  });
+});
+
+test.describe("recovery figures say what is known, and whose they are", () => {
+  type Live = {
+    asset_id: string; name: string; region_code: string | null;
+    recovery: { scoring_evidence_kind: string; resolved: boolean; recovery_status: string; estimate_days: unknown };
+  };
+  const withEvidence = (d: Live) => d.recovery.scoring_evidence_kind !== "modelled" || d.recovery.resolved
+    || d.recovery.recovery_status === "partial_restart" || d.recovery.estimate_days != null;
+
+  test("a selected region's Recovery tab labels the pooled figures as area-wide and lists only that region's facilities", async ({ app, page }) => {
+    await app.open();
+    const snap = await payload(page, "snapshot.json");
+    const live: Live[] = snap.live_disruptions;
+    const listed = live.filter(withEvidence);
+    // The defect needs facilities from more than one region in the area-wide list to show.
+    const regionsListed = new Set(listed.map((d) => d.region_code));
+    expect(regionsListed.size, "the build lists recovery evidence from one region only").toBeGreaterThan(1);
+    // Samara, the region the first-time-user review used, when it has a reported disruption;
+    // otherwise any region with one.
+    const regions = Object.values(snap.regions) as { code: string; name: string; unresolved_count: number }[];
+    const region = regions.find((r) => r.code === "RU-SAM" && r.unresolved_count > 0)
+      ?? regions.find((r) => r.unresolved_count > 0)!;
+    expect(region).toBeTruthy();
+    const mine = listed.filter((d) => d.region_code === region.code).slice(0, 20);
+    const other = listed.find((d) => d.region_code !== region.code)!;
+
+    await app.open(`?sys=ru&r=${region.code}`);
+    const panel = page.locator("#dossier-panel");
+    await expect(panel.locator(".section-head h2").first()).toHaveText(region.name);
+    await panel.getByRole("tab", { name: /recovery/i }).click();
+    const scope = panel.locator(".recovery-scope");
+    await expect(scope).toContainText("whole monitored area");
+    await expect(scope).toContainText(`not filtered to ${region.name}`);
+    await expect(panel).toContainText(`Only the facility list at the end is limited to ${region.name}`);
+
+    const rows = panel.locator(".recovery-facilities .event");
+    await expect(rows).toHaveCount(mine.length);
+    for (let i = 0; i < mine.length; i++) await expect(rows.nth(i)).toContainText(region.name);
+    // The facility that the old, unfiltered list showed under this region's header.
+    await expect(panel.locator(".recovery-facilities")).not.toContainText(other.name);
+    if (mine.length === 0) {
+      await expect(panel.locator(".recovery-facilities")).toContainText(`No facility in ${region.name} has published recovery evidence`);
+    }
+
+    // Clearing the selection brings back the area-wide list, with no region caveat.
+    await panel.getByRole("button", { name: "clear selection" }).click();
+    await panel.getByRole("tab", { name: /recovery/i }).click();
+    await expect(panel.locator(".recovery-scope")).not.toContainText("not filtered");
+    await expect(panel.locator(".recovery-facilities .event")).toHaveCount(Math.min(20, listed.length));
+  });
+
+  test("no recovery figure reads as a facility that is down now; the delay comes from the payload", async ({ app, page }) => {
+    await app.open();
+    const snap = await payload(page, "snapshot.json");
+    const days: number = snap.campaign_policy.evidence_embargo_days;
+    expect(days).toBeGreaterThan(0);
+    const panel = page.locator("#dossier-panel");
+    const banned = /awaiting reconstitution|Median impairment age|latest build|Counted, never named|ready · no figures yet|Unresolved disruptions/;
+
+    await panel.getByRole("tab", { name: /recovery/i }).click();
+    await expect(panel).toContainText("No restoration report by the cut-off");
+    await expect(panel).toContainText(`only once it is ${days} days old`);
+    await expect(panel).toContainText("not a list of facilities that are down now");
+    await expect(panel).not.toContainText(banned);
+
+    await panel.getByRole("tab", { name: /repair burden/i }).click();
+    await expect(panel).toContainText("Median days since disruption, no report");
+    await expect(panel).toContainText("Economic figures not yet available");
+    await expect(panel).toContainText("no sourced figure yet");
+    await expect(panel).not.toContainText(banned);
+
+    await panel.getByRole("tab", { name: /rankings/i }).click();
+    await expect(panel).not.toContainText(/impaired, but no capacity figure/);
+    await panel.locator(".ranking-picker select").selectOption({ label: "No restoration report by the cut-off" });
+    await expect(panel.locator(".ranking-desc")).toContainText(`only once it is ${days} days old`);
+    await panel.getByRole("button", { name: "Time since disruption ›" }).click();
+    await expect(panel.locator(".burden-table")).toContainText("Days since, median");
+    await expect(panel).not.toContainText(banned);
+
+    await panel.getByRole("tab", { name: /recent/i }).click();
+    await expect(panel).not.toContainText("generated deterministically");
+    await expect(page.getByRole("button", { name: "Whole area" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Full AOI" })).toHaveCount(0);
   });
 });
 

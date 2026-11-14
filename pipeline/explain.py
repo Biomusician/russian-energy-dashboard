@@ -57,11 +57,11 @@ ZERO_NOTES = {
         "recorded history can read 0.00 while its damage stands. Absence of a report is also "
         "not absence of damage.",
     ZERO_UNCOVERED_ONLY:
-        "Documented impairment here falls only in sectors with no capacity denominator, which "
+        "Disruption reported here falls only in sectors with no capacity denominator, which "
         "are excluded from the composite. This reads 0.00 because the index cannot score it, "
         "NOT because nothing happened.",
     ZERO_UNSIZED:
-        "Impairment is recorded here in a sector the index DOES score, but the affected "
+        "Disruption is reported here in a sector the index DOES score, but the affected "
         "facilities carry no capacity figure, so there is nothing to measure them against and "
         "they contribute 0.00. That is a gap in the inventory, NOT because nothing happened.",
     ZERO_ROUNDS_TO_ZERO:

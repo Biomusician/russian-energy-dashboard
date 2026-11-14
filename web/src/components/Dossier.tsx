@@ -186,7 +186,7 @@ bundle, step, selected, currentDate, incidentsByRegion, visibleIncidents, onSele
       <>
       {openLifecycle && (
         <div className="rail-actions">
-          <button className="ghost" onClick={openLifecycle}>Recovery lifecycle explorer</button>
+          <button className="ghost" onClick={openLifecycle}>Recovery timeline of each disruption</button>
         </div>
       )}
       <div className="tabbar" role="tablist">

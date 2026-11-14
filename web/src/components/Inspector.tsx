@@ -550,7 +550,7 @@ function RegionView({
         )}
         {(ex.unsized_sectors ?? []).length > 0 && (
           <p className="small warn-text">
-            Impaired here in {ex.unsized_sectors!.join(", ")} at facilities carrying no capacity
+            Disruption reported here in {ex.unsized_sectors!.join(", ")} at facilities carrying no capacity
             figure, so the index has nothing to size them against.
           </p>
         )}
@@ -794,7 +794,7 @@ const NATURE_COPY: Record<ChangeNature, { label: string; blurb: string }> = {
   },
   time_progression: {
     label: "Time passed",
-    blurb: "Modelled impairment ages with the evaluation date. Never evidence of repair.",
+    blurb: "The model's weight for a disruption fades as the days pass. Never evidence of repair.",
   },
 };
 

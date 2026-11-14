@@ -1962,6 +1962,12 @@ def corpus_totals(country_payloads):
     }
 
 
+def _theatre_status_delay(theatre_snapshot):
+    """Days a recovery report must age before the theatre uses it, or None without the policy."""
+    policy = theatre_snapshot.get("campaign_policy") or {}
+    return policy.get("evidence_embargo_days") if policy.get("applied") else None
+
+
 def build_manifest(country_payloads, theatre_snapshot, build_time):
     entries = []
     for s in systems.SYSTEMS:
@@ -1975,6 +1981,9 @@ def build_manifest(country_payloads, theatre_snapshot, build_time):
                              "meaning": "Share of tracked capacity at recently disrupted sites, weighted by evidence, cause and elapsed time; not measured loss."},
                 "reporting_environment": "conflict_restricted",
                 "as_of": theatre_snapshot["as_of"],
+                # The home page states the theatre's status-delay rule without loading the 280 kB
+                # snapshot. A rule parameter, never a count; null when no campaign policy applies.
+                "status_delay_days": _theatre_status_delay(theatre_snapshot),
                 "files": ["snapshot.json"],
             })
             continue
