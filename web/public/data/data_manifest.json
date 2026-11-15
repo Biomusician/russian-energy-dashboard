@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-11-14T12:14:52+00:00",
+  "build_time": "2026-11-15T12:47:00+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -9,7 +9,7 @@
     },
     {
       "name": "build_changes.json",
-      "bytes": 8575,
+      "bytes": 8468,
       "optional": false
     },
     {
@@ -19,12 +19,12 @@
     },
     {
       "name": "explanations_regional.json",
-      "bytes": 104992,
+      "bytes": 105031,
       "optional": false
     },
     {
       "name": "history_series.json",
-      "bytes": 92429,
+      "bytes": 93466,
       "optional": false
     },
     {
@@ -34,12 +34,12 @@
     },
     {
       "name": "index_national.json",
-      "bytes": 12533,
+      "bytes": 12585,
       "optional": false
     },
     {
       "name": "index_regional.json",
-      "bytes": 586790,
+      "bytes": 589080,
       "optional": false
     },
     {
@@ -54,12 +54,12 @@
     },
     {
       "name": "production_history.json",
-      "bytes": 74788,
+      "bytes": 75360,
       "optional": false
     },
     {
       "name": "recovery_lifecycle.json",
-      "bytes": 110537,
+      "bytes": 111362,
       "optional": false
     },
     {
@@ -74,7 +74,7 @@
     },
     {
       "name": "snapshot.json",
-      "bytes": 283643,
+      "bytes": 283484,
       "optional": false
     },
     {
