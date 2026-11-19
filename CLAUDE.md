@@ -45,7 +45,9 @@ with a regional overview at `?group=gulf` (`docs/GULF_ARCHITECTURE.md`,
 
 - **The Gulf is a regional energy picture, not a target set.** National totals are context, never
   importance. No Gulf index, no facility layer, and nothing about routes, straits, shipping,
-  tankers, export-route dependence or bypass capacity.
+  tankers, export-route dependence or bypass capacity (narrowed in iteration 22 for ONE artifact
+  of aggregate, dated statements: see the regional-context rule below; everything else keeps the
+  ban).
 - **Admin-1 is a maximum, not an entitlement.** `geography.precision_policy` states where each
   system places a record. In the seven new systems an attack or sabotage record is the country's:
   no region, facility, operator or headline, an opaque id, and no citation whose address names
@@ -57,6 +59,45 @@ with a regional overview at `?group=gulf` (`docs/GULF_ARCHITECTURE.md`,
   `scripts/write_gulf_pass.py` removes the rest.
 - **GCC and OPEC are membership fields**, never shorthand for the eight. Nothing nuclear beyond a
   national generation total.
+
+**Since iteration 22 there is a second, non-scored corpus: the global impact layer**
+(`docs/GLOBAL_IMPACT_METHODOLOGY.md`, `docs/EVIDENCE_CONFIDENCE_V2.md`). It holds reviewed cyber,
+technical, natural-hazard and civilian-service impact records from any country
+(`data/curated/global_impacts/` -> `global/impacts.json`), aggregate dated regional context for the
+Gulf (`global/regional_context.json`) and the evidence-confidence method
+(`global/evidence_confidence.json`). The thirteen systems stay thirteen. Rules, all tested:
+
+- **The impact layer is never scored and never counted.** No record enters the ESDI, a country
+  system's event count, a research gate or any index, and no analytic module imports it. A country
+  that appears only there is an *impact-record country*: no index, no maturity claim, no onboarding
+  dossier, no implied complete corpus. Counts are published records, never rates, never compared
+  or ranked across countries.
+- **It never widens publication.** A record held from a country system cannot reappear through the
+  impact layer (the import reconciles and refuses; the lead allow-list covers below-threshold holds
+  only, never a campaign, safety or evidence hold). **Every kinetic or sabotage impact record,
+  everywhere, is country-abstracted**: country level, no facility, operator, place, region, method,
+  headline or later status, and a keyed opaque id. Campaign-policy systems never carry a region.
+- **Attribution, AI involvement and evidence confidence are three separate claims**, each with its
+  own sources. An actor's own claim is `CLAIMED` and never yields more than `CLAIM_ONLY`, however
+  widely it is repeated. AI involvement is `NONE_REPORTED` unless a cited source ties AI materially
+  to that incident; a defender's use of AI, or a general warning, is not involvement.
+- **Evidence Confidence v2 counts independent originating statements, never links.** It is not a
+  probability, not severity, not importance, and no file ranks anything by it. **The theatre's
+  scoring multiplier is still v1**; replacing it needs the seven conditions in
+  `docs/EVIDENCE_CONFIDENCE_V2.md`, which have not been met.
+- **Regional context is one artifact of aggregate, dated, sourced statements** (shipping status as
+  an authority stated it, aggregate trade and supply, market and reserve responses, policy,
+  civilian and environmental effects). Never a vessel, a vessel count that reads as monitoring, a
+  position, a route, an alternate route, bypass capacity, a port's or facility's dependence, or a
+  single open/closed status flag. It enters no figure and no country's record. Outside that
+  artifact the Gulf ban above is unchanged.
+- **Cyber records carry no exploit detail**: no IP address, CVE, device make or model, protocol,
+  access method, credential, tooling or malware family; the broad mechanism is the ceiling.
+- **A social post is a medium, not a quality level.** Tiers S1-S4 with a stated identity basis; an
+  S3/S4 post or a self-claim is never the sole evidence that something happened; public posts
+  only, text only, no imagery as evidence, no identification of people.
+- **The impact queue (`data/candidates/impacts22/`) never reaches a payload** except through
+  `scripts/import_impacts.py`, and only for records all three blind roles accepted.
 
 The area of interest is locked in `AOI_FEDERAL_DISTRICTS` (`pipeline/config.py`). The
 Far Eastern FD is defined but not enabled; adding it there turns it on with no refactor.
