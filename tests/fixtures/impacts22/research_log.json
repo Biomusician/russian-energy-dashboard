@@ -1,0 +1,36 @@
+{
+  "window": {
+    "start": "2022-01-01",
+    "end": "present"
+  },
+  "status": "expanding corpus",
+  "source_families": [
+    {
+      "lane": "fixture",
+      "scope": "impacts",
+      "research_pass": "i22-fixture",
+      "family": "Synthetic operator statements",
+      "method": "Written by hand for the fixture; nothing was researched.",
+      "window": "2022-01-01 to 2026-11-19",
+      "status": "synthetic",
+      "limitation": "Every record in this fixture is invented."
+    },
+    {
+      "lane": "fixture",
+      "scope": "regional_context",
+      "research_pass": "i22-fixture",
+      "family": "Synthetic agency statements",
+      "method": "Written by hand for the fixture; nothing was researched.",
+      "window": "2026-01-01 to 2026-11-19",
+      "status": "synthetic",
+      "limitation": "Every statement in this fixture is invented."
+    }
+  ],
+  "regions_worked": [
+    "Synthetic fixture"
+  ],
+  "limitations": [
+    "SYNTHETIC FIXTURE: invented records for development and tests. Not research."
+  ],
+  "latest_research_date": "2026-11-19"
+}
