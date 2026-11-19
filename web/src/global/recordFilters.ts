@@ -41,7 +41,8 @@ export interface DateFilter<R> {
   kind: "date";
   id: string;
   label: string;
-  /** ISO calendar day the record starts on. */
+  /** The ISO calendar day the record starts on, or the month ("2026-04") or year when that is all
+   *  the record's date precision gives. */
   start: (record: R) => string;
   end?: (record: R) => string | null | undefined;
 }
@@ -114,9 +115,19 @@ export function admits<R>(def: FilterDef<R>, state: FilterState, record: R, toda
     return def.values(record).some((v) => picked.includes(v));
   }
   const { from, to } = dateBounds(c as DateChoice, today);
-  const start = def.start(record);
-  const end = def.end?.(record) || start;
+  const [start, startEnd] = daySpan(def.start(record));
+  const rawEnd = def.end?.(record);
+  const end = rawEnd ? daySpan(rawEnd)[1] : startEnd;
   return (to == null || start <= to) && (from == null || end >= from);
+}
+
+/** The first and last day a served date covers. A record dated only to a month ("2026-04") or a
+ *  year covers all of it: it is shown for any range that touches that period, never left out
+ *  because its day is unknown. "-31" is a safe last day for comparing ISO strings in any month. */
+export function daySpan(date: string): [string, string] {
+  if (/^\d{4}-\d{2}$/.test(date)) return [`${date}-01`, `${date}-31`];
+  if (/^\d{4}$/.test(date)) return [`${date}-01-01`, `${date}-12-31`];
+  return [date, date];
 }
 
 /** The records every active filter admits, in the order given. Never reorders, never adds. */
