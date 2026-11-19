@@ -802,3 +802,158 @@ def test_the_theatre_index_never_imports_evidence_confidence():
     assert r.stdout.strip() == "", f"the theatre index imports {r.stdout.strip()}"
     for module in (build_index, fetch_wikipedia):
         assert "evidence_confidence" not in inspect.getsource(module), module.__name__
+
+
+def test_a_confidence_typed_into_a_curated_record_is_never_copied():
+    raw = {"event_id": "xx-1", "date": "2024-03-01", "region_code": None, "evidence_confidence": {"category": "HIGH"},
+           "sources": [{"url": "https://a.example/x", "publisher": "A", "date": None, "language": "en",
+                        "source_role": "media", "opened": None}]}
+    assert "evidence_confidence" not in B._event(raw, {})
+    assert "evidence_confidence" in B.DERIVED_EVENT_FIELDS and "evidence_confidence" not in B.EVENT_FIELDS
+
+
+# --- the calibration tool (scripts/eci_calibration.py) -----------------------------------------------------
+
+def _script(name):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _record(i, sources):
+    return {"event_id": f"xx-2024-0{i}-named-plant-fire", "summary": f"Summary {i}", "effect": "Effect.",
+            "date": f"2024-0{i}-01", "date_end": None, "capacity_affected": None, "sources": sources,
+            "evidence_confidence": {"category": "HIGH", "score": 99}, "review": {"disposition": "confirmed"}}
+
+
+def test_a_blind_packet_never_carries_the_result_the_record_id_or_a_source_address():
+    cal = _script("eci_calibration")
+    rows = []
+    for i, sources in enumerate(([src("operator", site="gridco.example", publisher="GridCo"),
+                                  src("wire", site="reuters.example", publisher="Reuters")],
+                                 [wire_copy(1)], [post("S4", identity=None)]), start=1):
+        record = _record(i, sources)
+        rows.append(("country_event", "xx", record["event_id"], record, assess(sources)))
+    picked = cal.sample(rows, per_cell=2, seed=22)
+    assert sorted(r[2] for r in picked) == sorted(r[2] for r in rows)
+    packets = [cal.packet(cal.packet_id(22, r[0], r[2]), r[3]) for r in picked]
+    text = json.dumps(packets)
+    for p in packets:
+        assert set(p) == set(cal.PACKET_FIELDS)
+        assert all(set(s) == set(cal.PACKET_SOURCE_FIELDS) for s in p["sources"])
+        assert p["packet_id"].startswith("pkt-") and "named-plant" not in p["packet_id"]
+    for leak in ("category", "score", "evidence_confidence", "HIGH", "MODERATE", "PRELIMINARY", "http", ".example",
+                 "named-plant", "opened", "disposition", "components"):
+        assert leak not in text, leak
+    wire = next(s for p in packets for s in p["sources"] if s["publisher"] == "Reuters via Outlet 1")
+    assert wire["carries_wire"] == "Reuters" and wire["supports"] == ["occurrence", "effect"]
+    assert any(s["social_tier"] == "S4" for p in packets for s in p["sources"])
+    # The same seed gives the same ids, so labels already written are not orphaned by a re-run.
+    assert cal.packet_id(22, "country_event", "a") == cal.packet_id(22, "country_event", "a")
+    assert cal.packet_id(22, "country_event", "a") != cal.packet_id(23, "country_event", "a")
+
+
+def test_cohens_kappa_and_within_one_agreement_are_computed_as_defined():
+    cal = _script("eci_calibration")
+    a = {f"p{i}": lab for i, lab in enumerate(["HIGH"] * 5 + ["LIMITED"] * 5)}
+    assert cal.kappa(a, a) == 1.0
+    assert cal.kappa(a, {k: "HIGH" for k in a}) == 0.0, "agreement no better than chance"
+    b = dict(a, p0="LIMITED", p5="HIGH")              # 8 of 10 agree; chance agreement is one half
+    assert cal.kappa(a, b) == 0.6
+    assert cal.kappa(a, {}) is None and cal.kappa({"p0": "HIGH"}, {"p0": "HIGH"}) is None
+    assert cal.within_one("HIGH", "MODERATE") and cal.within_one("LIMITED", "PRELIMINARY")
+    assert not cal.within_one("HIGH", "LIMITED")
+    assert not cal.within_one("DISPUTED", "PRELIMINARY"), "Disputed is off the scale"
+    got = cal.agreement(a, b)
+    assert (got["packets"], got["exact"], got["within_one"]) == (10, 0.8, 0.8)
+    assert got["confusion"]["HIGH"]["LIMITED"] == 1 and got["confusion"]["LIMITED"]["HIGH"] == 1
+
+
+def test_compare_lists_the_packets_where_two_reviewers_agree_and_the_model_differs():
+    cal = _script("eci_calibration")
+    model = lambda cat: {"category": cat, "score": 50, "components": {}}  # noqa: E731
+    key = {"p1": {"record_id": "r1", "stratum": "xx", "model": model("HIGH")},
+           "p2": {"record_id": "r2", "stratum": "xx", "model": model("MODERATE")},
+           "p3": {"record_id": "r3", "stratum": "yy", "model": model("LIMITED")}}
+    labels = {"ana": {"p1": "HIGH", "p2": "LIMITED", "p3": "LIMITED"},
+              "ben": {"p1": "HIGH", "p2": "LIMITED", "p3": "MODERATE"},
+              "cy": {"p1": "MODERATE", "p2": "MODERATE"}}
+    out = cal.compare(key, labels, {"ana": {"p2": "single origin"}})
+    assert [(r["packet_id"], r["reviewers"], r["reviewer_label"], r["model_label"]) for r in out["reviewers_agree_model_differs"]] \
+        == [("p2", ["ana", "ben"], "LIMITED", "MODERATE")]
+    assert out["reviewers_agree_model_differs"][0]["reasons"]["ana"] == "single origin"
+    assert out["reviewer_vs_model"]["ana"]["exact"] == round(2 / 3, 3)
+    assert set(out["reviewer_vs_reviewer"]) == {"ana vs ben", "ana vs cy", "ben vs cy"}
+    assert out["reviewer_vs_reviewer"]["ana vs cy"]["packets"] == 2
+    assert "p2" in cal.markdown(out)
+
+
+def test_a_label_outside_the_vocabulary_or_for_an_unknown_packet_is_refused(tmp_path):
+    cal = _script("eci_calibration")
+    (tmp_path / "labels_ana.json").write_text(json.dumps(
+        {"p1": {"label": "HIGH", "reason": "r"}, "p2": {"label": "VERY HIGH"}, "p9": {"label": "LOW"}}), encoding="utf-8")
+    labels, _reasons, problems = cal.load_labels(tmp_path, {"p1": {}, "p2": {}})
+    assert labels == {"ana": {"p1": "HIGH"}} and len(problems) == 2
+
+
+# --- the theatre shadow study (scripts/confidence_shadow_study.py) --------------------------------------------
+
+def test_the_shadow_study_reads_theatre_citations_conservatively():
+    study = _script("confidence_shadow_study")
+    assert study.CANDIDATE_WEIGHTS == {"HIGH": 1.0, "MODERATE": 0.75, "LIMITED": 0.45, "PRELIMINARY": 0.2}
+    assert study.iso_date("25 January 2024") == "2024-01-25" and study.iso_date("January 25, 2024") == "2024-01-25"
+    assert study.iso_date("January 2024") == "2024-01" and study.iso_date("2024-01-25") == "2024-01-25"
+    assert study.iso_date("last winter") is None and study.iso_date(None) is None
+    assert study.official_domain("https://minenergo.gov.ru/x") and study.official_domain("http://kremlin.ru/events/1")
+    for press in ("https://tass.com/x", "https://www.governor-news.example/x", "https://themoscowtimes.com/gov/x"):
+        assert not study.official_domain(press), press
+    s = study.v2_source({"url": "https://tass.com/x", "publisher": "TASS", "date": "25 January 2024"})
+    assert (s["source_role"], s["date"], s["opened"]) == ("media", "2024-01-25", None)
+    strike = {"date": "2024-01-24", "status": "unknown", "sources": [
+        {"url": "https://a.example/1", "date": "25 January 2024"}, {"url": "https://b.example/2", "date": "25 January 2024"}]}
+    r = study.shadow(strike)
+    # Two independent reports at the time, no supported effect, nobody recorded opening them: 28 + 16 + 10.
+    assert (r["score"], r["category"]) == (54, "LIMITED")
+    assert study.effect_specificity({"capacity_affected_mtpa": 2.0}) == "quantified"
+    assert study.effect_specificity({"status": "damaged"}) == "described"
+    assert study.shadow(dict(strike, conflicting_reports=True))["category"] == "DISPUTED"
+
+
+def test_the_shadow_study_substitutes_weights_only_for_one_call_and_restores_them(monkeypatch):
+    study = _script("confidence_shadow_study")
+    before = copy.deepcopy(build_index.SCORING["confidence_weights"])
+    seen = {}
+
+    def fake_build(**kwargs):
+        seen["weights"] = dict(build_index.SCORING["confidence_weights"])
+        seen["labels"] = [i["confidence"] for i in kwargs["incidents"]]
+        if kwargs.get("as_of") == "explode":
+            raise RuntimeError("the builder failed")
+        return ({"esdi": [1.0]},)
+
+    monkeypatch.setattr(build_index, "build", fake_build)
+    incidents = [{"incident_id": "a", "confidence": "confirmed"}]
+    study.run_index({"incidents": incidents, "as_of": "x"}, {**before, **study.CANDIDATE_WEIGHTS}, {"a": "LIMITED"})
+    assert seen["weights"]["LIMITED"] == 0.45 and seen["labels"] == ["LIMITED"]
+    assert build_index.SCORING["confidence_weights"] == before, "the substituted weights were left in place"
+    assert incidents[0]["confidence"] == "confirmed", "the caller's incidents were relabelled"
+    with pytest.raises(RuntimeError):
+        study.run_index({"incidents": incidents, "as_of": "explode"}, {**before, **study.CANDIDATE_WEIGHTS}, {"a": "HIGH"})
+    assert build_index.SCORING["confidence_weights"] == before, "a failed run left the weights substituted"
+    # Without substitution the builder sees exactly the declared weights and labels.
+    study.run_index({"incidents": incidents, "as_of": "x"})
+    assert seen["weights"] == before and seen["labels"] == ["confirmed"]
+
+
+def test_the_shadow_study_and_the_calibration_tool_write_no_payload():
+    for name in ("confidence_shadow_study", "eci_calibration"):
+        text = (ROOT / "scripts" / f"{name}.py").read_text(encoding="utf-8")
+        assert "write_json" not in text and "WEB_DATA" not in text and "_mirror_to_web" not in text, name
+    study = (ROOT / "scripts" / "confidence_shadow_study.py").read_text(encoding="utf-8")
+    assert 'outputs.plan("fixture"' in study, "the study must run as a fixture build, which may not touch data/processed"
+    doc = (ROOT / "docs" / "EVIDENCE_CONFIDENCE_V2.md").read_text(encoding="utf-8")
+    for marker in ("<!-- shadow-study:begin -->", "<!-- shadow-study:end -->", "<!-- calibration-results:begin -->",
+                   "The bar for ever replacing the theatre multiplier", '"theatre_shadow"'):
+        assert marker in doc, marker
