@@ -1185,8 +1185,10 @@ def serve_record(r, ctx):
     end = r.get("date_end") if _date_ok(r.get("date_end"), ("day", "month", "year")) else None
     # An attempt affected no service, so there is no effect to be specific about.
     specificity = "vague" if r["record_kind"] == ATTEMPT else r["effect_specificity"]
+    # The review block is passed because it says what the citations cannot: the source-and-attribution
+    # reviewer checked which sources relay which, so the origin count here is a reviewed count.
     out["evidence_confidence"] = EC.assess(r["sources"], r["date"], end, specificity,
-                                           r.get("dispute"))
+                                           r.get("dispute"), review=r.get("review"))
     out["attribution"]["confidence"] = EC.attribution_confidence(r["attribution"], r["sources"])
     out["origin_count"] = len({EC.origin_of(s) for s in r["sources"]} - {None})
     out["digital_category"] = digital_category(r)

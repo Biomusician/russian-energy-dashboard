@@ -2727,6 +2727,20 @@ ITER22_COUNTRY_MUTATIONS = [
 MUTATIONS += ITER22_COUNTRY_MUTATIONS
 
 
+# Iteration 22, integration rules between the agents' modules (tests/test_iteration22_lead.py).
+ITER22_LEAD_MUTATIONS = [
+    ("the impact build no longer tells the confidence model the origins were reviewed",
+     [("pipeline/global_impacts.py", _text('                                           r.get("dispute"), review=r.get("review"))',
+                                           '                                           r.get("dispute"))'))],
+     "impact_build_passes_the_review_block"),
+    ("an accepted source-and-attribution review no longer counts as an origin review",
+     [("pipeline/evidence_confidence.py", _text('    return roles.get(cfg["reviewed_by_role"]) in cfg["accepting_verdicts"]',
+                                                '    return False'))],
+     "impact_build_passes_the_review_block"),
+]
+MUTATIONS += ITER22_LEAD_MUTATIONS
+
+
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
     for d in COPY_DIRS:
@@ -2746,6 +2760,7 @@ TEST_FILES += ("tests/test_iteration22_filters.py", "tests/test_iteration22_mapl
 TEST_FILES += ("tests/test_iteration22_atlas.py",)
 TEST_FILES += ("tests/test_iteration22_confidence.py", "tests/test_iteration22_whats_new.py", "tests/test_iteration22_redteam.py")
 TEST_FILES += ("tests/test_iteration22_country.py",)
+TEST_FILES += ("tests/test_iteration22_lead.py",)
 
 
 def _run(box, k):

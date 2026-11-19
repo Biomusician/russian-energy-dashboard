@@ -3,7 +3,9 @@
 A REGIONAL ENERGY PICTURE, NOT A TARGET SET. National aggregates for the eight Gulf systems, with
 the regional sum and its share of the world total where every member reports a value. It answers
 "which Gulf countries are monitored, and what is each one's broad national energy role?" and
-nothing about facilities, routes, straits or dependence.
+nothing about facilities, routes, straits or dependence. (Since iteration 22 dated, aggregate
+statements about the wider Gulf are published in a SEPARATE artifact, `global/regional_context.json`;
+this one is unchanged and still refuses every such key.)
 
 WHAT IT MAY HOLD. National values from `global/energy_context.json` (one source, one year), plus
 any extra national metric in `data/curated/global_context/gulf_regional.json` whose source terms
@@ -137,9 +139,13 @@ def build(context, country_payloads):
         "statement": (f"National energy statistics for the {len(members)} Gulf systems, for context. A figure here "
                       "is a country's annual total. It says nothing about any facility, and it is never "
                       "used to weigh, rank or score a disruption."),
-        "not_built": ("This view has no route, strait, shipping or tanker information and no facility layer, "
-                      "and it does not measure how much anything depends on a facility, a route or a country, "
-                      "by design. The share of the world total is a descriptive annual figure for the group."),
+        # Iteration 22: the Gulf PAGE gained a section of dated regional context, so the sentence speaks
+        # for these figures and names where that context lives. This artifact still holds none of it.
+        "not_built": ("These regional figures carry no route, strait, shipping or tanker information and no "
+                      "facility layer, and they do not measure how much anything depends on a facility, a route "
+                      "or a country, by design. The share of the world total is a descriptive annual figure for "
+                      "the group. Dated, sourced statements about the wider Gulf are published separately as "
+                      "regional context and enter none of these figures."),
         # Who is in each group, by name, so a reader need not assemble the list from the table.
         "member_names": [s["name"] for s in members],
         "memberships": {g: {"label": systems.GROUPS[g]["label"], "note": systems.GROUPS[g]["note"],
