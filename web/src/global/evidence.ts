@@ -301,15 +301,18 @@ export const LINK_STATE_LABEL: Record<string, string> = {
 
 /** A record the build did not assess: `category` is null and `reason` says why (for example, it
  *  is cited through a discovery aid only and no primary source is attached yet). */
-export interface NotAssessedConfidence { category: null; reason?: string | null }
+export interface NotAssessedConfidence { category: null; reason: string }
 export type AssessedConfidence = EvidenceConfidence & { category: string };
 export type ServedConfidence = AssessedConfidence | NotAssessedConfidence;
 
 /** "Not assessed" is its own state everywhere: its own words on a card, its own bucket in a filter
- *  and in a summary. It is never folded into the lowest category, and never read as absent. */
+ *  and in a summary. It is never folded into the lowest category, and never read as absent.
+ *  The same key and words as the shared impact components (impacts/model.ts), repeated here because
+ *  this file takes no value import; a test holds the two equal. */
 export const NOT_ASSESSED = "NOT_ASSESSED";
 export const NOT_ASSESSED_LABEL = "Not assessed";
-export const NOT_ASSESSED_FALLBACK_REASON = "The build gives no reason.";
+/** Said in place of a reason the build did not give, so the state never stands unexplained. */
+export const NOT_ASSESSED_FALLBACK_REASON = "The build gives no reason for this.";
 
 export function isAssessed(c: ServedConfidence): c is AssessedConfidence {
   return typeof c.category === "string";
@@ -324,7 +327,7 @@ export function isAssessed(c: ServedConfidence): c is AssessedConfidence {
 export function eventConfidence(e: object): ServedConfidence | null {
   const c = served(e) as (Partial<EvidenceConfidence> & { category?: string | null; reason?: string | null }) | null | undefined;
   if (!c || typeof c !== "object") return null;
-  if (c.category === null) return { category: null, reason: typeof c.reason === "string" && c.reason ? c.reason : null };
+  if (c.category === null) return { category: null, reason: typeof c.reason === "string" && c.reason ? c.reason : NOT_ASSESSED_FALLBACK_REASON };
   if (typeof c.category !== "string" || !c.category) return null;
   if (!c.components || typeof c.components !== "object" || !Array.isArray(c.reasons)) return null;
   return c as AssessedConfidence;

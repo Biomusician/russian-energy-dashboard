@@ -18,6 +18,10 @@ export const RESEARCH_PREVIEW_DEFINITION =
   + "groups have not been fully searched and some sources could not be read at all, so the absence of a record is "
   + "not evidence that no disruption occurred. The Research coverage tab says what was searched.";
 
+/** The same definition as an exported image carries it (iteration 22): cut before the pointer to a
+ *  tab the image does not have. Derived from the one definition, so the two cannot drift. */
+export const RESEARCH_PREVIEW_EXPORT_LINE = RESEARCH_PREVIEW_DEFINITION.replace(/ The Research coverage tab says what was searched\.$/, "");
+
 /** The first thing an empty country page says. Never a count, never "no disruptions". */
 export const EMPTY_CORPUS_LEAD =
   "No qualifying records in the current reviewed corpus — this is not evidence that no disruption occurred.";

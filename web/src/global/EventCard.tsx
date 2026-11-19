@@ -4,11 +4,12 @@ import {
   type CountryBundle, type CountryEvent,
 } from "./manifest";
 import {
-  LINK_STATE_LABEL, NOT_ASSESSED_FALLBACK_REASON, NOT_ASSESSED_LABEL, confidenceLabel, countLine, eventAnchor, eventConfidence, eventPlacement,
+  LINK_STATE_LABEL, NOT_ASSESSED_LABEL, confidenceLabel, countLine, eventAnchor, eventConfidence, eventPlacement,
   headlinesAllowed, isAssessed, notEstablished, originLabel, type ServedConfidence,
   originSummary, placementKind, plainBasis, roleVerdicts,
 } from "./evidence";
 import { ConfidenceBreakdown, ConfidenceChip, useConfidenceMethod } from "./impacts/ConfidenceChip";
+import type { EvidenceConfidence } from "./impacts/types";
 import { CONFIDENCE_IS_NOT } from "./countryCopy";
 import { PLACEMENT_LABEL } from "./placement";
 import { fmtDate } from "../data";
@@ -142,8 +143,9 @@ export function EventCard({ e, bundle, inEpisode = false, targeted = false }: {
         )}
         {/* Evidence confidence (iteration 22), on every record that carries one, campaign-covered or
             not: it restates the record's own public citations. A record without the field shows no
-            chip at all: absent is never drawn as a category. */}
-        {confidence && <CardConfidence confidence={confidence} />}
+            chip at all: absent is never drawn as a category. A record the build did not assess
+            (a null category) gets the shared chip's "Not assessed", with the served reason. */}
+        {confidence && <ConfidenceChip value={confidence as EvidenceConfidence} />}
         <ul className="source-list sources">
           {e.sources.map((s, i) => (
             <li key={i} className="source-row small">
@@ -191,19 +193,6 @@ export function EventCard({ e, bundle, inEpisode = false, targeted = false }: {
   );
 }
 
-/** The record's evidence confidence on its card. An assessed record gets the shared chip. A record
- *  the build did not assess says "Not assessed" and why, in those words: it is not the lowest
- *  category and is never drawn as one. */
-function CardConfidence({ confidence }: { confidence: ServedConfidence }) {
-  if (isAssessed(confidence)) return <ConfidenceChip value={confidence} />;
-  return (
-    <p className="conf conf-not-assessed small">
-      <span className="conf-chip conf-none">Evidence confidence: <strong>{NOT_ASSESSED_LABEL}</strong></span>{" "}
-      <span className="conf-reason">{confidence.reason ?? NOT_ASSESSED_FALLBACK_REASON}</span>
-    </p>
-  );
-}
-
 /** How strong the evidence is, and what produced that answer (iteration 22): who is speaking, the
  *  originating statements, how specific the reported effect is, whether a reviewer read a source,
  *  and whether it was reported at the time. The shared breakdown draws them from the record's own
@@ -218,8 +207,7 @@ function ConfidenceSection({ confidence, statement }: { confidence: ServedConfid
     return (
       <>
         <h4>How strong the evidence is</h4>
-        <p className="ev-inspector-confidence">Evidence confidence: <strong>{NOT_ASSESSED_LABEL}</strong>.{" "}
-          {confidence.reason ?? NOT_ASSESSED_FALLBACK_REASON}</p>
+        <p className="ev-inspector-confidence">Evidence confidence: <strong>{NOT_ASSESSED_LABEL}</strong>. {confidence.reason}</p>
         <p className="dim">Not assessed is not a low category: no category has been given to this record.</p>
         <p className="conf-statement">{method?.statement || statement || CONFIDENCE_IS_NOT}</p>
       </>

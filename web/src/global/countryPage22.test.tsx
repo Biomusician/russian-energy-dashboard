@@ -10,10 +10,10 @@ import {
 import { NO_RECORD_IS_NOT_NO_DISRUPTION, countryOverview, impactLine, overviewText, type ImpactPresence } from "./countryOverview";
 import { CountryOverview } from "./OverviewBlock";
 import { EventCard, EvidenceInspector } from "./EventCard";
-import { NOT_ASSESSED, NOT_ASSESSED_FALLBACK_REASON, confidenceBucket, confidenceCounts, confidenceOptions, eventConfidence, isAssessed } from "./evidence";
+import { NOT_ASSESSED, NOT_ASSESSED_FALLBACK_REASON, NOT_ASSESSED_LABEL, confidenceBucket, confidenceCounts, confidenceOptions, eventConfidence, isAssessed } from "./evidence";
 import { ConfidenceSummary } from "./ConfidenceSummary";
 import { countryFilters } from "./countryFilters";
-import { CONFIDENCE_IS_NOT } from "./countryCopy";
+import { CONFIDENCE_IS_NOT, RESEARCH_PREVIEW_DEFINITION } from "./countryCopy";
 import {
   EXPORT_ROW_LIMIT, causeCounts, countryImpacts, impactExportRow, impactExportSummary, impactFiles, impactFilters, impactOrder,
 } from "./countryImpactModel";
@@ -21,6 +21,7 @@ import { CountryImpacts, impactPresence, researchRanText } from "./CountryImpact
 import { latestOfEachType, regionalNote } from "./CountryRegional";
 import { exportPreviewLine } from "./countryExport";
 import { applyFilters, toggleChoice, NO_FILTERS } from "./recordFilters";
+import * as sharedModel from "./impacts/model";
 import { forgetVocabularies, registerMethod, registerVocabularies } from "./impacts/vocab";
 import type { ConfidenceMethod, EvidenceConfidence, ImpactRecord, ImpactsPayload, RegionalContext } from "./impacts/types";
 
@@ -426,6 +427,34 @@ describe("the impact tab's model", () => {
     expect(impactFilters(many, base.filter((r) => r.cyber_mechanism !== "it_outage_affecting_operations" || r.cause_family === "cyber")).map((d) => d.id)).not.toContain("it");
   });
 
+  it("an impact record that was not assessed is its own choice in the confidence filter, listed last", () => {
+    const base = countryImpacts(many, "ir").records;
+    const na = { ...base[0], evidence_confidence: { ...base[0].evidence_confidence!, category: null, label: null, score: null, reason: "Not yet assessed." } } as ImpactRecord;
+    const records = [na, ...base.slice(1)];
+    const defs = impactFilters(many, records, method.categories.map((c) => c.id));
+    const conf = defs.find((d) => d.id === "conf");
+    const options = conf && conf.kind === "choice" ? conf.options : [];
+    expect(options[options.length - 1]).toEqual({ value: NOT_ASSESSED, label: "Not assessed" });
+    expect(applyFilters(records, defs, toggleChoice(NO_FILTERS, "conf", NOT_ASSESSED), "2026-11-19")).toEqual([na]);
+    expect(applyFilters(records, defs, toggleChoice(NO_FILTERS, "conf", "PRELIMINARY"), "2026-11-19")).not.toContain(na);
+    // The country pages and the shared impact components use one key and one label for it.
+    expect(NOT_ASSESSED).toBe(sharedModel.NOT_ASSESSED);
+    expect(NOT_ASSESSED_LABEL).toBe(sharedModel.NOT_ASSESSED_LABEL);
+  });
+
+  it("no cause family is typed here: one the taxonomy adds later is counted and can be chosen", () => {
+    const base = countryImpacts(many, "ir").records;
+    const withNew: ImpactsPayload = { ...many, vocabularies: { ...many.vocabularies,
+      cause_families: [...(many.vocabularies.cause_families ?? []), { id: "authority_order", label: "Order by an authority" }] } };
+    const records = [{ ...base[0], cause_family: "authority_order" }, ...base.slice(1)];
+    expect(causeCounts(withNew, records).find((c) => c.id === "authority_order")).toEqual({ id: "authority_order", label: "Order by an authority", n: 1 });
+    const cause = impactFilters(withNew, records).find((d) => d.id === "cause");
+    expect(cause && cause.kind === "choice" ? cause.options.some((o) => o.value === "authority_order" && o.label === "Order by an authority") : false).toBe(true);
+    // Not yet in the served vocabulary: still counted and selectable, under the key in plain words.
+    expect(causeCounts(many, records).find((c) => c.id === "authority_order")?.label).toBe("Authority order");
+    expect(impactExportRow(withNew, records[0])).toContain("Order by an authority");
+  });
+
   it("cause counts are inside the list, in the vocabulary's order, and add up", () => {
     const { records } = countryImpacts(many, "ir");
     const counts = causeCounts(many, records);
@@ -525,7 +554,8 @@ describe("the impact and regional tabs", () => {
     for (const id of COUNTRIES) {
       const line = exportPreviewLine(SYSTEMS[id]);
       expect(!!line, id).toBe(SYSTEMS[id].maturity === "research_preview");
-      if (line) expect(line).toContain("not evidence that no disruption occurred");
+      // The image carries the page's one definition, less its pointer to a tab the image has not got.
+      if (line) { expect(RESEARCH_PREVIEW_DEFINITION.startsWith(line)).toBe(true); expect(line).toContain("not evidence that no disruption occurred"); }
     }
   });
 });

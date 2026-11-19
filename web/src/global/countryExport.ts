@@ -2,7 +2,7 @@ import { DIM, INK, SANS, fillFitted } from "./canvasText";
 import { ENVIRONMENT_LABEL, labelFor, type CountrySystem } from "./manifest";
 import { DISPUTED, NO_EVENTS, type Scale } from "./countryScale";
 import { fmtValue, type ContextRow, type EnergyContext } from "./context";
-import { RESEARCH_PREVIEW_LABEL, inSentence } from "./countryCopy";
+import { RESEARCH_PREVIEW_EXPORT_LINE, inSentence } from "./countryCopy";
 import { fmtDate } from "../data";
 import { PLACEMENT_LABEL } from "./placement";
 import type { ImpactExportSummary } from "./countryImpactModel";
@@ -27,11 +27,11 @@ export const COUNTRY_EXPORT_FIT_PADDING = { top: 112, right: 380, bottom: 120, l
 const SUMMARY_WIDTH = 640;
 export const COUNTRY_EXPORT_SUMMARY_PADDING = { ...COUNTRY_EXPORT_FIT_PADDING, left: 32 + SUMMARY_WIDTH + 32 };
 
-/** The research-preview caveat as an image carries it: the page's own definition, shortened to one
- *  line, with the consequence a reader must not miss. Null for a system that is not a preview. */
+/** The research-preview caveat as an image carries it: the page's own definition (countryCopy.ts),
+ *  without its pointer to a tab. Null for a system that is not a preview. */
 export function exportPreviewLine(sys: Pick<CountrySystem, "maturity">): string | null {
   if (sys.maturity !== "research_preview") return null;
-  return `${RESEARCH_PREVIEW_LABEL}: the systematic search for this country is still incomplete, so the absence of a record is not evidence that no disruption occurred.`;
+  return RESEARCH_PREVIEW_EXPORT_LINE;
 }
 
 /** Break `text` into lines no wider than `maxWidth`, measured in the live font. */

@@ -453,7 +453,7 @@ def test_country_image_carries_the_research_preview_caveat_where_the_page_shows_
     assert any(s.get("maturity") == "research_preview" for s in systems.values())
     for sid, drawn in out.items():
         preview = systems[sid].get("maturity") == "research_preview"
-        lines = [t for t in drawn if t.startswith("Research preview:")]
+        lines = [t for t in drawn if t.startswith("A research preview is ")]
         assert bool(lines) == preview, sid
         if preview:
             assert "not evidence that no disruption occurred" in lines[0], sid

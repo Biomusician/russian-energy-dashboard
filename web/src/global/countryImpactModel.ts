@@ -14,7 +14,7 @@ import type { FilterDef, FilterOption } from "./recordFilters";
 import { IMPACT_COLUMNS, IMPACT_FIELDS, csvFilename, impactRecordsCsv, readmeFilename, readmeText } from "./recordCsv";
 import { IMPACT_CORPUS_LINE, noImpactRecordText } from "./countryOverview";
 import { CONFIDENCE_IS_NOT, inSentence } from "./countryCopy";
-import { NOT_ASSESSED, bucketLabel, confidenceBucket } from "./evidence";
+import { NOT_ASSESSED, confidenceBucket, confidenceLabel } from "./impacts/model";
 
 export interface CountryImpactRecords {
   /** Disruptions for this country, in the served order: event date, newest first. */
@@ -101,11 +101,11 @@ export function impactFilters(payload: Pick<ImpactsPayload, "vocabularies">, rec
 
   // A record the build did not assess (category null) is its own choice, "Not assessed", listed
   // last: never under a category, and never left where no choice can select it.
-  const conf = (r: ImpactRecord) => { const b = confidenceBucket(r); return b ? [b] : []; };
+  const conf = (r: ImpactRecord) => [confidenceBucket(r.evidence_confidence)];
   const labels = new Map<string, string>();
   for (const r of records) {
-    const b = confidenceBucket(r);
-    if (b && !labels.has(b)) labels.set(b, bucketLabel(r));
+    const b = confidenceBucket(r.evidence_confidence);
+    if (!labels.has(b)) labels.set(b, confidenceLabel(r.evidence_confidence));
   }
   const present = [...labels].map(([value, label]) => ({ value, label }));
   const ordered = confidenceOrder
