@@ -13,14 +13,15 @@ import { EventCard, fmtEventDate } from "./EventCard";
 import { EmptyCorpus } from "./EmptyCorpus";
 import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
 import { NO_SCORE_NOT_ZERO, RESEARCH_PREVIEW_DEFINITION, RESEARCH_PREVIEW_LABEL, inSentence, noScorePlain } from "./countryCopy";
-import { eventAnchor } from "./evidence";
+import { confidenceOptions, eventAnchor } from "./evidence";
+import { ConfidenceSummary } from "./ConfidenceSummary";
 import { laneLine } from "./laneCoverage";
 import { PLACEMENT_LABEL } from "./placement";
 import { loadContext, rowForSystem, type EnergyContext } from "./context";
 import { NationalFigures } from "./WorldContext";
 import { LOCATION_EVENT, navigate, navigateCompare } from "./router";
 import { PanelBoundary } from "../components/ViewBoundary";
-import { COUNTRY_EXPORT_FIT_PADDING, composeCountryFrame, countryFilename } from "./countryExport";
+import { COUNTRY_EXPORT_FIT_PADDING, COUNTRY_EXPORT_SUMMARY_PADDING, composeCountryFrame, countryFilename } from "./countryExport";
 import { DISPUTED, NO_EVENTS, fillFor, scaleFor, type Scale } from "./countryScale";
 import { downloadBlob, exportMapPng } from "../mapExport";
 import { daysBetween, fmtDate } from "../data";
@@ -34,6 +35,15 @@ import {
 } from "./recordFilters";
 import { countryExport, countryFilters, countrySearch, exportOrder, type CountryFilters } from "./countryFilters";
 import { downloadBlob as downloadFile } from "../download";
+import {
+  DEFAULT_TAB, TAB_LABEL, regionalGroupFor, resolveTab, tabFromSearch, tabsFor, withTab, type RegionalGroup, type Tab,
+} from "./countryTabs";
+import { CountryOverview } from "./OverviewBlock";
+import { CountryImpacts, impactPresence, useCountryImpacts } from "./CountryImpacts";
+import { CountryRegional } from "./CountryRegional";
+import { loadConfidenceMethod } from "./impacts";
+import { impactExportSummary } from "./countryImpactModel";
+import "../styles/countryOverview.css";
 
 /** One country system (iteration 14).
  *
@@ -45,9 +55,12 @@ import { downloadBlob as downloadFile } from "../download";
  *
  *  Switching countries aborts the previous load, so a slow response for the country just left
  *  can never paint over the one just opened.
+ *
+ *  Iteration 22: the page opens with "What this page can tell you" (countryOverview.ts), the side
+ *  tabs are linkable (`tab=`, countryTabs.ts), and two tabs show corpora that are NOT this
+ *  country's published record: the impact layer's records for the country, and the Gulf regional
+ *  context. Neither changes a count shown anywhere else on the page.
  */
-
-type Tab = "events" | "sectors" | "context" | "research" | "sources" | "method";
 
 function initialRegion(): string | null {
   return new URLSearchParams(window.location.search).get("r");
@@ -61,17 +74,22 @@ function initialAnchor(): string | null {
 
 /** `#tab-<name>` from the address opens the page on that tab (iteration 22): the home page's
  *  What's new panel links a coverage or method change to the tab that explains it. Read once, when
- *  the page opens; any other value opens the events tab as before. */
+ *  the page opens, and only when the address carries no `tab=`; any other value opens the default tab. */
 function initialTab(): Tab {
   const t = window.location.hash.slice(1);
-  return t === "tab-research" ? "research" : t === "tab-method" ? "method" : "events";
+  return t === "tab-research" ? "research" : t === "tab-method" ? "method" : DEFAULT_TAB;
 }
 
 export default function CountryView({ id }: { id: string }) {
   const [entry, setEntry] = useState<ManifestSystem | null>(null);
   const [bundle, setBundle] = useState<CountryBundle | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>(initialTab);
+  // The tab the address or the reader asked for. `tab`, below, is the one shown: a tab this system
+  // does not have (the regional context outside its group) falls back to the country's own record.
+  const [askedTab, setTab] = useState<Tab>(() => tabFromSearch(window.location.search) ?? initialTab());
+  const [regional, setRegional] = useState<RegionalGroup | null>(null);
+  const tabs = useMemo(() => tabsFor(regional), [regional]);
+  const tab = resolveTab(askedTab, tabs);
   const [region, setRegion] = useState<string | null>(initialRegion);
   // The event filters live in the address (iteration 22). Kept as the address's own text until the
   // country has loaded, because only its records say which filters and values this page has.
@@ -102,12 +120,15 @@ export default function CountryView({ id }: { id: string }) {
     setBundle(null);
     setEntry(null);
     setError(null);
+    setRegional(null);
     loadManifest()
       .then((m) => {
         const e = m.systems.find((s) => s.id === id && s.kind === "country");
         if (!e) throw new Error(`"${id}" is not a monitored country system.`);
         if (ctl.signal.aborted) return null;
         setEntry(e);
+        // Whether this system has the regional-context tab is the manifest's group table, read here.
+        setRegional(regionalGroupFor(m, id));
         return loadCountry(e);
       })
       .then((b) => { if (b && !ctl.signal.aborted) setBundle(b); })
@@ -138,22 +159,50 @@ export default function CountryView({ id }: { id: string }) {
 
   // A search result for a region of this same country moves the URL without remounting the view.
   useEffect(() => {
-    const sync = () => { setRegion(initialRegion()); setFilterQuery(filterQueryOf(window.location.search)); };
+    const sync = () => {
+      setRegion(initialRegion());
+      setFilterQuery(filterQueryOf(window.location.search));
+      // An address without a tab is the country's own record: a search result for a region must
+      // not leave the reader on another tab.
+      setTab(tabFromSearch(window.location.search) ?? initialTab());
+    };
     window.addEventListener(LOCATION_EVENT, sync);
     window.addEventListener("popstate", sync);
     return () => { window.removeEventListener(LOCATION_EVENT, sync); window.removeEventListener("popstate", sync); };
   }, []);
 
-  // Region selection and the event filters are shareable, like the theatre's view state. The entry
-  // is replaced, not pushed: Back leaves the page instead of undoing one checkbox at a time, and
-  // coming back to the page (Back, Forward, a reload, a shared link) shows the same list.
+  // Region selection, the open tab and the event filters are shareable, like the theatre's view
+  // state. The entry is replaced, not pushed: Back leaves the page instead of undoing one checkbox
+  // at a time, and coming back to the page (Back, Forward, a reload, a shared link) shows the same list.
+  // Until the country has loaded, the tab the address asked for is kept as asked: which tabs this
+  // system has is not known yet, and a deep link must survive a reload during the wait.
+  const urlTab = bundle ? tab : askedTab;
   useEffect(() => {
     // The record anchor survives: a link to one record must still point at it after this rewrite.
-    window.history.replaceState(null, "", `${window.location.pathname}?${countrySearch(id, region, filterQuery)}${window.location.hash}`);
-  }, [id, region, filterQuery]);
+    window.history.replaceState(null, "", `${window.location.pathname}?${withTab(countrySearch(id, region, filterQuery), urlTab)}${window.location.hash}`);
+  }, [id, region, filterQuery, urlTab]);
+
+  // The impact corpus is a separate file, read when its tab is first opened. A page with no
+  // published record has nothing else to show, so it asks at once: its overview then says whether
+  // the corpus holds anything for this country instead of sending the reader to find out.
+  const noRecords = bundle ? bundle.system.event_summary.recorded_events === 0 : false;
+  const impacts = useCountryImpacts(id, tab === "impacts" || noRecords, tab);
+
+  // A link in the overview opens its tab and moves the reader to it: on a phone the tabs are a
+  // screen or more below the overview.
+  const detailsRef = useRef<HTMLElement | null>(null);
+  const [jump, setJump] = useState(0);
+  const openTab = (t: Tab) => { setTab(t); setJump((n) => n + 1); };
+  useEffect(() => {
+    if (jump === 0) return;
+    detailsRef.current?.scrollIntoView({ block: "start" });
+    detailsRef.current?.focus({ preventScroll: true });
+  }, [jump]);
 
   const today = localISODate(new Date());
-  const filters = useMemo<CountryFilters | null>(() => (bundle ? countryFilters(bundle.system, bundle.events) : null), [bundle]);
+  // The confidence filter lists its categories in the method's own order (iteration 22).
+  const filters = useMemo<CountryFilters | null>(() => (bundle
+    ? countryFilters(bundle.system, bundle.events, confidenceOptions(bundle.system, bundle.events)) : null), [bundle]);
   const decoded = useMemo(() => (filters ? decodeFilters(filterQuery, filters.defs) : null), [filters, filterQuery]);
   const setFilters = (next: FilterState) => {
     if (!filters) return;
@@ -248,12 +297,21 @@ export default function CountryView({ id }: { id: string }) {
     try {
       // The brief carries the national figures; without the context file it is drawn without them.
       const national = ctx ?? await loadContext().catch(() => null);
+      // With the impact tab open, the picture carries that list's summary: what the reader was
+      // looking at when they asked for it. Built from the same records the tab lists.
+      let impactSummary = null;
+      if (tab === "impacts" && impacts.state === "ready") {
+        // The served sentence about what confidence is; the summary has its own if the file fails.
+        const method = await loadConfidenceMethod().catch(() => null);
+        impactSummary = impactExportSummary(sys.name, impacts.records, impacts.attempts, impacts.payload, method?.statement);
+      }
       const res = await exportMapPng({
         source: m, width: 1600, height: 900, pixelRatio: 1,
-        fit: { bounds: sys.geography.view_bounds ?? sys.geography.bounds, padding: COUNTRY_EXPORT_FIT_PADDING },
-        compose: (c) => composeCountryFrame(c, sys, scale, national ? { row: rowForSystem(national, sys.system_id), ctx: national } : null),
+        fit: { bounds: sys.geography.view_bounds ?? sys.geography.bounds,
+               padding: impactSummary ? COUNTRY_EXPORT_SUMMARY_PADDING : COUNTRY_EXPORT_FIT_PADDING },
+        compose: (c) => composeCountryFrame(c, sys, scale, national ? { row: rowForSystem(national, sys.system_id), ctx: national } : null, impactSummary),
       });
-      downloadBlob(res.blob, countryFilename(sys));
+      downloadBlob(res.blob, impactSummary ? countryFilename(sys).replace(/\.png$/, "-impacts.png") : countryFilename(sys));
       setExportMsg(`Exported ${res.width}×${res.height}.`);
     } catch (err) {
       setExportMsg(err instanceof Error ? err.message : String(err));
@@ -286,6 +344,9 @@ export default function CountryView({ id }: { id: string }) {
         No index · {sys.event_summary.recorded_events === 0 ? "no qualifying records yet" : `${sys.event_summary.recorded_events} qualifying records`}.{" "}
         <a href="#notices">What this page can and cannot tell you</a>
       </p>
+
+      {/* What is published, what else is here, what is withheld: before the detail, on every system. */}
+      <CountryOverview sys={sys} impacts={impactPresence(impacts)} regional={regional} onTab={openTab} />
 
       {stale && (
         <div className="stale-note" role="status">
@@ -441,14 +502,8 @@ export default function CountryView({ id }: { id: string }) {
           </div>
         </section>
 
-        <section className="country-side panel" aria-label="Details">
-          <div className="tabs" role="group" aria-label="Detail views">
-            {(["events", "sectors", "context", "research", "sources", "method"] as Tab[]).map((t) => (
-              <button key={t} className="ghost" aria-pressed={tab === t} onClick={() => setTab(t)}>
-                {TAB_LABEL[t]}
-              </button>
-            ))}
-          </div>
+        <section className="country-side panel" aria-label="Details" id="country-details" tabIndex={-1} ref={detailsRef}>
+          <TabRow tabs={tabs} tab={tab} onTab={setTab} />
           {/* Keyed on the tab: a tab that fails costs that tab, and the others still open. */}
           <PanelBoundary key={tab} label={`The ${TAB_LABEL[tab]} tab`}>
           {tab === "events" && (
@@ -460,6 +515,8 @@ export default function CountryView({ id }: { id: string }) {
               filterNotes={[...(clearedNote ? [clearedNote] : []), ...decoded!.notes]}
             />
           )}
+          {tab === "impacts" && <CountryImpacts sys={sys} impacts={impacts} today={today} />}
+          {tab === "regional" && regional && <CountryRegional sys={sys} group={regional} />}
           {tab === "sectors" && <SectorsPanel bundle={bundle} />}
           {tab === "context" && <ContextPanel bundle={bundle} ctx={ctx} ctxFailed={ctxFailed} />}
           {tab === "research" && <ResearchCoverage bundle={bundle} />}
@@ -474,14 +531,31 @@ export default function CountryView({ id }: { id: string }) {
   );
 }
 
-const TAB_LABEL: Record<Tab, string> = {
-  events: "Reported events",
-  sectors: "Sectors",
-  context: "Energy context",
-  research: "Research coverage",
-  sources: "Sources & data quality",
-  method: "Why no score",
-};
+/** The side tabs. One row that scrolls sideways on a phone (eight tabs wrap into four rows at
+ *  390 px and push the content a screen down); the open tab is brought into the row's view, so a
+ *  deep link to a later tab never opens with its own tab out of sight. Ordinary buttons with
+ *  aria-pressed: the open tab is said in words, not only by its colour. */
+function TabRow({ tabs, tab, onTab }: { tabs: readonly Tab[]; tab: Tab; onTab: (t: Tab) => void }) {
+  const row = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = row.current;
+    const on = el?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!el || !on) return;
+    // Only the row is scrolled, never the page: scrollIntoView would also move the window.
+    const left = on.offsetLeft - el.offsetLeft;
+    if (left < el.scrollLeft) el.scrollLeft = left;
+    else if (left + on.offsetWidth > el.scrollLeft + el.clientWidth) el.scrollLeft = left + on.offsetWidth - el.clientWidth;
+  }, [tab, tabs]);
+  return (
+    <div className="tabs" role="group" aria-label="Detail views" ref={row}>
+      {tabs.map((t) => (
+        <button key={t} className="ghost" aria-pressed={tab === t} data-tab={t} onClick={() => onTab(t)}>
+          {TAB_LABEL[t]}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 /** Sources past their stale limit, on the reader's clock. Display only: never an analytic input. */
 function staleSources(sources: SourceEntry[], today: string): SourceEntry[] {
@@ -836,6 +910,7 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
       <p className="small dim">Re-check limits are display policy: they never decide whether an event
         is included and never enter a number.</p>
       {s.source_health && bundle.events.length > 0 && <SourceHealthBlock h={s.source_health} />}
+      <ConfidenceSummary bundle={bundle} />
       <SourceBrowser bundle={bundle} ctx={ctx} />
       <p className="small research-coverage">
         <strong>{s.research_log.passes.length === 0 ? "No search has been run yet" : RESEARCH_COMPLETENESS_LABEL[s.research_freshness.completeness]}.</strong>{" "}

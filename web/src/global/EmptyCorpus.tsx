@@ -9,7 +9,7 @@ import { readerText } from "./readerText";
 import { fmtDate } from "../data";
 import "../styles/country.css";
 
-/** The Reported events tab of a country with no published record (iteration 21).
+/** The Published energy disruptions tab of a country with no published record (iteration 21).
  *
  *  An empty page is a statement about the dataset, so it leads with that, then says what was
  *  searched, how the country reports, its national context, the sources, the safeguards that
@@ -64,9 +64,9 @@ export function EmptyCorpus({ bundle, ctx, onTab }: {
             the energy system: context, never disruption and never importance.</p>
         </div>
       ) : (
-        <p className="small dim">National figures are on the Energy context tab.</p>
+        <p className="small dim">National figures are on the National energy context tab.</p>
       )}
-      <button type="button" className="ghost" onClick={() => onTab("context")}>Open the Energy context tab</button>
+      <button type="button" className="ghost" onClick={() => onTab("context")}>Open the National energy context tab</button>
 
       <h3 className="eyebrow">Sources</h3>
       <p className="small">{used.length} registered sources were set up for this country, among them{" "}

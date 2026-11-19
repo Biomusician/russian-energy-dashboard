@@ -250,7 +250,7 @@ test.describe("a broken file costs only the view that reads it", () => {
     await app.mapIdle();
     await page.getByRole("button", { name: "Energy context" }).click();
     await expect(page.getByRole("alert").filter({ hasText: "Global energy context unavailable" })).toBeVisible();
-    await page.getByRole("button", { name: "Reported events" }).click();
+    await page.getByRole("button", { name: "Published energy disruptions" }).click();
     await expect(page.locator(".event-item").first()).toBeVisible();
   });
 

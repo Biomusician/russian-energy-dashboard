@@ -1,0 +1,74 @@
+/* Country pages, iteration 22: the "What this page can tell you" overview, the side tabs on a
+   phone, and the two tabs that show corpora other than the country's own record. Uses the tokens
+   in theme.css; no colour here carries a judgement about a country or a record. */
+
+/* ---- "What this page can tell you" ------------------------------------------------------------ */
+.country-overview {
+  margin: 10px 16px 0; padding: 9px 12px 10px; flex: 0 0 auto;
+  border: 1px solid var(--line); border-left: 3px solid var(--accent-dim);
+  background: var(--bg-panel); border-radius: var(--radius);
+}
+/* Line heights are whole pixels on purpose. The map below takes its place from this block's
+   height, and a fractional height (1.4 x 11.5px) put the map on a half pixel: its captured image
+   came out one pixel short of its recorded golden. */
+.country-overview h2 { font-size: 14px; line-height: 20px; margin: 0 0 6px; }
+.overview-parts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr); gap: 6px 24px; }
+.overview-part h3.eyebrow { margin: 0 0 2px; line-height: 14px; }
+.overview-part p { margin: 0; line-height: 16px; }
+.overview-lead { font-weight: 600; color: var(--text); }
+.overview-part ul.overview-links { list-style: none; margin: 0; padding: 0; }
+.overview-links li { margin: 0; line-height: 16px; }
+.overview-links a { font-weight: 600; }
+.overview-links a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.overview-link-line { color: var(--text-dim); }
+
+@media (max-width: 900px) {
+  .overview-parts { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+}
+@media (max-width: 600px) {
+  /* On a phone the overview is the first thing under the title, before the map (which the page's
+     own order rule would otherwise put first). The compact caveat line stays above it. It is kept
+     short enough that the map still starts in the first screen (iteration 20's rule). */
+  .country-main > .country-overview { order: -2; margin: 8px 16px 0; padding: 7px 10px 8px; }
+  .country-overview h2 { margin-bottom: 4px; }
+  /* The first and last parts run their label into the sentence: two lines saved, and the longest
+     country name still leaves the map in the first screen. The links keep their label above. */
+  .overview-published h3.eyebrow, .overview-withheld h3.eyebrow { display: inline; margin: 0 6px 0 0; line-height: 16px; }
+  .overview-published p, .overview-withheld p { display: inline; }
+  /* With inline children the part's own font sets each line's height: without this every line is
+     the body's 19 px, not the sentence's 16. */
+  .overview-published, .overview-withheld { font-size: 11.5px; line-height: 16px; }
+  .overview-parts { gap: 4px; }
+}
+
+/* The side panel takes focus when an overview link opens a tab; it is not a control. */
+.country-side:focus { outline: none; }
+.country-side:focus-visible { outline: 1px solid var(--accent-dim); outline-offset: -1px; }
+
+/* ---- the side tabs on a phone ----------------------------------------------------------------- */
+/* Eight 44 px tabs wrap into four rows at 390 px. One row that scrolls sideways instead: every
+   tab stays an ordinary button, the row is its own scroller (the page never scrolls sideways) and
+   the open tab is brought into view by the page. */
+@media (max-width: 600px) {
+  .country-side .tabs {
+    flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain;
+    padding-bottom: 6px; margin-bottom: 4px; scrollbar-width: thin;
+    /* The fade says there is more to the side without relying on a scrollbar being drawn. */
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+    padding-right: 28px;
+  }
+  .country-side .tabs > button { flex: 0 0 auto; white-space: nowrap; }
+}
+
+/* ---- Cyber & civilian services, Gulf & Hormuz context ---------------------------------------- */
+.impacts-what, .regional-note {
+  margin: 4px 0 8px; padding: 6px 8px; line-height: 1.45;
+  border-left: 2px solid var(--accent-dim); background: var(--bg-inset); border-radius: var(--radius);
+}
+.impacts-empty .empty-lead { font-size: 14px; font-weight: 600; line-height: 1.45; margin: 6px 0 4px; color: var(--text); }
+.impact-list > li.event-item { padding-top: 0; }
+.impact-attempts { margin-top: 14px; }
+.impacts-caveats { margin-top: 12px; }
+.impacts-caveats summary { cursor: pointer; color: var(--accent); }
+.ev-inspector-confidence { margin: 3px 0; }

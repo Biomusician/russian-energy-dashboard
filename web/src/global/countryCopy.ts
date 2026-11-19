@@ -18,6 +18,10 @@ export const RESEARCH_PREVIEW_DEFINITION =
   + "groups have not been fully searched and some sources could not be read at all, so the absence of a record is "
   + "not evidence that no disruption occurred. The Research coverage tab says what was searched.";
 
+/** The same definition as an exported image carries it (iteration 22): cut before the pointer to a
+ *  tab the image does not have. Derived from the one definition, so the two cannot drift. */
+export const RESEARCH_PREVIEW_EXPORT_LINE = RESEARCH_PREVIEW_DEFINITION.replace(/ The Research coverage tab says what was searched\.$/, "");
+
 /** The first thing an empty country page says. Never a count, never "no disruptions". */
 export const EMPTY_CORPUS_LEAD =
   "No qualifying records in the current reviewed corpus — this is not evidence that no disruption occurred.";
@@ -33,3 +37,10 @@ export function noScorePlain(country: string): string {
 export const NO_SCORE_NOT_ZERO =
   "A zero would mean \"measured, and nothing wrong\". Here nothing has been measured on that scale at all, so "
   + "the page shows no number in its place. A blank score is an absence of measurement, not a good result.";
+
+/** What evidence confidence is not (iteration 22). The served method carries this sentence and the
+ *  pages show the served one; this copy stands in while that file is loading or if it fails, so the
+ *  sentence is never missing beside a confidence category. */
+export const CONFIDENCE_IS_NOT =
+  "Evidence confidence describes the quality of the public evidence for this record. It is not a probability, "
+  + "not a measure of severity, and not a statement about how important the infrastructure is.";
