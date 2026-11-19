@@ -1,5 +1,7 @@
-import { useEffect, useRef, type MouseEvent } from "react";
+import { useEffect, useReducer, useRef, useState, type MouseEvent } from "react";
 import maplibregl from "maplibre-gl";
+import { MapLoadIndicator } from "../components/MapLoadIndicator";
+import { MAP_LOAD_INITIAL, mapLoadReducer } from "../mapLoad";
 import "../styles/map.css";
 
 /** A plain polygon map for the global home, the country views and the regional view.
@@ -60,6 +62,11 @@ export interface SimpleMapProps {
    *  the wheel, with the buttons, or with the plain wheel after the reader clicks into it, until
    *  the pointer leaves. Touch needs two fingers to move the map. */
   pageScrollsFirst?: boolean;
+  /** The caller's own data file (the figures that colour the map) has not arrived yet: the map box
+   *  says "Loading data…" until it does, even when the polygons are already drawn. */
+  loadingData?: boolean;
+  /** Where the same information is without the map, said if the map cannot be drawn. */
+  alternative?: string;
 }
 
 /** Follow an in-page link to a table that may sit inside a closed disclosure. */
@@ -80,20 +87,35 @@ export default function SimpleMap(props: SimpleMapProps) {
   // The latest callbacks, so the map is created once and still calls the current handlers.
   const latest = useRef(props);
   latest.current = props;
+  // What the map box is waiting for (iteration 22). Driven by MapLibre's own events below and by
+  // the caller's load promise, never by a timer.
+  const [load, dispatch] = useReducer(mapLoadReducer, MAP_LOAD_INITIAL);
+  // "Try again" builds the map afresh.
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => { dispatch({ type: "data_pending", pending: !!props.loadingData }); }, [props.loadingData]);
 
   useEffect(() => {
     if (!box.current) return;
-    const m = new maplibregl.Map({
-      container: box.current,
-      style: EMPTY_STYLE,
-      bounds: props.bounds,
-      fitBoundsOptions: { padding: FIT_PADDING },
-      attributionControl: false,
-      maxZoom: 8,
-      dragRotate: false,
-      renderWorldCopies: false,
-      cooperativeGestures: !!props.pageScrollsFirst,
-    });
+    let m: maplibregl.Map;
+    try {
+      m = new maplibregl.Map({
+        container: box.current,
+        style: EMPTY_STYLE,
+        bounds: props.bounds,
+        fitBoundsOptions: { padding: FIT_PADDING },
+        attributionControl: false,
+        maxZoom: 8,
+        dragRotate: false,
+        renderWorldCopies: false,
+        cooperativeGestures: !!props.pageScrollsFirst,
+      });
+    } catch (err) {
+      // No WebGL, or the browser refused a context. The box says so instead of staying blank; the
+      // list or table beside the map does not need it.
+      dispatch({ type: "failed", message: err instanceof Error ? err.message : String(err) });
+      return;
+    }
     map.current = m;
     m.touchZoomRotate.disableRotation();
     if (props.pageScrollsFirst) {
@@ -106,7 +128,13 @@ export default function SimpleMap(props: SimpleMapProps) {
     const el = m.getContainer();
     el.dataset.mapState = "loading";
     m.on("movestart", () => { el.dataset.mapState = "moving"; });
-    m.on("idle", () => { el.dataset.mapState = "idle"; });
+    m.on("idle", () => {
+      el.dataset.mapState = "idle";
+      // Idle before the polygons were handed over is an empty style at rest, not a drawn map.
+      if (m.getSource("polys")) dispatch({ type: "idle" });
+    });
+    m.on("sourcedata", (e) => { if (e.sourceId === "polys" && e.isSourceLoaded) dispatch({ type: "geometry_loaded" }); });
+    m.on("error", (e) => dispatch({ type: "failed", message: e.error?.message ?? "the map reported an error" }));
 
     m.on("load", () => {
       const { idProp } = latest.current;
@@ -150,9 +178,9 @@ export default function SimpleMap(props: SimpleMapProps) {
       m.remove();
       map.current = null;
     };
-    // Created once per mount; data and selection changes are applied below.
+    // Created once per mount, and again on "Try again"; data and selection changes are applied below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [attempt]);
 
   useEffect(() => {
     const m = map.current;
@@ -175,6 +203,7 @@ export default function SimpleMap(props: SimpleMapProps) {
 
   const zoomBy = (d: number) => { const m = map.current; if (m) (d > 0 ? m.zoomIn() : m.zoomOut()); };
   const reset = () => map.current?.fitBounds(latest.current.bounds, { padding: FIT_PADDING });
+  const retry = () => { dispatch({ type: "retry" }); setAttempt((a) => a + 1); };
 
   return (
     <div className="simple-map-shell">
@@ -185,6 +214,8 @@ export default function SimpleMap(props: SimpleMapProps) {
           <button type="button" className="map-tool" aria-label="Zoom out" title="Zoom out" onClick={() => zoomBy(-1)}>−</button>
           <button type="button" className="map-tool map-tool-text" title="Fit the whole map in view" onClick={reset}>Reset view</button>
         </div>
+        <MapLoadIndicator state={load} onRetry={retry}
+          alternative={props.alternative ?? (props.tableHref ? "The table below has the same data." : undefined)} />
         {props.emptyMessage ? <div className="map-empty-note" role="status">{props.emptyMessage}</div>
           : props.note ? <div className="map-empty-note map-state-note">{props.note}</div> : null}
       </div>

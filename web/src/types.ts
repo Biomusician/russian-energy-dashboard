@@ -593,7 +593,7 @@ export interface Bundle {
   assets: Asset[];
   taxonomy: Taxonomy;
   regionsGeo: GeoJSON.FeatureCollection;
-  linesGeo: GeoJSON.FeatureCollection;
+  // The line network is not part of the bundle since iteration 22: see loadLines() in data.ts.
   contextLand: GeoJSON.FeatureCollection;
   contextBorders: GeoJSON.FeatureCollection;
   ocean: GeoJSON.FeatureCollection;

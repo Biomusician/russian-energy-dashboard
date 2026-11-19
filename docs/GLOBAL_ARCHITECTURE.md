@@ -246,3 +246,42 @@ account is [ITERATION_21_REVIEW.md](ITERATION_21_REVIEW.md); what changed in the
 - **Opaque record ids.** `scripts/import_candidates.py` derives an abstracted attack record's token
   from a keyed hash (the key stays in the local review queue), and the build refuses any token that
   is not six hex digits, so an id cannot be reproduced by hashing guessed facility names.
+
+## Iteration 22: record filters, CSV export and map loading states
+
+Frontend only: no pipeline change and no new served file.
+
+- **Record filters are one shared, pure model.** `web/src/global/recordFilters.ts` knows no
+  vocabulary: the caller passes definitions (a choice filter with its options and labels from served
+  taxonomy data, or a date filter) and owns the state. Within one filter the chosen values are
+  alternatives; filters combine. `optionCounts` counts inside the one list it is given and is never
+  a figure to set beside another country's. `RecordFilterBar.tsx` is the control: a row of menus on
+  a wide screen, one "Filters (n)" sheet on a phone, and the always-present line "Showing n of N
+  published records", which says how many records the filters hide.
+- **Filter state lives in the address** as `f.<id>=<values>` (`f.cause=technical,unknown`,
+  `f.date=90d`, `f.date=2023-01-01..2023-12-31`), beside a view's own parameters. Keys and values
+  are sorted, so the address does not depend on the order things were chosen in. A filter or value
+  the page does not have is left out and described in a visible note. A country page replaces its
+  history entry on a filter edit (as it does for `r`); a link to a record the filters hide clears
+  exactly the filters that hide it and says so. A month-precision date covers its whole month.
+- **CSV export is stricter than the page** (`recordCsv.ts`), because a file travels without its
+  caveats. A fixed allow-list of columns per record kind (country event, impact record), each cell
+  built from a named field; never a coordinate or a review-internal field. A record under
+  attack-campaign safeguards, or abstracted to its country, exports no place, facility, operator,
+  source headline or later status: the cells are empty and `publication_note` says why. A covered
+  record that keeps the older convention of naming its facility in its own id, text and citation
+  addresses exports its date, class and cause only, as the cross-country lists show it. RFC 4180,
+  a formula guard, a UTF-8 byte-order mark. The CSV is data only; "About this file" downloads a
+  README with the columns, the build date, the filters in force and the corpus caveat.
+- **Every map says what it is waiting for** (`web/src/mapLoad.ts`, `components/MapLoadIndicator.tsx`):
+  "Loading map geometry…", "Loading data…", then nothing; on failure "The map could not be drawn",
+  the list or table that works without it, and "Try again". The state is a reducer driven only by
+  load promises and MapLibre's `sourcedata` and `idle` events, never a timer. The indicator is laid
+  over the map box, so it shifts nothing, and is a polite live region.
+- **The theatre no longer waits for its line network.** `assets_lines.geojson` (the theatre's
+  largest file, layer off by default) is requested alongside the core files by `loadLines()` in
+  `web/src/data.ts` but is not part of the bundle: regions, choropleth and controls draw first and
+  the lines join when the file lands ("Loading network lines…" only while the line layer is on).
+  The file, its name and the layer are unchanged. A PNG made with the line layer on waits for the
+  file and carries it in the copied style (`withSourceData` in `mapExport.ts`). A failed line file
+  costs that layer, with a retry, and never the page.

@@ -138,11 +138,18 @@ test.describe("world energy context", () => {
 
   test("events can be filtered, and a region can be chosen without the map", async ({ app, page }) => {
     await app.open("?sys=us");
-    await page.getByLabel("Filter events by year").selectOption("2024");
+    // Iteration 22: the year select became the shared date filter (a custom range here).
+    const bar = page.locator(".record-filters");
+    await bar.getByRole("button", { name: /^Date/ }).click();
+    await bar.getByRole("radio", { name: "Custom range" }).check();
+    await bar.getByLabel("From", { exact: true }).fill("2024-01-01");
+    await bar.getByLabel("To", { exact: true }).fill("2024-12-31");
+    await expect(page.locator(".rf-count")).toContainText("Date: 2024-01-01 to 2024-12-31");
     const items = page.locator(".event-list .event-item");
     await expect(items.first()).toBeVisible();
     for (const t of await items.locator(".event-head .mono").allInnerTexts()) expect(t).toContain("2024");
-    await page.getByLabel("Filter events by year").selectOption("");
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Clear filters" }).click();
     await page.getByLabel(/Choose a state/i).selectOption({ label: "Texas" });
     await expect(page.locator(".events-panel h2").first()).toHaveText("Texas");
   });

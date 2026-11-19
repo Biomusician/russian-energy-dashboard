@@ -196,11 +196,13 @@ test.describe("phone: the site bar's secondary tools fold behind Menu", () => {
 test.describe("country page selects", () => {
   test("the page's own filters are styled like the site's other selects", async ({ page }) => {
     await openView(page, "?sys=us");
-    const styles = await page.locator(".region-select select, .event-filters select").evaluateAll((els) => els.map((e) => {
+    // Iteration 22: the event filters are menus of checkboxes now (filters.e2e.ts); the region
+    // select is the page's one remaining select.
+    const styles = await page.locator(".region-select select").evaluateAll((els) => els.map((e) => {
       const s = getComputedStyle(e);
       return { bg: s.backgroundColor, border: s.borderTopColor, radius: s.borderTopLeftRadius };
     }));
-    expect(styles.length).toBeGreaterThanOrEqual(2);
+    expect(styles.length).toBeGreaterThanOrEqual(1);
     const ref = await page.locator(".global-nav .sys-switch select").evaluate((e) => getComputedStyle(e).backgroundColor);
     for (const s of styles) {
       expect(s.bg).toBe(ref);

@@ -133,6 +133,18 @@ export function canvasHasContent(canvas: HTMLCanvasElement): boolean {
   return new Set(samples).size > 1;
 }
 
+/** A copy of a style with one GeoJSON source's data replaced.
+ *
+ *  The export copies the live map's style. A file that reaches the live map after its first paint
+ *  (the theatre's line network) may not be in that copy yet, so the caller waits for the file and
+ *  puts it into the copy itself: the image never depends on how far the screen had got. */
+export function withSourceData(style: maplibregl.StyleSpecification, sourceId: string,
+                               data: GeoJSON.FeatureCollection): maplibregl.StyleSpecification {
+  const src = style.sources[sourceId];
+  if (!src || src.type !== "geojson") return style;
+  return { ...style, sources: { ...style.sources, [sourceId]: { ...src, data } } };
+}
+
 /** Render the current map state at an explicit size and return a PNG blob.
  *
  *  The temporary map is always removed, on every path.

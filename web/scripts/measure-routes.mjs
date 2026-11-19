@@ -9,18 +9,31 @@
 // (which files load, how often).
 //
 // USAGE (from web/, after `vite build` and with `vite preview --port <P>` running):
-//   node scripts/measure-routes.mjs http://127.0.0.1:<P> [runs]
+//   node scripts/measure-routes.mjs http://127.0.0.1:<P> [runs] [mbps]
+//
+// `mbps` (iteration 22) throttles the download through Chrome's own network emulation, with 40 ms
+// of latency. Localhost delivers a 2.4 MB file in a few milliseconds, which hides exactly the wait
+// a reader on a real connection has; `vite preview` also serves files uncompressed, so a throttled
+// figure is an upper bound on a compressing host, not a prediction of it.
 
 import { chromium } from "@playwright/test";
 
 const BASE = process.argv[2] ?? "http://127.0.0.1:4186";
 const RUNS = Number(process.argv[3] ?? 3);
+const MBPS = Number(process.argv[4] ?? 0);
+
+async function throttle(ctx, page) {
+  if (!MBPS) return;
+  const cdp = await ctx.newCDPSession(page);
+  const bytesPerSecond = (MBPS * 1e6) / 8;
+  await cdp.send("Network.emulateNetworkConditions", { offline: false, latency: 40, downloadThroughput: bytesPerSecond, uploadThroughput: bytesPerSecond });
+}
 
 // Installed before any page script: long tasks, layout shift, and every time a map container
 // reaches MapLibre's idle state or a new map canvas is created.
 const INIT = () => {
   const w = window;
-  w.__perf = { longTasks: [], cls: 0, mapIdleAt: null, mapsCreated: 0 };
+  w.__perf = { longTasks: [], cls: 0, mapIdleAt: null, mapCompleteAt: null, mapsCreated: 0 };
   try {
     new PerformanceObserver((l) => { for (const e of l.getEntries()) w.__perf.longTasks.push(Math.round(e.duration)); })
       .observe({ type: "longtask", buffered: true });
@@ -37,13 +50,19 @@ const INIT = () => {
       if (r.type === "attributes" && r.target.dataset?.mapState === "idle" && w.__perf.mapIdleAt == null) {
         w.__perf.mapIdleAt = Math.round(performance.now());
       }
+      // Iteration 22: the map box's own indicator says "ready" when the map is drawn AND every
+      // file the reader asked for (the theatre's line layer, when it is on) is in it. The last
+      // time it says so is when the map is complete; the first idle above is when it is usable.
+      if (r.type === "attributes" && r.target.dataset?.mapLoad === "ready") {
+        w.__perf.mapCompleteAt = Math.round(performance.now());
+      }
       for (const n of r.addedNodes) {
         if (n.nodeType !== 1) continue;
         if (n.classList?.contains("maplibregl-canvas")) count(n);
         n.querySelectorAll?.(".maplibregl-canvas").forEach(count);
       }
     }
-  }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-map-state"] });
+  }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-map-state", "data-map-load"] });
 };
 
 function attach(page, bucket) {
@@ -91,11 +110,12 @@ async function measureRoute(browser, query, map = true) {
   await page.addInitScript(INIT);
   const reqs = [];
   attach(page, reqs);
+  await throttle(ctx, page);
   await page.goto(`${BASE}/${query}`);
   await waitIdle(page, map);
   const perf = await page.evaluate(() => window.__perf);
   await ctx.close();
-  return { ...summarise(reqs), mapReadyMs: perf.mapIdleAt, maps: perf.mapsCreated,
+  return { ...summarise(reqs), mapReadyMs: perf.mapIdleAt, mapCompleteMs: perf.mapCompleteAt, maps: perf.mapsCreated,
            longTasks: perf.longTasks.length, longTaskMs: perf.longTasks.reduce((a, b) => a + b, 0),
            cls: Number(perf.cls.toFixed(4)) };
 }
@@ -121,22 +141,28 @@ async function measureSwitch(browser, from, to) {
 
 const median = (xs) => { const s = [...xs].sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
 
-const ROUTES = [["home", ""], ["gulf", "?group=gulf"], ["ir", "?sys=ir"], ["us", "?sys=us"], ["ru", "?sys=ru"],
-                ["compare us,ca,sa", "?compare=us,ca,sa", false]];
+const ALL_ROUTES = [["home", ""], ["gulf", "?group=gulf"], ["ir", "?sys=ir"], ["us", "?sys=us"], ["ru", "?sys=ru"],
+                    ["ru, lines on", "?sys=ru&ly=lines"], ["compare us,ca,sa", "?compare=us,ca,sa", false]];
+// A fifth argument names the routes to measure ("ru" matches both theatre rows); all of them otherwise.
+const ONLY = process.argv[5];
+const ROUTES = ONLY ? ALL_ROUTES.filter(([name]) => name.startsWith(ONLY)) : ALL_ROUTES;
 
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 const report = {};
-for (const [name, q, map] of [...ROUTES, ["switch ir->sa", null]]) {
+for (const [name, q, map] of [...ROUTES, ...(ONLY ? [] : [["switch ir->sa", null]])]) {
   const runs = [];
   for (let i = 0; i < RUNS; i++) runs.push(q === null ? await measureSwitch(browser, "ir", "sa") : await measureRoute(browser, q, map ?? true));
   const last = runs[runs.length - 1];
   report[name] = { ...last, mapReadyMs: median(runs.map((r) => r.mapReadyMs)), longTaskMs: median(runs.map((r) => r.longTaskMs)),
+                   // Null on a route with no map, and on a build older than the indicator.
+                   mapCompleteMs: runs.every((r) => r.mapCompleteMs != null) ? median(runs.map((r) => r.mapCompleteMs)) : null,
                    cls: median(runs.map((r) => r.cls)), mapReadyRuns: runs.map((r) => r.mapReadyMs) };
 }
 await browser.close();
 
 console.log(JSON.stringify(report, null, 1));
-console.log("\nroute | requests | data req | KB total | JS KB | data KB | map ready ms (median) | maps | long-task ms | CLS | duplicates");
+if (MBPS) console.log(`\nthrottled to ${MBPS} Mbit/s, 40 ms latency`);
+console.log("\nroute | requests | data req | KB total | JS KB | data KB | map ready ms (median) | map complete ms (median) | maps | long-task ms | CLS | duplicates");
 for (const [k, r] of Object.entries(report)) {
-  console.log(`${k} | ${r.requests} | ${r.dataRequests} | ${r.kb} | ${r.jsKb} | ${r.dataKb} | ${r.mapReadyMs} | ${r.maps} | ${r.longTaskMs} | ${r.cls} | ${r.duplicates.join(", ") || "none"}`);
+  console.log(`${k} | ${r.requests} | ${r.dataRequests} | ${r.kb} | ${r.jsKb} | ${r.dataKb} | ${r.mapReadyMs} | ${r.mapCompleteMs ?? "n/a"} | ${r.maps} | ${r.longTaskMs} | ${r.cls} | ${r.duplicates.join(", ") || "none"}`);
 }

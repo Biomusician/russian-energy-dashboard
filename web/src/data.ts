@@ -95,10 +95,28 @@ export function prefetchBundle(): void {
   loadBundle().catch(() => undefined);
 }
 
+// The theatre's line network (iteration 22). At about 2.4 MB it is the theatre's largest file, and
+// neither the choropleth nor the controls need it: its layer is off by default. It used to be one of
+// the files the whole dashboard waited for. Now it is its own request, started at the same moment
+// as the others so it arrives no later than before, and the map adds the lines when it lands. The
+// file, its name and its contents are unchanged. A failure is not kept, so "Try again" asks again.
+let linesPromise: Promise<GeoJSON.FeatureCollection> | null = null;
+
+export function loadLines(): Promise<GeoJSON.FeatureCollection> {
+  if (!linesPromise) {
+    const p = grab<GeoJSON.FeatureCollection>("assets_lines.geojson");
+    linesPromise = p;
+    p.catch(() => { if (linesPromise === p) linesPromise = null; });
+  }
+  return linesPromise;
+}
+
 async function fetchBundle(): Promise<Bundle> {
+  // Started here, not awaited: in flight alongside the core files, picked up by App.
+  loadLines().catch(() => undefined);
   const [
     snapshot, national, regional, incidents, regions, assets, taxonomy,
-    regionsGeo, linesGeo, contextLand, contextBorders, ocean,
+    regionsGeo, contextLand, contextBorders, ocean,
   ] = await Promise.all([
     grab<Bundle["snapshot"]>("snapshot.json"),
     grab<Bundle["national"]>("index_national.json"),
@@ -108,7 +126,6 @@ async function fetchBundle(): Promise<Bundle> {
     grab<Bundle["assets"]>("assets.json"),
     grab<Bundle["taxonomy"]>("taxonomy.json"),
     grab<Bundle["regionsGeo"]>("regions.geojson"),
-    grab<Bundle["linesGeo"]>("assets_lines.geojson"),
     grab<Bundle["contextLand"]>("context_land.geojson"),
     grab<Bundle["contextBorders"]>("context_borders.geojson"),
     grab<Bundle["ocean"]>("ocean.geojson"),
@@ -132,7 +149,7 @@ async function fetchBundle(): Promise<Bundle> {
 
   return {
     snapshot, national, regional, incidents, regions, assets, taxonomy,
-    regionsGeo, linesGeo, contextLand, contextBorders, ocean,
+    regionsGeo, contextLand, contextBorders, ocean,
     buildChanges,
     schema,
   };

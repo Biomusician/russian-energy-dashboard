@@ -27,6 +27,13 @@ import { daysBetween, fmtDate } from "../data";
 import { readerText } from "./readerText";
 import { CountryNav } from "./GlobalNav";
 import { registerCountryRegions } from "./searchIndex";
+import { RecordFilterBar } from "./RecordFilterBar";
+import {
+  applyFilters, activeFilters, decodeFilters, describeFilters, encodeFilters, filterQueryOf, hidingFilters, withoutFilters,
+  type FilterState,
+} from "./recordFilters";
+import { countryExport, countryFilters, countrySearch, exportOrder, type CountryFilters } from "./countryFilters";
+import { downloadBlob as downloadFile } from "../download";
 
 /** One country system (iteration 14).
  *
@@ -58,6 +65,10 @@ export default function CountryView({ id }: { id: string }) {
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("events");
   const [region, setRegion] = useState<string | null>(initialRegion);
+  // The event filters live in the address (iteration 22). Kept as the address's own text until the
+  // country has loaded, because only its records say which filters and values this page has.
+  const [filterQuery, setFilterQuery] = useState(() => filterQueryOf(window.location.search));
+  const [clearedNote, setClearedNote] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -119,19 +130,28 @@ export default function CountryView({ id }: { id: string }) {
 
   // A search result for a region of this same country moves the URL without remounting the view.
   useEffect(() => {
-    const sync = () => setRegion(initialRegion());
+    const sync = () => { setRegion(initialRegion()); setFilterQuery(filterQueryOf(window.location.search)); };
     window.addEventListener(LOCATION_EVENT, sync);
     window.addEventListener("popstate", sync);
     return () => { window.removeEventListener(LOCATION_EVENT, sync); window.removeEventListener("popstate", sync); };
   }, []);
 
-  // Region selection is shareable, like the theatre's.
+  // Region selection and the event filters are shareable, like the theatre's view state. The entry
+  // is replaced, not pushed: Back leaves the page instead of undoing one checkbox at a time, and
+  // coming back to the page (Back, Forward, a reload, a shared link) shows the same list.
   useEffect(() => {
-    const q = new URLSearchParams({ sys: id });
-    if (region) q.set("r", region);
     // The record anchor survives: a link to one record must still point at it after this rewrite.
-    window.history.replaceState(null, "", `${window.location.pathname}?${q.toString()}${window.location.hash}`);
-  }, [id, region]);
+    window.history.replaceState(null, "", `${window.location.pathname}?${countrySearch(id, region, filterQuery)}${window.location.hash}`);
+  }, [id, region, filterQuery]);
+
+  const today = localISODate(new Date());
+  const filters = useMemo<CountryFilters | null>(() => (bundle ? countryFilters(bundle.system, bundle.events) : null), [bundle]);
+  const decoded = useMemo(() => (filters ? decodeFilters(filterQuery, filters.defs) : null), [filters, filterQuery]);
+  const setFilters = (next: FilterState) => {
+    if (!filters) return;
+    setClearedNote(null);
+    setFilterQuery(encodeFilters(filters.defs, next));
+  };
 
   // A link to one record: show it in the full list, scroll it into view and mark it.
   const [anchor, setAnchor] = useState<string | null>(initialAnchor);
@@ -147,9 +167,21 @@ export default function CountryView({ id }: { id: string }) {
     if (!target) return;
     setRegion(null);
     setTab("events");
-    // After the list has rendered.
+    // A link to a record the filters hide still opens it: the filters that hide it are cleared, and
+    // the page says which. Run once per linked record, so the reader can filter again afterwards.
+    if (filters && decoded) {
+      const hiding = hidingFilters(target, filters.defs, decoded.state, today);
+      if (hiding.length > 0) {
+        const labels = filters.defs.filter((d) => hiding.includes(d.id)).map((d) => d.label);
+        setFilterQuery(encodeFilters(filters.defs, withoutFilters(decoded.state, hiding)));
+        setClearedNote(`The linked record was hidden by the ${labels.join(" and ")} ${labels.length === 1 ? "filter" : "filters"}, so ${labels.length === 1 ? "that filter was" : "those filters were"} cleared to show it.`);
+      }
+    }
+    // After the list has rendered, with the record in it.
     const t = window.setTimeout(() => document.getElementById(anchor!)?.scrollIntoView({ block: "center" }), 0);
     return () => window.clearTimeout(t);
+    // Only a new linked record runs this: a later filter change must not be undone.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target, anchor]);
 
   const validRegion = useMemo(() => {
@@ -354,6 +386,7 @@ export default function CountryView({ id }: { id: string }) {
             ariaLabel={`Map of ${sys.name} by ${sys.geography.unit_label}. Select one to list its events.`}
             emptyMessage={scale.thresholds.length === 0 ? `No record is placed in any ${sys.geography.unit_label}, so nothing is shaded. An unshaded map is not a quiet country.` : null}
             attribution="Boundaries: Natural Earth (public domain), line of actual control. Events: cited public reporting."
+            alternative="The list of reported events beside it does not need the map."
             onMap={(m) => { mapRef.current = m; }}
           />
           {/* A filter that cannot filter anything is replaced by the reason (iteration 21). */}
@@ -415,6 +448,8 @@ export default function CountryView({ id }: { id: string }) {
               events={events} region={validRegion} regionName={regionName}
               regionStatus={regionStatus} onClear={() => setRegion(null)} bundle={bundle}
               ctx={ctx} onTab={setTab} target={target?.event_id ?? null}
+              filters={filters!} filterState={decoded!.state} onFilters={setFilters} today={today}
+              filterNotes={[...(clearedNote ? [clearedNote] : []), ...decoded!.notes]}
             />
           )}
           {tab === "sectors" && <SectorsPanel bundle={bundle} />}
@@ -509,14 +544,15 @@ function CountryHeader({ name, id, wholeCountry, attacksWhole, children }: { nam
   );
 }
 
-function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle, ctx, onTab, target }: {
+function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle, ctx, onTab, target, filters, filterState, onFilters, today, filterNotes }: {
   events: CountryEvent[]; region: string | null; regionName: string | null;
   regionStatus: string | null; onClear: () => void; bundle: CountryBundle;
   ctx: EnergyContext | null; onTab: (t: Tab) => void; target: string | null;
+  filters: CountryFilters; filterState: FilterState; onFilters: (next: FilterState) => void; today: string;
+  filterNotes: string[];
 }) {
   const unit = bundle.system.geography.unit_label;
-  const [year, setYear] = useState("");
-  const [cls, setCls] = useState("");
+  const [exportMsg, setExportMsg] = useState<string | null>(null);
   if (events.length === 0 && !region) {
     return (
       <div className="events-panel">
@@ -525,13 +561,54 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
       </div>
     );
   }
-  const years = [...new Set(events.map((e) => e.date.slice(0, 4)))].sort().reverse();
-  const classes = [...new Set(events.map((e) => e.asset_class))].sort();
-  if (region && regionName) {
-    const placed = events.filter((e) => e.region_code === region);
-    // A multi-region event that names this region is listed here too, never counted here: the
-    // region view must not say "none found" when the payload records one that reached it.
-    const shared = events.filter((e) => e.geography_precision !== "admin1" && e.regions_affected.includes(region));
+  const inRegion = !!(region && regionName);
+  // A multi-region event that names this region is listed here too, never counted here: the
+  // region view must not say "none found" when the payload records one that reached it.
+  const regionPlaced = inRegion ? events.filter((e) => e.region_code === region) : [];
+  const regionShared = inRegion ? events.filter((e) => e.geography_precision !== "admin1" && e.regions_affected.includes(region!)) : [];
+  // The one list the filters act on: this region's records, or all of the country's.
+  const scope = inRegion ? [...regionPlaced, ...regionShared] : events;
+  const shown = applyFilters(scope, filters.defs, filterState, today);
+  const shownIds = new Set(shown.map((e) => e.event_id));
+  const filtering = activeFilters(filters.defs, filterState).length > 0;
+  const noun = inRegion ? `published records for ${regionName}` : "published records";
+
+  // The two files are built on the click, from the list on screen and nothing else.
+  const save = (which: "csv" | "readme") => {
+    const out = countryExport(bundle.system, shown, scope.length, describeFilters(filters.defs, filterState, today), regionName, today);
+    if (which === "csv") {
+      downloadFile(new Blob([out.csv], { type: "text/csv;charset=utf-8" }), out.csvName);
+      setExportMsg(`Saved ${out.csvName}: ${shown.length} of ${scope.length} ${noun}.`);
+    } else {
+      downloadFile(new Blob([out.readme], { type: "text/plain;charset=utf-8" }), out.readmeName);
+      setExportMsg(`Saved ${out.readmeName}.`);
+    }
+  };
+  const filterBar = scope.length > 0 && (
+    <>
+      <RecordFilterBar defs={filters.defs} state={filterState} onChange={onFilters} records={scope} shown={shown.length}
+                       today={today} noun={noun} notes={filterNotes} fixed={filters.fixed}>
+        <span className="record-export" role="group" aria-label="Download the records shown">
+          <button type="button" className="ghost" onClick={() => save("csv")} disabled={shown.length === 0}
+                  aria-label={`Download CSV of the ${shown.length} ${shown.length === 1 ? "record" : "records"} shown`}>Download CSV</button>
+          <button type="button" className="ghost" onClick={() => save("readme")}
+                  aria-label="About this file: download the note that explains the CSV">About this file</button>
+        </span>
+      </RecordFilterBar>
+      <p className="small dim record-export-note">The CSV holds the records shown here, after the filters. “About this file” explains its
+        columns and limits: these are the published records in this corpus, not a census, and counts are not comparable across countries.</p>
+      {exportMsg && <p className="small" role="status">{exportMsg}</p>}
+      {filtering && shown.length === 0 && (
+        <p className="small filter-empty" role="status">No published record in this list matches the filters. That describes the
+          filters, not {inRegion ? regionName : inSentence(bundle.system.name)}: {scope.length} {scope.length === 1 ? "record is" : "records are"} hidden by them.
+          Clear the filters to see {scope.length === 1 ? "it" : "them"}.</p>
+      )}
+    </>
+  );
+
+  if (inRegion) {
+    const placed = regionPlaced.filter((e) => shownIds.has(e.event_id));
+    const shared = regionShared.filter((e) => shownIds.has(e.event_id));
     return (
       <div className="events-panel">
         <div className="section-head">
@@ -544,10 +621,11 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
         ) : regionStatus === "not_placed" ? (
           <p className="small dim">No record is placed in {regionName}: records here are kept for the country as a
             whole, or this area is drawn for reference only. This is "not applicable", not "nothing happened".</p>
-        ) : placed.length === 0 && shared.length === 0 ? (
+        ) : scope.length === 0 ? (
           <p className="small dim">No qualifying events recorded for {regionName}. That means none
             were found in the sources monitored. It is not evidence that none occurred.</p>
         ) : null}
+        {filterBar}
         <ol className="event-list">
           {[...placed].reverse().map((e) => <EventCard key={e.event_id} e={e} bundle={bundle} targeted={e.event_id === target} />)}
         </ol>
@@ -575,36 +653,16 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
   return (
     <div className="events-panel">
       <h2>All reported events</h2>
-      {/* A filter with one choice filters nothing: it is replaced by what it would have said. */}
-      <div className="event-filters small">
-        {years.length > 1 ? (
-          <label>Year{" "}
-            <select aria-label="Filter events by year" value={year} onChange={(e) => setYear(e.target.value)}>
-              <option value="">All</option>
-              {years.map((y) => <option key={y} value={y}>{y}</option>)}
-            </select>
-          </label>
-        ) : <span className="dim">All records are from {years[0]}.</span>}{" "}
-        {classes.length > 1 ? (
-          <label>Type{" "}
-            <select aria-label="Filter events by infrastructure type" value={cls} onChange={(e) => setCls(e.target.value)}>
-              <option value="">All</option>
-              {classes.map((c) => (
-                <option key={c} value={c}>{labelFor(bundle.system.taxonomy.asset_classes, c)}</option>
-              ))}
-            </select>
-          </label>
-        ) : <span className="dim">All records are of one type: {labelFor(bundle.system.taxonomy.asset_classes, classes[0])}.</span>}
-      </div>
+      {filterBar}
       <p className="small dim">A record is a publicly reported event that meets the inclusion rule (Why no score tab): it is what was reported and found, not everything that happened.</p>
-      {(year || cls) && (
+      {/* With a filter on, one flat list, newest first: an episode group with some of its records
+          hidden would read as a smaller episode. */}
+      {filtering && (
         <ol className="event-list">
-          {[...events].filter((e) => (!year || e.date.startsWith(year)) && (!cls || e.asset_class === cls))
-            .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
-            .map((e) => <EventCard key={e.event_id} e={e} bundle={bundle} targeted={e.event_id === target} />)}
+          {exportOrder(shown).map((e) => <EventCard key={e.event_id} e={e} bundle={bundle} targeted={e.event_id === target} />)}
         </ol>
       )}
-      {!year && !cls && (<>
+      {!filtering && (<>
       {/* An empty page says what was searched and what is incomplete; the episode definition belongs
           beside episodes (iteration 20, §75). */}
       <p className="small dim">{`${events.length} records in ${bundle.episodes.length} episodes. An episode is one named hazard or one event a source explicitly identifies as common; a record linked to no other is an episode of one.`}</p>
