@@ -1,7 +1,7 @@
 import { fmtDate } from "../../data";
 import { LANGUAGE_LABEL, dirFor } from "../manifest";
 import { ConfidenceBreakdown, useConfidenceMethod } from "./ConfidenceChip";
-import { claimSupport, isAbstracted, notEstablished, sourceKind } from "./model";
+import { NO_CONFIDENCE_REASON, claimSupport, confidenceLabel, isAbstracted, notEstablished, originsText, sourceKind } from "./model";
 import { definitionOf, labelOf, lowerLabel, useImpactVocab, vocabulary } from "./vocab";
 import type { ImpactRecord, ImpactSource } from "./types";
 import "../../styles/impacts.css";
@@ -68,6 +68,7 @@ export function ImpactInspector({ record, id, onClose }: { record: ImpactRecord;
   const r = record;
   const headlines = !isAbstracted(r);
   const chain = claimSupport(r, vocabulary("claims").map((c) => String(c.id)));
+  const originsBasis = r.evidence_confidence?.components?.origins?.basis ?? null;
   return (
     <section id={id} className="ev-inspector imp-inspector small" aria-label="Evidence inspector"
              onKeyDown={(e) => { if (e.key === "Escape" && onClose) { e.stopPropagation(); onClose(); } }}>
@@ -80,10 +81,11 @@ export function ImpactInspector({ record, id, onClose }: { record: ImpactRecord;
           </li>
         ))}
       </ul>
-      {r.origin_count != null && (
-        <p className="dim">
-          {r.origin_count} originating {r.origin_count === 1 ? "statement" : "statements"} across {r.sources.length}{" "}
-          {r.sources.length === 1 ? "citation" : "citations"}. Republications of one statement count once.
+      {/* What was counted is the served basis's to say: publishers are not called originating
+          statements unless a reviewer established that they are. */}
+      {r.origin_count != null && originsBasis && (
+        <p className="dim imp-origins">
+          Across {r.sources.length} {r.sources.length === 1 ? "citation" : "citations"}: {originsText(r.origin_count, originsBasis)}.
         </p>
       )}
 
@@ -93,10 +95,10 @@ export function ImpactInspector({ record, id, onClose }: { record: ImpactRecord;
       </ul>
       {!headlines && <p className="dim">Source headlines are not shown for an attack or sabotage record.</p>}
 
-      <h4>Evidence confidence: {r.evidence_confidence?.label ?? "not computed"}</h4>
-      {r.evidence_confidence
+      <h4>Evidence confidence: {confidenceLabel(r.evidence_confidence)}</h4>
+      {r.evidence_confidence && r.evidence_confidence.category != null
         ? <ConfidenceBreakdown value={r.evidence_confidence} method={method} failed={failed} />
-        : <p className="dim">No evidence confidence is published for this record.</p>}
+        : <p className="imp-not-assessed">{r.evidence_confidence?.reason ?? NO_CONFIDENCE_REASON}</p>}
 
       {r.inclusion_basis != null && (
         <>
