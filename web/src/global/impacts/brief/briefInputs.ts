@@ -7,6 +7,7 @@
  *
  *  Pure: type imports, the shared model and the formatters. No React, no DOM.
  */
+import { fmtDate } from "../../../data";
 import { fmtValue, type ContextRow, type EnergyContext } from "../../context";
 import type { CountrySystem, GroupContext } from "../../manifest";
 import { impactsFor } from "../load";
@@ -45,7 +46,7 @@ export function briefConfidence(method: ConfidenceMethod | null): BriefConfidenc
   return {
     statement: method.statement,
     categories: method.categories.map((c) => ({ label: c.label, meaning: c.meaning })),
-    provisional: provisionalNote((method as { status?: string | null }).status),
+    provisional: provisionalNote(method.status),
   };
 }
 
@@ -79,7 +80,7 @@ export function gulfBriefInput(a: GulfBriefSources): GulfBriefInput {
     group: { label: a.ctx.label, members: a.ctx.systems.length },
     energy: {
       label: m.label, unit: m.unit, year: m.year,
-      source: `${src?.name ?? "source not stated"}${src?.release ? `, release of ${src.release}` : ""}`,
+      source: `${src?.name ?? "source not stated"}${src?.release ? `, release of ${fmtDate(src.release)}` : ""}`,
       // Served alphabetically. A national energy total and its unit: the one figure a member has here.
       rows: a.ctx.systems.map((s) => ({ name: s.name, value: fmtValue(s.values[a.metricId], m.unit) })),
       total: r.value != null

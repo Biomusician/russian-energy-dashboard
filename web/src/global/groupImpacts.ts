@@ -9,7 +9,10 @@
  *  Services are listed in the vocabulary's order, never by how many records name them.
  */
 import { impactsFor } from "./impacts/load";
-import { endDay, impactDateText, isCyber, isItFailure, placeText, serviceLine, startDay, type ServiceLine } from "./impacts/model";
+import {
+  NOT_ASSESSED, NOT_ASSESSED_LABEL, confidenceBucket, confidenceLabel, endDay, impactDateText, isCyber, isItFailure, placeText, serviceLine, startDay,
+  type ServiceLine,
+} from "./impacts/model";
 import type { ContextEntry, ImpactRecord, ImpactsPayload, RegionalContext, VocabEntry } from "./impacts/types";
 import { optionsPresent, type FilterDef, type FilterOption } from "./recordFilters";
 
@@ -59,31 +62,24 @@ export function groupImpactFilters(records: readonly ImpactRecord[], vocab: Impa
   const categories: FilterOption[] = [];
   for (const r of records) {
     const c = r.evidence_confidence;
-    if (c && c.category && !categories.some((o) => o.value === c.category)) categories.push({ value: c.category, label: c.label || c.category });
+    if (c && c.category && !categories.some((o) => o.value === c.category)) categories.push({ value: c.category, label: confidenceLabel(c) });
   }
   categories.sort((a, b) => a.label.localeCompare(b.label, "en"));
   categories.push({ value: NOT_ASSESSED, label: NOT_ASSESSED_LABEL });
-  add("confidence", "Evidence confidence", categories, (r) => [confidenceKey(r)],
+  add("confidence", "Evidence confidence", categories, (r) => [confidenceBucket(r.evidence_confidence)],
     (o) => `All records have one evidence confidence: ${o.label}.`);
   return { defs, fixed };
 }
 
-/** A record whose evidence confidence the build did not assess: no category, with the build's
- *  reason. It is its own bucket. It is not the lowest category, and is never shown as one. */
-export const NOT_ASSESSED = "not_assessed";
-export const NOT_ASSESSED_LABEL = "Not assessed";
-
 type Confidence = { category?: string | null; label?: string | null; reason?: string | null } | null | undefined;
 
-export function confidenceKey(r: { evidence_confidence?: Confidence }): string {
-  return r.evidence_confidence?.category || NOT_ASSESSED;
-}
-
-/** The record's evidence confidence in words: the served label, or "Not assessed" with the build's reason. */
+/** The record's evidence confidence in words, for a compact line: the served label, or "not
+ *  assessed" with the build's own reason. A record that was not assessed is its own state (the
+ *  shared model's NOT_ASSESSED bucket); it is not the lowest category and is never worded as one. */
 export function confidenceWord(r: { evidence_confidence?: Confidence }): string {
   const c = r.evidence_confidence;
-  if (c?.category) return c.label || c.category;
-  return c?.reason ? `${NOT_ASSESSED_LABEL.toLowerCase()} (${c.reason})` : NOT_ASSESSED_LABEL.toLowerCase();
+  if (c?.category) return confidenceLabel(c);
+  return c?.reason ? `${NOT_ASSESSED_LABEL.toLowerCase()} (${c.reason.replace(/\.$/, "")})` : NOT_ASSESSED_LABEL.toLowerCase();
 }
 
 // ---- a link to one record -------------------------------------------------------------------------

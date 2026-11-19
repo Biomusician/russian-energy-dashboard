@@ -114,7 +114,7 @@ describe("what a brief may know about a record", () => {
     expect(records[3].confidence).toBeNull();
     const t = tallyImpacts(records, { ...VOCAB, confidence: METHOD_ORDER });
     expect(t.byConfidence).toEqual([{ id: "HIGH", label: "High", n: 1 }, { id: "PRELIMINARY", label: "Preliminary", n: 1 },
-                                    { id: "not_assessed", label: "Not assessed", n: 2 }]);
+                                    { id: "NOT_ASSESSED", label: "Not assessed", n: 2 }]);
     expect(t.byConfidence.reduce((a, r) => a + r.n, 0)).toBe(t.total);
     // The method's order, not the counts: a large Preliminary bucket still follows High.
     const many = briefRecords([SERVED[1], SERVED[1], SERVED[1], SERVED[0]]);

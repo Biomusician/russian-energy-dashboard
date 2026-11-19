@@ -388,9 +388,10 @@ export function ContextSection({ regional, groupId }: { regional: Loaded<Regiona
         <h3>{NO_TANKER_MAP.heading}</h3>
         {NO_TANKER_MAP.lines.map((l) => <p key={l} className="small">{l}</p>)}
       </div>
-      {regional.state === "loading" && <Loading what="the regional context" />}
+      {/* The group's id arrives with the manifest: until then nothing is said about whose context this is. */}
+      {(regional.state === "loading" || (regional.state === "ready" && groupId == null)) && <Loading what="the regional context" />}
       {regional.state === "failed" && <Failed what="The regional context statements" still="The rest of this page is unaffected." />}
-      {regional.state === "ready" && (groupId && contextDescribes(regional.data, groupId)
+      {regional.state === "ready" && groupId != null && (contextDescribes(regional.data, groupId)
         ? <Context ctx={regional.data} />
         : <p className="small" role="status">No regional context is published for this group.</p>)}
     </>

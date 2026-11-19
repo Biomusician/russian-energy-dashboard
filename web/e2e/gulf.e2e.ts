@@ -34,6 +34,34 @@ const payload = (page: Page, id: string, file: string) => json(page, `/data/syst
 // The page's own refusals ("never a ranking") are allowed; a positive ranking statement is not.
 const RANKING = /\b(ranked (first|second|third|\d)|top \d|#\d|most (important|vulnerable|critical|exposed)|worst[- ]hit|hardest[- ]hit|league table of)\b/i;
 const ROUTES = /hormuz|tanker|choke ?point|shipping lane|bypass/i;
+// Iteration 22 (GLOBAL_IMPACT_METHODOLOGY.md §10) narrows the rule, it does not lift it. ONE section,
+// "Gulf & Hormuz context", may carry aggregate, dated statements about the strait; ROUTES still holds
+// for every other section, the event feed, the impact cards and the energy table. And wording that
+// names a ship, a path, bypass capacity or what depends on what is forbidden everywhere, that section
+// included: its only appearance is in the two fixed statements of what is NOT collected.
+const CONTEXT_LABEL = "Gulf & Hormuz context";
+const NEVER = /tanker|vessel|\bships?\b|bypass|choke ?point|\broutes?\b|\bdepend\w*/i;
+
+/** The page's text outside the context section. The section's own name, where it is the link to it,
+ *  is the one string of that section allowed out. Hidden text is read too. */
+async function outsideContext(page: Page): Promise<string> {
+  const text = await page.locator("main").evaluate((main) => {
+    const copy = main.cloneNode(true) as HTMLElement;
+    copy.querySelector("#sec-context")?.remove();
+    return copy.textContent ?? "";
+  });
+  return text.split(CONTEXT_LABEL).join("");
+}
+
+/** The context section's text apart from its two fixed refusals ("Why there is no tanker map" and
+ *  the timeline's own caveat), which are the only place the forbidden words may stand. */
+async function contextStatements(page: Page): Promise<string> {
+  return page.locator("#sec-context").evaluate((sec) => {
+    const copy = sec.cloneNode(true) as HTMLElement;
+    copy.querySelectorAll(".no-tanker-map, .ctx-caveat").forEach((e) => e.remove());
+    return copy.textContent ?? "";
+  });
+}
 
 async function sideways(page: Page) {
   return page.evaluate(() =>
@@ -84,7 +112,9 @@ test.describe("Gulf group", () => {
     const systems = g.systems as GulfSystem[];
     expect(systems).toHaveLength(8);
     await expect(page.getByRole("heading", { name: "Gulf littoral overview", level: 1 })).toBeVisible();
-    await expect(page.getByRole("note")).toContainText("not shown to be safer");
+    // By its id: since iteration 22 the comparability statement is one of several notes on the page.
+    await expect(page.locator("#comparability")).toHaveAttribute("role", "note");
+    await expect(page.locator("#comparability")).toContainText("not shown to be safer");
 
     const cards = page.getByRole("region", { name: "Monitored systems in this view" }).getByRole("article");
     await expect(cards).toHaveCount(8);
@@ -92,7 +122,9 @@ test.describe("Gulf group", () => {
     expect(names).toEqual(systems.map((s) => s.name));
     expect(names).toEqual([...names].sort());
     for (const s of systems) {
-      const card = page.getByRole("article", { name: s.name });
+      // The country's card among the system cards: an impact record's card is an article too, and
+      // its name ends with the country (iteration 22).
+      const card = page.getByRole("region", { name: "Monitored systems in this view" }).getByRole("article", { name: s.name, exact: true });
       await expect(card).toContainText("No index");
       await expect(card).toContainText(s.gcc_member ? "GCC member" : "Not a GCC member");
       await expect(card).toContainText(s.opec_member ? "OPEC member" : "Not an OPEC member");
@@ -159,8 +191,17 @@ test.describe("Gulf group", () => {
     await page.locator(".group-howto summary").click();
     const main = (await page.locator("main").innerText()).replace(g.not_built, "");
     expect(main).not.toMatch(RANKING);
-    expect(main).not.toMatch(ROUTES);
     expect(main).toContain("Gulf littoral, GCC and OPEC are three different things");
+    // Outside the one context section the old rule stands in full, hidden text included.
+    const outside = (await outsideContext(page)).replace(g.not_built, "");
+    expect(outside).not.toMatch(ROUTES);
+    expect(outside).not.toMatch(/\bstrait\b|\bshipping\b|\bvessels?\b/i);
+    // Inside it: no ship, path, bypass or dependence wording outside the two fixed refusals, and
+    // "tanker" stands once on the whole page, in the heading that says there is no such map.
+    expect(await contextStatements(page)).not.toMatch(NEVER);
+    for (const t of await page.locator("#sec-context .ctx-entry").allInnerTexts()) expect(t).not.toMatch(NEVER);
+    expect(main.match(/tanker/gi) ?? []).toHaveLength(1);
+    await expect(page.locator("#sec-context .no-tanker-map")).toContainText("Why there is no tanker map");
     await expect(page.locator(".group-kinds li")).toHaveCount(3);
   });
 

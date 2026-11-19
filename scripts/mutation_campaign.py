@@ -1701,6 +1701,117 @@ ITER21_TESTARCH_MUTATIONS = [
 MUTATIONS += ITER21_TESTARCH_MUTATIONS
 
 
+# Iteration 22: the Gulf overview's evidence sections, the regional context and the impact briefs.
+# Caught by tests/test_iteration22_gulf.py, which runs the shipped TypeScript: the sections through
+# react-dom/server and the briefs into a canvas that records its text.
+G22_BRIEF = "web/src/global/impacts/brief/impactBrief.ts"
+G22_INPUTS = "web/src/global/impacts/brief/briefInputs.ts"
+G22_DRAW = "web/src/global/impacts/brief/drawImpactBrief.ts"
+G22_MODEL = "web/src/global/groupImpacts.ts"
+G22_VIEW = "web/src/global/GroupImpactSections.tsx"
+G22_SECTIONS = "web/src/global/groupSections.ts"
+ITER22_GULF_MUTATIONS = [
+    ("the Gulf brief drops the aggregate-context caveat",
+     [(G22_BRIEF, _text('"Aggregate regional context only: no facilities, no routes, no vessels.",', '"Regional context.",'))],
+     "iter22_gulf_brief_caveat"),
+    ("the Gulf brief drops the not-comparable caveat",
+     [(G22_BRIEF, _text('"Event counts are published records in this corpus. They are not comparable across countries, and nothing here ranks a country.",',
+                        '"Event counts are published records in this corpus.",'))],
+     "iter22_gulf_brief_caveat"),
+    ("the Gulf brief drops the later-status caveat",
+     [(G22_BRIEF, _text('"The later status of attacked facilities is not published.",', '"Reviewed public reporting only.",'))],
+     "iter22_gulf_brief_caveat"),
+    ("the caveat band is not drawn",
+     [(G22_DRAW, _text("  brief.caveats.forEach((t, i) => {", "  ([] as string[]).forEach((t, i) => {"))],
+     "iter22_gulf_brief_caveat"),
+    ("the country brief drops the not-comparable line",
+     [(G22_BRIEF, _text('"Counts are published records inside this country, in this corpus: not a rate, and not comparable with any other country.",',
+                        '"Counts are published records inside this country, in this corpus.",'))],
+     "iter22_gulf_country_brief"),
+    ("an empty country record is drawn as a zero",
+     [(G22_BRIEF, _text("energy.push({ text: `No published energy disruption record. That describes this dataset, not ${where}.`, strong: true });",
+                        "energy.push({ text: `0 published energy disruption records.`, strong: true });"))],
+     "iter22_gulf_country_brief"),
+    ("the Gulf brief counts impact records per country",
+     [(G22_INPUTS, _text("rows: a.ctx.systems.map((s) => ({ name: s.name, value: fmtValue(s.values[a.metricId], m.unit) })),",
+                         'rows: a.ctx.systems.map((s) => ({ name: s.name, value: fmtValue(s.values[a.metricId], m.unit) + " · " '
+                         '+ (a.payload?.records ?? []).filter((r) => r.system_id === s.system_id).length + " records" })),'))],
+     "iter22_gulf_brief_has_no_per_country"),
+    ("a brief record carries its country",
+     [(G22_BRIEF, _text("    cause: r.cause_family,\n", "    cause: r.cause_family,\n    country: (r as { country_name?: string }).country_name,\n"))],
+     "iter22_gulf_brief_is_handed_four_fields"),
+    ("a context statement in a brief loses its date",
+     [(G22_BRIEF, _text("out.push({ text: `As of ${isoDate(s.asOf)} · ${s.type}`, strong: true });", "out.push({ text: s.type, strong: true });"))],
+     "iter22_gulf_brief_context_statements"),
+    ("a context statement in a brief loses its source",
+     [(G22_BRIEF, _text("    out.push({ text: `Source: ${s.source}`, dim: true });\n", ""))],
+     "iter22_gulf_brief_context_statements"),
+    ("an older statement is drawn beside the newest of its kind",
+     [(G22_BRIEF, _text("    if (seen.has(e.context_type)) continue;\n", ""))],
+     "iter22_gulf_brief_context_statements"),
+    ("a brief carries more than five statements",
+     [(G22_BRIEF, _text("export const MAX_BRIEF_STATEMENTS = 5;", "export const MAX_BRIEF_STATEMENTS = 50;"))],
+     "iter22_gulf_brief_context_statements"),
+    ("a record that was not assessed is counted as Preliminary",
+     [(G22_BRIEF, _text("      : null,\n  }));", '      : { id: "PRELIMINARY", label: "Preliminary" },\n  }));'))],
+     "iter22_gulf_brief_confidence"),
+    ("the Not assessed bucket is dropped from the brief",
+     [(G22_BRIEF, _text("  if (notAssessed > 0) byConfidence.push({ ...NOT_ASSESSED, n: notAssessed });\n", ""))],
+     "iter22_gulf_brief_confidence"),
+    ("a provisional method is not said to be provisional",
+     [(G22_BRIEF, _text("...(c.provisional != null ? [", "...(false ? ["))],
+     "iter22_gulf_brief_confidence"),
+    ("the confidence score is drawn out of a hundred",
+     [(G22_BRIEF, _text("label: confidenceLabel(r.evidence_confidence) }",
+                        'label: confidenceLabel(r.evidence_confidence) + " " + (r.evidence_confidence as { score?: number }).score + "/100" }'))],
+     "iter22_gulf_brief_confidence"),
+    ("an IT failure is counted as cyber in a brief",
+     [(G22_BRIEF, _text("    const key = r.itFailure ? IT_FAILURE : r.cause;", '    const key = r.itFailure ? "cyber" : r.cause;'))],
+     "iter22_gulf_brief_causes"),
+    ("the brief's cause rows are ordered by count",
+     [(G22_BRIEF, _text("  return { total: records.length, byCause: rows(causeVocab, cause),",
+                        "  return { total: records.length, byCause: rows(causeVocab, cause).sort((a, b) => b.n - a.n),"))],
+     "iter22_gulf_brief_causes"),
+    ("the Gulf page gains a country filter",
+     [(G22_MODEL, _text('    { kind: "date", id: "date", label: "Date", start: startDay, end: endDay },\n  ];',
+                        '    { kind: "date", id: "date", label: "Date", start: startDay, end: endDay },\n'
+                        '    { kind: "choice", id: "country", label: "Country", options: [...new Set(records.map((r) => r.country_name))]'
+                        '.map((n) => ({ value: n, label: n })), values: (r) => [r.country_name] },\n  ];'))],
+     "iter22_gulf_sections_never_emit"),
+    ("services are ordered by how many records name them",
+     [(G22_MODEL, _text("  return [...known, ...unknown];", "  return [...known, ...unknown].sort((a, b) => b.rows.length - a.rows.length);"))],
+     "iter22_gulf_services_follow"),
+    ("an IT failure is listed with the cyber records",
+     [(G22_MODEL, _text("  return { cyber: records.filter(isCyber), itFailures: records.filter(isItFailure) };",
+                        "  return { cyber: records.filter((r) => isCyber(r) || isItFailure(r)), itFailures: records.filter(isItFailure) };"))],
+     "iter22_gulf_services_follow"),
+    ("narrowing the context turns an older statement into the latest",
+     [(G22_MODEL, _text("  const entries: ContextEntry[] = ctx.entries.filter((e) => types.includes(e.context_type));",
+                        "  const entries: ContextEntry[] = ctx.entries.filter((e) => types.includes(e.context_type)).map((e) => ({ ...e, is_latest_of_type: true }));"))],
+     "iter22_gulf_context_section"),
+    ("the context section states a status",
+     [(G22_VIEW, _text("        Each is as of its own date. No single status is given.", "        Each is as of its own date. The strait is closed."))],
+     "iter22_gulf_context_section"),
+    ("the fixed block no longer says what is not collected",
+     [(G22_VIEW, _text(" It does not collect vessel positions, routes, bypass capacity or which facility depends on the strait, because those serve operations, not understanding.", ""))],
+     "iter22_gulf_context_section"),
+    ("the regional context is shown for a group it does not describe",
+     [(G22_INPUTS, _text(" && CONTEXT_GROUP[regional.context_id] === groupId;", ";"))],
+     "iter22_gulf_context_section"),
+    ("an unknown section name opens a guessed section",
+     [(G22_SECTIONS, _text("    return BY_ID.get(name.trim().toLowerCase()) ?? null;", "    return BY_ID.get(name.trim().toLowerCase()) ?? SECTIONS[3];"))],
+     "iter22_gulf_sections_have_addresses"),
+    ("a section jump drops the filters from the address",
+     [(G22_SECTIONS, _text('  const kept = pairs(search).filter(([k]) => k !== "section").map(', '  const kept = pairs(search).filter(([k]) => k === "group").map('))],
+     "iter22_gulf_sections_have_addresses"),
+    ("the overview speaks of the strait",
+     [(G22_SECTIONS, _text('"Dated, sourced statements in aggregate, each shown as of its own date. No single status is given."',
+                           '"Dated statements about tanker traffic through the strait."'))],
+     "iter22_gulf_sections_have_addresses"),
+]
+MUTATIONS += ITER22_GULF_MUTATIONS
+
+
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
     for d in COPY_DIRS:
@@ -1714,7 +1825,8 @@ def _sandbox():
 
 
 TEST_FILES = ("tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py",
-              "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py", "tests/test_compare.py", "tests/test_iteration21_performance.py", "tests/test_iteration21_home.py", "tests/test_iteration21_theatre_ux.py", "tests/test_iteration21_country.py", "tests/test_whats_new.py", "tests/test_iteration21_safety.py", "tests/test_iteration21_testarch.py")
+              "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py", "tests/test_compare.py", "tests/test_iteration21_performance.py", "tests/test_iteration21_home.py", "tests/test_iteration21_theatre_ux.py", "tests/test_iteration21_country.py", "tests/test_whats_new.py", "tests/test_iteration21_safety.py", "tests/test_iteration21_testarch.py",
+              "tests/test_iteration22_gulf.py")
 
 
 def _run(box, k):

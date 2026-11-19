@@ -17,7 +17,7 @@
  *  No React and no DOM here: the Python tests and vitest read these lines exactly as they ship, and
  *  `drawImpactBrief.ts` only places them.
  */
-import { IT_OUTAGE } from "../model";
+import { IT_OUTAGE, NOT_ASSESSED as NOT_ASSESSED_ID, NOT_ASSESSED_LABEL, confidenceLabel } from "../model";
 
 /** The fields of a served impact record a brief reads. Structural, so the served type satisfies it. */
 export interface BriefSourceRecord {
@@ -44,7 +44,7 @@ export function briefRecords(records: readonly BriefSourceRecord[]): BriefRecord
     itFailure: r.cause_family !== "cyber" && r.cyber_mechanism === IT_OUTAGE,
     services: [...new Set((r.civilian_service_impact ?? []).map((x) => x.service))],
     confidence: r.evidence_confidence?.category
-      ? { id: r.evidence_confidence.category, label: r.evidence_confidence.label || plain(r.evidence_confidence.category) }
+      ? { id: r.evidence_confidence.category, label: confidenceLabel(r.evidence_confidence) }
       : null,
   }));
 }
@@ -70,7 +70,8 @@ export interface TallyRow { id: string; label: string; n: number }
 export interface ImpactTally { total: number; byCause: TallyRow[]; byService: TallyRow[]; byConfidence: TallyRow[] }
 
 const IT_FAILURE = "it_failure";
-export const NOT_ASSESSED = { id: "not_assessed", label: "Not assessed" } as const;
+/** The shared model's bucket for a record the build did not assess. */
+export const NOT_ASSESSED = { id: NOT_ASSESSED_ID, label: NOT_ASSESSED_LABEL } as const;
 
 /** Published records by reported cause and by service, in the VOCABULARY's order. Never ordered by
  *  the count: a list sorted by a figure is a ranking of causes. An IT failure is counted apart from
@@ -142,8 +143,9 @@ export function metricText(m: BriefMetric): string | null {
 
 export const MAX_BRIEF_STATEMENTS = 5;
 
+/** "19 Nov 2026" from a calendar day, or from a build timestamp, of which only the day is shown. */
 function isoDate(iso: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?:T.*)?$/.exec(iso);
   if (!m) return iso;
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   return `${Number(m[3])} ${months[Number(m[2]) - 1] ?? m[2]} ${m[1]}`;

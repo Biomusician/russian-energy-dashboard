@@ -322,22 +322,76 @@ test.describe("Gulf overview: cyber and civilian services", () => {
   });
 
   test("cyber records and IT failures are two lists, and an IT failure is never in the cyber one", async ({ app, page }) => {
-    const { records } = await serveLayer(page);
+    const { records, impacts } = await serveLayer(page);
     const cyber = records.filter((r) => r.cause_family === "cyber");
     const it = records.filter((r) => r.cause_family !== "cyber" && r.cyber_mechanism === IT_OUTAGE);
     expect(cyber.length).toBeGreaterThan(0);
     expect(it.length).toBe(1);
     await app.open("?group=gulf&section=services");
     const sec = section(page, "services");
-    await expect(sec.getByRole("list", { name: "Cyber records, newest first" }).locator(".impact-card")).toHaveCount(cyber.length);
-    const failures = sec.getByRole("list", { name: "IT failures, newest first" }).locator(".impact-card");
+    const rows = sec.getByRole("list", { name: "Cyber records, newest first" }).locator(".digital-row");
+    await expect(rows).toHaveCount(cyber.length);
+    const failures = sec.getByRole("list", { name: "IT failures, newest first" }).locator(".digital-row");
     await expect(failures).toHaveCount(1);
     await expect(failures.first()).toContainText("IT failure:");
     await expect(sec.getByRole("list", { name: "Cyber records, newest first" })).not.toContainText("IT failure:");
     await expect(sec.locator(".cause-kinds")).toContainText("Not an attack, and never listed as cyber");
-    // Attribution is on the cards, as who attributes; there is no actor table.
+    // Every cause the taxonomy has is explained in the taxonomy's own words.
+    for (const c of impacts.vocabularies.cause_families) await expect(sec.locator(".cause-kinds")).toContainText(c.label);
+    // Attribution is shown as who attributes, row by row; there is no actor table.
     await expect(sec).toContainText("There is no summary by actor");
+    await expect(rows.first().locator(".attr-line")).toHaveCount((cyber[0].attribution as { status: string }).status === "NOT_APPLICABLE" ? 0 : 1);
+    await expect(rows.first()).toContainText(/Evidence confidence: \w/);
+    // The full card, with its evidence inspector, is on the page once: these are not second copies.
+    await expect(sec.locator(".impact-card")).toHaveCount(0);
     expect((await sec.innerText()).replace(CONTEXT_LABEL, "")).not.toMatch(STRAIT);
+  });
+
+  test("a compact record links to its full card, clearing a filter that hides it and saying so", async ({ app, page }) => {
+    const { records, impacts } = await serveLayer(page);
+    const cyber = records.filter((r) => r.cause_family === "cyber");
+    await app.open("?group=gulf&section=impacts");
+    const region = page.getByRole("region", { name: "Reviewed impact records for this region" });
+    // Hide every cyber record with a filter on another cause, then follow a cyber record's link.
+    const other = records.find((r) => r.cause_family === "natural_hazard" || r.cause_family === "supply_shortfall")!;
+    expect(other, "the fixture has no record of another cause").toBeTruthy();
+    const label = impacts.vocabularies.cause_families.find((c) => c.id === other.cause_family)!.label;
+    await region.getByRole("button", { name: /^Cause/ }).click();
+    await region.getByRole("group", { name: "Cause filter" }).getByLabel(new RegExp(`^${label}`)).check();
+    await expect(page).toHaveURL(/f\.cause=/);
+    await expect(region.locator(`#impact-${cyber[0].impact_id}`)).toHaveCount(0);
+    await section(page, "services").getByRole("list", { name: "Cyber records, newest first" }).getByRole("link", { name: /^Full record and sources/ }).first().click();
+    const card = region.locator(`#impact-${cyber[0].impact_id}`);
+    await expect(card).toBeInViewport();
+    await expect(card).toBeFocused();
+    await expect(region).toContainText("A filter was cleared to show the record you opened.");
+    await expect(region).toContainText(`Showing ${records.length} of ${records.length} published impact records`);
+    await expect(page).toHaveURL(new RegExp(`#impact-${cyber[0].impact_id}$`));
+    await expect(page).not.toHaveURL(/f\.cause=/);
+  });
+
+  test("a record the build did not assess says Not assessed, has its own filter choice, and is never Preliminary", async ({ app, page }) => {
+    let changed = "";
+    const { records } = await serveLayer(page, { impacts: (p) => {
+      const target = p.records.find((r) => r.system_id != null && r.country_a3 !== "MULTI")!;
+      changed = target.impact_id;
+      target.evidence_confidence = { category: null, label: null, score: null, reason: "No primary source is attached yet." };
+      return p;
+    } });
+    await app.open("?group=gulf&section=impacts");
+    const region = page.getByRole("region", { name: "Reviewed impact records for this region" });
+    const card = region.locator(`#impact-${changed}`);
+    await expect(card).toContainText("Not assessed");
+    await expect(card).toContainText("No primary source is attached yet");
+    await expect(card.locator(".conf")).not.toContainText(/Preliminary|\/ ?100|%/);
+    await region.getByRole("button", { name: /^Evidence confidence/ }).click();
+    const group = region.getByRole("group", { name: "Evidence confidence filter" });
+    const options = await group.locator(".rf-option-label").allInnerTexts();
+    expect(options[options.length - 1]).toBe("Not assessed");
+    await group.getByLabel(/^Not assessed/).check();
+    await expect(region).toContainText(`Showing 1 of ${records.length} published impact records`);
+    await expect(region.getByRole("list", { name: "Impact records, newest first" }).locator("li[id^=impact-]")).toHaveCount(1);
+    await expect(card).toBeVisible();
   });
 });
 
@@ -526,15 +580,20 @@ test.describe("Gulf overview: phones", () => {
       // The map is still in the first screen (iteration 21's rule).
       const map = await page.locator("[data-map-state]").boundingBox();
       expect(map!.y, "the map starts too low").toBeLessThan(h - 200);
-      // The block is behind one button here, and opens.
-      const toggle = page.getByRole("button", { name: /What this page can tell you/ });
+      // With room to spare, whatever font a machine substitutes: iteration 21 left about 130 px.
+      expect(map!.y, "the sections' navigation pushed the map down the first screen").toBeLessThan(h - 240);
+      // The block waits behind one phrase in the caveat line, which costs the first screen no row.
+      const toggle = page.locator(".group-caveat-line").getByRole("button", { name: /What this page can tell you/ });
       await expect(toggle).toHaveAttribute("aria-expanded", "false");
+      expect((await toggle.boundingBox())!.height, "an inline disclosure reaches the 24 px AA size").toBeGreaterThanOrEqual(23.5);
       await expect(page.locator(".group-tell dt")).toHaveCount(0);
       await toggle.click();
+      await expect(toggle).toHaveAttribute("aria-expanded", "true");
       await expect(page.locator(".group-tell dt")).toHaveCount(8);
       expect(await sideways(page), "sideways scroll with the block open").toBeLessThanOrEqual(1);
       await page.keyboard.press("Escape");
       await expect(toggle).toHaveAttribute("aria-expanded", "false");
+      await expect(page.locator(".group-tell dt")).toHaveCount(0);
 
       for (const [id, label] of SECTIONS.slice(1)) {
         const link = nav(page).getByRole("link", { name: label, exact: true });

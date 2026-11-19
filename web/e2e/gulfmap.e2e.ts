@@ -70,7 +70,10 @@ test.describe("Gulf overview: first screen", () => {
       expect(notes!.y).toBeGreaterThan(map!.y);
       await page.locator(".group-caveat-line a").click();
       await expect(page).toHaveURL(/#group-notes$/);
-      await expect(page.getByRole("note")).toBeInViewport();
+      // The comparability statement by its id: since iteration 22 the page has other notes too
+      // (the impact corpus line and the regional context's fixed caveats).
+      await expect(page.locator("#comparability")).toHaveAttribute("role", "note");
+      await expect(page.locator("#comparability")).toBeInViewport();
     });
   }
 
