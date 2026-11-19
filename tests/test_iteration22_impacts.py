@@ -376,11 +376,117 @@ def test_technical_checks_read_addresses_for_ip_and_cve_but_not_for_prose_patter
     assert not any("exploit" in p for p in problems(rec(FRA)))
 
 
-def test_gate_refuses_loaded_wording_in_summary_or_effect():
-    for field, text in (("summary", "the country's largest utility"), ("effect", "a critical service was lost")):
+IMPORTANCE_REFUSED = [
+    "the country's largest utility", "the biggest outage in years", "the sole supplier of the region", "a strategic reserve",
+    "a vital service", "a key substation failed", "the main power plant tripped", "the only hospital in the district",
+    "the only working pump failed", "the most important node", "a critical pipeline", "a major refinery",
+    "the backbone of the grid"]
+IMPORTANCE_ALLOWED = [
+    "Critical infrastructure operators were notified.", "A water main burst.", "A feeder main failed.",
+    "A major storm crossed the coast.", "It was a major outage.", "A major incident was declared.",
+    "The only source says so.", "Only 40 customers were affected.", "The main reason is not stated.",
+    "One patient was in critical condition."]
+
+
+@pytest.mark.parametrize("text", IMPORTANCE_REFUSED)
+def test_gate_refuses_a_claim_of_an_assets_size_or_importance(text):
+    for field in ("summary", "effect"):
         r = rec(FRA)
         r[field] += " " + text
-        refused(r, "size or importance wording")
+        refused(r, "claims an asset's size or importance")
+
+
+@pytest.mark.parametrize("text", IMPORTANCE_ALLOWED)
+def test_the_importance_gate_allows_words_that_say_nothing_about_an_asset(text):
+    for field in ("summary", "effect"):
+        r = rec(FRA)
+        r[field] += " " + text
+        assert problems(r) == []
+
+
+def test_the_importance_words_are_data_and_the_blunt_country_pattern_is_not_used_here():
+    words = G.TAXONOMY["importance_wording"]
+    assert {"largest", "biggest", "sole", "strategic", "vital", "most important"} <= set(words["always"])
+    assert set(words["before_asset_noun"]) == {"key", "main", "major", "critical"}
+    assert {"critical infrastructure", "water main", "feeder main", "major storm", "major outage", "major disruption",
+            "major incident"} <= set(words["allow_phrases"])
+    assert "source" not in words["asset_nouns"] and words["only_within_words"] == 3
+    src = (ROOT / "pipeline" / "global_impacts.py").read_text(encoding="utf-8")
+    assert "LOADED_WORDING.search" not in src and '"largest"' not in src
+
+
+@pytest.mark.parametrize("text", ["Water was delivered by tanker truck.", "Water tankers supplied the district.",
+                                  "Tanker trucks brought drinking water."])
+def test_a_road_tanker_delivering_water_is_not_shipping(text):
+    r = rec(FRA)
+    r["effect"] += " " + text
+    assert problems(r) == []
+    assert G.TAXONOMY["route_wording_allowed"]["phrases"] == ["water tanker", "water tankers", "tanker truck", "tanker trucks"]
+
+
+@pytest.mark.parametrize("text", ["A water tanker and an oil tanker waited.", "Tankers queued.", "A tanker was diverted."])
+def test_every_other_tanker_is_still_refused(text):
+    r = rec(FRA)
+    r["effect"] += " " + text
+    refused(r, "shipping, strait or route wording")
+
+
+def test_an_undated_page_is_cited_with_no_date_only_when_it_says_so_and_earns_nothing_for_timeliness():
+    base = rec(BRA)
+    assert G.serve_record(base, ctx())["evidence_confidence"]["components"]["contemporaneous"]["points"] > 0
+    r = rec(BRA)
+    r["sources"][1]["date"] = None
+    refused(r, "source 's2': no date")
+    r["sources"][1]["date_basis"] = "undated_page"
+    assert problems(r) == []
+    served = G.serve_record(r, ctx())
+    assert served["sources"][1]["date"] is None and served["sources"][1]["date_basis"] == "undated_page"
+    # Undated earns nothing for "reported at the time": with every source undated the points are gone.
+    r["sources"][0].update({"date": None, "date_basis": "undated_page"})
+    assert problems(r) == []
+    assert G.serve_record(r, ctx())["evidence_confidence"]["components"]["contemporaneous"]["points"] == 0
+    # A dated source may not also claim to be undated; no other basis exists; a post is never undated.
+    for change, why in (({"date": "2024-07-25", "date_basis": "undated_page"}, "date_basis 'undated_page' goes only with a null date"),
+                        ({"date": None, "date_basis": "date_unknown"}, "date_basis 'date_unknown'"),
+                        ({"date": "", "date_basis": "undated_page"}, "no date")):
+        r = rec(BRA)
+        r["sources"][1].update(change)
+        refused(r, why)
+    r = rec(POL)
+    r["sources"][1].update({"date": None, "date_basis": "undated_page"})
+    assert r["sources"][1]["medium"] == "social"
+    refused(r, "never on a social post")
+    out = payloads()
+    labels = {v["id"] for v in out[G.IMPACTS_OUT]["vocabularies"]["source_date_bases"]}
+    assert labels == {"undated_page"} and "source_date_bases" in out[G.CONTEXT_OUT]["vocabularies"]
+    # The same rule holds for a regional-context source.
+    e = entry()
+    e["sources"][0]["date"] = None
+    assert any("no date" in p for p in G.context_problems([e]))
+    e["sources"][0]["date_basis"] = "undated_page"
+    assert G.context_problems([e]) == []
+
+
+def test_the_review_block_may_state_a_lead_normalisation_only_with_its_date():
+    r = rec(FRA)
+    r["review"].update({"lead_normalisation": True, "lead_normalisation_at": "2026-11-21"})
+    assert problems(r) == []
+    assert G.serve_record(r, ctx())["review"]["lead_normalisation"] is True
+    for bad in ({"lead_normalisation": True}, {"lead_normalisation_at": "2026-11-21"},
+                {"lead_normalisation": False, "lead_normalisation_at": "2026-11-21"},
+                {"lead_normalisation": True, "lead_normalisation_at": "soon"}, {"lead_normalisation": "yes", "lead_normalisation_at": "2026-11-21"}):
+        r = rec(FRA)
+        r["review"].update(bad)
+        refused(r, "review.lead_normalisation is true beside the date")
+    e = entry()
+    e["review"].update({"lead_normalisation": True, "lead_normalisation_at": "2026-11-21"})
+    assert G.context_problems([e]) == []
+    e["review"]["lead_normalisation_at"] = None
+    assert any("review.lead_normalisation" in p for p in G.context_problems([e]))
+    # The lead is never one of the roles.
+    r = rec(FRA)
+    r["review"]["roles"]["lead"] = "accept_with_correction"
+    refused(r, "are not roles of this review")
 
 
 # --- the gate: claims and sources ---------------------------------------------------------------------------
@@ -923,7 +1029,9 @@ def test_vocabularies_are_served_with_labels_and_definitions():
             assert {"id", "label", "definition"} <= set(row) and row["definition"].endswith("."), (name, row)
             assert len(re.findall(r"[.!?](\s|$)", row["definition"])) <= 2, (name, row["id"])
     r = imp["research"]
-    assert set(r) == {"window", "status", "source_families", "regions_worked", "limitations", "latest_research_date"}
+    assert set(r) == {"window", "status", "source_families", "regions_worked", "limitations", "latest_research_date",
+                      "holds_statement"}
+    assert r["holds_statement"] is None
     assert all(f["lane"] == "fixture" and "scope" not in f for f in r["source_families"]) and len(r["source_families"]) == 1
 
 
@@ -1307,7 +1415,7 @@ def test_an_attack_record_is_abstracted_and_given_a_keyed_id(tmp_path):
     assert r["date_end"] is None and not any("title_en" in s or "title_original" in s for s in r["sources"])
     text = (paths["curated"] / "events.json").read_text(encoding="utf-8")
     assert "kyiv" not in text.lower() and "renamed-by-hand" not in text
-    assert report["renamed"] == {c["impact_id"]: rid}
+    assert report["renamed"] == {f"europe/{c['impact_id']}": rid}
     # The id is stable: a second run mints the same one.
     run(paths)
     assert set(curated_records(paths)) == {rid}
@@ -1329,7 +1437,7 @@ def test_a_reviewer_can_rename_a_candidate_and_the_old_id_never_reaches_the_cura
     paths = make_queue(tmp_path, {"europe": [candidate(DEU, impact_id=old)]})
     edit_review(paths, "safety", "europe", old, verdict="accept_with_correction", set={"impact_id": new})
     report = run(paths)
-    assert set(curated_records(paths)) == {new} and report["renamed"] == {old: new}
+    assert set(curated_records(paths)) == {new} and report["renamed"] == {f"europe/{old}": new}
     assert "munich" not in (paths["curated"] / "events.json").read_text(encoding="utf-8")
     run(paths)
     assert set(curated_records(paths)) == {new}
@@ -1340,9 +1448,41 @@ def test_a_rename_that_collides_with_another_record_is_refused(tmp_path):
     paths = make_queue(tmp_path, {"europe": [candidate(FRA), twin]},
                        extra_files={"distinct_events.json": [[FRA, twin["impact_id"]]]})
     edit_review(paths, "safety", "europe", twin["impact_id"], verdict="accept_with_correction", set={"impact_id": FRA})
-    report = run(paths)
-    assert curated_records(paths) == {}
+    # The run FAILS and writes nothing: neither record is chosen, neither overwrites the other.
+    with pytest.raises(SystemExit) as err:
+        run(paths)
+    assert "id collision" in str(err.value) and FRA in str(err.value)
+    assert curated_records(paths) == {} and not (paths["queue"] / "import_report.json").exists()
+    report = I.run(date=DAY1, ctx=ctx(), key=KEY, write=False, **paths)
     assert "id collision" in reasons(report, FRA) and "id collision" in reasons(report, twin["impact_id"])
+    assert report["collisions"] == [{"impact_id": FRA, "candidates": sorted([f"europe/{FRA}", f"europe/{twin['impact_id']}"])}]
+
+
+def test_two_lanes_filing_one_incident_under_the_same_id_are_told_apart_by_lane(tmp_path):
+    paths = make_queue(tmp_path, {"eurasia": [candidate(POL)], "telecom_transport": [candidate(POL)], "asia": [candidate(JPN)]})
+    with pytest.raises(SystemExit):
+        run(paths)
+    assert curated_records(paths) == {}
+    # The lead holds one lane's copy, by lane and id: the other is published, and nothing collides.
+    (paths["queue"] / "lead_holds.json").write_text(json.dumps(
+        {"_note": "local", "holds": {f"telecom_transport/{POL}": f"duplicate of eurasia/{POL}"}}), encoding="utf-8")
+    report = run(paths)
+    assert set(curated_records(paths)) == {POL, JPN} and report["collisions"] == []
+    assert report["by_lane"]["eurasia"]["imported"] == 1 and report["by_lane"]["telecom_transport"]["refused"] == 1
+    assert report["lead_holds"]["duplicates_across_lanes"] == 1
+
+
+def test_two_published_records_three_days_apart_are_a_warning_for_the_lead(tmp_path, capsys):
+    later = candidate(FRA, impact_id="imp-2025-03-08-fra-electricity-synthetic-second-incident", date="2025-03-08")
+    far = candidate(FRA, impact_id="imp-2025-03-20-fra-electricity-synthetic-third-incident", date="2025-03-20", date_end=None)
+    paths = make_queue(tmp_path, {"europe": [candidate(FRA), later, far]})
+    report = run(paths)
+    assert len(curated_records(paths)) == 3
+    assert report["possible_duplicates"] == [[FRA, later["impact_id"]]]
+    I.print_report(report)
+    assert "WARNING possible duplicate" in capsys.readouterr().out
+    (paths["queue"] / "distinct_events.json").write_text(json.dumps([[FRA, later["impact_id"]]]), encoding="utf-8")
+    assert run(paths)["possible_duplicates"] == []
 
 
 def test_roles_may_each_rename_a_record_and_the_last_in_role_order_wins(tmp_path):
@@ -1351,7 +1491,7 @@ def test_roles_may_each_rename_a_record_and_the_last_in_role_order_wins(tmp_path
     edit_review(paths, "safety", "europe", DEU, set={"impact_id": "imp-2025-09-02-deu-healthcare-last-name"})
     report = run(paths)
     assert set(curated_records(paths)) == {"imp-2025-09-02-deu-healthcare-last-name"}
-    assert report["renamed"] == {DEU: "imp-2025-09-02-deu-healthcare-last-name"}
+    assert report["renamed"] == {f"europe/{DEU}": "imp-2025-09-02-deu-healthcare-last-name"}
 
 
 def test_a_corrected_date_moves_the_ids_stem_with_it(tmp_path):
@@ -1359,7 +1499,7 @@ def test_a_corrected_date_moves_the_ids_stem_with_it(tmp_path):
     edit_review(paths, "evidence", "europe", BRA, verdict="accept_with_correction", set={"date": "2024-07-23"})
     report = run(paths)
     new = BRA.replace("2024-07-22", "2024-07-23")
-    assert set(curated_records(paths)) == {new} and report["renamed"] == {BRA: new}
+    assert set(curated_records(paths)) == {new} and report["renamed"] == {f"europe/{BRA}": new}
 
 
 def test_the_same_event_filed_by_two_lanes_is_refused_until_a_reviewer_chooses(tmp_path):
@@ -1426,19 +1566,16 @@ def test_a_month_precision_country_record_matches_any_day_of_its_month(tmp_path)
     assert curated_records(paths) == {} and "reconcile with us" in reasons(run(paths), USA)
 
 
-def _override(tmp_path, held, reason="The country threshold does not bind the impact layer; reviewed by the lead."):
-    return make_queue(tmp_path, {"na": [candidate(USA)]}, country={"us": [held]}, extra_files={
-        "reconcile_allow.json": {USA: {"country_candidate_id": held["candidate_id"], "reason": reason}}})
+DIFFERENT = "A different event: the country record concerns another operator's terminal, two states away."
 
 
-def test_the_leads_override_admits_a_record_held_only_as_below_threshold(tmp_path):
-    paths = _override(tmp_path, _country_row("us-2026-02-14-synthetic-held-terminal"))
-    report = run(paths)
-    assert set(curated_records(paths)) == {USA}
-    assert report["reconcile"][0]["hold_kind"] == "threshold" and report["reconcile"][0]["outcome"].startswith("allowed")
+def _ruled_distinct(tmp_path, held, reason=DIFFERENT, cand=None, key=f"na/{USA}"):
+    return make_queue(tmp_path, {"na": [cand or candidate(USA)]}, country={"us": [held]}, extra_files={
+        "reconcile_distinct.json": {key: [{"country_candidate_id": held["candidate_id"], "reason": reason}]}})
 
 
 @pytest.mark.parametrize("held,kind", [
+    (_country_row("us-2026-02-14-synthetic-held-terminal"), "threshold"),
     (_country_row("us-2026-02-14-synthetic-held-attack", cause="kinetic_strike", reason="Below the inclusion threshold."), "campaign"),
     (_country_row("us-2026-02-14-synthetic-held-safety", reason="Held by the safety reviewer: facility-level status wording."), "safety"),
     (_country_row("us-2026-02-14-synthetic-held-evidence", disposition="insufficient_evidence", reason="One unopened source."), "evidence"),
@@ -1446,23 +1583,62 @@ def test_the_leads_override_admits_a_record_held_only_as_below_threshold(tmp_pat
     (_country_row("us-2026-02-14-synthetic-held-silent", reason=None), "unclear"),
     (_country_row("us-2026-02-14-synthetic-held-dup", disposition="duplicate", duplicate_of="us-missing"), "unclear"),
 ])
-def test_the_override_is_refused_for_a_campaign_safety_evidence_or_unclear_hold(tmp_path, held, kind):
-    paths = _override(tmp_path, held)
+def test_no_hold_from_a_country_system_can_be_overridden_whatever_it_was_for(tmp_path, held, kind, capsys):
+    """Owner ruling: a restriction on publishing an event carries over; the stricter policy wins.
+    The first form of this script had an override for a below-threshold hold. There is none now,
+    and the file that carried it is not read, in either of its shapes."""
+    override = {"country_candidate_id": held["candidate_id"], "reason": "The country threshold does not bind this layer."}
+    paths = make_queue(tmp_path, {"na": [candidate(USA)]}, country={"us": [held]}, extra_files={
+        "reconcile_allow.json": {USA: override, f"na/{USA}": [override]}})
     report = run(paths)
     assert curated_records(paths) == {}
     assert report["reconcile"][0]["hold_kind"] == kind
-    assert "the override is not honoured" in report["reconcile"][0]["outcome"]
-    assert f"reads as {kind}" in reasons(report, USA)
+    assert report["reconcile"][0]["outcome"] == "refused: matches a record held or rejected in the country system's queue"
+    assert "matches a record held" in reasons(report, USA)
+    assert report["ignored_files"] == ["reconcile_allow.json"]
+    I.print_report(report)
+    assert "NOT READ reconcile_allow.json" in capsys.readouterr().out
 
 
-def test_an_override_without_a_reason_or_for_another_record_changes_nothing(tmp_path):
-    paths = _override(tmp_path, _country_row("us-2026-02-14-synthetic-held-terminal"), reason="  ")
-    report = run(paths)
-    assert curated_records(paths) == {} and "the override gives no reason" in reasons(report, USA)
+def test_the_lead_can_rule_a_match_a_different_event_and_must_say_why(tmp_path, capsys):
     held = _country_row("us-2026-02-14-synthetic-held-terminal")
+    paths = _ruled_distinct(tmp_path, held)
+    report = run(paths)
+    assert set(curated_records(paths)) == {USA} and report["ignored_files"] == []
+    match = report["reconcile"][0]
+    assert match["outcome"] == f"a different event, by the lead's ruling: {DIFFERENT}" and match["hold_kind"] == "threshold"
+    I.print_report(report)
+    assert "country-queue matches: 0 refused, 1 ruled a different event by the lead" in capsys.readouterr().out
+    # The reason is the lead's, in the local report; nothing of it is published.
+    assert "different event" not in (paths["curated"] / "events.json").read_text(encoding="utf-8")
+
+
+def test_a_ruling_without_a_reason_for_another_record_or_under_a_bare_id_changes_nothing(tmp_path):
+    held = _country_row("us-2026-02-14-synthetic-held-terminal")
+    report = run(paths := _ruled_distinct(tmp_path / "a", held, reason="  "))
+    assert curated_records(paths) == {} and "the ruling that this is a different event gives no reason" in reasons(report, USA)
     other = make_queue(tmp_path / "b", {"na": [candidate(USA)]}, country={"us": [held]}, extra_files={
-        "reconcile_allow.json": {USA: {"country_candidate_id": "us-some-other-record", "reason": "Reviewed."}}})
+        "reconcile_distinct.json": {f"na/{USA}": [{"country_candidate_id": "us-some-other-record", "reason": DIFFERENT}]}})
     assert curated_records(other) == {} and "matches a record held" in reasons(run(other), USA)
+    # Lane-qualified, like every other key of the queue: a bare id names no candidate.
+    bare = _ruled_distinct(tmp_path / "c", held, key=USA)
+    assert curated_records(bare) == {} and "matches a record held" in reasons(run(bare), USA)
+    # Two country records match: ruling one of them distinct leaves the other in force.
+    second = _country_row("us-2026-02-15-synthetic-held-terminal-2", date="2026-02-15")
+    both = make_queue(tmp_path / "d", {"na": [candidate(USA)]}, country={"us": [held, second]}, extra_files={
+        "reconcile_distinct.json": {f"na/{USA}": [{"country_candidate_id": held["candidate_id"], "reason": DIFFERENT}]}})
+    report = run(both)
+    assert curated_records(both) == {} and second["candidate_id"] in reasons(report, USA)
+    assert held["candidate_id"] not in reasons(report, USA)
+
+
+def test_an_attack_record_can_never_be_ruled_distinct_from_a_held_country_record(tmp_path):
+    held = _country_row("us-2026-02-14-synthetic-held-terminal")
+    for family in ("sabotage", "kinetic"):
+        paths = _ruled_distinct(tmp_path / family, held, cand=candidate(USA, cause_family=family, cyber_mechanism=None))
+        report = run(paths)
+        assert curated_records(paths) == {}
+        assert report["reconcile"][0]["outcome"] == "refused: an attack record is never ruled distinct from a held country record"
 
 
 def test_a_record_that_stops_being_accepted_is_withdrawn_and_others_are_left_alone(tmp_path):
@@ -1513,7 +1689,7 @@ def test_a_lanes_hyphenated_sector_in_an_id_is_written_as_the_vocabulary_writes_
     assert lane_id != USA
     paths = make_queue(tmp_path, {"na": [candidate(USA, impact_id=lane_id)]})
     report = run(paths)
-    assert set(curated_records(paths)) == {USA} and report["renamed"] == {lane_id: USA}
+    assert set(curated_records(paths)) == {USA} and report["renamed"] == {f"na/{lane_id}": USA}
 
 
 def test_a_hold_is_classified_from_its_reasons_not_from_the_names_of_the_review_roles():
@@ -1546,10 +1722,15 @@ def test_a_record_in_a_campaign_system_loses_its_headlines(tmp_path):
 def test_lanes_without_candidates_second_pass_lanes_and_unknown_side_files_are_tolerated(tmp_path):
     paths = make_queue(tmp_path, {"na": None, "na2": [candidate(USA)], "oceania2": []}, extra_files={
         "na/near_misses.json": [{"impact_id": "imp-x", "summary": "not a candidate"}],
+        "social/addenda.json": {}, "social/lane_log.json": {"lane": "social", "source_families": [{"family": "x"}]},
+        "social/scratchpad/notes.json": [1, 2],
         "na2/attribution_addenda.json": {"x": 1}, "na2/date_fixes.json": {"y": 2}, "na2/rationale.json": {USA: "why"}})
     report = run(paths)
     assert set(curated_records(paths)) == {USA}
     assert report["by_lane"]["na2"]["imported"] == 1 and report["refused"] == [] and report["not_reviewed"] == []
+    # A folder with no candidates and no context entries is not a lane: found by looking, not by a list.
+    assert [p.name for p in I.lane_dirs(paths["queue"])] == ["na2", "oceania2"]
+    assert set(report["by_lane"]) == {"na2", "oceania2"} and report["research_log"]["lanes"] == []
 
 
 def test_context_entries_need_two_roles_and_pass_the_context_gate(tmp_path):
@@ -1629,10 +1810,24 @@ def test_a_lead_hold_refuses_a_record_whatever_the_reviewers_said_and_the_publis
     report = run(paths)
     assert set(curated_records(paths)) == {BRA}
     assert "lead hold: Owner decision pending." in reasons(report, FRA)
-    assert report["lead_holds"] == {"count": 1}
-    # The count lives in the local report only: the published research note never says what is held.
-    note = (paths["curated"] / "research_log.json").read_text(encoding="utf-8")
-    assert "hold" not in note.lower() and "Owner decision" not in note
+    assert report["lead_holds"] == {"count": 1, "duplicates_across_lanes": 0, "safety_grounds": 0, "other_grounds": 1}
+    # The published research note carries NUMBERS only: no reason, no lane, no id of what is held.
+    note = _json(paths["curated"] / "research_log.json")
+    assert note["lead_holds"] == {"held": 1, "duplicates_across_lanes": 0, "safety_grounds": 0, "other_grounds": 1}
+    text = json.dumps(note)
+    assert "Owner decision" not in text and FRA not in text and "europe" not in text
+    assert G.log_problems(note) == []
+    e, c, lg = G.load_curated(paths["curated"])
+    served = G.build_payloads(e, c, lg, ctx(), AS_OF)[G.IMPACTS_OUT]["research"]
+    assert served["holds_statement"] == "1 reviewed record is held by the lead and not published: 1 on other grounds."
+    # A reason in words is refused in the note: a sentence can identify what a number cannot.
+    for bad in ({**note, "lead_holds": {**note["lead_holds"], "reason": "x"}}, {**note, "lead_holds": "one held in Example"},
+                {**note, "lead_holds": {**note["lead_holds"], "held": 5}}):
+        assert any("lead_holds is numbers only" in p for p in G.log_problems(bad))
+    # Lifting the hold takes the count out again.
+    (paths["queue"] / "lead_holds.json").write_text(json.dumps({"holds": {}}), encoding="utf-8")
+    run(paths)
+    assert "lead_holds" not in _json(paths["curated"] / "research_log.json") and set(curated_records(paths)) == {FRA, BRA}
     # A record imported earlier and held now is withdrawn.
     other = make_queue(tmp_path / "b", {"europe": [candidate(FRA)]})
     run(other)
@@ -1789,3 +1984,259 @@ def test_authority_order_is_a_cause_that_is_not_malicious_and_not_cyber():
     r["attribution"] = rec(USA)["attribution"]
     refused(r, "on a record that is not a malicious act")
     assert "authority_order" in G.NOT_MALICIOUS and "authority_order" not in G.MALICIOUS
+
+
+# --- the lead's normalisation pass -----------------------------------------------------------------------------
+
+LEAD_DAY = "2026-11-21"
+ESP = "imp-2025-12-01-esp-wastewater-synthetic-plant-disruption"
+
+
+def lead_file(paths, lane, verdicts, reviewed_at=LEAD_DAY):
+    path = review_file(paths, "lead", lane)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    doc = {"lane": lane, "role": "lead", "verdicts": verdicts}
+    if reviewed_at:
+        doc["reviewed_at"] = reviewed_at
+    path.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+
+
+def normalise(**changes):
+    return {"verdict": "accept_with_correction", **changes}
+
+
+def test_the_leads_normalisation_applies_after_safety_and_the_review_block_says_so(tmp_path):
+    paths = make_queue(tmp_path, {"europe": [candidate(FRA), candidate(BRA)]})
+    edit_review(paths, "safety", "europe", FRA, verdict="accept_with_correction", set={"summary": "SYNTHETIC. The safety reviewer's wording."})
+    lead_file(paths, "europe", {FRA: normalise(set={"summary": "SYNTHETIC. The lead's spelling of the same sentence."},
+                                               reason="Vocabulary.")})
+    report = run(paths)
+    got = curated_records(paths)
+    assert got[FRA]["summary"] == "SYNTHETIC. The lead's spelling of the same sentence."
+    review = got[FRA]["review"]
+    assert review["lead_normalisation"] is True and review["lead_normalisation_at"] == LEAD_DAY
+    assert review["reviewed_at"] == "2026-11-19" and review["disposition"] == "corrected"
+    # The lead is not a role and changes no verdict.
+    assert review["roles"] == {"evidence": "accept", "attribution_source": "accept", "safety": "accept_with_correction"}
+    assert "lead_normalisation" not in got[BRA]["review"] and got[BRA]["review"]["disposition"] == "confirmed"
+    assert report["lead_normalised"] == [f"europe/{FRA}"]
+    assert G.record_problems(list(got.values()), ctx()) == []
+    run(paths)
+    assert curated_records(paths) == got
+
+
+@pytest.mark.parametrize("role", ["evidence", "attribution_source", "safety"])
+def test_the_leads_normalisation_cannot_rescue_a_record_a_role_rejected_or_did_not_review(tmp_path, role):
+    paths = make_queue(tmp_path, {"europe": [candidate(FRA), candidate(BRA)]})
+    edit_review(paths, role, "europe", FRA, verdict="reject", reason="Fails the contract.")
+    doc = _json(review_file(paths, role, "europe"))
+    del doc["verdicts"][BRA]
+    review_file(paths, role, "europe").write_text(json.dumps(doc), encoding="utf-8")
+    lead_file(paths, "europe", {FRA: normalise(set={"summary": "SYNTHETIC. Rewritten."}), BRA: normalise(set={"summary": "SYNTHETIC. Rewritten."})})
+    report = run(paths)
+    assert curated_records(paths) == {}
+    assert f"rejected by {role}: Fails the contract." in reasons(report, FRA) and f"not reviewed by {role}" in reasons(report, BRA)
+    assert report["lead_normalised"] == []
+
+
+@pytest.mark.parametrize("patch,why", [
+    ({"verdict": "accept", "set": {"summary": "SYNTHETIC. Rewritten."}}, "its verdict is 'accept'"),
+    ({"verdict": "reject", "reason": "The lead disagrees."}, "its verdict is 'reject'"),
+    ({"set": {"summary": "SYNTHETIC. Rewritten."}}, "its verdict is None"),
+    (normalise(sources_opened=["s1"]), "a normalisation has `set` and `remove_sources` only"),
+    (normalise(set={"admin1": {"code": "FR-IDF", "name": "Île-de-France"}, "geographic_precision": "admin1"}),
+     "it would give a region to a record the reviewers accepted without one"),
+    (normalise(set={"no_such_list[3].x": 1}), "lead correction could not be applied"),
+])
+def test_a_lead_patch_that_oversteps_refuses_the_record(tmp_path, patch, why):
+    paths = make_queue(tmp_path, {"europe": [candidate(FRA), candidate(BRA)]})
+    lead_file(paths, "europe", {FRA: patch})
+    report = run(paths)
+    assert set(curated_records(paths)) == {BRA}
+    assert why in reasons(report, FRA) and ("lead normalisation refused" in reasons(report, FRA) or "lead correction" in reasons(report, FRA))
+
+
+def test_a_lead_file_without_a_date_refuses_its_patches(tmp_path):
+    paths = make_queue(tmp_path, {"europe": [candidate(FRA)]})
+    lead_file(paths, "europe", {FRA: normalise(set={"summary": "SYNTHETIC. Rewritten."})}, reviewed_at=None)
+    assert "the lead's file gives no reviewed_at date" in reasons(run(paths), FRA) and curated_records(paths) == {}
+
+
+def test_a_lead_patch_cannot_change_an_attacks_cause_or_weaken_an_abstracted_records_policy(tmp_path):
+    attack = _attack_candidate()
+    factor = candidate(BRA, contributing_factors=["sabotage"])
+    paths = make_queue(tmp_path, {"eurasia": [attack], "europe": [candidate(BRA, publication_policy="country_abstracted")],
+                                  "asia": [factor]})
+    lead_file(paths, "eurasia", {attack["impact_id"]: normalise(set={"cause_family": "industrial_technical"})})
+    lead_file(paths, "europe", {BRA: normalise(set={"publication_policy": "standard"})})
+    lead_file(paths, "asia", {BRA: normalise(set={"contributing_factors": []})})
+    report = run(paths)
+    assert curated_records(paths) == {}
+    why = {r["lane"]: " | ".join(r["reasons"]) for r in report["refused"]}
+    assert "it would change the cause of a kinetic or sabotage record" in why["eurasia"]
+    assert "it would publish a country-abstracted record at a weaker policy" in why["europe"]
+    assert "it would change the cause of a kinetic or sabotage record" in why["asia"]
+
+
+def test_a_lead_patch_cannot_mark_a_source_opened(tmp_path):
+    paths = make_queue(tmp_path, {"europe": [candidate(FRA)]})
+    edit_review(paths, "evidence", "europe", FRA, sources_opened=["s1", "s2", "s3"])
+    lead_file(paths, "europe", {FRA: normalise(set={"sources[s4].opened": True, "sources[s4].publisher": "Example Agency"})})
+    run(paths)
+    s4 = next(x for x in curated_records(paths)[FRA]["sources"] if x["ref"] == "s4")
+    assert s4["opened"] is False and s4["publisher"] == "Example Agency"
+
+
+def test_a_lead_patch_can_say_a_page_is_undated_and_nothing_else_makes_a_source_dateless(tmp_path):
+    undated = candidate(BRA)
+    undated["sources"][1]["date"] = None
+    paths = make_queue(tmp_path, {"europe": [undated]})
+    assert "source 's2': no date" in reasons(run(paths), BRA)
+    lead_file(paths, "europe", {BRA: normalise(set={"sources[s2].date_basis": "undated_page"})})
+    run(paths)
+    s2 = curated_records(paths)[BRA]["sources"][1]
+    assert s2["date"] is None and s2["date_basis"] == "undated_page"
+    assert "date_basis" not in curated_records(paths)[BRA]["sources"][0]
+
+
+def test_the_leads_normalisation_works_for_context_entries_with_their_two_roles(tmp_path):
+    def raw(n):
+        return {k: v for k, v in entry(n).items() if k not in ("review", "first_published")}
+    fixed, untouched, rejected = raw(2), raw(3), raw(1)
+    fixed["metric"]["value_upper"] = 12
+    paths = make_queue(tmp_path, {}, context={"hormuz": [fixed, untouched, rejected]})
+    edit_review(paths, "safety", "hormuz", rejected["id"], verdict="reject", reason="Names a route.")
+    report = run(paths)
+    why = {r["candidate_id"]: " | ".join(r["reasons"]) for r in report["context"]["refused"]}
+    assert "value_upper is given for a range, and only for a range" in why[fixed["id"]]
+    lead_file(paths, "hormuz", {fixed["id"]: normalise(set={"metric.value_upper": None}),
+                                rejected["id"]: normalise(set={"claim": "Rewritten."})})
+    report = run(paths)
+    entries = {e["id"]: e for e in _json(paths["curated"] / "regional_context.json")["entries"]}
+    assert set(entries) == {fixed["id"], untouched["id"]}
+    assert entries[fixed["id"]]["review"] == {"reviewed_at": "2026-11-19", "roles": {"evidence": "accept", "safety": "accept"},
+                                              "lead_normalisation": True, "lead_normalisation_at": LEAD_DAY}
+    assert entries[fixed["id"]]["metric"]["value_upper"] is None
+    assert "lead_normalisation" not in entries[untouched["id"]]["review"]
+    assert "rejected by safety" in " | ".join(next(r for r in report["context"]["refused"] if r["candidate_id"] == rejected["id"])["reasons"])
+    e, c, lg = G.load_curated(paths["curated"])
+    assert G.context_problems(c["entries"]) == []
+
+
+# --- what shape() writes mechanically ---------------------------------------------------------------------------
+
+def test_an_abstracted_energy_record_that_names_no_technology_says_it_is_withheld(tmp_path):
+    attack = _attack_candidate()
+    attack["technology"] = None
+    named = candidate(BRA, publication_policy="country_abstracted")
+    paths = make_queue(tmp_path, {"eurasia": [attack], "europe": [named, candidate(JPN, publication_policy="country_abstracted")]})
+    report = run(paths)
+    got = {r["country_a3"]: r for r in curated_records(paths).values()}
+    assert got["UKR"]["technology"] == "withheld" and got["BRA"]["technology"] == "transmission"
+    assert got["JPN"]["technology"] is None                     # not an energy record: not applicable stays null
+    assert any("technology written as withheld" in n for n in report["notes"][got["UKR"]["impact_id"]])
+    # A record that is NOT abstracted is not helped: its technology is a reviewer's to state.
+    plain = candidate(BRA, technology=None)
+    other = make_queue(tmp_path / "b", {"europe": [plain]})
+    assert "an energy record names a technology or says why not" in reasons(run(other), BRA)
+
+
+def test_an_empty_or_unknown_end_date_is_written_as_null(tmp_path):
+    paths = make_queue(tmp_path, {"europe": [candidate(BRA, date_end=""), candidate(POL, date_end="unknown")]})
+    run(paths)
+    got = curated_records(paths)
+    assert got[BRA]["date_end"] is None and got[POL]["date_end"] is None
+
+
+def test_unknown_attribution_on_a_cause_that_is_not_malicious_is_written_not_applicable_and_never_the_reverse(tmp_path):
+    storm = candidate(BRA)
+    storm["attribution"].update({"status": "UNKNOWN", "actor": "Nobody", "actor_type": "unknown"})
+    intrusion = candidate(FRA)
+    intrusion["attribution"] = copy.deepcopy(rec(BRA)["attribution"])       # NOT_APPLICABLE on a cyberattack
+    unknown_cause = candidate("imp-2024-05-zaf-municipal_services-synthetic-city-systems")
+    paths = make_queue(tmp_path, {"europe": [storm, intrusion], "africa_latam": [unknown_cause]})
+    report = run(paths)
+    got = curated_records(paths)
+    a = got[BRA]["attribution"]
+    assert (a["status"], a["actor"], a["actor_type"]) == ("NOT_APPLICABLE", None, None)
+    assert any("written as NOT_APPLICABLE" in n for n in report["notes"][BRA])
+    assert FRA not in got and "attribution is NOT_APPLICABLE on a malicious act" in reasons(report, FRA)
+    # A cause nobody has established is neither: its UNKNOWN stays UNKNOWN.
+    assert got[unknown_cause["impact_id"]]["attribution"]["status"] == "UNKNOWN"
+
+
+def test_a_competing_attribution_whose_source_did_not_survive_is_dropped_and_said(tmp_path):
+    paths = make_queue(tmp_path, {"europe": [candidate(ESP)]})
+    run(paths)
+    assert len(curated_records(paths)[ESP]["attribution"]["competing"]) == 2
+    edit_review(paths, "safety", "europe", ESP, verdict="accept_with_correction", remove_sources=["s3"])
+    r = I.apply_reviews(candidate(ESP), {role: _json(review_file(paths, role, "europe"))["verdicts"][ESP] for role in I.ROLE_ORDER})[0]
+    notes = []
+    I.normalise(r, notes)
+    assert [c["source_refs"] for c in r["attribution"]["competing"]] == [["s2"]]
+    assert any("1 competing attribution(s) dropped" in n for n in notes)
+    # With every competing attribution gone a DISPUTED status no longer stands, and the gate says so.
+    edit_review(paths, "safety", "europe", ESP, remove_sources=["s2", "s3"])
+    report = run(paths)
+    assert curated_records(paths) == {} and "DISPUTED" in reasons(report, ESP)
+
+
+def test_a_date_written_at_coarser_precision_moves_the_ids_date_segment(tmp_path):
+    paths = make_queue(tmp_path, {"europe": [candidate(BRA)]})
+    edit_review(paths, "evidence", "europe", BRA, verdict="accept_with_correction", set={"date_precision": "month"})
+    report = run(paths)
+    new = "imp-2024-07-bra-electricity-synthetic-storm-blackout"
+    assert set(curated_records(paths)) == {new} and curated_records(paths)[new]["date"] == "2024-07"
+    assert report["renamed"] == {f"europe/{BRA}": new}
+
+
+# --- social addenda follow the surviving record ---------------------------------------------------------------
+
+def _social_reviews(paths, keys):
+    for role in I.ADDENDA_ROLES:
+        verdicts = accept(keys, **({"sources_opened": [k.split("#")[1] for k in keys]} if role == "evidence" else {}))
+        review_file(paths, role, "social").write_text(json.dumps(
+            {"lane": "social", "role": role, "reviewed_at": "2026-11-19", "verdicts": verdicts}), encoding="utf-8")
+
+
+def test_addenda_of_a_copy_held_as_a_duplicate_go_to_the_record_that_survives(tmp_path):
+    twin = candidate(FRA, impact_id="imp-2025-03-06-fra-electricity-synthetic-other-lane-copy", date="2025-03-06")
+    tid = twin["impact_id"]
+    other = _addendum("s1")                         # the survivor already has an s1: the moved source is renumbered
+    other["url"] = "https://social-platform.example/synthetic/post/7007"
+    paths = make_queue(tmp_path, {"europe": [candidate(FRA)], "ai": [twin]}, extra_files={
+        "lead_holds.json": {"holds": {f"ai/{tid}": f"lead hold: duplicate of europe/{FRA} (better sourced)"}},
+        "social/addenda.json": {FRA: [_addendum("s9")], tid: [other, _addendum("s8")]}})
+    _social_reviews(paths, [f"{FRA}#s9", f"{tid}#s1", f"{tid}#s8"])
+    report = run(paths)
+    got = curated_records(paths)
+    assert set(got) == {FRA}
+    assert "lead hold: duplicate of europe/" in reasons(report, tid) and "lead hold: lead hold" not in reasons(report, tid)
+    urls = {s["ref"]: s["url"] for s in got[FRA]["sources"]}
+    assert urls["s9"].endswith("/9009") and urls["s5"].endswith("/7007") and len(urls) == 6
+    outcomes = {(a["ref"], a.get("moved_from")): a["outcome"] for a in report["addenda"]}
+    assert outcomes[("s9", None)] == "added" and outcomes[("s5", f"ai/{tid}")] == "added"
+    # The same address twice is one source: the held copy's second addendum repeats the survivor's own.
+    assert outcomes[("s8", f"ai/{tid}")] == "not added: the record already cites this address"
+    assert report["lead_holds"]["duplicates_across_lanes"] == 1
+    assert G.record_problems(list(got.values()), ctx()) == []
+    run(paths)
+    assert curated_records(paths) == got
+
+
+def test_addenda_of_a_held_copy_stay_put_when_the_hold_names_no_survivor_or_they_were_not_accepted(tmp_path):
+    twin = candidate(FRA, impact_id="imp-2025-03-06-fra-electricity-synthetic-other-lane-copy", date="2025-03-06")
+    tid = twin["impact_id"]
+    other = _addendum("s7")
+    other["url"] = "https://social-platform.example/synthetic/post/7007"
+    paths = make_queue(tmp_path, {"europe": [candidate(FRA)], "ai": [twin]}, extra_files={
+        "lead_holds.json": {"holds": {f"ai/{tid}": "Owner decision pending."}}, "social/addenda.json": {tid: [other]}})
+    _social_reviews(paths, [f"{tid}#s7"])
+    report = run(paths)
+    assert [s["ref"] for s in curated_records(paths)[FRA]["sources"]] == ["s1", "s2", "s3", "s4"] and report["addenda"] == []
+    # Named as the survivor, but a role rejected the addendum: it is not added.
+    (paths["queue"] / "lead_holds.json").write_text(json.dumps({"holds": {f"ai/{tid}": f"duplicate of europe/{FRA}"}}), encoding="utf-8")
+    edit_review(paths, "safety", "social", f"{tid}#s7", verdict="reject", reason="Not the official account.")
+    report = run(paths)
+    assert [s["ref"] for s in curated_records(paths)[FRA]["sources"]] == ["s1", "s2", "s3", "s4"]
+    assert "rejected by safety" in report["addenda"][0]["outcome"] and report["addenda"][0]["moved_from"] == f"ai/{tid}"

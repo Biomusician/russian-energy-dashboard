@@ -1,6 +1,6 @@
 """Move reviewed impact candidates into the curated global impact corpus (iteration 22).
 
-    .venv\\Scripts\\python.exe scripts\\import_impacts.py [--date 2026-11-20]
+    .venv\\Scripts\\python.exe scripts\\import_impacts.py [--date 2026-11-20] [--dry-run]
 
 `data/candidates/impacts22/<lane>/candidates.json` (and a lane's `context_entries.json`) is a
 research queue. Nothing in it is published. This script is the one gate between the queue and
@@ -13,20 +13,43 @@ WHAT IT DOES, in order (docs/GLOBAL_IMPACT_METHODOLOGY.md §12; REVIEW_FORMAT.md
   3. Applies the reviewers' patches: evidence, then attribution and source, then safety, so safety
      wins. `opened` is whatever the EVIDENCE reviewer opened, never what the lane wrote. A reviewer
      may rename a candidate (`set: {"impact_id": ...}`); verdicts stay keyed by the original id.
+     Then, only on a record every role accepted, the LEAD's normalisation (`reviews/lead/<lane>.json`,
+     the same format; `accept_with_correction`, `set` and `remove_sources` only): mechanical
+     rewrites of a spelling or a wording into the contract's. It changes no verdict, cannot weaken
+     the publication policy, give a record a region, mark a source opened or change the cause of an
+     attack, and the published review block says it was made and when.
   4. Every kinetic or sabotage record becomes country-abstracted: no region, no headline, no end
      date, and an id minted from a keyed hash (the country import's key; never printed).
   5. Dedupes across lanes: same country and sector, dates within a day. The one the reviewers
      accepted is kept; if they accepted more than one, all are refused for the lead to resolve.
   6. Reconciles with the country queues: a candidate in a monitored system that matches, by date
      and sector, a record of that system's own queue that is NOT published there is refused. The
-     most conservative rule wins; a record held from a country system does not reappear here.
-     `reconcile_allow.json` is the lead's explicit override, honoured ONLY where the country record
-     was held as below that system's inclusion threshold (which does not bind this layer), never
-     where it was a campaign, safety or evidence hold, and never where the queue does not say.
+     stricter policy wins: an event held from a country system does not appear here because this
+     layer has a different schema, WHATEVER the hold was for, an inclusion threshold included.
+     There is no override. `reconcile_distinct.json` is something else: the lead's statement, with
+     a mandatory reason, that a date-and-class match is a DIFFERENT EVENT (a false match). It lifts
+     no hold, and an attack record can never use it. `reconcile_allow.json` is no longer read.
   7. Runs the build's own gate on each record as it will be published, and refuses what it refuses.
   8. Stamps `first_published` on records new to the curated file. An existing record keeps its
      date; one whose content changed also gets `last_revised`. Running twice changes nothing.
   9. Rewrites the published research note from each lane's `lane_log.json`: process facts only.
+
+ALSO:
+  - A lane is any folder of the queue holding `candidates.json` or `context_entries.json`; nothing
+    else is a lane. Everything is keyed `<lane>/<original id>` until final ids exist, so two lanes
+    filing under one id are two candidates.
+  - `lead_holds.json` (`{"holds": {"<lane>/<id>": reason}}`) refuses each held candidate with the
+    lead's reason. The research note then carries NUMBERS only: how many are held and on which of
+    three grounds, never a reason, a lane or an id.
+  - The run FAILS and writes nothing if two imported records end with the same final id. Two
+    imported records sharing country and sector within three days are a printed WARNING, not a
+    refusal; `distinct_events.json` (`[["<lane>/<id>", "<lane>/<id>"], ...]`) records that a pair
+    is two events.
+  - `social/addenda.json` adds a reviewed social source to a record that is imported; its verdicts
+    are keyed `<impact_id>#<ref>` in `reviews/<role>/social.json`. Where the lead holds a record as
+    a "duplicate of <lane>/<id>", its accepted addenda go to that surviving record.
+  - `--dry-run` reads everything, prints per-lane imported and refused counts with every refusal
+    reason, and writes nothing: not the curated files, not the report.
 
 The report is printed and written to `<queue>/import_report.json`, which is local and never
 committed: it names candidates, old ids and the country queues' hold reasons.
@@ -54,12 +77,18 @@ QUEUE = ROOT / "data" / "candidates" / "impacts22"
 COUNTRY_QUEUES = ROOT / "data" / "candidates"
 ROLE_ORDER = ("evidence", "attribution_source", "safety")      # the order patches apply: safety last
 CONTEXT_ROLES = G.CONTEXT_REVIEW_ROLES
+# The lead's normalisation pass: read after the blind roles, never one of them.
+LEAD = "lead"
+# The roles that must each accept a social addendum (reviews/<role>/social.json) before it is added.
+ADDENDA_ROLES = ROLE_ORDER
+LEAD_KEYS = ("verdict", "set", "remove_sources", "reason", "note")
 PASS = B.BLIND_PASS
 VERDICTS = PASS + ("reject",)
 # Where a lane worked, for the published research note. A thematic lane names no region.
 LANE_REGIONS = {"africa_latam": ["Africa", "Latin America and the Caribbean"], "asia": ["Asia"], "europe": ["Europe"],
                 "na": ["North America"], "oceania": ["Oceania"], "mideast": ["Middle East"],
-                "iran_cyber": ["Iran"], "iran_power": ["Iran"]}
+                "iran_cyber": ["Iran"], "iran_power": ["Iran"], "eurasia": ["Eurasia"],
+                "gulf_states": ["Gulf states"], "gulf_civil": ["Gulf states"]}
 # Words lanes use for a figure's qualifier, as the vocabulary writes them.
 QUALIFIER_WORDS = {"over": "at_least", "more than": "at_least", "at least": "at_least", "minimum": "at_least",
                    "above": "at_least", "roughly": "about", "approximately": "about", "approx": "about",
@@ -71,14 +100,13 @@ SCOPE_WORDS = {"subnational": "regional", "multi-region": "multi_region", "multi
                "nationwide": "national", "countrywide": "national"}
 
 # How a country system's own queue describes why a record is not published there. Read from the
-# queue record's process fields. The override is for a below-threshold hold ONLY, so every signal
-# of anything else wins, and silence is refused.
+# queue record's process fields, for the lead's local report ONLY: the kind of hold decides
+# nothing, because a match with a held record is refused whatever it was held for.
 #
 # WHAT EACH PATTERN READS: the reason a researcher, reviewer or the lead wrote (disposition_reason,
 # lead_hold, a review's reason or note). Never the names of the review roles, one of which is
 # "safety". A word that only MENTIONS safety ("not an attack", "the campaign rule does not apply")
-# still counts against the override: wrongly refusing costs the lead a second look, wrongly
-# admitting republishes a held record.
+# reads as a safety hold: the report errs towards the graver kind.
 SAFETY_HOLD = re.compile(
     r"safety|campaign|withh[eo]ld|abstract|coordinat|facility[- ]level|status|vulnerab|target|kinetic|attack|"
     r"strike|sabotage|drone|missile|nuclear|export[- ]route|shipping|strait|red team|\[D-\d+\]|out of scope|"
@@ -106,8 +134,32 @@ def write_json(path, obj):
 # --- reading the queue ------------------------------------------------------------------------------
 
 def lane_dirs(queue):
-    """Every lane directory, first and second pass alike ("na", "na2"). `reviews` is not a lane."""
-    return sorted(p for p in Path(queue).iterdir() if p.is_dir() and p.name != "reviews")
+    """Every lane directory, found by looking, first and second pass alike ("na", "na2"). A lane is
+    a directory that has filed candidates or context entries: `reviews` is not one, and neither is
+    a folder that holds only notes, addenda or a scratchpad."""
+    return sorted(p for p in Path(queue).iterdir() if p.is_dir() and p.name != "reviews"
+                  and ((p / "candidates.json").exists() or (p / "context_entries.json").exists()))
+
+
+def load_holds(queue):
+    """The lead's holds: {"<lane>/<original id>": reason}. A bare id (the first form of the file)
+    holds that id in every lane."""
+    path = Path(queue) / "lead_holds.json"
+    if not path.exists():
+        return {}
+    doc = read_json(path)
+    holds = doc.get("holds") if isinstance(doc.get("holds"), dict) else doc
+    return {k: str(v) for k, v in holds.items() if not k.startswith("_")}
+
+
+def hold_ground(reason):
+    """Which of the three counted grounds a lead hold falls under. Counted, never published as text."""
+    if re.search(r"duplicate|same (id|incident|event|record)|filed (twice|by two)", reason, re.I):
+        return "duplicates_across_lanes"
+    if re.search(r"safety|campaign|abstract|precision|status|address|link|names? |ties |rule|scope|place|facility|"
+                 r"operator|attack|strike|method|route|cable|sea ", reason, re.I):
+        return "safety_grounds"
+    return "other_grounds"
 
 
 def _rows(path, keys):
@@ -125,7 +177,7 @@ def load_reviews(queue):
     """{role: {lane: file}} for every reviewer file present."""
     out = {}
     base = Path(queue) / "reviews"
-    for role in ROLE_ORDER:
+    for role in ROLE_ORDER + (LEAD,):
         out[role] = {}
         if (base / role).is_dir():
             for path in sorted((base / role).glob("*.json")):
@@ -218,6 +270,46 @@ def apply_reviews(record, verdicts, roles=ROLE_ORDER):
     return r, problems
 
 
+def lead_patch(reviews, lane, cid):
+    """(the lead's normalisation of this candidate, its date), or (None, None)."""
+    doc = reviews.get(LEAD, {}).get(lane)
+    v = doc["verdicts"].get(cid) if doc else None
+    return (v, str(doc.get("reviewed_at") or "")) if isinstance(v, dict) else (None, None)
+
+
+def apply_lead(reviewed, patch, patched_at):
+    """A record every role accepted, with the lead's normalisation applied. Returns (record,
+    problems); any problem refuses the record, so a patch that oversteps is never half-applied.
+
+    WHAT THE LEAD MAY NOT DO HERE, because each is a reviewer's decision or a safety rule: accept
+    or reject (the verdicts are already in), publish an abstracted record at a weaker policy, give
+    a record with no region a region, turn an attack into anything else, or mark a source opened."""
+    problems = []
+    if patch.get("verdict") != "accept_with_correction":
+        problems.append(f"its verdict is {patch.get('verdict')!r}; a normalisation is accept_with_correction and "
+                        "decides nothing")
+    extra = sorted(set(patch) - set(LEAD_KEYS))
+    if extra:
+        problems.append(f"it carries {extra}; a normalisation has `set` and `remove_sources` only")
+    if not G._date_ok(patched_at):
+        problems.append("the lead's file gives no reviewed_at date")
+    if problems:
+        return reviewed, [f"lead normalisation refused: {p}" for p in problems]
+    opened = {s.get("ref"): s.get("opened") is True for s in reviewed.get("sources") or [] if isinstance(s, dict)}
+    r, problems = apply_reviews(reviewed, {LEAD: patch}, roles=(LEAD,))
+    for src in r.get("sources") or []:
+        if isinstance(src, dict):
+            # Opened is what the evidence reviewer or the lane found, never what a later patch says.
+            src["opened"] = opened.get(src.get("ref"), False)
+    if G.is_attack(reviewed) and (not G.is_attack(r) or r.get("cause_family") != reviewed.get("cause_family")):
+        problems.append("it would change the cause of a kinetic or sabotage record")
+    if reviewed.get("publication_policy") == G.ABSTRACTED and r.get("publication_policy") != G.ABSTRACTED:
+        problems.append("it would publish a country-abstracted record at a weaker policy")
+    if reviewed.get("admin1") is None and r.get("admin1") is not None:
+        problems.append("it would give a region to a record the reviewers accepted without one")
+    return r, [f"lead normalisation refused: {p}" for p in problems]
+
+
 def prune_refs(r, refs, supports=None):
     """Drop `source_refs` that point at a source a reviewer removed, or (given `supports`, {ref:
     claims}) at a source the reviewers no longer let support that claim. A claim left with no
@@ -235,31 +327,45 @@ def prune_refs(r, refs, supports=None):
         keep(c, "attribution")
 
 
-def reviewed_addenda(sources, item, reviews):
+def reviewed_addenda(sources, review_id, taken, reviews, moved=False):
     """[(source, why not)] for the sources added later to one filed record. `why not` is None when
-    every role accepted the addendum; its corrections are applied to the source itself."""
+    every role accepted the addendum; its corrections are applied to the source itself.
+
+    `review_id` is the id the addendum was reviewed under: the record's own original id, or, for
+    `moved` addenda, the id of the copy the lead holds as its duplicate. A moved source whose ref
+    the surviving record already uses takes the next free one."""
     out = []
-    taken = {s.get("ref") for s in item["record"]["sources"]}
     for src in sources:
         if not isinstance(src, dict) or not src.get("ref"):
             continue
-        verdicts, _ = verdicts_for(reviews, "social", f"{item['original_id']}#{src['ref']}", ROLE_ORDER)
-        why = "not reviewed" if not verdicts else review_state(verdicts, ROLE_ORDER)
-        if why is None and src["ref"] in taken:
+        verdicts, _ = verdicts_for(reviews, "social", f"{review_id}#{src['ref']}", ADDENDA_ROLES)
+        why = "not reviewed" if not verdicts else review_state(verdicts, ADDENDA_ROLES)
+        if why is None and src["ref"] in taken and not moved:
             why = f"the record already has a source {src['ref']}"
         if why is None:
             fixed, problems = apply_reviews({"sources": [src]}, {role: {**v, "set": {}} for role, v in verdicts.items()})
             src = fixed["sources"][0]
-            for role in ROLE_ORDER:
+            for role in ADDENDA_ROLES:
                 for path, value in (verdicts[role].get("set") or {}).items():
                     try:
                         set_path(src, path, copy.deepcopy(value))
                     except (ValueError, AttributeError, TypeError) as exc:
                         problems.append(f"{role} correction could not be applied: {exc}")
             why = " | ".join(problems) or None
+            if src["ref"] in taken:
+                n = 1
+                while f"s{n}" in taken:
+                    n += 1
+                src["ref"] = f"s{n}"
             taken.add(src["ref"])
         out.append((src, why))
     return out
+
+
+def hold_survivor(reason):
+    """The `<lane>/<id>` a lead hold names as the record this one duplicates, or None."""
+    m = re.search(r"duplicate of\s+([A-Za-z0-9_]+/imp-[A-Za-z0-9_-]+)", str(reason), re.I)
+    return m.group(1) if m else None
 
 
 def review_state(verdicts, roles):
@@ -342,7 +448,7 @@ def normalise(r, notes):
     prune_refs(r, {s.get("ref") for s in sources}, {s.get("ref"): tuple(s.get("supports") or ()) for s in sources})
     if before != json.dumps([r.get("civilian_service_impact"), r.get("attribution"), r.get("ai_involvement")], sort_keys=True):
         notes.append("a source no longer cited for a claim it does not support")
-    if r.get("date_end") in G.ABSENCE:
+    if r.get("date_end") in G.ABSENCE or r.get("date_end") == "":
         # A date field holds a date or null. An end date nobody states is simply not given.
         notes.append(f"end date {r['date_end']!r} written as null")
         r["date_end"] = None
@@ -380,6 +486,21 @@ def normalise(r, notes):
                 c["statement"] = c["note"]
             for k in ("note", "status"):
                 c.pop(k, None)
+    if isinstance(a, dict) and isinstance(a.get("competing"), list):
+        # A competing attribution stands on a source like any other claim. One whose sources the
+        # reviewers removed, or no longer let support attribution, is not carried.
+        kept = [c for c in a["competing"] if not isinstance(c, dict) or c.get("source_refs")]
+        if len(kept) != len(a["competing"]):
+            notes.append(f"{len(a['competing']) - len(kept)} competing attribution(s) dropped: no surviving source "
+                         "supports them")
+            a["competing"] = kept
+    factors = r.get("contributing_factors") if isinstance(r.get("contributing_factors"), list) else []
+    if (isinstance(a, dict) and a.get("status") == "UNKNOWN" and r.get("cause_family") in G.NOT_MALICIOUS
+            and not set(factors) & set(G.MALICIOUS)):
+        # Nobody is asked who did a storm. UNKNOWN is for a malicious act nobody credibly
+        # attributes; the reverse (NOT_APPLICABLE on a malicious act) is refused, never rewritten.
+        notes.append("attribution UNKNOWN on a record that is not a malicious act written as NOT_APPLICABLE")
+        a["status"], a["actor"], a["actor_type"] = "NOT_APPLICABLE", None, None
     d = r.get("dispute")
     if isinstance(d, dict) and "claim" in d:
         # Some lanes named what is disputed under `claim`.
@@ -395,7 +516,7 @@ def clean_sources(sources):
         if isinstance(s, dict):
             s = {k: s[k] for k in G.SOURCE_FIELDS if k in s}
             s.setdefault("social", None)
-            for k in ("title_original", "title_en", "origin", "attribution_basis"):
+            for k in ("title_original", "title_en", "origin", "attribution_basis", "date_basis"):
                 if s.get(k) is None:
                     s.pop(k, None)
             out.append(s)
@@ -461,6 +582,11 @@ def shape(reviewed, original_id, key, restricted, notes):
         if r.get("date_end") is not None:
             notes.append("end date removed: when service came back is later status")
             r["date_end"] = None
+        if r.get("domain") == "energy" and r.get("technology") is None:
+            # An energy record names its technology or says why not. For a record published
+            # without its place the honest word is that it is withheld.
+            notes.append("technology written as withheld on an abstracted record that named none")
+            r["technology"] = "withheld"
         # Whatever a reviewer renamed it to: an abstracted record's id is always the keyed one.
         r["impact_id"] = abstract_id(r, original_id, key)
     if abstracted or restricted:
@@ -474,18 +600,21 @@ def shape(reviewed, original_id, key, restricted, notes):
     return {k: r[k] for k in G.RECORD_FIELDS if k in r}
 
 
-def review_block(record, verdicts, reviewed_at, roles, full=True):
+def review_block(record, verdicts, reviewed_at, roles, full=True, lead_at=None):
+    """The published review block. `lead_at` is the date of the lead's normalisation, if there was
+    one: it is stated beside the roles' verdicts and is never one of them."""
+    lead = {"lead_normalisation": True, "lead_normalisation_at": lead_at} if lead_at else {}
     out = {"reviewed_at": reviewed_at, "roles": {role: verdicts[role]["verdict"] for role in roles}}
     if not full:
-        return out
-    corrected = any(v["verdict"] == "accept_with_correction" for v in verdicts.values())
+        return {**out, **lead}
+    corrected = any(verdicts[role]["verdict"] == "accept_with_correction" for role in roles) or bool(lead)
     ai = (record.get("ai_involvement") or {}).get("status") not in (None, "NONE_REPORTED")
     social = any(s.get("medium") == "social" for s in record.get("sources") or [])
     return {"reviewed_at": reviewed_at, "review_status": "blind_reviewed", "roles": out["roles"],
             # The attribution-and-source role applies both checks; it accepted, so where they apply they passed.
             "ai_check": "passed" if ai else "not_applicable",
             "social_check": "passed" if social else "not_applicable",
-            "disposition": "corrected" if corrected else "confirmed"}
+            "disposition": "corrected" if corrected else "confirmed", **lead}
 
 
 def stamp(new, old, date):
@@ -521,11 +650,11 @@ def span(text):
         return None
 
 
-def within_a_day(a, b):
+def within_a_day(a, b, days=1):
     sa, sb = span(a), span(b)
     if not sa or not sb:
         return False
-    day = dt.timedelta(days=1)
+    day = dt.timedelta(days=days)
     return sa[0] - day <= sb[1] and sb[0] - day <= sa[1]
 
 
@@ -550,7 +679,8 @@ def duplicate_groups(items, distinct=()):
     for i, a in enumerate(items):
         for j in range(i + 1, len(items)):
             b = items[j]
-            if _same_event(a["record"], b["record"]) and frozenset((a["original_id"], b["original_id"])) not in ruled:
+            if _same_event(a["record"], b["record"]) and not ruled & {frozenset((a["original_id"], b["original_id"])),
+                                                                      frozenset((a["key"], b["key"]))}:
                 root[find(j)] = find(i)
     groups = {}
     for i, item in enumerate(items):
@@ -661,10 +791,12 @@ def _lane_stem(lane):
     return re.sub(r"\d+$", "", lane)
 
 
-def research_log(existing, lane_logs, date):
+def research_log(existing, lane_logs, date, held=None):
     """The published research note, with this run's lanes replacing their earlier entries. Process
-    facts only: source families, method, window, status, limitation. Returns (log, dropped)."""
-    out = {k: copy.deepcopy(existing.get(k)) for k in G.LOG_FIELDS}
+    facts only: source families, method, window, status, limitation; and, where the lead holds
+    records, how many and on which of three grounds, as numbers. Never a reason, a lane or an id:
+    nothing in it identifies a record that is not published. Returns (log, dropped)."""
+    out = {k: copy.deepcopy(existing.get(k)) for k in G.LOG_FIELDS if k != "lead_holds"}
     out["window"] = out["window"] or {"start": G.WINDOW_START, "end": "present"}
     out["status"] = out["status"] or "expanding corpus"
     families = [f for f in out["source_families"] or [] if f.get("lane") not in lane_logs]
@@ -695,6 +827,8 @@ def research_log(existing, lane_logs, date):
     out["regions_worked"] = sorted(regions)
     out["limitations"] = out["limitations"] or []
     out["latest_research_date"] = latest
+    if held and sum(held.values()):
+        out["lead_holds"] = {"held": sum(held.values()), **{k: held.get(k, 0) for k in G.HOLD_GROUNDS}}
     return out, dropped
 
 
@@ -716,10 +850,13 @@ def run(queue=QUEUE, curated=G.IMPACTS_CURATED, date=None, country_queues=COUNTR
     context_doc = read_json(curated / "regional_context.json")
     existing = {r["impact_id"]: r for r in events_doc["records"]}
     existing_ctx = {e["id"]: e for e in context_doc["entries"]}
-    allow = read_json(queue / "reconcile_allow.json") if (queue / "reconcile_allow.json").exists() else {}
+    # The lead's rulings that a date-and-class match with a held country record is a different
+    # event. Not an override: see step 6.
+    ruled_distinct = read_json(queue / "reconcile_distinct.json") if (queue / "reconcile_distinct.json").exists() else {}
     distinct = read_json(queue / "distinct_events.json") if (queue / "distinct_events.json").exists() else []
     # The lead's own holds, by the id the lane filed: refused whatever the reviewers said.
-    holds = read_json(queue / "lead_holds.json") if (queue / "lead_holds.json").exists() else {}
+    holds = load_holds(queue)
+    held = dict.fromkeys(G.HOLD_GROUNDS, 0)
     # Sources found later for a filed record: {original id: [source, ...]}, reviewed in
     # reviews/<role>/social.json under "<original id>#<ref>".
     addenda = read_json(queue / "social" / "addenda.json") if (queue / "social" / "addenda.json").exists() else {}
@@ -734,11 +871,12 @@ def run(queue=QUEUE, curated=G.IMPACTS_CURATED, date=None, country_queues=COUNTR
     report = {"date": date, "imported": [], "refused": [], "not_reviewed": [], "withdrawn": [], "renamed": {},
               "notes": {}, "reconcile": [], "by_lane": {}, "context": {"imported": [], "refused": [], "not_reviewed": [],
                                                                       "withdrawn": []},
-              "research_log": {}, "addenda": [],
-              # A number only, and only in this local report: the published research note says
-              # nothing of what is held, and how many (pipeline/global_impacts.py, log_problems).
-              "lead_holds": {"count": 0}}
+              "research_log": {}, "addenda": [], "collisions": [], "possible_duplicates": [],
+              "lead_holds": {"count": 0}, "lead_normalised": [],
+              "ignored_files": ["reconcile_allow.json"] if (queue / "reconcile_allow.json").exists() else []}
     lane_logs, accepted, known_ids = {}, [], set()
+    # {surviving "<lane>/<id>": [held "<lane>/<id>", ...]}, from holds that name what they duplicate.
+    duplicates_of = {}
 
     def lane_tally(lane):
         return report["by_lane"].setdefault(lane, {"imported": 0, "refused": 0, "not_reviewed": 0})
@@ -751,6 +889,7 @@ def run(queue=QUEUE, curated=G.IMPACTS_CURATED, date=None, country_queues=COUNTR
     # 1-4. Read, review, patch and shape every candidate.
     for lane_dir in lane_dirs(queue):
         lane = lane_dir.name
+        lane_tally(lane)
         has_context = (lane_dir / "context_entries.json").exists()
         if (lane_dir / "lane_log.json").exists():
             doc = read_json(lane_dir / "lane_log.json")
@@ -758,15 +897,21 @@ def run(queue=QUEUE, curated=G.IMPACTS_CURATED, date=None, country_queues=COUNTR
                 lane_logs[lane] = (doc, "regional_context" if has_context else "impacts")
         for cand in _rows(lane_dir / "candidates.json", ("records", "candidates")):
             original_id = str(cand.get("impact_id") or "")
-            item = {"lane": lane, "original_id": original_id}
+            # Two lanes may file one incident under the same id: a candidate is its lane AND its id
+            # until the final ids are assigned.
+            item = {"lane": lane, "original_id": original_id, "key": f"{lane}/{original_id}"}
             lane_tally(lane)
             # Every id this candidate could be published under, so a record that stops being
             # accepted is taken out of the curated file instead of lingering there.
             known_ids.update({original_id, canonical_id(original_id, cand), abstract_id(cand, original_id, key),
                               abstract_id({**cand, "cause_family": "kinetic"}, original_id, key)})
-            if original_id in holds:
+            hold = holds.get(item["key"], holds.get(original_id))
+            if hold is not None:
                 report["lead_holds"]["count"] += 1
-                refuse(item, f"lead hold: {holds[original_id]}")
+                held[hold_ground(hold)] += 1
+                if hold_survivor(hold):
+                    duplicates_of.setdefault(hold_survivor(hold), []).append(item["key"])
+                refuse(item, "lead hold: " + re.sub(r"^lead hold:\s*", "", hold, flags=re.I))
                 continue
             verdicts, reviewed_at = verdicts_for(reviews, lane, original_id, ROLE_ORDER)
             if not verdicts:
@@ -782,16 +927,26 @@ def run(queue=QUEUE, curated=G.IMPACTS_CURATED, date=None, country_queues=COUNTR
                 refuse(item, why)
                 continue
             reviewed, problems = apply_reviews(cand, verdicts)
+            # The lead's normalisation: only now, on a record every role accepted, and after safety.
+            patch, lead_at = lead_patch(reviews, lane, original_id)
+            if patch is not None and not problems:
+                if (patch.get("set") or {}).get("impact_id"):
+                    known_ids.add(str(patch["set"]["impact_id"]))
+                reviewed, problems = apply_lead(reviewed, patch, lead_at)
             if problems:
                 refuse(item, problems)
                 continue
+            if patch is None:
+                lead_at = None
+            else:
+                report["lead_normalised"].append(item["key"])
             notes = []
             restricted = bool(G.restricted_systems(reviewed, ctx)) if isinstance(reviewed.get("country_a3"), str) else False
             record = shape(reviewed, original_id, key, restricted, notes)
             known_ids.add(str(record.get("impact_id")))
-            record["review"] = review_block(record, verdicts, reviewed_at, ROLE_ORDER)
+            record["review"] = review_block(record, verdicts, reviewed_at, ROLE_ORDER, lead_at=lead_at)
             item.update({"record": record, "notes": notes, "verdicts": verdicts, "reviewed_at": reviewed_at,
-                         "restricted": restricted})
+                         "restricted": restricted, "lead_at": lead_at})
             accepted.append(item)
 
     # A renamed id that lands on another candidate's id, or on a different published record.
@@ -803,6 +958,8 @@ def run(queue=QUEUE, curated=G.IMPACTS_CURATED, date=None, country_queues=COUNTR
         clash = len(items) > 1 or (old is not None and (old.get("country_a3"), old.get("sector")) !=
                                    (items[0]["record"].get("country_a3"), items[0]["record"].get("sector")))
         if clash:
+            # Never overwritten, never one silently chosen: the run fails and the lead rules.
+            report["collisions"].append({"impact_id": rid, "candidates": sorted(i["key"] for i in items)})
             for item in items:
                 item["refused"] = [f"id collision: {rid} would name more than one record"]
     # 5. Dedupe across lanes.
@@ -821,21 +978,21 @@ def run(queue=QUEUE, curated=G.IMPACTS_CURATED, date=None, country_queues=COUNTR
             kind = hold_kind(q, sid, queues(sid)[1], ctx["restricted"])
             entry = {"lane": item["lane"], "candidate_id": item["original_id"], "system_id": sid,
                      "country_candidate_id": q["candidate_id"], "hold_kind": kind, "hold_fields": hold_fields(q)}
-            listed = allow.get(item["original_id"]) or allow.get(record.get("impact_id")) or []
-            override = next((o for o in (listed if isinstance(listed, list) else [listed])
-                             if isinstance(o, dict) and o.get("country_candidate_id") == q["candidate_id"]), None)
-            named = override is not None
-            if named and not str(override.get("reason") or "").strip():
-                entry["outcome"] = "refused: the override gives no reason"
-            elif named and G.is_attack(record):
-                entry["outcome"] = "refused: an attack record is never overridden"
-            elif named and kind != "threshold":
-                entry["outcome"] = (f"refused: the override is not honoured, because the country record's hold reads as "
-                                    f"{kind}, not as below that system's inclusion threshold")
-            elif named:
-                entry["outcome"] = f"allowed by the lead's override: {override['reason']}"
-            else:
+            # No override, whatever the hold was for: a restriction on publishing an event carries
+            # over to this layer. The one thing the lead may say is that the match is FALSE: the
+            # country record is a different event. That lifts no hold.
+            listed = ruled_distinct.get(item["key"]) or []
+            ruling = next((o for o in (listed if isinstance(listed, list) else [listed])
+                           if isinstance(o, dict) and o.get("country_candidate_id") == q["candidate_id"]), None)
+            reason = str((ruling or {}).get("reason") or "").strip()
+            if ruling is None:
                 entry["outcome"] = "refused: matches a record held or rejected in the country system's queue"
+            elif not reason:
+                entry["outcome"] = "refused: the ruling that this is a different event gives no reason"
+            elif G.is_attack(record):
+                entry["outcome"] = "refused: an attack record is never ruled distinct from a held country record"
+            else:
+                entry["outcome"] = f"a different event, by the lead's ruling: {reason}"
             report["reconcile"].append(entry)
             if entry["outcome"].startswith("refused"):
                 item.setdefault("refused", []).append(
@@ -855,15 +1012,29 @@ def run(queue=QUEUE, curated=G.IMPACTS_CURATED, date=None, country_queues=COUNTR
                 # Social addenda: a source found later for a record that was itself accepted. Each
                 # is added only if every role accepted it and the record still passes the gate.
                 base = item["record"]
-                for src, why in reviewed_addenda(addenda.get(item["original_id"]) or [], item, reviews):
+                taken = {s.get("ref") for s in base["sources"]}
+                own = addenda.get(item["key"]) or addenda.get(item["original_id"]) or []
+                found = [(src, why, None) for src, why in reviewed_addenda(own, item["original_id"], taken, reviews)]
+                # Addenda of a copy the lead holds as this record's duplicate follow the survivor.
+                for held_key in duplicates_of.get(item["key"], []):
+                    held_id = held_key.split("/", 1)[1]
+                    theirs = addenda.get(held_key) or addenda.get(held_id) or []
+                    if theirs is not own:   # two lanes that filed under one id share one list of addenda
+                        found += [(src, why, held_key) for src, why in reviewed_addenda(theirs, held_id, taken, reviews, moved=True)]
+                for src, why, moved_from in found:
                     outcome = {"candidate_id": item["original_id"], "ref": src.get("ref")}
+                    if moved_from:
+                        outcome["moved_from"] = moved_from
+                    if why is None and any(s.get("url") == src.get("url") for s in base["sources"]):
+                        why = "the record already cites this address"
                     if why is None:
                         trial = {**base, "sources": sorted(base["sources"] + clean_sources([src]), key=lambda s: str(s.get("ref")))}
                         if item["restricted"] or trial.get("publication_policy") == G.ABSTRACTED:
                             for s in trial["sources"]:
                                 s.pop("title_original", None)
                                 s.pop("title_en", None)
-                        trial["review"] = review_block(trial, item["verdicts"], item["reviewed_at"], ROLE_ORDER)
+                        trial["review"] = review_block(trial, item["verdicts"], item["reviewed_at"], ROLE_ORDER,
+                                                       lead_at=item["lead_at"])
                         added, trouble = gated(trial)
                         why = None if not trouble else "gate: " + " | ".join(trouble)
                         if why is None:
@@ -877,7 +1048,7 @@ def run(queue=QUEUE, curated=G.IMPACTS_CURATED, date=None, country_queues=COUNTR
                 report["imported"].append(record["impact_id"])
                 lane_tally(item["lane"])["imported"] += 1
                 if record["impact_id"] != item["original_id"]:
-                    report["renamed"][item["original_id"]] = record["impact_id"]
+                    report["renamed"][item["key"]] = record["impact_id"]
                 if item["notes"]:
                     report["notes"][record["impact_id"]] = item["notes"]
         if "refused" in item:
@@ -887,6 +1058,18 @@ def run(queue=QUEUE, curated=G.IMPACTS_CURATED, date=None, country_queues=COUNTR
     kept = {rid: r for rid, r in existing.items() if rid not in known_ids}
     report["withdrawn"] = sorted(rid for rid in existing if rid in known_ids and rid not in imported)
     records = sorted({**kept, **imported}.values(), key=lambda r: r["impact_id"])
+    # Published side by side and possibly one incident: same country and sector, dates within three
+    # days. A warning for the lead to rule on, not a refusal (within one day was refused above).
+    ruled = {frozenset(pair) for pair in distinct}
+    filed_as = {v: k for k, v in report["renamed"].items()}
+    for i, a in enumerate(records):
+        for b in records[i + 1:]:
+            if (set(G._countries(a)) & set(G._countries(b)) and a.get("sector") == b.get("sector")
+                    and within_a_day(a.get("date"), b.get("date"), days=3)):
+                pair = [a["impact_id"], b["impact_id"]]
+                keys = frozenset(filed_as.get(x, x) for x in pair)
+                if not ruled & {frozenset(pair), keys, frozenset(k.split("/", 1)[-1] for k in keys)}:
+                    report["possible_duplicates"].append(pair)
 
     # The regional context: two roles, the same patches, the build's context gate.
     known_ctx, imported_ctx = set(), {}
@@ -904,6 +1087,14 @@ def run(queue=QUEUE, curated=G.IMPACTS_CURATED, date=None, country_queues=COUNTR
                     known_ctx.add(str(v["set"]["id"]))
             why = review_state(verdicts, CONTEXT_ROLES)
             reviewed, problems = apply_reviews(cand, verdicts, CONTEXT_ROLES) if not why else (cand, [])
+            patch, lead_at = lead_patch(reviews, lane, cid) if not why else (None, None)
+            if patch is not None and not problems:
+                if (patch.get("set") or {}).get("id"):
+                    known_ctx.add(str(patch["set"]["id"]))
+                reviewed, problems = apply_lead(reviewed, patch, lead_at)
+                report["lead_normalised"].append(f"{lane}/{cid}")
+            if patch is None:
+                lead_at = None
             if why or problems:
                 report["context"]["refused"].append({"lane": lane, "candidate_id": cid, "reasons": [why] if why else problems})
                 continue
@@ -916,7 +1107,7 @@ def run(queue=QUEUE, curated=G.IMPACTS_CURATED, date=None, country_queues=COUNTR
                 if fixed in G.METRIC_QUALIFIERS or fixed == "exact":
                     m["qualifier"] = None if fixed == "exact" else fixed
             entry["sources"] = clean_sources(entry.get("sources"))
-            entry["review"] = review_block(entry, verdicts, reviewed_at, CONTEXT_ROLES, full=False)
+            entry["review"] = review_block(entry, verdicts, reviewed_at, CONTEXT_ROLES, full=False, lead_at=lead_at)
             entry = stamp(entry, existing_ctx.get(entry.get("id")), date)
             entry = {k: entry[k] for k in G.ENTRY_FIELDS if k in entry}
             problems = G.context_problems([entry])
@@ -928,18 +1119,25 @@ def run(queue=QUEUE, curated=G.IMPACTS_CURATED, date=None, country_queues=COUNTR
             imported_ctx[entry["id"]] = entry
             report["context"]["imported"].append(entry["id"])
             if entry["id"] != cid:
-                report["renamed"][cid] = entry["id"]
+                report["renamed"][f"{lane}/{cid}"] = entry["id"]
     kept_ctx = {cid: e for cid, e in existing_ctx.items() if cid not in known_ctx}
     report["context"]["withdrawn"] = sorted(cid for cid in existing_ctx if cid in known_ctx and cid not in imported_ctx)
     entries = sorted({**kept_ctx, **imported_ctx}.values(), key=lambda e: e["id"])
 
     # 9. The research note.
-    log, dropped = research_log(read_json(curated / "research_log.json"), lane_logs, date)
+    log, dropped = research_log(read_json(curated / "research_log.json"), lane_logs, date, held)
     report["research_log"] = {"lanes": sorted(lane_logs), "families_dropped": dropped}
+    report["lead_holds"].update(held)
 
     for k in ("imported",):
         report[k] = sorted(report[k])
         report["context"][k] = sorted(report["context"][k])
+    if write and report["collisions"]:
+        # Two candidates would be published under one id. Nothing is written until the lead rules
+        # (a hold in lead_holds.json, or a reviewer's reject): choosing one here would be a guess.
+        print_report(report)
+        raise SystemExit("import_impacts: id collision; nothing was written. " + "; ".join(
+            f"{c['impact_id']} <- {', '.join(c['candidates'])}" for c in report["collisions"]))
     if write:
         write_json(curated / "events.json", {**events_doc, "records": records})
         write_json(curated / "regional_context.json", {**context_doc, "entries": entries})
@@ -967,10 +1165,26 @@ def print_report(report):
         print(f"   research note: dropped a family of lane {d['lane']}: " + " | ".join(d["why"]))
     for a in report["addenda"]:
         print(f"   addendum {a['candidate_id']}#{a['ref']}: {a['outcome']}")
+    for c in report["collisions"]:
+        print(f"   COLLISION {c['impact_id']}: filed as {', '.join(c['candidates'])}. The import fails until one is "
+              "held or rejected.")
+    for a, b in report["possible_duplicates"]:
+        print(f"   WARNING possible duplicate (same country and sector, dates within three days): {a} and {b}")
     if report["lead_holds"]["count"]:
-        print(f"lead holds applied: {report['lead_holds']['count']}")
+        h = report["lead_holds"]
+        print(f"lead holds applied: {h['count']} ({h.get('duplicates_across_lanes', 0)} duplicates across lanes, "
+              f"{h.get('safety_grounds', 0)} on safety grounds, {h.get('other_grounds', 0)} on other grounds)")
     if report["renamed"]:
         print(f"ids rewritten: {len(report['renamed'])} (old and new are in the local report only)")
+    if report["lead_normalised"]:
+        print(f"lead normalisation read for {len(report['lead_normalised'])} records and entries")
+    distinct = [x for x in report["reconcile"] if not x["outcome"].startswith("refused")]
+    if report["reconcile"]:
+        print(f"country-queue matches: {len(report['reconcile']) - len(distinct)} refused, {len(distinct)} ruled a "
+              "different event by the lead")
+    for name in report["ignored_files"]:
+        print(f"   NOT READ {name}: there is no override for a record held from a country system "
+              "(reconcile_distinct.json states that a match is a different event)")
 
 
 def main():
