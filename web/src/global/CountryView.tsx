@@ -14,6 +14,7 @@ import { EmptyCorpus } from "./EmptyCorpus";
 import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
 import { NO_SCORE_NOT_ZERO, RESEARCH_PREVIEW_DEFINITION, RESEARCH_PREVIEW_LABEL, inSentence, noScorePlain } from "./countryCopy";
 import { confidenceOptions, eventAnchor } from "./evidence";
+import { ConfidenceSummary } from "./ConfidenceSummary";
 import { laneLine } from "./laneCoverage";
 import { PLACEMENT_LABEL } from "./placement";
 import { loadContext, rowForSystem, type EnergyContext } from "./context";
@@ -900,6 +901,7 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
       <p className="small dim">Re-check limits are display policy: they never decide whether an event
         is included and never enter a number.</p>
       {s.source_health && bundle.events.length > 0 && <SourceHealthBlock h={s.source_health} />}
+      <ConfidenceSummary bundle={bundle} />
       <SourceBrowser bundle={bundle} ctx={ctx} />
       <p className="small research-coverage">
         <strong>{s.research_log.passes.length === 0 ? "No search has been run yet" : RESEARCH_COMPLETENESS_LABEL[s.research_freshness.completeness]}.</strong>{" "}

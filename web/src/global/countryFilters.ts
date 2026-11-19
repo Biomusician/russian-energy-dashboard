@@ -13,8 +13,7 @@ import {
   COUNTRY_EVENT_COLUMNS, COUNTRY_EVENT_FIELDS, countryEventsCsv, csvFilename, isRestrictedEvent, readmeFilename, readmeText,
 } from "./recordCsv";
 
-type Confidence = { category?: string; label?: string } | null | undefined;
-const confidenceOf = (e: CountryEvent): Confidence => (e as { evidence_confidence?: Confidence }).evidence_confidence;
+import { bucketLabel, confidenceBucket } from "./evidence";
 
 /** The taxonomy's entries as options, in the served order, plus any value a record carries that the
  *  taxonomy does not name, so no record is left that no option can select. */
@@ -49,17 +48,19 @@ export function countryFilters(sys: CountrySystem, events: readonly CountryEvent
   add("class", "Infrastructure", vocabulary(sys.taxonomy.asset_classes, events, (e) => e.asset_class), (e) => [e.asset_class],
     (o) => `All records are of one kind of infrastructure: ${o.label}.`);
 
-  // Evidence confidence is offered only when the build serves it on these events.
+  // Evidence confidence is offered only when the build serves it on these events. A record the
+  // build did not assess (category null) is its own choice, "Not assessed": it is never listed
+  // under a category and never left where no choice can select it.
   const present = new Map<string, string>();
   for (const e of events) {
-    const c = confidenceOf(e);
-    if (c?.category && !present.has(c.category)) present.set(c.category, c.label ?? c.category.replace(/_/g, " ").toLowerCase());
+    const bucket = confidenceBucket(e);
+    if (bucket && !present.has(bucket)) present.set(bucket, bucketLabel(e));
   }
   if (present.size > 0) {
     const options = confidenceOrder
       ? confidenceOrder.filter((o) => present.has(o.value))
       : [...present].map(([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label));
-    add("conf", "Evidence confidence", options, (e) => { const c = confidenceOf(e)?.category; return c ? [c] : []; },
+    add("conf", "Evidence confidence", options, (e) => { const b = confidenceBucket(e); return b ? [b] : []; },
       (o) => `All records have one evidence confidence: ${o.label}.`);
   }
   return { defs, fixed };

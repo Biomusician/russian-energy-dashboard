@@ -1772,6 +1772,110 @@ ITER22_FILTER_MUTATIONS = [
 MUTATIONS += ITER22_FILTER_MUTATIONS
 
 
+# Iteration 22: country pages. The overview ("What this page can tell you"), the impact and
+# regional tabs, evidence confidence on event cards, and the image export. The catching tests run
+# the SHIPPED TypeScript in Node (tests/test_iteration22_country.py); the browser-level proof is in
+# web/e2e/country22.e2e.ts.
+C_OVERVIEW = "web/src/global/countryOverview.ts"
+C_TABS = "web/src/global/countryTabs.ts"
+C_IMPACT_MODEL = "web/src/global/countryImpactModel.ts"
+C_IMPACT_TAB = "web/src/global/CountryImpacts.tsx"
+C_CARD = "web/src/global/EventCard.tsx"
+C_EXPORT = "web/src/global/countryExport.ts"
+ITER22_COUNTRY_MUTATIONS = [
+    ("the overview of a campaign country states how many records are held",
+     [(C_OVERVIEW, _text('    items.push("whether, or how many, records are in review");',
+                         "    items.push(`${sys.research_log.passes.map((p) => (p.outcome && p.outcome.held) || 0).reduce((a, b) => a + b, 0)} records in review`);"))],
+     "overview_never_states_or_implies_a_held_count"),
+    ("the overview of a campaign country says candidates remain under review when a pass is flagged",
+     [(C_OVERVIEW, _text('    items.push("whether, or how many, records are in review");',
+                         '    items.push(sys.research_log.passes.some((p) => p.under_review) ? "records that remain under review" : "whether, or how many, records are in review");'))],
+     "overview_never_states_or_implies_a_held_count"),
+    ("the overview treats a campaign country as unrestricted",
+     [(C_OVERVIEW, _text("  const restricted = isCampaignRestricted(sys);", "  const restricted = false;"))],
+     "overview_never_states_or_implies_a_held_count or overview_of_an_empty_country"),
+    ("an empty country's overview prints a zero",
+     [(C_OVERVIEW, _text("    published = `No energy-disruption record is published for ${name} yet.`;",
+                         "    published = `0 energy-disruption records are published for ${name}.`;"))],
+     "overview_of_an_empty_country"),
+    ("an empty country's overview drops 'no record is not no disruption'",
+     [(C_OVERVIEW, _text("    publishedNote = `Why: ${listOf(why)}. ${NO_RECORD_IS_NOT_NO_DISRUPTION}`;",
+                         "    publishedNote = `Why: ${listOf(why)}.`;"))],
+     "overview_of_an_empty_country"),
+    ("impact records are added to the country's published-record count",
+     [(C_OVERVIEW, _text('    published = `${n} reviewed energy-disruption ${plural(n, "record is", "records are")} published for ${name}.`;',
+                         '    published = `${n + (impacts.state === "ready" ? impacts.records : 0)} reviewed energy-disruption ${plural(n, "record is", "records are")} published for ${name}.`;'))],
+     "never_change_the_published_record_count"),
+    ("the impact count loses the words that say it is another corpus",
+     [(C_OVERVIEW, _text('  return `${parts.join(" and ")}, in a separate, non-scored corpus.`;', '  return `${parts.join(" and ")}.`;'))],
+     "never_change_the_published_record_count"),
+    ("every system gets the regional-context tab",
+     [(C_TABS, _text("Array.isArray(g.members) && g.members.includes(systemId)", "Array.isArray(g.members)"))],
+     "regional_tab_exists_only_for_members"),
+    ("the default tab is written into every address",
+     [(C_TABS, _text("  if (tab !== DEFAULT_TAB) kept.push(`tab=${tab}`);", "  kept.push(`tab=${tab}`);"))],
+     "regional_tab_exists_only_for_members"),
+    ("an event with no evidence confidence is drawn with a chip",
+     [(C_CARD, _text("        {confidence && <CardConfidence confidence={confidence} />}", "        <ConfidenceChip value={confidence} />"))],
+     "confidence_chip_is_absent"),
+    ("a half-formed evidence confidence is shown as if it were whole",
+     [(EVIDENCE_TS, _text('  if (!c.components || typeof c.components !== "object" || !Array.isArray(c.reasons)) return null;\n', ""))],
+     "confidence_chip_is_absent"),
+    ("the country inspector drops the sentence about what confidence is not",
+     [(C_CARD, _text('      {!method && <p className="conf-statement">{statement || CONFIDENCE_IS_NOT}</p>}\n', ""))],
+     "confidence_chip_is_absent"),
+    ("an abstracted impact record's export row names its region",
+     [(C_IMPACT_MODEL, _text('  const place = isAbstracted(r) ? "country level, place withheld"', '  const place = false ? "country level, place withheld"'))],
+     "abstracted_impact_record_renders_no_place or draws_the_summary"),
+    ("the country page shows an abstracted impact record's region",
+     [("web/src/global/impacts/model.ts", _text("  if (!isAbstracted(r) && r.admin1?.name) return `${r.admin1.name}, ${r.country_name}`;",
+                                                 "  if (r.admin1?.name) return `${r.admin1.name}, ${r.country_name}`;"))],
+     "abstracted_impact_record_renders_no_place"),
+    ("an attempt is counted among a country's impact records",
+     [(C_IMPACT_MODEL, _text("    records: impactsFor(payload, { systemIds: [systemId] }),",
+                             "    records: [...impactsFor(payload, { systemIds: [systemId] }), ...allAttempts(payload).filter((r) => belongsTo(r, systemId))],"))],
+     "never_counts_an_attempt"),
+    ("the impact tab stops saying it is a separate corpus",
+     [(C_IMPACT_TAB, _text('      <p className="small impacts-what" role="note">{IMPACT_CORPUS_LINE}</p>\n', ""))],
+     "says_it_is_a_separate_corpus"),
+    ("an IT failure is filed under cyber in the country's cause filter",
+     [(C_IMPACT_MODEL, _text("  const cause = (r: ImpactRecord) => [r.cause_family];",
+                             '  const cause = (r: ImpactRecord) => [isItFailure(r) ? "cyber" : r.cause_family];'))],
+     "keep_an_it_failure_out_of_cyber"),
+    ("a country's cause counts are ordered by size",
+     [(C_IMPACT_MODEL, _text('  return [...known, ...rest].map((id) => ({ id, label: servedLabel(payload, "cause_families", id), n: n.get(id) ?? 0 }));',
+                             '  return [...known, ...rest].map((id) => ({ id, label: servedLabel(payload, "cause_families", id), n: n.get(id) ?? 0 })).sort((a, b) => b.n - a.n);'))],
+     "keep_an_it_failure_out_of_cyber"),
+    ("the exported country image drops the research-preview caveat",
+     [(C_EXPORT, _text('  if (sys.maturity !== "research_preview") return null;', "  if (true) return null;"))],
+     "research_preview_caveat"),
+    ("the impact export drops the separate-corpus line",
+     [(C_IMPACT_MODEL, _text("  const lines: string[] = [IMPACT_CORPUS_LINE];", "  const lines: string[] = [];"))],
+     "draws_the_summary"),
+    ("the impact export changes the image's published-record line",
+     [(C_EXPORT, _text("      : `No index. ${sys.event_summary.recorded_events} qualifying events in",
+                       "      : `No index. ${sys.event_summary.recorded_events + (impacts ? impacts.rows.length : 0)} qualifying events in"))],
+     "leaves_the_published_count_alone"),
+    ("the impact summary is not drawn into the image",
+     [(C_EXPORT, _text("  if (impacts) drawImpactSummary(c, impacts, s, pad, Math.round(108 * s));\n", ""))],
+     "draws_the_summary"),
+    ("a record that was not assessed is labelled Preliminary",
+     [(EVIDENCE_TS, _text('export const NOT_ASSESSED_LABEL = "Not assessed";', 'export const NOT_ASSESSED_LABEL = "Preliminary";'))],
+     "not_assessed_is_its_own_state"),
+    ("a record that was not assessed is filed under the lowest category in the filter and the summary",
+     [(EVIDENCE_TS, _text("  if (c.category === null) return NOT_ASSESSED;", '  if (c.category === null) return "PRELIMINARY";'))],
+     "not_assessed_is_its_own_state"),
+    ("a record that was not assessed is treated as carrying no confidence at all",
+     [(EVIDENCE_TS, _text('  if (c.category === null) return { category: null, reason: typeof c.reason === "string" && c.reason ? c.reason : null };',
+                          "  if (c.category === null) return null;"))],
+     "not_assessed_is_its_own_state"),
+    ("the per-country confidence summary loses the sentence that it is not comparable across countries",
+     [("web/src/global/ConfidenceSummary.tsx", _text('      <p className="small dim">{CONFIDENCE_SUMMARY_NOTE}</p>\n', ""))],
+     "not_assessed_is_its_own_state"),
+]
+MUTATIONS += ITER22_COUNTRY_MUTATIONS
+
+
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
     for d in COPY_DIRS:
@@ -1787,6 +1891,7 @@ def _sandbox():
 TEST_FILES = ("tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py",
               "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py", "tests/test_compare.py", "tests/test_iteration21_performance.py", "tests/test_iteration21_home.py", "tests/test_iteration21_theatre_ux.py", "tests/test_iteration21_country.py", "tests/test_whats_new.py", "tests/test_iteration21_safety.py", "tests/test_iteration21_testarch.py")
 TEST_FILES += ("tests/test_iteration22_filters.py",)
+TEST_FILES += ("tests/test_iteration22_country.py",)
 
 
 def _run(box, k):

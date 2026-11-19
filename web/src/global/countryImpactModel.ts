@@ -14,6 +14,7 @@ import type { FilterDef, FilterOption } from "./recordFilters";
 import { IMPACT_COLUMNS, IMPACT_FIELDS, csvFilename, impactRecordsCsv, readmeFilename, readmeText } from "./recordCsv";
 import { IMPACT_CORPUS_LINE, noImpactRecordText } from "./countryOverview";
 import { CONFIDENCE_IS_NOT, inSentence } from "./countryCopy";
+import { NOT_ASSESSED, bucketLabel, confidenceBucket } from "./evidence";
 
 export interface CountryImpactRecords {
   /** Disruptions for this country, in the served order: event date, newest first. */
@@ -98,21 +99,26 @@ export function impactFilters(payload: Pick<ImpactsPayload, "vocabularies">, rec
   const ai = (r: ImpactRecord) => [r.ai_involvement.status];
   add("ai", "AI involvement", optionsFor(payload, "ai_statuses", records, ai), ai);
 
-  const conf = (r: ImpactRecord) => (r.evidence_confidence?.category ? [r.evidence_confidence.category] : []);
+  // A record the build did not assess (category null) is its own choice, "Not assessed", listed
+  // last: never under a category, and never left where no choice can select it.
+  const conf = (r: ImpactRecord) => { const b = confidenceBucket(r); return b ? [b] : []; };
   const labels = new Map<string, string>();
   for (const r of records) {
-    const c = r.evidence_confidence;
-    if (c?.category && !labels.has(c.category)) labels.set(c.category, c.label || plain(c.category));
+    const b = confidenceBucket(r);
+    if (b && !labels.has(b)) labels.set(b, bucketLabel(r));
   }
   const present = [...labels].map(([value, label]) => ({ value, label }));
   const ordered = confidenceOrder
     ? [...present].sort((a, b) => rank(confidenceOrder, a.value) - rank(confidenceOrder, b.value))
-    : [...present].sort((a, b) => a.label.localeCompare(b.label));
+    : [...present].sort((a, b) => rank([], a.value) - rank([], b.value) || a.label.localeCompare(b.label));
   add("conf", "Evidence confidence", ordered, conf);
   return defs;
 }
 
+/** A category's place in the method's order; one the method does not name follows those it does,
+ *  and "Not assessed" is always last. */
 function rank(order: readonly string[], v: string): number {
+  if (v === NOT_ASSESSED) return order.length + 1;
   const i = order.indexOf(v);
   return i < 0 ? order.length : i;
 }

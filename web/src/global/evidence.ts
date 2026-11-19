@@ -299,28 +299,106 @@ export const LINK_STATE_LABEL: Record<string, string> = {
 
 // ---- evidence confidence (iteration 22) ---------------------------------------------------------
 
-/** The record's evidence confidence, or null. The field is optional: a payload built before it
- *  existed, or a record the build gave none, renders exactly as before, with no chip and no
- *  section. A value without its components or reasons is treated as absent rather than shown
- *  half-formed. It is never defaulted to a category: absent is not "low". */
-export function eventConfidence(e: CountryEvent): EvidenceConfidence | null {
-  const c = (e as { evidence_confidence?: EvidenceConfidence | null }).evidence_confidence;
-  if (!c || typeof c !== "object" || typeof c.category !== "string" || !c.category) return null;
-  if (!c.components || typeof c.components !== "object" || !Array.isArray(c.reasons)) return null;
-  return c;
+/** A record the build did not assess: `category` is null and `reason` says why (for example, it
+ *  is cited through a discovery aid only and no primary source is attached yet). */
+export interface NotAssessedConfidence { category: null; reason?: string | null }
+export type AssessedConfidence = EvidenceConfidence & { category: string };
+export type ServedConfidence = AssessedConfidence | NotAssessedConfidence;
+
+/** "Not assessed" is its own state everywhere: its own words on a card, its own bucket in a filter
+ *  and in a summary. It is never folded into the lowest category, and never read as absent. */
+export const NOT_ASSESSED = "NOT_ASSESSED";
+export const NOT_ASSESSED_LABEL = "Not assessed";
+export const NOT_ASSESSED_FALLBACK_REASON = "The build gives no reason.";
+
+export function isAssessed(c: ServedConfidence): c is AssessedConfidence {
+  return typeof c.category === "string";
 }
 
-/** The evidence-confidence filter's options in the method's own order (High before Moderate ...),
- *  read from the order the build writes its per-country summary in, with each label taken from a
- *  record that carries it. Undefined when the system serves no summary: the filter then lists the
- *  categories present alphabetically, as before. No file is fetched for this. */
-export function confidenceOptions(sys: CountrySystem, events: readonly CountryEvent[]): { value: string; label: string }[] | undefined {
-  const by = (sys as { evidence_confidence_summary?: { by_category?: Record<string, number> } }).evidence_confidence_summary?.by_category;
-  if (!by || typeof by !== "object") return undefined;
-  const labels = new Map<string, string>();
-  for (const e of events) {
-    const c = eventConfidence(e);
-    if (c && !labels.has(c.category)) labels.set(c.category, c.label || c.category.replace(/_/g, " ").toLowerCase());
-  }
-  return Object.keys(by).filter((k) => labels.has(k)).map((k) => ({ value: k, label: labels.get(k) as string }));
+/** The record's evidence confidence, or null. Three cases, kept apart:
+ *  - the field is absent (a payload built before it existed): null, so the card shows no chip and
+ *    the inspector no section. Absent is never drawn as a category;
+ *  - `category` is null: the record was not assessed, and says why;
+ *  - a category with its components and reasons. A value with a category but without them is
+ *    treated as absent rather than shown half-formed. */
+export function eventConfidence(e: object): ServedConfidence | null {
+  const c = served(e) as (Partial<EvidenceConfidence> & { category?: string | null; reason?: string | null }) | null | undefined;
+  if (!c || typeof c !== "object") return null;
+  if (c.category === null) return { category: null, reason: typeof c.reason === "string" && c.reason ? c.reason : null };
+  if (typeof c.category !== "string" || !c.category) return null;
+  if (!c.components || typeof c.components !== "object" || !Array.isArray(c.reasons)) return null;
+  return c as AssessedConfidence;
 }
+
+type RawConfidence = { category?: unknown; label?: unknown } | null | undefined;
+/** The field as served. Read through a cast: the record types predate it and it is optional. */
+const served = (e: object): unknown => (e as { evidence_confidence?: unknown }).evidence_confidence;
+
+/** The bucket a record falls in for a filter or a summary: its category, "Not assessed" when the
+ *  build served a null category, and null when the record carries no confidence at all. Read from
+ *  the category alone, so a filter never loses a record over a field it does not use. */
+export function confidenceBucket(e: object): string | null {
+  const c = served(e) as RawConfidence;
+  if (!c || typeof c !== "object") return null;
+  if (c.category === null) return NOT_ASSESSED;
+  return typeof c.category === "string" && c.category ? c.category : null;
+}
+
+/** The words for a record's bucket: the served label, or "Not assessed". */
+export function bucketLabel(e: object): string {
+  const b = confidenceBucket(e);
+  if (b === null) return "";
+  if (b === NOT_ASSESSED) return NOT_ASSESSED_LABEL;
+  const label = (served(e) as RawConfidence)?.label;
+  return typeof label === "string" && label ? label : b.replace(/_/g, " ").toLowerCase();
+}
+
+/** The words for a served confidence: the served label, or "Not assessed". */
+export function confidenceLabel(c: ServedConfidence): string {
+  return bucketLabel({ evidence_confidence: c });
+}
+
+/** The buckets present among `records`, in the method's own order (High before Moderate ...), with
+ *  "Not assessed" last. The order is the one the build writes its per-country summary in
+ *  (`order`); a category the summary does not name follows the ones it does. Labels are the
+ *  records' own. */
+function bucketsPresent(records: readonly object[], order: readonly string[]): { value: string; label: string }[] {
+  const labels = new Map<string, string>();
+  for (const r of records) {
+    const b = confidenceBucket(r);
+    if (b && !labels.has(b)) labels.set(b, bucketLabel(r));
+  }
+  const keys = [...order.filter((k) => k !== NOT_ASSESSED && labels.has(k)),
+    ...[...labels.keys()].filter((k) => k !== NOT_ASSESSED && !order.includes(k)).sort(),
+    ...(labels.has(NOT_ASSESSED) ? [NOT_ASSESSED] : [])];
+  return keys.map((k) => ({ value: k, label: labels.get(k) as string }));
+}
+
+function summaryOrder(sys: CountrySystem): string[] | undefined {
+  const by = (sys as { evidence_confidence_summary?: { by_category?: Record<string, number> } }).evidence_confidence_summary?.by_category;
+  return by && typeof by === "object" ? Object.keys(by) : undefined;
+}
+
+/** The evidence-confidence filter's options in the method's own order. Undefined when the system
+ *  serves no summary: the filter then lists what is present alphabetically, as before. No file is
+ *  fetched for this. */
+export function confidenceOptions(sys: CountrySystem, events: readonly CountryEvent[]): { value: string; label: string }[] | undefined {
+  const order = summaryOrder(sys);
+  return order ? bucketsPresent(events, order) : undefined;
+}
+
+export interface ConfidenceCount { value: string; label: string; n: number }
+
+/** How this country's published records fall across the evidence-confidence buckets, counted from
+ *  the records the page shows. Inside one country only: it describes the citations these records
+ *  carry and is not comparable across countries. Empty when no record carries the field. */
+export function confidenceCounts(sys: CountrySystem, events: readonly CountryEvent[]): ConfidenceCount[] {
+  return bucketsPresent(events, summaryOrder(sys) ?? []).map((o) => ({
+    ...o, n: events.filter((e) => confidenceBucket(e) === o.value).length,
+  }));
+}
+
+/** The sentence that travels with the per-country summary, wherever it is shown. */
+export const CONFIDENCE_SUMMARY_NOTE =
+  "This describes the citations these records carry, inside this country only. It reflects how the country is "
+  + "reported as well as what happened, and is not comparable across countries. Nothing here enters a number.";
