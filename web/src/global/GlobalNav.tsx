@@ -1,10 +1,10 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { loadManifest, type Manifest } from "./manifest";
-import { LOCATION_EVENT, navigate, navigateGroup, navigateTo } from "./router";
-import { GLOSSARY, HOW_IT_WORKS } from "./glossary";
+import { IMPACTS_VIEW, LOCATION_EVENT, impactsHref, navigate, navigateGroup, navigateTo } from "./router";
+import { GLOSSARY, HOW_IT_WORKS, glossaryDetail, type ServedMethod } from "./glossary";
 import {
   CONCEPT_ENTRIES, KIND_LABEL, VIEW_ENTRIES, groupEntries, loadTheatreRegions, loadedCountryRegions,
-  onCountryRegions, searchEntries, systemEntries, theatreRegionEntries,
+  onCountryRegions, regionalContextEntries, searchEntries, systemEntries, theatreRegionEntries,
   type SearchEntry, type SearchHit, type TheatreRegion,
 } from "./searchIndex";
 import { requestStartHere } from "./startHereMemory";
@@ -110,6 +110,16 @@ export function GlobalNavBar({ trail, search = true, extra }: { trail: Crumb[]; 
         <button ref={toggleRef} className="ghost nav-menu-toggle" type="button" aria-expanded={open} aria-controls={menuId}
           onClick={() => setOpen((v) => !v)}>Menu</button>
         <div id={menuId} ref={menuRef} className={`nav-menu${open ? " open" : ""}`}>
+          {/* The one cross-country view of impact records (iteration 22). A real link, so it can be
+              opened in a new tab; its corpus is fetched by the atlas, never by this bar. */}
+          <a className="ghost nav-link" href={impactsHref()}
+            aria-current={new URLSearchParams(window.location.search).get("view") === IMPACTS_VIEW ? "page" : undefined}
+            onClick={(e) => {
+              if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+              e.preventDefault();
+              if (open) closeMenu();
+              navigateTo(impactsHref());
+            }}>Impact atlas</a>
           <a className="ghost nav-link" href={`${window.location.pathname}#${WHATS_NEW_ID}`}
             onClick={(e) => {
               if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -281,7 +291,7 @@ export function GlobalSearch({ compact = false, inputRef }: { compact?: boolean;
   const entries = useMemo(() => {
     const out: SearchEntry[] = [...VIEW_ENTRIES, ...CONCEPT_ENTRIES];
     if (manifest) {
-      out.push(...systemEntries(manifest), ...groupEntries(manifest));
+      out.push(...systemEntries(manifest), ...groupEntries(manifest), ...regionalContextEntries(manifest));
       const theatreName = manifest.systems.find((s) => s.kind === "theatre")?.name ?? "";
       if (theatre) out.push(...theatreRegionEntries(theatre, theatreName));
     }
@@ -381,6 +391,11 @@ export function GlossaryDialog() {
   const opener = useRef<HTMLElement | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [initial] = useState(() => new URLSearchParams(window.location.search).get("help") === "glossary");
+  // The served definitions behind the evidence, attribution and AI entries. Fetched the first time
+  // the glossary is opened, never on page load; until then, and if it fails, each entry shows its
+  // own wording.
+  const [served, setServed] = useState<ServedMethod | null>(null);
+  const asked = useRef(false);
 
   const show = (entry: string | null) => {
     const d = ref.current;
@@ -388,6 +403,10 @@ export function GlossaryDialog() {
     if (!d.open) {
       opener.current = document.activeElement as HTMLElement | null;
       d.showModal();
+    }
+    if (!asked.current) {
+      asked.current = true;
+      import("./impacts/load").then((m) => m.loadConfidenceMethod()).then(setServed).catch(() => { asked.current = false; });
     }
     setFocusId(entry);
     const target = entry ? d.querySelector<HTMLElement>(`#gl-${entry} h3`) : d.querySelector<HTMLElement>("h2");
@@ -439,7 +458,7 @@ export function GlossaryDialog() {
             <p>{g.plain}</p>
             <details open={focusId === g.id || undefined}>
               <summary className="small">More detail<span className="sr-only"> on {g.term}</span></summary>
-              <p className="small dim">{g.detail}</p>
+              <p className="small dim">{glossaryDetail(g, served)}</p>
             </details>
           </article>
         ))}

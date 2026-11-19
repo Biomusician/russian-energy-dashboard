@@ -11,6 +11,8 @@ const TheatreApp = lazy(importTheatre);
 const CountryView = lazy(importCountryView);
 const GroupView = lazy(importGroupView);
 const CompareView = lazy(() => import("./global/CompareView"));
+// The Impact Atlas and its corpus load only when the atlas is opened (iteration 22).
+const ImpactAtlas = lazy(() => import("./global/impacts/ImpactAtlas"));
 
 /** What the error boundary calls a view, and its address without saved state. A route this does not
  *  name still gets a boundary, under the generic label. */
@@ -22,6 +24,8 @@ export function describe(route: Route): { key: string; label: string; cleanHref?
     case "group": return { key: `group:${route.id}`, label: "This regional overview", cleanHref: `?group=${encodeURIComponent(route.id)}` };
     // Not keyed on the selection: an edit to the compared systems keeps the boundary and the loaded columns.
     case "compare": return { key: "compare", label: "The comparison", cleanHref: "?compare=" };
+    // Not keyed on the filters: a filter edit keeps the boundary and the loaded corpus.
+    case "impacts": return { key: "impacts", label: "The impact atlas", cleanHref: "?view=impacts" };
     default: return { key: (route as { view: string }).view, label: "This view" };
   }
 }
@@ -36,6 +40,7 @@ export function defaultTitle(route: ReturnType<typeof routeFor>): string {
     case "group": return `${base} — regional overview`;
     case "country": return `${base} — country system`;
     case "compare": return `${base} — compare systems`;
+    case "impacts": return `${base} — impact atlas`;
     default: return base;
   }
 }
@@ -63,6 +68,7 @@ export default function Root() {
         {route.view === "group" && <GroupView key={route.id} id={route.id} />}
         {/* Not keyed: an edit to the selection keeps the countries already loaded. */}
         {route.view === "compare" && <CompareView ids={route.ids} />}
+        {route.view === "impacts" && <ImpactAtlas />}
       </Suspense>
     </ViewBoundary>
   );

@@ -1,0 +1,144 @@
+/* The global impact layer (iteration 22): impact cards, the confidence chip, attribution and AI
+   lines, the impact Evidence Inspector, the regional context timeline and the Impact Atlas.
+   Uses the tokens in theme.css. No colour here carries a meaning by itself: every state is a word,
+   and a tint only repeats it. No colour is graded by a count. */
+
+/* ---- impact card --------------------------------------------------------------------------- */
+.impact-card { padding: 10px 0 12px; }
+.impact-card .event-head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; justify-content: flex-start; }
+.impact-card .event-date { font-size: 12.5px; color: var(--text); font-weight: 600; letter-spacing: 0.01em; }
+.impact-place { font-size: 13.5px; color: var(--text); }
+.impact-tags { display: flex; margin-top: 5px; }
+.impact-card .event-tag { white-space: normal; }
+.impact-card .event-summary { color: var(--text); margin: 6px 0 4px; line-height: 1.5; }
+.impact-services { list-style: none; margin: 0; padding: 0; }
+.impact-services li { margin: 0 0 2px; }
+.impact-line-label { color: var(--text-dim); font-weight: 600; }
+.attr-line, .ai-line, .impact-dispute { margin: 5px 0; line-height: 1.5; color: var(--text); }
+.attr-line, .ai-line { padding-left: 8px; border-left: 2px solid var(--line); }
+.attr-statement, .ai-statement { margin-top: 2px; }
+.attr-competing { margin: 3px 0; padding-left: 18px; }
+.impact-attempt-label {
+  margin: 0 0 4px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; color: var(--text);
+  border: 1px dashed var(--text-faint); border-radius: var(--radius); padding: 2px 6px; display: inline-block;
+}
+.impact-historical, .impact-card .withheld-note { margin: 4px 0; }
+
+/* ---- confidence chip ----------------------------------------------------------------------- */
+.conf { margin: 6px 0 2px; font-size: 12px; }
+.conf-chip {
+  display: inline-block; padding: 1px 7px; border: 1px solid var(--line); border-radius: 9px;
+  color: var(--text); background: var(--bg-inset);
+}
+.conf-chip strong { font-weight: 700; }
+.conf-none { border-style: dashed; }
+.conf-reason { color: var(--text-dim); }
+.conf-status { color: var(--text); border-left: 2px solid var(--text-dim); padding-left: 7px; }
+.conf-why { font-size: 11.5px; }
+.conf-panel {
+  display: block; margin-top: 5px; padding: 7px 9px; background: var(--bg-inset);
+  border: 1px solid var(--line-soft); border-radius: var(--radius); color: var(--text);
+}
+.conf-breakdown p { margin: 3px 0; line-height: 1.5; }
+.conf-reasons { margin: 3px 0; padding-left: 18px; }
+.conf-components { border-collapse: collapse; margin: 5px 0; width: 100%; max-width: 560px; }
+.conf-components th, .conf-components td {
+  text-align: left; padding: 2px 8px 2px 0; border-top: 1px solid var(--line-soft); font-weight: 400; vertical-align: top;
+}
+.conf-components thead th { color: var(--text-faint); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; border-top: 0; }
+.conf-components .mono { font-family: var(--mono); white-space: nowrap; }
+.conf-score .mono { font-family: var(--mono); }
+.conf-statement { color: var(--text-dim); }
+
+/* ---- impact Evidence Inspector ------------------------------------------------------------- */
+.imp-inspector .imp-chain, .imp-inspector .imp-sources { list-style: none; padding-left: 0; }
+.imp-chain li { margin: 3px 0; }
+.imp-source { padding: 5px 0; border-top: 1px solid var(--line-soft); }
+.imp-source:first-child { border-top: 0; }
+.imp-source a { overflow-wrap: anywhere; }
+.imp-social { margin: 2px 0; padding-left: 8px; border-left: 2px solid var(--line); }
+.imp-supports { font-weight: 600; }
+
+/* ---- regional context timeline ------------------------------------------------------------- */
+.ctx-caveat {
+  margin: 8px 0; padding: 7px 10px; background: var(--bg-inset);
+  border: 1px solid var(--line); border-left: 2px solid var(--text-dim); border-radius: var(--radius);
+}
+.ctx-caveat p { margin: 2px 0; line-height: 1.5; }
+.ctx-entries { list-style: none; margin: 8px 0; padding: 0; }
+.ctx-entry { padding: 9px 0; border-top: 1px solid var(--line-soft); }
+.ctx-entry:first-child { border-top: 0; }
+.ctx-date { font-weight: 600; color: var(--text); font-size: 12.5px; }
+.ctx-source { color: var(--text-dim); font-size: 12.5px; }
+.ctx-claim { margin: 4px 0; line-height: 1.5; font-size: 13px; }
+.ctx-metric, .ctx-asof { margin: 2px 0; }
+.ctx-asof { color: var(--text-dim); }
+.ctx-sources { list-style: none; margin: 3px 0 0; padding: 0; }
+.ctx-sources a { overflow-wrap: anywhere; }
+.ctx-types summary { cursor: pointer; color: var(--accent); }
+.ctx-types dl { margin: 6px 0; }
+.ctx-types dt { font-weight: 600; margin-top: 4px; }
+.ctx-types dd { margin: 0; color: var(--text-dim); }
+
+/* ---- the Impact Atlas ------------------------------------------------------------------------ */
+.atlas-badge {
+  display: inline-block; padding: 2px 9px; border: 1px solid var(--text-dim); border-radius: 9px;
+  font-size: 11px; font-weight: 600; color: var(--text); white-space: nowrap;
+}
+.atlas-main { max-width: 1100px; width: 100%; box-sizing: border-box; }
+.atlas-intro p { margin: 4px 0; line-height: 1.5; }
+.atlas-caveats { margin: 4px 0; padding-left: 18px; color: var(--text-dim); }
+.atlas-summary { font-size: 13px; }
+.atlas-bias { margin: 2px 0 6px; max-width: 900px; line-height: 1.5; }
+.atlas-what, .atlas-coverage { margin-top: 6px; }
+.atlas-what summary, .atlas-coverage summary, .atlas-attempts summary { cursor: pointer; color: var(--accent); }
+.atlas-what ul, .atlas-coverage ul { margin: 4px 0; padding-left: 18px; }
+.atlas-what li, .atlas-coverage li { margin: 2px 0; line-height: 1.45; }
+.atlas-coverage h3 { margin: 8px 0 2px; }
+
+.atlas-presets { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.global-main a.atlas-preset {
+  display: inline-flex; align-items: center; padding: 4px 10px; font-size: 12px; text-decoration: none;
+  color: var(--text); border: 1px solid var(--line); border-radius: 12px; background: var(--bg-panel-2);
+}
+.global-main a.atlas-preset:hover, .global-main a.atlas-preset:focus-visible { border-color: var(--accent-dim); color: var(--accent); }
+.global-main a.atlas-preset.is-on { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.atlas-preset-meaning { margin: -6px 0 0; }
+
+.atlas-countries .home-section-head { margin-bottom: 4px; }
+.atlas-country-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 5px; }
+.atlas-country {
+  font: inherit; font-size: 12px; padding: 3px 9px; cursor: pointer; color: var(--text);
+  background: var(--bg-inset); border: 1px solid var(--line); border-radius: var(--radius);
+}
+.atlas-country:hover, .atlas-country:focus-visible { border-color: var(--accent-dim); color: var(--accent); }
+.atlas-country.is-on { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.atlas-map { height: min(46vh, 420px); min-height: 260px; display: flex; margin-top: 8px; }
+.atlas-map-key { margin: 4px 0 0; color: var(--text-dim); display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.atlas-key-swatch { display: inline-block; width: 11px; height: 11px; border: 1px solid var(--text-faint); margin-right: 5px; vertical-align: -1px; }
+
+.atlas-year-head {
+  font-size: 15px; margin: 14px 0 0; padding-bottom: 3px; border-bottom: 1px solid var(--line);
+  font-family: var(--mono); color: var(--text);
+}
+.atlas-month-head {
+  font-size: 11px; margin: 10px 0 0; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim);
+}
+.atlas-cards { list-style: none; margin: 0; padding: 0; }
+.atlas-card { border-top: 1px solid var(--line-soft); }
+.atlas-card:first-child { border-top: 0; }
+.atlas-more { margin: 10px 0; }
+.atlas-empty p { margin: 0 0 8px; }
+.atlas-attempts > p { margin: 6px 0; }
+
+@media (max-width: 600px) {
+  .atlas-main { padding-left: 12px; padding-right: 12px; }
+  .atlas-badge { white-space: normal; }
+  .atlas-country, .global-main a.atlas-preset { min-height: 36px; }
+  .impact-card .event-facts > div { grid-template-columns: 1fr; gap: 1px; }
+  .conf-components { font-size: 11px; }
+}
+
+@media print {
+  .conf-why, .atlas-presets, .atlas-more, .atlas-countries button { display: none !important; }
+}

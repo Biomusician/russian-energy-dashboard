@@ -218,8 +218,11 @@ function ChoiceBody<R>({ def, defs, state, onChange, records, today }: BodyProps
           <label>
             <input type="checkbox" checked={picked.includes(o.value)} onChange={() => onChange(toggleChoice(state, def.id, o.value))} />
             <span className="rf-option-label">{o.label}</span>
-            {/* A count inside this one list, said as such to a screen reader. */}
-            <span className="rf-n">{counts.get(o.value) ?? 0}<span className="sr-only"> of the records in this list</span></span>
+            {/* A count inside this one list, said as such to a screen reader. A filter may decline
+                it (def.counts === false): a number beside each country is a league table. */}
+            {def.counts !== false && (
+              <span className="rf-n">{counts.get(o.value) ?? 0}<span className="sr-only"> of the records in this list</span></span>
+            )}
           </label>
         </li>
       ))}

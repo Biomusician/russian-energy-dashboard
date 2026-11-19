@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { readDismissed, takeStartHereRequest, writeDismissed } from "./startHereMemory";
 import { START_HERE_EVENT, openGlossary } from "./GlobalNav";
-import { navigate, navigateGroup } from "./router";
+import { impactsHref, navigate, navigateGroup, navigateTo } from "./router";
 
 /** "Start here": six things a first-time reader needs, on the page rather than in a modal.
  *  Dismissing it is remembered in this browser only; "How to read this" brings it back. */
@@ -63,6 +63,11 @@ export default function StartHere({ gulfSlug, gulfLabel }: { gulfSlug: string | 
             <li><strong>Maps mean different things by view.</strong> The world map is coloured by a national energy figure;
               a country map is coloured by where records were placed; the Russia, Belarus &amp; Crimea map shows exposure. Each map's legend says which.</li>
           </ol>
+          <p className="small start-here-impacts">
+            A separate <a href={impactsHref()} onClick={(e) => { e.preventDefault(); navigateTo(impactsHref()); }}>Impact atlas</a> lists
+            reviewed reports of disruptions to energy and essential civilian services in any country, with who is said to be
+            responsible and how strong the evidence is; it has no score and is not a census.
+          </p>
           <div className="start-here-next">
             <span className="small dim">What to open next:</span>
             <button className="ghost" type="button" onClick={() => navigate("ru")}>The indexed theatre</button>

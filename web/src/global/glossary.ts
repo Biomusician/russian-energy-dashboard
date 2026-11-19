@@ -16,6 +16,17 @@ function stateList(): string {
   return `${words.slice(0, -1).join("; ")}; or ${words[words.length - 1]}`;
 }
 
+/** The served Evidence Confidence method, as far as the glossary reads it: the statement, the
+ *  category and attribution-confidence meanings, and the definitions of the served vocabularies. */
+export interface ServedMethod {
+  statement: string;
+  /** Present while the method is provisional. */
+  status?: string | null;
+  categories: { id: string; label: string; meaning: string }[];
+  attribution: { labels: Record<string, string>; meanings: Record<string, string> };
+  labels: Record<string, { id: string | number; label: string; definition?: string }[]>;
+}
+
 export interface GlossaryEntry {
   id: string;
   term: string;
@@ -23,15 +34,117 @@ export interface GlossaryEntry {
   aliases: string[];
   plain: string;
   detail: string;
+  /** The served definition, where the build publishes one. Shown as the detail once the method
+   *  has loaded, so the glossary and the record cards cannot drift apart. */
+  served?: (m: ServedMethod) => string | null;
+}
+
+function definition(m: ServedMethod, vocab: string, id: string): string | null {
+  return m.labels?.[vocab]?.find((e) => String(e.id) === id)?.definition ?? null;
+}
+
+/** "Label: meaning" for each key, in the order given, skipping what the method does not carry. */
+function meanings(labels: Record<string, string>, texts: Record<string, string>, keys: string[]): string | null {
+  const own = (o: object, k: string) => Object.prototype.hasOwnProperty.call(o, k);
+  const out = keys.filter((k) => own(labels ?? {}, k) && own(texts ?? {}, k)).map((k) => `${labels[k]}: ${texts[k]}`);
+  return out.length > 0 ? out.join(" ") : null;
+}
+
+/** The detail to show for an entry: the served definition when there is one, else the entry's own. */
+export function glossaryDetail(g: GlossaryEntry, served: ServedMethod | null): string {
+  if (!served || !g.served) return g.detail;
+  try { return g.served(served) || g.detail; } catch { return g.detail; }
 }
 
 export const GLOSSARY: GlossaryEntry[] = [
+  {
+    id: "ai-involvement",
+    term: "AI involvement",
+    aliases: ["ai", "artificial intelligence", "ai-assisted", "ai involved", "ai-caused", "machine learning"],
+    plain: "Whether a cited source ties artificial intelligence to this particular incident, and how firmly. Most records carry no AI line at all, because no source reports any.",
+    detail: "Two different things are kept apart. AI-assisted means an attacker used AI tooling; it does not mean AI caused the outage. AI as operational cause means an AI system used in operations made the wrong decision, or an AI service the operation relied on failed. Modern, automated or sophisticated is not AI: a source has to say so about this incident.",
+    served: (m) => [definition(m, "ai_relations", "ai_assisted"), definition(m, "ai_relations", "ai_operational_cause"), definition(m, "ai_statuses", "NONE_REPORTED")]
+      .filter(Boolean).join(" ") || null,
+  },
   {
     id: "as-published",
     term: "As published vs current-evidence reconstruction",
     aliases: ["as published", "reconstruction", "history", "past date", "timeline"],
     plain: "Two different answers to \"what did it look like on that day?\". As published is what the site actually showed on that day. A current-evidence reconstruction is today's evidence and method applied to that past date.",
     detail: "They differ whenever a report about an old event was found later, or the method changed. A reconstruction places a late-found event on its own date; the published history shows when the site first displayed it. Published history is available only from late August 2026 and is never filled in for earlier days.",
+  },
+  {
+    id: "assessed",
+    term: "Assessed",
+    aliases: ["assessment", "assessed attribution"],
+    plain: "A competent body, such as a government agency, the affected operator or a technical investigator, has assessed who was responsible or whether AI was involved. Firmer than suspected; less than a formal attribution.",
+    detail: "The record says who made the assessment and on what date. An assessment made months after the event is shown with its own date, never as something known at the time.",
+    served: (m) => definition(m, "attribution_statuses", "ASSESSED"),
+  },
+  {
+    id: "attempt",
+    term: "Attempt (no reported service disruption)",
+    aliases: ["attempt", "attempted attack", "foiled", "no service impact"],
+    plain: "A clearly documented attempt on an essential service where no effect on the service was reported. Attempts are listed in their own section and are never counted with disruptions.",
+    detail: "Only attempts documented in an official or operator statement qualify. They are kept apart so that the timeline and every count describe real interruptions of a service, not intrusions that were stopped.",
+    served: (m) => definition(m, "record_kinds", "attempt_no_service_impact"),
+  },
+  {
+    id: "attributed",
+    term: "Attributed",
+    aliases: ["formal attribution", "attributed attack"],
+    plain: "A government or law-enforcement body has formally attributed the incident to an actor, or several independent credible sources attribute it to the same one. The site reports who attributes; it asserts nothing itself.",
+    detail: "Records always read \"X attributed this to Y\", never \"Y did it\". An attribution needs at least one official source, and its date is shown because attributions often come long after the event.",
+    served: (m) => definition(m, "attribution_statuses", "ATTRIBUTED"),
+  },
+  {
+    id: "attribution",
+    term: "Attribution",
+    aliases: ["who did it", "responsible", "actor", "perpetrator", "blame", "unknown attribution", "not established"],
+    plain: "Who is publicly said to be responsible for a malicious act, and by whom. It is separate from what caused the disruption and from whether it happened.",
+    detail: "An attribution is one of: not applicable (not a malicious act), unknown (no credible public attribution, which is not a low confidence), claimed, suspected, assessed, attributed or disputed. When sources disagree, every competing attribution is listed and the site does not choose.",
+    served: (m) => ["UNKNOWN", "CLAIMED", "SUSPECTED", "ASSESSED", "ATTRIBUTED", "DISPUTED"]
+      .map((k) => { const d = definition(m, "attribution_statuses", k); const l = m.labels?.attribution_statuses?.find((e) => e.id === k)?.label; return d && l ? `${l}: ${d}` : null; })
+      .filter(Boolean).join(" ") || null,
+  },
+  {
+    id: "attribution-confidence",
+    term: "Attribution confidence",
+    aliases: ["attribution strength", "claim only", "how sure"],
+    plain: "How strong the public evidence is about who was responsible: high, moderate, low, claim only or disputed. It is worked out from who made the attribution, never typed by hand.",
+    detail: "High needs a formal government or law-enforcement attribution plus a second independent one of a different kind. An actor's own claim can never be more than claim only. Unknown attribution has no confidence level: it is not established, which is different from low.",
+    served: (m) => meanings(m.attribution?.labels, m.attribution?.meanings, ["HIGH", "MODERATE", "LOW", "CLAIM_ONLY", "DISPUTED", "NOT_ESTABLISHED"]),
+  },
+  {
+    id: "civilian-service-impact",
+    term: "Civilian-service impact",
+    aliases: ["civilian impact", "service impact", "customers affected", "people affected", "households", "subscribers"],
+    plain: "Which everyday service was interrupted (electricity, water, telecommunications, healthcare, transport and others), how widely, and for how long, as the sources report it.",
+    detail: "Figures keep the source's own unit. People are not customers, customers are not households, and households are not subscribers, so nothing is converted or added up. Where no source gives a figure the record says so; it is never shown as zero.",
+  },
+  {
+    id: "claimed",
+    term: "Claimed",
+    aliases: ["claim", "claim of responsibility", "self-claim", "took credit"],
+    plain: "An actor said it was responsible, or a source claimed AI was involved, without independent support. A claim is recorded as a claim; it is not corroboration.",
+    detail: "Groups claim attacks they did not carry out and exaggerate ones they did. A record resting only on an actor's own claim is marked claim only, and its evidence confidence can be no higher than preliminary.",
+    served: (m) => definition(m, "attribution_statuses", "CLAIMED"),
+  },
+  {
+    id: "cyber-disruption",
+    term: "Cyber disruption",
+    aliases: ["cyber", "cyberattack", "cyber attack", "hack", "ransomware", "it failure", "it outage", "mechanism"],
+    plain: "A disruption whose reported cause is a malicious act through computer systems or networks. A record may name the broad kind (ransomware, denial of service, destructive malware) when it was publicly reported.",
+    detail: "A failure that was digital but not malicious, such as a faulty software update that stopped operations, is an IT failure: it is filed as a technical failure, has its own filter, and is never counted as a cyberattack. No record says how access was gained.",
+    served: (m) => definition(m, "cause_families", "cyber"),
+  },
+  {
+    id: "disputed",
+    term: "Disputed",
+    aliases: ["dispute", "contested", "competing attributions", "disagree"],
+    plain: "Credible sources materially disagree: about whether the disruption happened, what its effect was, or who was responsible. The site lists what each says and does not choose between them.",
+    detail: "A disputed record is labelled disputed whatever its evidence score would otherwise be. A disputed attribution lists every competing attribution with who made it.",
+    served: (m) => [m.categories?.find((c) => c.id === "DISPUTED")?.meaning, definition(m, "attribution_statuses", "DISPUTED")].filter(Boolean).join(" ") || null,
   },
   {
     id: "episode",
@@ -48,11 +161,26 @@ export const GLOSSARY: GlossaryEntry[] = [
     detail: "It weighs each facility's published capacity by evidence strength, cause and time elapsed, sector by sector, then combines sectors with fixed weights. A sector with no capacity base is left out and the weights are rescaled; it is not counted as zero. It is a measure of exposure, not of output lost.",
   },
   {
+    id: "evidence-confidence",
+    term: "Evidence confidence",
+    aliases: ["confidence", "evidence quality", "high", "moderate", "limited", "preliminary", "ordinal score", "how reliable"],
+    plain: "How strong the public evidence is that a disruption happened and that its reported effect is right: high, moderate, limited, preliminary or disputed. A record whose evidence has not been assessed says \"Not assessed\", with the reason. It is not a probability, not a measure of severity and not a statement about how important the infrastructure is.",
+    detail: "It is worked out from who is speaking (an operator or official body counts for more than a repost), how many separate sources stand behind the report, how specific the reported effect is, whether a reviewer read the source, and whether it was reported at the time. The number of links never enters. The category is the finding; the points behind it are not a percentage. Each record shows its reasons under \"Why?\".",
+    served: (m) => [m.status ? `Method status: ${m.status}.` : null, m.statement, ...(m.categories ?? []).map((c) => `${c.label}: ${c.meaning}`)].filter(Boolean).join(" "),
+  },
+  {
     id: "exposure",
     term: "Exposure",
     aliases: ["capacity at disrupted sites", "capacity loss", "loss"],
     plain: "How much capacity sits at sites that were reported disrupted. It is not how much output was lost: open reporting rarely says that, so the site does not estimate it.",
     detail: "A refinery reported hit counts with its published capacity, decaying with time, whether or not the report said how much production stopped. Where a source does quantify the effect, that figure is shown on the record but does not drive the index.",
+  },
+  {
+    id: "impact-atlas",
+    term: "Impact atlas",
+    aliases: ["impacts", "impact records", "atlas", "cross-country", "global impact"],
+    plain: "A separate collection of reviewed, publicly reported disruptions to energy systems and essential civilian services, in any country. It has no score and feeds no index.",
+    detail: "It is an expanding corpus, not a census: disclosure laws differ, operators may not disclose and conflicts distort reporting. Its counts are published records, never rates, and are never compared or ranked between countries. A country that appears only there is not a monitored system.",
   },
   {
     id: "national-context",
@@ -71,7 +199,7 @@ export const GLOSSARY: GlossaryEntry[] = [
   {
     id: "originating-statement",
     term: "Originating statement vs citation",
-    aliases: ["citation", "origin", "source", "wire service", "corroboration"],
+    aliases: ["citation", "origin", "source", "wire service", "corroboration", "originating statement", "independent sources", "republication"],
     plain: "A citation is a link to a report. An originating statement is where the information first came from. Ten articles repeating one news-agency report are ten citations but one originating statement.",
     detail: "Corroboration is counted in originating statements, not links. An origin is the wire service a citation names, otherwise the website it appears on, so a record with many links can still rest on a single statement, and the country page says so.",
   },
@@ -89,6 +217,16 @@ export const GLOSSARY: GlossaryEntry[] = [
     aliases: ["withheld", "campaign", "row key", "list entry", "safeguard", "attack campaign", "under safeguards"],
     plain: `While attacks on a country's energy facilities are being reported, some detail is not published: the facility's current status, and in some countries where the attack happened inside the country. Such records appear as "${PLACEMENT_LABEL.national_safeguarded}".`,
     detail: "The record still shows that something was reported, its date, its broad class and its cause. Lists that put records from several countries side by side show such a record for the country as a whole, with a list entry number instead of its own name. Historical evidence may be published once the campaign is over.",
+  },
+  {
+    id: "reported-effect",
+    term: "Reported effect",
+    aliases: ["effect", "quantified", "described", "what happened", "consequence"],
+    plain: "What the cited sources say the disruption did, in neutral words. It is what was reported at the time, not a measurement and not the state of the service today.",
+    detail: "Each record says how specific the report is: quantified (a source gives a figure), described (a concrete effect without a figure) or general terms only. A reported effect is not capacity lost and is never turned into a score.",
+    served: (m) => ["quantified", "described", "vague"]
+      .map((k) => { const e = m.labels?.effect_specificity?.find((x) => x.id === k); return e?.definition ? `${e.label}: ${e.definition}` : null; })
+      .filter(Boolean).join(" ") || null,
   },
   {
     id: "research-coverage",

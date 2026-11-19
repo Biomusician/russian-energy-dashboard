@@ -193,7 +193,7 @@ export interface ImpactRecordForCsv {
   cyber_mechanism?: string | null;
   summary?: string;
   effect?: string | null;
-  effect_specificity?: string;
+  effect_specificity?: string | null;
   civilian_service_impact?: {
     service?: string; geographic_scope?: string; duration_text?: string | null;
     affected?: { source_says?: string | null; unit?: string | null } | string | null;
@@ -203,7 +203,7 @@ export interface ImpactRecordForCsv {
     as_of?: string | null; statement?: string | null; confidence?: string | { category?: string } | null;
   } | null;
   ai_involvement?: { status?: string; relation?: string | null; role?: string | null; as_of?: string | null } | null;
-  evidence_confidence?: { category?: string; label?: string; score?: number } | null;
+  evidence_confidence?: { category?: string | null; label?: string | null; score?: number | null } | null;
   origin_count?: number | null;
   sources?: (Citation & { title_original?: string | null })[] | null;
   publication_policy?: string;

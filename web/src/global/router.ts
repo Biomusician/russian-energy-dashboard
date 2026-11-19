@@ -15,6 +15,9 @@
  *                         the reader chose. Ids are lower-cased and de-duplicated here; whether
  *                         each one exists is decided by the view against the manifest, which
  *                         drops an unknown id with a visible note. `sys` and `group` win.
+ *  - `?view=impacts`      the Impact Atlas (iteration 22): the cross-country corpus of reviewed
+ *                         impact records. Its filters travel as `f.<id>=` parameters, which no
+ *                         other view owns. `sys`, `group` and `compare` win.
  *  - a bare URL: the global home.
  *
  *  Nothing here reads a value from the query string as an object key, so `sys=constructor`
@@ -28,13 +31,22 @@ export type Route =
   | { view: "theatre" }
   | { view: "country"; id: string }
   | { view: "group"; id: string }
-  | { view: "compare"; ids: string[] };
+  | { view: "compare"; ids: string[] }
+  | { view: "impacts" };
 
 /** At most this many systems side by side: past four a table of prose stops being readable. */
 export const MAX_COMPARE = 4;
 // How many ids a compare link may carry before the view resolves them. More than MAX_COMPARE, so an
 // unknown id early in a hand-edited link cannot push a real one out before the view can say so.
 const MAX_COMPARE_TOKENS = 12;
+
+/** The `view` value that opens the Impact Atlas. */
+export const IMPACTS_VIEW = "impacts";
+
+/** The link that opens the Impact Atlas, optionally with filters already on (`f.cause=cyber`). */
+export function impactsHref(filterQuery = ""): string {
+  return `?view=${IMPACTS_VIEW}${filterQuery ? `&${filterQuery}` : ""}`;
+}
 
 // Every key the theatre's URL state has ever written (urlState.ts). Order is irrelevant.
 const THEATRE_KEYS = ["m", "a", "d", "r", "cls", "cau", "con", "ly", "cam", "cmp"];
@@ -48,6 +60,7 @@ export function routeFor(search: string): Route {
   if (group) return { view: "group", id: group };
   // getAll: `?compare=us&compare=ca` reads as `?compare=us,ca` instead of silently losing one.
   if (p.has("compare")) return { view: "compare", ids: compareIdsFrom(p.getAll("compare").join(",")) };
+  if ((p.get("view") ?? "").trim().toLowerCase() === IMPACTS_VIEW) return { view: "impacts" };
   if (THEATRE_KEYS.some((k) => p.has(k))) return { view: "theatre" };
   return { view: "home" };
 }
