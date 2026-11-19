@@ -43,6 +43,7 @@
     {"id": "natural_hazard", "label": "Natural hazard", "malicious": false, "definition": "Weather, wildfire, flood, earthquake or another natural event."},
     {"id": "supply_shortfall", "label": "Supply shortfall", "malicious": false, "definition": "Not enough fuel, water or generation to meet demand."},
     {"id": "civil_disruption", "label": "Civil disruption", "malicious": null, "definition": "A strike, protest or unrest that interrupted the service."},
+    {"id": "authority_order", "label": "Ordered by an authority", "malicious": false, "definition": "A service restricted or shut down by order of an authority (for example an exam-period or protest-period internet shutdown). Not a malicious incident: attribution is NOT_APPLICABLE and the record says who ordered it only as a source states."},
     {"id": "unknown", "label": "Cause not established", "malicious": null, "definition": "Public sources do not establish the cause."}
   ],
   "country_cause_to_family": {
@@ -224,6 +225,7 @@
   "geographic_scopes": [
     {"id": "national", "label": "National", "definition": "The source describes the effect as nationwide."},
     {"id": "regional", "label": "Regional", "definition": "The source describes the effect as covering part of the country."},
+    {"id": "multi_region", "label": "Several regions", "definition": "The source describes the effect as covering several regions of the country."},
     {"id": "local", "label": "Local", "definition": "The source describes the effect as limited to one community or operator."},
     {"id": "multi_country", "label": "Several countries", "definition": "The source describes the effect as crossing borders."}
   ],
@@ -242,7 +244,7 @@
   ],
   "publication_policies": [
     {"id": "standard", "label": "Standard", "definition": "Published at country or first-level-region precision."},
-    {"id": "country_abstracted", "label": "Country level only", "definition": "An attack or sabotage record: the country only, with no place, operator, method, headline or later status."}
+    {"id": "country_abstracted", "label": "Country level only", "definition": "Published for the country only, with no place, operator, method, headline or later status. Every attack or sabotage record is."}
   ],
   "link_states": [
     {"id": "reachable", "label": "Reachable", "definition": "The page loaded at the last automated check."},
@@ -261,6 +263,7 @@
   ],
   "dispute_about": [
     {"id": "occurrence", "label": "Whether it happened", "definition": "Credible sources disagree about whether the disruption occurred."},
-    {"id": "effect", "label": "What the effect was", "definition": "Credible sources disagree about the effect on the service."}
+    {"id": "effect", "label": "What the effect was", "definition": "Credible sources disagree about the effect on the service."},
+    {"id": "cause", "label": "What caused it", "definition": "Credible sources disagree about the cause. Evidence confidence for the event itself is unchanged."}
   ]
 }

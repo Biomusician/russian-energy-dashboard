@@ -89,7 +89,7 @@ SOCIAL_FIELDS = ("platform", "handle", "display_name", "account_tier", "identity
 IMPACT_FIELDS = ("service", "geographic_scope", "affected", "duration_text", "source_refs")
 AFFECTED_FIELDS = ("value", "unit", "qualifier", "source_says")
 ATTRIBUTION_FIELDS = ("status", "actor", "actor_type", "basis", "as_of", "statement", "competing", "source_refs")
-COMPETING_FIELDS = ("actor", "actor_type", "basis", "statement", "source_refs")
+COMPETING_FIELDS = ("actor", "actor_type", "basis", "by", "as_of", "statement", "source_refs")
 AI_FIELDS = ("status", "relation", "role", "as_of", "statement", "source_refs")
 DISPUTE_FIELDS = ("about", "statement", "source_refs")
 REVIEW_FIELDS = ("reviewed_at", "review_status", "roles", "ai_check", "social_check", "disposition")
@@ -182,9 +182,11 @@ CONTEXT_FORBIDDEN = re.compile("|".join([
 CONTEXT_CASED = re.compile(r"\b(M/?[TV]|VLCC|ULCC|SS)\s+[A-Z][\w-]+")
 
 # Held or rejected work never appears in a published research note (process facts only).
-LOG_FORBIDDEN = re.compile(B.HELD_WORDING.pattern + r"|\breject\w*|\brefus\w*|\bnear[- ]miss\w*|\bduplicate\w*", re.I)
+# "Refused" is not on the list: a site that refused the fetcher is a process fact.
+LOG_FORBIDDEN = re.compile(B.HELD_WORDING.pattern + r"|\breject\w*|\bnear[- ]miss\w*", re.I)
 
-ID_STANDARD = re.compile(r"imp-(\d{4}(?:-\d{2}){0,2})-([a-z]{3,5})-([a-z-]+?)-([a-z0-9]+(?:-[a-z0-9]+)*)")
+# imp-<date>-<a3>-<sector>-<slug>: the sector is its vocabulary id as written ("fuel_supply").
+ID_STANDARD = re.compile(r"imp-(\d{4}(?:-\d{2}){0,2})-([a-z]{3,5})-([a-z_]+)-([a-z0-9]+(?:-[a-z0-9]+)*)")
 ADMIN1_CODE = re.compile(r"[A-Z]{2}-[A-Z0-9]{1,3}")
 _ARTICLES = ("al", "ad", "an", "ar", "as", "ash", "at", "az", "el")
 
@@ -456,7 +458,9 @@ def claim_problems(r):
         out.append("no source supports occurrence")
     elif all(_weak_for_occurrence(s) for s in occurrence):
         out.append("the only evidence of occurrence is an unverified or unofficial social post or an actor's own claim")
-    if r.get("effect_specificity") in ("quantified", "described") and not backing("effect"):
+    # An attempt had no effect on the service, so there is no effect claim to source.
+    if (r.get("record_kind") != ATTEMPT and r.get("effect_specificity") in ("quantified", "described")
+            and not backing("effect")):
         out.append(f"the effect is {r.get('effect_specificity')} but no source supports effect")
     if r.get("record_kind") == ATTEMPT and not any(EC.tier_of(s) == "direct" for s in occurrence):
         out.append("an attempt needs an official or operator statement that supports occurrence")
@@ -511,8 +515,9 @@ def vocabulary_problems(r):
     elif not WINDOW_START <= (r["date"] + "-01-01")[:10]:
         out.append(f"date {r['date']} is before the corpus window ({WINDOW_START})")
     end = r.get("date_end")
-    if end is not None and end not in ABSENCE and not _date_ok(end, ("day", "month", "year")):
-        out.append(f"date_end {end!r} is not a date, null or an absence word")
+    # A date field holds a date or null, never a word: every reader of it compares dates.
+    if end is not None and not _date_ok(end, ("day", "month", "year")):
+        out.append(f"date_end {end!r} is not a date or null")
     elif _date_ok(end, ("day", "month", "year")) and _date_ok(r.get("date"), ("day", "month", "year")) and end < r["date"][:len(end)]:
         out.append("date_end is before date")
     if r.get("geographic_precision") not in ids("geographic_precision"):
@@ -558,9 +563,14 @@ def vocabulary_problems(r):
     attempt = r.get("record_kind") == ATTEMPT
     spec, basis = r.get("effect_specificity"), r.get("inclusion_basis")
     if attempt:
-        # An attempt met no inclusion basis and had no effect: both are not applicable, not vague.
-        if basis is not None or spec is not None or r.get("civilian_service_impact") or r.get("effect") is not None:
-            out.append("an attempt has no effect, no service impact and no inclusion basis (all null)")
+        # An attempt met no inclusion basis and affected no service: both are not applicable. It may
+        # say in words what was attempted and that nothing was disrupted.
+        if basis is not None or r.get("civilian_service_impact"):
+            out.append("an attempt has no service impact and no inclusion basis (null and an empty list)")
+        if spec is not None and spec not in EC.EFFECT_SPECIFICITY:
+            out.append(f"effect_specificity {spec!r} is null or one of {EC.EFFECT_SPECIFICITY}")
+        if r.get("effect") is not None and not isinstance(r["effect"], str):
+            out.append("effect is text or null")
     else:
         if spec not in EC.EFFECT_SPECIFICITY:
             out.append(f"effect_specificity {spec!r} is not one of {EC.EFFECT_SPECIFICITY}")
@@ -568,14 +578,16 @@ def vocabulary_problems(r):
             out.append(f"inclusion_basis {basis!r} is not one of {ids('inclusion_bases')}")
         if not isinstance(r.get("effect"), str) or not r["effect"].strip():
             out.append("a disruption states its effect")
-        if NO_IMPACT_WORDING.search(f"{r.get('summary') or ''} {r.get('effect') or ''}"):
-            out.append("the text says no service was affected: an attempt is filed as a disruption")
+        # A stated effect that says only that nothing was affected is an attempt. A record that
+        # says one service was untouched while another failed is a disruption, and is not refused.
+        sentences = [s for s in re.split(r"(?<=[.!?])\s+", str(r.get("effect") or "").strip()) if s]
+        if sentences and all(NO_IMPACT_WORDING.search(s) for s in sentences):
+            out.append("the stated effect says no service was affected: an attempt is filed as a disruption")
 
     impacts = r.get("civilian_service_impact")
     if not isinstance(impacts, list):
         out.append("civilian_service_impact must be a list")
         impacts = []
-    quantified = False
     for i, c in enumerate(impacts):
         w = f"civilian_service_impact[{i}]"
         if not isinstance(c, dict):
@@ -596,7 +608,9 @@ def vocabulary_problems(r):
             continue
         out += _unknown_keys(aff, AFFECTED_FIELDS, w + ".affected")
         value = aff.get("value")
-        if value is not None:
+        # No figure: null where none applies, an absence word where the source gives none. The
+        # source's unit may still be kept ("customers", number unknown); a qualifier may not.
+        if value is not None and value not in ABSENCE:
             if not _number(value) or not math.isfinite(value) or value <= 0:
                 out.append(f"{w}: affected.value {value!r}: an absence is null, never zero; a figure is a positive number")
             if not isinstance(aff.get("unit"), str) or not aff["unit"].strip():
@@ -605,11 +619,11 @@ def vocabulary_problems(r):
                 out.append(f"{w}: a value without the source's own words (source_says)")
             if aff.get("qualifier") not in ids("affected_qualifiers"):
                 out.append(f"{w}: qualifier {aff.get('qualifier')!r} is not one of {ids('affected_qualifiers')}")
-            quantified = True
-        elif aff.get("unit") is not None or aff.get("qualifier") is not None:
-            out.append(f"{w}: a unit or qualifier with no value")
-    if quantified and spec != "quantified":
-        out.append("a figure is given for the effect but effect_specificity is not quantified")
+        else:
+            if aff.get("qualifier") is not None:
+                out.append(f"{w}: a qualifier with no value")
+            if aff.get("unit") is not None and (not isinstance(aff["unit"], str) or not aff["unit"].strip()):
+                out.append(f"{w}: unit is text or null")
 
     a = r.get("attribution")
     if not isinstance(a, dict):
@@ -628,8 +642,8 @@ def vocabulary_problems(r):
             out.append("attribution.basis and attribution.competing are lists")
         else:
             for i, c in enumerate(a.get("competing") or []):
-                if not isinstance(c, dict) or not c.get("actor") or not c.get("statement"):
-                    out.append(f"attribution.competing[{i}] needs an actor and a statement")
+                if not isinstance(c, dict) or not (c.get("actor") or c.get("statement")):
+                    out.append(f"attribution.competing[{i}] needs an actor or a statement of the competing attribution")
                 else:
                     out += _unknown_keys(c, COMPETING_FIELDS, f"attribution.competing[{i}]")
         if status not in (None, "NOT_APPLICABLE", "UNKNOWN") and not str(a.get("statement") or "").strip():
@@ -689,8 +703,7 @@ def identity_problems(r):
     out = []
     iid = str(r.get("impact_id") or "")
     a3 = str(r.get("country_a3") or "").lower()
-    sector = str(r.get("sector") or "").replace("_", "-")
-    prefix = f"imp-{r.get('date')}-{a3}-{sector}-"
+    prefix = f"imp-{r.get('date')}-{a3}-{r.get('sector')}-"
     if not ID_STANDARD.fullmatch(iid) or not iid.startswith(prefix) or len(iid) > 110:
         out.append(f"impact_id must be imp-<date>-<a3>-<sector>-<slug> (expected to start {prefix!r})")
     if not _date_ok(r.get("first_published")):
@@ -698,9 +711,9 @@ def identity_problems(r):
     if "last_revised" in r and (not _date_ok(r["last_revised"]) or (_date_ok(r.get("first_published"))
                                                                     and r["last_revised"] < r["first_published"])):
         out.append("last_revised is a date on or after first_published")
-    if r.get("episode_id") is not None and (not re.fullmatch(r"ep-[a-z0-9]+(-[a-z0-9]+)*", str(r["episode_id"]))
+    if r.get("episode_id") is not None and (not re.fullmatch(r"[a-z0-9_]+(-[a-z0-9_]+)*", str(r["episode_id"]))
                                             or not str(r.get("episode_basis") or "").strip()):
-        out.append("episode_id is null or an ep-<slug> with an episode_basis")
+        out.append("episode_id is null or a lower-case slug with an episode_basis")
     if r.get("episode_id") is None and r.get("episode_basis") is not None:
         out.append("episode_basis without an episode_id")
     return out
@@ -745,7 +758,7 @@ def _prose(r):
     parts += [a.get("statement"), a.get("actor")]
     for c in a.get("competing") or []:
         if isinstance(c, dict):
-            parts += [c.get("statement"), c.get("actor")]
+            parts += [c.get("statement"), c.get("actor"), c.get("by")]
     ai = r.get("ai_involvement") if isinstance(r.get("ai_involvement"), dict) else {}
     parts.append(ai.get("statement"))
     if isinstance(r.get("dispute"), dict):
@@ -789,22 +802,30 @@ def wording_problems(r):
     return out
 
 
+def abstracted_stem(r):
+    """What an abstracted record's id starts with: date, country, sector, and "attack" or "event"."""
+    word = "attack" if is_attack(r) else "event"
+    return f"imp-{r.get('date')}-{str(r.get('country_a3') or '').lower()}-{r.get('sector')}-{word}-"
+
+
 def abstraction_problems(r, ctx):
-    """An attack is the country's: no region, headline, method, later status, or place in an address."""
+    """An attack is the country's: no region, headline, method, later status, or place in an address.
+
+    Every kinetic or sabotage record MUST be abstracted. A reviewer MAY abstract any other record
+    (a cause not established, in a country at war): the stricter policy is always allowed, and the
+    same rules then apply. Its id says "event", because "attack" would assert a cause."""
     out = []
     attack, policy = is_attack(r), r.get("publication_policy")
     if attack and policy != ABSTRACTED:
         out.append("a kinetic or sabotage record must be country_abstracted")
     if policy != ABSTRACTED:
         return out
-    if not attack:
-        out.append("country_abstracted is the attack rule; this record's cause is not kinetic or sabotage")
     if r.get("geographic_precision") != "country" or r.get("admin1") is not None:
         out.append("an abstracted record is published for the country only")
     iid = str(r.get("impact_id") or "")
-    stem = f"imp-{r.get('date')}-{str(r.get('country_a3') or '').lower()}-{str(r.get('sector') or '').replace('_', '-')}-attack-"
+    stem = abstracted_stem(r)
     if not iid.startswith(stem) or not re.fullmatch(B.OPAQUE_TOKEN, iid[len(stem):]):
-        out.append("an abstracted record's id is imp-<date>-<a3>-<sector>-attack-<six hex digits of the import's keyed hash>")
+        out.append(f"an abstracted record's id is {stem}<six hex digits of the import's keyed hash>")
     if r.get("episode_id") is not None:
         out.append("an abstracted record is its own episode: a declared episode's name is not gated")
     if r.get("date_end") is not None:
@@ -837,7 +858,7 @@ def campaign_problems(r, ctx):
         found = names_in(" \n ".join([_prose(r), _id_words(r)] + [str(s.get("publisher") or "") for s in _sources(r)]), phrases)
         if found:
             out.append(f"the text or id names a region of a campaign-restricted system ({sid}): {found}")
-        if is_attack(r):
+        if is_attack(r) or r.get("publication_policy") == ABSTRACTED:
             for s in _sources(r):
                 path = re.sub(r"^https?://", "", str(s.get("url") or ""))
                 if names_in(B.address_words(path), phrases):
@@ -899,8 +920,7 @@ def context_problems(entries):
         for k in ("date", "as_of", "first_published"):
             if not _date_ok(e.get(k)):
                 p.append(f"{k} {e.get(k)!r} is not a date: every statement is dated and says as of when")
-        if _date_ok(e.get("date")) and _date_ok(e.get("as_of")) and e["as_of"] < e["date"]:
-            p.append("as_of is before date")
+        # `as_of` may be earlier than `date`: a report published today about last week's position.
         if _date_ok(e.get("date")) and e["date"] < WINDOW_START:
             p.append(f"date is before the corpus window ({WINDOW_START})")
         if e.get("context_type") not in ids("context_types"):
@@ -1085,7 +1105,9 @@ def serve_record(r, ctx):
         if place.get("theatre"):
             out["theatre"] = True
     end = r.get("date_end") if _date_ok(r.get("date_end"), ("day", "month", "year")) else None
-    out["evidence_confidence"] = EC.assess(r["sources"], r["date"], end, r.get("effect_specificity") or "vague",
+    # An attempt affected no service, so there is no effect to be specific about.
+    specificity = "vague" if r["record_kind"] == ATTEMPT else r["effect_specificity"]
+    out["evidence_confidence"] = EC.assess(r["sources"], r["date"], end, specificity,
                                            r.get("dispute"))
     out["attribution"]["confidence"] = EC.attribution_confidence(r["attribution"], r["sources"])
     out["origin_count"] = len({EC.origin_of(s) for s in r["sources"]} - {None})
