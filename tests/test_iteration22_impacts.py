@@ -1938,8 +1938,9 @@ def test_a_social_addendum_is_added_only_when_every_role_accepted_it_and_its_rec
     paths = make_queue(tmp_path, {"europe": [candidate(FRA), candidate(BRA), candidate(DEU)]}, extra_files={
         "social/addenda.json": {FRA: [_addendum("s9"), _addendum("s8")], BRA: [_addendum("s9")], DEU: [_addendum("s9")]}})
     edit_review(paths, "safety", "europe", DEU, verdict="reject", reason="Fails abstraction.")
-    for role in I.ROLE_ORDER:
-        verdicts = accept([f"{FRA}#s9", f"{DEU}#s9"], **({"sources_opened": ["s9"]} if role == "evidence" else {}))
+    assert I.ADDENDA_ROLES == ("attribution_source", "safety"), "the social check and safety, not the evidence role"
+    for role in I.ADDENDA_ROLES:
+        verdicts = accept([f"{FRA}#s9", f"{DEU}#s9"], **({"sources_opened": ["s9"]} if role == "attribution_source" else {}))
         verdicts[f"{FRA}#s8"] = {"verdict": "reject" if role == "safety" else "accept", "reason": "Not the official account."}
         path = review_file(paths, role, "social")
         path.write_text(json.dumps({"lane": "social", "role": role, "reviewed_at": "2026-11-19", "verdicts": verdicts}), encoding="utf-8")

@@ -348,6 +348,11 @@ def reviewed_addenda(sources, review_id, taken, reviews, moved=False):
         if why is None:
             fixed, problems = apply_reviews({"sources": [src]}, {role: {**v, "set": {}} for role, v in verdicts.items()})
             src = fixed["sources"][0]
+            # Opened: the social check opens every post it accepts and may list what it opened;
+            # where it lists nothing, the lane's own record of opening the post stands.
+            listed = (verdicts.get("attribution_source") or {}).get("sources_opened")
+            if isinstance(listed, list):
+                src["opened"] = src["ref"] in listed
             for role in ADDENDA_ROLES:
                 for path, value in (verdicts[role].get("set") or {}).items():
                     try:
