@@ -687,7 +687,8 @@ state may be null until it is fetched.
   comparison, categories[], order, note, global[], systems[], unchanged[]}`. `comparison` is
   `{previous_as_of, current_as_of, mode, basis, note?}`; the previous build is the last committed
   production build dated BEFORE this one (`lineage.previous_dated_build`), so a same-day rebuild
-  produces the same file. `categories` is the closed list of ten causes. A change is
+  produces the same file. `categories` is the closed list of causes (ten, plus six for the impact
+  layer since iteration 22; see below). A change is
   `{category, notes[], items?, more?, event_dates?, all_predate_previous_build?, aggregated?}`; an
   item is `{key, date, date_precision, region, class, fields?, recovery_kind?, evidence_date?}`,
   with a row key (`<system>-change-NN`) and never an event id, effect, cause or facility. No count
@@ -696,3 +697,26 @@ state may be null until it is fetched.
   lists only systems that changed; the theatre row adds `index {label, before, after, separable}`
   or `unavailable`. `unchanged[]` is `{system_id, name}`. A non-current build writes
   `available: false`, never an empty list.
+- **Iteration 22, record level.** The closed list is now sixteen causes (six for the impact layer:
+  `impact_record_added`, `evidence_strengthened`, `evidence_weakened`, `attribution_updated`,
+  `ai_status_updated`, `regional_context_updated`). An item may carry `record_id`, the record's
+  public event id, **only** in a system outside the campaign rule and never on a withdrawn record;
+  the panel links it to `?sys=<id>#ev-<record id>`. Under the rule an item is exactly as before. A
+  change may carry `link`: `{system_id, tab}` (`research` or `method`, a tab of the country page,
+  opened by `#tab-<name>`) or `{anchor}` (a section of the home page); never a record.
+  `impact_layer` is `null` when the build publishes no impact layer, `[]` when it does and nothing
+  in it changed, else a list of changes derived from `global/impacts.json` and
+  `global/regional_context.json` in the previous and the current build. An impact item is
+  `{key, impact_id, date, date_precision, country, sector, timing?, first_published?, from?, to?}`;
+  `timing` is `backfill` (event more than 30 days older than `first_published`), `new_event` or
+  `unknown`. A layer with no predecessor is one change with `first_release: true` and one sentence,
+  never a list of its records. A withdrawn impact record is one `aggregated` sentence: no id, no
+  count, nothing about candidates.
+- **Evidence confidence on country records (iteration 22).** Each event in
+  `systems/<id>/events.json` carries `evidence_confidence`: `{category, label, score, disputed,
+  components {directness {tier, points}, origins {count, points}, effect {specificity, points},
+  opened {points}, contemporaneous {points}}, reasons[]}`, computed by the build from the served
+  record alone (`pipeline/evidence_confidence.py`, `docs/EVIDENCE_CONFIDENCE_V2.md`). `system.json`
+  carries `evidence_confidence_summary`: `{by_category, method_version, statement, note}`, inside
+  the country only. Neither appears in the manifest or any cross-country file, and neither reaches
+  the theatre's index.

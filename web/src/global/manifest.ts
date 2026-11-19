@@ -179,6 +179,10 @@ export interface CountrySystem {
   episode_bases: Record<string, string>;
   /** Citations of the published events, described inside this country only (iteration 17). */
   source_health?: SourceHealth;
+  /** How this country's published records fall across the evidence categories (iteration 22).
+   *  Inside the country only: it reflects how the country is reported, and is never compared. */
+  evidence_confidence_summary?: { by_category: Record<EvidenceConfidence["category"], number>;
+                                  method_version: string; statement: string; note: string };
   research_gaps: string[];
   audit_docs: string[];
   record_reviewed: string | null;
@@ -431,6 +435,29 @@ export interface CountryEvent {
   hazard_name: string | null;
   /** Set when an active campaign's publication rule withholds part of this record. */
   publication: { rule: string; campaign_id: string; withheld: string[]; note: string } | null;
+  /** Evidence Confidence v2 (iteration 22): the quality of this record's public evidence, computed
+   *  by the build from the citations shown here. Absent in a payload built before it. */
+  evidence_confidence?: EvidenceConfidence;
+}
+
+/** How strong the public evidence is that a record happened and that its reported effect is
+ *  supported (pipeline/evidence_confidence.py). An ordinal category with the components behind it.
+ *  Not a probability, not severity, not infrastructure importance. */
+export interface EvidenceConfidence {
+  category: "HIGH" | "MODERATE" | "LIMITED" | "PRELIMINARY" | "DISPUTED";
+  label: string;
+  /** 0–100, ordinal: the sum of the component points. Never shown as a percentage. */
+  score: number;
+  disputed: boolean;
+  components: {
+    directness: { tier: "direct" | "independent" | "secondary" | "researcher_social" | "unverified" | null; points: number };
+    origins: { count: number; points: number };
+    effect: { specificity: "quantified" | "described" | "vague" | null; points: number };
+    opened: { points: number };
+    contemporaneous: { points: number };
+  };
+  /** Plain sentences answering "why this category?", in the order the components are listed. */
+  reasons: string[];
 }
 
 export interface CountryBundle {
@@ -881,7 +908,7 @@ export function labelFor(map: Record<string, string>, key: string): string {
 
 // ---- what's new in the data (iteration 21) -----------------------------------------------------
 
-/** One record as the panel shows it: never an id, an effect, a cause or a facility. */
+/** One record as the panel shows it: never an effect, a cause or a facility. */
 export interface WhatsNewItem {
   key: string;
   date: string | null;
@@ -891,6 +918,10 @@ export interface WhatsNewItem {
   fields?: string[];
   recovery_kind?: string;
   evidence_date?: string | null;
+  /** The record's public id, so the panel can link to it on the country page (iteration 22).
+   *  Present only outside the campaign rule, and never on a withdrawn record: under the rule an
+   *  id may name the facility, and `key` stands in for it. */
+  record_id?: string;
 }
 
 export interface WhatsNewChange {
@@ -902,6 +933,37 @@ export interface WhatsNewChange {
   all_predate_previous_build?: boolean;
   /** A campaign system's withdrawn or held records: one sentence, nothing countable. */
   aggregated?: boolean;
+  /** Where the page explains this kind of change: a tab of the country's page, or a section of
+   *  the home page. Never a record. */
+  link?: { system_id?: string; tab?: string; anchor?: string };
+}
+
+/** One impact record in the panel (iteration 22): its public id, date, country and sector. */
+export interface WhatsNewImpactItem {
+  key: string;
+  impact_id: string | null;
+  date: string | null;
+  date_precision: string;
+  country: string | null;
+  sector: string | null;
+  /** For a newly published record: found by research after the fact, a new event, or not established. */
+  timing?: "backfill" | "new_event" | "unknown";
+  first_published?: string | null;
+  /** For a changed evidence category, attribution status or AI status. */
+  from?: string;
+  to?: string;
+}
+
+export interface WhatsNewImpactChange {
+  category: string;
+  notes: string[];
+  items?: WhatsNewImpactItem[];
+  more?: boolean;
+  aggregated?: boolean;
+  /** The layer's first publication: one sentence, never a list of every record. */
+  first_release?: boolean;
+  all_backfill?: boolean;
+  all_new_events?: boolean;
 }
 
 export interface WhatsNewSystem {
@@ -923,6 +985,9 @@ export interface WhatsNew {
   order: string;
   note: string;
   global: WhatsNewChange[];
+  /** null (or absent, in a file from before iteration 22) when the build publishes no impact
+   *  layer; an empty list when it does and nothing in it changed. */
+  impact_layer?: WhatsNewImpactChange[] | null;
   systems: WhatsNewSystem[];
   unchanged: { system_id: string; name: string }[];
 }
@@ -944,8 +1009,14 @@ export function whatsNewShapeProblems(d: unknown): string[] {
   const change = (c: unknown) => obj(c) && typeof c.category === "string" && known.has(c.category) && strs(c.notes)
     && (c.items === undefined || (Array.isArray(c.items) && c.items.every((it) => obj(it)
         && typeof it.key === "string" && typeof it.region === "string" && typeof it.class === "string"
-        && (it.fields === undefined || strs(it.fields)))))
-    && (c.event_dates === undefined || c.event_dates === null || strs(c.event_dates));
+        && (it.fields === undefined || strs(it.fields))
+        && (it.record_id === undefined || typeof it.record_id === "string"))))
+    && (c.event_dates === undefined || c.event_dates === null || strs(c.event_dates))
+    && (c.link === undefined || obj(c.link));
+  const impactChange = (c: unknown) => obj(c) && typeof c.category === "string" && known.has(c.category) && strs(c.notes)
+    && (c.items === undefined || (Array.isArray(c.items) && c.items.every((it) => obj(it) && typeof it.key === "string")));
+  if (d.impact_layer !== undefined && d.impact_layer !== null
+      && !(Array.isArray(d.impact_layer) && d.impact_layer.every(impactChange))) out.push("impact_layer is malformed");
   if (!Array.isArray(d.global) || !d.global.every(change)) out.push("global is malformed");
   if (!Array.isArray(d.systems) || !d.systems.every((s) => obj(s) && typeof s.system_id === "string"
       && typeof s.name === "string" && Array.isArray(s.changes) && s.changes.every(change))) {

@@ -253,8 +253,10 @@ def test_a_threshold_version_change_is_one_rule_change_never_a_country_improving
     for v in curr["systems"].values():
         v["system"]["inclusion_threshold"] = {"version": "2026-12-01.1"}
     d = W.derive(prev, curr, QUIET, CMP)
+    # Iteration 22: a rule change also says where the page explains how this works.
     assert d["global"] == [{"category": "methodology", "notes": [
-        "The inclusion threshold for country records was revised (version 2026-12-01.1)."]}]
+        "The inclusion threshold for country records was revised (version 2026-12-01.1)."],
+        "link": {"anchor": "why-head"}}]
     assert d["systems"] == []
     assert not re.search(r"improv|better|worse|safer", json.dumps([d["global"], d["systems"]]).lower())
 
@@ -308,6 +310,9 @@ def test_every_ledger_category_has_a_panel_category():
     assert set(W.THEATRE_NOTE) == set(diff_builds.CATEGORIES) - {"incident_added", "incident_removed"}
     assert W.CATEGORY_IDS == ("records_added", "records_withdrawn", "research_coverage", "link_health",
                               "methodology", "data_correction", "national_context", "recovery_evidence",
+                              # Iteration 22: the impact layer's own kinds of change.
+                              "impact_record_added", "evidence_strengthened", "evidence_weakened",
+                              "attribution_updated", "ai_status_updated", "regional_context_updated",
                               "decay_only", "build_only")
 
 
@@ -413,14 +418,26 @@ def test_the_served_panel_holds_the_same_refusals():
     names = {s["id"]: s["name"] for s in systems.SYSTEMS}
     assert all(r["name"] == names[r["system_id"]] for r in d["systems"] + d["unchanged"])
     checked = 0
+    # Iteration 22: outside the campaign rule a row may carry its record's public id, so the panel
+    # can link to it. Under the rule nothing changes: no id, in any row.
+    served = {sid: {"system": json.loads((WEB / systems.root(sid) / "system.json").read_text(encoding="utf-8")),
+                    "events": json.loads((WEB / systems.root(sid) / "events.json").read_text(encoding="utf-8"))}
+              for sid in systems.COUNTRY_SYSTEMS}
+    under_rule = {sid for sid, side in served.items() if W.restricted(None, side)}
+    assert under_rule, "no system is under the campaign rule"
     for r in d["systems"]:
         for c in r["changes"]:
             checked += 1
             assert c["category"] in W.CATEGORY_IDS
             for it in c.get("items") or []:
                 assert set(it) <= {"date", "date_precision", "region", "class", "key", "fields",
-                                   "recovery_kind", "evidence_date"}, it
+                                   "recovery_kind", "evidence_date", "record_id"}, it
                 assert re.fullmatch(rf"{r['system_id']}-change-\d\d", it["key"])
+                if "record_id" in it:
+                    assert r["system_id"] not in under_rule and r["system_id"] != systems.THEATRE, it
+                    live = {e["event_id"]: e for e in served[r["system_id"]]["events"]["events"]}
+                    assert it["record_id"] in live and not live[it["record_id"]].get("publication"), it
+                    assert c["category"] != "records_withdrawn", "a withdrawn record has no page to link to"
             if r["system_id"] in GULF:
                 assert c["category"] != "recovery_evidence"
                 if c["category"] == "records_withdrawn":
@@ -429,10 +446,19 @@ def test_the_served_panel_holds_the_same_refusals():
                     assert "fields" not in it
     if d["available"]:
         assert checked > 0 or d["global"]
-    # No link target is published: the page links only to the country (?sys=<id>), never to a record.
-    assert not re.search(r'"(href|url|link|anchor|event_id|episode_id)"\s*:', json.dumps(d))
-    # Every event id that names a facility stays off the panel.
-    for sid in systems.COUNTRY_SYSTEMS:
-        ev = json.loads((WEB / systems.root(sid) / "events.json").read_text(encoding="utf-8"))["events"]
-        for e in ev:
-            assert e["event_id"] not in json.dumps(d), e["event_id"]
+    # No address is published: a link is a country tab or a section of the home page, and a record
+    # is named only by `record_id` (checked above), never by a URL, an event_id or an episode id.
+    assert not re.search(r'"(href|url|event_id|episode_id)"\s*:', json.dumps(d))
+    for r in d["systems"]:
+        for c in r["changes"]:
+            if "link" in c:
+                assert c["link"] == {"system_id": r["system_id"], "tab": W.CHANGE_TAB[c["category"]]}
+    # Every event id of a system under the campaign rule stays off the panel, wherever it might
+    # appear; elsewhere an id appears only as a row's record_id.
+    text = json.dumps(d)
+    without_ids = json.dumps({**d, "systems": [
+        {**r, "changes": [{**c, "items": [{k: v for k, v in it.items() if k != "record_id"} for it in c.get("items") or []]}
+                          for c in r["changes"]]} for r in d["systems"]]})
+    for sid, side in served.items():
+        for e in side["events"]["events"]:
+            assert e["event_id"] not in (text if sid in under_rule else without_ids), e["event_id"]
