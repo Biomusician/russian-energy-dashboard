@@ -123,7 +123,9 @@ describe("overview: what is published", () => {
       const o = countryOverview(s, NOT_LOADED, null);
       expect(o.published.startsWith(`${s.event_summary.recorded_events} reviewed energy-disruption record`)).toBe(true);
       expect(overviewText(o).join(" ")).not.toContain(NO_RECORD_IS_NOT_NO_DISRUPTION);
-      expect(o.publishedNote.includes("attack-campaign safeguards")).toBe(isCampaignRestricted(s));
+      // The campaign limits are said once, in the part about what is not published.
+      expect(o.withheld.join(" ").includes("While attacks on energy facilities are reported")).toBe(isCampaignRestricted(s));
+      expect(o.publishedNote).toBe("What was reported and found, not everything that happened.");
     }
   });
 });
@@ -494,8 +496,8 @@ describe("the impact tab's model", () => {
     expect(s.more).toContain(String(records.length - EXPORT_ROW_LIMIT));
     // No statement served: the fixed sentence stands in. No record: said as the corpus's state.
     expect(impactExportSummary("Iran", records, [], many).lines.join(" ")).toContain(CONFIDENCE_IS_NOT);
-    const none = impactExportSummary("Oman", [], [], many);
-    expect(none.lines.join(" ")).toContain("No reviewed impact record is published for Oman yet");
+    const none = impactExportSummary("Canada", [], [], many);
+    expect(none.lines.join(" ")).toContain("No reviewed impact record is published for Canada yet");
     expect(none.rows).toEqual([]);
     expect(none.lines.join(" ")).not.toMatch(/\b0\b/);
   });

@@ -8,13 +8,16 @@
   border: 1px solid var(--line); border-left: 3px solid var(--accent-dim);
   background: var(--bg-panel); border-radius: var(--radius);
 }
-.country-overview h2 { font-size: 14px; margin: 0 0 6px; }
+/* Line heights are whole pixels on purpose. The map below takes its place from this block's
+   height, and a fractional height (1.4 x 11.5px) put the map on a half pixel: its captured image
+   came out one pixel short of its recorded golden. */
+.country-overview h2 { font-size: 14px; line-height: 20px; margin: 0 0 6px; }
 .overview-parts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr); gap: 6px 24px; }
-.overview-part h3.eyebrow { margin: 0 0 2px; }
-.overview-part p { margin: 0; line-height: 1.4; }
+.overview-part h3.eyebrow { margin: 0 0 2px; line-height: 14px; }
+.overview-part p { margin: 0; line-height: 16px; }
 .overview-lead { font-weight: 600; color: var(--text); }
 .overview-part ul.overview-links { list-style: none; margin: 0; padding: 0; }
-.overview-links li { margin: 0; line-height: 1.4; }
+.overview-links li { margin: 0; line-height: 16px; }
 .overview-links a { font-weight: 600; }
 .overview-links a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .overview-link-line { color: var(--text-dim); }
@@ -28,6 +31,14 @@
      short enough that the map still starts in the first screen (iteration 20's rule). */
   .country-main > .country-overview { order: -2; margin: 8px 16px 0; padding: 7px 10px 8px; }
   .country-overview h2 { margin-bottom: 4px; }
+  /* The first and last parts run their label into the sentence: two lines saved, and the longest
+     country name still leaves the map in the first screen. The links keep their label above. */
+  .overview-published h3.eyebrow, .overview-withheld h3.eyebrow { display: inline; margin: 0 6px 0 0; line-height: 16px; }
+  .overview-published p, .overview-withheld p { display: inline; }
+  /* With inline children the part's own font sets each line's height: without this every line is
+     the body's 19 px, not the sentence's 16. */
+  .overview-published, .overview-withheld { font-size: 11.5px; line-height: 16px; }
+  .overview-parts { gap: 4px; }
 }
 
 /* The side panel takes focus when an overview link opens a tab; it is not a control. */

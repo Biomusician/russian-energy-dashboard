@@ -114,28 +114,28 @@ export function countryOverview(sys: OverviewSystem, impacts: ImpactPresence, re
     publishedNote = `Why: ${listOf(why)}. ${NO_RECORD_IS_NOT_NO_DISRUPTION}`;
   } else {
     published = `${n} reviewed energy-disruption ${plural(n, "record is", "records are")} published for ${name}.`;
-    publishedNote = restricted
-      ? "What was reported and found, not everything that happened. Attack records are under attack-campaign safeguards."
-      : "What was reported and found, not everything that happened.";
+    // The safeguards are named once, under "Not published, and why": the block has to stay short.
+    publishedNote = "What was reported and found, not everything that happened.";
   }
 
   const known: OverviewLink[] = [{ tab: "impacts", label: TAB_LABEL.impacts, line: impactLine(sys.name, impacts) }];
-  if (regional) known.push({ tab: "regional", label: TAB_LABEL.regional, line: `regional statements in aggregate; nothing about a facility in ${name}.` });
-  known.push({ tab: "context", label: TAB_LABEL.context, line: "the size of the energy system; context, never disruption." });
+  if (regional) known.push({ tab: "regional", label: TAB_LABEL.regional, line: "regional statements; no facility named." });
+  known.push({ tab: "context", label: TAB_LABEL.context, line: "system size, never disruption." });
   known.push({ tab: "research", label: TAB_LABEL.research, line: "what was and was not searched." });
 
   const withheld: string[] = [];
   if (restricted) {
     // Identical whatever the research log holds: beside a short list of published attack records, a
     // count of what is in review, or even the fact that something is, hints at the campaign's scale.
-    const items = ["an attacked facility's later status"];
-    if (attacksWhole) items.push("where in the country an attack happened");
+    const items = attacksWhole
+      ? ["where in the country an attack happened", "the facility's later status"]
+      : ["an attacked facility's later status"];
     items.push("whether, or how many, records are in review");
-    withheld.push(`While attacks on energy facilities are being reported: ${listOf(items)}.`);
+    withheld.push(`While attacks on energy facilities are reported: ${listOf(items)}.`);
   } else {
     withheld.push("Records still in review, until they pass review.");
   }
-  withheld.push("Never, for any record: coordinates, or anything finer than a first-level region.");
+  withheld.push("Never: coordinates, or anything finer than a region.");
 
   return { published, publishedNote, known, withheld };
 }
