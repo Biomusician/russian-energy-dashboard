@@ -42,7 +42,9 @@
       "context_type": "aggregate_supply",
       "claim": "SYNTHETIC FIXTURE. The Example Energy Agency estimated that crude exports from the Gulf were lower than a year earlier.",
       "metric": {
-        "value": 2.5,
+        "value": 2,
+        "value_upper": 3,
+        "qualifier": "range",
         "unit": "mb/d",
         "basis": "estimated fall in crude exports from the Gulf, year on year, in the source's words"
       },
