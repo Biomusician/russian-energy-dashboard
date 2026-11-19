@@ -66,9 +66,42 @@ export function groupEntries(m: Manifest): SearchEntry[] {
   }));
 }
 
+/** The Impact Atlas and its preset views (iteration 22). Links only: no impact record is loaded
+ *  for search, and none is fetched until the reader opens the atlas. Each address is the one the
+ *  atlas's own preset chip writes (a test holds the two together). */
+export const IMPACT_ENTRIES: SearchEntry[] = [
+  makeEntry({ key: "view:impacts", kind: "view", label: "Impact atlas", sub: "Reviewed impact records across countries · no score, not a census",
+              terms: ["Impact atlas", "impacts", "impact records", "civilian services", "service disruptions", "atlas"],
+              action: { type: "href", href: "?view=impacts" } }),
+  makeEntry({ key: "view:impacts:cyber", kind: "view", label: "Cyber disruptions", sub: "Impact atlas, filtered to a reported malicious cyber cause",
+              terms: ["Cyber disruptions", "cyber", "cyberattack", "cyber attack", "ransomware", "hacking"],
+              action: { type: "href", href: "?view=impacts&f.cause=cyber" } }),
+  makeEntry({ key: "view:impacts:ai", kind: "view", label: "AI involvement: records", sub: "Impact atlas, filtered to records where a source ties AI to the incident",
+              terms: ["AI involvement records", "AI involved", "artificial intelligence", "AI-assisted", "AI incidents"],
+              action: { type: "href", href: "?view=impacts&f.ai=ASSESSED,CLAIMED,CONFIRMED,SUSPECTED" } }),
+  makeEntry({ key: "view:impacts:attributed", kind: "view", label: "Attributed cyber disruptions", sub: "Impact atlas, filtered to cyber records with an assessed or formal attribution",
+              terms: ["Attributed cyber", "attribution records", "who was responsible"],
+              action: { type: "href", href: "?view=impacts&f.attr=ASSESSED,ATTRIBUTED&f.cause=cyber" } }),
+];
+
+/** The regional overview that carries the dated Gulf and Strait of Hormuz context statements. */
+const REGIONAL_CONTEXT_SLUG = "gulf";
+
+/** "Gulf and Hormuz context": offered only when the manifest has that regional overview, and it
+ *  opens the overview, which shows the context timeline. Aggregate statements only. */
+export function regionalContextEntries(m: Manifest): SearchEntry[] {
+  return Object.entries(m.groups ?? {}).filter(([, g]) => g.slug === REGIONAL_CONTEXT_SLUG && g.context).map(([id, g]) => makeEntry({
+    key: `context:${id}`, kind: "group", label: "Gulf and Hormuz context",
+    sub: `Dated, sourced, aggregate statements · on the ${g.label} overview`,
+    terms: ["Gulf and Hormuz context", "Hormuz", "Strait of Hormuz", "Hormuz context", "regional context"],
+    action: { type: "group", slug: g.slug as string },
+  }));
+}
+
 export const VIEW_ENTRIES: SearchEntry[] = [
   makeEntry({ key: "view:compare", kind: "view", label: "Compare systems", sub: "Side by side, each on its own terms",
               terms: ["Compare systems", "compare", "side by side"], action: { type: "href", href: "?compare=" } }),
+  ...IMPACT_ENTRIES,
   makeEntry({ key: "view:home", kind: "view", label: "Home", sub: "Overview of every monitored system",
               terms: ["Home", "overview", "all systems"], action: { type: "system", id: "" } }),
 ];

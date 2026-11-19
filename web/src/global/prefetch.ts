@@ -44,6 +44,11 @@ export function prefetchRoute(route: Route): void {
     }));
   } else if (route.view === "theatre") {
     prefetchBundle();
+  } else if (route.view === "impacts") {
+    // The corpus starts downloading beside the atlas's code. A dynamic import, so the loader is in
+    // no other route's bundle, and this is the ONLY branch that asks for the impact files: the
+    // home page fetches none of them.
+    quiet(import("./impacts/load").then((m) => m.loadImpacts()));
   }
 }
 

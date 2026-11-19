@@ -34,6 +34,9 @@ export interface ChoiceFilter<R> {
   /** The vocabulary on this page, in the order to list it, with labels from served data. */
   options: readonly FilterOption[];
   values: (record: R) => readonly string[];
+  /** False where a number beside each option would read as a comparison between the options
+   *  (countries in the impact atlas). The bar then lists the options with no count. */
+  counts?: boolean;
 }
 
 /** A date range. A record with an end date matches when any part of its span is in the range. */

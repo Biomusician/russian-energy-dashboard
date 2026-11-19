@@ -9,7 +9,7 @@ import {
   type DataQuality, type Manifest, type ManifestSystem,
 } from "./manifest";
 import { loadContext, type EnergyContext } from "./context";
-import { navigate, navigateGroup, navigateTo } from "./router";
+import { impactsHref, navigate, navigateGroup, navigateTo } from "./router";
 import { prefetchOn } from "./prefetch";
 import { PanelBoundary } from "../components/ViewBoundary";
 import { dated, recordLine } from "./homeModel";
@@ -106,6 +106,8 @@ export default function GlobalHome() {
               ? <a className="home-action" href={`?group=${gulf.slug}`} onClick={(e) => { e.preventDefault(); navigateGroup(gulf.slug as string); }}>Explore the {gulf.label} →</a>
               : <span className="home-action disabled">Regional overview loading…</span>}
             <a className="home-action" href="?compare=" onClick={(e) => { e.preventDefault(); navigateTo("?compare="); }}>Compare systems →</a>
+            {/* A link only: the impact corpus is fetched when the atlas opens, never by this page. */}
+            <a className="home-action" href={impactsHref()} onClick={(e) => { e.preventDefault(); navigateTo(impactsHref()); }}>Impact atlas →</a>
             <a className="home-action primary" href="?sys=ru" onClick={(e) => { e.preventDefault(); navigate("ru"); }}>Russia, Belarus &amp; Crimea (indexed) →</a>
           </nav>
           {manifest && <p className="comparability compact" role="note">{manifest.comparability_statement}</p>}
