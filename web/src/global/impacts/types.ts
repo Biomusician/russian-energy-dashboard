@@ -55,15 +55,23 @@ export interface ImpactSource {
 }
 
 /** Evidence Confidence v2 (§8.1): a category, an ordinal score that is not a probability, and the
- *  components that produced it. The same shape on impact records and on country events. */
+ *  components that produced it. The same shape on impact records and on country events.
+ *
+ *  `category` is null where the evidence was NOT ASSESSED (for example a record cited only through
+ *  a discovery aid, with no primary source attached yet); `reason` then says why. Not assessed is
+ *  its own state: it is not the lowest category and it is not zero. */
 export interface EvidenceConfidence {
-  category: string;
-  label: string;
-  score: number;
+  category: string | null;
+  label: string | null;
+  score: number | null;
+  /** Why there is no category, where there is none. */
+  reason?: string | null;
   disputed: boolean;
   components: {
     directness: { tier: string | null; points: number };
-    origins: { count: number; points: number };
+    /** `basis` says what was counted: "reviewed" (originating statements established on review)
+     *  or "publishers" (distinct publishers cited; whether they relay one statement was not reviewed). */
+    origins: { count: number; points: number; basis?: string | null };
     effect: { specificity: string | null; points: number };
     opened: { points: number };
     contemporaneous: { points: number };
@@ -274,6 +282,8 @@ export interface ConfidenceComponent {
 /** The method of §8 as data: read by the confidence disclosure and the glossary. */
 export interface ConfidenceMethod {
   version: string;
+  /** Present while the method is provisional, e.g. "provisional: thresholds not calibrated". */
+  status?: string | null;
   /** Confidence is evidence quality: not a probability, not severity, not importance. */
   statement: string;
   questions: { id: string; label: string; asks: string }[];

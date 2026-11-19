@@ -7,7 +7,7 @@
 .rf-menu { position: relative; }
 .rf-toggle.is-on { border-color: var(--accent-dim); color: var(--text); }
 .rf-summary { color: var(--accent); }
-.rf-toggle::after { content: " BE"; color: var(--text-faint); }
+.rf-toggle::after { content: " \25BE"; color: var(--text-faint); }
 .rf-panel {
   position: absolute; z-index: 30; top: calc(100% + 4px); left: 0; min-width: 240px; max-width: min(360px, 90vw);
   max-height: 60vh; overflow: auto; padding: 8px 10px;

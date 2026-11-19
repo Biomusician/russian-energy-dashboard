@@ -18,6 +18,15 @@ export const CONFIDENCE_METHOD_PATH = "global/evidence_confidence.json";
 const isObj = (x: unknown): x is Record<string, unknown> => typeof x === "object" && x !== null && !Array.isArray(x);
 const isStr = (x: unknown): x is string => typeof x === "string";
 
+/** An assessed confidence has a category, its components and its reasons. A NOT ASSESSED one has
+ *  a null category and must say why: a null with no reason is refused, so it can never be shown
+ *  as an empty chip. */
+export function confidenceMalformed(c: unknown): boolean {
+  if (!isObj(c)) return true;
+  if (c.category == null) return !isStr(c.reason) || c.reason.trim() === "";
+  return !isStr(c.category) || !isObj(c.components) || !Array.isArray(c.reasons);
+}
+
 /** What the components read without checking. One line per kind of fault, not per record. */
 function recordProblems(r: unknown): string | null {
   if (!isObj(r)) return "a record is not an object";
@@ -27,8 +36,7 @@ function recordProblems(r: unknown): string | null {
   if (!isObj(r.ai_involvement) || !isStr(r.ai_involvement.status)) return "a record has no AI-involvement status";
   if (!Array.isArray(r.sources) || r.sources.some((s) => !isObj(s) || !isStr(s.url) || !Array.isArray(s.supports))) return "a record's sources are malformed";
   if (!Array.isArray(r.civilian_service_impact)) return "a record's service impacts are not a list";
-  if (r.evidence_confidence != null && (!isObj(r.evidence_confidence) || !isStr(r.evidence_confidence.category)
-      || !isObj(r.evidence_confidence.components) || !Array.isArray(r.evidence_confidence.reasons))) return "a record's evidence confidence is malformed";
+  if (r.evidence_confidence != null && confidenceMalformed(r.evidence_confidence)) return "a record's evidence confidence is malformed";
   return null;
 }
 

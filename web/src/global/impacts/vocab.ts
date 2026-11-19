@@ -77,7 +77,8 @@ export function labelOf(name: string, id: string | number | null | undefined): s
  *  an acronym ("LNG", "AI-assisted") is left alone. */
 export function lowerLabel(name: string, id: string | number | null | undefined): string {
   const s = labelOf(name, id);
-  return /^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s;
+  // "A government" and "Operator" are lowered; "LNG", "AI-assisted" and "IT outage" are not.
+  return /^[A-Z]([a-z]|\s)/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s;
 }
 
 export function definitionOf(name: string, id: string | number | null | undefined): string | null {

@@ -203,7 +203,7 @@ export interface ImpactRecordForCsv {
     as_of?: string | null; statement?: string | null; confidence?: string | { category?: string } | null;
   } | null;
   ai_involvement?: { status?: string; relation?: string | null; role?: string | null; as_of?: string | null } | null;
-  evidence_confidence?: { category?: string; label?: string; score?: number } | null;
+  evidence_confidence?: { category?: string | null; label?: string | null; score?: number | null } | null;
   origin_count?: number | null;
   sources?: (Citation & { title_original?: string | null })[] | null;
   publication_policy?: string;

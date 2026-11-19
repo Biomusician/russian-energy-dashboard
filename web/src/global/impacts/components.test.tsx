@@ -8,10 +8,13 @@ import { ConfidenceBreakdown, ConfidenceChip } from "./ConfidenceChip";
 import { CONTEXT_CAVEAT, ContextTimeline } from "./ContextTimeline";
 import { ImpactCard } from "./ImpactCard";
 import { ImpactInspector } from "./ImpactInspector";
-import { confidenceMethodProblems, impactsFor, impactsProblems, regionalContextProblems } from "./load";
-import { attempts, attributionConfidenceLabel, claimSupport, disruptions, isCyber, isHistoricalAddition, isItFailure, notEstablished, placeText, serviceLine } from "./model";
+import { confidenceMalformed, confidenceMethodProblems, impactsFor, impactsProblems, regionalContextProblems } from "./load";
+import {
+  NOT_ASSESSED, attempts, attributionConfidenceLabel, claimSupport, confidenceBucket, confidenceLabel, disruptions, isCyber,
+  isHistoricalAddition, isItFailure, notEstablished, originsText, placeText, serviceLine,
+} from "./model";
 import { forgetVocabularies, labelOf, registerMethod, registerVocabularies } from "./vocab";
-import type { ConfidenceMethod, ImpactRecord, ImpactsPayload, RegionalContext } from "./types";
+import type { ConfidenceMethod, EvidenceConfidence, ImpactRecord, ImpactsPayload, RegionalContext } from "./types";
 
 /** The shared impact components against the served shapes (iteration 22).
  *
@@ -32,6 +35,12 @@ const one = (pick: (r: ImpactRecord) => boolean): ImpactRecord => {
   if (!r) throw new Error("the fixture has no such record");
   return r;
 };
+
+/** Evidence that was not assessed, as the build serves it: a null category and the reason. */
+const NOT_ASSESSED_VALUE = {
+  category: null, label: null, score: null, disputed: false,
+  reason: "Cited through a discovery aid only; a primary source is not yet attached.",
+} as unknown as EvidenceConfidence;
 
 beforeAll(() => {
   forgetVocabularies();
@@ -85,10 +94,84 @@ describe("ConfidenceChip", () => {
     expect(out).toContain("Why?");
   });
 
-  it("an absent confidence is said as absent, never as the lowest category", () => {
+  it("an absent confidence is 'Not assessed', never the lowest category and never an empty chip", () => {
     const out = render(<ConfidenceChip value={null} />);
-    expect(out).toContain("not computed");
+    expect(out).toContain("Evidence confidence: Not assessed");
+    expect(out).toContain("No evidence confidence is published for this record");
     expect(out).not.toMatch(/Preliminary|Limited/);
+  });
+
+  it("a null category with a reason is a neutral 'Not assessed' chip that shows the served reason", () => {
+    const out = render(<ConfidenceChip value={NOT_ASSESSED_VALUE} />);
+    expect(out).toContain("Evidence confidence: Not assessed");
+    expect(out).toContain(NOT_ASSESSED_VALUE.reason!);
+    expect(out).not.toMatch(/Preliminary|Limited|Why\?/);
+    expect(renderToStaticMarkup(<ConfidenceChip value={NOT_ASSESSED_VALUE} />)).not.toMatch(/conf-(preliminary|limited|high|moderate)/);
+    expect(confidenceLabel(NOT_ASSESSED_VALUE)).toBe("Not assessed");
+    expect(confidenceBucket(NOT_ASSESSED_VALUE)).toBe(NOT_ASSESSED);
+    expect(confidenceBucket(null)).toBe(NOT_ASSESSED);
+  });
+
+  it("a null category must come with its reason: a bare null is refused at load", () => {
+    expect(confidenceMalformed(NOT_ASSESSED_VALUE)).toBe(false);
+    expect(confidenceMalformed({ ...NOT_ASSESSED_VALUE, reason: null })).toBe(true);
+    expect(confidenceMalformed({ ...NOT_ASSESSED_VALUE, reason: "  " })).toBe(true);
+    const rec = { ...payload.records[0], evidence_confidence: NOT_ASSESSED_VALUE };
+    expect(impactsProblems({ ...payload, records: [rec] })).toEqual([]);
+    expect(impactsProblems({ ...payload, records: [{ ...rec, evidence_confidence: { category: null } }] })).toContain("a record's evidence confidence is malformed");
+  });
+
+  it("a card and an inspector for a not-assessed record say so, with the reason", () => {
+    const rec: ImpactRecord = { ...payload.records[0], evidence_confidence: NOT_ASSESSED_VALUE };
+    expect(render(<ImpactCard record={rec} />)).toContain(`Evidence confidence: Not assessed ${NOT_ASSESSED_VALUE.reason}`);
+    const inspector = render(<ImpactInspector record={rec} />);
+    expect(inspector).toContain("Evidence confidence: Not assessed");
+    expect(inspector).toContain(NOT_ASSESSED_VALUE.reason!);
+    expect(inspector).not.toMatch(/Preliminary/);
+  });
+
+  it("the points are points: never out of a hundred, never a percentage", () => {
+    for (const r of payload.records) {
+      const out = render(<ConfidenceBreakdown value={r.evidence_confidence!} method={method} />);
+      expect(out).not.toMatch(/\/\s*100|of 100|\d\s*%|percent/i);
+      expect(out).toContain(`${r.evidence_confidence!.score} points : ordinal score, not a probability`);
+    }
+  });
+
+  it("origins are worded by their served basis, and publishers are never called originating statements", () => {
+    expect(originsText(3, "publishers")).toBe("3 distinct publishers cited; whether they relay one statement was not reviewed");
+    expect(originsText(1, "publishers")).toBe("1 distinct publisher cited; whether they relay one statement was not reviewed");
+    expect(originsText(2, "reviewed")).toMatch(/^2 originating statements, as established on review$/);
+    expect(originsText(2, undefined)).toBe("2");
+    const base = one((x) => x.evidence_confidence?.category === "HIGH");
+    const withBasis = (basis: string): ImpactRecord => ({
+      ...base, evidence_confidence: { ...base.evidence_confidence!, components: { ...base.evidence_confidence!.components,
+        origins: { ...base.evidence_confidence!.components.origins, basis } } },
+    });
+    const publishers = render(<ImpactInspector record={withBasis("publishers")} />);
+    expect(publishers).toContain("distinct publishers cited; whether they relay one statement was not reviewed");
+    // Only served text (the method's own component label, a served reason) may say "originating".
+    const served = [...method.components.flatMap((c) => [c.label, c.meaning ?? ""]), ...method.categories.map((c) => c.meaning), ...base.evidence_confidence!.reasons].filter(Boolean);
+    let own = publishers;
+    for (const s of served) own = own.split(s).join("");
+    expect(own).not.toMatch(/originating statement/i);
+    expect(render(<ImpactInspector record={withBasis("reviewed")} />)).toContain("as established on review");
+  });
+
+  it("no component composes 'independent originating statements': that phrase is the served method's to use", () => {
+    const servedLabel = method.components.find((c) => c.id === "origins")!.label;
+    for (const r of payload.records) {
+      let out = render(<ImpactCard record={r} />) + render(<ImpactInspector record={r} />);
+      for (const s of [servedLabel, ...method.categories.map((c) => c.meaning), ...(r.evidence_confidence?.reasons ?? [])]) out = out.split(s).join("");
+      expect(out).not.toMatch(/independent originating statements/i);
+    }
+  });
+
+  it("shows the method's status while it is provisional, and nothing when it is not", () => {
+    const r = one((x) => x.evidence_confidence?.category === "MODERATE");
+    const provisional = { ...method, status: "provisional: thresholds not calibrated" };
+    expect(render(<ConfidenceBreakdown value={r.evidence_confidence!} method={provisional} />)).toContain("Method status: provisional: thresholds not calibrated.");
+    expect(render(<ConfidenceBreakdown value={r.evidence_confidence!} method={{ ...method, status: null }} />)).not.toContain("Method status");
   });
 
   it("the breakdown lists reasons and components, calls the score ordinal and quotes the served sentence", () => {
@@ -96,7 +179,7 @@ describe("ConfidenceChip", () => {
     const out = render(<ConfidenceBreakdown value={r.evidence_confidence!} method={method} />);
     for (const reason of r.evidence_confidence!.reasons) expect(out).toContain(reason);
     for (const c of method.components) expect(out).toContain(c.label);
-    expect(out).toContain(`${r.evidence_confidence!.score} of 100 : ordinal score, not a probability`);
+    expect(out).toContain(`${r.evidence_confidence!.score} points : ordinal score, not a probability`);
     expect(out).toContain(method.statement);
   });
 

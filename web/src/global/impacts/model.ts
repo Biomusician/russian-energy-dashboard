@@ -55,6 +55,37 @@ export function isAbstracted(r: ImpactRecord): boolean {
   return isAbstractedImpact(r);
 }
 
+// ---- evidence confidence -------------------------------------------------------------------------
+
+/** The bucket for a record whose evidence was not assessed (a null category). Its own bucket in
+ *  filters and counts: never folded into the lowest category. */
+export const NOT_ASSESSED = "NOT_ASSESSED";
+export const NOT_ASSESSED_LABEL = "Not assessed";
+/** Said where a record carries no confidence at all and so no served reason. */
+export const NO_CONFIDENCE_REASON = "No evidence confidence is published for this record.";
+
+interface ConfidenceLike { category?: string | null; label?: string | null }
+
+/** The filter and count bucket of a confidence: its category, or NOT_ASSESSED. */
+export function confidenceBucket(c: ConfidenceLike | null | undefined): string {
+  return c?.category ?? NOT_ASSESSED;
+}
+
+/** The words for a confidence: the served label, or "Not assessed". Never empty. */
+export function confidenceLabel(c: ConfidenceLike | null | undefined): string {
+  if (!c || c.category == null) return NOT_ASSESSED_LABEL;
+  return c.label || c.category.replace(/_/g, " ").toLowerCase().replace(/^./, (ch) => ch.toUpperCase());
+}
+
+/** What the origins figure counts, by its served basis. Where only publishers were counted the
+ *  line says so: whether they relay one statement was not reviewed, so they are not called
+ *  independent. A build with no basis gets the bare number and no claim about what it counts. */
+export function originsText(count: number, basis: string | null | undefined): string {
+  if (basis === "publishers") return `${count} distinct ${count === 1 ? "publisher" : "publishers"} cited; whether they relay one statement was not reviewed`;
+  if (basis === "reviewed") return `${count} originating ${count === 1 ? "statement" : "statements"}, as established on review`;
+  return String(count);
+}
+
 // ---- dates ---------------------------------------------------------------------------------------
 
 /** The first calendar day the record can refer to: a month-precision date starts on the 1st. */
