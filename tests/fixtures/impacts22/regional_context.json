@@ -1,0 +1,211 @@
+{
+  "context_id": "gulf_hormuz",
+  "schema_version": 1,
+  "label": "The Gulf and the Strait of Hormuz",
+  "entries": [
+    {
+      "id": "ctx-2026-03-05-synthetic-shipping-statement",
+      "date": "2026-03-05",
+      "as_of": "2026-03-05",
+      "context_type": "shipping_status",
+      "claim": "SYNTHETIC FIXTURE. The Example Maritime Agency said commercial shipping through the Strait of Hormuz was restricted, in aggregate.",
+      "metric": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://maritime-agency.example/synthetic/ctx-2026-03-05-synthetic-shipping-statement",
+          "publisher": "Example Maritime Agency",
+          "date": "2026-03-05",
+          "language": "en",
+          "source_role": "government",
+          "medium": "web",
+          "supports": [
+            "occurrence"
+          ],
+          "opened": true,
+          "derived_claim": "Synthetic: the source makes the fixture statement."
+        }
+      ],
+      "first_published": "2026-11-12",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept"
+        }
+      }
+    },
+    {
+      "id": "ctx-2026-04-10-synthetic-supply-statement",
+      "date": "2026-04-10",
+      "as_of": "2026-04-10",
+      "context_type": "aggregate_supply",
+      "claim": "SYNTHETIC FIXTURE. The Example Energy Agency estimated that crude exports from the Gulf were lower than a year earlier.",
+      "metric": {
+        "value": 2.5,
+        "unit": "mb/d",
+        "basis": "estimated fall in crude exports from the Gulf, year on year, in the source's words"
+      },
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://energy-agency.example/synthetic/ctx-2026-04-10-synthetic-supply-statement",
+          "publisher": "Example Energy Agency",
+          "date": "2026-04-10",
+          "language": "en",
+          "source_role": "government",
+          "medium": "report",
+          "supports": [
+            "occurrence"
+          ],
+          "opened": true,
+          "derived_claim": "Synthetic: the source makes the fixture statement."
+        }
+      ],
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept"
+        }
+      }
+    },
+    {
+      "id": "ctx-2026-04-12-synthetic-market-response",
+      "date": "2026-04-12",
+      "as_of": "2026-04-12",
+      "context_type": "market_response",
+      "claim": "SYNTHETIC FIXTURE. Example Exchange data showed the benchmark crude price rose over the week. A price movement is not infrastructure loss.",
+      "metric": {
+        "value": 9,
+        "unit": "percent",
+        "basis": "weekly change in the benchmark crude price, per the exchange"
+      },
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://exchange.example/synthetic/ctx-2026-04-12-synthetic-market-response",
+          "publisher": "Example Exchange",
+          "date": "2026-04-12",
+          "language": "en",
+          "source_role": "dataset",
+          "medium": "dataset",
+          "supports": [
+            "occurrence"
+          ],
+          "opened": true,
+          "derived_claim": "Synthetic: the source makes the fixture statement."
+        }
+      ],
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept"
+        }
+      }
+    },
+    {
+      "id": "ctx-2026-04-15-synthetic-reserve-action",
+      "date": "2026-04-15",
+      "as_of": "2026-04-15",
+      "context_type": "reserve_action",
+      "claim": "SYNTHETIC FIXTURE. Example Energy Agency members agreed a coordinated release from emergency oil stocks.",
+      "metric": {
+        "value": 60,
+        "unit": "million barrels",
+        "basis": "total coordinated release announced, per the agency"
+      },
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://energy-agency.example/synthetic/ctx-2026-04-15-synthetic-reserve-action",
+          "publisher": "Example Energy Agency",
+          "date": "2026-04-15",
+          "language": "en",
+          "source_role": "government",
+          "medium": "report",
+          "supports": [
+            "occurrence"
+          ],
+          "opened": true,
+          "derived_claim": "Synthetic: the source makes the fixture statement."
+        }
+      ],
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept"
+        }
+      }
+    },
+    {
+      "id": "ctx-2026-05-02-synthetic-civilian-statement",
+      "date": "2026-05-02",
+      "as_of": "2026-05-02",
+      "context_type": "civilian_environmental",
+      "claim": "SYNTHETIC FIXTURE. The Example Environment Programme reported an oil slick in Gulf waters and warned of effects on coastal fisheries.",
+      "metric": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://environment-programme.example/synthetic/ctx-2026-05-02-synthetic-civilian-statement",
+          "publisher": "Example Environment Programme",
+          "date": "2026-05-02",
+          "language": "en",
+          "source_role": "government",
+          "medium": "report",
+          "supports": [
+            "occurrence"
+          ],
+          "opened": true,
+          "derived_claim": "Synthetic: the source makes the fixture statement."
+        }
+      ],
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept"
+        }
+      }
+    },
+    {
+      "id": "ctx-2026-09-20-synthetic-shipping-statement",
+      "date": "2026-09-20",
+      "as_of": "2026-09-22",
+      "context_type": "shipping_status",
+      "claim": "SYNTHETIC FIXTURE. The Example Maritime Agency said transit traffic through the Strait of Hormuz remained below its usual level.",
+      "metric": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://maritime-agency.example/synthetic/ctx-2026-09-20-synthetic-shipping-statement",
+          "publisher": "Example Maritime Agency",
+          "date": "2026-09-22",
+          "language": "en",
+          "source_role": "government",
+          "medium": "web",
+          "supports": [
+            "occurrence"
+          ],
+          "opened": true,
+          "derived_claim": "Synthetic: the source makes the fixture statement."
+        }
+      ],
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "roles": {
+          "evidence": "accept",
+          "safety": "accept"
+        }
+      }
+    }
+  ]
+}
