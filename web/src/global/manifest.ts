@@ -729,7 +729,7 @@ export function geometryProblems(x: unknown): string[] {
 
 /** Fetch a file once, refusing it if `problems` finds anything: a refused file fails like a missing
  *  one, as "could not be loaded", and never reaches a component half-formed. */
-function validated<T>(path: string, problems: (x: unknown) => string[]): Promise<T> {
+export function validated<T>(path: string, problems: (x: unknown) => string[]): Promise<T> {
   return once(path, async () => {
     const x = await getJson<T>(path);
     const bad = problems(x);
