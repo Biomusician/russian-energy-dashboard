@@ -788,6 +788,13 @@ def main():
                if outputs.grants("production_ledger") else
                whats_new.unavailable(f"a {args.mode} build has no published predecessor", snapshot["as_of"]))
 
+    # The global impact layer (iteration 22): a separate, non-scored corpus with its own gate. Built
+    # after the country systems because it names countries from the world map they write, and after
+    # the panel above so that nothing analytic can read it. It raises, naming the record, if the
+    # curated corpus carries anything the scope boundary forbids.
+    from pipeline import global_impacts
+    global_impacts.build(snapshot["as_of"])
+
 
     # Single source of truth for headline numbers (§2) — regenerated every CURRENT build so no
     # doc drifts. A reconstruction or fixture neither mirrors nor rewrites CURRENT_STATE: the plan
