@@ -23,7 +23,7 @@ changed. Live figures are in [CURRENT_STATE.md](CURRENT_STATE.md).
 | Work branch | `iteration-22`, foundation commit `5417e92` |
 | Systems | 13, unchanged: the Russia theatre (index) and 12 country systems (no score) |
 | Country corpus at start | 175 published records in 12 country systems; 65 research lanes |
-| Tests at start | pytest 1,235 passed, 2 skipped; vitest 454; TypeScript clean; Playwright <!-- LEAD: baseline pw -->; mutation campaign <!-- LEAD: baseline mut --> |
+| Tests at start | pytest 1,235 passed, 2 skipped; vitest 454; TypeScript clean; Playwright 400 passed, 1 skipped; mutation campaign 376 of 376 caught (0 survived, 0 invalid, 0 errors) |
 | Served data at start | 10.6 MB under `web/public/data`; built JavaScript 1.75 MB |
 | Link health at start | last full check 12 November: 299 cited addresses |
 | Iran at start | research preview, campaign-restricted, no published record; no regional context anywhere in the product |
