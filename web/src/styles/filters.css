@@ -1,0 +1,72 @@
+/* Record filters and the export controls beside them (iteration 22): the country pages and the
+   impact atlas. Uses the tokens in theme.css. A filter that is on says so in words on its button;
+   the accent border only repeats it. */
+
+.record-filters { margin: 8px 0 10px; }
+.rf-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.rf-menu { position: relative; }
+.rf-toggle.is-on { border-color: var(--accent-dim); color: var(--text); }
+.rf-summary { color: var(--accent); }
+.rf-toggle::after { content: " BE"; color: var(--text-faint); }
+.rf-panel {
+  position: absolute; z-index: 30; top: calc(100% + 4px); left: 0; min-width: 240px; max-width: min(360px, 90vw);
+  max-height: 60vh; overflow: auto; padding: 8px 10px;
+  background: var(--bg-panel-2); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.rf-options { list-style: none; margin: 0; padding: 0; }
+.rf-options li { margin: 0; }
+.rf-options label { display: flex; align-items: baseline; gap: 7px; padding: 4px 2px; font-size: 12px; color: var(--text); cursor: pointer; }
+.rf-options input { flex: none; accent-color: var(--accent); }
+.rf-option-label { flex: 1; }
+.rf-n { color: var(--text-dim); font-family: var(--mono); font-size: 11px; }
+.rf-done { margin-top: 6px; }
+.rf-custom { display: grid; gap: 6px; margin-top: 6px; }
+.rf-custom label { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-dim); }
+.rf-custom input[type="date"] {
+  background: var(--bg-inset); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 4px 6px; font: inherit; color-scheme: dark;
+}
+.rf-dates p { margin: 4px 0 0; }
+.record-filters input:focus-visible, .record-filters button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rf-clear:disabled, .rf-sheet button:disabled { opacity: 0.45; cursor: default; }
+.rf-count { margin: 6px 0 2px; color: var(--text); }
+.rf-on-list { color: var(--text-dim); }
+.rf-fixed { margin: 6px 0 0; }
+.rf-note {
+  margin: 4px 0; padding: 5px 8px; color: var(--text);
+  border-left: 2px solid var(--amber); background: var(--bg-inset); border-radius: var(--radius);
+}
+
+/* The export controls: two plain buttons and the line that says what they hold. */
+.record-export { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-left: auto; }
+.record-export-note { margin: 2px 0 6px; }
+
+/* ---- phone: one button, one sheet ------------------------------------------------------------- */
+.rf-backdrop {
+  position: fixed; inset: 0; z-index: 80; background: rgba(3, 5, 8, 0.72);
+  display: flex; align-items: flex-end;
+}
+.rf-sheet {
+  width: 100%; max-height: 86vh; overflow: auto; padding: 10px 14px 14px;
+  background: var(--bg-panel); border-top: 1px solid var(--line); border-radius: 10px 10px 0 0;
+}
+.rf-sheet:focus { outline: none; }
+.rf-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; position: sticky; top: -10px; background: var(--bg-panel); padding: 6px 0; }
+.rf-sheet-head h3 { margin: 0; font-size: 14px; }
+.rf-group { border: 0; border-top: 1px solid var(--line-soft); margin: 0; padding: 8px 0; min-width: 0; }
+.rf-group legend { padding: 0; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); }
+.rf-sheet .rf-options label { padding: 9px 2px; font-size: 13px; min-height: 44px; align-items: center; }
+.rf-sheet .rf-options input { width: 18px; height: 18px; }
+.rf-sheet .rf-custom input[type="date"] { min-height: 44px; }
+.rf-sheet-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-top: 1px solid var(--line-soft); padding-top: 10px; }
+.rf-sheet-foot p { flex: 1 1 100%; margin: 0; color: var(--text); }
+.rf-sheet-done { border-color: var(--accent-dim); color: var(--accent); }
+
+@media (max-width: 600px) {
+  .record-export { margin-left: 0; }
+}
+
+@media print {
+  .rf-row, .record-export { display: none; }
+}
