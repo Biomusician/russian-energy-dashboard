@@ -176,7 +176,10 @@ Field rules:
   `other_energy`. A separate field from the country systems' `asset_class`; a mapping table relates
   them and nothing is migrated.
 - **Cause family:** `kinetic`, `cyber`, `sabotage`, `industrial_technical`, `natural_hazard`,
-  `supply_shortfall`, `civil_disruption`, `unknown`. The country systems' causes map onto these
+  `supply_shortfall`, `civil_disruption`, `authority_order`, `unknown`. `authority_order` is a
+  service restricted or shut down by order of an authority (an exam-period or protest-period
+  internet shutdown): not a malicious incident, attribution `NOT_APPLICABLE`, and the record says
+  who ordered it only as a source states. The country systems' causes map onto these
   (`kinetic_strike` → `kinetic`, and so on); the country vocabulary is unchanged.
 - **Cyber mechanism:** `ransomware`, `data_wiper`, `ddos`, `unauthorized_access`,
   `it_outage_affecting_operations`, `ot_ics_disruption`, `supply_chain_compromise`,
