@@ -9,10 +9,14 @@
  *  and holds anything for this country, whether the system belongs to the regional-context group.
  *  No country is named in the code.
  *
+ *  SHORT ON PURPOSE. The whole block has to fit above the map on a phone, so each part is a
+ *  sentence or a one-line link. The long explanations stay where they were: the notices under the
+ *  headline, the empty-corpus page and the Research coverage tab.
+ *
  *  TWO RULES THE TESTS RUN.
  *  - Under the attack-campaign safeguards nothing here depends on what a research pass logged about
- *    candidates or held records: not a count, and not whether any exist. The same page is rendered
- *    whatever the log carries.
+ *    candidates or held records: not a count, and not whether any exist. The same words are
+ *    rendered whatever the log carries.
  *  - The impact corpus is separate. Its count is said beside the words "separate, non-scored
  *    corpus" and never added to, or shown in place of, the country's published-record count.
  *
@@ -32,8 +36,6 @@ export type ImpactPresence =
   | { state: "failed" }
   | { state: "ready"; records: number; attempts: number; latestResearch: string | null };
 
-export const IMPACTS_NOT_LOADED: ImpactPresence = { state: "not_loaded" };
-
 type OverviewSystem = Pick<CountrySystem,
   "name" | "event_summary" | "campaign_state" | "publication_policy" | "research_log" | "research_freshness" | "geography">;
 
@@ -44,13 +46,12 @@ export interface OverviewLink {
 }
 
 export interface Overview {
-  /** The first sentence: what is published for this country. */
+  /** What is published for this country: one sentence. */
   published: string;
-  /** With no published record: why that may be. Empty when records are published. */
-  reasons: string[];
-  /** The sentence that closes the first part. */
+  /** Why that may be nothing, or what the published records are. */
   publishedNote: string;
   known: OverviewLink[];
+  /** What is not published, each with its reason. */
   withheld: string[];
 }
 
@@ -59,38 +60,40 @@ export const NO_RECORD_IS_NOT_NO_DISRUPTION = "No record is not no disruption.";
 
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
-/** The impact tab's own empty sentence, shared with the overview so the two cannot drift. */
+function listOf(parts: string[]): string {
+  if (parts.length <= 1) return parts[0] ?? "";
+  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+}
+
+/** The impact tab's own empty sentence. */
 export function noImpactRecordText(name: string): string {
   return `No reviewed impact record is published for ${inSentence(name)} yet. That describes this corpus, not ${inSentence(name)}.`;
 }
 
+/** What the impact tab says before it lists anything, and what an export of it carries. */
 export const IMPACT_CORPUS_LINE =
   "Reviewed impact records from a separate, non-scored corpus. They are not part of this country's published "
   + "energy-disruption record and enter no count or index.";
 
-/** One line about the impact corpus, by what is known. A count only once the file has been read. */
+/** One line about the impact corpus, by what is known. A count only once the file has been read,
+ *  and always beside the words that say it is another corpus. */
 export function impactLine(name: string, impacts: ImpactPresence): string {
-  if (impacts.state === "failed") return "The impact corpus could not be loaded. The rest of this page is unaffected.";
-  if (impacts.state !== "ready") {
-    return "Disruptions to civilian services and cyber incidents, from a separate, non-scored corpus. Open it to see what is published.";
-  }
-  if (impacts.records === 0 && impacts.attempts === 0) return noImpactRecordText(name);
+  if (impacts.state === "failed") return "the impact corpus could not be loaded; the rest of this page is unaffected.";
+  if (impacts.state !== "ready") return "reviewed impact records, in a separate, non-scored corpus.";
+  if (impacts.records === 0 && impacts.attempts === 0) return `no impact record yet, which describes that corpus, not ${inSentence(name)}.`;
   const parts: string[] = [];
   if (impacts.records > 0) parts.push(`${impacts.records} reviewed impact ${plural(impacts.records, "record", "records")}`);
-  if (impacts.attempts > 0) parts.push(`${impacts.attempts} documented ${plural(impacts.attempts, "attempt", "attempts")} with no reported service disruption`);
-  return `${parts.join(" and ")} in a separate, non-scored corpus: not part of the published record above, and in no count or index.`;
+  if (impacts.attempts > 0) parts.push(`${impacts.attempts} documented ${plural(impacts.attempts, "attempt", "attempts")}`);
+  return `${parts.join(" and ")}, in a separate, non-scored corpus.`;
 }
 
 /** Why the search may have missed things, from the served research state. Null when every declared
  *  source group was searched. */
 function searchReason(sys: OverviewSystem): string | null {
-  if (sys.research_log.passes.length === 0) return "No systematic search has been run yet.";
+  if (sys.research_log.passes.length === 0) return "no systematic search has been run yet";
   const rf = sys.research_freshness;
-  const states = rf.lane_states ?? {};
-  if ((states.blocked_by_source ?? 0) > 0) {
-    return "Sources are hard to reach: at least one source group could not be read at all, and the search is unfinished.";
-  }
-  if (rf.completeness !== "complete") return "The search is unfinished: not every source group has been fully searched.";
+  if (((rf.lane_states ?? {}).blocked_by_source ?? 0) > 0) return "sources are hard to reach";
+  if (rf.completeness !== "complete") return "the search is unfinished";
   return null;
 }
 
@@ -101,61 +104,43 @@ export function countryOverview(sys: OverviewSystem, impacts: ImpactPresence, re
   const attacksWhole = sys.geography.precision_policy?.kinetic === "country";
 
   let published: string;
-  const reasons: string[] = [];
   let publishedNote: string;
   if (n === 0) {
     published = `No energy-disruption record is published for ${name} yet.`;
-    reasons.push("The inclusion rule is strict: a reported event is published only when it meets the rule and passes independent review.");
-    if (restricted) {
-      reasons.push(attacksWhole
-        ? "Attack-campaign safeguards apply: a reported attack is published only as a record for the country as a whole, with nothing about the facility's later status."
-        : "Attack-campaign safeguards apply: a reported attack is published with nothing about the facility's later status.");
-    }
+    const why = ["the inclusion rule is strict"];
+    if (restricted) why.push("attack-campaign safeguards apply");
     const search = searchReason(sys);
-    if (search) reasons.push(search);
-    publishedNote = `${NO_RECORD_IS_NOT_NO_DISRUPTION} That describes this dataset, not ${name}.`;
+    if (search) why.push(search);
+    publishedNote = `Why: ${listOf(why)}. ${NO_RECORD_IS_NOT_NO_DISRUPTION}`;
   } else {
-    const eps = sys.event_summary.episodes;
-    published = `${n} reviewed energy-disruption ${plural(n, "record is", "records are")} published for ${name}, in ${eps} ${plural(eps, "episode", "episodes")}.`;
+    published = `${n} reviewed energy-disruption ${plural(n, "record is", "records are")} published for ${name}.`;
     publishedNote = restricted
-      ? "They are what was reported and found, not everything that happened. Attack records are published under attack-campaign safeguards."
-      : "They are what was reported and found, not everything that happened.";
+      ? "What was reported and found, not everything that happened. Attack records are under attack-campaign safeguards."
+      : "What was reported and found, not everything that happened.";
   }
 
-  const known: OverviewLink[] = [
-    { tab: "impacts", label: TAB_LABEL.impacts, line: impactLine(sys.name, impacts) },
-  ];
-  if (regional) {
-    known.push({
-      tab: "regional", label: TAB_LABEL.regional,
-      line: `Dated, sourced statements about the region in aggregate. They say nothing about any facility in ${name}.`,
-    });
-  }
-  known.push({
-    tab: "context", label: TAB_LABEL.context,
-    line: "The size of the national energy system, from one source and one year. Context, never disruption.",
-  });
-  known.push({
-    tab: "research", label: TAB_LABEL.research,
-    line: "What was searched, in which languages, and what could not be read.",
-  });
+  const known: OverviewLink[] = [{ tab: "impacts", label: TAB_LABEL.impacts, line: impactLine(sys.name, impacts) }];
+  if (regional) known.push({ tab: "regional", label: TAB_LABEL.regional, line: `regional statements in aggregate; nothing about a facility in ${name}.` });
+  known.push({ tab: "context", label: TAB_LABEL.context, line: "the size of the energy system; context, never disruption." });
+  known.push({ tab: "research", label: TAB_LABEL.research, line: "what was and was not searched." });
 
   const withheld: string[] = [];
   if (restricted) {
-    withheld.push("Whether an attacked facility has been repaired, restarted or is operating: not published while attacks on energy facilities are being reported, because a current list of what works would describe the damage.");
-    if (attacksWhole) withheld.push("Where inside the country an attack happened, and at which facility or operator: an attack record is kept for the country as a whole.");
     // Identical whatever the research log holds: beside a short list of published attack records, a
     // count of what is in review, or even the fact that something is, hints at the campaign's scale.
-    withheld.push("Records still in review: never shown, and under these safeguards this page does not say how many there are, or whether there are any.");
+    const items = ["an attacked facility's later status"];
+    if (attacksWhole) items.push("where in the country an attack happened");
+    items.push("whether, or how many, records are in review");
+    withheld.push(`While attacks on energy facilities are being reported: ${listOf(items)}.`);
   } else {
-    withheld.push("Records still in review: not shown until they pass. The Research coverage tab gives the counts.");
+    withheld.push("Records still in review, until they pass review.");
   }
-  withheld.push("Coordinates and anything finer than a first-level region: never collected or published, for any record.");
+  withheld.push("Never, for any record: coordinates, or anything finer than a first-level region.");
 
-  return { published, reasons, publishedNote, known, withheld };
+  return { published, publishedNote, known, withheld };
 }
 
-/** Every sentence of the overview, in reading order: what a test, or an export, reads. */
+/** Every sentence of the overview, in reading order: what a test reads. */
 export function overviewText(o: Overview): string[] {
-  return [o.published, ...o.reasons, o.publishedNote, ...o.known.map((k) => `${k.label}: ${k.line}`), ...o.withheld];
+  return [o.published, o.publishedNote, ...o.known.map((k) => `${k.label}: ${k.line}`), ...o.withheld];
 }

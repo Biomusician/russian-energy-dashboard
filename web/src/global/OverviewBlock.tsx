@@ -2,6 +2,7 @@ import type { CountrySystem } from "./manifest";
 import { OVERVIEW_TITLE, countryOverview, type ImpactPresence } from "./countryOverview";
 import { tabHref, type RegionalGroup, type Tab } from "./countryTabs";
 import "../styles/country.css";
+import "../styles/countryOverview.css";
 
 /** "What this page can tell you" (iteration 22): the first thing a country page says after its
  *  title. Three short parts, always in this order: what is published, what else is here, what is
@@ -20,11 +21,7 @@ export function CountryOverview({ sys, impacts, regional, onTab }: {
       <div className="overview-parts">
         <div className="overview-part overview-published">
           <h3 className="eyebrow">Published here</h3>
-          <p className="overview-lead">{o.published}</p>
-          {o.reasons.length > 0 && (
-            <ul className="small overview-reasons">{o.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
-          )}
-          <p className="small overview-note">{o.publishedNote}</p>
+          <p className="small"><strong className="overview-lead">{o.published}</strong> {o.publishedNote}</p>
         </div>
         <div className="overview-part overview-known">
           <h3 className="eyebrow">Also on this page</h3>
@@ -38,14 +35,14 @@ export function CountryOverview({ sys, impacts, regional, onTab }: {
                      e.preventDefault();
                      onTab(k.tab);
                    }}>{k.label}</a>
-                <span className="overview-link-line">{k.line}</span>
+                <span className="overview-link-line">: {k.line}</span>
               </li>
             ))}
           </ul>
         </div>
         <div className="overview-part overview-withheld">
           <h3 className="eyebrow">Not published, and why</h3>
-          <ul className="small">{o.withheld.map((w) => <li key={w}>{w}</li>)}</ul>
+          <p className="small">{o.withheld.join(" ")}</p>
         </div>
       </div>
     </section>

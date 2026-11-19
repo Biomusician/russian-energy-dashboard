@@ -13,14 +13,14 @@ import { EventCard, fmtEventDate } from "./EventCard";
 import { EmptyCorpus } from "./EmptyCorpus";
 import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
 import { NO_SCORE_NOT_ZERO, RESEARCH_PREVIEW_DEFINITION, RESEARCH_PREVIEW_LABEL, inSentence, noScorePlain } from "./countryCopy";
-import { eventAnchor } from "./evidence";
+import { confidenceOptions, eventAnchor } from "./evidence";
 import { laneLine } from "./laneCoverage";
 import { PLACEMENT_LABEL } from "./placement";
 import { loadContext, rowForSystem, type EnergyContext } from "./context";
 import { NationalFigures } from "./WorldContext";
 import { LOCATION_EVENT, navigate, navigateCompare } from "./router";
 import { PanelBoundary } from "../components/ViewBoundary";
-import { COUNTRY_EXPORT_FIT_PADDING, composeCountryFrame, countryFilename } from "./countryExport";
+import { COUNTRY_EXPORT_FIT_PADDING, COUNTRY_EXPORT_SUMMARY_PADDING, composeCountryFrame, countryFilename } from "./countryExport";
 import { DISPUTED, NO_EVENTS, fillFor, scaleFor, type Scale } from "./countryScale";
 import { downloadBlob, exportMapPng } from "../mapExport";
 import { daysBetween, fmtDate } from "../data";
@@ -37,10 +37,12 @@ import { downloadBlob as downloadFile } from "../download";
 import {
   DEFAULT_TAB, TAB_LABEL, regionalGroupFor, resolveTab, tabFromSearch, tabsFor, withTab, type RegionalGroup, type Tab,
 } from "./countryTabs";
-import { CountryOverview } from "./CountryOverview";
+import { CountryOverview } from "./OverviewBlock";
 import { CountryImpacts, impactPresence, useCountryImpacts } from "./CountryImpacts";
 import { CountryRegional } from "./CountryRegional";
+import { loadConfidenceMethod } from "./impacts";
 import { impactExportSummary } from "./countryImpactModel";
+import "../styles/countryOverview.css";
 
 /** One country system (iteration 14).
  *
@@ -175,7 +177,7 @@ export default function CountryView({ id }: { id: string }) {
   // published record has nothing else to show, so it asks at once: its overview then says whether
   // the corpus holds anything for this country instead of sending the reader to find out.
   const noRecords = bundle ? bundle.system.event_summary.recorded_events === 0 : false;
-  const impacts = useCountryImpacts(id, tab === "impacts" || noRecords);
+  const impacts = useCountryImpacts(id, tab === "impacts" || noRecords, tab);
 
   // A link in the overview opens its tab and moves the reader to it: on a phone the tabs are a
   // screen or more below the overview.
@@ -189,7 +191,9 @@ export default function CountryView({ id }: { id: string }) {
   }, [jump]);
 
   const today = localISODate(new Date());
-  const filters = useMemo<CountryFilters | null>(() => (bundle ? countryFilters(bundle.system, bundle.events) : null), [bundle]);
+  // The confidence filter lists its categories in the method's own order (iteration 22).
+  const filters = useMemo<CountryFilters | null>(() => (bundle
+    ? countryFilters(bundle.system, bundle.events, confidenceOptions(bundle.system, bundle.events)) : null), [bundle]);
   const decoded = useMemo(() => (filters ? decodeFilters(filterQuery, filters.defs) : null), [filters, filterQuery]);
   const setFilters = (next: FilterState) => {
     if (!filters) return;
@@ -286,14 +290,19 @@ export default function CountryView({ id }: { id: string }) {
       const national = ctx ?? await loadContext().catch(() => null);
       // With the impact tab open, the picture carries that list's summary: what the reader was
       // looking at when they asked for it. Built from the same records the tab lists.
-      const impactSummary = tab === "impacts" && impacts.state === "ready"
-        ? impactExportSummary(sys.name, impacts.records, impacts.attempts, impacts.payload) : null;
+      let impactSummary = null;
+      if (tab === "impacts" && impacts.state === "ready") {
+        // The served sentence about what confidence is; the summary has its own if the file fails.
+        const method = await loadConfidenceMethod().catch(() => null);
+        impactSummary = impactExportSummary(sys.name, impacts.records, impacts.attempts, impacts.payload, method?.statement);
+      }
       const res = await exportMapPng({
         source: m, width: 1600, height: 900, pixelRatio: 1,
-        fit: { bounds: sys.geography.view_bounds ?? sys.geography.bounds, padding: COUNTRY_EXPORT_FIT_PADDING },
+        fit: { bounds: sys.geography.view_bounds ?? sys.geography.bounds,
+               padding: impactSummary ? COUNTRY_EXPORT_SUMMARY_PADDING : COUNTRY_EXPORT_FIT_PADDING },
         compose: (c) => composeCountryFrame(c, sys, scale, national ? { row: rowForSystem(national, sys.system_id), ctx: national } : null, impactSummary),
       });
-      downloadBlob(res.blob, countryFilename(sys));
+      downloadBlob(res.blob, impactSummary ? countryFilename(sys).replace(/\.png$/, "-impacts.png") : countryFilename(sys));
       setExportMsg(`Exported ${res.width}×${res.height}.`);
     } catch (err) {
       setExportMsg(err instanceof Error ? err.message : String(err));

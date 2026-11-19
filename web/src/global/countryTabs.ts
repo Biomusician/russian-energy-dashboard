@@ -9,7 +9,7 @@
  *
  *  Pure, with type imports only: the Python tests run this file in Node as it ships.
  */
-import type { Manifest, ManifestSystem } from "./manifest";
+import type { Manifest } from "./manifest";
 
 export type Tab = "events" | "impacts" | "regional" | "sectors" | "context" | "research" | "sources" | "method";
 
@@ -91,10 +91,4 @@ export function withTab(search: string, tab: Tab): string {
  *  new window. */
 export function tabHref(systemId: string, tab: Tab): string {
   return `?${withTab(`sys=${encodeURIComponent(systemId)}`, tab)}`;
-}
-
-/** Whether the system sits in any regional-context group, from its manifest entry alone. Used
- *  before the manifest's group table is in hand; `regionalGroupFor` decides. */
-export function mayHaveRegional(entry: Pick<ManifestSystem, "regional_groups"> | null | undefined): boolean {
-  return (entry?.regional_groups ?? []).length > 0;
 }

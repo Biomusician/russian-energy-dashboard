@@ -6,6 +6,7 @@
  */
 import type { CountryEvent, CountrySystem } from "./manifest";
 import type { Placement } from "./placement";
+import type { EvidenceConfidence } from "./impacts/types";
 
 // ---- originating statements ------------------------------------------------------------------
 // A MIRROR of pipeline/build_systems.py (WIRE_ORIGINS, DISCOVERY_ONLY_DOMAINS, registered_domain,
@@ -295,3 +296,31 @@ export const LINK_STATE_LABEL: Record<string, string> = {
   dead: "gone at the last automated check",
   error: "failed to load at the last automated check",
 };
+
+// ---- evidence confidence (iteration 22) ---------------------------------------------------------
+
+/** The record's evidence confidence, or null. The field is optional: a payload built before it
+ *  existed, or a record the build gave none, renders exactly as before, with no chip and no
+ *  section. A value without its components or reasons is treated as absent rather than shown
+ *  half-formed. It is never defaulted to a category: absent is not "low". */
+export function eventConfidence(e: CountryEvent): EvidenceConfidence | null {
+  const c = (e as { evidence_confidence?: EvidenceConfidence | null }).evidence_confidence;
+  if (!c || typeof c !== "object" || typeof c.category !== "string" || !c.category) return null;
+  if (!c.components || typeof c.components !== "object" || !Array.isArray(c.reasons)) return null;
+  return c;
+}
+
+/** The evidence-confidence filter's options in the method's own order (High before Moderate ...),
+ *  read from the order the build writes its per-country summary in, with each label taken from a
+ *  record that carries it. Undefined when the system serves no summary: the filter then lists the
+ *  categories present alphabetically, as before. No file is fetched for this. */
+export function confidenceOptions(sys: CountrySystem, events: readonly CountryEvent[]): { value: string; label: string }[] | undefined {
+  const by = (sys as { evidence_confidence_summary?: { by_category?: Record<string, number> } }).evidence_confidence_summary?.by_category;
+  if (!by || typeof by !== "object") return undefined;
+  const labels = new Map<string, string>();
+  for (const e of events) {
+    const c = eventConfidence(e);
+    if (c && !labels.has(c.category)) labels.set(c.category, c.label || c.category.replace(/_/g, " ").toLowerCase());
+  }
+  return Object.keys(by).filter((k) => labels.has(k)).map((k) => ({ value: k, label: labels.get(k) as string }));
+}

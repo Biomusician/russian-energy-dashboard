@@ -4,9 +4,12 @@ import {
   type CountryBundle, type CountryEvent,
 } from "./manifest";
 import {
-  LINK_STATE_LABEL, countLine, eventAnchor, eventPlacement, headlinesAllowed, notEstablished, originLabel,
+  LINK_STATE_LABEL, countLine, eventAnchor, eventConfidence, eventPlacement, headlinesAllowed, notEstablished, originLabel,
   originSummary, placementKind, plainBasis, roleVerdicts,
 } from "./evidence";
+import { ConfidenceBreakdown, ConfidenceChip, useConfidenceMethod } from "./impacts/ConfidenceChip";
+import type { EvidenceConfidence } from "./impacts/types";
+import { CONFIDENCE_IS_NOT } from "./countryCopy";
 import { PLACEMENT_LABEL } from "./placement";
 import { fmtDate } from "../data";
 import "../styles/country.css";
@@ -69,6 +72,7 @@ export function EventCard({ e, bundle, inEpisode = false, targeted = false }: {
   // Null for a campaign-covered record whose id could name a facility: no anchor, so no link.
   const anchor = eventAnchor(e, sys.system_id);
   const title = e.facility_name ?? e.region_name ?? sys.name;
+  const confidence = eventConfidence(e);
   return (
     <li className={`event-item event-card placement-${kind}${targeted ? " targeted" : ""}`}
         id={anchor ?? undefined}>
@@ -136,6 +140,10 @@ export function EventCard({ e, bundle, inEpisode = false, targeted = false }: {
           <p className="small discovery-only">This record rests only on Wikipedia or a content aggregator. They restate
             other publishers' reporting, so no originating statement is cited.</p>
         )}
+        {/* Evidence confidence (iteration 22), on every record that carries one, campaign-covered or
+            not: it restates the record's own public citations. A record without the field shows no
+            chip at all: absent is never drawn as a category. */}
+        {confidence && <ConfidenceChip value={confidence} />}
         <ul className="source-list sources">
           {e.sources.map((s, i) => (
             <li key={i} className="source-row small">
@@ -183,6 +191,26 @@ export function EventCard({ e, bundle, inEpisode = false, targeted = false }: {
   );
 }
 
+/** How strong the evidence is, and what produced that answer (iteration 22): who is speaking, how
+ *  many independent originating statements, how specific the reported effect is, whether a reviewer
+ *  read a source, and whether it was reported at the time. The shared breakdown draws them; the
+ *  method's labels are fetched when an inspector is first opened.
+ *
+ *  The sentence that confidence is not severity, probability or importance is always shown: the
+ *  served one once the method has loaded (inside the breakdown), and until then, or if the file
+ *  fails, the country payload's copy or the fixed one. */
+function ConfidenceSection({ confidence, statement }: { confidence: EvidenceConfidence; statement: string | undefined }) {
+  const { method, failed } = useConfidenceMethod(true);
+  return (
+    <>
+      <h4>How strong the evidence is</h4>
+      <p className="ev-inspector-confidence">Evidence confidence: <strong>{confidence.label || confidence.category}</strong>.</p>
+      <ConfidenceBreakdown value={confidence} method={method} failed={failed} />
+      {!method && <p className="conf-statement">{statement || CONFIDENCE_IS_NOT}</p>}
+    </>
+  );
+}
+
 /** Plain answers about one record. Rendered only while open, so a closed card carries none of it. */
 export function EvidenceInspector({ id, e, bundle, onClose }: {
   id: string; e: CountryEvent; bundle: CountryBundle; onClose: () => void;
@@ -193,6 +221,9 @@ export function EvidenceInspector({ id, e, bundle, onClose }: {
   const verdicts = roleVerdicts(e);
   const threshold = sys.inclusion_threshold;
   const clause = e.criterion_met != null ? threshold.clauses[String(e.criterion_met)] : null;
+  const confidence = eventConfidence(e);
+  // The country's own payload carries the sentence, so it is on screen before the method file is.
+  const statement = (sys as { evidence_confidence_summary?: { statement?: string } }).evidence_confidence_summary?.statement;
   return (
     <section id={id} className="ev-inspector small" aria-label="Evidence inspector"
              onKeyDown={(ev) => { if (ev.key === "Escape") { ev.stopPropagation(); onClose(); } }}>
@@ -239,6 +270,8 @@ export function EvidenceInspector({ id, e, bundle, onClose }: {
       <p className="dim">An originating statement is a wire service the citation names, otherwise the website it sits on:
         two reports from one agency count once, and a wire story republished by several outlets counts once. Republication
         a citation does not name cannot be seen, so this can undercount independence but never overstate it.</p>
+
+      {confidence && <ConfidenceSection confidence={confidence} statement={statement} />}
 
       <h4>What this report does not establish</h4>
       <ul className="ev-inspector-limits">
