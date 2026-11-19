@@ -193,7 +193,7 @@ export interface ImpactRecordForCsv {
   cyber_mechanism?: string | null;
   summary?: string;
   effect?: string | null;
-  effect_specificity?: string;
+  effect_specificity?: string | null;
   civilian_service_impact?: {
     service?: string; geographic_scope?: string; duration_text?: string | null;
     affected?: { source_says?: string | null; unit?: string | null } | string | null;
