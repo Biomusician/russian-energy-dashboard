@@ -1700,6 +1700,77 @@ ITER21_TESTARCH_MUTATIONS = [
 ]
 MUTATIONS += ITER21_TESTARCH_MUTATIONS
 
+# Iteration 22: shared record filters, the safe CSV export and the map loading states. The catching
+# tests run the SHIPPED TypeScript in Node (tests/test_iteration22_filters.py); the browser-level
+# proof is in web/e2e/filters.e2e.ts and web/e2e/maploading.e2e.ts.
+R_CSV = "web/src/global/recordCsv.ts"
+R_FILTERS = "web/src/global/recordFilters.ts"
+R_BAR = "web/src/global/RecordFilterBar.tsx"
+R_COUNTRY = "web/src/global/countryFilters.ts"
+R_VIEW = "web/src/global/CountryView.tsx"
+ITER22_FILTER_MUTATIONS = [
+    ("the CSV dumps each source object instead of its allow-listed parts (a hidden field is exported)",
+     [(R_CSV, _text('    citations: bare ? "" : citationsCell(e.sources),', '    citations: bare ? "" : JSON.stringify(e.sources),'))],
+     "csv_exports_only_the_allow_listed_columns"),
+    ("the CSV exports a campaign-covered record's region, facility, operator and status",
+     [(R_CSV, _text("  const open = !restricted;", "  const open = true;"))],
+     "csv_campaign_covered_records_export_no_place or csv_an_abstracted_attack_record"),
+    ("an attack record kept at country level is exported as an ordinary record",
+     [(R_CSV, _text('  return !!e.publication || placementKind(e, sys) === "country_attack";', "  return !!e.publication;"))],
+     "csv_an_abstracted_attack_record"),
+    ("a covered record whose own text names its facility exports that text",
+     [(R_CSV, _text("  const bare = restricted && !abstracted;", "  const bare = false;"))],
+     "csv_a_covered_record_whose_own_text or csv_campaign_covered_records_export_no_place"),
+    ("an abstracted impact record exports its region",
+     [(R_CSV, _text('    admin1_code: abstracted ? "" : text(r.admin1?.code),', "    admin1_code: text(r.admin1?.code),"))],
+     "csv_an_abstracted_impact_record"),
+    ("a kinetic impact record without the policy field is exported as standard",
+     [(R_CSV, _text('  return r.publication_policy === "country_abstracted" || ABSTRACT_CAUSES.includes(text(r.cause_family))',
+                    '  return r.publication_policy === "country_abstracted" || false'))],
+     "csv_an_abstracted_impact_record"),
+    ("a formula cell reaches the spreadsheet unguarded",
+     [(R_CSV, _text("  if (/^[=+\\-@\\t\\r]/.test(s)) s = `'${s}`;\n", ""))],
+     "csv_a_formula_in_any_cell"),
+    ("the CSV loses its byte-order mark",
+     [(R_CSV, _text('  return `${CSV_BOM}${lines.join("\\r\\n")}\\r\\n`;', '  return `${lines.join("\\r\\n")}\\r\\n`;'))],
+     "csv_is_rfc_4180_with_a_bom"),
+    ("a quote inside a cell is not doubled",
+     [(R_CSV, _text("""`"${s.replace(/"/g, '""')}"`""", '`"${s}"`'))],
+     "csv_is_rfc_4180_with_a_bom"),
+    ("filters widen the list instead of narrowing it (any filter admits)",
+     [(R_FILTERS, _text("  return records.filter((r) => defs.every((d) => admits(d, state, r, today)));",
+                        "  return records.filter((r) => defs.some((d) => admits(d, state, r, today)));"))],
+     "filters_combine_and_never_widen"),
+    ("the filter bar hides records without saying so",
+     [(R_BAR, _text("      {hidden > 0 && <> The filters hide <strong>{hidden}</strong>.</>}\n      {on.length > 0 &&",
+                    "      {on.length > 0 &&"))],
+     "filter_bar_always_says_how_many"),
+    ("a link's unknown filter value is dropped silently",
+     [(R_FILTERS, _text("    if (bad.length > 0) {", "    if (false) {"))],
+     "unknown_value_or_filter_is_dropped_with_a_note"),
+    ("a link's unknown filter is dropped silently",
+     [(R_FILTERS, _text("  if (unknownIds.length > 0) {", "  if (false) {"))],
+     "unknown_value_or_filter_is_dropped_with_a_note"),
+    ("a link's unknown filter value is obeyed (the list is emptied)",
+     [(R_FILTERS, _text("      if (known.has(v)) { if (!good.includes(v)) good.push(v); } else if (!bad.includes(v)) bad.push(v);",
+                        "      if (!good.includes(v)) good.push(v);"))],
+     "unknown_value_or_filter_is_dropped_with_a_note"),
+    ("the country address drops the filters, so a reload shows the full list",
+     [(R_COUNTRY, _text("  return withFilterQuery(q.toString(), filterQuery);", "  return q.toString();"))],
+     "country_address_keeps_the_filters"),
+    ("the country page does not read its filters from the address on load",
+     [(R_VIEW, _text("useState(() => filterQueryOf(window.location.search))", 'useState("")'))],
+     "country_view_reads_its_filters_from_the_address"),
+    ("the country page exports every record instead of the shown list",
+     [(R_VIEW, _text("countryExport(bundle.system, shown, scope.length,", "countryExport(bundle.system, scope, scope.length,"))],
+     "country_view_exports_the_shown_list"),
+    ("a link to a hidden record clears every filter instead of the ones that hide it",
+     [(R_FILTERS, _text("  return defs.filter((d) => !admits(d, state, record, today)).map((d) => d.id);",
+                        "  return defs.map((d) => d.id);"))],
+     "a_link_to_a_record_the_filters_hide"),
+]
+MUTATIONS += ITER22_FILTER_MUTATIONS
+
 
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
@@ -1715,6 +1786,7 @@ def _sandbox():
 
 TEST_FILES = ("tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py",
               "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py", "tests/test_compare.py", "tests/test_iteration21_performance.py", "tests/test_iteration21_home.py", "tests/test_iteration21_theatre_ux.py", "tests/test_iteration21_country.py", "tests/test_whats_new.py", "tests/test_iteration21_safety.py", "tests/test_iteration21_testarch.py")
+TEST_FILES += ("tests/test_iteration22_filters.py",)
 
 
 def _run(box, k):

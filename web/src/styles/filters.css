@@ -7,7 +7,7 @@
 .rf-menu { position: relative; }
 .rf-toggle.is-on { border-color: var(--accent-dim); color: var(--text); }
 .rf-summary { color: var(--accent); }
-.rf-toggle::after { content: " BE"; color: var(--text-faint); }
+.rf-toggle::after { content: " \25BE"; color: var(--text-faint); }
 .rf-panel {
   position: absolute; z-index: 30; top: calc(100% + 4px); left: 0; min-width: 240px; max-width: min(360px, 90vw);
   max-height: 60vh; overflow: auto; padding: 8px 10px;
@@ -36,6 +36,11 @@
 .rf-note {
   margin: 4px 0; padding: 5px 8px; color: var(--text);
   border-left: 2px solid var(--amber); background: var(--bg-inset); border-radius: var(--radius);
+}
+
+.filter-empty {
+  margin: 6px 0; padding: 6px 8px; color: var(--text);
+  background: var(--bg-inset); border: 1px solid var(--line-soft); border-radius: var(--radius);
 }
 
 /* The export controls: two plain buttons and the line that says what they hold. */

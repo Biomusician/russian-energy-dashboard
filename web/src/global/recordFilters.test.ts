@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  NO_FILTERS, activeFilters, applyFilters, dateBounds, daysBefore, decodeFilters, describeFilters, encodeFilters,
+  NO_FILTERS, activeFilters, applyFilters, dateBounds, daySpan, daysBefore, decodeFilters, describeFilters, encodeFilters,
   filterQueryOf, hidingFilters, isIsoDay, optionCounts, optionsPresent, setDate, toggleChoice, withFilterQuery,
   withoutFilters, type FilterDef, type FilterState,
 } from "./recordFilters";
@@ -61,6 +61,19 @@ describe("applying filters", () => {
     expect(ids(applyFilters(RECS, DEFS, state({ dates: { date: { from: "2026-01-06", to: "2026-01-31" } } }), TODAY))).toBe("");
     expect(ids(applyFilters(RECS, DEFS, state({ dates: { date: { from: null, to: "2023-12-31" } } }), TODAY))).toBe("de");
     expect(ids(applyFilters(RECS, DEFS, state({ dates: { date: { from: "2026-09-01", to: null } } }), TODAY))).toBe("ab");
+  });
+
+  it("a record dated only to a month is shown for any range that touches the month", () => {
+    const month: Rec = { id: "m", date: "2026-04", cause: "unknown", tags: [] };
+    const range = (from: string | null, to: string | null) =>
+      applyFilters([month], DEFS, state({ dates: { date: { from, to } } }), TODAY).length;
+    expect(range("2026-04-01", "2026-04-30")).toBe(1);
+    expect(range("2026-04-20", null)).toBe(1);
+    expect(range(null, "2026-04-01")).toBe(1);
+    expect(range("2026-05-01", null)).toBe(0);
+    expect(range(null, "2026-03-31")).toBe(0);
+    expect(daySpan("2026")).toEqual(["2026-01-01", "2026-12-31"]);
+    expect(daySpan("2026-04-08")).toEqual(["2026-04-08", "2026-04-08"]);
   });
 
   it("calendar arithmetic crosses months and leap days without a local clock", () => {
