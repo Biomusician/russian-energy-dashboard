@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   COUNTRY_BRIEF_CAVEATS, GULF_BRIEF_CAVEATS, MAX_BRIEF_STATEMENTS, briefRecords, briefStatements, briefText,
-  countryImpactBrief, gulfImpactBrief, metricText, tallyImpacts,
+  countryImpactBrief, gulfImpactBrief, metricText, provisionalNote, tallyImpacts,
   type BriefImpacts, type BriefSourceEntry, type BriefVocabularies, type CountryBriefInput, type GulfBriefInput,
 } from "./impactBrief";
 import { IMPACT_BRIEF, drawCountryImpactBrief, drawGulfImpactBrief, wrapText } from "./drawImpactBrief";
@@ -48,15 +48,18 @@ const VOCAB: BriefVocabularies = {
 
 /** Served-shaped records carrying everything a brief must not repeat. */
 const SERVED = [
-  { cause_family: "kinetic", digital_category: null, civilian_service_impact: [{ service: "electricity" }],
+  { cause_family: "kinetic", cyber_mechanism: null, civilian_service_impact: [{ service: "electricity" }],
+    evidence_confidence: { category: "HIGH", label: "High", score: 84 },
     country_name: "Qatar", system_id: "qa", admin1: { code: "QA-ZZ", name: "Secretville" }, summary: "Strike on the Hidden Works terminal.",
     sources: [{ url: "https://example.test/hidden-works", title_en: "Hidden Works hit" }] },
-  { cause_family: "cyber", digital_category: "cyber", civilian_service_impact: [{ service: "water" }, { service: "water" }, { service: "telecom" }],
-    country_name: "Oman", system_id: "om", attribution: { actor: "Example Group" } },
-  { cause_family: "industrial_technical", digital_category: "it_failure", civilian_service_impact: [],
-    country_name: "Oman", system_id: "om" },
-  { cause_family: "natural_hazard", civilian_service_impact: null, country_name: "Kuwait", system_id: "kw" },
+  { cause_family: "cyber", cyber_mechanism: "it_outage_affecting_operations", civilian_service_impact: [{ service: "water" }, { service: "water" }, { service: "telecom" }],
+    country_name: "Oman", system_id: "om", attribution: { actor: "Example Group" },
+    evidence_confidence: { category: "PRELIMINARY", label: "Preliminary", score: 20 } },
+  { cause_family: "industrial_technical", cyber_mechanism: "it_outage_affecting_operations", civilian_service_impact: [],
+    country_name: "Oman", system_id: "om", evidence_confidence: { category: null, reason: "No source supports the occurrence.", score: 0 } },
+  { cause_family: "natural_hazard", civilian_service_impact: null, country_name: "Kuwait", system_id: "kw", evidence_confidence: null },
 ];
+const METHOD_ORDER = [{ id: "HIGH", label: "High" }, { id: "MODERATE", label: "Moderate" }, { id: "PRELIMINARY", label: "Preliminary" }];
 
 const impactsOf = (records = SERVED): BriefImpacts => ({
   records: briefRecords(records), vocab: VOCAB, window: { start: "2022-01-01", end: "present" },
@@ -97,9 +100,35 @@ const country = (over: Partial<CountryBriefInput> = {}): CountryBriefInput => ({
 });
 
 describe("what a brief may know about a record", () => {
-  it("a brief record has a cause, an IT-failure flag and services, and nothing else", () => {
-    for (const r of briefRecords(SERVED)) expect(Object.keys(r).sort()).toEqual(["cause", "itFailure", "services"]);
+  it("a brief record has a cause, an IT-failure flag, services and a confidence category, and nothing else", () => {
+    for (const r of briefRecords(SERVED)) expect(Object.keys(r).sort()).toEqual(["cause", "confidence", "itFailure", "services"]);
     expect(briefRecords(SERVED)[1].services).toEqual(["water", "telecom"]);
+    // The category and its served label only: the score never crosses.
+    expect(briefRecords(SERVED)[0].confidence).toEqual({ id: "HIGH", label: "High" });
+    expect(JSON.stringify(briefRecords(SERVED))).not.toMatch(/score|84|reason/);
+  });
+
+  it("a record the build did not assess is Not assessed: its own bucket, last, never Preliminary", () => {
+    const records = briefRecords(SERVED);
+    expect(records[2].confidence).toBeNull();
+    expect(records[3].confidence).toBeNull();
+    const t = tallyImpacts(records, { ...VOCAB, confidence: METHOD_ORDER });
+    expect(t.byConfidence).toEqual([{ id: "HIGH", label: "High", n: 1 }, { id: "PRELIMINARY", label: "Preliminary", n: 1 },
+                                    { id: "not_assessed", label: "Not assessed", n: 2 }]);
+    expect(t.byConfidence.reduce((a, r) => a + r.n, 0)).toBe(t.total);
+    // The method's order, not the counts: a large Preliminary bucket still follows High.
+    const many = briefRecords([SERVED[1], SERVED[1], SERVED[1], SERVED[0]]);
+    expect(tallyImpacts(many, { ...VOCAB, confidence: METHOD_ORDER }).byConfidence.map((r) => r.id)).toEqual(["HIGH", "PRELIMINARY"]);
+    // Without the method the categories are in name order, with Not assessed still last.
+    expect(tallyImpacts(records, VOCAB).byConfidence.map((r) => r.label)).toEqual(["High", "Preliminary", "Not assessed"]);
+  });
+
+  it("a cause family the taxonomy adds is labelled from the taxonomy, in its place", () => {
+    const vocab = { ...VOCAB, cause_families: [...VOCAB.cause_families.slice(0, 2), { id: "authority_order", label: "Ordered by an authority" }, ...VOCAB.cause_families.slice(2)] };
+    const t = tallyImpacts(briefRecords([...SERVED, { cause_family: "authority_order" }]), vocab);
+    expect(t.byCause.map((r) => r.label)).toEqual(["Kinetic attack", "Cyber", "Ordered by an authority", "Natural hazard", "IT failure (not an attack)"]);
+    drawGulfImpactBrief(gulf({ impacts: { ...impactsOf([...SERVED, { cause_family: "authority_order" }]) as object, vocab } as BriefImpacts }));
+    expect(text()).toMatch(/Ordered by an authority 1/);
   });
 
   it("the tally follows the vocabulary's order, never the counts, and an IT failure is never cyber", () => {
@@ -114,9 +143,9 @@ describe("what a brief may know about a record", () => {
     expect(t.byService.map((r) => [r.id, r.n])).toEqual([["electricity", 1], ["water", 1], ["telecom", 1]]);
   });
 
-  it("a cause the vocabulary lacks is still counted, under its own id", () => {
+  it("a cause the vocabulary lacks is still counted, under its own key in plain words", () => {
     const t = tallyImpacts(briefRecords([{ cause_family: "new_family" }]), VOCAB);
-    expect(t.byCause).toEqual([{ id: "new_family", label: "new_family", n: 1 }]);
+    expect(t.byCause).toEqual([{ id: "new_family", label: "New family", n: 1 }]);
   });
 });
 
@@ -125,7 +154,7 @@ describe("regional context statements in a brief", () => {
     const s = briefStatements(ENTRIES, TYPES);
     expect(s.map((x) => [x.asOf, x.type])).toEqual([["2026-09-22", "Shipping, in aggregate"], ["2026-04-10", "Supply, in aggregate"]]);
     expect(s[1].source).toBe("Agency B; Wire C");
-    expect(s[1].figure).toBe("2 to 3 mb/d (estimated fall)");
+    expect(s[1].figure).toBe("between 2 and 3 mb/d (estimated fall)");
   });
 
   it("never carries more than five", () => {
@@ -138,6 +167,7 @@ describe("regional context statements in a brief", () => {
     expect(metricText({ value: 60, unit: "million barrels", basis: null })).toBe("60 million barrels");
     expect(metricText({ value: 9, qualifier: "about", unit: "percent" })).toBe("about 9 percent");
     expect(metricText({ value: 1.5, qualifier: "at_most", unit: "mb/d" })).toBe("up to 1.5 mb/d");
+    expect(metricText({ value: null, unit: "mb/d" })).toBeNull();
   });
 });
 
@@ -207,6 +237,42 @@ describe("the Gulf impact brief, as drawn", () => {
     const words = text().match(/word\d+/g) ?? [];
     expect(words).toHaveLength(60);
     expect(drawn.filter((d) => /word\d+/.test(d.t)).length).toBeGreaterThan(1);
+  });
+});
+
+describe("evidence confidence in a brief", () => {
+  it("is drawn as categories in words; no score, no number out of a hundred, no percentage", () => {
+    drawGulfImpactBrief(gulf({ impacts: { ...(impactsOf() as object), vocab: { ...VOCAB, confidence: METHOD_ORDER } } as BriefImpacts }));
+    expect(text()).toMatch(/By evidence confidence \(the quality of the public evidence: not severity, not a probability\)/);
+    expect(drawn.some((d) => d.t === "High 1 · Preliminary 1 · Not assessed 2")).toBe(true);
+    expect(text()).toMatch(/Not assessed: the build could not assess the record's evidence\. It is not the lowest category\./);
+    expect(text()).not.toMatch(/\/ ?100|of 100|\b84\b|\b20\b/);
+    // The one percentage on the page is the energy share, on the energy line.
+    for (const d of drawn) if (/%/.test(d.t)) expect(d.t).toMatch(/of the world total/);
+    drawn = [];
+    drawCountryImpactBrief(country({ impacts: impactsOf() }));
+    expect(text()).toMatch(/High 1 · Not assessed 2 · Preliminary 1|High 1 · Preliminary 1 · Not assessed 2/);
+    expect(text()).not.toMatch(/\/ ?100|of 100|%/);
+  });
+
+  it("says the categories are provisional when the served method says so, in both briefs", () => {
+    const provisional = { statement: "Evidence confidence describes the quality of the public evidence.",
+                          categories: [{ label: "High", meaning: "Corroborated." }], provisional: provisionalNote("provisional: thresholds not calibrated") };
+    drawGulfImpactBrief(gulf({ confidence: provisional }));
+    expect(drawn.some((d) => d.t === "The categories are provisional: thresholds not calibrated.")).toBe(true);
+    drawn = [];
+    drawCountryImpactBrief(country({ confidence: provisional }));
+    expect(drawn.some((d) => d.t === "The categories are provisional: thresholds not calibrated.")).toBe(true);
+    drawn = [];
+    drawGulfImpactBrief(gulf());
+    expect(text()).not.toMatch(/provisional/i);
+  });
+
+  it("reads the served status, and only a provisional one", () => {
+    expect(provisionalNote("provisional: thresholds not calibrated")).toBe("thresholds not calibrated");
+    expect(provisionalNote("Provisional")).toBe("");
+    expect(provisionalNote("calibrated 2026-11-20")).toBeNull();
+    expect(provisionalNote(undefined)).toBeNull();
   });
 });
 

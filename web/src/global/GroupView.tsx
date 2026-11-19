@@ -24,16 +24,34 @@ import { LIST_ENTRY_NOTE, PLACEMENT_LABEL, listEntry, memberPlace } from "./plac
 import { CountryLink, CoveredRunItem, fmtEpisodeDate } from "./feedItems";
 import "../styles/gulf.css";
 import { GlobalNavBar } from "./GlobalNav";
+import {
+  ContextSection, CoverageSection, ReportedImpacts, SectionNav, ServicesSection, TellBlock, TellToggle, useImpactLayer, useNarrow,
+} from "./GroupImpactSections";
+import { groupRecords } from "./groupImpacts";
+import { SECTIONS, sectionFrom, tellLines, withSection, type SectionId } from "./groupSections";
+import { loadConfidenceMethod } from "./impacts";
+import { gulfBriefFilename, gulfBriefInput } from "./impacts/brief/briefInputs";
+import { drawGulfImpactBrief } from "./impacts/brief/drawImpactBrief";
+import { canvasPng } from "./compareExport";
 
 /** A regional overview (iteration 19): the Gulf.
  *
  *  A REGIONAL ENERGY PICTURE, NOT A TARGET SET. Everything on this page is a country: its annual
- *  national energy figures, whether it is monitored, how far its research has got, and its
- *  reviewed historical events in date order. There is no facility layer, no route, no strait, no
- *  shipping, and no ordering of countries by anything but name.
+ *  national energy figures, whether it is monitored, how far its research has got, its reviewed
+ *  historical events in date order and, since iteration 22, the reviewed impact records of the
+ *  same countries (a separate corpus that is not scored). There is no facility layer, no vessel or
+ *  path of any kind, and no ordering or counting of countries by anything but name.
  *
- *  The first screen is the product: what the view is, the members, the map and the one control
- *  that colours it. The longer statements follow the map, one click from the caveat line above it.
+ *  ONE EXCEPTION, NARROW AND DELIBERATE (iteration 22, GLOBAL_IMPACT_METHODOLOGY.md §10). The
+ *  section "Gulf & Hormuz context" carries aggregate, dated, sourced statements about the Gulf and
+ *  the strait: no status flag, only what a named source said and when. Every other section, the
+ *  event feed, the impact cards and the energy table still carry no strait or shipping wording,
+ *  and no section, that one included, names a ship, a path, bypass capacity or what depends on what.
+ *  The block "Why there is no tanker map" is the one place that says what is not collected.
+ *
+ *  ONE PAGE. The sections are headings on one scrolling document (groupSections.ts), each with an
+ *  address (`section=`); nothing is behind a tab. The first screen is still the product: what the
+ *  view is, the members, the map and the one control that colours it.
  */
 
 type Box = [number, number, number, number];
@@ -96,6 +114,19 @@ export default function GroupView({ id }: { id: string }) {
   const [selA3, setSelA3] = useState<string | null>(null);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  // Iteration 22: the impact layer's files, the section the reader is in, and the impact brief.
+  const layer = useImpactLayer();
+  const narrow = useNarrow();
+  // On a phone "What this page can tell you" opens from the caveat line, so the map keeps the first screen.
+  const [tellOpen, setTellOpen] = useState(false);
+  const [briefMsg, setBriefMsg] = useState<string | null>(null);
+  const [current, setCurrent] = useState<SectionId | null>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
+  // The section a link asked for, until the page has settled there or the reader moves by hand.
+  const wanted = useRef<SectionId | null>(sectionFrom(window.location.search)?.id ?? null);
+  // The section the reader chose from the navigation: it stays marked until they scroll by hand,
+  // because a short last section can never reach the top of the page.
+  const chosen = useRef<SectionId | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -177,6 +208,106 @@ export default function GroupView({ id }: { id: string }) {
     }
   };
 
+  // ---- sections (iteration 22) ----
+  const groupKey = manifest ? groupBySlug(manifest, id)?.id ?? null : null;
+  // The records shown follow the membership filter, as the cards and the event feed do. A brief is
+  // always about the whole group.
+  const shownIds = useMemo(() => shown.map((s) => s.system_id), [shown]);
+  const allIds = useMemo(() => group?.members ?? [], [group]);
+
+  const goTo = (sid: SectionId, write = true) => {
+    const s = SECTIONS.find((x) => x.id === sid);
+    if (!s) return;
+    if (write) {
+      window.history.replaceState(null, "", `${window.location.pathname}${withSection(window.location.search, sid)}`);
+      wanted.current = null;
+      chosen.current = sid;
+    }
+    setCurrent(sid);
+    // Focus follows the jump, so a keyboard or screen-reader user continues from the section.
+    if (sid === "overview") {
+      // The overview is the page's top: its heading is the page's own.
+      pageRef.current?.scrollTo({ top: 0 });
+      pageRef.current?.querySelector<HTMLElement>("h1")?.focus({ preventScroll: true });
+      return;
+    }
+    const el = document.getElementById(s.anchor);
+    if (!el) return;
+    el.scrollIntoView({ block: "start" });
+    el.querySelector<HTMLElement>("h2")?.focus({ preventScroll: true });
+  };
+
+  // A reader who scrolls, types or touches has taken over: a late file must not pull them back,
+  // and the navigation goes back to marking where they are.
+  useEffect(() => {
+    const release = () => { wanted.current = null; chosen.current = null; };
+    const events = ["wheel", "touchmove", "keydown", "pointerdown"] as const;
+    events.forEach((e) => window.addEventListener(e, release, { passive: true }));
+    return () => events.forEach((e) => window.removeEventListener(e, release));
+  }, []);
+
+  // A linked section is opened once the page above it has its height, and again as each later file
+  // lands (each can move the section), until everything has settled.
+  const settled = !!ctx && layer.impacts.state !== "loading" && layer.regional.state !== "loading";
+  useEffect(() => {
+    if (!wanted.current || !ctx) return;
+    goTo(wanted.current, false);
+    if (settled) wanted.current = null;
+  }, [ctx, settled, layer.impacts.state, layer.regional.state]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Which section is at the top of the page, for the navigation's "you are here" mark.
+  useEffect(() => {
+    const page = pageRef.current;
+    if (!page) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      if (chosen.current || wanted.current) return;
+      const top = page.getBoundingClientRect().top;
+      // At the very end of the page the last section is the one in view, however short it is.
+      const atEnd = page.scrollTop > 0 && page.scrollTop + page.clientHeight >= page.scrollHeight - 2;
+      let at: SectionId = SECTIONS[0].id;
+      for (const s of SECTIONS) {
+        const el = document.getElementById(s.anchor);
+        if (el && (atEnd || el.getBoundingClientRect().top - top <= 96)) at = s.id;
+      }
+      setCurrent(at);
+    };
+    const onScroll = () => { if (!frame) frame = window.requestAnimationFrame(update); };
+    page.addEventListener("scroll", onScroll, { passive: true });
+    update();
+    return () => { page.removeEventListener("scroll", onScroll); if (frame) window.cancelAnimationFrame(frame); };
+  }, [ctx]);
+
+  const tell = ctx ? tellLines({
+    label: ctx.label,
+    members: ctx.systems.length,
+    metrics: Object.values(ctx.metrics).map((x) => x.label),
+    impacts: layer.impacts.state === "loading" ? "loading" : layer.impacts.state === "failed" ? "unavailable"
+      : groupRecords(layer.impacts.data, allIds).length > 0 ? "some" : "empty",
+    context: layer.regional.state === "loading" ? "loading" : layer.regional.state === "failed" ? "unavailable"
+      : layer.regional.data.entries.length > 0 ? "some" : "empty",
+  }) : [];
+
+  const runImpactBrief = async () => {
+    if (!ctx || !metricId || !manifest || !group) { setBriefMsg("The page is still loading."); return; }
+    // Still loading is not the same as unavailable: the brief would say the records could not be loaded.
+    if (layer.impacts.state === "loading" || layer.regional.state === "loading") { setBriefMsg("The impact records are still loading. Try again in a moment."); return; }
+    try {
+      const method = await loadConfidenceMethod().catch(() => null);
+      const canvas = drawGulfImpactBrief(gulfBriefInput({
+        ctx, metricId, members: allIds,
+        payload: layer.impacts.state === "ready" ? layer.impacts.data : null,
+        regional: layer.regional.state === "ready" ? layer.regional.data : null,
+        method, buildDate: manifest.build_time,
+      }));
+      downloadBlob(await canvasPng(canvas), gulfBriefFilename(id, manifest.build_time));
+      setBriefMsg(`Impact brief saved (${canvas.width}×${canvas.height}). It describes the whole group, whatever filters are on, and carries its own caveats.`);
+    } catch (err) {
+      setBriefMsg(err instanceof Error ? err.message : String(err));
+    }
+  };
+
   if (manifest && !group) {
     return (
       <div className="global-page">
@@ -188,19 +319,20 @@ export default function GroupView({ id }: { id: string }) {
   }
 
   return (
-    <div className="global-page group-page">
+    <div className="global-page group-page" ref={pageRef}>
       <header className="site-head">
         <GlobalNavBar trail={[{ label: group?.label ?? "Regional overview" }]} extra={<SystemSwitcher current={null} group={id} />} />
       </header>
       <div className="page-title">
         <div>
-          <h1 className="ribbon-title">{group?.label ?? "Regional"} overview</h1>
-          <div className="ribbon-sub">National energy context and reviewed historical events · open sources only</div>
+          <h1 className="ribbon-title" tabIndex={-1}>{group?.label ?? "Regional"} overview</h1>
+          <div className="ribbon-sub">National energy context, reviewed historical events and reported impacts · open sources only</div>
         </div>
       </div>
       <main className="global-main">
+        <SectionNav current={current} onGo={goTo} />
         {ctx && (
-          <section className="group-top" aria-label="What this view is">
+          <section className="group-top group-section" id="sec-overview" aria-label="What this view is">
             <p className="group-purpose">
               <strong>{ctx.label}:</strong> national energy figures for {ctx.systems.length} countries, for context, each
               linked to its own reviewed record of reported disruptions.
@@ -208,17 +340,19 @@ export default function GroupView({ id }: { id: string }) {
             <p className="group-caveat-line small">
               National context only · not comparable between countries · no index or score, and nothing here is an order of importance.{" "}
               <a href="#group-notes">Notes and caveats</a>
+              {narrow && <>{" · "}<TellToggle open={tellOpen} onToggle={setTellOpen} /></>}
             </p>
+            {(!narrow || tellOpen) && <TellBlock lines={tell} onGo={goTo} />}
           </section>
         )}
         {ctxFailed && <p className="warn-text" role="alert">The regional context could not be loaded. Each country's own page still works.</p>}
 
         <PanelBoundary label="The regional energy context">
         {ctx && m && metricId && (
-          <section aria-label="Regional energy context" className="group-context">
+          <section aria-label="Regional energy context" className="group-context group-section" id="sec-energy">
             {/* The section's own heading, for the heading outline only: its h3s ("National figures")
                 otherwise followed the page's h1 directly (iteration 21). The map says it visually. */}
-            <h2 className="sr-only">Regional energy context</h2>
+            <h2 className="sr-only" tabIndex={-1}>Regional energy context</h2>
             <div className="group-stage">
               <div className={`group-controls map-control-row${colourBy ? "" : " is-neutral"}`}>
                 <label className="small">Colour the map by{" "}
@@ -429,7 +563,8 @@ export default function GroupView({ id }: { id: string }) {
         )}
         </PanelBoundary>
 
-        <h2 className="level-head">Monitored systems in this view</h2>
+        <div className="group-section" id="sec-systems">
+        <h2 className="level-head" tabIndex={-1}>Monitored systems in this view</h2>
         <section aria-label="Monitored systems in this view" className="sys-cards">
           {shown.map((s) => (
             <article key={s.system_id} className="sys-card panel" aria-label={s.name}>
@@ -462,11 +597,29 @@ export default function GroupView({ id }: { id: string }) {
             </article>
           ))}
         </section>
+        </div>
+
+        <section className="group-section" id="sec-impacts" aria-labelledby="sec-impacts-h">
+        <h2 className="level-head" id="sec-impacts-h" tabIndex={-1}>Reported impacts</h2>
+        <p className="small section-lead">Two reviewed sets of records, kept apart: impact records (energy and essential civilian services, with
+          cause, attribution and evidence confidence), and below them the country systems' own reviewed energy events.</p>
+        <div className="group-brief-row">
+          <button className="ghost group-brief-btn" onClick={runImpactBrief}>Download impact brief (PNG)</button>
+          <span className="small dim">One page for the group as a whole: national energy context, the newest dated regional statements,
+            published impact evidence in aggregate, and the caveats. No country is counted.</span>
+        </div>
+        {briefMsg && <p className="small" role="status">{briefMsg}</p>}
+        <PanelBoundary label="The impact records">
+          <div className="impact-records" role="region" aria-label="Reviewed impact records for this region">
+            <h3>Impact records, newest first</h3>
+            <ReportedImpacts impacts={layer.impacts} members={shownIds} memberCount={shown.length} />
+          </div>
+        </PanelBoundary>
 
         <PanelBoundary label="The recent list">
         {ctx?.recent && (
           <section className="panel global-note recent-evidence" aria-label="Recent reviewed events in this region">
-            <h2 className="eyebrow">Reviewed events in this region, newest first</h2>
+            <h3 className="eyebrow">Reviewed events in this region, newest first</h3>
             <p className="small dim">Date order only. No severity, size or country order. Most of these records were added as a historical
               backfill when the countries joined the site: a long list is a larger dataset, not a deteriorating region.
               A country with few records has few records found, which is not few disruptions.</p>
@@ -482,6 +635,29 @@ export default function GroupView({ id }: { id: string }) {
           </section>
         )}
         </PanelBoundary>
+        </section>
+
+        <section className="group-section" id="sec-services" aria-labelledby="sec-services-h">
+          <h2 className="level-head" id="sec-services-h" tabIndex={-1}>Cyber &amp; civilian services</h2>
+          <PanelBoundary label="Cyber and civilian services">
+            <ServicesSection impacts={layer.impacts} members={shownIds} />
+          </PanelBoundary>
+        </section>
+
+        {/* The one section that may carry aggregate wording about the strait and shipping (§10). */}
+        <section className="group-section" id="sec-context" aria-labelledby="sec-context-h">
+          <h2 className="level-head" id="sec-context-h" tabIndex={-1}>Gulf &amp; Hormuz context</h2>
+          <PanelBoundary label="The regional context">
+            <ContextSection regional={layer.regional} groupId={groupKey} />
+          </PanelBoundary>
+        </section>
+
+        <section className="group-section" id="sec-coverage" aria-labelledby="sec-coverage-h">
+          <h2 className="level-head" id="sec-coverage-h" tabIndex={-1}>Research coverage</h2>
+          <PanelBoundary label="Research coverage">
+            <CoverageSection impacts={layer.impacts} systems={shown} />
+          </PanelBoundary>
+        </section>
       </main>
     </div>
   );

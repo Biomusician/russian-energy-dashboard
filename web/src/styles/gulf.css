@@ -83,3 +83,104 @@
   .member-list li { flex: 0 0 auto; scroll-snap-align: start; }
   .member-btn { width: auto; white-space: nowrap; }
 }
+
+/* ---- Sections (iteration 22): one scrolling page, a heading per section, each with an address. ---- */
+
+/* The in-page navigation. Links in a row; on a wide screen it stays at the top of the page while
+   the reader scrolls. The current section is said by aria-current and shown by an underline and
+   weight, never by colour alone. */
+.group-sections { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); margin: -6px 0 0; }
+.group-sections ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 4px; }
+.group-sections a {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 4px 10px;
+  color: var(--text-dim); text-decoration: none; font: 500 12.5px/1.2 var(--sans); border-bottom: 2px solid transparent;
+}
+.group-sections a:hover { color: var(--text); text-decoration: underline; }
+.group-sections a[aria-current] { color: var(--text); font-weight: 700; border-bottom-color: var(--accent); }
+.group-sections a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* A jump lands the section clear of the sticky navigation. */
+.group-section { display: flex; flex-direction: column; gap: 8px; min-width: 0; scroll-margin-top: 48px; }
+/* The heading is as wide as its words, so the focus ring a jump leaves is around the words. */
+.group-section > h2, .group-section > div > h2 { scroll-margin-top: 48px; align-self: flex-start; }
+.group-section h2:focus-visible, .group-page h1:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.group-section h3 { margin: 8px 0 0; font-size: 13.5px; }
+.group-section h4 { margin: 6px 0 2px; font-size: 12.5px; color: var(--text); }
+.group-section .section-lead { margin: 0; max-width: 980px; line-height: 1.5; }
+.group-section > p, .group-section .impact-records > p, .group-section dl, .group-section ul { max-width: 980px; }
+.group-section .group-tell-list { max-width: none; }
+
+/* "What this page can tell you": as many columns of questions as the width holds. */
+.group-tell { margin-top: 4px; }
+.group-tell-head { margin: 0; font-size: 13px; }
+.group-tell-list { margin: 4px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 6px 22px; }
+.group-tell-list dt { font-weight: 600; color: var(--text); }
+.group-tell-list dd { margin: 0; color: var(--text-dim); line-height: 1.4; }
+/* On a phone the block opens from this phrase inside the caveat line: an inline disclosure, which
+   reaches the 24px AA size (styles/touch.css) without becoming a row of its own above the map. */
+.group-tell-toggle { font-size: inherit; padding: 0; min-height: 24px; text-decoration: underline; }
+
+/* Impact records: one list, in date order. A rule between cards, no panel per card. */
+.impact-records { min-width: 0; }
+.impact-list { list-style: none; margin: 4px 0 0; padding: 0; max-width: 980px; }
+.impact-list > li { border-top: 1px solid var(--line-soft); }
+.impact-list > li:first-child { border-top: 0; }
+.impact-corpus-note { border-left: 3px solid var(--amber); padding: 2px 0 2px 8px; margin: 4px 0; line-height: 1.5; }
+.impact-attempts { margin-top: 10px; }
+.impact-caveats ul { margin: 4px 0; padding-left: 18px; }
+
+.cause-kinds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 18px; margin: 0; }
+.cause-kinds dt { font-weight: 600; }
+.cause-kinds dd { margin: 0; color: var(--text-dim); line-height: 1.4; }
+.service-rows { list-style: none; margin: 0; padding: 0; }
+.service-rows li { padding: 4px 0; border-top: 1px solid var(--line-soft); line-height: 1.5; overflow-wrap: anywhere; }
+.service-rows li:first-child { border-top: 0; }
+.service-when { font-weight: 600; }
+.service-place { color: var(--text); }
+/* A cyber record or IT failure in brief; the full card is under Reported impacts, once. */
+.digital-list { list-style: none; margin: 4px 0 0; padding: 0; max-width: 980px; }
+.digital-row { padding: 8px 0; border-top: 1px solid var(--line-soft); }
+.digital-row:first-child { border-top: 0; }
+.digital-row .event-head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 12.5px; }
+.digital-row .event-tags { display: flex; flex-wrap: wrap; margin-top: 4px; }
+.digital-row .event-tag { white-space: normal; }
+.digital-summary { margin: 5px 0 3px; line-height: 1.5; color: var(--text); }
+.digital-foot { margin: 3px 0 0; }
+.impact-list > li:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.impact-list > li { scroll-margin-top: 48px; }
+
+/* The fixed statement of what is not collected, above the regional timeline. */
+.no-tanker-map { max-width: 980px; padding: 8px 12px; border: 1px solid var(--line); border-left: 3px solid var(--amber); background: var(--bg-inset); }
+.no-tanker-map h3 { margin: 0 0 4px; }
+.no-tanker-map p { margin: 3px 0; line-height: 1.5; }
+.ctx-filter { max-width: 980px; margin: 0; padding: 6px 10px; border: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.ctx-filter legend { padding: 0 4px; color: var(--text-dim); }
+.ctx-filter label { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; }
+.ctx-count { margin: 0; }
+.group-section .ctx-timeline { max-width: 980px; }
+
+.family-list, .coverage-links, .withheld-list, .research-limits { margin: 2px 0; padding-left: 18px; line-height: 1.5; }
+.family-list li { margin-bottom: 4px; }
+.coverage-links li { padding: 2px 0; }
+
+@media (max-width: 900px) {
+  /* Below the width where the page is one column, the navigation scrolls away with the page:
+     a bar pinned over a short screen costs more than it gives. */
+  .group-sections { position: static; }
+}
+
+@media (max-width: 600px) {
+  /* One row the reader can swipe, inside itself, as the member strip is: the page never scrolls
+     sideways, and the map stays in the first screen. */
+  .group-sections ul { flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity; }
+  .group-sections li { flex: 0 0 auto; scroll-snap-align: start; }
+  .group-sections a { min-height: 44px; white-space: nowrap; }
+  .group-tell-list, .cause-kinds { grid-template-columns: minmax(0, 1fr); }
+  .group-tell { margin-top: 0; }
+  .ctx-filter label { min-height: 44px; }
+}
+
+@media print {
+  .group-sections, .ctx-filter, .group-tell-toggle { display: none; }
+  .impact-list > li, .digital-row, .ctx-entry { break-inside: avoid; }
+}

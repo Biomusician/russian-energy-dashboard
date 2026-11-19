@@ -4,21 +4,28 @@
  *  stop a misreading has to be in the image, and nothing the page withholds may reach it.
  *
  *  HOW THE SECOND HALF IS KEPT. The compositor is handed a `BriefRecord`, not a record. A
- *  `BriefRecord` has three fields: the reported cause, whether the record is an IT failure, and the
- *  services with a documented effect. It has no place, no region, no summary, no source, no actor
- *  and no country, so a withheld place cannot be drawn: it never arrives. The Gulf brief's tally is
- *  made from those three fields alone, which is also why it cannot carry a per-country figure.
+ *  `BriefRecord` has four fields: the reported cause, whether the record is an IT failure, the
+ *  services with a documented effect, and the evidence-confidence category. It has no place, no
+ *  region, no summary, no source, no actor and no country, so a withheld place cannot be drawn: it
+ *  never arrives. The Gulf brief's tally is made from those four fields alone, which is also why
+ *  it cannot carry a per-country figure.
+ *
+ *  EVIDENCE CONFIDENCE is a category in words, from the served method. A record the build did not
+ *  assess is "Not assessed", its own bucket, never the lowest category. No score is drawn: not as
+ *  a number out of a hundred and not as a percentage, because it is neither a probability nor a grade.
  *
  *  No React and no DOM here: the Python tests and vitest read these lines exactly as they ship, and
  *  `drawImpactBrief.ts` only places them.
  */
+import { IT_OUTAGE } from "../model";
 
 /** The fields of a served impact record a brief reads. Structural, so the served type satisfies it. */
 export interface BriefSourceRecord {
   cause_family: string;
-  /** Served by the build: "cyber" for a cyberattack, "it_failure" for a failure with no malice. */
-  digital_category?: string | null;
+  cyber_mechanism?: string | null;
   civilian_service_impact?: readonly { service: string }[] | null;
+  /** `category` null (with the build's reason) is a record that was not assessed. */
+  evidence_confidence?: { category?: string | null; label?: string | null } | null;
 }
 
 /** Everything a brief knows about one record. See the header: this narrowness is the safeguard. */
@@ -26,14 +33,26 @@ export interface BriefRecord {
   cause: string;
   itFailure: boolean;
   services: string[];
+  /** The served category and its served label; null when the build did not assess the record. */
+  confidence: { id: string; label: string } | null;
 }
 
 export function briefRecords(records: readonly BriefSourceRecord[]): BriefRecord[] {
   return records.map((r) => ({
     cause: r.cause_family,
-    itFailure: r.digital_category === "it_failure",
+    // The shared rule (model.ts, methodology §4): digitally triggered without malice. Never "cyber".
+    itFailure: r.cause_family !== "cyber" && r.cyber_mechanism === IT_OUTAGE,
     services: [...new Set((r.civilian_service_impact ?? []).map((x) => x.service))],
+    confidence: r.evidence_confidence?.category
+      ? { id: r.evidence_confidence.category, label: r.evidence_confidence.label || plain(r.evidence_confidence.category) }
+      : null,
   }));
+}
+
+/** A key in plain words, for a key no served vocabulary names: "authority_order" reads "Authority order". */
+function plain(id: string): string {
+  const s = id.replace(/_/g, " ").toLowerCase();
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 interface Labelled { id: string; label: string }
@@ -43,12 +62,15 @@ export interface BriefVocabularies {
   cause_families: readonly Labelled[];
   sectors: readonly Labelled[];
   digital_categories?: readonly Labelled[];
+  /** The served method's categories, in its own order. Without it the categories are listed by name. */
+  confidence?: readonly Labelled[];
 }
 
 export interface TallyRow { id: string; label: string; n: number }
-export interface ImpactTally { total: number; byCause: TallyRow[]; byService: TallyRow[] }
+export interface ImpactTally { total: number; byCause: TallyRow[]; byService: TallyRow[]; byConfidence: TallyRow[] }
 
 const IT_FAILURE = "it_failure";
+export const NOT_ASSESSED = { id: "not_assessed", label: "Not assessed" } as const;
 
 /** Published records by reported cause and by service, in the VOCABULARY's order. Never ordered by
  *  the count: a list sorted by a figure is a ranking of causes. An IT failure is counted apart from
@@ -61,20 +83,35 @@ export function tallyImpacts(records: readonly BriefRecord[], vocab: BriefVocabu
     cause.set(key, (cause.get(key) ?? 0) + 1);
     for (const s of r.services) service.set(s, (service.get(s) ?? 0) + 1);
   }
+  // Evidence confidence: the served categories in the method's order (by name without it), then
+  // "Not assessed" last. Never by count, and "Not assessed" is never merged into a category.
+  const assessed = new Map<string, { label: string; n: number }>();
+  let notAssessed = 0;
+  for (const r of records) {
+    if (!r.confidence) { notAssessed += 1; continue; }
+    const row = assessed.get(r.confidence.id) ?? { label: r.confidence.label, n: 0 };
+    row.n += 1;
+    assessed.set(r.confidence.id, row);
+  }
+  const order = vocab.confidence
+    ? [...vocab.confidence.map((c) => c.id).filter((id) => assessed.has(id)), ...[...assessed.keys()].filter((id) => !vocab.confidence!.some((c) => c.id === id))]
+    : [...assessed.keys()].sort((a, b) => assessed.get(a)!.label.localeCompare(assessed.get(b)!.label, "en"));
+  const byConfidence: TallyRow[] = order.map((id) => ({ id, label: vocab.confidence?.find((c) => c.id === id)?.label ?? assessed.get(id)!.label, n: assessed.get(id)!.n }));
+  if (notAssessed > 0) byConfidence.push({ ...NOT_ASSESSED, n: notAssessed });
   const itLabel = vocab.digital_categories?.find((d) => d.id === IT_FAILURE)?.label ?? "IT failure";
   const causeVocab: Labelled[] = [...vocab.cause_families, { id: IT_FAILURE, label: `${itLabel} (not an attack)` }];
   const rows = (vocabulary: readonly Labelled[], counts: Map<string, number>): TallyRow[] => {
     const out = vocabulary.filter((v) => counts.has(v.id)).map((v) => ({ id: v.id, label: v.label, n: counts.get(v.id)! }));
     // A value the vocabulary does not have is still a published record: listed last under its own id.
-    for (const [id, n] of counts) if (!vocabulary.some((v) => v.id === id)) out.push({ id, label: id, n });
+    for (const [id, n] of counts) if (!vocabulary.some((v) => v.id === id)) out.push({ id, label: plain(id), n });
     return out;
   };
-  return { total: records.length, byCause: rows(causeVocab, cause), byService: rows(vocab.sectors, service) };
+  return { total: records.length, byCause: rows(causeVocab, cause), byService: rows(vocab.sectors, service), byConfidence };
 }
 
 // ---- regional context statements ------------------------------------------------------------------
 
-export interface BriefMetric { value: number; value_upper?: number | null; qualifier?: string | null; unit: string; basis?: string | null }
+export interface BriefMetric { value: number | null; value_upper?: number | null; qualifier?: string | null; unit: string | null; basis?: string | null }
 
 /** The fields of a served regional-context entry a brief reads. */
 export interface BriefSourceEntry {
@@ -82,7 +119,7 @@ export interface BriefSourceEntry {
   context_type: string;
   claim: string;
   metric?: BriefMetric | null;
-  sources: readonly { publisher: string; date?: string | null }[];
+  sources: readonly { publisher: string | null }[];
   is_latest_of_type?: boolean;
 }
 
@@ -92,12 +129,15 @@ const QUALIFIER_WORDS: Record<string, string> = { about: "about ", at_least: "at
 
 const num = (v: number) => v.toLocaleString("en-GB", { maximumFractionDigits: 2 });
 
-/** A statement's figure in the source's own unit, with what it measures. Nothing is converted. */
-export function metricText(m: BriefMetric): string {
+/** A statement's figure in the source's own unit, with what it measures. Nothing is converted.
+ *  The same words as the page's timeline (ContextTimeline.metricText), written out here so the
+ *  image does not depend on which vocabulary a page happened to load. */
+export function metricText(m: BriefMetric): string | null {
+  if (m.value == null) return null;
   const value = m.qualifier === "range" && m.value_upper != null
-    ? `${num(m.value)} to ${num(m.value_upper)}`
+    ? `between ${num(m.value)} and ${num(m.value_upper)}`
     : `${QUALIFIER_WORDS[m.qualifier ?? ""] ?? ""}${num(m.value)}`;
-  return `${value} ${m.unit}${m.basis ? ` (${m.basis})` : ""}`;
+  return `${value}${m.unit ? ` ${m.unit}` : ""}${m.basis ? ` (${m.basis})` : ""}`;
 }
 
 export const MAX_BRIEF_STATEMENTS = 5;
@@ -124,7 +164,7 @@ export function briefStatements(entries: readonly BriefSourceEntry[], typeLabels
       type: label(e.context_type),
       claim: e.claim,
       figure: e.metric ? metricText(e.metric) : null,
-      source: e.sources.map((s) => s.publisher).filter(Boolean).join("; ") || "source not stated",
+      source: [...new Set(e.sources.map((s) => s.publisher).filter(Boolean))].join("; ") || "source not stated",
     });
     if (out.length >= MAX_BRIEF_STATEMENTS) break;
   }
@@ -149,12 +189,25 @@ export interface ImpactBrief {
 export type BriefImpacts = "unavailable" | {
   records: BriefRecord[];
   vocab: BriefVocabularies;
-  window: { start: string; end: string };
+  /** The research window, when the payload states one. */
+  window: { start: string; end: string } | null;
   limitations: string[];
   latestResearch: string | null;
 };
 
-export interface BriefConfidence { statement: string; categories: readonly { label: string; meaning: string }[] }
+export interface BriefConfidence {
+  statement: string;
+  categories: readonly { label: string; meaning: string }[];
+  /** Set when the served method says its categories are provisional: what it says after the word
+   *  ("thresholds not calibrated"), or "" when it says no more. The brief then says so in a line. */
+  provisional?: string | null;
+}
+
+/** "provisional: thresholds not calibrated" -> "thresholds not calibrated"; any other status -> null. */
+export function provisionalNote(status: string | null | undefined): string | null {
+  const m = /^\s*provisional\b[\s:,;-]*(.*)$/i.exec(status ?? "");
+  return m ? m[1].trim() : null;
+}
 
 /** The three sentences every Gulf brief ends with. Each is its own line so none can ride on another. */
 export const GULF_BRIEF_CAVEATS = [
@@ -170,7 +223,8 @@ export const COUNTRY_BRIEF_CAVEATS = [
 
 const SIGN = "Energy Disruption Monitor · open sources only";
 
-function windowText(w: { start: string; end: string }): string {
+function windowText(w: { start: string; end: string } | null): string | null {
+  if (!w) return null;
   return `${isoDate(w.start)} to ${w.end === "present" ? "the present" : isoDate(w.end)}`;
 }
 
@@ -184,6 +238,8 @@ function tallyLines(t: ImpactTally): BriefLine[] {
   } else {
     out.push({ text: "No record documents an effect on a named service.", dim: true });
   }
+  out.push({ text: "By evidence confidence (the quality of the public evidence: not severity, not a probability):", dim: true });
+  out.push({ text: t.byConfidence.map((r) => `${r.label} ${r.n}`).join(" · ") });
   return out;
 }
 
@@ -201,7 +257,10 @@ function confidenceBlock(c: BriefConfidence | null): BriefBlock {
   return {
     heading: "Evidence confidence",
     lines: c
-      ? [{ text: c.statement }, ...c.categories.map((k) => ({ text: `${k.label}: ${k.meaning}`, dim: true }))]
+      ? [{ text: c.statement },
+         ...(c.provisional != null ? [{ text: `The categories are provisional${c.provisional ? `: ${c.provisional}` : ""}.`, strong: true }] : []),
+         ...c.categories.map((k) => ({ text: `${k.label}: ${k.meaning}`, dim: true })),
+         { text: `${NOT_ASSESSED.label}: the build could not assess the record's evidence. It is not the lowest category.`, dim: true }]
       // The sentence that must travel even when the method file did not load.
       : [{ text: "Evidence confidence describes the quality of the public evidence for a record. It is not a probability and not a measure of severity." }],
   };
@@ -243,7 +302,7 @@ export function gulfImpactBrief(x: GulfBriefInput): ImpactBrief {
     evidence.push({ text: `No published impact record for these ${x.group.members} countries in the current reviewed corpus. That describes this dataset, not the region.` });
   } else {
     const t = tallyImpacts(impacts.records, impacts.vocab);
-    evidence.push({ text: `${t.total} published ${t.total === 1 ? "record" : "records"} for the ${x.group.members} countries together, ${window}.`, strong: true });
+    evidence.push({ text: `${t.total} published ${t.total === 1 ? "record" : "records"} for the ${x.group.members} countries together${window ? `, ${window}` : ""}.`, strong: true });
     evidence.push(...tallyLines(t));
   }
   evidence.push({ text: "Reviewed records from a separate corpus that is not scored. Published records, not incidents that occurred.", dim: true });
@@ -329,7 +388,7 @@ export function countryImpactBrief(x: CountryBriefInput): ImpactBrief {
     evidence.push({ text: `No published impact record for ${where} in the current reviewed corpus. That describes this dataset, not ${where}.` });
   } else {
     const t = tallyImpacts(impacts.records, impacts.vocab);
-    evidence.push({ text: `${t.total} published ${t.total === 1 ? "record" : "records"} inside ${where}, ${window}.`, strong: true });
+    evidence.push({ text: `${t.total} published ${t.total === 1 ? "record" : "records"} inside ${where}${window ? `, ${window}` : ""}.`, strong: true });
     evidence.push(...tallyLines(t));
   }
   evidence.push({ text: "Reviewed records from a separate corpus that is not scored: they enter no index and not the country's energy record above.", dim: true });
