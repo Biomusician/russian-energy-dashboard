@@ -44,6 +44,8 @@ export function AttributionLine({ a }: { a: Attribution | null | undefined }) {
   const method = confidenceMethod();
   const confidence = attributionConfidenceLabel(a, method?.attribution.labels);
   const disputed = a.status === "DISPUTED";
+  const meanings = method?.attribution.meanings ?? {};
+  const meaning = confidence && a.confidence && Object.prototype.hasOwnProperty.call(meanings, a.confidence) ? meanings[a.confidence] : null;
   // A claim of responsibility is the actor's own statement: nobody "attributed" it.
   const by = a.status === "CLAIMED" && a.basis.every((b) => b === "actor_self_claim")
     ? "claimed by the actor itself" : a.basis.length > 0 ? `attributed by ${basisText(a.basis)}` : null;
@@ -71,10 +73,10 @@ export function AttributionLine({ a }: { a: Attribution | null | undefined }) {
           </ul>
         </>
       )}
-      {a.status === "CLAIMED" && <div className="dim">{definitionOf("attribution_statuses", "CLAIMED") ?? "A claim is not corroboration."}</div>}
-      {confidence && method?.attribution.meanings[a.confidence ?? ""] && (
-        <div className="dim">Attribution confidence {confidence.toLowerCase()}: {method.attribution.meanings[a.confidence as string]}</div>
-      )}
+      {meaning
+        ? <div className="dim">Attribution confidence {confidence?.toLowerCase()}: {meaning}</div>
+        // Without the method's wording, a claim still says what a claim is worth.
+        : a.status === "CLAIMED" && <div className="dim">{definitionOf("attribution_statuses", "CLAIMED") ?? "A claim is not corroboration."}</div>}
     </div>
   );
 }
