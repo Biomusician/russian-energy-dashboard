@@ -1,0 +1,210 @@
+{
+  "note": "SYNTHETIC records the gate must refuse. Never built, never served.",
+  "cases": [
+    {
+      "expect": "only evidence of occurrence",
+      "record": {
+        "impact_id": "imp-2025-06-10-ita-water-synthetic-s4-only",
+        "record_kind": "disruption",
+        "date": "2025-06-10",
+        "date_precision": "day",
+        "date_end": null,
+        "country_a3": "ITA",
+        "admin1": null,
+        "geographic_precision": "country",
+        "domain": "civilian_service",
+        "sector": "water",
+        "technology": null,
+        "cause_family": "cyber",
+        "contributing_factors": [],
+        "cyber_mechanism": "malicious_configuration_change",
+        "summary": "SYNTHETIC FIXTURE. Example Water reported unauthorised changes to treatment settings at a water utility in Italy.",
+        "effect": "SYNTHETIC FIXTURE. Water was supplied under a boil notice for two days.",
+        "effect_specificity": "described",
+        "inclusion_basis": 1,
+        "civilian_service_impact": [
+          {
+            "service": "water",
+            "geographic_scope": "local",
+            "affected": {
+              "value": null,
+              "unit": null,
+              "qualifier": null,
+              "source_says": "residents of the utility's service area (no figure given)"
+            },
+            "duration_text": "two days, per the operator",
+            "source_refs": [
+              "s1"
+            ]
+          }
+        ],
+        "attribution": {
+          "status": "UNKNOWN",
+          "actor": null,
+          "actor_type": null,
+          "basis": [],
+          "as_of": null,
+          "statement": null,
+          "competing": [],
+          "source_refs": []
+        },
+        "ai_involvement": {
+          "status": "NONE_REPORTED",
+          "relation": null,
+          "role": null,
+          "as_of": null,
+          "statement": null,
+          "source_refs": []
+        },
+        "dispute": null,
+        "sources": [
+          {
+            "ref": "s1",
+            "url": "https://channel.example/synthetic/post/2002",
+            "publisher": "Example Group C channel",
+            "date": "2025-06-11",
+            "language": "en",
+            "source_role": "researcher",
+            "medium": "social",
+            "social": {
+              "platform": "Example Messenger",
+              "handle": "@example_group_c",
+              "display_name": "Example Group C",
+              "account_tier": "S4",
+              "identity_basis": "The group's own long-running channel (synthetic); identity not otherwise established.",
+              "posted_at": "2025-06-11T12:00:00Z"
+            },
+            "supports": [
+              "occurrence",
+              "effect"
+            ],
+            "opened": true,
+            "derived_claim": "Synthetic: Example Group C channel states the fixture claim."
+          }
+        ],
+        "episode_id": null,
+        "episode_basis": null,
+        "publication_policy": "standard",
+        "research_pass": "i22-fixture",
+        "first_published": "2026-11-19",
+        "review": {
+          "reviewed_at": "2026-11-19",
+          "review_status": "blind_reviewed",
+          "roles": {
+            "evidence": "accept",
+            "attribution_source": "accept",
+            "safety": "accept"
+          },
+          "ai_check": "not_applicable",
+          "social_check": "passed",
+          "disposition": "confirmed"
+        }
+      }
+    },
+    {
+      "expect": "only evidence of occurrence",
+      "record": {
+        "impact_id": "imp-2025-06-10-ita-water-synthetic-self-claim-only",
+        "record_kind": "disruption",
+        "date": "2025-06-10",
+        "date_precision": "day",
+        "date_end": null,
+        "country_a3": "ITA",
+        "admin1": null,
+        "geographic_precision": "country",
+        "domain": "civilian_service",
+        "sector": "water",
+        "technology": null,
+        "cause_family": "cyber",
+        "contributing_factors": [],
+        "cyber_mechanism": "malicious_configuration_change",
+        "summary": "SYNTHETIC FIXTURE. Example Water reported unauthorised changes to treatment settings at a water utility in Italy.",
+        "effect": "SYNTHETIC FIXTURE. Water was supplied under a boil notice for two days.",
+        "effect_specificity": "described",
+        "inclusion_basis": 1,
+        "civilian_service_impact": [
+          {
+            "service": "water",
+            "geographic_scope": "local",
+            "affected": {
+              "value": null,
+              "unit": null,
+              "qualifier": null,
+              "source_says": "residents of the utility's service area (no figure given)"
+            },
+            "duration_text": "two days, per the operator",
+            "source_refs": [
+              "s1"
+            ]
+          }
+        ],
+        "attribution": {
+          "status": "CLAIMED",
+          "actor": "Example Group C",
+          "actor_type": "hacktivist",
+          "basis": [
+            "actor_self_claim"
+          ],
+          "as_of": "2025-06-11",
+          "statement": "SYNTHETIC. Example Group C claimed responsibility. A claim is not corroboration.",
+          "competing": [],
+          "source_refs": [
+            "s1"
+          ]
+        },
+        "ai_involvement": {
+          "status": "NONE_REPORTED",
+          "relation": null,
+          "role": null,
+          "as_of": null,
+          "statement": null,
+          "source_refs": []
+        },
+        "dispute": null,
+        "sources": [
+          {
+            "ref": "s1",
+            "url": "https://channel.example/synthetic/post/2002",
+            "publisher": "Example Group C channel",
+            "date": "2025-06-11",
+            "language": "en",
+            "source_role": "actor_self_claim",
+            "medium": "social",
+            "social": {
+              "platform": "Example Messenger",
+              "handle": "@example_group_c",
+              "display_name": "Example Group C",
+              "account_tier": "S4",
+              "identity_basis": "The group's own long-running channel (synthetic); identity not otherwise established.",
+              "posted_at": "2025-06-11T12:00:00Z"
+            },
+            "supports": [
+              "occurrence",
+              "effect",
+              "attribution"
+            ],
+            "opened": true,
+            "derived_claim": "Synthetic: Example Group C channel states the fixture claim."
+          }
+        ],
+        "episode_id": null,
+        "episode_basis": null,
+        "publication_policy": "standard",
+        "research_pass": "i22-fixture",
+        "first_published": "2026-11-19",
+        "review": {
+          "reviewed_at": "2026-11-19",
+          "review_status": "blind_reviewed",
+          "roles": {
+            "evidence": "accept",
+            "attribution_source": "accept",
+            "safety": "accept"
+          },
+          "ai_check": "not_applicable",
+          "social_check": "passed",
+          "disposition": "confirmed"
+        }
+      }
+    }
+  ]
+}

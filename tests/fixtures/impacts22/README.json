@@ -1,0 +1,3 @@
+{
+  "note": "SYNTHETIC FIXTURE for the global impact layer (iteration 22). Every record, publisher, actor and figure here is invented; countries are real ISO codes only so the map has somewhere to draw. Built for development with `python -m pipeline.global_impacts --fixture`; the output is never committed."
+}

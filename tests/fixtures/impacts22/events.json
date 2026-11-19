@@ -1,0 +1,1819 @@
+{
+  "schema_version": 1,
+  "records": [
+    {
+      "impact_id": "imp-2023-01-16-kaz-district-energy-synthetic-heating-failure",
+      "record_kind": "disruption",
+      "date": "2023-01-16",
+      "date_precision": "day",
+      "date_end": "unknown",
+      "country_a3": "KAZ",
+      "admin1": null,
+      "geographic_precision": "country",
+      "domain": "energy",
+      "sector": "district_energy",
+      "technology": "unknown",
+      "cause_family": "industrial_technical",
+      "contributing_factors": [],
+      "cyber_mechanism": null,
+      "summary": "SYNTHETIC FIXTURE. The Example City Administration declared an emergency after district heating failed in a city in Kazakhstan.",
+      "effect": "SYNTHETIC FIXTURE. Heating to apartment buildings was interrupted in winter conditions.",
+      "effect_specificity": "described",
+      "inclusion_basis": 1,
+      "civilian_service_impact": [
+        {
+          "service": "district_energy",
+          "geographic_scope": "local",
+          "affected": "unknown",
+          "duration_text": "not_researched",
+          "source_refs": [
+            "s1"
+          ]
+        }
+      ],
+      "attribution": {
+        "status": "NOT_APPLICABLE",
+        "actor": null,
+        "actor_type": null,
+        "basis": [],
+        "as_of": null,
+        "statement": null,
+        "competing": [],
+        "source_refs": []
+      },
+      "ai_involvement": {
+        "status": "NONE_REPORTED",
+        "relation": null,
+        "role": null,
+        "as_of": null,
+        "statement": null,
+        "source_refs": []
+      },
+      "dispute": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://administration.example/synthetic/statement",
+          "publisher": "Example Administration",
+          "date": "2023-01-17",
+          "language": "en",
+          "source_role": "government",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": false,
+          "title_original": "Synthetic headline from Example Administration",
+          "title_en": "Synthetic headline from Example Administration",
+          "derived_claim": "Synthetic: Example Administration states the fixture claim."
+        },
+        {
+          "ref": "s2",
+          "url": "https://portal.example/synthetic/statement",
+          "publisher": "Example Portal",
+          "date": "2023-01-18",
+          "language": "en",
+          "source_role": "aggregator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Portal",
+          "title_en": "Synthetic headline from Example Portal",
+          "derived_claim": "Synthetic: Example Portal states the fixture claim."
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "standard",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "not_applicable",
+        "social_check": "not_applicable",
+        "disposition": "confirmed"
+      }
+    },
+    {
+      "impact_id": "imp-2024-01-04-rus-district-energy-synthetic-heating-pipe",
+      "record_kind": "disruption",
+      "date": "2024-01-04",
+      "date_precision": "day",
+      "date_end": null,
+      "country_a3": "RUS",
+      "admin1": null,
+      "geographic_precision": "country",
+      "domain": "energy",
+      "sector": "district_energy",
+      "technology": "other_energy",
+      "cause_family": "industrial_technical",
+      "contributing_factors": [],
+      "cyber_mechanism": null,
+      "summary": "SYNTHETIC FIXTURE. The Example Regional Administration reported that a heating pipe failed and homes in Russia lost heating.",
+      "effect": "SYNTHETIC FIXTURE. About 20,000 residents were without heating for several days.",
+      "effect_specificity": "quantified",
+      "inclusion_basis": 2,
+      "civilian_service_impact": [
+        {
+          "service": "district_energy",
+          "geographic_scope": "local",
+          "affected": {
+            "value": 20000,
+            "unit": "residents",
+            "qualifier": "about",
+            "source_says": "about 20,000 residents"
+          },
+          "duration_text": "several days, per the administration",
+          "source_refs": [
+            "s1",
+            "s2"
+          ]
+        }
+      ],
+      "attribution": {
+        "status": "NOT_APPLICABLE",
+        "actor": null,
+        "actor_type": null,
+        "basis": [],
+        "as_of": null,
+        "statement": null,
+        "competing": [],
+        "source_refs": []
+      },
+      "ai_involvement": {
+        "status": "NONE_REPORTED",
+        "relation": null,
+        "role": null,
+        "as_of": null,
+        "statement": null,
+        "source_refs": []
+      },
+      "dispute": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://regional-administration.example/synthetic/statement",
+          "publisher": "Example Regional Administration",
+          "date": "2024-01-04",
+          "language": "en",
+          "source_role": "government",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Regional Administration",
+          "title_en": "Synthetic headline from Example Regional Administration",
+          "derived_claim": "Synthetic: Example Regional Administration states the fixture claim."
+        },
+        {
+          "ref": "s2",
+          "url": "https://agency-news.example/synthetic/statement",
+          "publisher": "Example Agency News",
+          "date": "2024-01-05",
+          "language": "en",
+          "source_role": "wire",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Agency News",
+          "title_en": "Synthetic headline from Example Agency News",
+          "derived_claim": "Synthetic: Example Agency News states the fixture claim.",
+          "origin": "wire:example agency"
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "standard",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "not_applicable",
+        "social_check": "not_applicable",
+        "disposition": "confirmed"
+      }
+    },
+    {
+      "impact_id": "imp-2024-05-zaf-municipal-services-synthetic-city-systems",
+      "record_kind": "disruption",
+      "date": "2024-05",
+      "date_precision": "month",
+      "date_end": null,
+      "country_a3": "ZAF",
+      "admin1": null,
+      "geographic_precision": "country",
+      "domain": "civilian_service",
+      "sector": "municipal_services",
+      "technology": null,
+      "cause_family": "unknown",
+      "contributing_factors": [],
+      "cyber_mechanism": null,
+      "summary": "SYNTHETIC FIXTURE. City online services in South Africa were reported unavailable for several weeks; the cause is not established.",
+      "effect": "SYNTHETIC FIXTURE. Residents could not use online municipal services.",
+      "effect_specificity": "vague",
+      "inclusion_basis": 5,
+      "civilian_service_impact": [],
+      "attribution": {
+        "status": "UNKNOWN",
+        "actor": null,
+        "actor_type": null,
+        "basis": [],
+        "as_of": null,
+        "statement": null,
+        "competing": [],
+        "source_refs": []
+      },
+      "ai_involvement": {
+        "status": "NONE_REPORTED",
+        "relation": null,
+        "role": null,
+        "as_of": null,
+        "statement": null,
+        "source_refs": []
+      },
+      "dispute": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://roundup.example/synthetic/statement",
+          "publisher": "Example Roundup",
+          "date": "2024-06-03",
+          "language": "en",
+          "source_role": "aggregator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Roundup",
+          "title_en": "Synthetic headline from Example Roundup",
+          "derived_claim": "Synthetic: Example Roundup states the fixture claim."
+        },
+        {
+          "ref": "s2",
+          "url": "https://social-platform.example/synthetic/post/3003",
+          "publisher": "Example Reporter",
+          "date": "2024-05-21",
+          "language": "en",
+          "source_role": "media",
+          "medium": "social",
+          "social": {
+            "platform": "Example Platform",
+            "handle": "@example_reporter",
+            "display_name": "Example Reporter",
+            "account_tier": "S2",
+            "identity_basis": "Named staff reporter listed on the outlet's site (synthetic).",
+            "posted_at": "2024-05-21T07:15:00Z"
+          },
+          "supports": [
+            "occurrence"
+          ],
+          "opened": true,
+          "derived_claim": "Synthetic: Example Reporter states the fixture claim."
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "standard",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "not_applicable",
+        "social_check": "passed",
+        "disposition": "confirmed"
+      }
+    },
+    {
+      "impact_id": "imp-2024-07-22-bra-electricity-synthetic-storm-blackout",
+      "record_kind": "disruption",
+      "date": "2024-07-22",
+      "date_precision": "day",
+      "date_end": null,
+      "country_a3": "BRA",
+      "admin1": null,
+      "geographic_precision": "country",
+      "domain": "energy",
+      "sector": "electricity",
+      "technology": "transmission",
+      "cause_family": "natural_hazard",
+      "contributing_factors": [],
+      "cyber_mechanism": null,
+      "summary": "SYNTHETIC FIXTURE. A storm brought down transmission lines and interrupted electricity supply in Brazil.",
+      "effect": "SYNTHETIC FIXTURE. Example Grid said 2 million customers lost power; the Example Regulator said the number was far lower.",
+      "effect_specificity": "quantified",
+      "inclusion_basis": 2,
+      "civilian_service_impact": [
+        {
+          "service": "electricity",
+          "geographic_scope": "regional",
+          "affected": {
+            "value": 2000000,
+            "unit": "customers",
+            "qualifier": "disputed",
+            "source_says": "2 million customers, per the operator; disputed by the regulator"
+          },
+          "duration_text": null,
+          "source_refs": [
+            "s1"
+          ]
+        }
+      ],
+      "attribution": {
+        "status": "NOT_APPLICABLE",
+        "actor": null,
+        "actor_type": null,
+        "basis": [],
+        "as_of": null,
+        "statement": null,
+        "competing": [],
+        "source_refs": []
+      },
+      "ai_involvement": {
+        "status": "NONE_REPORTED",
+        "relation": null,
+        "role": null,
+        "as_of": null,
+        "statement": null,
+        "source_refs": []
+      },
+      "dispute": {
+        "about": "effect",
+        "statement": "SYNTHETIC. The operator and the regulator give materially different figures for customers affected.",
+        "source_refs": [
+          "s1",
+          "s2"
+        ]
+      },
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://grid.example/synthetic/statement",
+          "publisher": "Example Grid",
+          "date": "2024-07-22",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Grid",
+          "title_en": "Synthetic headline from Example Grid",
+          "derived_claim": "Synthetic: Example Grid states the fixture claim."
+        },
+        {
+          "ref": "s2",
+          "url": "https://regulator.example/synthetic/statement",
+          "publisher": "Example Regulator",
+          "date": "2024-07-25",
+          "language": "en",
+          "source_role": "regulator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Regulator",
+          "title_en": "Synthetic headline from Example Regulator",
+          "derived_claim": "Synthetic: Example Regulator states the fixture claim."
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "standard",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "not_applicable",
+        "social_check": "not_applicable",
+        "disposition": "corrected"
+      }
+    },
+    {
+      "impact_id": "imp-2024-08-irn-electricity-synthetic-heat-shortfall",
+      "record_kind": "disruption",
+      "date": "2024-08",
+      "date_precision": "month",
+      "date_end": null,
+      "country_a3": "IRN",
+      "admin1": null,
+      "geographic_precision": "country",
+      "domain": "energy",
+      "sector": "electricity",
+      "technology": "thermal_generation",
+      "cause_family": "supply_shortfall",
+      "contributing_factors": [
+        "natural_hazard"
+      ],
+      "cyber_mechanism": null,
+      "summary": "SYNTHETIC FIXTURE. The Example Power Ministry announced rolling electricity cuts in Iran during a period of high demand.",
+      "effect": "SYNTHETIC FIXTURE. Households and offices had scheduled cuts of about two hours a day.",
+      "effect_specificity": "described",
+      "inclusion_basis": 5,
+      "civilian_service_impact": [
+        {
+          "service": "electricity",
+          "geographic_scope": "national",
+          "affected": {
+            "value": null,
+            "unit": null,
+            "qualifier": null,
+            "source_says": "households and offices (no figure given)"
+          },
+          "duration_text": "about two hours a day, per the ministry",
+          "source_refs": [
+            "s1"
+          ]
+        }
+      ],
+      "attribution": {
+        "status": "NOT_APPLICABLE",
+        "actor": null,
+        "actor_type": null,
+        "basis": [],
+        "as_of": null,
+        "statement": null,
+        "competing": [],
+        "source_refs": []
+      },
+      "ai_involvement": {
+        "status": "NONE_REPORTED",
+        "relation": null,
+        "role": null,
+        "as_of": null,
+        "statement": null,
+        "source_refs": []
+      },
+      "dispute": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://power-ministry.example/synthetic/notice/7001",
+          "publisher": "Example Power Ministry",
+          "date": "2024-08-30",
+          "language": "en",
+          "source_role": "government",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "derived_claim": "Synthetic: Example Power Ministry states the fixture claim."
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "standard",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "not_applicable",
+        "social_check": "not_applicable",
+        "disposition": "confirmed"
+      }
+    },
+    {
+      "impact_id": "imp-2024-11-18-pol-telecom-synthetic-network-outage",
+      "record_kind": "disruption",
+      "date": "2024-11-18",
+      "date_precision": "day",
+      "date_end": null,
+      "country_a3": "POL",
+      "admin1": null,
+      "geographic_precision": "country",
+      "domain": "civilian_service",
+      "sector": "telecom",
+      "technology": null,
+      "cause_family": "cyber",
+      "contributing_factors": [],
+      "cyber_mechanism": "destructive_malware",
+      "summary": "SYNTHETIC FIXTURE. Example Telecom reported a cyber incident that took its mobile network offline across Poland.",
+      "effect": "SYNTHETIC FIXTURE. Mobile voice and data were unavailable nationwide for most of a day.",
+      "effect_specificity": "described",
+      "inclusion_basis": 4,
+      "civilian_service_impact": [
+        {
+          "service": "telecom",
+          "geographic_scope": "national",
+          "affected": {
+            "value": null,
+            "unit": null,
+            "qualifier": null,
+            "source_says": "its mobile subscribers nationwide (no figure given)"
+          },
+          "duration_text": "most of one day, per the operator",
+          "source_refs": [
+            "s1",
+            "s2"
+          ]
+        }
+      ],
+      "attribution": {
+        "status": "ASSESSED",
+        "actor": "Example Group B",
+        "actor_type": "state_linked",
+        "basis": [
+          "victim_operator"
+        ],
+        "as_of": "2024-12-02",
+        "statement": "SYNTHETIC. Example Telecom assessed that Example Group B was responsible.",
+        "competing": [],
+        "source_refs": [
+          "s1"
+        ]
+      },
+      "ai_involvement": {
+        "status": "NONE_REPORTED",
+        "relation": null,
+        "role": null,
+        "as_of": null,
+        "statement": null,
+        "source_refs": []
+      },
+      "dispute": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://telecom.example/synthetic/statement",
+          "publisher": "Example Telecom",
+          "date": "2024-11-18",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect",
+            "attribution"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Telecom",
+          "title_en": "Synthetic headline from Example Telecom",
+          "derived_claim": "Synthetic: Example Telecom states the fixture claim."
+        },
+        {
+          "ref": "s2",
+          "url": "https://social-platform.example/synthetic/post/1001",
+          "publisher": "Example Telecom (official account)",
+          "date": "2024-11-18",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "social",
+          "social": {
+            "platform": "Example Platform",
+            "handle": "@example_telecom",
+            "display_name": "Example Telecom",
+            "account_tier": "S1",
+            "identity_basis": "Account linked from the operator's own website (synthetic).",
+            "posted_at": "2024-11-18T09:30:00Z"
+          },
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "derived_claim": "Synthetic: Example Telecom (official account) states the fixture claim."
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "standard",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "not_applicable",
+        "social_check": "passed",
+        "disposition": "confirmed"
+      }
+    },
+    {
+      "impact_id": "imp-2025-02-aus-electricity-synthetic-hail-solar",
+      "record_kind": "disruption",
+      "date": "2025-02",
+      "date_precision": "month",
+      "date_end": null,
+      "country_a3": "AUS",
+      "admin1": null,
+      "geographic_precision": "country",
+      "domain": "energy",
+      "sector": "electricity",
+      "technology": "solar_generation",
+      "cause_family": "natural_hazard",
+      "contributing_factors": [],
+      "cyber_mechanism": null,
+      "summary": "SYNTHETIC FIXTURE. Hail damaged solar farms in Australia and their output was interrupted, a trade publication reported.",
+      "effect": "SYNTHETIC FIXTURE. Output from the affected solar farms was interrupted.",
+      "effect_specificity": "vague",
+      "inclusion_basis": 6,
+      "civilian_service_impact": [],
+      "attribution": {
+        "status": "NOT_APPLICABLE",
+        "actor": null,
+        "actor_type": null,
+        "basis": [],
+        "as_of": null,
+        "statement": null,
+        "competing": [],
+        "source_refs": []
+      },
+      "ai_involvement": {
+        "status": "NONE_REPORTED",
+        "relation": null,
+        "role": null,
+        "as_of": null,
+        "statement": null,
+        "source_refs": []
+      },
+      "dispute": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://tradepress.example/synthetic/statement",
+          "publisher": "Example Tradepress",
+          "date": "2025-03-02",
+          "language": "en",
+          "source_role": "specialist_media",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Tradepress",
+          "title_en": "Synthetic headline from Example Tradepress",
+          "derived_claim": "Synthetic: Example Tradepress states the fixture claim."
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "standard",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "not_applicable",
+        "social_check": "not_applicable",
+        "disposition": "confirmed"
+      }
+    },
+    {
+      "impact_id": "imp-2025-03-05-fra-electricity-synthetic-grid-ransomware",
+      "record_kind": "disruption",
+      "date": "2025-03-05",
+      "date_precision": "day",
+      "date_end": "2025-03-09",
+      "country_a3": "FRA",
+      "admin1": null,
+      "geographic_precision": "country",
+      "domain": "energy",
+      "sector": "electricity",
+      "technology": "distribution",
+      "cause_family": "cyber",
+      "contributing_factors": [],
+      "cyber_mechanism": "ransomware",
+      "summary": "SYNTHETIC FIXTURE. Example Utility reported a ransomware incident that interrupted electricity billing and outage handling in France.",
+      "effect": "SYNTHETIC FIXTURE. Customer systems were unavailable and about 120,000 customers waited longer for reconnection.",
+      "effect_specificity": "quantified",
+      "inclusion_basis": 2,
+      "civilian_service_impact": [
+        {
+          "service": "electricity",
+          "geographic_scope": "national",
+          "affected": {
+            "value": 120000,
+            "unit": "customers",
+            "qualifier": "about",
+            "source_says": "about 120,000 customers"
+          },
+          "duration_text": "about four days, per the operator",
+          "source_refs": [
+            "s1",
+            "s2"
+          ]
+        }
+      ],
+      "attribution": {
+        "status": "ATTRIBUTED",
+        "actor": "Example Group A",
+        "actor_type": "criminal",
+        "basis": [
+          "government",
+          "cybersecurity_firm"
+        ],
+        "as_of": "2025-04-20",
+        "statement": "SYNTHETIC. The Example Ministry attributed the incident to Example Group A; Example Secfirm reached the same finding.",
+        "competing": [],
+        "source_refs": [
+          "s3",
+          "s4"
+        ]
+      },
+      "ai_involvement": {
+        "status": "NONE_REPORTED",
+        "relation": null,
+        "role": null,
+        "as_of": null,
+        "statement": null,
+        "source_refs": []
+      },
+      "dispute": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://utility.example/synthetic/statement",
+          "publisher": "Example Utility",
+          "date": "2025-03-05",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Utility",
+          "title_en": "Synthetic headline from Example Utility",
+          "derived_claim": "Synthetic: Example Utility states the fixture claim."
+        },
+        {
+          "ref": "s2",
+          "url": "https://wire.example/synthetic/statement",
+          "publisher": "Example Wire",
+          "date": "2025-03-06",
+          "language": "en",
+          "source_role": "wire",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Wire",
+          "title_en": "Synthetic headline from Example Wire",
+          "derived_claim": "Synthetic: Example Wire states the fixture claim.",
+          "origin": "wire:example wire"
+        },
+        {
+          "ref": "s3",
+          "url": "https://ministry.example/synthetic/statement",
+          "publisher": "Example Ministry",
+          "date": "2025-04-20",
+          "language": "en",
+          "source_role": "government",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "attribution"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Ministry",
+          "title_en": "Synthetic headline from Example Ministry",
+          "derived_claim": "Synthetic: Example Ministry states the fixture claim."
+        },
+        {
+          "ref": "s4",
+          "url": "https://secfirm.example/synthetic/statement",
+          "publisher": "Example Secfirm",
+          "date": "2025-04-02",
+          "language": "en",
+          "source_role": "cyber_firm",
+          "medium": "report",
+          "social": null,
+          "supports": [
+            "attribution"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Secfirm",
+          "title_en": "Synthetic headline from Example Secfirm",
+          "derived_claim": "Synthetic: Example Secfirm states the fixture claim."
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "standard",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-12",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "not_applicable",
+        "social_check": "not_applicable",
+        "disposition": "confirmed"
+      }
+    },
+    {
+      "impact_id": "imp-2025-04-28-multi-electricity-synthetic-grid-separation",
+      "record_kind": "disruption",
+      "date": "2025-04-28",
+      "date_precision": "day",
+      "date_end": null,
+      "country_a3": "MULTI",
+      "admin1": null,
+      "geographic_precision": "multi_country",
+      "domain": "energy",
+      "sector": "electricity",
+      "technology": "grid_control",
+      "cause_family": "industrial_technical",
+      "contributing_factors": [],
+      "cyber_mechanism": null,
+      "summary": "SYNTHETIC FIXTURE. A grid separation interrupted electricity supply across Portugal and Spain, the two system operators said.",
+      "effect": "SYNTHETIC FIXTURE. Supply was interrupted for most of a day in both countries.",
+      "effect_specificity": "described",
+      "inclusion_basis": 4,
+      "civilian_service_impact": [
+        {
+          "service": "electricity",
+          "geographic_scope": "multi_country",
+          "affected": {
+            "value": null,
+            "unit": null,
+            "qualifier": null,
+            "source_says": "consumers in both countries (no figure given)"
+          },
+          "duration_text": "most of one day, per the operators",
+          "source_refs": [
+            "s1",
+            "s2"
+          ]
+        },
+        {
+          "service": "transport",
+          "geographic_scope": "multi_country",
+          "affected": {
+            "value": null,
+            "unit": null,
+            "qualifier": null,
+            "source_says": "rail passengers (no figure given)"
+          },
+          "duration_text": null,
+          "source_refs": [
+            "s2"
+          ]
+        }
+      ],
+      "attribution": {
+        "status": "NOT_APPLICABLE",
+        "actor": null,
+        "actor_type": null,
+        "basis": [],
+        "as_of": null,
+        "statement": null,
+        "competing": [],
+        "source_refs": []
+      },
+      "ai_involvement": {
+        "status": "NONE_REPORTED",
+        "relation": null,
+        "role": null,
+        "as_of": null,
+        "statement": null,
+        "source_refs": []
+      },
+      "dispute": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://grid-pt.example/synthetic/statement",
+          "publisher": "Example Grid Pt",
+          "date": "2025-04-28",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Grid Pt",
+          "title_en": "Synthetic headline from Example Grid Pt",
+          "derived_claim": "Synthetic: Example Grid Pt states the fixture claim."
+        },
+        {
+          "ref": "s2",
+          "url": "https://grid-es.example/synthetic/statement",
+          "publisher": "Example Grid Es",
+          "date": "2025-04-28",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Grid Es",
+          "title_en": "Synthetic headline from Example Grid Es",
+          "derived_claim": "Synthetic: Example Grid Es states the fixture claim."
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "standard",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "not_applicable",
+        "social_check": "not_applicable",
+        "disposition": "confirmed"
+      },
+      "countries_a3": [
+        "PRT",
+        "ESP"
+      ]
+    },
+    {
+      "impact_id": "imp-2025-06-10-ita-water-synthetic-utility-intrusion",
+      "record_kind": "disruption",
+      "date": "2025-06-10",
+      "date_precision": "day",
+      "date_end": null,
+      "country_a3": "ITA",
+      "admin1": null,
+      "geographic_precision": "country",
+      "domain": "civilian_service",
+      "sector": "water",
+      "technology": null,
+      "cause_family": "cyber",
+      "contributing_factors": [],
+      "cyber_mechanism": "malicious_configuration_change",
+      "summary": "SYNTHETIC FIXTURE. Example Water reported unauthorised changes to treatment settings at a water utility in Italy.",
+      "effect": "SYNTHETIC FIXTURE. Water was supplied under a boil notice for two days.",
+      "effect_specificity": "described",
+      "inclusion_basis": 1,
+      "civilian_service_impact": [
+        {
+          "service": "water",
+          "geographic_scope": "local",
+          "affected": {
+            "value": null,
+            "unit": null,
+            "qualifier": null,
+            "source_says": "residents of the utility's service area (no figure given)"
+          },
+          "duration_text": "two days, per the operator",
+          "source_refs": [
+            "s1"
+          ]
+        }
+      ],
+      "attribution": {
+        "status": "CLAIMED",
+        "actor": "Example Group C",
+        "actor_type": "hacktivist",
+        "basis": [
+          "actor_self_claim"
+        ],
+        "as_of": "2025-06-11",
+        "statement": "SYNTHETIC. Example Group C claimed responsibility. A claim is not corroboration.",
+        "competing": [],
+        "source_refs": [
+          "s2"
+        ]
+      },
+      "ai_involvement": {
+        "status": "NONE_REPORTED",
+        "relation": null,
+        "role": null,
+        "as_of": null,
+        "statement": null,
+        "source_refs": []
+      },
+      "dispute": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://water.example/synthetic/statement",
+          "publisher": "Example Water",
+          "date": "2025-06-10",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Water",
+          "title_en": "Synthetic headline from Example Water",
+          "derived_claim": "Synthetic: Example Water states the fixture claim."
+        },
+        {
+          "ref": "s2",
+          "url": "https://channel.example/synthetic/post/2002",
+          "publisher": "Example Group C channel",
+          "date": "2025-06-11",
+          "language": "en",
+          "source_role": "actor_self_claim",
+          "medium": "social",
+          "social": {
+            "platform": "Example Messenger",
+            "handle": "@example_group_c",
+            "display_name": "Example Group C",
+            "account_tier": "S4",
+            "identity_basis": "The group's own long-running channel (synthetic); identity not otherwise established.",
+            "posted_at": "2025-06-11T12:00:00Z"
+          },
+          "supports": [
+            "attribution"
+          ],
+          "opened": true,
+          "derived_claim": "Synthetic: Example Group C channel states the fixture claim."
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "standard",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "not_applicable",
+        "social_check": "passed",
+        "disposition": "confirmed"
+      }
+    },
+    {
+      "impact_id": "imp-2025-09-02-deu-healthcare-synthetic-hospital-it-outage",
+      "record_kind": "disruption",
+      "date": "2025-09-02",
+      "date_precision": "day",
+      "date_end": "2025-09-05",
+      "country_a3": "DEU",
+      "admin1": {
+        "code": "DE-BY",
+        "name": "Bavaria"
+      },
+      "geographic_precision": "admin1",
+      "domain": "civilian_service",
+      "sector": "healthcare",
+      "technology": null,
+      "cause_family": "cyber",
+      "contributing_factors": [],
+      "cyber_mechanism": "it_outage_affecting_operations",
+      "summary": "SYNTHETIC FIXTURE. Example Hospital Group reported an IT outage after a cyber incident at hospitals in Bavaria, Germany.",
+      "effect": "SYNTHETIC FIXTURE. Emergency patients were sent to other hospitals for three days.",
+      "effect_specificity": "described",
+      "inclusion_basis": 5,
+      "civilian_service_impact": [
+        {
+          "service": "healthcare",
+          "geographic_scope": "regional",
+          "affected": {
+            "value": null,
+            "unit": null,
+            "qualifier": null,
+            "source_says": "emergency patients in the region (no figure given)"
+          },
+          "duration_text": "three days, per the operator",
+          "source_refs": [
+            "s1"
+          ]
+        }
+      ],
+      "attribution": {
+        "status": "SUSPECTED",
+        "actor": "Example Group D",
+        "actor_type": "criminal",
+        "basis": [
+          "media_investigation"
+        ],
+        "as_of": "2025-09-20",
+        "statement": "SYNTHETIC. Example Daily reported that investigators suspect Example Group D.",
+        "competing": [],
+        "source_refs": [
+          "s2"
+        ]
+      },
+      "ai_involvement": {
+        "status": "NONE_REPORTED",
+        "relation": null,
+        "role": null,
+        "as_of": null,
+        "statement": null,
+        "source_refs": []
+      },
+      "dispute": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://hospital.example/synthetic/statement",
+          "publisher": "Example Hospital",
+          "date": "2025-09-02",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Hospital",
+          "title_en": "Synthetic headline from Example Hospital",
+          "derived_claim": "Synthetic: Example Hospital states the fixture claim."
+        },
+        {
+          "ref": "s2",
+          "url": "https://daily.example/synthetic/statement",
+          "publisher": "Example Daily",
+          "date": "2025-09-20",
+          "language": "en",
+          "source_role": "media",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "attribution"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Daily",
+          "title_en": "Synthetic headline from Example Daily",
+          "derived_claim": "Synthetic: Example Daily states the fixture claim."
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "standard",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "not_applicable",
+        "social_check": "not_applicable",
+        "disposition": "confirmed"
+      }
+    },
+    {
+      "impact_id": "imp-2025-10-08-ukr-electricity-attack-3fa91c",
+      "record_kind": "disruption",
+      "date": "2025-10-08",
+      "date_precision": "day",
+      "date_end": null,
+      "country_a3": "UKR",
+      "admin1": null,
+      "geographic_precision": "country",
+      "domain": "energy",
+      "sector": "electricity",
+      "technology": "other_energy",
+      "cause_family": "kinetic",
+      "contributing_factors": [],
+      "cyber_mechanism": null,
+      "summary": "SYNTHETIC FIXTURE. An attack damaged electricity infrastructure in Ukraine, the authorities said.",
+      "effect": "SYNTHETIC FIXTURE. Scheduled power cuts were introduced for households.",
+      "effect_specificity": "described",
+      "inclusion_basis": 2,
+      "civilian_service_impact": [
+        {
+          "service": "electricity",
+          "geographic_scope": "national",
+          "affected": {
+            "value": null,
+            "unit": null,
+            "qualifier": null,
+            "source_says": "households (no figure given)"
+          },
+          "duration_text": null,
+          "source_refs": [
+            "s1"
+          ]
+        }
+      ],
+      "attribution": {
+        "status": "UNKNOWN",
+        "actor": null,
+        "actor_type": null,
+        "basis": [],
+        "as_of": null,
+        "statement": null,
+        "competing": [],
+        "source_refs": []
+      },
+      "ai_involvement": {
+        "status": "NONE_REPORTED",
+        "relation": null,
+        "role": null,
+        "as_of": null,
+        "statement": null,
+        "source_refs": []
+      },
+      "dispute": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://energy-ministry.example/synthetic/release/8841",
+          "publisher": "Example Energy Ministry",
+          "date": "2025-10-08",
+          "language": "en",
+          "source_role": "government",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "derived_claim": "Synthetic: Example Energy Ministry states the fixture claim."
+        },
+        {
+          "ref": "s2",
+          "url": "https://newsroom.example/synthetic/item/5512",
+          "publisher": "Example Newsroom",
+          "date": "2025-10-08",
+          "language": "en",
+          "source_role": "media",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "derived_claim": "Synthetic: Example Newsroom states the fixture claim."
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "country_abstracted",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "not_applicable",
+        "social_check": "not_applicable",
+        "disposition": "confirmed"
+      }
+    },
+    {
+      "impact_id": "imp-2025-12-01-esp-wastewater-synthetic-plant-disruption",
+      "record_kind": "disruption",
+      "date": "2025-12-01",
+      "date_precision": "day",
+      "date_end": null,
+      "country_a3": "ESP",
+      "admin1": null,
+      "geographic_precision": "country",
+      "domain": "civilian_service",
+      "sector": "wastewater",
+      "technology": null,
+      "cause_family": "cyber",
+      "contributing_factors": [],
+      "cyber_mechanism": "ot_ics_disruption",
+      "summary": "SYNTHETIC FIXTURE. Example Sanitation reported a cyber incident that disrupted wastewater treatment in Spain.",
+      "effect": "SYNTHETIC FIXTURE. Treatment ran on manual operation for a week.",
+      "effect_specificity": "described",
+      "inclusion_basis": 5,
+      "civilian_service_impact": [
+        {
+          "service": "wastewater",
+          "geographic_scope": "local",
+          "affected": "unknown",
+          "duration_text": "about one week, per the operator",
+          "source_refs": [
+            "s1"
+          ]
+        }
+      ],
+      "attribution": {
+        "status": "DISPUTED",
+        "actor": null,
+        "actor_type": "unknown",
+        "basis": [
+          "government",
+          "cybersecurity_firm"
+        ],
+        "as_of": "2026-01-20",
+        "statement": "SYNTHETIC. The Example Agency and Example Secfirm attribute the incident to different groups.",
+        "competing": [
+          {
+            "actor": "Example Group E",
+            "actor_type": "state_linked",
+            "basis": [
+              "government"
+            ],
+            "statement": "SYNTHETIC. The Example Agency attributed the incident to Example Group E.",
+            "source_refs": [
+              "s2"
+            ]
+          },
+          {
+            "actor": "Example Group F",
+            "actor_type": "criminal",
+            "basis": [
+              "cybersecurity_firm"
+            ],
+            "statement": "SYNTHETIC. Example Secfirm attributed the incident to Example Group F.",
+            "source_refs": [
+              "s3"
+            ]
+          }
+        ],
+        "source_refs": [
+          "s2",
+          "s3"
+        ]
+      },
+      "ai_involvement": {
+        "status": "NONE_REPORTED",
+        "relation": null,
+        "role": null,
+        "as_of": null,
+        "statement": null,
+        "source_refs": []
+      },
+      "dispute": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://sanitation.example/synthetic/statement",
+          "publisher": "Example Sanitation",
+          "date": "2025-12-01",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Sanitation",
+          "title_en": "Synthetic headline from Example Sanitation",
+          "derived_claim": "Synthetic: Example Sanitation states the fixture claim."
+        },
+        {
+          "ref": "s2",
+          "url": "https://agency.example/synthetic/statement",
+          "publisher": "Example Agency",
+          "date": "2026-01-15",
+          "language": "en",
+          "source_role": "cert",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "attribution"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Agency",
+          "title_en": "Synthetic headline from Example Agency",
+          "derived_claim": "Synthetic: Example Agency states the fixture claim."
+        },
+        {
+          "ref": "s3",
+          "url": "https://secfirm.example/synthetic/statement",
+          "publisher": "Example Secfirm",
+          "date": "2026-01-20",
+          "language": "en",
+          "source_role": "cyber_firm",
+          "medium": "report",
+          "social": null,
+          "supports": [
+            "attribution"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Secfirm",
+          "title_en": "Synthetic headline from Example Secfirm",
+          "derived_claim": "Synthetic: Example Secfirm states the fixture claim."
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "standard",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "not_applicable",
+        "social_check": "not_applicable",
+        "disposition": "confirmed"
+      }
+    },
+    {
+      "impact_id": "imp-2026-01-09-nld-water-synthetic-attempt",
+      "record_kind": "attempt_no_service_impact",
+      "date": "2026-01-09",
+      "date_precision": "day",
+      "date_end": null,
+      "country_a3": "NLD",
+      "admin1": null,
+      "geographic_precision": "country",
+      "domain": "civilian_service",
+      "sector": "water",
+      "technology": null,
+      "cause_family": "cyber",
+      "contributing_factors": [],
+      "cyber_mechanism": "unauthorized_access",
+      "summary": "SYNTHETIC FIXTURE. Example Waterworks in the Netherlands said it detected and stopped an intrusion into its office network.",
+      "effect": null,
+      "effect_specificity": null,
+      "inclusion_basis": null,
+      "civilian_service_impact": [],
+      "attribution": {
+        "status": "UNKNOWN",
+        "actor": null,
+        "actor_type": null,
+        "basis": [],
+        "as_of": null,
+        "statement": null,
+        "competing": [],
+        "source_refs": []
+      },
+      "ai_involvement": {
+        "status": "NONE_REPORTED",
+        "relation": null,
+        "role": null,
+        "as_of": null,
+        "statement": null,
+        "source_refs": []
+      },
+      "dispute": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://waterworks.example/synthetic/statement",
+          "publisher": "Example Waterworks",
+          "date": "2026-01-09",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Waterworks",
+          "title_en": "Synthetic headline from Example Waterworks",
+          "derived_claim": "Synthetic: Example Waterworks states the fixture claim."
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "standard",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "not_applicable",
+        "social_check": "not_applicable",
+        "disposition": "confirmed"
+      }
+    },
+    {
+      "impact_id": "imp-2026-02-14-usa-fuel-supply-synthetic-payment-outage",
+      "record_kind": "disruption",
+      "date": "2026-02-14",
+      "date_precision": "day",
+      "date_end": "2026-02-16",
+      "country_a3": "USA",
+      "admin1": {
+        "code": "US-OH",
+        "name": "Ohio"
+      },
+      "geographic_precision": "admin1",
+      "domain": "energy",
+      "sector": "fuel_supply",
+      "technology": "fuel_storage_or_distribution",
+      "cause_family": "cyber",
+      "contributing_factors": [],
+      "cyber_mechanism": "unknown_cyber_mechanism",
+      "summary": "SYNTHETIC FIXTURE. Example Fuel Retail reported a cyber incident that stopped card payments at its stations in Ohio, United States.",
+      "effect": "SYNTHETIC FIXTURE. Card payments were unavailable at about 300 stations for two days.",
+      "effect_specificity": "quantified",
+      "inclusion_basis": 5,
+      "civilian_service_impact": [
+        {
+          "service": "fuel_supply",
+          "geographic_scope": "regional",
+          "affected": {
+            "value": 300,
+            "unit": "stations",
+            "qualifier": "about",
+            "source_says": "about 300 stations"
+          },
+          "duration_text": "two days, per the operator",
+          "source_refs": [
+            "s1"
+          ]
+        }
+      ],
+      "attribution": {
+        "status": "UNKNOWN",
+        "actor": null,
+        "actor_type": null,
+        "basis": [],
+        "as_of": null,
+        "statement": null,
+        "competing": [],
+        "source_refs": []
+      },
+      "ai_involvement": {
+        "status": "SUSPECTED",
+        "relation": "ai_assisted",
+        "role": "malware_or_script_generation",
+        "as_of": "2026-03-10",
+        "statement": "SYNTHETIC. Example Threatlab said code used in this incident may have been written with an AI tool.",
+        "source_refs": [
+          "s2"
+        ]
+      },
+      "dispute": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://fuelretail.example/synthetic/statement",
+          "publisher": "Example Fuelretail",
+          "date": "2026-02-14",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Fuelretail",
+          "title_en": "Synthetic headline from Example Fuelretail",
+          "derived_claim": "Synthetic: Example Fuelretail states the fixture claim."
+        },
+        {
+          "ref": "s2",
+          "url": "https://threatlab.example/synthetic/statement",
+          "publisher": "Example Threatlab",
+          "date": "2026-03-10",
+          "language": "en",
+          "source_role": "cyber_firm",
+          "medium": "report",
+          "social": null,
+          "supports": [
+            "ai_involvement"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Threatlab",
+          "title_en": "Synthetic headline from Example Threatlab",
+          "derived_claim": "Synthetic: Example Threatlab states the fixture claim."
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "standard",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-19",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "passed",
+        "social_check": "not_applicable",
+        "disposition": "confirmed"
+      }
+    },
+    {
+      "impact_id": "imp-2026-05-20-jpn-transport-synthetic-dispatch-failure",
+      "record_kind": "disruption",
+      "date": "2026-05-20",
+      "date_precision": "day",
+      "date_end": null,
+      "country_a3": "JPN",
+      "admin1": null,
+      "geographic_precision": "country",
+      "domain": "civilian_service",
+      "sector": "transport",
+      "technology": null,
+      "cause_family": "industrial_technical",
+      "contributing_factors": [],
+      "cyber_mechanism": null,
+      "summary": "SYNTHETIC FIXTURE. Example Rail reported that an automated dispatch system issued wrong instructions and commuter rail services in Japan were suspended.",
+      "effect": "SYNTHETIC FIXTURE. Commuter services were suspended for about six hours.",
+      "effect_specificity": "described",
+      "inclusion_basis": 4,
+      "civilian_service_impact": [
+        {
+          "service": "transport",
+          "geographic_scope": "regional",
+          "affected": {
+            "value": null,
+            "unit": null,
+            "qualifier": null,
+            "source_says": "commuters on the affected lines (no figure given)"
+          },
+          "duration_text": "about six hours, per the operator",
+          "source_refs": [
+            "s1",
+            "s3"
+          ]
+        }
+      ],
+      "attribution": {
+        "status": "NOT_APPLICABLE",
+        "actor": null,
+        "actor_type": null,
+        "basis": [],
+        "as_of": null,
+        "statement": null,
+        "competing": [],
+        "source_refs": []
+      },
+      "ai_involvement": {
+        "status": "CONFIRMED",
+        "relation": "ai_operational_cause",
+        "role": "ai_operational_system_failure",
+        "as_of": "2026-06-30",
+        "statement": "SYNTHETIC. Example Rail's incident report says its AI-based dispatch system made the erroneous decision.",
+        "source_refs": [
+          "s2"
+        ]
+      },
+      "dispute": null,
+      "sources": [
+        {
+          "ref": "s1",
+          "url": "https://rail.example/synthetic/statement",
+          "publisher": "Example Rail",
+          "date": "2026-05-20",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Rail",
+          "title_en": "Synthetic headline from Example Rail",
+          "derived_claim": "Synthetic: Example Rail states the fixture claim."
+        },
+        {
+          "ref": "s2",
+          "url": "https://rail.example/synthetic/incident-report",
+          "publisher": "Example Rail",
+          "date": "2026-06-30",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "report",
+          "social": null,
+          "supports": [
+            "ai_involvement"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Rail",
+          "title_en": "Synthetic headline from Example Rail",
+          "derived_claim": "Synthetic: Example Rail states the fixture claim."
+        },
+        {
+          "ref": "s3",
+          "url": "https://broadcaster.example/synthetic/statement",
+          "publisher": "Example Broadcaster",
+          "date": "2026-05-20",
+          "language": "en",
+          "source_role": "media",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": true,
+          "title_original": "Synthetic headline from Example Broadcaster",
+          "title_en": "Synthetic headline from Example Broadcaster",
+          "derived_claim": "Synthetic: Example Broadcaster states the fixture claim."
+        }
+      ],
+      "episode_id": null,
+      "episode_basis": null,
+      "publication_policy": "standard",
+      "research_pass": "i22-fixture",
+      "first_published": "2026-11-12",
+      "review": {
+        "reviewed_at": "2026-11-19",
+        "review_status": "blind_reviewed",
+        "roles": {
+          "evidence": "accept",
+          "attribution_source": "accept",
+          "safety": "accept"
+        },
+        "ai_check": "passed",
+        "social_check": "not_applicable",
+        "disposition": "confirmed"
+      }
+    }
+  ]
+}

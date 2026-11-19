@@ -1,0 +1,10 @@
+{
+  "checked": "2026-11-19",
+  "link_states": {
+    "https://utility.example/synthetic/statement": "reachable",
+    "https://wire.example/synthetic/statement": "redirected",
+    "https://channel.example/synthetic/post/2002": "deleted",
+    "https://administration.example/synthetic/statement": "blocked",
+    "https://maritime-agency.example/synthetic/ctx-2026-03-05-synthetic-shipping-statement": "archived_copy"
+  }
+}
