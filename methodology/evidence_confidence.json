@@ -1,0 +1,64 @@
+{
+  "version": "2.0-draft",
+  "note": "Evidence Confidence v2 (docs/GLOBAL_IMPACT_METHODOLOGY.md §8). Read by pipeline/evidence_confidence.py. An ordinal measure of evidence quality for 'did it happen and is the reported effect supported'. Not a probability, not severity, not infrastructure importance, not research completeness. It does not enter the ESDI.",
+  "statement": "Evidence confidence describes the quality of the public evidence for this record. It is not a probability, not a measure of severity, and not a statement about how important the infrastructure is.",
+  "tiers": {
+    "direct": {"points": 40, "label": "Direct authoritative statement",
+               "meaning": "The operator, a government body, a regulator, a national cyber agency, law enforcement, a court record, or an official account whose identity is established."},
+    "independent": {"points": 28, "label": "Independent reporting",
+                    "meaning": "A wire service, a news outlet, specialist press, or a cyber firm's own investigation."},
+    "secondary": {"points": 15, "label": "Secondary source",
+                  "meaning": "An aggregator or dataset restating others, or a recognised journalist's post."},
+    "researcher_social": {"points": 10, "label": "Researcher's social post",
+                          "meaning": "A reputable open-source researcher's public post. A lead, not confirmation."},
+    "unverified": {"points": 4, "label": "Unverified claim",
+                   "meaning": "An anonymous account, or the actor's own claim of responsibility."}
+  },
+  "role_tier": {
+    "operator": "direct", "government": "direct", "official": "direct", "regulator": "direct",
+    "cert": "direct", "law_enforcement": "direct", "court_record": "direct",
+    "wire": "independent", "media": "independent", "specialist_media": "independent",
+    "industry": "independent", "cyber_firm": "independent",
+    "researcher": "secondary", "dataset": "secondary", "aggregator": "secondary",
+    "actor_self_claim": "unverified"
+  },
+  "social_tier": {
+    "S1": "by_role", "S2": "secondary", "S3": "researcher_social", "S4": "unverified"
+  },
+  "corroborating_tiers": ["direct", "independent"],
+  "origin_points": {"1": 0, "2": 16, "3": 25},
+  "effect_points": {"quantified": 15, "described": 8, "vague": 0},
+  "opened_points": 10,
+  "contemporaneous_points": 10,
+  "contemporaneous_days": 30,
+  "categories": [
+    {"id": "HIGH", "min": 78, "label": "High",
+     "meaning": "A direct or independently reported account, corroborated by a second originating statement, with a specific reported effect."},
+    {"id": "MODERATE", "min": 55, "label": "Moderate",
+     "meaning": "A credible account from one originating statement, or corroborated reporting with a less specific effect."},
+    {"id": "LIMITED", "min": 35, "label": "Limited",
+     "meaning": "Reported by a credible source, but single-origin and thin on the effect, or resting on secondary sources."},
+    {"id": "PRELIMINARY", "min": 0, "label": "Preliminary",
+     "meaning": "Rests on unverified or secondary claims. Published because it was reviewed, not because it is settled."}
+  ],
+  "disputed": {"id": "DISPUTED", "label": "Disputed",
+               "meaning": "Credible sources materially disagree about whether it happened or what the effect was. The product does not choose between them."},
+  "caps": {"unverified_only": "PRELIMINARY"},
+  "attribution": {
+    "official_bases": ["government", "law_enforcement"],
+    "first_party_bases": ["government", "law_enforcement", "victim_operator"],
+    "technical_bases": ["cybersecurity_firm", "researcher", "media_investigation"],
+    "labels": {
+      "HIGH": "High", "MODERATE": "Moderate", "LOW": "Low", "CLAIM_ONLY": "Claim only",
+      "DISPUTED": "Disputed", "NOT_ESTABLISHED": "Not established"
+    },
+    "meanings": {
+      "HIGH": "A formal government or law-enforcement attribution, supported by a second independent attribution of a different kind.",
+      "MODERATE": "One formal attribution by a government, law enforcement or the victim; or two independent technical or investigative attributions that agree.",
+      "LOW": "A single cyber firm, researcher or media investigation names the actor.",
+      "CLAIM_ONLY": "Only the actor's own claim of responsibility. A claim is not corroboration.",
+      "DISPUTED": "Credible sources attribute the incident differently.",
+      "NOT_ESTABLISHED": "No credible public attribution. This is not a low confidence: attribution has not been established."
+    }
+  }
+}
