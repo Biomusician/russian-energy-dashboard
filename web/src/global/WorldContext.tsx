@@ -6,7 +6,8 @@ import {
   type ContextRow, type EnergyContext, type MapMode,
 } from "./context";
 import { composeContextFrame, contextFilename } from "./contextExport";
-import type { Manifest } from "./manifest";
+import { loadWorld, type Manifest } from "./manifest";
+import { MapGeometryPlaceholder } from "../components/MapLoadIndicator";
 import { navigate } from "./router";
 import { downloadBlob, exportMapPng } from "../mapExport";
 import { fmtDate } from "../data";
@@ -212,30 +213,39 @@ export default function WorldContext({ world, worldError, manifest, ctx, ctxErro
   const [exportMsg, setExportMsg] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  // "Try again" on a map file that failed (iteration 22): asked for again here. The loader never
+  // keeps a failed request, so this is a new one, and the page's own state is left alone.
+  const [retried, setRetried] = useState<GeoJSON.FeatureCollection | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const retryWorld = () => {
+    setRetrying(true);
+    loadWorld().then(setRetried).catch(() => undefined).finally(() => setRetrying(false));
+  };
+  const shownWorld = world ?? retried;
 
   const modes = useMemo(() => (ctx ? modesFor(ctx) : []), [ctx]);
   const mode: MapMode | null = modes.find((m) => m.id === modeId) ?? modes[0] ?? null;
   const byA3 = useMemo(() => new Map((ctx?.countries ?? []).map((r) => [r.a3, r])), [ctx]);
   const noteOf = useMemo(() => {
     const out = new Map<string, string>();
-    for (const f of world?.features ?? []) {
+    for (const f of shownWorld?.features ?? []) {
       const p = f.properties as { a3?: string; note?: string | null; status?: string } | null;
       // Crimea's feature carries a3 UKR. Its note is about Crimea and must not reach Ukraine's card.
       if (p?.a3 && p.note && p.status !== "occupied" && !out.has(p.a3)) out.set(p.a3, p.note);
     }
     return out;
-  }, [world]);
+  }, [shownWorld]);
   // A country drawn both with and without a system id is monitored in part.
   const partly = useMemo(() => {
     const monitored = new Set<string>();
     const not = new Set<string>();
-    for (const f of world?.features ?? []) {
+    for (const f of shownWorld?.features ?? []) {
       const p = f.properties as { a3?: string; system_id?: string | null; status?: string } | null;
       if (!p?.a3 || p.status === "occupied") continue;
       (p.system_id ? monitored : not).add(p.a3);
     }
     return new Set([...monitored].filter((a) => not.has(a)));
-  }, [world]);
+  }, [shownWorld]);
 
   // Without the context file the map falls back to showing only where is monitored.
   const fill = (mode?.fill ?? ["case",
@@ -287,10 +297,13 @@ export default function WorldContext({ world, worldError, manifest, ctx, ctxErro
         </details>
       )}
       <div className="global-map-wrap">
-        {world ? (
+        {shownWorld ? (
           <SimpleMap
-            data={world}
+            data={shownWorld}
             bounds={[-170, -50, 179, 78]}
+            // The polygons can be drawn before the figures that colour them arrive.
+            loadingData={!ctx && !ctxError}
+            alternative="The national figures table below has every figure."
             idProp="a3"
             selected={cardA3}
             fill={fill}
@@ -320,7 +333,8 @@ export default function WorldContext({ world, worldError, manifest, ctx, ctxErro
             pageScrollsFirst
           />
         ) : (
-          <div className="simple-map placeholder">{worldError ? "Map unavailable" : "Loading map…"}</div>
+          <MapGeometryPlaceholder failed={!!worldError && !retrying} onRetry={retryWorld}
+            alternative="The national figures table below has every figure." />
         )}
         <div className="map-hover-line small mono" aria-live="off">{hover ?? " "}</div>
       </div>

@@ -10,7 +10,7 @@ import SearchBox from "./SearchBox";
  *  resilience fallback for the brief deploy window where the CDN may serve an older
  *  snapshot.json to the newer bundle. Sector/recovery/evidence facets aren't needed by the
  *  left rail, so they are left empty here. */
-function fallbackFacets(bundle: Bundle): FacetCounts {
+function fallbackFacets(bundle: Bundle, lines: GeoJSON.FeatureCollection | null): FacetCounts {
   const c = (arr: (string | null | undefined)[]): Record<string, number> => {
     const m: Record<string, number> = {};
     for (const v of arr) if (v) m[v] = (m[v] ?? 0) + 1;
@@ -18,7 +18,9 @@ function fallbackFacets(bundle: Bundle): FacetCounts {
   };
   return {
     asset_class: c(bundle.assets.map((a) => a.asset_class)),
-    line_class: c(bundle.linesGeo.features.map((f) => f.properties?.asset_class as string)),
+    // The line file arrives after the first paint (iteration 22); until it does this fallback
+    // counts no lines. Only reached when the snapshot carries no facet counts of its own.
+    line_class: c((lines?.features ?? []).map((f) => f.properties?.asset_class as string)),
     incident_asset_class: c(bundle.incidents.map((i) => i.asset_class)),
     sector: {},
     cause: c(bundle.incidents.map((i) => i.cause)),
@@ -32,9 +34,11 @@ function fallbackFacets(bundle: Bundle): FacetCounts {
  *  "nothing recorded here" rather than as a broken filter. */
 export default function Filters({
   bundle, filters, setFilters, onPickRegion, onPickAsset, compareCount = 0,
-  drawer = false, open = false, onCloseDrawer,
+  drawer = false, open = false, onCloseDrawer, lines = null,
 }: {
   bundle: Bundle;
+  /** The line network, once its file has arrived (iteration 22). */
+  lines?: GeoJSON.FeatureCollection | null;
   filters: FilterState;
   setFilters: Dispatch<SetStateAction<FilterState>>;
   visibleIncidents: Incident[];
@@ -51,7 +55,7 @@ export default function Filters({
   // Normally the pipeline emits facet_counts. During a deploy the CDN can briefly serve an
   // older snapshot.json (pre-facet_counts) to the new bundle; rather than white-screen, fall
   // back to counts computed from the raw corpus so the controls still render correctly.
-  const fc = bundle.snapshot.facet_counts ?? fallbackFacets(bundle);
+  const fc = bundle.snapshot.facet_counts ?? fallbackFacets(bundle, lines);
 
   // Corpus-wide totals (iteration 4). Toggle VISIBILITY is data-driven off these — a
   // control exists iff the whole current dataset has a record for it — never off the

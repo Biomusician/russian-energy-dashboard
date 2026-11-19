@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { addDays, loadBundle, stepFor } from "./data";
+import { addDays, loadBundle, loadLines, stepFor } from "./data";
 import type { Asset, Bundle, Incident, RegionSnapshot, ProductionHistory } from "./types";
 import { decodeDeepLink, encodeDeepLink, has, type CameraState } from "./urlState";
 import Ribbon from "./components/Ribbon";
@@ -15,7 +15,7 @@ import Briefing, { type ExportSize } from "./components/Briefing";
 import {
   DEFAULT_OPTIONS, briefingFilename, buildBriefingContext, exportPixelSize,
 } from "./briefing";
-import { downloadBlob, exportMapPng } from "./mapExport";
+import { downloadBlob, exportMapPng, withSourceData } from "./mapExport";
 import { localISODate } from "./freshness";
 import { ZERO_SHORT } from "./palette";
 import { drawBriefingFrame } from "./briefingFrame";
@@ -80,6 +80,16 @@ export default function App() {
 
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // The line network arrives on its own request (iteration 22): the map draws its regions and
+  // controls first and adds the lines when this lands. A failure costs that layer, not the page.
+  const [lines, setLines] = useState<GeoJSON.FeatureCollection | null>(null);
+  const [linesFailed, setLinesFailed] = useState(false);
+  const requestLines = () => {
+    setLinesFailed(false);
+    loadLines().then(setLines).catch(() => setLinesFailed(true));
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(requestLines, []);
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<string | null>(initial.selected ?? null);
   const [selectedAsset, setSelectedAsset] = useState<{ asset: Asset; key: string } | null>(null);
@@ -486,8 +496,20 @@ export default function App() {
       const canvas = map.getCanvas();
       const dims = exportPixelSize(
         size, canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio);
+      // With the line layer on, the image waits for the line file and carries it, however far the
+      // screen had got: an export made in the first second must not come out without its lines.
+      let lineData: GeoJSON.FeatureCollection | null = null;
+      if (filters.showLines) {
+        try {
+          lineData = await loadLines();
+        } catch {
+          throw new Error("The network lines could not be loaded, so an image with that layer switched on "
+            + "cannot be made. Switch the layer off, or try again.");
+        }
+      }
       const res = await exportMapPng({
         source: map, ...dims,
+        transformStyle: lineData ? (style) => withSourceData(style, "lines", lineData) : undefined,
         // The choropleth lives in feature state, which a copied style does not carry. Hover is
         // left behind: it is where the pointer was, not something the reader chose.
         featureStates: [{ source: "regions", ids: (bundle?.regions ?? []).map((r) => r.code), keys: ["value", "selected"] }],
@@ -594,6 +616,7 @@ export default function App() {
         open={filtersOpen}
         onCloseDrawer={() => setFiltersOpen(false)}
         bundle={bundle}
+        lines={lines}
         filters={filters}
         setFilters={setFilters}
         visibleIncidents={visibleIncidents}
@@ -616,6 +639,9 @@ export default function App() {
         flyTarget={flyTarget}
         layoutSignal={`${layoutMode}:${mapFocus}:${filtersIsDrawer}:${dossierIsDrawer}`}
         onMapReady={(m) => { mapRef.current = m; }}
+        lines={lines}
+        linesFailed={linesFailed}
+        onRetryLines={requestLines}
         // As published carries headline figures only: the map keeps the current build rather than
         // paint a reconstruction under an as-published label.
         comparison={compare && compare.history !== "published" ? {

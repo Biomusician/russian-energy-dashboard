@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
+import { MapLoadIndicator } from "./MapLoadIndicator";
+import { MAP_LOAD_INITIAL, mapLoadPhase, mapLoadReducer } from "../mapLoad";
 import type { FilterState, FlyTarget } from "../App";
 import type { Asset, Bundle, Incident, PipelineRegistry } from "../types";
 import {
@@ -152,9 +154,14 @@ const ROUTE_QUALITY_LABEL: Record<string, string> = {
 export default function MapPanel({
   bundle, step, filters, selected, onSelect, incidentsByRegion,
   selectedAssetKey, onSelectAsset, haloByRegion, initialCamera, onCamera, flyTarget,
-  layoutSignal, comparison, onMapReady,
+  layoutSignal, comparison, onMapReady, lines = null, linesFailed = false, onRetryLines,
 }: {
   bundle: Bundle;
+  /** The line network (iteration 22). Its 2.4 MB file arrives on its own request, so the map draws
+   *  regions, choropleth and controls without waiting for it and adds the lines when it lands. */
+  lines?: GeoJSON.FeatureCollection | null;
+  linesFailed?: boolean;
+  onRetryLines?: () => void;
   step: number;
   filters: FilterState;
   selected: string | null;
@@ -190,6 +197,17 @@ export default function MapPanel({
   const selectedAssetIdRef = useRef<number | null>(null);
   const [ready, setReady] = useState(false);
   const [assetLayersReady, setAssetLayersReady] = useState(false);
+  // What the map box is waiting for (iteration 22): driven by MapLibre's own events and by the
+  // line file's request, never by a timer.
+  const [load, dispatch] = useReducer(mapLoadReducer, MAP_LOAD_INITIAL);
+  // "Try again" after a map that could not be built: builds it afresh.
+  const [attempt, setAttempt] = useState(0);
+  // The latest line data for the map's `load` handler, and what the "lines" source was last given.
+  const linesRef = useRef(lines);
+  linesRef.current = lines;
+  const linesGiven = useRef<GeoJSON.FeatureCollection | null>(null);
+  // True once MapLibre has parsed the line file: the lines are in the map, not just downloaded.
+  const [linesInMap, setLinesInMap] = useState(false);
   const [hover, setHover] = useState<HoverInfo | null>(null);
   // Phones only (CSS shows the toggle below 640px): the legend's secondary keys fold away so the
   // legend stops covering a quarter of a small map. The scale and the Crimea key always show.
@@ -318,16 +336,24 @@ export default function MapPanel({
     if (!container.current || map.current) return;
     // A shared link opens at its saved frame (§22); otherwise fit the Full-AOI bounds.
     const cam = initialCamera;
-    const m = new maplibregl.Map({
-      container: container.current,
-      style: EMPTY_STYLE,
-      ...(cam
-        ? { center: [cam.lng, cam.lat] as [number, number], zoom: cam.zoom }
-        : { bounds: AOI_BOUNDS, fitBoundsOptions: { padding: 28 } }),
-      attributionControl: false,
-      maxZoom: 9,
-      dragRotate: false,
-    });
+    let m: maplibregl.Map;
+    try {
+      m = new maplibregl.Map({
+        container: container.current,
+        style: EMPTY_STYLE,
+        ...(cam
+          ? { center: [cam.lng, cam.lat] as [number, number], zoom: cam.zoom }
+          : { bounds: AOI_BOUNDS, fitBoundsOptions: { padding: 28 } }),
+        attributionControl: false,
+        maxZoom: 9,
+        dragRotate: false,
+      });
+    } catch (err) {
+      // No WebGL, or the browser refused a context. The map box says so; the rails, the search and
+      // the dossier do not need the map.
+      dispatch({ type: "failed", message: err instanceof Error ? err.message : String(err) });
+      return;
+    }
     map.current = m;
     if (import.meta.env.DEV) (window as unknown as { __map?: maplibregl.Map }).__map = m;
     // A readiness signal for the real-browser test tier. Without it a test can only guess when
@@ -337,7 +363,13 @@ export default function MapPanel({
     const box = m.getContainer();
     box.dataset.mapState = "loading";
     m.on("movestart", () => { box.dataset.mapState = "moving"; });
-    m.on("idle", () => { box.dataset.mapState = "idle"; });
+    m.on("idle", () => {
+      box.dataset.mapState = "idle";
+      // Idle before the sources were handed over is an empty style at rest, not a drawn map.
+      if (m.getSource("regions")) dispatch({ type: "idle" });
+    });
+    m.on("sourcedata", (e) => { if (e.sourceId === "regions" && e.isSourceLoaded) dispatch({ type: "geometry_loaded" }); });
+    m.on("error", (e) => dispatch({ type: "failed", message: e.error?.message ?? "the map reported an error" }));
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
     m.addControl(
       new maplibregl.AttributionControl({
@@ -384,7 +416,10 @@ export default function MapPanel({
         data: bundle.regionsGeo,
         promoteId: "code",
       });
-      m.addSource("lines", { type: "geojson", data: bundle.linesGeo });
+      // The line file may not have arrived yet: the source starts with whatever is here, and the
+      // effect below hands the file over when it lands.
+      linesGiven.current = linesRef.current;
+      m.addSource("lines", { type: "geojson", data: linesRef.current ?? EMPTY_FC });
       m.addSource("assets", { type: "geojson", data: assetPoints });
       m.addSource("disruptions", { type: "geojson", data: disruptionPoints });
 
@@ -582,9 +617,54 @@ export default function MapPanel({
       m.remove();
       map.current = null;
     };
-    // Sources are seeded once; later changes are pushed by the effects below.
+    // Sources are seeded once; later changes are pushed by the effects below. Rebuilt only by
+    // "Try again" after a failure.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [attempt]);
+
+  // The line network lands on its own request: hand it to the map when it arrives, and note when
+  // MapLibre has finished parsing it (its own `sourcedata` event), which is when it can be drawn.
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready || !lines) return;
+    const src = m.getSource("lines") as maplibregl.GeoJSONSource | undefined;
+    if (!src) return;
+    if (linesGiven.current !== lines) {
+      linesGiven.current = lines;
+      src.setData(lines);
+    } else if (m.isSourceLoaded("lines")) {
+      // It was already in the source when the map was built, and is parsed.
+      setLinesInMap(true);
+      return;
+    }
+    const parsed = (e: maplibregl.MapSourceDataEvent) => {
+      if (e.sourceId !== "lines" || !e.isSourceLoaded) return;
+      m.off("sourcedata", parsed);
+      setLinesInMap(true);
+    };
+    m.on("sourcedata", parsed);
+    return () => { m.off("sourcedata", parsed); };
+  }, [ready, lines]);
+
+  // Say so in the map box only while it matters to the reader: the line layer is switched on and
+  // its lines are not in the map yet. With the layer off the file loads without comment.
+  useEffect(() => {
+    if (!filters.showLines || linesInMap) dispatch({ type: "late_arrived", id: "lines" });
+    else if (linesFailed) dispatch({ type: "late_failed", id: "lines", label: "network lines" });
+    else dispatch({ type: "late_requested", id: "lines", label: "network lines" });
+  }, [filters.showLines, linesInMap, linesFailed]);
+
+  const retryLoad = () => {
+    // A late file that failed is asked for again; the map itself is fine.
+    if (mapLoadPhase(load) === "late_failed") { onRetryLines?.(); return; }
+    dispatch({ type: "retry" });
+    setReady(false);
+    setAssetLayersReady(false);
+    setLinesInMap(false);
+    linesGiven.current = null;
+    loadedRef.current = new Set();
+    setAttempt((a) => a + 1);
+  };
 
   // Mirror the settled camera to the parent for the URL (§22). Armed on a short delay so the
   // one-off initial fit does NOT write a camera into an otherwise-default link; every real pan,
@@ -1228,6 +1308,8 @@ export default function MapPanel({
     // user had no way to skip the rails and reach it.
     <main className="mapwrap" aria-label="Disruption map">
       <div ref={container} className="map" />
+      <MapLoadIndicator state={load} onRetry={retryLoad}
+        alternative="The region list, the search and the dossier still work without it." />
 
       {/* Context geography labels — HTML overlays, so the map needs no glyph endpoint. */}
       {labels.map((l, i) => (

@@ -1708,6 +1708,8 @@ R_FILTERS = "web/src/global/recordFilters.ts"
 R_BAR = "web/src/global/RecordFilterBar.tsx"
 R_COUNTRY = "web/src/global/countryFilters.ts"
 R_VIEW = "web/src/global/CountryView.tsx"
+R_MAPLOAD = "web/src/mapLoad.ts"
+R_MAPIND = "web/src/components/MapLoadIndicator.tsx"
 ITER22_FILTER_MUTATIONS = [
     ("the CSV dumps each source object instead of its allow-listed parts (a hidden field is exported)",
      [(R_CSV, _text('    citations: bare ? "" : citationsCell(e.sources),', '    citations: bare ? "" : JSON.stringify(e.sources),'))],
@@ -1768,6 +1770,47 @@ ITER22_FILTER_MUTATIONS = [
      [(R_FILTERS, _text("  return defs.filter((d) => !admits(d, state, record, today)).map((d) => d.id);",
                         "  return defs.map((d) => d.id);"))],
      "a_link_to_a_record_the_filters_hide"),
+    # --- map loading states and the theatre's line network (tests/test_iteration22_maploading.py) ---
+    ("a map box says nothing while its geometry is loading",
+     [(R_MAPLOAD, _text('  if (!s.geometry) return "geometry";\n', ""))],
+     "map_loading_says_geometry_then_data_then_nothing"),
+    ("a drawn map goes on saying 'Loading data…'",
+     [(R_MAPLOAD, _text("{ ...s, geometry: true, drawn: true, error: null };", "{ ...s, geometry: true, error: null };"))],
+     "map_loading_says_geometry_then_data_then_nothing"),
+    ("the caller's pending data file is ignored once the polygons are drawn",
+     [(R_MAPLOAD, _text('  if (!s.drawn || s.dataPending) return "data";', '  if (!s.drawn) return "data";'))],
+     "map_loading_waits_for_the_callers_own_data_file"),
+    ("a late file is never named while it loads",
+     [(R_MAPLOAD, _text('  if (s.late.some((l) => !l.failed)) return "late";\n', ""))],
+     "map_loading_names_a_late_file"),
+    ("a late file's failure is silent",
+     [(R_MAPLOAD, _text('  if (s.late.some((l) => l.failed)) return "late_failed";\n', ""))],
+     "map_loading_names_a_late_file"),
+    ("an error reported after the first paint covers a drawn map",
+     [(R_MAPLOAD, _text("      return s.drawn ? s : { ...s, error: e.message };", "      return { ...s, error: e.message };"))],
+     "map_loading_a_failure_is_an_error_with_a_retry"),
+    ("a failed map offers no retry",
+     [(R_MAPIND, _text("      {retry && onRetry && <button", "      {false && <button"))],
+     "map_indicator_is_a_polite_live_region"),
+    ("a failed map does not name the list or table that works without it",
+     [(R_MAPIND, _text('{message}{phase === "failed" && alternative ? ` ${alternative}` : ""}', "{message}"))],
+     "map_indicator_is_a_polite_live_region"),
+    ("the theatre waits for the 2.4 MB line file again",
+     [("web/src/data.ts", _text("  loadLines().catch(() => undefined);\n  const [", "  await loadLines();\n  const ["))],
+     "theatre_bundle_does_not_wait_for_the_line_network"),
+    ("the line file is fetched only when first asked for, after the bundle",
+     [("web/src/data.ts", _text("  loadLines().catch(() => undefined);\n  const [", "  const ["))],
+     "theatre_bundle_does_not_wait_for_the_line_network"),
+    ("a failed line request is kept, so Try again can never work",
+     [("web/src/data.ts", _text("    p.catch(() => { if (linesPromise === p) linesPromise = null; });\n", "    p.catch(() => undefined);\n"))],
+     "theatre_a_failed_line_file_never_fails_the_dashboard"),
+    ("the PNG export does not wait for the lines when their layer is on",
+     [("web/src/App.tsx", _text("          lineData = await loadLines();", "          lineData = null;"))],
+     "theatre_png_export_waits_for_the_lines"),
+    ("the map's loading state is driven by a guess instead of MapLibre's idle event",
+     [("web/src/global/SimpleMap.tsx", _text('      if (m.getSource("polys")) dispatch({ type: "idle" });',
+                                             '      window.setTimeout(() => dispatch({ type: "idle" }), 2000);'))],
+     "map_loading_is_driven_by_real_events"),
 ]
 MUTATIONS += ITER22_FILTER_MUTATIONS
 
@@ -1786,7 +1829,7 @@ def _sandbox():
 
 TEST_FILES = ("tests/test_pipeline.py", "tests/test_iteration18.py", "tests/test_iteration19.py",
               "tests/test_iteration20.py", "tests/test_research_coverage.py", "tests/test_iter21_gulf_map.py", "tests/test_compare.py", "tests/test_iteration21_performance.py", "tests/test_iteration21_home.py", "tests/test_iteration21_theatre_ux.py", "tests/test_iteration21_country.py", "tests/test_whats_new.py", "tests/test_iteration21_safety.py", "tests/test_iteration21_testarch.py")
-TEST_FILES += ("tests/test_iteration22_filters.py",)
+TEST_FILES += ("tests/test_iteration22_filters.py", "tests/test_iteration22_maploading.py")
 
 
 def _run(box, k):

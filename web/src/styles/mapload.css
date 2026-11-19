@@ -1,0 +1,35 @@
+/* What a map is waiting for, said inside the map box (iteration 22). Laid over the map: it takes no
+   room, so nothing shifts when it appears or goes. The words carry the state; no spinner, no colour
+   that means anything by itself. */
+
+.map-load {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 3;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  max-width: calc(100% - 32px); padding: 8px 12px; border-radius: var(--radius);
+  background: rgba(7, 9, 12, 0.88); border: 1px solid var(--line);
+  color: var(--text); font-size: 12.5px; line-height: 1.45; text-align: center;
+  /* The map under it stays usable: a late file must not block panning a map that is drawn. */
+  pointer-events: none;
+}
+/* With nothing to say it is clipped away, not removed: a live region has to be in the page before
+   its text changes for a screen reader to announce the change. */
+.map-load:not(.is-on) {
+  width: 1px; height: 1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); background: none;
+}
+.map-load.is-error { border-left: 2px solid var(--amber); }
+.map-load-text { margin: 0; }
+.map-load-retry { pointer-events: auto; }
+
+/* A file that arrives after the map is drawn is said along the top edge, not across the middle of
+   a map the reader is already using. */
+.map-load[data-map-load="late"], .map-load[data-map-load="late_failed"] {
+  top: 58px; transform: translateX(-50%); font-size: 11.5px; padding: 5px 9px;
+}
+
+/* Before the map exists: the same words in the box the map will fill. */
+.map-load-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
+.map-load-placeholder .map-load-text { margin: 0; }
+
+@media print {
+  .map-load { display: none !important; }
+}

@@ -386,6 +386,7 @@ export default function CountryView({ id }: { id: string }) {
             ariaLabel={`Map of ${sys.name} by ${sys.geography.unit_label}. Select one to list its events.`}
             emptyMessage={scale.thresholds.length === 0 ? `No record is placed in any ${sys.geography.unit_label}, so nothing is shaded. An unshaded map is not a quiet country.` : null}
             attribution="Boundaries: Natural Earth (public domain), line of actual control. Events: cited public reporting."
+            alternative="The list of reported events beside it does not need the map."
             onMap={(m) => { mapRef.current = m; }}
           />
           {/* A filter that cannot filter anything is replaced by the reason (iteration 21). */}
