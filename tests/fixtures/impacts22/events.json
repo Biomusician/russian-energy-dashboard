@@ -1699,7 +1699,7 @@
       "technology": null,
       "cause_family": "industrial_technical",
       "contributing_factors": [],
-      "cyber_mechanism": null,
+      "cyber_mechanism": "it_outage_affecting_operations",
       "summary": "SYNTHETIC FIXTURE. Example Rail reported that an automated dispatch system issued wrong instructions and commuter rail services in Japan were suspended.",
       "effect": "SYNTHETIC FIXTURE. Commuter services were suspended for about six hours.",
       "effect_specificity": "described",

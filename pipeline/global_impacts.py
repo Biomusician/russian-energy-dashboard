@@ -95,7 +95,10 @@ DISPUTE_FIELDS = ("about", "statement", "source_refs")
 REVIEW_FIELDS = ("reviewed_at", "review_status", "roles", "ai_check", "social_check", "disposition")
 ENTRY_FIELDS = ("id", "date", "as_of", "context_type", "claim", "metric", "sources", "first_published",
                 "last_revised", "review")
-METRIC_FIELDS = ("value", "unit", "basis")
+METRIC_FIELDS = ("value", "value_upper", "qualifier", "unit", "basis")
+METRIC_QUALIFIERS = ("about", "at_least", "at_most", "range")
+# The one mechanism a record that is not a cyberattack may carry (methodology §4).
+IT_FAILURE_MECHANISM = "it_outage_affecting_operations"
 LOG_FIELDS = ("window", "status", "source_families", "regions_worked", "limitations", "latest_research_date")
 FAMILY_FIELDS = ("lane", "scope", "research_pass", "family", "method", "window", "status", "limitation")
 
@@ -314,6 +317,15 @@ def restricted_systems(r, ctx):
                    if ctx["system_of"].get(a3) in ctx["restricted"]})
 
 
+def digital_category(r):
+    """"cyber" for a cyberattack (the cause family, or a contributing factor, is cyber), "it_failure"
+    for a disruption digitally triggered without malice, else None. Two filters, never one: an IT
+    failure counted under Cyber would turn a faulty update into an attack."""
+    if r.get("cause_family") == "cyber" or "cyber" in (r.get("contributing_factors") or []):
+        return "cyber"
+    return "it_failure" if r.get("cyber_mechanism") == IT_FAILURE_MECHANISM else None
+
+
 def is_attack(r):
     return r.get("cause_family") in ATTACK_FAMILIES or bool(set(r.get("contributing_factors") or []) & set(ATTACK_FAMILIES))
 
@@ -527,7 +539,14 @@ def vocabulary_problems(r):
     if cyber and (mech is None or not _absent_or(mech, ids("cyber_mechanisms"))):
         out.append(f"cyber_mechanism {mech!r}: a cyber record names a broad mechanism or says it is not reported")
     if not cyber and mech is not None:
-        out.append("cyber_mechanism is null (not applicable) when no cause is cyber")
+        # One exception (methodology §4): a disruption digitally triggered WITHOUT malice, such as a
+        # faulty software update. It is a technical failure, never a cyberattack, and nobody is
+        # attributed.
+        if mech != IT_FAILURE_MECHANISM or r.get("cause_family") != "industrial_technical":
+            out.append(f"cyber_mechanism is null (not applicable) when no cause is cyber; the one exception is "
+                       f"{IT_FAILURE_MECHANISM} on an industrial_technical record")
+        elif (r.get("attribution") or {}).get("status") != "NOT_APPLICABLE":
+            out.append("an IT failure is not a malicious act: its attribution is NOT_APPLICABLE")
     for k in ("summary",):
         if not isinstance(r.get(k), str) or not r[k].strip():
             out.append(f"no {k}")
@@ -900,6 +919,14 @@ def context_problems(entries):
                     p.append("a metric value without a unit")
                 if not isinstance(m.get("basis"), str) or not m["basis"].strip():
                     p.append("a metric without its basis (what the figure measures, in the source's words)")
+                if m.get("qualifier") is not None and m["qualifier"] not in METRIC_QUALIFIERS:
+                    p.append(f"metric.qualifier {m['qualifier']!r} is not one of {METRIC_QUALIFIERS}")
+                upper = m.get("value_upper")
+                if (m.get("qualifier") == "range") != (upper is not None):
+                    p.append("metric.value_upper is given for a range, and only for a range")
+                elif upper is not None and (not _number(upper) or not math.isfinite(upper)
+                                            or not _number(m.get("value")) or upper <= m["value"]):
+                    p.append("metric.value_upper is a number above metric.value")
         p += source_problems(e.get("sources"), claims=("occurrence",))
         p += review_problems(e, roles=CONTEXT_REVIEW_ROLES, full=False)
         p += coordinate_problems(e)
@@ -1002,6 +1029,9 @@ FIELD_NOTES = {
                  "country a monitored system.",
     "theatre": "Present and true where the country is part of the Russia, Belarus and Crimea theatre. The record is "
                "not a theatre record and enters no index.",
+    "digital_category": "cyber for a cyberattack (the cause family or a contributing factor is cyber); it_failure for "
+                        "a disruption digitally triggered without malice, such as a faulty software update; else "
+                        "null. Two separate filters: an IT failure is never counted as cyber.",
     "origin_count": "Distinct originating statements among the record's citations. A wire story and its copies are "
                     "one; discovery aids are none. Not a count of links.",
     "first_published": "The build date on which this record was first served. Not the event date and not a source date.",
@@ -1010,7 +1040,8 @@ FIELD_NOTES = {
     "attempts": "Documented attempts with no reported service disruption. Listed apart and never counted with disruptions.",
     "null": TAXONOMY["null_means"],
 }
-VOCABULARIES = ("domains", "sectors", "technologies", "cause_families", "cyber_mechanisms", "source_roles", "media",
+VOCABULARIES = ("domains", "sectors", "technologies", "cause_families", "cyber_mechanisms", "digital_categories",
+                "source_roles", "media",
                 "social_tiers", "claims", "attribution_statuses", "actor_types", "attribution_bases", "ai_statuses",
                 "ai_relations", "ai_roles", "record_kinds", "absence_words", "inclusion_bases", "effect_specificity",
                 "geographic_precision", "geographic_scopes", "date_precision", "affected_qualifiers",
@@ -1058,6 +1089,7 @@ def serve_record(r, ctx):
                                            r.get("dispute"))
     out["attribution"]["confidence"] = EC.attribution_confidence(r["attribution"], r["sources"])
     out["origin_count"] = len({EC.origin_of(s) for s in r["sources"]} - {None})
+    out["digital_category"] = digital_category(r)
     for s in out["sources"]:
         s["link_check"] = _link_check(s, ctx)
     return out
@@ -1135,7 +1167,7 @@ def build_context(context_doc, research_log, ctx, as_of):
         "latest_note": LATEST_NOTE,
         "empty_reason": None if entries else "No reviewed statement has been published yet.",
         "context_types": TAXONOMY["context_types"],
-        "vocabularies": _labels(("source_roles", "media", "link_states")),
+        "vocabularies": _labels(("source_roles", "media", "link_states", "affected_qualifiers")),
         "research": _research(research_log, "regional_context"),
         "entries": entries,
     }

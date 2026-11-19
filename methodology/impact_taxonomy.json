@@ -95,6 +95,10 @@
     {"id": "cyber_physical_disruption", "label": "Cyber-physical disruption", "definition": "A cyber incident reported to have caused a physical effect."},
     {"id": "unknown_cyber_mechanism", "label": "Mechanism not reported", "definition": "Sources call the incident cyber and do not say what kind."}
   ],
+  "digital_categories": [
+    {"id": "cyber", "label": "Cyber", "definition": "A cyberattack: the cause, or a contributing cause, is malicious activity through computer systems."},
+    {"id": "it_failure", "label": "IT failure", "definition": "Digitally triggered without malice, such as a faulty software update or a system failure. Not a cyberattack, and never counted as one."}
+  ],
   "source_roles": [
     {"id": "operator", "label": "Operator", "definition": "The company or body that runs the affected service."},
     {"id": "government", "label": "Government", "definition": "A ministry, agency or official of a government."},
