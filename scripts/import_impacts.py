@@ -215,7 +215,6 @@ def apply_reviews(record, verdicts, roles=ROLE_ORDER):
     listed = evidence.get("sources_opened")
     for s in sources:
         s["opened"] = (s.get("ref") in listed) if isinstance(listed, list) else s.get("opened") is True
-    prune_refs(r, {s.get("ref") for s in sources})
     return r, problems
 
 
