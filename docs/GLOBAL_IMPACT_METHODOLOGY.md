@@ -273,7 +273,9 @@ Properties, each tested and mutation-tested:
   (directness and corroboration are separate components), and many copies of one state or wire
   statement are one origin.
 
-Thresholds were calibrated against blind reviewer labels (`docs/EVIDENCE_CONFIDENCE_V2.md`).
+Thresholds are provisional until a blind calibration is recorded in
+`docs/EVIDENCE_CONFIDENCE_V2.md`; that document, not this sentence, says whether one has been run
+and what it found.
 
 ### 8.2 Attribution confidence
 
