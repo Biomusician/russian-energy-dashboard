@@ -49,8 +49,15 @@ def wire_copy(i, wire="Reuters"):
     return src("media", site=f"outlet{i}.example", publisher=f"{wire} via Outlet {i}")
 
 
-def assess(sources, specificity="described", dispute=None, date=EVENT, date_end=None):
-    return EC.assess(sources, date, date_end, specificity, dispute)
+# A review block that says the source-and-attribution reviewer checked which sources relay which:
+# the only state in which the origin count is a count of independent statements and High is open.
+# The tests of the points use it; what happens without it has tests of its own
+# (tests/test_iteration22_redteam.py).
+REVIEWED = {"roles": {"evidence": "accept", "attribution_source": "accept", "safety": "accept"}}
+
+
+def assess(sources, specificity="described", dispute=None, date=EVENT, date_end=None, review=REVIEWED):
+    return EC.assess(sources, date, date_end, specificity, dispute, review=review)
 
 
 # --- a seeded generator of source sets -----------------------------------------------------------------
@@ -91,28 +98,79 @@ def _points(result):
 
 # --- monotonicity ----------------------------------------------------------------------------------
 
-def test_adding_any_source_never_lowers_the_score_any_component_or_the_category():
+def _counted(sources):
+    """The sources the origin count is taken over: direct or independent, backing the record."""
+    return [s for s in sources if (EC._supports(s, "occurrence") or EC._supports(s, "effect"))
+            and EC.tier_of(s) in EC.METHOD["corroborating_tiers"]]
+
+
+def _joins_two_groups(base, extra):
+    """`extra` shares an identity with sources of `base` that were counted as separate."""
+    linked = [s for s in _counted(base) if EC.origin_keys(s) & EC.origin_keys(extra)]
+    return EC.independent_origins(linked) >= 2
+
+
+def test_adding_a_source_lowers_nothing_unless_it_shows_two_sources_are_one():
+    """Every component but the origin count is a maximum or an "any", so a new source cannot lower
+    it. The origin count can fall, and only one way: the new citation shares an origin, a publisher
+    or an organisation with two sources that had been counted apart. That is a correction."""
     rng = random.Random(22)
-    for _ in range(1500):
+    fell = 0
+    for _ in range(3000):
         base, extra = random_set(rng), random_source(rng)
         spec = rng.choice(EC.EFFECT_SPECIFICITY)
         before, after = assess(base, spec), assess(base + [extra], spec)
-        assert after["score"] >= before["score"], (base, extra)
+        if before["category"] is None or after["category"] is None:
+            continue                       # not assessed: nothing to compare (tested apart)
         for k, v in _points(before).items():
-            assert _points(after)[k] >= v, (k, base, extra)
+            if k != "origins":
+                assert _points(after)[k] >= v, (k, base, extra)
+        if after["components"]["origins"]["count"] < before["components"]["origins"]["count"]:
+            fell += 1
+            assert _joins_two_groups(base, extra), (base, extra)
+        else:
+            assert after["score"] >= before["score"], (base, extra)
+            assert RANK[after["category"]] >= RANK[before["category"]], (base, extra)
+    assert fell, "the generator never produced a citation that joins two groups"
+
+
+def test_where_each_site_has_one_publisher_adding_a_source_never_lowers_anything():
+    """With nothing to reveal (every site speaks under one name, no declared origin), the score,
+    every component and the category can only rise."""
+    rng = random.Random(23)
+    for _ in range(1500):
+        pool = []
+        for _n in range(rng.randrange(7) + 1):
+            s = random_source(rng)
+            s.pop("origin", None)
+            s["publisher"] = "Publisher of " + s["url"].split("/")[2]
+            if s.get("social"):
+                s["social"]["handle"] = s["url"].split("/")[2]
+            pool.append(s)
+        base, extra = pool[:-1], pool[-1]
+        before, after = assess(base), assess(base + [extra])
+        if before["category"] is None or after["category"] is None:
+            continue
+        assert after["score"] >= before["score"], (base, extra)
         assert RANK[after["category"]] >= RANK[before["category"]], (base, extra)
         assert after["components"]["origins"]["count"] >= before["components"]["origins"]["count"]
 
 
-def test_removing_any_source_never_raises_the_score_or_the_category():
+def test_removing_a_source_raises_nothing_unless_it_was_joining_two_groups():
     rng = random.Random(2022)
     for _ in range(600):
         full = random_set(rng, most=7)
         whole = assess(full)
         for i in range(len(full)):
-            part = assess(full[:i] + full[i + 1:])
-            assert part["score"] <= whole["score"], (full, i)
-            assert RANK[part["category"]] <= RANK[whole["category"]], (full, i)
+            rest = full[:i] + full[i + 1:]
+            part = assess(rest)
+            if whole["category"] is None or part["category"] is None:
+                continue
+            if part["components"]["origins"]["count"] > whole["components"]["origins"]["count"]:
+                assert _joins_two_groups(rest, full[i]), (full, i)
+            else:
+                assert part["score"] <= whole["score"], (full, i)
+                assert RANK[part["category"]] <= RANK[whole["category"]], (full, i)
 
 
 def test_the_order_sources_are_listed_in_changes_nothing():
@@ -151,7 +209,7 @@ def test_three_releases_from_one_utility_are_one_origin():
     three = one + [src("operator", site="gridco.example", publisher="GridCo", path=p, date=d)
                    for p, d in (("update-2", "2024-03-03"), ("update-3", "2024-03-05"))]
     assert assess(three) == assess(one)
-    assert assess(three)["components"]["origins"] == {"count": 1, "points": 0}
+    assert assess(three)["components"]["origins"] == {"count": 1, "points": 0, "basis": "reviewed"}
 
 
 def test_source_count_never_enters_only_who_speaks_and_how_many_origins():
@@ -195,10 +253,14 @@ def test_an_aggregator_or_a_discovery_aid_is_never_an_origin():
     assert EC.tier_of(aggregator) == "secondary" and EC.tier_of(wikipedia) == "secondary"
     assert EC.origin_of(wikipedia) is None
     assert assess([media, aggregator, wikipedia]) == assess([media])
-    alone = assess([aggregator, wikipedia], "quantified")
-    assert alone["components"]["origins"]["count"] == 0 and alone["category"] == "PRELIMINARY"
-    assert alone["components"]["effect"]["points"] == 0, "a secondary source does not establish the effect"
-    assert alone["components"]["opened"]["points"] == 0 and alone["components"]["contemporaneous"]["points"] == 0
+    # Beside a secondary source that is not a discovery aid (a dataset), they still add nothing,
+    # and a secondary source establishes neither the effect nor a date nor a reading.
+    dataset = src("dataset", site="eventdata.example", publisher="An event database")
+    thin = assess([dataset, aggregator, wikipedia], "quantified")
+    assert thin == assess([dataset], "quantified")
+    assert thin["components"]["origins"]["count"] == 0 and thin["category"] == "PRELIMINARY"
+    assert thin["components"]["effect"]["points"] == 0, "a secondary source does not establish the effect"
+    assert thin["components"]["opened"]["points"] == 0 and thin["components"]["contemporaneous"]["points"] == 0
 
 
 def test_a_dataset_restating_others_is_secondary_and_no_role_is_promoted_in_code():
@@ -306,7 +368,7 @@ def test_the_unverified_cap_holds_whatever_the_points_say(monkeypatch):
 def test_no_sources_is_preliminary_with_a_zero_score_and_says_why():
     r = assess([])
     assert (r["category"], r["score"]) == ("PRELIMINARY", 0)
-    assert "No direct or independently reported source" in r["reasons"]
+    assert "No first-party source and no press report" in r["reasons"]
 
 
 # --- social media is a medium, not a quality level ------------------------------------------------------
@@ -385,7 +447,7 @@ def att(status, **kw):
 
 
 def asrc(role, site, **kw):
-    return src(role, site=site, publisher=site, supports=["attribution"], **kw)
+    return src(role, site=site, publisher=kw.pop("publisher", site), supports=["attribution"], **kw)
 
 
 GOV = asrc("government", "security-service.example")
@@ -480,14 +542,19 @@ def test_an_anonymous_post_or_a_discovery_aid_attributes_nothing():
 
 
 def test_adding_an_attribution_source_never_lowers_attribution_confidence():
+    """Among third-party attributions. (A self-claim is different: once the claim itself is cited,
+    press coverage that declares no finding of its own is seen to be the claim again.)"""
     order = ["NOT_ESTABLISHED", "CLAIM_ONLY", "LOW", "MODERATE", "HIGH"]
-    pool = [GOV, POLICE, VICTIM, FIRM, FIRM2, PRESS, PRESS2, CLAIM, dict(PRESS, attribution_basis="government"),
+    pool = [GOV, POLICE, VICTIM, FIRM, FIRM2, PRESS, PRESS2, dict(PRESS, attribution_basis="government"),
             src("media", supports=["occurrence"])]
     rng = random.Random(11)
     for _ in range(800):
         base = [rng.choice(pool) for _ in range(rng.randrange(5))]
-        a, b = (EC.attribution_confidence(att("ASSESSED"), s) for s in (base, base + [rng.choice(pool)]))
+        a, b = (EC.attribution_confidence(att("ATTRIBUTED"), s) for s in (base, base + [rng.choice(pool)]))
         assert order.index(b) >= order.index(a), base
+    # Citing the claim beside undeclared press coverage shows the coverage for what it is.
+    assert EC.attribution_confidence(att("SUSPECTED"), [PRESS]) == "LOW"
+    assert EC.attribution_confidence(att("SUSPECTED"), [PRESS, CLAIM]) == "CLAIM_ONLY"
 
 
 def test_disputed_attribution_is_disputed_and_needs_the_competing_view():
@@ -554,7 +621,7 @@ def test_an_anonymous_post_is_never_the_sole_evidence_of_ai_involvement():
 def test_case_01_five_syndicated_copies_of_one_wire_report_are_one_report():
     r = assess([wire_copy(i) for i in range(5)])
     assert (r["category"], r["score"]) == ("MODERATE", 56)
-    assert r["components"]["origins"] == {"count": 1, "points": 0}
+    assert r["components"]["origins"] == {"count": 1, "points": 0, "basis": "reviewed"}
     assert r == assess([wire_copy(0)]), "five copies say exactly what one says"
     assert "One originating statement" in r["reasons"]
 
@@ -637,9 +704,14 @@ def test_the_public_names_and_the_output_shape_are_kept():
     for name in ("assess", "attribution_confidence", "attribution_problems", "ai_problems", "method", "origin_of", "tier_of"):
         assert callable(getattr(EC, name)), name
     r = assess(STRONG, "quantified")
-    assert set(r) == {"category", "label", "score", "disputed", "components", "reasons"}
+    # Every key of the first version is still there; `reason` and `cap` were added by the red-team fixes.
+    assert set(r) == {"category", "label", "score", "disputed", "components", "reasons", "reason", "cap"}
     assert set(r["components"]) == {"directness", "origins", "effect", "opened", "contemporaneous"}
+    assert set(r["components"]["origins"]) == {"count", "points", "basis"}
     assert isinstance(r["score"], int) and 0 <= r["score"] <= 100
+    # A record that is not assessed keeps the same keys, with nulls where there is nothing to say.
+    na = assess([src("media", site="en.wikipedia.org", publisher="Wikipedia")])
+    assert set(na) == set(r) and set(na["components"]) == set(r["components"])
     m = EC.method()
     assert [c["id"] for c in m["categories"]] == ["HIGH", "MODERATE", "LIMITED", "PRELIMINARY", "DISPUTED"]
     assert sum(c["max"] for c in m["components"]) == 100
@@ -650,7 +722,10 @@ def test_no_score_can_exceed_one_hundred_or_fall_below_zero():
     rng = random.Random(9)
     for _ in range(500):
         r = assess(random_set(rng), rng.choice(EC.EFFECT_SPECIFICITY))
-        assert 0 <= r["score"] <= 100 and r["score"] == sum(_points(r).values())
+        if r["category"] is None:
+            assert r["score"] is None and set(_points(r).values()) == {None}, "not assessed is null, never zero"
+        else:
+            assert 0 <= r["score"] <= 100 and r["score"] == sum(_points(r).values())
 
 
 # --- job A: evidence confidence on country records ----------------------------------------------------------
@@ -700,15 +775,15 @@ needs_build = pytest.mark.skipif(not _built(), reason="the served country payloa
 
 @needs_build
 def test_every_served_country_record_carries_a_confidence_that_its_own_public_fields_reproduce():
-    """The served value is a function of the served record alone: its published citations, its dates
-    and whether it carries a figure. So it says nothing those do not, on a campaign-covered record
-    as on any other."""
+    """The served value is a function of the served record alone: its published citations, its dates,
+    whether it carries a figure and its published review block. So it says nothing those do not, on
+    a campaign-covered record as on any other."""
     covered = 0
     for sid in systems.COUNTRY_SYSTEMS:
         for e in _served(sid, "events.json")["events"]:
-            again = EC.assess(e["sources"], e["date"], e.get("date_end"), B.effect_specificity(e))
+            again = EC.assess(e["sources"], e["date"], e.get("date_end"), B.effect_specificity(e), review=e.get("review"))
             assert e["evidence_confidence"] == again, e["event_id"]
-            assert e["evidence_confidence"]["category"] in EC.CATEGORIES
+            assert e["evidence_confidence"]["category"] in (*EC.CATEGORIES, None)
             covered += bool(e.get("publication"))
     assert covered, "no campaign-covered record was checked"
 
@@ -727,9 +802,11 @@ def test_serving_confidence_changed_no_record_no_count_and_no_other_field():
             for k in ("date", "date_end", "summary", "effect", "capacity_affected", "asset_class", "cause"):
                 assert e[k] == raw.get(k), (e["event_id"], k)
             assert [s["url"] for s in e["sources"]] == [s["url"] for s in raw["sources"]]
-        by = system["evidence_confidence_summary"]["by_category"]
-        assert sum(by.values()) == len(doc["events"])
+        summary = system["evidence_confidence_summary"]
+        by = summary["by_category"]
+        assert sum(by.values()) + summary["not_assessed"] == len(doc["events"])
         assert by == {c: sum(1 for e in doc["events"] if e["evidence_confidence"]["category"] == c) for c in EC.CATEGORIES}
+        assert summary["not_assessed"] == sum(1 for e in doc["events"] if e["evidence_confidence"]["category"] is None)
 
 
 def _walk_keys(x):
@@ -836,7 +913,7 @@ def test_a_blind_packet_never_carries_the_result_the_record_id_or_a_source_addre
                                  [wire_copy(1)], [post("S4", identity=None)]), start=1):
         record = _record(i, sources)
         rows.append(("country_event", "xx", record["event_id"], record, assess(sources)))
-    picked = cal.sample(rows, per_cell=2, seed=22)
+    picked = cal.sample(rows, target=10, seed=22)
     assert sorted(r[2] for r in picked) == sorted(r[2] for r in rows)
     packets = [cal.packet(cal.packet_id(22, r[0], r[2]), r[3]) for r in picked]
     text = json.dumps(packets)

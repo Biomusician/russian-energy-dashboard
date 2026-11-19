@@ -181,7 +181,12 @@ export interface CountrySystem {
   source_health?: SourceHealth;
   /** How this country's published records fall across the evidence categories (iteration 22).
    *  Inside the country only: it reflects how the country is reported, and is never compared. */
-  evidence_confidence_summary?: { by_category: Record<EvidenceConfidence["category"], number>;
+  evidence_confidence_summary?: { by_category: Record<EvidenceCategory, number>;
+                                  /** Records cited through a discovery aid only: counted apart from
+                                   *  every category, because that is a research state. */
+                                  not_assessed: number; not_assessed_reason: string;
+                                  /** "provisional: thresholds not calibrated" until a calibration is recorded. */
+                                  status: string;
                                   method_version: string; statement: string; note: string };
   research_gaps: string[];
   audit_docs: string[];
@@ -440,21 +445,34 @@ export interface CountryEvent {
   evidence_confidence?: EvidenceConfidence;
 }
 
-/** How strong the public evidence is that a record happened and that its reported effect is
- *  supported (pipeline/evidence_confidence.py). An ordinal category with the components behind it.
- *  Not a probability, not severity, not infrastructure importance. */
+export type EvidenceCategory = "HIGH" | "MODERATE" | "LIMITED" | "PRELIMINARY" | "DISPUTED";
+
+/** What the sources a record cites support about whether it happened and what its effect was
+ *  (pipeline/evidence_confidence.py). An ordinal category with the components behind it. It
+ *  describes the cited sources, not everything published about the event; it does not cover the
+ *  cause or who was responsible. Not a probability, not severity, not infrastructure importance. */
 export interface EvidenceConfidence {
-  category: "HIGH" | "MODERATE" | "LIMITED" | "PRELIMINARY" | "DISPUTED";
+  /** null = not assessed (the record is cited through a discovery aid only): `reason` says so.
+   *  Never rendered as Preliminary and never counted with a category. */
+  category: EvidenceCategory | null;
   label: string;
-  /** 0–100, ordinal: the sum of the component points. Never shown as a percentage. */
-  score: number;
+  /** Ordinal points: the sum of the components. Never shown as a percentage or "out of 100".
+   *  null when the record is not assessed: null, not zero. */
+  score: number | null;
   disputed: boolean;
+  /** Why there is no category, when there is none; otherwise null. */
+  reason: string | null;
+  /** A rule that held the category below what the points give, or null. */
+  cap: "origins_not_reviewed" | "unverified_only" | null;
   components: {
-    directness: { tier: "direct" | "independent" | "secondary" | "researcher_social" | "unverified" | null; points: number };
-    origins: { count: number; points: number };
-    effect: { specificity: "quantified" | "described" | "vague" | null; points: number };
-    opened: { points: number };
-    contemporaneous: { points: number };
+    directness: { tier: "direct" | "independent" | "secondary" | "researcher_social" | "unverified" | null; points: number | null };
+    /** `basis` says what `count` counts: "reviewed" = independent originating statements, checked
+     *  by a reviewer; "publishers" = distinct publishers cited, whether they relay one statement
+     *  not reviewed. Only the first may be described as independent. */
+    origins: { count: number; points: number | null; basis: "reviewed" | "publishers" };
+    effect: { specificity: "quantified" | "described" | "vague" | null; points: number | null };
+    opened: { points: number | null };
+    contemporaneous: { points: number | null };
   };
   /** Plain sentences answering "why this category?", in the order the components are listed. */
   reasons: string[];

@@ -252,7 +252,7 @@ score. A record supported only by unverified social posts or only by an actor's 
 most **Preliminary**.
 
 Properties, each tested and mutation-tested:
-
+- adding a source never lowers the score, and removing one never raises it, except where the source shows that two cited sources are one account (a shared publisher, organisation or declared relay);
 - adding a source never lowers the score; removing one never raises it;
 - a duplicate citation or a second citation from the same origin changes nothing;
 - source **count** never enters, only roles and origins;
@@ -260,7 +260,7 @@ Properties, each tested and mutation-tested:
   (directness and corroboration are separate components), and many copies of one state or wire
   statement are one origin.
 
-Thresholds were calibrated against blind reviewer labels (`docs/EVIDENCE_CONFIDENCE_V2.md`).
+Thresholds are provisional: no blind calibration result has been recorded yet, and the method is served with `status: "provisional: thresholds not calibrated"` until one is (`docs/EVIDENCE_CONFIDENCE_V2.md`).
 
 ### 8.2 Attribution confidence
 

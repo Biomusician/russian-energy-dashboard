@@ -53,8 +53,15 @@ BEGIN, END = "<!-- shadow-study:begin -->", "<!-- shadow-study:end -->"
 # The candidate mapping the study evaluates. It is a question put to the data, not a proposal that
 # has been accepted: nothing reads it but this script.
 CANDIDATE_WEIGHTS = {"HIGH": 1.0, "MODERATE": 0.75, "LIMITED": 0.45, "PRELIMINARY": 0.2}
+# Off the scale: a Disputed incident, and one v2 does not assess (cited through a discovery aid
+# only), have no category to map. Leaving them at their v1 weight made a disputed incident the
+# heaviest in the shadow index (1.0, where no undisputed incident exceeded 0.75). The study states
+# a decision instead: neither weighs more than the lowest mapped category.
+OFF_SCALE = ("DISPUTED", "NOT_ASSESSED")
+OFF_SCALE_WEIGHTS = {k: min(CANDIDATE_WEIGHTS.values()) for k in OFF_SCALE}
+SHADOW_WEIGHTS = {**CANDIDATE_WEIGHTS, **OFF_SCALE_WEIGHTS}
 V1_LABELS = ("confirmed", "probable", "possible", "unverified")
-V2_LABELS = ("HIGH", "MODERATE", "LIMITED", "PRELIMINARY", "DISPUTED")
+V2_LABELS = ("HIGH", "MODERATE", "LIMITED", "PRELIMINARY", "DISPUTED", "NOT_ASSESSED")
 REPLAY_DAYS_BACK = (90, 180, 365)
 
 # Deliberately narrow: a label that is exactly gov / gouv / mil, or one of two named hosts. A
@@ -181,25 +188,23 @@ def study(as_of):
     results = {i["incident_id"]: shadow(i) for i in incidents}
 
     cross = {a: {b: 0 for b in V2_LABELS} for a in V1_LABELS}
-    change = {"higher": 0, "lower": 0, "same": 0, "disputed_no_mapping": 0}
+    change = {"higher": 0, "lower": 0, "same": 0, "off_scale": 0}
     labels, components = {}, collections.Counter()
     citations = official = dated = 0
     for inc in incidents:
         v1 = inc.get("confidence") or "possible"
         r = results[inc["incident_id"]]
-        cross.setdefault(v1, {b: 0 for b in V2_LABELS})[r["category"]] += 1
+        # No category is "not assessed", a state of its own: never folded into Preliminary.
+        label = r["category"] or "NOT_ASSESSED"
+        cross.setdefault(v1, {b: 0 for b in V2_LABELS})[label] += 1
         components[r["components"]["directness"]["tier"] or "none"] += 1
         for c in inc.get("sources") or []:
             citations += 1
             official += official_domain(c.get("url"))
             dated += iso_date(c.get("date")) is not None
-        if r["category"] == "DISPUTED":
-            # Disputed is not on the scale, so the candidate mapping gives it no weight of its own.
-            labels[inc["incident_id"]] = v1
-            change["disputed_no_mapping"] += 1
-            continue
-        labels[inc["incident_id"]] = r["category"]
-        old, new = declared.get(v1, 0.45), CANDIDATE_WEIGHTS[r["category"]]
+        labels[inc["incident_id"]] = label
+        change["off_scale"] += label in OFF_SCALE
+        old, new = declared.get(v1, 0.45), SHADOW_WEIGHTS[label]
         change["higher" if new > old else "lower" if new < old else "same"] += 1
 
     # Where the two disagree, and why: each line is a property of the citations, countable by hand.
@@ -222,17 +227,18 @@ def study(as_of):
                 else "two_or_more_hosts_but_one_origin" if n_origins == 1
                 else "two_or_more_hosts_but_no_origin"] += 1
             why["two_or_more_hosts_one_of_them_a_discovery_aid"] += aid
-        why["effect_supported"] += r["components"]["effect"]["points"] > 0
-        why["a_citation_dated_at_the_time"] += r["components"]["contemporaneous"]["points"] > 0
+        why["not_assessed_by_v2"] += r["category"] is None
+        why["effect_supported"] += (r["components"]["effect"]["points"] or 0) > 0
+        why["a_citation_dated_at_the_time"] += (r["components"]["contemporaneous"]["points"] or 0) > 0
         why["no_citation_with_a_readable_date"] += not any(iso_date(c.get("date")) for c in cites)
     differences = {k: why[k] for k in (
         "labelled_confirmed", "labelled_confirmed_citing_two_or_more_hosts", "labelled_confirmed_by_the_curator",
         "two_or_more_hosts", "two_or_more_hosts_and_two_or_more_origins", "two_or_more_hosts_but_one_origin",
         "two_or_more_hosts_but_no_origin", "two_or_more_hosts_one_of_them_a_discovery_aid", "cite_a_discovery_aid",
-        "effect_supported", "a_citation_dated_at_the_time", "no_citation_with_a_readable_date")}
+        "not_assessed_by_v2", "effect_supported", "a_citation_dated_at_the_time", "no_citation_with_a_readable_date")}
 
     current = run_index(kwargs)
-    candidate = run_index(kwargs, {**declared, **CANDIDATE_WEIGHTS}, labels)
+    candidate = run_index(kwargs, {**declared, **SHADOW_WEIGHTS}, labels)
     # The substitution left nothing behind.
     assert {k: v for k, v in build_index.SCORING["confidence_weights"].items() if not k.startswith("_")} == declared
 
@@ -263,6 +269,9 @@ def study(as_of):
         "cross_tabulation": {"rows": "v1 label (scored today)", "columns": "v2 category (shadow)",
                              "counts": {k: v for k, v in cross.items() if sum(v.values())}},
         "candidate_mapping": CANDIDATE_WEIGHTS,
+        "off_scale_weights": {"weights": OFF_SCALE_WEIGHTS,
+                              "why": "Disputed and not-assessed incidents have no category to map. Each is given "
+                                     "the lowest mapped weight, so neither outweighs an incident nobody disputes."},
         "v1_weights": declared,
         "weight_change_under_mapping": change,
         "why_they_differ": differences,
@@ -278,14 +287,19 @@ def study(as_of):
             "Theatre citations carry no source role: each is treated as independent media reporting unless its "
             "address is on a recognisably official domain (a label that is exactly gov, gouv or mil, or "
             "kremlin.ru / government.ru). Official statements quoted by the press are counted as press.",
-            "No theatre citation records whether a reviewer opened it, so the 10-point 'read by a reviewer' "
-            "component is zero for every incident.",
+            "No theatre citation records whether it was opened, and theatre incidents carry no review block, so "
+            "the 10-point 'opened during research or review' component is zero for every incident. That is "
+            "'not recorded', not 'not opened'.",
             "The Wikipedia strike table reports that a strike happened, not what it did. Its incidents carry no "
             "supported effect, so the 15-point effect component is zero for them.",
-            "Because of the two limits above, no strike-table incident can reach High whatever its citations: "
-            "the ceiling is 28 + 25 + 10 = 63, Moderate.",
-            "Origins are counted by named wire, registered domain and publisher name. Republication the record "
-            "does not name is invisible, which can only overstate independence in v1 and v2 alike.",
+            "Nobody has reviewed which theatre citations relay which, so every origin count here is a count of "
+            "distinct publishers and no incident can be High: Moderate is the ceiling by rule, whatever the "
+            "citations. '0 higher' in the table above therefore follows from construction, not from the evidence.",
+            "Origins are counted by named wire, registered domain, publisher name and the organisation table. "
+            "Republication the record does not name is invisible, which can only overstate independence in v1 "
+            "and v2 alike.",
+            "The candidate weights are ranks given numbers. v2 is declared not to be a probability, and nothing "
+            "here shows that a Moderate incident deserves three quarters of a High one.",
         ],
     }
 
@@ -295,11 +309,12 @@ WHY_TEXT = {
     "labelled_confirmed_citing_two_or_more_hosts": "… and cite two or more distinct hosts",
     "labelled_confirmed_by_the_curator": "… where the label was typed by the curator (curated incidents), not derived from citations",
     "two_or_more_hosts": "Cite two or more distinct hosts (what v1 counts for a strike-table incident)",
-    "two_or_more_hosts_and_two_or_more_origins": "… and two or more independent origins under v2",
-    "two_or_more_hosts_but_one_origin": "… but only one independent origin under v2",
-    "two_or_more_hosts_but_no_origin": "… but no independent origin under v2",
+    "two_or_more_hosts_and_two_or_more_origins": "… and two or more distinct publishers as v2 counts them",
+    "two_or_more_hosts_but_one_origin": "… but only one publisher as v2 counts them",
+    "two_or_more_hosts_but_no_origin": "… but no countable publisher under v2",
     "two_or_more_hosts_one_of_them_a_discovery_aid": "… where one of the hosts is a discovery aid (Wikipedia)",
     "cite_a_discovery_aid": "Cite a discovery aid at all",
+    "not_assessed_by_v2": "Cite nothing but a discovery aid, so v2 does not assess them",
     "effect_supported": "Have an effect the v2 model counts as supported",
     "a_citation_dated_at_the_time": "Have a citation dated within 30 days of the event",
     "no_citation_with_a_readable_date": "Have no citation with a readable date",
@@ -333,8 +348,11 @@ def markdown(s):
         "**Candidate mapping evaluated:** " + ", ".join(f"{k} → {v}" for k, v in s["candidate_mapping"].items())
         + ". (v1: " + ", ".join(f"{k} {v}" for k, v in s["v1_weights"].items()) + ".)",
         "",
+        "**Off the scale:** " + ", ".join(f"{k} → {v}" for k, v in s["off_scale_weights"]["weights"].items())
+        + ". " + s["off_scale_weights"]["why"],
+        "",
         f"**Incidents whose weight would change:** {ch['lower']} lower, {ch['higher']} higher, {ch['same']} unchanged"
-        + (f", {ch['disputed_no_mapping']} Disputed with no mapped weight (kept at v1)." if ch["disputed_no_mapping"] else "."),
+        + f" ({ch['off_scale']} of them off the scale).",
         "",
         "**Why they differ** (incidents; each line is a property of the citations).",
         "",
@@ -382,6 +400,7 @@ def served_block(s):
         "incidents": s["incidents"],
         "cross_tabulation": s["cross_tabulation"],
         "candidate_mapping": s["candidate_mapping"],
+        "off_scale_weights": s["off_scale_weights"],
         "weight_change_under_mapping": s["weight_change_under_mapping"],
         "why_they_differ": s["why_they_differ"],
         "esdi": {"current": s["esdi"]["current"], "shadow": s["esdi"]["shadow"],

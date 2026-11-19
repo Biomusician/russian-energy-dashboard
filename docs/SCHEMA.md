@@ -714,9 +714,18 @@ state may be null until it is fetched.
   count, nothing about candidates.
 - **Evidence confidence on country records (iteration 22).** Each event in
   `systems/<id>/events.json` carries `evidence_confidence`: `{category, label, score, disputed,
-  components {directness {tier, points}, origins {count, points}, effect {specificity, points},
-  opened {points}, contemporaneous {points}}, reasons[]}`, computed by the build from the served
-  record alone (`pipeline/evidence_confidence.py`, `docs/EVIDENCE_CONFIDENCE_V2.md`). `system.json`
-  carries `evidence_confidence_summary`: `{by_category, method_version, statement, note}`, inside
-  the country only. Neither appears in the manifest or any cross-country file, and neither reaches
-  the theatre's index.
+  reason, cap, components {directness {tier, points}, origins {count, points, basis}, effect
+  {specificity, points}, opened {points}, contemporaneous {points}}, reasons[]}`, computed by the
+  build from the served record alone (`pipeline/evidence_confidence.py`,
+  `docs/EVIDENCE_CONFIDENCE_V2.md`). **`category` is `null`** for a record cited only through a
+  discovery aid (Wikipedia, an aggregator), with `reason` saying so, `score` and every `points`
+  `null`: not assessed, never Preliminary and never zero. `origins.basis` says what `count`
+  counts: `"reviewed"` (independent originating statements, checked by the source-and-attribution
+  reviewer) or `"publishers"` (distinct publishers cited; whether they relay one statement was not
+  reviewed), and only the first may be worded as independent. `cap` names a rule that held the
+  category down (`origins_not_reviewed`: a `"publishers"` record is at most Moderate;
+  `unverified_only`) or is `null`. The points are points, never a percentage. `system.json`
+  carries `evidence_confidence_summary`: `{by_category, not_assessed, not_assessed_reason,
+  method_version, status, statement, note}`, inside the country only; `status` is
+  `"provisional: thresholds not calibrated"` while the method version ends `-draft`. Neither
+  appears in the manifest or any cross-country file, and neither reaches the theatre's index.

@@ -1122,14 +1122,19 @@ def effect_specificity(event):
 def attach_evidence_confidence(events):
     """Evidence Confidence v2 on each published record (iteration 22, GLOBAL_IMPACT_METHODOLOGY §8).
 
-    Computed from the SERVED record and nothing else: its published citations, its dates and
-    whether it carries a figure. It is therefore a restatement of what the record already shows,
-    which is why a campaign-covered record may carry it: it can say nothing its public citations
-    do not (a test recomputes it from events.json alone). Display only: it decides no inclusion,
-    enters no count the page compares, and never reaches the theatre's index."""
+    Computed from the SERVED record and nothing else: its published citations, its dates,
+    whether it carries a figure, and its published review block (whether a reviewer opened its
+    sources). It is therefore a restatement of what the record already shows, which is why a
+    campaign-covered record may carry it: it can say nothing its public fields do not (a test
+    recomputes it from events.json alone). Display only: it decides no inclusion, enters no count
+    the page compares, and never reaches the theatre's index.
+
+    A country record's reviewers did not check which citations relay which, so its origin count is
+    a count of publishers and no country record is High. A record cited only through an
+    encyclopedia carries `category: null` and the reason: not assessed, never Preliminary."""
     for e in events:
         e["evidence_confidence"] = evidence_confidence.assess(
-            e["sources"], e["date"], e.get("date_end"), effect_specificity(e))
+            e["sources"], e["date"], e.get("date_end"), effect_specificity(e), review=e.get("review"))
 
 
 def evidence_confidence_summary(events):
@@ -1137,15 +1142,25 @@ def evidence_confidence_summary(events):
     country only, like source_health: it describes the citations found here, it is not comparable
     across countries, and the manifest carries none of it."""
     by = {c: 0 for c in evidence_confidence.CATEGORIES}
+    not_assessed = 0
     for e in events:
-        by[e["evidence_confidence"]["category"]] += 1
+        category = e["evidence_confidence"]["category"]
+        if category is None:
+            not_assessed += 1
+        else:
+            by[category] += 1
     return {
         "by_category": by,
+        # Apart from the categories: a record with only a discovery aid attached has not been
+        # assessed, which is a fact about the research, not about the evidence.
+        "not_assessed": not_assessed,
+        "not_assessed_reason": evidence_confidence.METHOD["not_assessed"]["discovery_aid_only"],
         "method_version": evidence_confidence.METHOD["version"],
+        "status": evidence_confidence.calibration_status(),
         "statement": evidence_confidence.METHOD["statement"],
-        "note": ("Counts this country's published records by the quality of their public evidence. "
-                 "It reflects how this country is reported as well as what happened, and is not "
-                 "comparable across countries. Nothing here enters a number."),
+        "note": ("Counts this country's published records by what their cited sources support. It "
+                 "reflects how and when this country was researched and how it is reported, as well "
+                 "as what happened, and is not comparable across countries. Nothing here enters a number."),
     }
 
 
