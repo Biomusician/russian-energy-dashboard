@@ -342,7 +342,7 @@ test.describe("Gulf country systems", () => {
       if (events.length > 0) {
         await expect(page.locator(".country-side")).toContainText(new RegExp(`across ${events.length} events?\\b`));
       }
-      await app.button("Reported events").click();
+      await app.button("Published energy disruptions").click();
     }
     expect(app.errors).toEqual([]);
   });
