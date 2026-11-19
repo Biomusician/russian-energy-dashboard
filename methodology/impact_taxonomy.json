@@ -265,5 +265,21 @@
     {"id": "occurrence", "label": "Whether it happened", "definition": "Credible sources disagree about whether the disruption occurred."},
     {"id": "effect", "label": "What the effect was", "definition": "Credible sources disagree about the effect on the service."},
     {"id": "cause", "label": "What caused it", "definition": "Credible sources disagree about the cause. Evidence confidence for the event itself is unchanged."}
-  ]
+  ],
+  "source_date_bases": [
+    {"id": "undated_page", "label": "Undated page", "definition": "The page carries no date of its own (a running timeline, an agency landing page). It is cited without a date and earns nothing for being reported at the time."}
+  ],
+  "importance_wording": {
+    "note": "What the gate reads as a claim about an asset's size or importance in an impact record's summary or effect. Not a vocabulary: a word list. 'always' is refused wherever it stands; a word of 'before_asset_noun' is refused directly before an asset noun or with at most 'words_between' words between; 'only' is refused with an asset noun among the next 'only_within_words' words; an allowed phrase is read as absent. Asset nouns also match with -s or -es.",
+    "always": ["largest", "biggest", "sole", "strategic", "vital", "most important", "backbone", "lifeline", "heart of"],
+    "before_asset_noun": ["key", "main", "major", "critical"],
+    "words_between": 1,
+    "only_within_words": 3,
+    "asset_nouns": ["plant", "station", "substation", "refinery", "terminal", "pipeline", "grid", "network", "facility", "facilities", "hospital", "clinic", "port", "airport", "depot", "reservoir", "dam", "cable", "exchange", "hub", "interconnector", "transformer", "reactor", "turbine", "generator", "line", "feeder", "supplier", "provider", "operator", "utility", "utilities", "carrier", "bridge", "railway", "tunnel", "data centre", "data center", "works", "pump", "well", "unit", "site", "link", "artery"],
+    "allow_phrases": ["critical infrastructure", "water main", "water mains", "feeder main", "feeder mains", "major storm", "major storms", "major outage", "major outages", "major disruption", "major disruptions", "major incident", "major incidents"]
+  },
+  "route_wording_allowed": {
+    "note": "Phrases in which 'tanker' is a road vehicle delivering water or fuel, allowed in an impact record. Every other shipping, strait or route word is still refused there.",
+    "phrases": ["water tanker", "water tankers", "tanker truck", "tanker trucks"]
+  }
 }

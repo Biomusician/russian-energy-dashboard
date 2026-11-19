@@ -31,7 +31,7 @@ from pathlib import Path
 from pipeline import build_systems as B
 from pipeline import evidence_confidence as EC
 from pipeline import outputs, systems
-from pipeline.config import CURATED, METHODOLOGY_DIR, PROCESSED, ROOT, WEB_DATA
+from pipeline.config import CURATED, METHODOLOGY_DIR, ROOT, WEB_DATA
 from pipeline.util import log, read_json, write_json
 
 IMPACTS_CURATED = CURATED / "global_impacts"
@@ -82,8 +82,11 @@ RECORD_FIELDS = (
     "attribution", "ai_involvement", "dispute", "sources", "episode_id", "episode_basis", "publication_policy",
     "research_pass", "first_published", "last_revised", "review")
 OPTIONAL_RECORD_FIELDS = ("countries_a3", "last_revised")
-SOURCE_FIELDS = ("ref", "url", "publisher", "date", "language", "source_role", "medium", "social", "supports",
-                 "opened", "title_original", "title_en", "derived_claim", "origin", "attribution_basis")
+SOURCE_FIELDS = ("ref", "url", "publisher", "date", "date_basis", "language", "source_role", "medium", "social",
+                 "supports", "opened", "title_original", "title_en", "derived_claim", "origin", "attribution_basis")
+# The one reason a citation may carry no date: the page itself has none (a city's running timeline,
+# an agency landing page). Such a source earns nothing for "reported at the time".
+UNDATED = "undated_page"
 REQUIRED_SOURCE_FIELDS = ("ref", "url", "publisher", "date", "language", "source_role", "medium", "supports", "opened")
 SOCIAL_FIELDS = ("platform", "handle", "display_name", "account_tier", "identity_basis", "posted_at")
 IMPACT_FIELDS = ("service", "geographic_scope", "affected", "duration_text", "source_refs")
@@ -92,14 +95,20 @@ ATTRIBUTION_FIELDS = ("status", "actor", "actor_type", "basis", "as_of", "statem
 COMPETING_FIELDS = ("actor", "actor_type", "basis", "by", "as_of", "statement", "source_refs")
 AI_FIELDS = ("status", "relation", "role", "as_of", "statement", "source_refs")
 DISPUTE_FIELDS = ("about", "statement", "source_refs")
-REVIEW_FIELDS = ("reviewed_at", "review_status", "roles", "ai_check", "social_check", "disposition")
+# The lead's normalisation pass (scripts/import_impacts.py, reviews/lead/): mechanical rewrites of
+# a record every blind role accepted, made after them and said so, with its own date.
+LEAD_REVIEW_FIELDS = ("lead_normalisation", "lead_normalisation_at")
+REVIEW_FIELDS = ("reviewed_at", "review_status", "roles", "ai_check", "social_check", "disposition") + LEAD_REVIEW_FIELDS
 ENTRY_FIELDS = ("id", "date", "as_of", "context_type", "claim", "metric", "sources", "first_published",
                 "last_revised", "review")
 METRIC_FIELDS = ("value", "value_upper", "qualifier", "unit", "basis")
 METRIC_QUALIFIERS = ("about", "at_least", "at_most", "range")
 # The one mechanism a record that is not a cyberattack may carry (methodology §4).
 IT_FAILURE_MECHANISM = "it_outage_affecting_operations"
-LOG_FIELDS = ("window", "status", "source_families", "regions_worked", "limitations", "latest_research_date")
+LOG_FIELDS = ("window", "status", "source_families", "regions_worked", "limitations", "latest_research_date",
+              "lead_holds")
+# The grounds a lead hold is counted under. Counts only: see `log_problems`.
+HOLD_GROUNDS = ("duplicates_across_lanes", "safety_grounds", "other_grounds")
 FAMILY_FIELDS = ("lane", "scope", "research_pass", "family", "method", "window", "status", "limitation")
 
 # --- wording the gate refuses --------------------------------------------------------------------
@@ -151,6 +160,51 @@ NO_IMPACT_WORDING = re.compile(
     r"\b(did|does|has|had|have) not (affect|disrupt|interrupt)\w*|\bwithout (any )?(disruption|interruption|impact|effect)\b|"
     r"\b(was|were) (thwarted|foiled|prevented|blocked|repelled)\b|\b(thwarted|foiled) (the |an )?(attack|attempt)\b|"
     r"\b(services?|operations?|supply|supplies) (was|were) (not|un)\s?(affected|disrupted|interrupted)\b", re.I)
+
+
+
+def _alternatives(phrases):
+    """Phrases as one alternation, longest first; a space in a phrase is any run of white space."""
+    return "|".join(re.escape(p).replace(r"\ ", r"\s+") for p in sorted(phrases, key=len, reverse=True))
+
+
+def _blank(pattern, text):
+    """`text` with every match of `pattern` replaced by spaces of the same length."""
+    return pattern.sub(lambda m: " " * len(m.group(0)), str(text))
+
+
+# Importance wording (methodology §2: no ranking, nothing that reads as target value). The country
+# corpus refuses every use of a dozen words (build_systems.LOADED_WORDING), which is right for its
+# attack records and too blunt here: "water main", "the only source says", "a major storm" and the
+# legal term "critical infrastructure" say nothing about how much an asset matters. This gate
+# refuses a claim of importance ABOUT AN ASSET. The words are data (impact_taxonomy.json).
+# WHAT IT CATCHES: the listed superlatives anywhere; "key", "main", "major" or "critical" directly
+# before an asset noun, or with one word between; "only" with an asset noun among the next three
+# words. WHAT IT CANNOT: an asset noun that is not on the list, two or more words between
+# ("critical water treatment plant"), or importance spelled another way. The safety reviewer reads
+# the sentence.
+_IMPORTANCE = TAXONOMY["importance_wording"]
+_ASSET_NOUN = rf"(?:{_alternatives(_IMPORTANCE['asset_nouns'])})(?:s|es)?"
+IMPORTANCE_ALLOWED = re.compile(rf"\b(?:{_alternatives(_IMPORTANCE['allow_phrases'])})\b", re.I)
+IMPORTANCE_WORDING = re.compile("|".join([
+    rf"\b(?:{_alternatives(_IMPORTANCE['always'])})\b",
+    rf"\b(?:{_alternatives(_IMPORTANCE['before_asset_noun'])})\s+(?:[\w'-]+\s+){{0,{int(_IMPORTANCE['words_between'])}}}"
+    rf"{_ASSET_NOUN}\b",
+    rf"\bonly\s+(?:[\w'-]+\s+){{0,{int(_IMPORTANCE['only_within_words']) - 1}}}{_ASSET_NOUN}\b",
+]), re.I)
+# Water delivered by road is not shipping: the few phrases in which "tanker" is a lorry.
+ROUTE_ALLOWED = re.compile(rf"\b(?:{_alternatives(TAXONOMY['route_wording_allowed']['phrases'])})\b", re.I)
+
+
+def importance_hit(text):
+    """The first importance claim about an asset in `text`, or None. Allowed phrases are read as absent."""
+    return IMPORTANCE_WORDING.search(_blank(IMPORTANCE_ALLOWED, text))
+
+
+def route_hit(text):
+    """The first shipping, strait or route wording in an impact record's text, or None."""
+    return B.ROUTE_WORDING.search(_blank(ROUTE_ALLOWED, text))
+
 
 # The regional context (methodology §10) may speak of shipping, the strait, transit, traffic,
 # exports and cargoes IN AGGREGATE. It may never carry what follows. A vessel's NAME cannot be
@@ -278,7 +332,7 @@ def load_context(world_path=None, unit_names=None, link_states=None):
     """Country names, which countries are monitored systems, which of those are under the campaign
     policy, and known link states. `unit_names` ({system_id: phrases}) is for tests that must not
     need the Natural Earth cache; left out, unit names are read on first use."""
-    world = read_json(world_path or PROCESSED / "global" / "world.geojson")
+    world = read_json(world_path or outputs.processed() / "global" / "world.geojson")
     names = {}
     for f in world["features"]:
         p = f["properties"]
@@ -401,12 +455,18 @@ def source_problems(sources, claims=EC.CLAIMS):
             continue
         w = f"source {s.get('ref')!r}"
         out += _unknown_keys(s, SOURCE_FIELDS, w)
+        # A page with no date of its own is cited with `date: null` and says so. Nothing else is
+        # undated: a post, an article and a statement all carry a date.
+        undated = "date" in s and s["date"] is None and s.get("date_basis") == UNDATED and s.get("medium") != "social"
         for k in REQUIRED_SOURCE_FIELDS:
-            if k not in s or s[k] in (None, "", []) and k != "opened":
+            if k not in s or s[k] in (None, "", []) and k != "opened" and not (k == "date" and undated):
                 out.append(f"{w}: no {k}")
         if not re.match(r"https?://[^\s/]+\.[^\s/]+", str(s.get("url") or "")):
             out.append(f"{w}: the address is not a public web address")
-        if not _date_ok(s.get("date"), ("day", "month", "year")):
+        if s.get("date_basis") is not None and not undated:
+            out.append(f"{w}: date_basis {s['date_basis']!r} goes only with a null date on a page that has none "
+                       f"({UNDATED}); never on a social post")
+        if not undated and not _date_ok(s.get("date"), ("day", "month", "year")):
             out.append(f"{w}: date {s.get('date')!r} is not a date")
         if s.get("source_role") not in ids("source_roles"):
             out.append(f"{w}: source_role {s.get('source_role')!r} is not in the vocabulary")
@@ -724,9 +784,13 @@ def review_problems(r, roles=REVIEW_ROLES, full=True):
     v = r.get("review")
     if not isinstance(v, dict):
         return ["no review block"]
-    out = _unknown_keys(v, REVIEW_FIELDS if full else ("reviewed_at", "roles"), "review")
+    out = _unknown_keys(v, REVIEW_FIELDS if full else ("reviewed_at", "roles") + LEAD_REVIEW_FIELDS, "review")
     if not _date_ok(v.get("reviewed_at")):
         out.append("review.reviewed_at is not a date")
+    if any(k in v for k in LEAD_REVIEW_FIELDS) and (
+            v.get("lead_normalisation") is not True or not _date_ok(v.get("lead_normalisation_at"))):
+        out.append("review.lead_normalisation is true beside the date of the lead's pass (lead_normalisation_at), "
+                   "or both are left out")
     got = v.get("roles") if isinstance(v.get("roles"), dict) else {}
     for role in roles:
         if got.get(role) not in B.BLIND_PASS:
@@ -790,15 +854,15 @@ def wording_problems(r):
     out = []
     prose, titles = _prose(r), _titles(r)
     words = " ".join(B.address_words(u) for u in _addresses(r))
-    hit = B.ROUTE_WORDING.search(" \n ".join([prose, titles, _id_words(r), words]))
+    hit = route_hit(" \n ".join([prose, titles, _id_words(r), words]))
     if hit:
         out.append(f"shipping, strait or route wording ({hit.group(0)!r}); it belongs to the regional context only")
     hit = B.METHOD_WORDING.search(prose)
     if hit:
         out.append(f"the text states how an attack was carried out ({hit.group(0)!r})")
-    hit = B.LOADED_WORDING.search(f"{r.get('summary') or ''} \n {r.get('effect') or ''}")
+    hit = importance_hit(f"{r.get('summary') or ''} \n {r.get('effect') or ''}")
     if hit:
-        out.append(f"size or importance wording in the summary or effect ({hit.group(0)!r})")
+        out.append(f"wording in the summary or effect that claims an asset's size or importance ({hit.group(0)!r})")
     return out
 
 
@@ -967,9 +1031,18 @@ def context_problems(entries):
 
 
 def log_problems(research_log):
-    """A research note publishes process facts only: families, method, window, status, limitation."""
+    """A research note publishes process facts only: families, method, window, status, limitation.
+    Of what the lead holds it may carry NUMBERS, by ground, and never a word: free text that speaks
+    of held or rejected work is refused, because a sentence can identify a record a number cannot."""
     out = _unknown_keys(research_log, LOG_FIELDS, "research log")
-    out += [f"research log: no {k}" for k in LOG_FIELDS if k not in research_log]
+    out += [f"research log: no {k}" for k in LOG_FIELDS if k not in research_log and k != "lead_holds"]
+    holds = research_log.get("lead_holds")
+    if "lead_holds" in research_log:
+        ok = (isinstance(holds, dict) and set(holds) == {"held", *HOLD_GROUNDS}
+              and all(isinstance(v, int) and not isinstance(v, bool) and v >= 0 for v in holds.values())
+              and holds["held"] == sum(holds[k] for k in HOLD_GROUNDS) and holds["held"] > 0)
+        if not ok:
+            out.append(f"research log: lead_holds is numbers only: held and {HOLD_GROUNDS}, which add up to it")
     for i, f in enumerate(research_log.get("source_families") or []):
         w = f"research log family #{i}"
         if not isinstance(f, dict):
@@ -1057,6 +1130,11 @@ FIELD_NOTES = {
     "first_published": "The build date on which this record was first served. Not the event date and not a source date.",
     "link_check": "The citation's state at the last automated link check, or unchecked. A failed link says nothing "
                   "about the record.",
+    "date_basis": "Present, as undated_page, on a citation whose page carries no date of its own; its date is then "
+                  "null. Such a source earns nothing for being reported at the time.",
+    "lead_normalisation": "Present and true in a review block where, after every blind role accepted the record, the "
+                          "lead rewrote a spelling or a wording into the contract's; lead_normalisation_at is the date. "
+                          "It changes no verdict.",
     "attempts": "Documented attempts with no reported service disruption. Listed apart and never counted with disruptions.",
     "null": TAXONOMY["null_means"],
 }
@@ -1065,7 +1143,7 @@ VOCABULARIES = ("domains", "sectors", "technologies", "cause_families", "cyber_m
                 "social_tiers", "claims", "attribution_statuses", "actor_types", "attribution_bases", "ai_statuses",
                 "ai_relations", "ai_roles", "record_kinds", "absence_words", "inclusion_bases", "effect_specificity",
                 "geographic_precision", "geographic_scopes", "date_precision", "affected_qualifiers",
-                "publication_policies", "link_states", "review_roles", "dispute_about")
+                "publication_policies", "link_states", "review_roles", "dispute_about", "source_date_bases")
 CONTEXT_STATEMENT = (
     "Dated, sourced statements about the Gulf and the Strait of Hormuz, in aggregate: shipping, trade, supply, "
     "markets, reserves, policy and broad civilian and environmental effects. Each statement is as of its own date.")
@@ -1135,7 +1213,20 @@ def _research(research_log, scope):
     if scope == "impacts":
         out["regions_worked"] = sorted(research_log.get("regions_worked") or [])
         out["limitations"] = list(research_log.get("limitations") or [])
+        out["holds_statement"] = holds_statement(research_log.get("lead_holds"))
     return out
+
+
+def holds_statement(holds):
+    """One sentence of numbers about what the lead holds, or None. No reason, lane, country or id."""
+    if not holds:
+        return None
+    n = holds["held"]
+    parts = [f"{holds['duplicates_across_lanes']} as duplicates across research lanes" if holds["duplicates_across_lanes"] else None,
+             f"{holds['safety_grounds']} on safety grounds" if holds["safety_grounds"] else None,
+             f"{holds['other_grounds']} on other grounds" if holds["other_grounds"] else None]
+    return (f"{n} reviewed record{'' if n == 1 else 's'} {'is' if n == 1 else 'are'} held by the lead and not published: "
+            + ", ".join(p for p in parts if p) + ".")
 
 
 def build_impacts(events_doc, research_log, ctx, as_of):
@@ -1189,7 +1280,7 @@ def build_context(context_doc, research_log, ctx, as_of):
         "latest_note": LATEST_NOTE,
         "empty_reason": None if entries else "No reviewed statement has been published yet.",
         "context_types": TAXONOMY["context_types"],
-        "vocabularies": _labels(("source_roles", "media", "link_states", "affected_qualifiers")),
+        "vocabularies": _labels(("source_roles", "media", "link_states", "affected_qualifiers", "source_date_bases")),
         "research": _research(research_log, "regional_context"),
         "entries": entries,
     }
