@@ -1,4 +1,4 @@
-"""Evidence Confidence v2 (iteration 22): how strong is the public evidence for a record?
+"""Evidence Confidence v2 (iteration 22): what do the sources a record cites support?
 
 Three separate questions, never one number (docs/GLOBAL_IMPACT_METHODOLOGY.md §8):
 
@@ -7,22 +7,34 @@ Three separate questions, never one number (docs/GLOBAL_IMPACT_METHODOLOGY.md §
   * `ai_problems`             does a source tie AI to this incident at the status claimed?
 
 WHAT THIS IS NOT. Not a probability, not severity, not infrastructure importance, not research
-completeness. It does not enter the ESDI: the theatre's scoring multiplier
+completeness, and not a judgement of everything published about an event: it describes the sources
+THIS RECORD CITES. It does not enter the ESDI: the theatre's scoring multiplier
 (`confidence_weights` in scoring.json, set from cited-host count) is a different thing and is
 unchanged. A test forbids `build_index` from importing this module.
 
-WHY POINTS, AND WHY THESE. Every component is a maximum, an "any" or a count of distinct origins
-over the supporting sources, so adding a source can never lower the score and removing one can never
-raise it. Nothing counts citations: ten copies of one wire story are one origin, and three
-releases from one utility are one origin. Directness and corroboration are separate components, so
-an official statement is not marked down for corroboration a closed media environment could not
-supply, and many copies of one statement do not stand in for independence.
+WHY POINTS, AND WHY THESE. Nothing counts citations: ten copies of one wire story are one origin,
+and three releases from one utility are one origin. Who is speaking and how many originating
+statements there are are separate components, so an official statement is not marked down for
+corroboration a closed media environment could not supply, and many copies of one statement do not
+stand in for independence. Every component but the origin count is a maximum or an "any" over the
+supporting sources, so adding a source cannot lower it. The origin count can fall: a new citation
+can show that two sources thought separate are one (same organisation, same publisher, one a relay
+of the other). That is the count being corrected, and it is the one way a score can drop.
 
-Every parameter is in methodology/evidence_confidence.json.
+WHAT THE METHOD CANNOT SEE (methodology red team, iteration 22). Whether a news report is the
+outlet's own work or a relay of someone's statement is not in a citation. So the origin count is
+called "independent originating statements" only where a reviewer has checked it (`basis:
+"reviewed"`); otherwise it is a count of distinct publishers, said as such, and the record cannot be
+High. A record cited only through an encyclopedia or an aggregator is not assessed at all: that is a
+research state, not weak evidence.
+
+Every parameter is in methodology/evidence_confidence.json. While its version ends in "-draft" the
+thresholds are provisional: no blind calibration result has been recorded.
 """
 
 import datetime as dt
 import json
+import re
 
 from pipeline.config import METHODOLOGY_DIR
 
@@ -33,6 +45,7 @@ CLAIMS = ("occurrence", "effect", "attribution", "ai_involvement")
 EFFECT_SPECIFICITY = tuple(METHOD["effect_points"])
 TIER_ORDER = ("unverified", "researcher_social", "secondary", "independent", "direct")
 CATEGORIES = tuple(c["id"] for c in METHOD["categories"]) + (METHOD["disputed"]["id"],)
+ORIGIN_BASES = ("reviewed", "publishers")
 
 ATTRIBUTION_STATUSES = ("NOT_APPLICABLE", "UNKNOWN", "CLAIMED", "SUSPECTED", "ASSESSED", "ATTRIBUTED", "DISPUTED")
 ATTRIBUTION_CONFIDENCE = ("HIGH", "MODERATE", "LOW", "CLAIM_ONLY", "DISPUTED", "NOT_ESTABLISHED")
@@ -56,18 +69,47 @@ AI_ROLES = ("attacker_assistance", "social_engineering_generation", "malware_or_
             "ai_generated_configuration_or_code", "ai_service_dependency_failure", "other", "unknown")
 
 
+# --- one source: where it comes from, who is speaking ---------------------------------------------
+
+def _words(text):
+    return re.sub(r"[^\w]+", " ", str(text or "").lower()).strip()
+
+
+def _host(source):
+    return (source.get("url") or "").split("://", 1)[-1].split("/", 1)[0].split(":", 1)[0].lower().rstrip(".")
+
+
 def origin_of(source):
-    """The originating statement a citation carries. An explicit `origin` wins (a lane that can see
-    a republication groups it); a social post's origin is its account; otherwise the rule the
-    country systems already use (a named wire, else the registered domain). None for a discovery
-    aid (Wikipedia, a content aggregator), which is never an origin."""
+    """The originating statement a citation carries. None for a discovery aid (Wikipedia, a content
+    aggregator), which is never an origin and which no explicit `origin` can turn into one.
+    Otherwise an explicit `origin` (a lane that can see a republication groups it; one that names
+    a wire is that wire), a social post's account, or the rule the country systems already use
+    (a named wire, else the registered domain)."""
+    from pipeline import build_systems as B  # late: build_systems imports this module
+    natural = B.source_origin({k: v for k, v in source.items() if k != "origin"})
+    if natural is None:
+        return None
     if source.get("origin"):
-        return str(source["origin"]).lower()
+        declared = " " + re.sub(r"[^a-z]+", " ", str(source["origin"]).lower()) + " "
+        for key, name in B.WIRE_ORIGINS:
+            if f" {key} " in declared:
+                return "wire:" + name
+        return str(source["origin"]).strip().lower()
     social = source.get("social") or {}
-    if source.get("medium") == "social" and social.get("handle"):
-        return f"social:{(social.get('platform') or '').lower()}:{social['handle'].lower().lstrip('@')}"
-    from pipeline.build_systems import source_origin  # late: build_systems is large and imports nothing from here
-    return source_origin(source)
+    if _medium(source) == "social" and social.get("handle"):
+        return f"social:{(social.get('platform') or '').strip().lower()}:{str(social['handle']).strip().lower().lstrip('@')}"
+    return natural
+
+
+def _medium(source):
+    return str(source.get("medium") or "").strip().lower()
+
+
+def _identity_established(social):
+    """An official account counts as its organisation only when the record says how its identity
+    was established, and a platform badge is not a way (methodology §9)."""
+    basis = str((social or {}).get("identity_basis") or "").strip().lower()
+    return bool(basis) and basis not in METHOD["badge_only_identity"]
 
 
 def tier_of(source):
@@ -75,20 +117,44 @@ def tier_of(source):
     if origin_of(source) is None:
         return "secondary"
     role = source.get("source_role")
-    if source.get("medium") == "social":
-        account = (source.get("social") or {}).get("account_tier")
-        mapped = METHOD["social_tier"].get(account, "unverified")
+    if _medium(source) == "social":
+        social = source.get("social") or {}
+        mapped = METHOD["social_tier"].get(str(social.get("account_tier") or "").strip().upper(), "unverified")
         if mapped != "by_role":
             return mapped
+        if not _identity_established(social):
+            return "unverified"
         # An established official account speaks as its organisation does.
-    if role == "dataset":
-        return "direct"  # a regulator's or operator's own filing; a discovery aid was caught above
+    # No role is promoted in code. A dataset restating others is secondary; a regulator's own
+    # filing is cited with the regulator's role and `medium: "dataset"`. (Iteration 22: a
+    # hard-coded "dataset is direct" here gave an event database the standing of an operator,
+    # against the parameter file and methodology §8.1.)
     return METHOD["role_tier"].get(role, "secondary")
 
 
+def is_discovery_aid(source):
+    """An encyclopedia or an aggregator: a way to find sources, never one itself."""
+    return origin_of(source) is None or source.get("source_role") in METHOD["discovery_aid_roles"]
+
+
+def _claims_of(source, field):
+    """`supports` / `disputes` as a list of known claims. A bare string is one claim, never a
+    substring to search: "no_attribution" does not support attribution."""
+    value = source.get(field)
+    if value is None:
+        return None
+    value = [value] if isinstance(value, str) else list(value)
+    return [c for c in value if c in CLAIMS]
+
+
 def _supports(source, claim):
+    # A source recorded as disputing a claim never backs it, whatever `supports` says. One that
+    # denies the event happened does not back an effect of it either.
+    disputed = _claims_of(source, "disputes") or []
+    if claim in disputed or (claim == "effect" and "occurrence" in disputed):
+        return False
+    declared = _claims_of(source, "supports")
     # Country-system events predate claim-level provenance: every citation supports the event.
-    declared = source.get("supports")
     return claim in ("occurrence", "effect") if declared is None else claim in declared
 
 
@@ -115,58 +181,226 @@ def _contemporaneous(source, date, date_end):
     return start - dt.timedelta(days=1) <= cited <= stop + dt.timedelta(days=METHOD["contemporaneous_days"])
 
 
-def assess(sources, date, date_end=None, effect_specificity="described", dispute=None):
-    """Evidence confidence for occurrence and effect: category, ordinal score and its components."""
+# --- originating statements ----------------------------------------------------------------------
+
+def _publisher_key(source):
+    return _words(source.get("publisher")) or None
+
+
+def organisation_of(source):
+    """The organisation a source belongs to, from the parameter file's table, followed up to its
+    parent: two arms of one department, or a state news agency and its state, are one voice. None
+    when the table does not know it, which is most sources."""
+    from pipeline import build_systems as B
+    table = {o["id"]: o for o in METHOD["origins"]["organisations"]}
+    host, domain = _host(source), B.registered_domain(source.get("url"))
+    publisher = f" {_publisher_key(source) or ''} "
+    handle = str((source.get("social") or {}).get("handle") or "").strip().lower().lstrip("@")
+    for org in table.values():
+        hit = (domain in org.get("domains", ()) or host in org.get("domains", ())
+               or any(host == s or host.endswith("." + s) for s in org.get("domain_suffixes", ()))
+               or any(f" {p} " in publisher for p in org.get("publishers", ()))
+               or (handle and handle in org.get("handles", ())))
+        if hit:
+            seen, oid = set(), org["id"]
+            while table.get(oid, {}).get("parent") and oid not in seen:
+                seen.add(oid)
+                oid = table[oid]["parent"]
+            return oid
+    return None
+
+
+def _filed_form(source):
+    text = f"{source.get('url') or ''} {source.get('publisher') or ''}".lower()
+    return next((f for f in METHOD["origins"]["filed_forms"] if any(m in text for m in f["match"])), None)
+
+
+def origin_keys(source):
+    """Every identity a source shares with others that carry the same statement: its origin, its
+    publisher's name, its organisation, its own `ref`, and the `ref` it says it relays."""
+    keys = {("origin", origin_of(source))}
+    if _publisher_key(source):
+        keys.add(("publisher", _publisher_key(source)))
+    if organisation_of(source):
+        keys.add(("organisation", organisation_of(source)))
+    if source.get("ref"):
+        keys.add(("statement", str(source["ref"])))
+    if source.get("relays"):
+        # A relay never adds an origin: it joins the statement it relays, cited or not.
+        keys.add(("statement", str(source["relays"])))
+    return keys
+
+
+def independent_origins(sources):
+    """How many originating statements stand behind `sources`: the number of groups left when
+    sources that share an origin, a publisher, an organisation or a declared relay are joined, and
+    a filed form is joined to its filer. Discovery aids count for nothing.
+
+    This is an upper bound on independence. Republication a record does not name stays invisible,
+    so it can overstate; `assess` therefore calls it a count of independent statements only when a
+    reviewer checked it. It can also fall when a source is added: a citation that links two groups
+    shows they were one."""
+    counted = [s for s in sources if origin_of(s) is not None]
+    parent = list(range(len(counted)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    owner = {}
+    for i, s in enumerate(counted):
+        for key in origin_keys(s):
+            if key in owner:
+                parent[find(i)] = find(owner[key])
+            else:
+                owner[key] = i
+    for i, s in enumerate(counted):
+        form = _filed_form(s)
+        if form:
+            for j, other in enumerate(counted):
+                if other.get("source_role") in form["filed_by_roles"]:
+                    parent[find(i)] = find(j)
+    return len({find(i) for i in range(len(counted))})
+
+
+def origins_reviewed(review):
+    """Whether a reviewer checked which of a record's sources relay which. True for a record whose
+    review block shows the source-and-attribution role accepting it (impact records: that reviewer
+    sets a shared `origin` or `relays` on every relay). A country record's reviewers did not."""
+    cfg = METHOD["origins"]
+    roles = (review or {}).get("roles") or {}
+    return roles.get(cfg["reviewed_by_role"]) in cfg["accepting_verdicts"]
+
+
+def _reviewer_opened(review):
+    """The record's own review block says a reviewer opened at least one source."""
+    try:
+        return int((review or {}).get("sources_opened_by_reviewer") or 0) > 0
+    except (TypeError, ValueError):
+        return False
+
+
+# --- evidence confidence -------------------------------------------------------------------------
+
+def _disputed(sources, dispute):
+    """Whether occurrence or effect is credibly contested: the record says so, or a direct or
+    independent source is recorded as disputing one of them (`disputes`, the mirror of
+    `supports`). An anonymous denial is not credible disagreement, and a dispute about who did it
+    belongs to attribution."""
+    if dispute:
+        about = dispute.get("about") if isinstance(dispute, dict) else None
+        about = [about] if isinstance(about, str) else list(about or [])
+        # A dispute that does not say what it is about is read as one about the record itself:
+        # the conservative reading, since Disputed claims less than any category.
+        if not about or any(a in ("occurrence", "effect") for a in about):
+            return True
+    return any(tier_of(s) in METHOD["corroborating_tiers"]
+               and any(a in ("occurrence", "effect") for a in (_claims_of(s, "disputes") or []))
+               for s in sources)
+
+
+def _category(category_id):
+    return next(c for c in METHOD["categories"] if c["id"] == category_id)
+
+
+def _not_assessed(disputed, basis):
+    """A record with nothing to assess. Null, not Preliminary and not zero: the three absences stay
+    distinct, and "a primary source is not yet attached" is a research state."""
+    cfg = METHOD["not_assessed"]
+    return {
+        "category": None, "label": cfg["label"], "score": None, "disputed": disputed,
+        "reason": cfg["discovery_aid_only"], "cap": None,
+        "components": {
+            "directness": {"tier": None, "points": None},
+            "origins": {"count": 0, "points": None, "basis": basis},
+            "effect": {"specificity": None, "points": None},
+            "opened": {"points": None},
+            "contemporaneous": {"points": None},
+        },
+        "reasons": [cfg["discovery_aid_only"][0].upper() + cfg["discovery_aid_only"][1:]],
+    }
+
+
+def assess(sources, date, date_end=None, effect_specificity="described", dispute=None, review=None):
+    """Evidence confidence for occurrence and effect: category, ordinal score and its components.
+
+    `review` is the record's own review block. It answers two things the citations cannot: whether
+    a reviewer opened a source, and whether a reviewer checked which sources relay which. Without
+    it the origin count is a count of publishers and the record cannot be High.
+
+    `category` is None, with `reason`, for a record cited only through a discovery aid."""
     backing = [s for s in sources if _supports(s, "occurrence") or _supports(s, "effect")]
+    basis = "reviewed" if origins_reviewed(review) else "publishers"
+    disputed = _disputed(sources, dispute)
+    if backing and all(is_discovery_aid(s) for s in backing):
+        return _not_assessed(disputed, basis)
+
     tiers = [tier_of(s) for s in backing]
     best = max(tiers, key=TIER_ORDER.index) if tiers else None
     strong = [s for s, t in zip(backing, tiers) if t in METHOD["corroborating_tiers"]]
-    origins = {origin_of(s) for s in strong} - {None}
+    origin_count = independent_origins(strong)
 
     directness = METHOD["tiers"][best]["points"] if best else 0
-    origin_points = METHOD["origin_points"][str(min(len(origins), 3))] if origins else 0
+    origin_points = METHOD["origin_points"][str(min(origin_count, 3))] if origin_count else 0
     effect_backed = any(_supports(s, "effect") for s in strong)
     effect_points = METHOD["effect_points"].get(effect_specificity, 0) if effect_backed else 0
-    opened = METHOD["opened_points"] if any(s.get("opened") is True for s in strong) else 0
+    # Opened during research (the source's own flag) or during review (the record's review block).
+    # "Not recorded" on a source is not "not opened": it earns nothing by itself and costs nothing
+    # where the review block says a reviewer read the sources.
+    was_opened = bool(strong) and (any(s.get("opened") is True for s in strong) or _reviewer_opened(review))
+    opened = METHOD["opened_points"] if was_opened else 0
     timely = METHOD["contemporaneous_points"] if any(_contemporaneous(s, date, date_end) for s in strong) else 0
     score = directness + origin_points + effect_points + opened + timely
 
     category = next(c for c in METHOD["categories"] if score >= c["min"])
-    capped = best in (None, "researcher_social", "unverified")
-    if capped:
-        category = next(c for c in METHOD["categories"] if c["id"] == METHOD["caps"]["unverified_only"])
-    disputed = bool(dispute) and dispute.get("about") in ("occurrence", "effect")
+    cap = None
+    order = [c["id"] for c in METHOD["categories"]]            # strongest first
+    ceiling = METHOD["origins"]["cap_when_not_reviewed"]
+    if basis != "reviewed" and order.index(category["id"]) < order.index(ceiling):
+        # Two publishers may be one statement relayed. Until someone has checked, the count is an
+        # upper bound, and an upper bound does not earn the top category.
+        category, cap = _category(ceiling), "origins_not_reviewed"
+    if best in (None, "researcher_social", "unverified"):
+        category = _category(METHOD["caps"]["unverified_only"])
+        cap = "unverified_only" if best else None
     if disputed:
         category = METHOD["disputed"]
 
     reasons = []
     if best:
         reasons.append(METHOD["tiers"][best]["label"])
-    if len(origins) >= 2:
-        reasons.append(f"{len(origins)} independent originating statements")
-    elif len(origins) == 1:
-        reasons.append("One originating statement")
+    if not origin_count:
+        reasons.append("No first-party source and no press report")
+    elif basis == "reviewed":
+        reasons.append(f"{origin_count} independent originating statements" if origin_count >= 2
+                       else "One originating statement")
     else:
-        reasons.append("No direct or independently reported source")
+        reasons.append(f"{origin_count} distinct publishers cited; whether they relay one statement was not reviewed"
+                       if origin_count >= 2 else "One publisher cited")
     if effect_backed:
         reasons.append({"quantified": "Effect quantified by a source", "described": "Effect described, not quantified",
                         "vague": "Effect reported only in general terms"}.get(effect_specificity, "Effect not assessed"))
     else:
-        reasons.append("No direct or independent source for the effect")
+        reasons.append("No first-party source or press report for the effect")
     if opened:
-        reasons.append("Source read by a reviewer")
+        reasons.append("A cited source was opened during research or review")
     if timely:
         reasons.append("Reported at the time")
-    if capped and best:
+    if cap == "origins_not_reviewed":
+        reasons.append(f"Held at {_category(ceiling)['label']}: independence of the cited sources has not been reviewed")
+    if cap == "unverified_only":
         reasons.append("Rests on unverified claims only")
     if disputed:
         reasons.append("Credible sources disagree")
 
     return {
         "category": category["id"], "label": category["label"], "score": score, "disputed": disputed,
+        "reason": None, "cap": cap,
         "components": {
             "directness": {"tier": best, "points": directness},
-            "origins": {"count": len(origins), "points": origin_points},
+            "origins": {"count": origin_count, "points": origin_points, "basis": basis},
             "effect": {"specificity": effect_specificity if effect_backed else None, "points": effect_points},
             "opened": {"points": opened},
             "contemporaneous": {"points": timely},
@@ -175,8 +409,87 @@ def assess(sources, date, date_end=None, effect_specificity="described", dispute
     }
 
 
-def _basis(source):
-    return source.get("attribution_basis") or BASIS_OF_ROLE.get(source.get("source_role"), "media_investigation")
+# --- attribution ---------------------------------------------------------------------------------
+
+def _actor_names(attribution):
+    a = attribution or {}
+    return [n for n in (_words(x) for x in [a.get("actor"), *(a.get("actor_aliases") or [])]) if n]
+
+
+def _published_by_actor(source, attribution):
+    """The source is the named actor speaking: its publisher or origin is the actor (or a name the
+    record lists for it, such as the government body that announced its own operation). A name of
+    two or more words also matches inside a longer publisher name ("Group X News")."""
+    voices = [f" {v} " for v in (_publisher_key(source), _words(source.get("origin")),
+                                 _words((source.get("social") or {}).get("display_name"))) if v]
+    for name in _actor_names(attribution):
+        for voice in voices:
+            if voice.strip() == name or (" " in name and f" {name} " in voice):
+                return True
+    return False
+
+
+def _own_claim(source, attribution=None):
+    """The actor's own claim of responsibility, whatever role the source was given: typed as one,
+    declared as one (a wire report of the claim carries the claim), or published by the actor."""
+    return (source.get("source_role") == "actor_self_claim"
+            or source.get("attribution_basis") == "actor_self_claim"
+            or _published_by_actor(source, attribution))
+
+
+def _basis(source, attribution=None):
+    """Whose authority a source carries when it names an actor, or None when it carries none.
+
+    The actor's own claim is a claim whatever else the record says about it. A discovery aid and
+    an anonymous or unestablished account are not credible attribution and carry nothing. The
+    `attribution_basis` override (a wire story reporting a government's attribution) is honoured
+    only on a direct or independently reporting source: a post or an aggregator cannot borrow a
+    government's authority."""
+    role = source.get("source_role")
+    declared = source.get("attribution_basis")
+    if _own_claim(source, attribution):
+        return "actor_self_claim"
+    tier = tier_of(source)
+    if origin_of(source) is None or tier == "unverified":
+        return None
+    if tier in METHOD["corroborating_tiers"]:
+        return declared or BASIS_OF_ROLE.get(role, "media_investigation")
+    return "researcher" if role == "researcher" or tier == "researcher_social" else "media_investigation"
+
+
+def _corroborates(source):
+    """Whether a source is an attribution of its own, as against a report of someone else's.
+
+    News coverage of an attribution usually restates it. A wire, outlet or trade title therefore
+    counts toward corroboration only when the record declares what it carries (`attribution_basis`):
+    an investigation of its own, or a named authority's attribution at one remove. Undeclared, it
+    still shows that someone credible names the actor (LOW), but two outlets repeating one
+    statement are not two attributions."""
+    return (source.get("source_role") not in METHOD["attribution"]["restating_roles"]
+            or bool(source.get("attribution_basis")))
+
+
+def _attribution_evidence(sources, attribution=None):
+    """(backing, named, claims): every source that supports attribution, those that carry a
+    credible third-party attribution, and the actor's own claims with everything that relays them.
+
+    A relay of a claim is a claim: a source that says it relays one (`relays`), and, where a claim
+    is among the sources, press coverage that declares no basis of its own. "Group X claimed
+    responsibility", reported by any number of outlets, is still one claim by Group X."""
+    backing = [s for s in sources if _supports(s, "attribution")]
+    claims = [s for s in backing if _own_claim(s, attribution)]
+    rest = [s for s in backing if not _own_claim(s, attribution)]
+    moved = bool(claims)
+    while moved:
+        # To a fixed point: a relay of a relay of the claim is the claim too, in whatever order
+        # the sources are listed.
+        refs = {str(s["ref"]) for s in claims if s.get("ref")}
+        relays = [s for s in rest if (s.get("relays") and str(s["relays"]) in refs) or not _corroborates(s)]
+        rest = [s for s in rest if not any(s is r for r in relays)]
+        claims += relays
+        moved = bool(relays)
+    named = [s for s in rest if _basis(s, attribution) is not None]
+    return backing, named, claims
 
 
 def attribution_confidence(attribution, sources):
@@ -189,17 +502,17 @@ def attribution_confidence(attribution, sources):
         return "NOT_ESTABLISHED"
     if status == "DISPUTED":
         return "DISPUTED"
-    backing = [s for s in sources if _supports(s, "attribution")]
-    named = [s for s in backing if _basis(s) != "actor_self_claim"]
-    bases = {_basis(s) for s in named}
-    origins = {origin_of(s) for s in named} - {None}
+    _backing, named, claims = _attribution_evidence(sources, attribution)
     cfg = METHOD["attribution"]
     if not named:
-        return "CLAIM_ONLY" if backing else "NOT_ESTABLISHED"
-    if bases & set(cfg["official_bases"]) and len(bases) >= 2 and len(origins) >= 2:
+        return "CLAIM_ONLY" if claims else "NOT_ESTABLISHED"
+    bases = {_basis(s, attribution) for s in named}
+    firm = [s for s in named if _corroborates(s)]
+    firm_bases = {_basis(s, attribution) for s in firm}
+    if firm_bases & set(cfg["official_bases"]) and len(firm_bases) >= 2 and independent_origins(firm) >= 2:
         return "HIGH"
-    technical = {origin_of(s) for s in named if _basis(s) in cfg["technical_bases"]} - {None}
-    if bases & set(cfg["first_party_bases"]) or len(technical) >= 2:
+    technical = [s for s in firm if _basis(s, attribution) in cfg["technical_bases"]]
+    if bases & set(cfg["first_party_bases"]) or independent_origins(technical) >= 2:
         return "MODERATE"
     return "LOW"
 
@@ -211,11 +524,8 @@ def attribution_problems(attribution, sources):
     status = a.get("status")
     if status not in ATTRIBUTION_STATUSES:
         return [f"attribution status {status!r} is not one of {ATTRIBUTION_STATUSES}"]
-    backing = [s for s in sources if _supports(s, "attribution")]
-    named = [s for s in backing if _basis(s) != "actor_self_claim"]
-    claims = [s for s in backing if _basis(s) == "actor_self_claim"]
-    bases = {_basis(s) for s in named}
-    origins = {origin_of(s) for s in named} - {None}
+    backing, named, claims = _attribution_evidence(sources, a)
+    bases = {_basis(s, a) for s in named}
     cfg = METHOD["attribution"]
     if status in ("NOT_APPLICABLE", "UNKNOWN"):
         if a.get("actor") or backing:
@@ -232,6 +542,8 @@ def attribution_problems(attribution, sources):
     if status == "CLAIMED":
         if not claims:
             out.append("CLAIMED needs the actor's own claim as a source")
+        # Only a source with a finding of its own makes CLAIMED an understatement. Outlets
+        # reporting the claim are the claim again.
         if named:
             out.append("CLAIMED but another party also attributes: the status understates the sources")
     elif status == "DISPUTED":
@@ -239,15 +551,20 @@ def attribution_problems(attribution, sources):
             out.append("DISPUTED needs the competing attribution listed")
     else:
         if not named:
-            out.append(f"{status} rests on the actor's own claim alone; a self-claim is CLAIMED")
-        if status == "ATTRIBUTED" and not (bases & set(cfg["official_bases"]) or len(origins) >= 3):
-            out.append("ATTRIBUTED needs a formal government or law-enforcement attribution, "
-                       "or three independent attributions that agree")
+            out.append(f"{status} has no credible source naming the actor: the actor's own claim, and any "
+                       "report of it, is CLAIMED; an anonymous post or a discovery aid attributes nothing")
+        # Methodology §8.2: ATTRIBUTED is a formal attribution. Any number of technical or press
+        # attributions that agree is ASSESSED (iteration 22: three origins used to be enough here).
+        if status == "ATTRIBUTED" and not bases & set(cfg["official_bases"]):
+            out.append("ATTRIBUTED needs a formal government or law-enforcement attribution; "
+                       "technical or press attributions that agree are ASSESSED")
     for b in a.get("basis") or []:
         if b not in ATTRIBUTION_BASES:
             out.append(f"attribution basis {b!r} is not one of {ATTRIBUTION_BASES}")
     return out
 
+
+# --- AI involvement ------------------------------------------------------------------------------
 
 def ai_problems(ai, sources):
     """An AI label needs a source that ties AI to this incident, at the strength the status claims."""
@@ -270,6 +587,11 @@ def ai_problems(ai, sources):
     if not a.get("as_of"):
         out.append("an AI-involvement finding needs the date it was made (as_of)")
     tiers = {tier_of(s) for s in backing}
+    # An anonymous account is discovery only and never sole evidence (methodology §9); an actor's
+    # own boast is a claim and may stand as CLAIMED, nothing firmer.
+    if backing and tiers <= {"unverified"} and not (
+            status == "CLAIMED" and any(s.get("source_role") == "actor_self_claim" for s in backing)):
+        out.append(f"ai_involvement is {status} on unverified posts alone; an anonymous account is never sole evidence")
     if status == "CONFIRMED" and "direct" not in tiers:
         out.append("CONFIRMED needs a direct authoritative source (operator, government or the vendor's own report)")
     if status == "ASSESSED" and not tiers & {"direct", "independent"}:
@@ -277,14 +599,23 @@ def ai_problems(ai, sources):
     return out
 
 
+# --- the method, as served data ---------------------------------------------------------------------
+
+def calibration_status():
+    """What may be said about the thresholds. Tied to the version: while it ends in "-draft" no
+    calibration result has been recorded and nothing may say the thresholds were calibrated."""
+    return METHOD["status_while_draft"] if METHOD["version"].endswith("-draft") else METHOD["status_when_calibrated"]
+
+
 def method():
     """The method as served data, for the confidence drawer and the glossary."""
     return {
         "version": METHOD["version"],
+        "status": calibration_status(),
         "statement": METHOD["statement"],
         "questions": [
             {"id": "evidence", "label": "Evidence confidence",
-             "asks": "Did it happen, and is the reported effect supported?"},
+             "asks": "Did it happen, and is the reported effect supported, on the sources this record cites?"},
             {"id": "attribution", "label": "Attribution confidence",
              "asks": "How strong is the evidence about who did it?"},
             {"id": "ai", "label": "AI involvement",
@@ -293,25 +624,40 @@ def method():
         "components": [
             {"id": "directness", "label": "Who is speaking", "max": METHOD["tiers"]["direct"]["points"],
              "tiers": [{"id": t, **METHOD["tiers"][t]} for t in reversed(TIER_ORDER)]},
-            {"id": "origins", "label": "Independent originating statements", "max": METHOD["origin_points"]["3"],
+            {"id": "origins", "label": "Originating statements", "max": METHOD["origin_points"]["3"],
              "meaning": "Counted in originating statements, not links: a wire story and its copies are one; "
-                        "releases from one organisation are one; reposts are one at best."},
+                        "releases from one organisation are one, on its website or its official account; a "
+                        "form and the operator that filed it are one; a relay is the statement it relays. "
+                        "Where a reviewer checked which sources relay which, the count is of independent "
+                        "statements. Where nobody did, it is a count of distinct publishers, an upper bound, "
+                        "and the record cannot be High."},
             {"id": "effect", "label": "How specific the reported effect is", "max": METHOD["effect_points"]["quantified"],
-             "meaning": "Quantified, described or only general, as a direct or independent source reports it."},
-            {"id": "opened", "label": "Read by a reviewer", "max": METHOD["opened_points"],
-             "meaning": "A reviewer opened and read a direct or independent source."},
+             "meaning": "Quantified, described or only general, as a first-party source or the press reports it."},
+            {"id": "opened", "label": "Opened during research or review", "max": METHOD["opened_points"],
+             "meaning": "A first-party source or press report was opened by the researcher, or the record's "
+                        "review says a reviewer opened its sources. Not recorded is not the same as not opened."},
             {"id": "contemporaneous", "label": "Reported at the time", "max": METHOD["contemporaneous_points"],
-             "meaning": f"A direct or independent source dated within {METHOD['contemporaneous_days']} days of the event."},
+             "meaning": f"A first-party source or press report dated within {METHOD['contemporaneous_days']} days of the event."},
         ],
         "categories": METHOD["categories"] + [METHOD["disputed"]],
+        "not_assessed": METHOD["not_assessed"],
+        "origin_bases": {
+            "reviewed": "A reviewer checked which sources relay which: the count is of independent originating statements.",
+            "publishers": "Distinct publishers cited. Whether they relay one statement was not reviewed.",
+        },
         "overrides": [
-            "Disputed overrides the score: credible sources disagree, and the product does not choose.",
+            "Disputed overrides the points: credible sources disagree, and the product does not choose.",
             "A record resting only on unverified posts or an actor's own claim is at most Preliminary.",
+            "A record whose sources' independence has not been reviewed is at most Moderate.",
+            "A record cited only through an encyclopedia or an aggregator is not assessed.",
         ],
         "properties": [
-            "Adding a source never lowers the score; a duplicate or a second citation from the same origin changes nothing.",
-            "The number of links never enters; only who is speaking and how many independent origins there are.",
-            "The score is ordinal. It is not a probability.",
+            "A duplicate citation, or a second citation from the same publisher at the same origin, changes nothing.",
+            "The number of links never enters; only who is speaking and how many originating statements there are.",
+            "Adding a source never lowers a component, with one exception: a citation that shows two sources "
+            "share an origin lowers the count of originating statements.",
+            "The points are ordinal: they order records by what their citations show. They are not a probability "
+            "and not a percentage.",
         ],
         "attribution": METHOD["attribution"],
     }

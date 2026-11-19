@@ -24,16 +24,27 @@ one sentence with no count and no dates, recovery changes are not reported at al
 reads the candidate queue: held candidates never reach this file because it is built from published
 payloads only.
 
+RECORD LEVEL (iteration 22). Outside the campaign rule a row also carries its record's public id
+(`record_id`), so the panel can link to the record on its country page; that id is already in the
+address of the record's own "Link to this record". Under the rule nothing changed: no id, for any
+record of such a system, covered or not. A withdrawn record carries none anywhere: no page holds it.
+A coverage or method change carries a `link` to where the page explains it (a tab of the country,
+a section of the home page), never to a record. The impact layer's changes are derived from its two
+served artifacts and listed once, apart from any country (`impact_layer`): its first release is one
+sentence, a backfilled historical record is told apart from a new event by its own dates, and an
+attribution or AI-status change is an update to an existing record, never a new incident.
+
 WHERE THE BASELINE COMES FROM. The last committed production build dated before this one, read out
 of git (`lineage.previous_dated_build`), never the worktree copy. The theatre part re-runs the
 theatre's own ledger (`diff_builds.diff`) against that same baseline, so one panel never mixes two
 "previous builds".
 """
 
+import datetime as dt
 import json
 
 from pipeline import diff_builds, lineage, systems
-from pipeline.build_systems import RESTRICTING_STATES, TAXONOMY_EXTENSIONS
+from pipeline.build_systems import DERIVED_EVENT_FIELDS, RESTRICTING_STATES, TAXONOMY_EXTENSIONS
 from pipeline.config import ASSET_CLASSES, SECTORS
 
 SCHEMA_VERSION = 1
@@ -66,6 +77,24 @@ CATEGORIES = (
     ("recovery_evidence", "Recovery evidence added (where publishable)",
      "A report about recovery was added to an existing record. It may describe a restoration long before "
      "this build. Facility status under an active attack campaign is never shown here."),
+    # Iteration 22: the global impact layer (global/impacts.json, global/regional_context.json).
+    ("impact_record_added", "Impact records added",
+     "Reviewed records were added to the global impact layer. A record whose event is more than 30 days "
+     "older than its first publication is a historical record found by research (a backfill), not a new event."),
+    ("evidence_strengthened", "Evidence strengthened",
+     "The evidence-confidence category of an existing impact record rose: more or better public evidence "
+     "was found or read. The evidence changed, not the event."),
+    ("evidence_weakened", "Evidence weakened",
+     "The evidence-confidence category of an existing impact record fell, or the record is now disputed. "
+     "The evidence changed, not the event."),
+    ("attribution_updated", "Attribution updated",
+     "The public attribution status of an existing impact record changed. Not a new incident: what changed "
+     "is who is reported to attribute it, and how firmly."),
+    ("ai_status_updated", "AI-involvement status updated",
+     "What sources say about AI in an existing impact record changed. Not a new incident."),
+    ("regional_context_updated", "Regional context updated",
+     "Dated, sourced statements in the Gulf and Strait of Hormuz context were added or revised. Context "
+     "only: never a disruption record, never part of an index."),
     ("decay_only", "Index moved by time decay only",
      "No input changed. The evaluation date moved and modelled impairment aged. This is not evidence that "
      "anything was repaired."),
@@ -187,14 +216,22 @@ def _labels():
     return {**ASSET_CLASSES, **TAXONOMY_EXTENSIONS["asset_classes"]}
 
 
-def _item(e, labels):
-    """A record as the aggregating surfaces already publish it: no id, no effect, no cause, and
-    "National" for a campaign-covered record whatever its own system records."""
+def _item(e, labels, with_id=False):
+    """A record as the aggregating surfaces already publish it: no effect, no cause, and
+    "National" for a campaign-covered record whatever its own system records.
+
+    `with_id` (iteration 22): outside the campaign rule a record's id is already public on its
+    country page ("Link to this record"), so the panel may carry it and link there. It is never
+    set for a system under the rule, and a covered record never carries one whatever the caller
+    asks: there the id may name the facility, and the row key stands in for it."""
     covered = bool(e.get("publication"))
     region = ("National" if covered else e.get("region_name")
               or ("Multiple regions" if e.get("regions_affected") else "National"))
-    return {"date": e.get("date"), "date_precision": e.get("date_precision") or "day",
+    item = {"date": e.get("date"), "date_precision": e.get("date_precision") or "day",
             "region": region, "class": labels.get(e.get("asset_class"), e.get("asset_class"))}
+    if with_id and not covered and e.get("event_id"):
+        item["record_id"] = e["event_id"]
+    return item
 
 
 def _capped(rows):
@@ -211,7 +248,8 @@ def _record_changes(prev_events, curr_events, previous_as_of, is_restricted, lab
     p = {e["event_id"]: e for e in prev_events if e.get("event_id")}
     c = {e["event_id"]: e for e in curr_events if e.get("event_id")}
 
-    added = [(_item(c[i], labels), i) for i in c.keys() - p.keys()]
+    linkable = not is_restricted
+    added = [(_item(c[i], labels, with_id=linkable), i) for i in c.keys() - p.keys()]
     if added:
         items, more = _capped(added)
         dates = sorted(str(c[i].get("date")) for i in c.keys() - p.keys())
@@ -233,6 +271,8 @@ def _record_changes(prev_events, curr_events, previous_as_of, is_restricted, lab
                 "is repeated. Which and how many are not shown while the attack-campaign publication "
                 "rule applies."]})
         else:
+            # No id: the record is on no page any more, so there is nothing to link to, and an id
+            # withdrawn for what it named should not be repeated here.
             items, more = _capped([(_item(p[i], labels), i) for i in gone])
             out.append({"category": "records_withdrawn", "items": items, "more": more, "notes": []})
 
@@ -252,13 +292,13 @@ def _record_changes(prev_events, curr_events, previous_as_of, is_restricted, lab
                 corrected.append((_item(b, labels), i))
             continue
         if rec_moved and rb.get("research_status") == "EVIDENCE_FOUND":
-            recovered.append(({**_item(b, labels),
+            recovered.append(({**_item(b, labels, with_id=True),
                                "recovery_kind": RECOVERY_KIND_TEXT.get(rb.get("kind"), rb.get("kind")),
                                "evidence_date": rb.get("date")}, i))
         elif rec_moved:
             fields = sorted(set(fields) | {"recovery research status"})
         if fields:
-            corrected.append(({**_item(b, labels), "fields": fields}, i))
+            corrected.append(({**_item(b, labels, with_id=True), "fields": fields}, i))
     if corrected:
         items, more = _capped(corrected)
         out.append({"category": "data_correction", "items": items, "more": more, "notes": []})
@@ -351,17 +391,37 @@ _CAMPAIGN_HIDDEN_EVENT = ("recovery", "review", "publication")
 _CAMPAIGN_HIDDEN_SYSTEM = ("event_summary", "recovery_coverage", "publication_policy", "record_reviewed")
 
 
+# Evidence confidence (iteration 22) is computed from a record's own citations, dates and figure. A
+# change in it is either a change in those, which is reported as a correction, or a change of
+# method, which is reported once for every country. It is never a change to this one country.
+_DERIVED_EVENT = DERIVED_EVENT_FIELDS
+_DERIVED_SYSTEM = ("evidence_confidence_summary",)
+
+
 def _comparable(side, is_restricted):
     """A system's two documents with everything that is not a change to this country removed."""
-    sys_doc = {k: v for k, v in (side.get("system") or {}).items() if k not in _NOT_THIS_SYSTEM}
+    sys_doc = {k: v for k, v in (side.get("system") or {}).items()
+               if k not in _NOT_THIS_SYSTEM and k not in _DERIVED_SYSTEM}
     if isinstance(sys_doc.get("publication_policy"), dict):
         sys_doc["publication_policy"] = {k: v for k, v in sys_doc["publication_policy"].items() if k != "release_rule"}
     ev = side.get("events") or {}
-    events = ev.get("events") or []
+    events = [{k: v for k, v in e.items() if k not in _DERIVED_EVENT} for e in ev.get("events") or []]
     if is_restricted:
         sys_doc = {k: v for k, v in sys_doc.items() if k not in _CAMPAIGN_HIDDEN_SYSTEM}
         events = [{k: v for k, v in e.items() if k not in _CAMPAIGN_HIDDEN_EVENT} for e in events]
     return sys_doc, events, ev.get("episodes")
+
+
+# Where a reader can see what a kind of change describes (iteration 22): a tab of the country's
+# own page. Only for country systems; the theatre's page is laid out differently.
+CHANGE_TAB = {"research_coverage": "research", "methodology": "method"}
+
+
+def _with_links(sid, changes):
+    for c in changes:
+        if c["category"] in CHANGE_TAB:
+            c["link"] = {"system_id": sid, "tab": CHANGE_TAB[c["category"]]}
+    return changes
 
 
 def country_changes(sid, prev, curr, previous_as_of):
@@ -369,7 +429,8 @@ def country_changes(sid, prev, curr, previous_as_of):
     {"system": system.json, "events": events.json}; `prev` is None for a system new in this build."""
     labels = _labels()
     if not prev:
-        return [{"category": "research_coverage", "notes": ["Monitoring of this system was first published."]}]
+        return _with_links(sid, [{"category": "research_coverage",
+                                  "notes": ["Monitoring of this system was first published."]}])
     is_restricted = restricted(prev, curr)
     out = _record_changes((prev.get("events") or {}).get("events") or [],
                           (curr.get("events") or {}).get("events") or [],
@@ -378,7 +439,7 @@ def country_changes(sid, prev, curr, previous_as_of):
     if not out and _comparable(prev, is_restricted) != _comparable(curr, is_restricted):
         out.append({"category": "build_only",
                     "notes": ["Wording or presentation changed; no record, rule or context changed."]})
-    return _ordered(out)
+    return _with_links(sid, _ordered(out))
 
 
 def theatre_changes(ledger):
@@ -444,8 +505,24 @@ def global_changes(prev, curr):
         notes.append("The rule for releasing facility status after an attack campaign changed.")
     if pick(prev, "stale_policies") and pick(prev, "stale_policies") != pick(curr, "stale_policies"):
         notes.append("The rule for when a source counts as stale changed.")
+    # Evidence confidence on country records (iteration 22). Its arrival, or a revision of its
+    # method, moves a label on every record at once with nothing changing in any of them.
+    def confidence(side):
+        events = [e for s in (side.get("systems") or {}).values() if s
+                  for e in (s.get("events") or {}).get("events") or []]
+        return bool(events), any("evidence_confidence" in e for e in events)
+    (prev_events, prev_has), (_curr_events, curr_has) = confidence(prev), confidence(curr)
+    pv = (pick(prev, "evidence_confidence_summary") or {}).get("method_version")
+    cv = (pick(curr, "evidence_confidence_summary") or {}).get("method_version")
+    if prev_events and curr_has and not prev_has:
+        notes.append("Each published country record now shows an evidence-confidence category, computed "
+                     "from its published citations. No record changed.")
+    elif pv and cv and pv != cv:
+        notes.append(f"The evidence-confidence method was revised (version {cv}). A record's category can "
+                     "move with no change to the record.")
     if notes:
-        out.append({"category": "methodology", "notes": notes})
+        # The home page's own account of how this works, on the page the panel sits on.
+        out.append({"category": "methodology", "notes": notes, "link": {"anchor": "why-head"}})
     pc, cc = prev.get("energy_context") or {}, curr.get("energy_context") or {}
     ps, cs = pc.get("source") or {}, cc.get("source") or {}
     if pc and cc:
@@ -455,6 +532,140 @@ def global_changes(prev, curr):
                 f"figures for {cc.get('comparison_year')}."]})
         elif pc.get("countries") != cc.get("countries"):
             out.append({"category": "national_context", "notes": ["National energy figures were revised."]})
+    return _ordered(out)
+
+
+# --- the global impact layer (iteration 22) ---------------------------------------------------------
+#
+# Read from the two served artifacts of GLOBAL_IMPACT_METHODOLOGY §11 as published, in the previous
+# build and in this one: `global/impacts.json` (records[].impact_id, .date, .first_published,
+# .evidence_confidence.category, .attribution.status, .ai_involvement.status) and
+# `global/regional_context.json` (entries[].id). Nothing here reads a candidate queue, and nothing
+# says how many records anyone is holding.
+
+# A record whose event is more than this many days older than its first publication was found by
+# research after the fact: a backfill, not a new event.
+BACKFILL_DAYS = 30
+# Disputed claims less than any category, so a move into it is a weakening and a move out of it a
+# strengthening.
+EVIDENCE_ORDER = ("DISPUTED", "PRELIMINARY", "LIMITED", "MODERATE", "HIGH")
+FIRST_IMPACT_RELEASE = (
+    "First release of the impact layer: reviewed records of disruption to energy and essential civilian "
+    "services, each with its evidence confidence, attribution and AI-involvement status. Its records are "
+    "listed on the impact pages, not here: none of them is a new event because it is newly published.")
+
+
+def _period_end(iso):
+    """The last day a date of day, month or year precision can mean."""
+    s = str(iso)
+    if len(s) >= 10:
+        return dt.date.fromisoformat(s[:10])
+    if len(s) == 7:
+        first = dt.date(int(s[:4]), int(s[5:7]), 1)
+        return (first.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)
+    return dt.date(int(s[:4]), 12, 31)
+
+
+def impact_timing(record):
+    """"backfill", "new_event" or "unknown" for a newly published impact record.
+
+    A backfill needs positive evidence: both dates present, and the whole of the event's date
+    (the end of its month, for a month-precision date) more than BACKFILL_DAYS before the record
+    was first published. With either date missing or unreadable nothing is claimed either way."""
+    try:
+        published = dt.date.fromisoformat(str(record.get("first_published"))[:10])
+        event_end = _period_end(record.get("date"))
+    except (TypeError, ValueError):
+        return "unknown"
+    return "backfill" if (published - event_end).days > BACKFILL_DAYS else "new_event"
+
+
+def _impact_item(r, **extra):
+    """An impact record as its own artifact already publishes it: its public id (an opaque token
+    for an abstracted attack record, by the import's own rule), date, country and sector."""
+    return {"impact_id": r.get("impact_id"), "date": r.get("date"),
+            "date_precision": r.get("date_precision") or "day",
+            "country": r.get("country_name") or r.get("country_a3"), "sector": r.get("sector"), **extra}
+
+
+def _records(doc):
+    return {r["impact_id"]: r for r in (doc or {}).get("records") or [] if isinstance(r, dict) and r.get("impact_id")}
+
+
+def _moved(prev, curr, path):
+    def value(r):
+        for k in path:
+            r = (r or {}).get(k) if isinstance(r, dict) else None
+        return r
+    return [(i, value(prev[i]), value(curr[i])) for i in sorted(prev.keys() & curr.keys())
+            if value(prev[i]) != value(curr[i]) and value(curr[i]) is not None and value(prev[i]) is not None]
+
+
+def impact_changes(prev, curr):
+    """Changes to the impact layer between two published states, or None when this build has none.
+
+    A layer with no predecessor is one sentence, never a list: every record in a first release is
+    "new" to the file and none is a new event."""
+    cur_doc, cur_ctx = curr.get("impacts"), curr.get("regional_context")
+    if cur_doc is None and cur_ctx is None:
+        return None
+    prev_doc, prev_ctx = prev.get("impacts"), prev.get("regional_context")
+    if cur_doc is not None and prev_doc is None:
+        return [{"category": "impact_record_added", "first_release": True, "notes": [FIRST_IMPACT_RELEASE]}]
+
+    out = []
+    p, c = _records(prev_doc), _records(cur_doc)
+    added = [(_impact_item(c[i], timing=impact_timing(c[i]), first_published=c[i].get("first_published")), i)
+             for i in c.keys() - p.keys()]
+    if added:
+        items, more = _capped(added)
+        timings = {it[0]["timing"] for it in added}
+        out.append({"category": "impact_record_added", "items": items, "more": more, "notes": [],
+                    # Said of the whole set only when it is true of every record in it.
+                    "all_backfill": timings == {"backfill"}, "all_new_events": timings == {"new_event"}})
+    if p.keys() - c.keys():
+        # Which and how many would say what review is holding back. One sentence.
+        out.append({"category": "records_withdrawn", "notes": [
+            "One or more impact records shown before are not shown now: withdrawn, or held while a review is repeated."],
+            "aggregated": True})
+
+    stronger, weaker = [], []
+    for i, a, b in _moved(p, c, ("evidence_confidence", "category")):
+        if a in EVIDENCE_ORDER and b in EVIDENCE_ORDER:
+            (stronger if EVIDENCE_ORDER.index(b) > EVIDENCE_ORDER.index(a) else weaker).append(
+                (_impact_item(c[i], **{"from": a, "to": b}), i))
+    for cat, rows in (("evidence_strengthened", stronger), ("evidence_weakened", weaker)):
+        if rows:
+            items, more = _capped(rows)
+            out.append({"category": cat, "items": items, "more": more, "notes": []})
+    for cat, path, note in (
+            ("attribution_updated", ("attribution", "status"),
+             "The attribution of an existing record was updated. Not a new incident."),
+            ("ai_status_updated", ("ai_involvement", "status"),
+             "The AI-involvement status of an existing record was updated. Not a new incident.")):
+        rows = [(_impact_item(c[i], **{"from": a, "to": b}), i) for i, a, b in _moved(p, c, path)]
+        if rows:
+            items, more = _capped(rows)
+            out.append({"category": cat, "items": items, "more": more, "notes": [note]})
+
+    if cur_ctx is not None:
+        entries = lambda doc: {e["id"]: e for e in (doc or {}).get("entries") or [] if isinstance(e, dict) and e.get("id")}  # noqa: E731
+        pe, ce = entries(prev_ctx), entries(cur_ctx)
+        notes = []
+        if prev_ctx is None:
+            notes.append("The Gulf and Strait of Hormuz regional context was first published.")
+        else:
+            if ce.keys() - pe.keys():
+                notes.append("Dated statements were added to the Gulf and Strait of Hormuz regional context.")
+            if pe.keys() - ce.keys() or any(pe[i] != ce[i] for i in pe.keys() & ce.keys()):
+                notes.append("Statements in the regional context were revised or withdrawn.")
+        if notes:
+            out.append({"category": "regional_context_updated", "notes": notes})
+    n = 0
+    for change in out:
+        for it in change.get("items") or []:
+            n += 1
+            it["key"] = f"impact-change-{n:02d}"
     return _ordered(out)
 
 
@@ -497,13 +708,16 @@ def derive(prev, curr, theatre_ledger, comparison):
         else:
             # With its name: the page holds no country list of its own.
             unchanged.append({"system_id": sid, "name": s["name"]})
+    impact = impact_changes(prev, curr)
     glob = global_changes(prev, curr)
     if not glob and not rows:
-        glob = [{"category": "build_only", "notes": ["Rebuilt; nothing published changed."]}]
-    return _payload(comparison, glob, rows, unchanged)
+        # Nothing changed in any system or rule. If the impact layer changed, its own block says
+        # so, and "nothing published changed" would be false.
+        glob = [] if impact else [{"category": "build_only", "notes": ["Rebuilt; nothing published changed."]}]
+    return _payload(comparison, glob, rows, unchanged, impact=impact)
 
 
-def _payload(comparison, glob, rows, unchanged, reason=None):
+def _payload(comparison, glob, rows, unchanged, reason=None, impact=None):
     return {
         "schema_version": SCHEMA_VERSION,
         "available": reason is None,
@@ -515,6 +729,9 @@ def _payload(comparison, glob, rows, unchanged, reason=None):
                  "No counts are shown: reporting differs too much between countries for a number beside each "
                  "to mean anything but a ranking."),
         "global": glob,
+        # null when this build publishes no impact layer; an empty list when it does and nothing in
+        # it changed. The two are different and the panel says which.
+        "impact_layer": impact,
         "systems": rows,
         "unchanged": unchanged,
     }
@@ -533,7 +750,10 @@ def _published_state(read):
         sys_doc = read(f"{systems.root(sid)}/system.json")
         ev = read(f"{systems.root(sid)}/events.json")
         out[sid] = {"system": sys_doc, "events": ev} if sys_doc and ev else None
-    return {"systems": out, "energy_context": read("global/energy_context.json")}
+    return {"systems": out, "energy_context": read("global/energy_context.json"),
+            # Absent in a build that predates the impact layer: None, which impact_changes reads as
+            # "no predecessor", not as an empty layer.
+            "impacts": read("global/impacts.json"), "regional_context": read("global/regional_context.json")}
 
 
 def build(root, processed, snapshot, incidents, assets):

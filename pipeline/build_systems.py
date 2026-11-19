@@ -26,7 +26,7 @@ import re
 import unicodedata
 from urllib.parse import unquote
 
-from pipeline import geo, global_context, gulf_context, systems
+from pipeline import evidence_confidence, geo, global_context, gulf_context, systems
 from pipeline.config import ASSET_CLASSES, CURATED, DISRUPTION_CAUSES, RAW, SECTORS
 from pipeline import outputs
 from pipeline.util import fetch, log, read_json, write_json
@@ -91,6 +91,9 @@ EVENT_FIELDS = (
     "threshold_basis", "capacity_affected", "sources", "recovery", "review", "episode_id",
     "hazard_name", "publication",
 )
+# Fields the build computes from the served record and never reads from a curated file (iteration
+# 22). A value a lane typed under one of these names is not copied: `_event` reads EVENT_FIELDS only.
+DERIVED_EVENT_FIELDS = ("evidence_confidence",)
 # Iteration 20. A capacity figure carries its uncertainty, so nothing downstream can read a lower
 # bound, an approximate figure or one unit of a larger event as an exact total. Nothing sums these
 # figures and nothing should until the methodology says how.
@@ -1104,6 +1107,63 @@ def attach_link_states(events, states):
                 s["link_check"] = states[s["url"]]
 
 
+def effect_specificity(event):
+    """`quantified` when the record carries a figure for what was affected, else `described`.
+
+    A facility's size is not a figure for the effect: a refinery's nameplate is not the amount lost
+    when it burned (the rule CAPACITY_MEASURES already states), so `facility_size` stays
+    `described`. A disputed figure carries no value and stays `described` too. Never `vague`: a
+    country record is admitted only with a reported effect."""
+    cap = event.get("capacity_affected") or {}
+    has_figure = any(cap.get(k) is not None for k in ("value", "value_min", "value_max"))
+    return "quantified" if has_figure and cap.get("measure") != "facility_size" else "described"
+
+
+def attach_evidence_confidence(events):
+    """Evidence Confidence v2 on each published record (iteration 22, GLOBAL_IMPACT_METHODOLOGY §8).
+
+    Computed from the SERVED record and nothing else: its published citations, its dates,
+    whether it carries a figure, and its published review block (whether a reviewer opened its
+    sources). It is therefore a restatement of what the record already shows, which is why a
+    campaign-covered record may carry it: it can say nothing its public fields do not (a test
+    recomputes it from events.json alone). Display only: it decides no inclusion, enters no count
+    the page compares, and never reaches the theatre's index.
+
+    A country record's reviewers did not check which citations relay which, so its origin count is
+    a count of publishers and no country record is High. A record cited only through an
+    encyclopedia carries `category: null` and the reason: not assessed, never Preliminary."""
+    for e in events:
+        e["evidence_confidence"] = evidence_confidence.assess(
+            e["sources"], e["date"], e.get("date_end"), effect_specificity(e), review=e.get("review"))
+
+
+def evidence_confidence_summary(events):
+    """How this country's published records fall across the evidence categories. Inside the
+    country only, like source_health: it describes the citations found here, it is not comparable
+    across countries, and the manifest carries none of it."""
+    by = {c: 0 for c in evidence_confidence.CATEGORIES}
+    not_assessed = 0
+    for e in events:
+        category = e["evidence_confidence"]["category"]
+        if category is None:
+            not_assessed += 1
+        else:
+            by[category] += 1
+    return {
+        "by_category": by,
+        # Apart from the categories: a record with only a discovery aid attached has not been
+        # assessed, which is a fact about the research, not about the evidence.
+        "not_assessed": not_assessed,
+        "not_assessed_reason": evidence_confidence.METHOD["not_assessed"]["discovery_aid_only"],
+        "method_version": evidence_confidence.METHOD["version"],
+        "status": evidence_confidence.calibration_status(),
+        "statement": evidence_confidence.METHOD["statement"],
+        "note": ("Counts this country's published records by what their cited sources support. It "
+                 "reflects how and when this country was researched and how it is reported, as well "
+                 "as what happened, and is not comparable across countries. Nothing here enters a number."),
+    }
+
+
 def link_health_problems(health, all_events):
     """The committed link-health file may speak only of citations the build publishes.
 
@@ -1722,6 +1782,9 @@ def build_system(system_id, admin1, admin0, as_of):
         raise ValueError(f"system {system_id}: events dated in the future: {future}")
     later = sum(1 for e in events if e["date"] > as_of)
     events = [e for e in events if e["date"] <= as_of]
+    # Last, on the record exactly as it will be served (after the publication policy and the
+    # as-of filter): nothing the reader cannot see enters it.
+    attach_evidence_confidence(events)
     # Computed after the as-of filter, so a historical build's episodes hold only the records
     # that existed by then.
     episodes = episodes_of(declared, events)
@@ -1837,6 +1900,7 @@ def build_system(system_id, admin1, admin0, as_of):
         "profile": profile,
         "sources": doc["sources"],
         "source_health": source_health(events),
+        "evidence_confidence_summary": evidence_confidence_summary(events),
         "research_gaps": doc["research_gaps"],
         # The build runs daily; the event record does not. Separate dates, so "as of" never
         # implies the corpus was re-checked today (iteration-14 red team).

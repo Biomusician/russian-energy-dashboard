@@ -1,14 +1,16 @@
 {
   "version": "2.0-draft",
-  "note": "Evidence Confidence v2 (docs/GLOBAL_IMPACT_METHODOLOGY.md §8). Read by pipeline/evidence_confidence.py. An ordinal measure of evidence quality for 'did it happen and is the reported effect supported'. Not a probability, not severity, not infrastructure importance, not research completeness. It does not enter the ESDI.",
-  "statement": "Evidence confidence describes the quality of the public evidence for this record. It is not a probability, not a measure of severity, and not a statement about how important the infrastructure is.",
+  "note": "Evidence Confidence v2 (docs/GLOBAL_IMPACT_METHODOLOGY.md §8, docs/EVIDENCE_CONFIDENCE_V2.md). Read by pipeline/evidence_confidence.py. An ordinal description of the sources a record cites for 'did it happen and is the reported effect supported'. Not a probability, not severity, not infrastructure importance, not research completeness, and not a statement about cause or attribution. It does not enter the ESDI. While the version ends in -draft the thresholds are provisional: no blind calibration result has been recorded.",
+  "statement": "Evidence confidence describes the sources this record cites, not everything published about the event. It covers whether the event happened and whether the reported effect is supported; it does not cover the cause, or who was responsible. It is not a probability, not a measure of severity, and not a statement about how important the infrastructure is.",
+  "status_while_draft": "provisional: thresholds not calibrated",
+  "status_when_calibrated": "calibrated against blind reviewer labels: see docs/EVIDENCE_CONFIDENCE_V2.md",
   "tiers": {
-    "direct": {"points": 40, "label": "Direct authoritative statement",
-               "meaning": "The operator, a government body, a regulator, a national cyber agency, law enforcement, a court record, or an official account whose identity is established."},
-    "independent": {"points": 28, "label": "Independent reporting",
-                    "meaning": "A wire service, a news outlet, specialist press, or a cyber firm's own investigation."},
+    "direct": {"points": 40, "label": "First-party or official statement",
+               "meaning": "The operator, a government body, a regulator, a national cyber agency, law enforcement, a court record, or an official account whose identity is established. First-party describes who is speaking, not whether the statement has been verified."},
+    "independent": {"points": 28, "label": "Press or third-party reporting",
+                    "meaning": "A wire service, a news outlet, specialist press, a trade body, or a cyber firm's own investigation. Whether the report is the outlet's own work or a relay of someone's statement is a separate question, answered under originating statements."},
     "secondary": {"points": 15, "label": "Secondary source",
-                  "meaning": "An aggregator or dataset restating others, or a recognised journalist's post."},
+                  "meaning": "A dataset restating others, or a recognised journalist's post."},
     "researcher_social": {"points": 10, "label": "Researcher's social post",
                           "meaning": "A reputable open-source researcher's public post. A lead, not confirmation."},
     "unverified": {"points": 4, "label": "Unverified claim",
@@ -25,21 +27,66 @@
   "social_tier": {
     "S1": "by_role", "S2": "secondary", "S3": "researcher_social", "S4": "unverified"
   },
+  "badge_only_identity": ["badge", "platform_badge", "verified_badge", "verified", "blue_check", "checkmark"],
   "corroborating_tiers": ["direct", "independent"],
+  "discovery_aid_roles": ["aggregator"],
+  "not_assessed": {
+    "label": "Not assessed",
+    "discovery_aid_only": "cited through a discovery aid only; a primary source is not yet attached",
+    "meaning": "The record cites only an encyclopedia or an aggregator, which restate other sources. That says a primary citation has not been attached yet. It says nothing about how well the event is documented."
+  },
   "origin_points": {"1": 0, "2": 16, "3": 25},
+  "origins": {
+    "note": "How originating statements are counted. Sources are grouped when they share an origin (an explicit origin, a named wire, a website, an account), a publisher name, an organisation in the table below, a filed form and its filer, or a declared relay. The count is the number of groups. It is called a count of independent originating statements only when a reviewer has checked which sources relay which (basis 'reviewed'); otherwise it is a count of distinct publishers and the record cannot be High.",
+    "reviewed_by_role": "attribution_source",
+    "accepting_verdicts": ["accept", "accept_with_correction"],
+    "cap_when_not_reviewed": "MODERATE",
+    "organisations": [
+      {"id": "us-doe", "name": "U.S. Department of Energy",
+       "domains": ["energy.gov", "eia.gov", "doe417.pnnl.gov"],
+       "publishers": ["u s department of energy", "us department of energy", "energy information administration"]},
+      {"id": "state-ir", "name": "Iran: state bodies and state news agencies",
+       "domains": ["irna.ir", "shana.ir"], "domain_suffixes": ["gov.ir"],
+       "publishers": ["irna", "islamic republic news agency", "shana"]},
+      {"id": "state-sa", "name": "Saudi Arabia: state bodies and state news agency",
+       "domain_suffixes": ["gov.sa"], "publishers": ["spa", "saudi press agency"]},
+      {"id": "state-kw", "name": "Kuwait: state bodies and state news agency",
+       "domains": ["kuna.net.kw"], "domain_suffixes": ["gov.kw"], "publishers": ["kuna", "kuwait news agency"]},
+      {"id": "state-ae", "name": "United Arab Emirates: state bodies and state news agency",
+       "domains": ["wam.ae"], "domain_suffixes": ["gov.ae"], "publishers": ["wam", "emirates news agency"]},
+      {"id": "state-qa", "name": "Qatar: state bodies and state news agency",
+       "domains": ["qna.org.qa"], "domain_suffixes": ["gov.qa"], "publishers": ["qna", "qatar news agency"]},
+      {"id": "state-bh", "name": "Bahrain: state bodies and state news agency",
+       "domains": ["bna.bh"], "domain_suffixes": ["gov.bh"], "publishers": ["bna", "bahrain news agency"]},
+      {"id": "state-om", "name": "Oman: state bodies and state news agency",
+       "domain_suffixes": ["gov.om"], "publishers": ["ona", "oman news agency"]},
+      {"id": "state-iq", "name": "Iraq: state bodies and state news agency",
+       "domains": ["ina.iq"], "domain_suffixes": ["gov.iq"], "publishers": ["iraqi news agency"]},
+      {"id": "state-cn", "name": "China: state bodies and state news agency",
+       "domains": ["xinhuanet.com", "news.cn"], "domain_suffixes": ["gov.cn"], "publishers": ["xinhua"]},
+      {"id": "state-ru", "name": "Russia: state bodies and state news agencies",
+       "domains": ["tass.com", "tass.ru", "ria.ru", "kremlin.ru"], "domain_suffixes": ["gov.ru"],
+       "publishers": ["tass", "ria novosti"]}
+    ],
+    "filed_forms": [
+      {"id": "doe-oe-417", "name": "DOE Form OE-417 electric emergency incident summaries",
+       "match": ["oe-417", "oe417", "doe417"], "filed_by_roles": ["operator"],
+       "why": "The form is filed by the utility. Where a record cites the utility too, the summary and the utility's own release are one account."}
+    ]
+  },
   "effect_points": {"quantified": 15, "described": 8, "vague": 0},
   "opened_points": 10,
   "contemporaneous_points": 10,
   "contemporaneous_days": 30,
   "categories": [
     {"id": "HIGH", "min": 78, "label": "High",
-     "meaning": "A direct or independently reported account, corroborated by a second originating statement, with a specific reported effect."},
+     "meaning": "At least two originating statements whose independence a reviewer has checked, with most of the other components present. Rests on the cited sources as the record describes them."},
     {"id": "MODERATE", "min": 55, "label": "Moderate",
-     "meaning": "A credible account from one originating statement, or corroborated reporting with a less specific effect."},
+     "meaning": "A first-party or official account from one origin with a reported effect, or press reporting with most other components present. Also the most a record can be while the independence of its sources has not been reviewed."},
     {"id": "LIMITED", "min": 35, "label": "Limited",
-     "meaning": "Reported by a credible source, but single-origin and thin on the effect, or resting on secondary sources."},
+     "meaning": "Reported by a first-party source or the press, with several components missing: one origin, no figure, no dated source, or none recorded as opened."},
     {"id": "PRELIMINARY", "min": 0, "label": "Preliminary",
-     "meaning": "Rests on unverified or secondary claims. Published because it was reviewed, not because it is settled."}
+     "meaning": "Rests on an unverified claim, a post, or a secondary source, or on a single report with nothing else recorded about it. Published because it was reviewed, not because it is settled."}
   ],
   "disputed": {"id": "DISPUTED", "label": "Disputed",
                "meaning": "Credible sources materially disagree about whether it happened or what the effect was. The product does not choose between them."},
@@ -48,15 +95,16 @@
     "official_bases": ["government", "law_enforcement"],
     "first_party_bases": ["government", "law_enforcement", "victim_operator"],
     "technical_bases": ["cybersecurity_firm", "researcher", "media_investigation"],
+    "restating_roles": ["wire", "media", "specialist_media", "industry", "aggregator"],
     "labels": {
       "HIGH": "High", "MODERATE": "Moderate", "LOW": "Low", "CLAIM_ONLY": "Claim only",
       "DISPUTED": "Disputed", "NOT_ESTABLISHED": "Not established"
     },
     "meanings": {
-      "HIGH": "A formal government or law-enforcement attribution, supported by a second independent attribution of a different kind.",
-      "MODERATE": "One formal attribution by a government, law enforcement or the victim; or two independent technical or investigative attributions that agree.",
-      "LOW": "A single cyber firm, researcher or media investigation names the actor.",
-      "CLAIM_ONLY": "Only the actor's own claim of responsibility. A claim is not corroboration.",
+      "HIGH": "A formal government or law-enforcement attribution, supported by a second attribution of a different kind from a separate organisation, each its own finding.",
+      "MODERATE": "One attribution by a government, law enforcement or the affected party; or two separate technical or investigative findings that agree.",
+      "LOW": "A single cyber firm, researcher or media investigation names the actor, or press coverage reports that someone does.",
+      "CLAIM_ONLY": "Only the actor's own claim of responsibility, however many outlets report it. A claim is not corroboration.",
       "DISPUTED": "Credible sources attribute the incident differently.",
       "NOT_ESTABLISHED": "No credible public attribution. This is not a low confidence: attribution has not been established."
     }

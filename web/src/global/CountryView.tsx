@@ -59,11 +59,19 @@ function initialAnchor(): string | null {
   return h.startsWith("ev-") ? h : null;
 }
 
+/** `#tab-<name>` from the address opens the page on that tab (iteration 22): the home page's
+ *  What's new panel links a coverage or method change to the tab that explains it. Read once, when
+ *  the page opens; any other value opens the events tab as before. */
+function initialTab(): Tab {
+  const t = window.location.hash.slice(1);
+  return t === "tab-research" ? "research" : t === "tab-method" ? "method" : "events";
+}
+
 export default function CountryView({ id }: { id: string }) {
   const [entry, setEntry] = useState<ManifestSystem | null>(null);
   const [bundle, setBundle] = useState<CountryBundle | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("events");
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [region, setRegion] = useState<string | null>(initialRegion);
   // The event filters live in the address (iteration 22). Kept as the address's own text until the
   // country has loaded, because only its records say which filters and values this page has.
