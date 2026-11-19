@@ -22,7 +22,7 @@ from tests.test_iteration22_confidence import (
     EVENT, REVIEWED, _built, _served, asrc, att, post, src)
 
 ROOT = Path(__file__).resolve().parent.parent
-needs_build = pytest.mark.skipif(not _built(), reason="the served country payloads predate evidence confidence; run pipeline.run")
+needs_build = pytest.mark.skipif(not _built(), reason="the served country payloads predate this version of evidence confidence; run pipeline.run")
 UNREVIEWED = {"roles": {"evidence": "accept", "safety": "accept", "taxonomy": "accept"}}     # a country record's review
 
 
@@ -413,10 +413,10 @@ def test_no_document_says_the_thresholds_were_calibrated_while_the_results_are_n
                                                           ROOT / "pipeline" / "evidence_confidence.py"]
     for path in texts:
         text = path.read_text(encoding="utf-8")
-        for m in re.finditer(r"[^.\n]*\b(?:were|was|are|is|been) calibrated\b[^.\n]*", text):
-            sentence = m.group(0).lower()
-            if "threshold" in sentence and "not" not in sentence:
-                raise AssertionError(f"{path.name} says a calibration happened: {m.group(0).strip()!r}")
+        # The claim itself, wherever it sits: a "not" elsewhere in the sentence does not excuse it
+        # (a mutant that put the claim beside the word "provisional" used to survive this test).
+        m = re.search(r"threshold\w*\s+(?:were|was|are|is|have\s+been|has\s+been)\s+calibrated", text, re.I)
+        assert not m, f"{path.name} says a calibration happened: {m.group(0)!r}"
     assert "provisional" in (ROOT / "docs" / "GLOBAL_IMPACT_METHODOLOGY.md").read_text(encoding="utf-8")
 
 
@@ -444,6 +444,199 @@ def test_no_shadow_weight_for_an_incident_off_the_scale_exceeds_the_lowest_mappe
     assert set(study.SHADOW_WEIGHTS) == set(study.V2_LABELS)
     strike = {"date": "2024-01-24", "status": "unknown", "sources": [{"url": "https://en.wikipedia.org/wiki/X", "date": "25 January 2024"}]}
     assert study.shadow(strike)["category"] is None, "a strike cited through Wikipedia only is not assessed"
+
+
+def test_a_disputed_record_shows_no_total_and_says_it_is_contested_first():
+    sources = [ministry(), outlet("a"), outlet("b")]
+    r = assess(sources, dispute={"about": "effect"})
+    assert r["category"] == "DISPUTED" and r["score"] is None, "a contested record showed a total"
+    assert r["reasons"][0] == "Credible sources disagree" and "not a settled reading" in r["reasons"][1]
+    assert not any("Held at" in x for x in assess(sources, review=UNREVIEWED, dispute={"about": "effect"})["reasons"])
+    # D6 and a value outside the vocabulary are read as a dispute about the record; a dispute about
+    # the cause or about who did it is not one about whether it happened.
+    for about in ("Effect", "figure", ["effect", "cause"]):
+        assert assess(sources, dispute={"about": about})["category"] == "DISPUTED", about
+    for about in ("cause", "attribution", "ai_involvement"):
+        assert assess(sources, dispute={"about": about})["category"] == "HIGH", about
+    # D13: a string is one claim, not something to ignore.
+    denial = src("operator", site="gridco.example", publisher="GridCo", disputes="occurrence", supports=[])
+    assert assess([outlet("a"), denial])["category"] == "DISPUTED"
+    assert EC.dispute_problems({"about": "figure"}) and EC.dispute_problems("accounts differ") and EC.dispute_problems({})
+    assert EC.dispute_problems({"about": ["effect", "cause"]}) == [] == EC.dispute_problems(None)
+
+
+# --- 9. who is speaking is said plainly -----------------------------------------------------------------
+
+PARTY = "The first-party source is the affected party itself"
+
+
+def test_no_label_calls_a_source_authoritative_or_independent_and_a_partys_own_account_is_said():
+    for tier in EC.METHOD["tiers"].values():
+        assert "authoritative" not in tier["label"].lower() and "independent" not in tier["label"].lower()
+    operator = src("operator", site="gridco.example", publisher="GridCo")
+    assert PARTY in assess([operator])["reasons"]
+    assert PARTY in assess([operator, outlet("a")])["reasons"], "press beside the operator does not make it a third party"
+    for sources in ([src("regulator", site="reg.example")], [outlet("a")], [operator, src("regulator", site="reg.example")]):
+        assert PARTY not in assess(sources)["reasons"], sources
+
+
+# --- 13, 11, 12. attribution: the status, relays, and who may corroborate -------------------------------
+
+A_GOV = asrc("government", "ministry.example", publisher="Ministry", ref="g1")
+A_FIRM = asrc("cyber_firm", "firm-a.example", publisher="Firm a")
+conf = EC.attribution_confidence
+
+
+def test_h1_h2_attribution_confidence_never_says_more_than_the_status():
+    assert conf(att("ATTRIBUTED"), [A_GOV, A_FIRM]) == "HIGH"
+    assert conf(att("ASSESSED"), [A_GOV, A_FIRM]) == "MODERATE"
+    assert conf(att("SUSPECTED"), [A_GOV, A_FIRM]) == "LOW"                                          # H1
+    assert conf(att("SUSPECTED"), [CLAIM]) == "CLAIM_ONLY" and conf(att("SUSPECTED"), []) == "NOT_ESTABLISHED"
+    assert set(EC.METHOD["attribution"]["status_ceiling"]) == {"SUSPECTED", "ASSESSED"}
+    # H2: a competing attribution on the record is a dispute, whatever the status says.
+    assert conf(att("ATTRIBUTED", competing=[{"actor": "Group Y"}]), [A_GOV, A_FIRM]) == "DISPUTED"
+
+
+def test_g1_to_g8_a_relayed_attribution_is_one_attribution_and_never_a_second(monkeypatch):
+    wire_gov = asrc("wire", "wire-a.example", publisher="Wire a", attribution_basis="government")
+    wire_police = asrc("wire", "wire-b.example", publisher="Wire b", attribution_basis="law_enforcement")
+    outlet_victim = asrc("media", "paper-c.example", publisher="Paper c", attribution_basis="victim_operator")
+    a = att("ATTRIBUTED")
+    assert conf(a, [wire_gov]) == "MODERATE"                                                         # G1
+    assert conf(a, [wire_gov, wire_police]) == "MODERATE", "two outlets on one press conference"     # G2
+    assert conf(a, [wire_gov, outlet_victim]) == "MODERATE"                                          # G3
+    assert conf(a, [wire_gov, wire_police, outlet_victim]) == "MODERATE"
+    # A carried official attribution beside a firm's own finding is two attributions.
+    assert conf(a, [wire_gov, A_FIRM]) == "HIGH"
+    # G5, G6: a source that says it relays the cited statement is that statement again.
+    relay = asrc("wire", "wire-a.example", publisher="Wire a", attribution_basis="media_investigation", relays="g1")
+    assert conf(a, [A_GOV, relay]) == "MODERATE"
+    assert conf(a, [A_GOV, dict(A_FIRM, relays="g1")]) == "MODERATE"
+    assert conf(a, [A_GOV, dict(A_FIRM, relays="something not cited")]) == "HIGH"
+    # G7: one joint advisory on two agencies' sites, grouped by the reviewer.
+    joint = [asrc("government", "agency-a.example", publisher="Agency A", origin="joint advisory"),
+             asrc("law_enforcement", "agency-b.example", publisher="Agency B", origin="joint advisory")]
+    assert conf(a, joint) == "MODERATE"
+    # G8: a ministry and the state utility it owns.
+    utility = asrc("operator", "utility.example", publisher="Utility Co")
+    assert conf(a, [A_GOV, utility]) == "HIGH", "unknown to the table: two organisations"
+    method = copy.deepcopy(EC.METHOD)
+    method["origins"]["organisations"] += [{"id": "ministry-x", "domains": ["ministry.example"]},
+                                           {"id": "state-utility", "domains": ["utility.example"], "parent": "ministry-x"}]
+    monkeypatch.setattr(EC, "METHOD", method)
+    assert conf(a, [A_GOV, utility]) == "MODERATE"
+
+
+def test_f12_f13_posts_datasets_and_unknown_roles_never_corroborate_an_attribution():
+    a = att("ASSESSED")
+    s3 = lambda h: post("S3", role="researcher", handle=h, publisher=h, supports=["attribution"])     # noqa: E731
+    assert conf(a, [s3("osint1"), s3("osint2")]) == "LOW"                                            # F12
+    assert conf(a, [asrc("dataset", "data.example", publisher="Data"), asrc("think_tank", "tank.example", publisher="Tank")]) == "LOW"
+    assert conf(a, [asrc("think_tank", "a.example", publisher="A"), asrc("think_tank", "b.example", publisher="B")]) == "LOW"  # G16
+    # H8, H9: one firm on its blog and its own account, or on a second domain, is one firm.
+    firm_post = post("S1", role="cyber_firm", handle="firma", publisher="Firm a", supports=["attribution"])
+    assert conf(a, [A_FIRM, firm_post]) == "LOW"
+    assert conf(a, [A_FIRM, asrc("cyber_firm", "firm-a-reports.example", publisher="Firm a")]) == "LOW"
+    assert conf(a, [A_FIRM, asrc("cyber_firm", "firm-b.example", publisher="Firm b")]) == "MODERATE"
+
+
+# --- 10. a later formal account, and a missing date -----------------------------------------------------
+
+def test_c2_a_later_formal_account_is_not_marked_down_against_a_same_day_line():
+    dated = lambda r: r["components"]["contemporaneous"]                                             # noqa: E731
+    final = assess([src("regulator", site="reg.example", publisher="Regulator", date="2024-11-10")])
+    same_day = assess([src("operator", site="gridco.example", publisher="GridCo", date="2024-03-01")])
+    assert final["score"] >= same_day["score"], "a regulator's final report scored below a same-day line"   # C2, C3
+    assert dated(final) == {"points": 10, "dated": "later_formal_account"}
+    assert "A dated formal account, published later" in final["reasons"] and "Reported at the time" not in final["reasons"]
+    assert dated(same_day) == {"points": 10, "dated": "at_the_time"}
+    # Press months later, an operator's later line, and a forecast are not formal accounts.
+    assert dated(assess([src("media", date="2024-11-10")])) == {"points": 0, "dated": "outside_window"}
+    late_operator = src("operator", site="gridco.example", publisher="GridCo", date="2024-11-10")
+    assert dated(assess([late_operator]))["dated"] == "outside_window"
+    assert dated(assess([src("government", site="gov.example", date="2024-01-01")]))["dated"] == "outside_window"
+    # ...unless the source says it is one (an operator's regulatory filing).
+    assert dated(assess([dict(late_operator, formal_account=True)]))["dated"] == "later_formal_account"
+    # A missing date is not recorded, and said.
+    undated = assess([src("media", date=None)])
+    assert dated(undated) == {"points": 0, "dated": "not_recorded"}
+    assert "No cited source carries a date: not recorded" in undated["reasons"]
+    assert EC.source_problems(src("media", date="12 December 2023")), "an unreadable date silently lost the points"   # C11
+
+
+# --- 17. the points are points --------------------------------------------------------------------------
+
+def test_nothing_served_presents_the_points_as_a_percentage_or_out_of_a_hundred():
+    served = json.dumps([EC.method(), assess([ministry(), outlet("a")]), assess([outlet("a")], review=None),
+                         B.evidence_confidence_summary([])])
+    for bad in ("/100", "/ 100", "out of 100", "%", "percent of", "per cent"):
+        assert bad not in served, bad
+    assert "not a percentage" in json.dumps(EC.method()["properties"])
+    meaning = {c["id"]: c["meaning"] for c in EC.METHOD["categories"]}
+    # The meanings describe what the rules produce (C1, A5): High is about reviewed independence,
+    # not a specific effect, and Preliminary includes a single bare report.
+    assert "reviewer has checked" in meaning["HIGH"] and "specific reported effect" not in meaning["HIGH"]
+    assert "single report" in meaning["PRELIMINARY"] and "not been reviewed" in meaning["MODERATE"]
+
+
+# --- 6, 8, 21. one statement under two addresses, and typing that is cross-checked ----------------------
+
+def test_b9_to_b21_one_statement_cited_twice_is_one_origin():
+    count = lambda *s: EC.independent_origins(list(s))                                               # noqa: E731
+    reuters = src("wire", site="www.reuters.com", publisher="Reuters")
+    archived = src("media", site="web.archive.org", path="web/20240302000000/https://www.reuters.com/a", publisher="Internet Archive")
+    amp = src("media", site="www-reuters-com.cdn.ampproject.org", path="c/s/www.reuters.com/a", publisher="AMP cache")
+    assert EC.origin_of(archived) == EC.origin_of(amp) == EC.origin_of(reuters) == "wire:Reuters"   # B10, B11
+    assert count(reuters, src("media", site="www.msn.com", publisher="MSN")) == 1                    # B12
+    assert count(reuters, src("media", site="bit.ly", publisher=""), src("media", site="t.co", publisher="")) == 1   # B32
+    assert count(src("wire", site="apnews.com", publisher="AP News"), src("media", site="paper.example", publisher="The Paper (AP)")) == 1  # B13
+    assert count(src("wire", site="tass.com", publisher="TASS"), src("media", site="o1.example", publisher="Outlet 1 (TASS)"),
+                 src("media", site="o2.example", publisher="Outlet 2, citing TASS")) == 1          # B14
+    assert count(src("official", site="spa.gov.sa", publisher="Saudi Press Agency"),
+                 src("media", site="o1.example", publisher="Outlet 1 (SPA)")) == 1                   # B15
+    assert count(reuters, src("media", site="o1.example", publisher="Outlet 1", origin="Reuters")) == 1   # B16
+    assert count(outlet("a"), dict(WIKIPEDIA, origin="its own reporting")) == 1                      # B19
+    for aid in ("news.google.com", "www.wikiwand.com"):                                              # B20, B21
+        assert count(outlet("a"), src("media", site=aid, publisher="A mirror")) == 1, aid
+    # B9, B36: one account under two platform names, with and without its @.
+    x = post("S1", handle="@UtilityCo ", publisher="Utility Co on X")
+    twitter = post("S1", handle="utilityco", publisher="UtilityCo (Twitter)")
+    twitter["social"]["platform"], twitter["url"] = "twitter", "https://twitter.com/utilityco/status/1"
+    assert EC.origin_of(x) == EC.origin_of(twitter) == "social:x:utilityco" and count(x, twitter) == 1
+
+
+def test_b22_b24_a_channel_typed_as_a_website_is_still_a_channel():
+    channel = src("media", site="t.me", path="anon_channel/123", publisher="Anon channel")           # typed web
+    r = assess([channel])
+    assert (r["category"], r["components"]["directness"]["tier"]) == ("PRELIMINARY", "unverified")  # B22
+    assert assess([channel, outlet("a")])["components"]["origins"]["count"] == 1                     # B23b
+    other = src("media", site="t.me", path="s/other_channel/5", publisher="Other")
+    assert EC.origin_of(channel) == "social:telegram:anon_channel" != EC.origin_of(other)            # B23
+    b24 = post("S4", role="government", identity=None)
+    b24["medium"] = "Social"
+    assert EC.tier_of(b24) == "unverified"
+    # C18, C19: a basis made of badge words establishes nothing.
+    for basis in ("Verified account", "blue tick", "verified_badge", "Official account on X", "has the gold checkmark"):
+        assert EC.tier_of(post("S1", identity=basis)) == "unverified", basis
+    assert EC.tier_of(post("S1", identity="linked from the operator's own website")) == "direct"
+    # The gate refuses what scoring can only read conservatively.
+    for bad in (channel, src("media", medium="Podcast"), src("think_tank"), src("media", supports="no_attribution"),
+                src("media", disputes="occurrence"), src("media", site="bit.ly"), post("S9")):
+        assert EC.source_problems(bad), bad
+    assert EC.source_problems(src("media")) == [] == EC.source_problems(post("S2"))
+
+
+def test_b34_b35_hosts_under_a_shared_suffix_are_separate_publishers():
+    count = lambda *s: EC.independent_origins(list(s))                                               # noqa: E731
+    a = src("government", site="ecologie.gouv.fr", publisher="Ministry A")
+    b = src("government", site="www.interieur.gouv.fr", publisher="Ministry B")
+    assert count(a, b) == 2                                                                          # B34
+    assert count(a, src("government", site="www.ecologie.gouv.fr", publisher="Ministry A", path="second")) == 1
+    assert count(src("media", site="writer-one.substack.com", publisher="Writer One"),
+                 src("media", site="writer-two.substack.com", publisher="Writer Two")) == 2          # B35
+    # The organisation table still makes one state's bodies one voice.
+    assert count(src("government", site="moe.gov.sa", publisher="Ministry of Energy"),
+                 src("official", site="www.spa.gov.sa", publisher="Saudi Press Agency")) == 1
 
 
 # --- the calibration that would lift "provisional" (finding 16) -----------------------------------------

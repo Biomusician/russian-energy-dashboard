@@ -472,7 +472,10 @@ export interface EvidenceConfidence {
     origins: { count: number; points: number | null; basis: "reviewed" | "publishers" };
     effect: { specificity: "quantified" | "described" | "vague" | null; points: number | null };
     opened: { points: number | null };
-    contemporaneous: { points: number | null };
+    /** `dated`: a report at the time, a later formal account, a date outside both, or no date
+     *  recorded on any counted source (said, and not a finding). */
+    contemporaneous: { points: number | null;
+                       dated?: "at_the_time" | "later_formal_account" | "outside_window" | "not_recorded" | null };
   };
   /** Plain sentences answering "why this category?", in the order the components are listed. */
   reasons: string[];

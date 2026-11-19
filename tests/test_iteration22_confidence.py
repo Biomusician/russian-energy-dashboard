@@ -420,7 +420,7 @@ def test_a_dispute_overrides_the_score(dispute):
     settled, contested = assess(STRONG, "quantified"), assess(STRONG, "quantified", dispute)
     assert settled["category"] == "HIGH" and settled["disputed"] is False
     assert contested["category"] == "DISPUTED" and contested["disputed"] is True
-    assert contested["score"] == settled["score"], "the score is still shown; the category is what changes"
+    assert contested["score"] is None and settled["score"] is not None, "no total is shown on a contested record"
     assert "Credible sources disagree" in contested["reasons"]
 
 
@@ -479,7 +479,7 @@ def test_unknown_attribution_is_not_established_never_low():
     ([CLAIM], "CLAIM_ONLY"), ([], "NOT_ESTABLISHED"),
 ])
 def test_attribution_confidence_by_who_attributes(sources, expected):
-    assert EC.attribution_confidence(att("ASSESSED"), sources) == expected
+    assert EC.attribution_confidence(att("ATTRIBUTED"), sources) == expected
 
 
 def test_a_self_claim_alone_cannot_exceed_claim_only():
@@ -766,11 +766,16 @@ def _served(sid, name):
 
 
 def _built():
-    doc = _served(systems.COUNTRY_SYSTEMS[0], "events.json")
-    return bool(doc) and all("evidence_confidence" in e for e in doc["events"])
+    """Whether the served payload was built by this version of the model. Looked for on every
+    country's events, not the first country's: the first has no events, and a guard that asked
+    only there called a stale payload built (`all([])` is true) and then failed on it."""
+    events = [e for sid in systems.COUNTRY_SYSTEMS for e in (_served(sid, "events.json") or {}).get("events", [])]
+    return bool(events) and all(
+        "basis" in ((e.get("evidence_confidence") or {}).get("components") or {}).get("origins", {})
+        and "dated" in e["evidence_confidence"]["components"]["contemporaneous"] for e in events)
 
 
-needs_build = pytest.mark.skipif(not _built(), reason="the served country payloads predate evidence confidence; run pipeline.run")
+needs_build = pytest.mark.skipif(not _built(), reason="the served country payloads predate this version of evidence confidence; run pipeline.run")
 
 
 @needs_build
