@@ -724,7 +724,9 @@ state may be null until it is fetched.
   reviewer) or `"publishers"` (distinct publishers cited; whether they relay one statement was not
   reviewed), and only the first may be worded as independent. `cap` names a rule that held the
   category down (`origins_not_reviewed`: a `"publishers"` record is at most Moderate;
-  `unverified_only`) or is `null`. The points are points, never a percentage. `system.json`
+  `unverified_only`) or is `null`. `score` is also `null` on a Disputed record (no total is shown
+  for a contested reading). `contemporaneous.dated` is `at_the_time`, `later_formal_account`,
+  `outside_window` or `not_recorded`. The points are points, never a percentage. `system.json`
   carries `evidence_confidence_summary`: `{by_category, not_assessed, not_assessed_reason,
   method_version, status, statement, note}`, inside the country only; `status` is
   `"provisional: thresholds not calibrated"` while the method version ends `-draft`. Neither

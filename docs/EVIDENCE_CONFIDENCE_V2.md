@@ -51,7 +51,7 @@ attribution or AI involvement adds nothing here, and a source recorded as disput
 | Originating statements | 0 / 16 / 25 | One, two, three or more groups, among first-party and press sources only (see below). |
 | Effect specificity | 15 / 8 / 0 | Quantified, described, vague; counted only when a first-party or press source supports the effect. |
 | Opened during research or review | 10 | A first-party or press source carries `opened: true`, **or** the record's own review block says a reviewer opened its sources (`review.sources_opened_by_reviewer > 0`). `opened: null` is "not recorded", never "not opened". |
-| Reported at the time | 10 | A first-party or press source dated from the day before the event to 30 days after its end. |
+| Dated account | 10 | A first-party or press source dated from the day before the event to 30 days after its end, **or** a later formal account: a dated first-party source in a formal role (`formal_account_roles`: regulator, court record, law enforcement, CERT, government) or one that says so itself (`formal_account: true`, for an operator's regulatory filing). A regulator's final report eight months on is not marked down against a same-day line. `components.contemporaneous.dated` says which; when no counted source carries a date it is `not_recorded`, and a reason line says so. |
 
 The points are points: ordinal, a way of ordering records by what their citations show. They are
 never a percentage and never "out of 100". Categories: **High** ≥ 78, **Moderate** 55–77,
@@ -74,8 +74,16 @@ own work; that question is the originating-statement count.
   or the actor's own claim is Preliminary whatever the points say (`cap: "unverified_only"`).
 - **Disputed.** The record says its occurrence or effect is contested (`dispute`), or a first-party
   or press source is recorded as disputing one of them. The category is Disputed and the product
-  does not choose. An anonymous denial is not credible disagreement. A dispute about who did it
-  belongs to attribution and does not touch this.
+  does not choose: **no total is shown** (`score: null`), the reasons open with the disagreement
+  and say the lines after it describe the sources cited, not a settled reading. A source that
+  disputes a claim is never counted as support for it, and one that denies the event does not
+  back its effect either. An anonymous denial is not credible disagreement. A dispute about who
+  did it, or about the cause, does not touch this; a `dispute.about` outside the vocabulary is
+  read as a dispute about the record (and `dispute_problems` refuses it at the gate).
+
+A first-party source that is the affected party itself (`party_roles`: the operator) gets a reason
+line saying so: "first-party" says who is speaking, and where that is the party whose facility it
+was, nobody else the record cites has checked the account.
 
 ### Who is speaking
 
@@ -145,6 +153,19 @@ Other rules: `UNKNOWN` is `NOT_ESTABLISHED`; `ATTRIBUTED` needs a formal governm
 law-enforcement basis (any number of technical or press attributions that agree is `ASSESSED`); an
 anonymous post or a discovery aid attributes nothing; news coverage restating an attribution is
 not a second attribution unless the record declares what it carries.
+
+**The confidence never says more than the status** (`attribution.status_ceiling`): `SUSPECTED` is
+at most `LOW` and `ASSESSED` at most `MODERATE`, however official the source. A non-empty
+`competing` list is `DISPUTED`, whatever the status.
+
+**Who may corroborate.** Only a first-party or press-tier source with a finding of its own: not a
+restating role (unless it declares `attribution_basis: "media_investigation"`), not a relay of a
+statement the record also cites (`relays`), and not a post, a dataset, an aggregator or an unknown
+role, which can show that someone names the actor (`LOW`) and nothing more. An attribution carried
+at one remove (a wire reporting a government's statement the record does not cite) is one
+attribution of the relayed basis; however many outlets carry it, and whatever bases they declare,
+together they add at most one, because they may all be one press conference. Organisations that
+are parent and child in the table are one.
 
 Methodology §6 still says `ATTRIBUTED` may rest on "several independent credible attributions that
 agree"; §8.2 and the code say it needs an official basis. The code follows §8.2.
@@ -280,11 +301,27 @@ supports, or a rule the data cannot yet carry.
   outlets and with a published figure, both of which follow how much attention an event drew, so a
   sort by points would be a sort by attention. Nothing sorts by them. Not fixed: removing the
   summary is an owner decision.
-- **Typing is trusted.** The tier is the role the lane typed. A state news agency typed `wire` is
-  press; typed `official` it is first-party. The organisation table catches the ones it lists.
-- **Host folding undercounts arbitrarily (red team 21).** Two unrelated ministries under one
-  national suffix that the registered-domain rule folds together are one origin. Safe in
-  direction, but the count then depends on a country's domain convention.
+- **Typing is trusted, within limits.** The tier is the role the lane typed. A state news agency
+  typed `wire` is press; typed `official` it is first-party. What is cross-checked: an address on
+  a social platform is a post whatever medium was typed; an archive or AMP copy is the page it
+  copies; a shortened link and a news aggregator count for nothing; one account under two
+  platform names is one; a wire's own site, or a publisher that names a wire, is that wire
+  (`origins.wires`); a basis made of badge words establishes no identity. `source_problems` and
+  `dispute_problems` list what a gate should refuse (an unknown medium, role or tier, `supports`
+  that is not a list of claims, an unreadable date). **They are not yet called by any gate**: the
+  import script is not this module's.
+- **What the origin count still cannot see (red team 6: B6, B7, B8, B17).** An operator's website
+  and its account under a different publisher string; its investor-relations site on a second
+  domain; a wire copy a lane filed as the outlet's own reporting. Only a reviewer marking `relays`
+  or a shared `origin` joins these, which is why an unreviewed count cannot earn High.
+- **Host folding (red team 21).** Hosts under a listed shared suffix (`origins.shared_suffixes`:
+  `gouv.fr`, `go.jp`, `gc.ca`, blogging hosts) are separate publishers. The list is short and
+  hand-kept; a suffix it lacks still folds unrelated bodies into one origin. Safe in direction.
+- **A later formal account is recognised by role.** A government page dated long after the event
+  earns the dated-account points whether or not it is an inquiry. Year-precision dates are read
+  loosely (any source in that year is "at the time").
+- **Sources are not checked to name the same actor.** Two attribution sources naming different
+  actors both count toward the record's actor unless the record lists `competing`.
 - **The points are added.** Ten points for a recorded flag count the same as ten for a dated
   source. The categories are thresholds on that sum, and the category meanings describe the usual
   ways of reaching each, not every way.

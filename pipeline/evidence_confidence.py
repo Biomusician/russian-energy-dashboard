@@ -75,41 +75,115 @@ def _words(text):
     return re.sub(r"[^\w]+", " ", str(text or "").lower()).strip()
 
 
+_WRAPPERS = (
+    # A copy of a page is that page: an archive snapshot, an AMP cache copy.
+    (re.compile(r"^https?://(?:web\.)?archive\.org/web/[^/]+/(https?://.+)$", re.I), "{0}"),
+    (re.compile(r"^https?://[^/]*\.cdn\.ampproject\.org/[a-z]+/(?:s/)?(.+)$", re.I), "https://{0}"),
+    (re.compile(r"^https?://(?:www\.)?google\.[a-z.]+/amp/(?:s/)?(.+)$", re.I), "https://{0}"),
+)
+
+
+def _url(source):
+    """The address a citation points at, with archive and AMP wrappers removed."""
+    url = str(source.get("url") or "").strip()
+    for pattern, shape in _WRAPPERS:
+        m = pattern.match(url)
+        if m:
+            url = shape.format(m.group(1))
+    return url
+
+
 def _host(source):
-    return (source.get("url") or "").split("://", 1)[-1].split("/", 1)[0].split(":", 1)[0].lower().rstrip(".")
+    return _url(source).split("://", 1)[-1].split("/", 1)[0].split(":", 1)[0].lower().rstrip(".")
+
+
+def _on(host, domains):
+    return any(host == d or host.endswith("." + d) for d in domains)
+
+
+def _wire_named(text):
+    """The wire a publisher string or an explicit origin names: the table the country systems use,
+    then this module's additions (full names, and the agencies that table lacks)."""
+    from pipeline import build_systems as B  # late: build_systems imports this module
+    words = " " + re.sub(r"[^a-z]+", " ", str(text or "").lower()) + " "
+    for key, name in B.WIRE_ORIGINS:
+        if f" {key} " in words:
+            return "wire:" + name
+    for wire in METHOD["origins"]["wires"]:
+        if any(f" {m} " in words for m in wire["match"]):
+            return "wire:" + wire["name"]
+    return None
+
+
+def _account(source):
+    """(platform, handle) of a social post: from its `social` block, else from its address. One
+    platform under two names is one platform, and a handle is compared without its @ or its case."""
+    social = source.get("social") or {}
+    host = _host(source)
+    host = host[4:] if host.startswith("www.") else host
+    platform = str(social.get("platform") or host).strip().lower()
+    platform = METHOD["platform_aliases"].get(platform, platform)
+    handle = str(social.get("handle") or "").strip().lower().lstrip("@")
+    if not handle:
+        skip = {"s", "i", "c", "p", "user", "channel", "watch", "share", "groups", "pages", "posts", "status"}
+        parts = [p for p in _url(source).split("://", 1)[-1].split("?", 1)[0].split("/")[1:] if p]
+        handle = next((p.lower().lstrip("@") for p in parts if p.lower() not in skip), "")
+    return platform, handle
 
 
 def origin_of(source):
     """The originating statement a citation carries. None for a discovery aid (Wikipedia, a content
-    aggregator), which is never an origin and which no explicit `origin` can turn into one.
-    Otherwise an explicit `origin` (a lane that can see a republication groups it; one that names
-    a wire is that wire), a social post's account, or the rule the country systems already use
-    (a named wire, else the registered domain)."""
+    or news aggregator) and for a link shortener: neither is an origin, and no explicit `origin`
+    can turn one into one. Otherwise an explicit `origin` (a lane that can see a republication
+    groups it; one that names a wire is that wire), a social post's account, a named wire or a
+    wire's own site, else the registered domain."""
     from pipeline import build_systems as B  # late: build_systems imports this module
-    natural = B.source_origin({k: v for k, v in source.items() if k != "origin"})
+    host = _host(source)
+    if _on(host, METHOD["discovery_aid_domains"]) or _on(host, METHOD["shortener_hosts"]):
+        return None
+    bare = {k: v for k, v in source.items() if k != "origin"}
+    bare["url"] = _url(source)
+    natural = B.source_origin(bare)
     if natural is None:
         return None
     if source.get("origin"):
-        declared = " " + re.sub(r"[^a-z]+", " ", str(source["origin"]).lower()) + " "
-        for key, name in B.WIRE_ORIGINS:
-            if f" {key} " in declared:
-                return "wire:" + name
-        return str(source["origin"]).strip().lower()
-    social = source.get("social") or {}
-    if _medium(source) == "social" and social.get("handle"):
-        return f"social:{(social.get('platform') or '').strip().lower()}:{str(social['handle']).strip().lower().lstrip('@')}"
+        return _wire_named(source["origin"]) or str(source["origin"]).strip().lower()
+    if _medium(source) == "social":
+        platform, handle = _account(source)
+        if handle:
+            return f"social:{platform}:{handle}"
+        return natural
+    if natural.startswith("wire:"):
+        return natural
+    wire = _wire_named(source.get("publisher")) or next(
+        ("wire:" + w["name"] for w in METHOD["origins"]["wires"] if _on(host, w["domains"])), None)
+    if wire:
+        return wire
+    # Two ministries under one national suffix, or two writers on one blogging host, are not one
+    # publisher: the origin is the label in front of the shared suffix.
+    for suffix in METHOD["origins"]["shared_suffixes"]:
+        if host.endswith("." + suffix):
+            return host[:-len(suffix) - 1].split(".")[-1] + "." + suffix
     return natural
 
 
 def _medium(source):
+    """The medium as typed, lower-cased; a post on a social platform is social whatever was typed:
+    a channel filed as a website is still a channel."""
+    if _on(_host(source), METHOD["social_hosts"]):
+        return "social"
     return str(source.get("medium") or "").strip().lower()
 
 
 def _identity_established(social):
     """An official account counts as its organisation only when the record says how its identity
-    was established, and a platform badge is not a way (methodology §9)."""
+    was established, and a platform badge is not a way (methodology §9): a basis made of nothing
+    but badge words ("Verified account", "blue tick") establishes nothing."""
     basis = str((social or {}).get("identity_basis") or "").strip().lower()
-    return bool(basis) and basis not in METHOD["badge_only_identity"]
+    if not basis:
+        return False
+    empty = set(METHOD["badge_words"]) | set(METHOD["badge_filler"])
+    return any(word not in empty for word in _words(basis.replace("_", " ")).split())
 
 
 def tier_of(source):
@@ -181,6 +255,18 @@ def _contemporaneous(source, date, date_end):
     return start - dt.timedelta(days=1) <= cited <= stop + dt.timedelta(days=METHOD["contemporaneous_days"])
 
 
+def _later_formal_account(source, date, date_end):
+    """A dated first-party source published after the window that is a formal account: a
+    regulator's final report, a court record, a government inquiry, or a source that says so
+    itself (`formal_account: true`, for an operator's regulatory filing). An investigation that
+    reports eight months later is not weaker evidence than a same-day line."""
+    stop, cited = _date(date_end or date, end=True), _date(source.get("date"))
+    if not (stop and cited) or tier_of(source) != "direct":
+        return False
+    formal = source.get("formal_account") is True or source.get("source_role") in METHOD["formal_account_roles"]
+    return formal and cited > stop + dt.timedelta(days=METHOD["contemporaneous_days"])
+
+
 # --- originating statements ----------------------------------------------------------------------
 
 def _publisher_key(source):
@@ -193,7 +279,7 @@ def organisation_of(source):
     when the table does not know it, which is most sources."""
     from pipeline import build_systems as B
     table = {o["id"]: o for o in METHOD["origins"]["organisations"]}
-    host, domain = _host(source), B.registered_domain(source.get("url"))
+    host, domain = _host(source), B.registered_domain(_url(source))
     publisher = f" {_publisher_key(source) or ''} "
     handle = str((source.get("social") or {}).get("handle") or "").strip().lower().lstrip("@")
     for org in table.values():
@@ -292,8 +378,12 @@ def _disputed(sources, dispute):
     if dispute:
         about = dispute.get("about") if isinstance(dispute, dict) else None
         about = [about] if isinstance(about, str) else list(about or [])
-        # A dispute that does not say what it is about is read as one about the record itself:
-        # the conservative reading, since Disputed claims less than any category.
+        about = [str(a).strip().lower() for a in about]
+        # A dispute that does not say what it is about, or says something outside the vocabulary
+        # ("figure"), is read as one about the record itself: the conservative reading, since
+        # Disputed claims less than any category. A dispute about the cause or about who did it
+        # is not one about whether it happened.
+        about = [a if a in CLAIMS + ("cause",) else "occurrence" for a in about]
         if not about or any(a in ("occurrence", "effect") for a in about):
             return True
     return any(tier_of(s) in METHOD["corroborating_tiers"]
@@ -317,7 +407,7 @@ def _not_assessed(disputed, basis):
             "origins": {"count": 0, "points": None, "basis": basis},
             "effect": {"specificity": None, "points": None},
             "opened": {"points": None},
-            "contemporaneous": {"points": None},
+            "contemporaneous": {"points": None, "dated": None},
         },
         "reasons": [cfg["discovery_aid_only"][0].upper() + cfg["discovery_aid_only"][1:]],
     }
@@ -351,7 +441,14 @@ def assess(sources, date, date_end=None, effect_specificity="described", dispute
     # where the review block says a reviewer read the sources.
     was_opened = bool(strong) and (any(s.get("opened") is True for s in strong) or _reviewer_opened(review))
     opened = METHOD["opened_points"] if was_opened else 0
-    timely = METHOD["contemporaneous_points"] if any(_contemporaneous(s, date, date_end) for s in strong) else 0
+    # A report at the time, or a later formal account. A source with no date is "not recorded":
+    # said in the reasons, because the absence of a date is not a finding about the event.
+    dated = (None if not strong
+             else "at_the_time" if any(_contemporaneous(s, date, date_end) for s in strong)
+             else "later_formal_account" if any(_later_formal_account(s, date, date_end) for s in strong)
+             else "outside_window" if any(_date(s.get("date")) for s in strong)
+             else "not_recorded")
+    timely = METHOD["contemporaneous_points"] if dated in ("at_the_time", "later_formal_account") else 0
     score = directness + origin_points + effect_points + opened + timely
 
     category = next(c for c in METHOD["categories"] if score >= c["min"])
@@ -371,6 +468,11 @@ def assess(sources, date, date_end=None, effect_specificity="described", dispute
     reasons = []
     if best:
         reasons.append(METHOD["tiers"][best]["label"])
+    first_party = [s for s, t in zip(backing, tiers) if t == "direct"]
+    if first_party and all(s.get("source_role") in METHOD["party_roles"] for s in first_party):
+        # "First-party" says who is speaking. Where that is the affected party, say so: its
+        # account of its own facility has not been checked by anyone else the record cites.
+        reasons.append("The first-party source is the affected party itself")
     if not origin_count:
         reasons.append("No first-party source and no press report")
     elif basis == "reviewed":
@@ -386,24 +488,31 @@ def assess(sources, date, date_end=None, effect_specificity="described", dispute
         reasons.append("No first-party source or press report for the effect")
     if opened:
         reasons.append("A cited source was opened during research or review")
-    if timely:
+    if dated == "at_the_time":
         reasons.append("Reported at the time")
-    if cap == "origins_not_reviewed":
+    elif dated == "later_formal_account":
+        reasons.append("A dated formal account, published later")
+    elif dated == "not_recorded":
+        reasons.append("No cited source carries a date: not recorded")
+    if cap == "origins_not_reviewed" and not disputed:
         reasons.append(f"Held at {_category(ceiling)['label']}: independence of the cited sources has not been reviewed")
     if cap == "unverified_only":
         reasons.append("Rests on unverified claims only")
     if disputed:
-        reasons.append("Credible sources disagree")
+        # Nothing positive is shown as settled on a contested record: no total, and the reader is
+        # told what is contested before what was cited.
+        reasons = ["Credible sources disagree",
+                   "The lines below describe the sources cited; they are not a settled reading"] + reasons
 
     return {
-        "category": category["id"], "label": category["label"], "score": score, "disputed": disputed,
-        "reason": None, "cap": cap,
+        "category": category["id"], "label": category["label"], "score": None if disputed else score,
+        "disputed": disputed, "reason": None, "cap": cap,
         "components": {
             "directness": {"tier": best, "points": directness},
             "origins": {"count": origin_count, "points": origin_points, "basis": basis},
             "effect": {"specificity": effect_specificity if effect_backed else None, "points": effect_points},
             "opened": {"points": opened},
-            "contemporaneous": {"points": timely},
+            "contemporaneous": {"points": timely, "dated": dated},
         },
         "reasons": reasons,
     }
@@ -469,6 +578,18 @@ def _corroborates(source):
             or bool(source.get("attribution_basis")))
 
 
+def _own_finding(source):
+    """An attribution the source makes itself: it sits in the first-party or press tier and it is
+    not a restating role, unless that role declares an investigation of its own
+    (`attribution_basis: "media_investigation"`). A source that says it relays a cited statement
+    needs no rule here: `independent_origins` joins it to that statement, so it is never a second."""
+    if tier_of(source) not in METHOD["corroborating_tiers"]:
+        return False
+    if source.get("source_role") in METHOD["attribution"]["restating_roles"]:
+        return source.get("attribution_basis") == "media_investigation"
+    return True
+
+
 def _attribution_evidence(sources, attribution=None):
     """(backing, named, claims): every source that supports attribution, those that carry a
     credible third-party attribution, and the actor's own claims with everything that relays them.
@@ -502,19 +623,39 @@ def attribution_confidence(attribution, sources):
         return "NOT_ESTABLISHED"
     if status == "DISPUTED":
         return "DISPUTED"
+    if (attribution or {}).get("competing"):
+        # A competing attribution is on the record: whatever the status says, it is contested.
+        return "DISPUTED"
     _backing, named, claims = _attribution_evidence(sources, attribution)
     cfg = METHOD["attribution"]
     if not named:
         return "CLAIM_ONLY" if claims else "NOT_ESTABLISHED"
     bases = {_basis(s, attribution) for s in named}
-    firm = [s for s in named if _corroborates(s)]
-    firm_bases = {_basis(s, attribution) for s in firm}
-    if firm_bases & set(cfg["official_bases"]) and len(firm_bases) >= 2 and independent_origins(firm) >= 2:
-        return "HIGH"
-    technical = [s for s in firm if _basis(s, attribution) in cfg["technical_bases"]]
-    if bases & set(cfg["first_party_bases"]) or independent_origins(technical) >= 2:
-        return "MODERATE"
-    return "LOW"
+    # Who counts toward corroboration: a first-party or press-tier source with a finding of its
+    # own. A post, a dataset, an aggregator or an unknown role can show that someone names the
+    # actor (Low) and nothing more.
+    own = [s for s in named if _own_finding(s)]
+    # An attribution carried at one remove (a wire reporting a government's statement that the
+    # record does not cite) is one attribution of the relayed basis. However many outlets carry
+    # it, and whatever bases they declare, together they add at most one: they may all be one
+    # press conference.
+    relayed = [s for s in named if not any(s is o for o in own) and _corroborates(s)
+               and tier_of(s) in METHOD["corroborating_tiers"]]
+    separate = independent_origins(own)
+    if any(independent_origins(own + [r]) > separate for r in relayed):
+        separate += 1
+    firm_bases = {_basis(s, attribution) for s in own + relayed}
+    if firm_bases & set(cfg["official_bases"]) and len(firm_bases) >= 2 and separate >= 2:
+        level = "HIGH"
+    elif (bases & set(cfg["first_party_bases"])
+          or independent_origins([s for s in own if _basis(s, attribution) in cfg["technical_bases"]]) >= 2):
+        level = "MODERATE"
+    else:
+        level = "LOW"
+    # The confidence cannot say more than the status does.
+    order = ("LOW", "MODERATE", "HIGH")
+    ceiling = cfg["status_ceiling"].get(status)
+    return order[min(order.index(level), order.index(ceiling))] if ceiling else level
 
 
 def attribution_problems(attribution, sources):
@@ -601,9 +742,52 @@ def ai_problems(ai, sources):
 
 # --- the method, as served data ---------------------------------------------------------------------
 
+def source_problems(source):
+    """What a gate should refuse before a source is scored: values outside the vocabulary. Scoring
+    itself reads each of these conservatively (an unknown role is secondary, a post with no tier is
+    unverified, a shortened link counts for nothing), so a record that slips past is understated,
+    never overstated; the gate is what makes the typing mean something."""
+    out = []
+    medium = source.get("medium")
+    if medium is not None and str(medium).strip().lower() not in METHOD["media"]:
+        out.append(f"medium {medium!r} is not one of {tuple(METHOD['media'])}")
+    if source.get("source_role") not in METHOD["role_tier"]:
+        out.append(f"source_role {source.get('source_role')!r} is not one of {tuple(sorted(METHOD['role_tier']))}")
+    if _on(_host(source), METHOD["shortener_hosts"]):
+        out.append("a shortened link is not a citation: cite the page it points to")
+    if _medium(source) == "social":
+        social = source.get("social") or {}
+        if str(social.get("account_tier") or "").strip().upper() not in METHOD["social_tier"]:
+            out.append(f"a social post needs social.account_tier, one of {tuple(METHOD['social_tier'])}")
+        if str(medium or "").strip().lower() != "social":
+            out.append("the address is on a social platform: medium must be 'social'")
+    for field in ("supports", "disputes"):
+        value = source.get(field)
+        if value is not None and (isinstance(value, str) or any(c not in CLAIMS for c in value)):
+            out.append(f"{field} must be a list of {CLAIMS}, not {value!r}")
+    if source.get("date") and _date(source["date"]) is None:
+        out.append(f"date {source['date']!r} cannot be read: use YYYY, YYYY-MM or YYYY-MM-DD")
+    return out
+
+
+def dispute_problems(dispute):
+    """A record's `dispute` must say what is disputed, in the vocabulary. "cause" is accepted and
+    recorded; this module's category does not cover cause (docs/EVIDENCE_CONFIDENCE_V2.md §7)."""
+    if dispute in (None, False):
+        return []
+    if not isinstance(dispute, dict):
+        return ["dispute must be an object with `about`"]
+    about = dispute.get("about")
+    about = [about] if isinstance(about, str) else list(about or [])
+    known = CLAIMS + ("cause",)
+    if not about:
+        return [f"dispute needs `about`, one or more of {known}"]
+    return [f"dispute.about {a!r} is not one of {known}" for a in about if a not in known]
+
+
 def calibration_status():
     """What may be said about the thresholds. Tied to the version: while it ends in "-draft" no
-    calibration result has been recorded and nothing may say the thresholds were calibrated."""
+    calibration result has been recorded and nothing may claim a calibration."""
     return METHOD["status_while_draft"] if METHOD["version"].endswith("-draft") else METHOD["status_when_calibrated"]
 
 
@@ -636,8 +820,10 @@ def method():
             {"id": "opened", "label": "Opened during research or review", "max": METHOD["opened_points"],
              "meaning": "A first-party source or press report was opened by the researcher, or the record's "
                         "review says a reviewer opened its sources. Not recorded is not the same as not opened."},
-            {"id": "contemporaneous", "label": "Reported at the time", "max": METHOD["contemporaneous_points"],
-             "meaning": f"A first-party source or press report dated within {METHOD['contemporaneous_days']} days of the event."},
+            {"id": "contemporaneous", "label": "Dated account", "max": METHOD["contemporaneous_points"],
+             "meaning": f"A first-party source or press report dated within {METHOD['contemporaneous_days']} days of the "
+                        "event, or a later formal account (a regulator's report, a court record, a government "
+                        "inquiry). A source with no date is not recorded, which is said and is not a finding."},
         ],
         "categories": METHOD["categories"] + [METHOD["disputed"]],
         "not_assessed": METHOD["not_assessed"],
@@ -646,7 +832,8 @@ def method():
             "publishers": "Distinct publishers cited. Whether they relay one statement was not reviewed.",
         },
         "overrides": [
-            "Disputed overrides the points: credible sources disagree, and the product does not choose.",
+            "Disputed overrides the points: credible sources disagree, the product does not choose, and no "
+            "total is shown. A source that disputes a claim is never counted as support for it.",
             "A record resting only on unverified posts or an actor's own claim is at most Preliminary.",
             "A record whose sources' independence has not been reviewed is at most Moderate.",
             "A record cited only through an encyclopedia or an aggregator is not assessed.",
