@@ -136,6 +136,16 @@ Field rules:
   `technology` is `null` (not applicable) outside energy.
 - `cause_family`: one primary cause; `contributing_factors` only where a source says so.
 - `cyber_mechanism`: `null` (not applicable) unless `cause_family` or a contributing factor is cyber.
+  One exception: a disruption that was **digitally triggered without malice** (a faulty software
+  update, an IT system failure that stopped operations) is `cause_family: "industrial_technical"`
+  with `cyber_mechanism: "it_outage_affecting_operations"`, the only mechanism allowed there. It is
+  not a cyberattack, its attribution is `NOT_APPLICABLE`, and the "Cyber" filters do not include it;
+  it has its own "IT failure" filter.
+- A municipal or public body that announced its own non-kinetic incident (a city government's
+  ransomware incident) may be named as the affected organisation outside campaign-restricted
+  systems; the record's geography still stops at the first-level region.
+- A regional-context `metric` may also carry `qualifier` (about, at least, at most, range) and
+  `value_upper` for a range.
 - `effect_specificity`: `quantified` (a source gives a figure for the effect), `described` (a
   concrete effect without a figure) or `vague` ("disruption reported").
 - `civilian_service_impact[].affected.unit` is the **source's own unit**. People are not customers
