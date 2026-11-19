@@ -73,8 +73,9 @@ Gulf (`global/regional_context.json`) and the evidence-confidence method
   dossier, no implied complete corpus. Counts are published records, never rates, never compared
   or ranked across countries.
 - **It never widens publication.** A record held from a country system cannot reappear through the
-  impact layer (the import reconciles and refuses; the lead allow-list covers below-threshold holds
-  only, never a campaign, safety or evidence hold). **Every kinetic or sabotage impact record,
+  impact layer, whatever the reason it was held, a threshold included: the import reconciles and
+  refuses, and there is no override. The lead may only state that a date-and-class match is a
+  different event (`reconcile_distinct.json`, reason mandatory). **Every kinetic or sabotage impact record,
   everywhere, is country-abstracted**: country level, no facility, operator, place, region, method,
   headline or later status, and a keyed opaque id. Campaign-policy systems never carry a region.
 - **Attribution, AI involvement and evidence confidence are three separate claims**, each with its
