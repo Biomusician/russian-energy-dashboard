@@ -6727,7 +6727,9 @@ def test_country_events_are_region_scoped_whitelisted_and_sourced():
             # An empty record is allowed only where the page says research has barely begun.
             assert _sys_payload(sid, "system.json")["maturity"] == "research_preview", f"{sid}: no events"
         for e in events:
-            assert set(B.EVENT_FIELDS) <= set(e) <= set(B.EVENT_FIELDS) | set(B.OPTIONAL_EVENT_FIELDS), (sid, e["event_id"])
+            # Iteration 22: plus the fields the build derives from the served record (evidence confidence).
+            assert set(B.EVENT_FIELDS) <= set(e) <= (set(B.EVENT_FIELDS) | set(B.OPTIONAL_EVENT_FIELDS)
+                                                     | set(B.DERIVED_EVENT_FIELDS)), (sid, e["event_id"])
             assert not (set(_walk_keys(e)) & COORD_KEYS), e["event_id"]
             if e["geography_precision"] == "admin1":
                 assert e["region_code"] in codes, e["event_id"]

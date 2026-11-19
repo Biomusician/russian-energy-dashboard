@@ -25,6 +25,7 @@
   "social_tier": {
     "S1": "by_role", "S2": "secondary", "S3": "researcher_social", "S4": "unverified"
   },
+  "badge_only_identity": ["badge", "platform_badge", "verified_badge", "verified", "blue_check", "checkmark"],
   "corroborating_tiers": ["direct", "independent"],
   "origin_points": {"1": 0, "2": 16, "3": 25},
   "effect_points": {"quantified": 15, "described": 8, "vague": 0},
@@ -48,6 +49,7 @@
     "official_bases": ["government", "law_enforcement"],
     "first_party_bases": ["government", "law_enforcement", "victim_operator"],
     "technical_bases": ["cybersecurity_firm", "researcher", "media_investigation"],
+    "restating_roles": ["wire", "media", "specialist_media", "industry"],
     "labels": {
       "HIGH": "High", "MODERATE": "Moderate", "LOW": "Low", "CLAIM_ONLY": "Claim only",
       "DISPUTED": "Disputed", "NOT_ESTABLISHED": "Not established"
