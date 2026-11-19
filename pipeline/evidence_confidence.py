@@ -139,8 +139,10 @@ def independent_origins(sources):
     publishers. One organisation speaking on its website and on its official account, or on two
     sites, is one statement; a wire and its republications are one. Each count can only grow as a
     source is added, so the smaller can only grow too, and a second citation from the same
-    publisher at the same origin changes neither. It can undercount independence (two outlets a
-    record gives the same publisher name), never overstate it. Discovery aids count for nothing."""
+    publisher at the same origin changes neither. The publisher step can only lower the count (two
+    outlets a record gives the same publisher name read as one). Republication a record does not
+    name stays invisible: that is the one way the count can overstate independence, and a lane
+    that can see it sets `origin`. Discovery aids count for nothing."""
     counted = [s for s in sources if origin_of(s) is not None]
     return min(len({origin_of(s) for s in counted}), len({_publisher_key(s) for s in counted}))
 
