@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "build_time": "2026-11-19T14:28:46+00:00",
+  "build_time": "2026-11-19T21:22:31+00:00",
   "files": [
     {
       "name": "assets.json",
@@ -9,12 +9,12 @@
     },
     {
       "name": "build_changes.json",
-      "bytes": 8647,
+      "bytes": 8945,
       "optional": false
     },
     {
       "name": "data_quality.json",
-      "bytes": 26562,
+      "bytes": 26556,
       "optional": false
     },
     {
@@ -54,7 +54,7 @@
     },
     {
       "name": "production_history.json",
-      "bytes": 77648,
+      "bytes": 78220,
       "optional": false
     },
     {
@@ -84,7 +84,7 @@
     },
     {
       "name": "assets_lines.geojson",
-      "bytes": 2387474,
+      "bytes": 2387510,
       "optional": false
     },
     {
@@ -94,7 +94,7 @@
     },
     {
       "name": "context_gas_network.geojson",
-      "bytes": 1605422,
+      "bytes": 1604793,
       "optional": true
     },
     {

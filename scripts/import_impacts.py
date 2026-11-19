@@ -80,7 +80,10 @@ CONTEXT_ROLES = G.CONTEXT_REVIEW_ROLES
 # The lead's normalisation pass: read after the blind roles, never one of them.
 LEAD = "lead"
 # The roles that must each accept a social addendum (reviews/<role>/social.json) before it is added.
-ADDENDA_ROLES = ROLE_ORDER
+# Two, not three: an addendum is a source for a record whose occurrence and effect the evidence role
+# already reviewed, so what remains to check is the social check (identity, tier, origin, what the
+# post itself states; both reviewers open the post) and safety.
+ADDENDA_ROLES = ("attribution_source", "safety")
 LEAD_KEYS = ("verdict", "set", "remove_sources", "reason", "note")
 PASS = B.BLIND_PASS
 VERDICTS = PASS + ("reject",)
