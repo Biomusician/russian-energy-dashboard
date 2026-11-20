@@ -370,7 +370,11 @@ in §33. Each was fixed at its cause; none was skipped or loosened beyond the wr
 Baseline 376 of 376 caught. The campaign now holds 713 mutants (filters 31, impact layer 97, Atlas
 43, confidence 107, country pages 26, Gulf page 28, lead integration 9, and earlier lists).
 Each agent ran its own list to zero survivors; the lead's integration list: 33 attempted, 33
-caught. <!-- LEAD: full campaign -->
+caught. **Full campaign on the integrated branch: 713 attempted, 713 caught, 0 survived, 0 invalid
+anchors, 0 errored, 0 baselines not green** (19 November 2026, 19:28-20:57). The sandbox was copied
+after the Python and calibration fixes in `df252c8` and before that commit's frontend changes (the
+brief button's move and the e2e rule); the campaign's mutants are pytest-keyed, and the anchor check
+passes on the final tree.
 
 ## 30. Red teams
 
