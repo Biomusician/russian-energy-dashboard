@@ -349,7 +349,8 @@ supports, or a rule the data cannot yet carry.
   a social platform is a post whatever medium was typed; an archive or AMP copy is the page it
   copies; a shortened link and a news aggregator count for nothing; one account under two
   platform names is one; a wire's own site, or a publisher that names a wire, is that wire
-  (`origins.wires`); a basis made of badge words establishes no identity. `source_problems` and
+  (`origins.wires`); a basis made of badge words establishes no identity, whichever platform it
+  names ("Verified Telegram channel" says no more than "Verified account"). `source_problems` and
   `dispute_problems` list what a gate refuses (an unknown medium, role or tier, `supports` that is
   not a list of claims, an unreadable date, a dispute with no `about`). Since the iteration-22
   closure they **gate the import and the build** (methodology §12). They are deterministic checks

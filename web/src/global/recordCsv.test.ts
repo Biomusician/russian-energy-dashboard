@@ -348,6 +348,7 @@ describe("impact records", () => {
       expect(row.admin1_code).toBe("");
       expect(row.admin1_name).toBe("");
       expect(row.source_headlines).toBe("");
+      expect(row.date_end).toBe("");
       expect(row.geographic_precision).toBe("country");
       expect(row.publication_note).toBe(ABSTRACTED_CSV_NOTE);
       expect(Object.values(row).join(" ")).not.toMatch(/PLANTED|XX-01/);

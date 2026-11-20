@@ -295,7 +295,8 @@ export function impactRow(r: ImpactRecordForCsv): ImpactRow {
     record_kind: text(r.record_kind),
     date: text(r.date),
     date_precision: text(r.date_precision),
-    date_end: text(r.date_end),
+    // When service came back is later status: never exported beside a record published without its place.
+    date_end: abstracted ? "" : text(r.date_end),
     country_a3: text(r.country_a3),
     countries_a3: list(r.countries_a3),
     country: text(r.country_name),

@@ -2690,3 +2690,150 @@ def test_the_import_refuses_a_planned_end_date(tmp_path):
     report = run(paths)
     assert set(curated_records(paths)) == {FRA}
     assert "is after 2025-09-20, the newest date among its sources" in reasons(report, DEU)
+
+
+# --- iteration-22 release closure: test-architecture red team ----------------------------------------------
+# Each test below was written for a mutation that left every earlier test green
+# (scripts/mutation_campaign.py, TESTARCH22_MUTATIONS).
+
+def test_stamp_first_published_reads_the_newest_date_across_both_files(tmp_path):
+    """A release cannot first serve a record before an earlier release served a context entry either."""
+    d, _, _ = _stamp_dir(tmp_path)
+    c = _json(d / "regional_context.json")
+    c["entries"][0]["first_published"] = "2026-11-15"          # newer than every record's date (2026-11-12)
+    S.write_json(d / "regional_context.json", c)
+    before = [(d / n).read_bytes() for n in ("events.json", "regional_context.json")]
+    with pytest.raises(ValueError, match="before 2026-11-15"):
+        S.stamp("2026-11-13", curated=d)
+    assert [(d / n).read_bytes() for n in ("events.json", "regional_context.json")] == before
+
+
+def test_a_self_claim_in_competing_is_refused_however_its_basis_is_spelled_or_repeated():
+    r = rec(DEU)
+    r["attribution"]["competing"] = [{**SELF_CLAIM, "basis": ["actor_self_claim", "actor_self_claim"]}]
+    refused(r, "attribution.competing[0] rests only on the actor's own claim")
+    # A spelling outside the vocabulary is not a basis at all, so it cannot carry a boast in as a rival.
+    for spelled in (["self_claim"], ["Actor_Self_Claim"], ["actor self claim"], ["actor_self_claim", "goverment"]):
+        r["attribution"]["competing"] = [{**SELF_CLAIM, "basis": spelled}]
+        refused(r, "attribution.competing[0]: basis must list who advances it")
+
+
+WIRE_OF_CLAIM = {"ref": "s3", "url": "https://wire.example/synthetic/group-g-claims", "publisher": "Example Wire",
+                 "date": "2025-09-03", "language": "en", "source_role": "wire", "medium": "web", "social": None,
+                 "supports": ["attribution"], "opened": True, "attribution_basis": "actor_self_claim",
+                 "derived_claim": "Synthetic: the wire reports Example Group G's claim."}
+
+
+def test_a_competing_entry_citing_only_reports_of_the_actors_claim_is_refused():
+    """A wire story declared as carrying the claim, or the actor's own outlet typed as media, is the claim:
+    citing only those, a competing entry would make the record DISPUTED on a boast."""
+    for source in (dict(WIRE_OF_CLAIM),
+                   {**WIRE_OF_CLAIM, "source_role": "media", "publisher": "Example Group G", "attribution_basis": None,
+                    "url": "https://group-g.example/synthetic/statement"}):
+        r = rec(DEU)
+        r["sources"].append(source)
+        r["attribution"]["competing"] = [{**SELF_CLAIM, "basis": ["media_investigation"], "source_refs": ["s3"]}]
+        refused(r, "every source it cites is the actor's own claim")
+    # One independent source beside the claim keeps the entry: someone other than the actor advances it.
+    r = rec(DEU)
+    r["sources"].append(dict(WIRE_OF_CLAIM))
+    r["attribution"]["competing"] = [{**SELF_CLAIM, "basis": ["actor_self_claim", "media_investigation"],
+                                      "source_refs": ["s2", "s3"]}]
+    assert not any("competing[0]" in p for p in problems(r)), problems(r)
+
+
+def test_an_end_date_is_judged_to_the_last_day_of_a_31_day_month_and_of_a_year():
+    r = rec(DEU)                                   # event 2025-09-02; sources 2025-09-02 and 2025-09-20
+    r["sources"][1]["date"] = "2025-10"            # could be from 31 October
+    r["date_end"] = "2025-10-31"
+    assert not any("newest date among its sources" in p for p in problems(r)), problems(r)
+    r["date_end"] = "2025-11-01"
+    refused(r, "date_end 2025-11-01 is after 2025-10")
+    r["sources"][1]["date"] = "2025"               # could be from 31 December
+    r["date_end"] = "2025-12-31"
+    assert not any("newest date among its sources" in p for p in problems(r)), problems(r)
+    r["date_end"] = "2026-01"
+    refused(r, "date_end 2026-01 is after 2025")
+
+
+def test_the_end_date_rule_still_applies_to_a_record_with_a_social_source():
+    r = rec(POL)
+    assert any(s["medium"] == "social" for s in r["sources"])
+    newest = max(s["date"] for s in r["sources"])
+    r["date_end"] = f"{int(newest[:4]) + 1}{newest[4:7]}"
+    refused(r, "the newest date among its sources")
+
+
+def test_the_latest_statement_of_a_type_is_chosen_by_its_as_of_date_never_its_publication_date():
+    """A report published later about an earlier position is not the latest statement of its type."""
+    e, c, lg = docs()
+    late = copy.deepcopy(next(x for x in c["entries"] if x["id"] == "ctx-2026-09-20-synthetic-shipping-statement"))
+    late.update(id="ctx-2026-10-01-synthetic-shipping-retrospective", date="2026-10-01", as_of="2026-03-01",
+                claim="SYNTHETIC FIXTURE. A later report about the position on 1 March.")
+    c["entries"].append(late)
+    assert G.context_problems([late]) == []
+    cx = G.build_payloads(e, c, lg, ctx(), AS_OF)[G.CONTEXT_OUT]
+    by_id = {x["id"]: x for x in cx["entries"]}
+    assert by_id["ctx-2026-10-01-synthetic-shipping-retrospective"]["is_latest_of_type"] is False
+    assert by_id["ctx-2026-09-20-synthetic-shipping-statement"]["is_latest_of_type"] is True
+    assert cx["latest_by_type"]["shipping_status"] == ["ctx-2026-09-20-synthetic-shipping-statement"]
+
+
+def test_a_multi_country_candidate_is_reconciled_with_every_country_it_names(tmp_path):
+    """A record held from a country system does not come back inside a multi-country record."""
+    held = _country_row("us-2025-04-28-synthetic-held-substation", date="2025-04-28", asset_class="substation")
+    paths = make_queue(tmp_path, {"na": [candidate(MULTI, countries_a3=["CAN", "USA"])]}, country={"us": [held]})
+    report = run(paths)
+    assert curated_records(paths) == {}
+    assert "reconcile with us" in reasons(report, MULTI)
+
+
+def test_a_held_country_record_of_a_class_with_no_sector_matches_any_energy_candidate(tmp_path):
+    """A system-wide country record maps to no sector: the conservative reading matches every energy record."""
+    held = _country_row("us-2026-02-14-synthetic-held-system", asset_class="system_wide")
+    assert G.TAXONOMY["asset_class_to_technology"]["map"]["system_wide"]["sector"] is None
+    paths = make_queue(tmp_path, {"na": [candidate(USA)]}, country={"us": [held]})
+    report = run(paths)
+    assert curated_records(paths) == {} and "reconcile with us" in reasons(report, USA)
+
+
+def _abstracted_irn():
+    r = rec(IRN)
+    r["publication_policy"] = G.ABSTRACTED
+    r["impact_id"] = "imp-2024-08-irn-electricity-event-0a1b2c"
+    for s in r["sources"]:
+        s.pop("title_en", None)
+        s.pop("title_original", None)
+    return r
+
+
+def test_an_abstracted_record_in_a_campaign_system_names_no_region_in_a_citation_address():
+    """Not only attacks: any record a reviewer abstracted is held to the address rule."""
+    r = _abstracted_irn()
+    assert problems(r) == []
+    r["sources"][0]["url"] = "https://power-ministry.example/synthetic/khuzestan-notice"
+    refused(r, "the citation address names a region of ir")
+
+
+def test_a_publisher_that_names_a_campaign_systems_region_is_refused():
+    r = rec(IRN)
+    r["sources"][0]["publisher"] = "Khuzestan Example Power Company"
+    refused(r, "names a region of a campaign-restricted system (ir)")
+
+
+def test_an_abstracted_record_carries_no_episode():
+    r = rec(UKR)
+    r["episode_id"], r["episode_basis"] = "synthetic-winter-strikes", "SYNTHETIC. One declared wave."
+    refused(r, "an abstracted record is its own episode")
+
+
+def test_an_s1_basis_that_names_only_a_badge_and_a_platform_establishes_nothing():
+    r = rec(POL)
+    social = next(s for s in r["sources"] if s["medium"] == "social")["social"]
+    for badge in ("Verified Telegram channel", "Official verified page on Facebook", "Verified Bluesky account",
+                  "blue check on Mastodon", "verified YouTube channel"):
+        social["identity_basis"] = badge
+        refused(r, "an S1 account's identity_basis names only a platform badge")
+        assert not EC._identity_established(social)
+    social["identity_basis"] = "Telegram channel linked from the operator's own website (synthetic)."
+    assert EC._identity_established(social) and problems(r) == []
