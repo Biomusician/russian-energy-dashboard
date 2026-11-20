@@ -2997,6 +2997,18 @@ CLOSURE_MUTATIONS = [
     ("the import drops self_claims as a field outside the contract",
      [(GI, _text('"competing", "self_claims",\n', '"competing",\n'))],
      "leads_normalisation_can_move_a_self_claim_out_of_competing"),
+    ("an end date after every source passes",
+     [(GI, _text('    if _start(end) > _last_day(newest):', '    if False:'))],
+     "end_date_after_the_newest_source_is_refused or import_refuses_a_planned_end_date"),
+    ("the end date is judged against the oldest source",
+     [(GI, _text('    newest = max((s["date"] for s in sources), key=_last_day)', '    newest = min((s["date"] for s in sources), key=_last_day)'))],
+     "end_date_after_the_newest_source_is_refused"),
+    ("the end date rule guesses at an undated page",
+     [(GI, _text('not sources or not all(_date_ok(s.get("date"), precisions) for s in sources):',
+                 'not sources or not any(_date_ok(s.get("date"), precisions) for s in sources):')),
+      (GI, _text('    newest = max((s["date"] for s in sources), key=_last_day)',
+                 '    newest = max((s["date"] for s in sources if s.get("date")), key=_last_day)'))],
+     "end_date_rule_does_not_guess_at_an_undated_page"),
 ]
 MUTATIONS += CLOSURE_MUTATIONS
 

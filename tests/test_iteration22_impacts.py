@@ -2653,3 +2653,40 @@ def test_a_self_claim_whose_only_source_a_reviewer_removed_is_dropped_and_said(t
     got = curated_records(paths)[DEU]
     assert got["attribution"]["self_claims"] == [] and [s["ref"] for s in got["sources"]] == ["s1", "s2"]
     assert any("1 self-claim(s) dropped" in n for n in report["notes"][DEU])
+
+
+# --- iteration-22 release closure: an end date is observed, never planned (B11) -----------------------
+
+def test_an_end_date_after_the_newest_source_is_refused():
+    r = rec(DEU)                                   # sources dated 2025-09-02 and 2025-09-20
+    assert problems(r) == []
+    r["date_end"] = "2025-09-20"                   # the newest source's own day: it could have seen it
+    assert problems(r) == []
+    r["date_end"] = "2025-09-21"
+    refused(r, "date_end 2025-09-21 is after 2025-09-20, the newest date among its sources")
+    # Judged against the NEWEST source, not the first: an end between the two is fine.
+    r["date_end"] = "2025-09-10"
+    assert problems(r) == []
+    # Precision is read conservatively on both sides.
+    r["date_end"] = "2025-09"                      # could mean any day of September
+    assert problems(r) == []
+    r["sources"][1]["date"] = "2025-09"            # a month-dated source could be from the 30th
+    r["date_end"] = "2025-09-30"
+    assert problems(r) == []
+    r["date_end"] = "2025-10"
+    refused(r, "date_end 2025-10 is after 2025-09")
+
+
+def test_the_end_date_rule_does_not_guess_at_an_undated_page():
+    r = rec(DEU)
+    r["date_end"] = "2025-10-01"
+    refused(r, "the newest date among its sources")
+    r["sources"][1]["date"], r["sources"][1]["date_basis"] = None, "undated_page"
+    assert not any("newest date among its sources" in p for p in problems(r))
+
+
+def test_the_import_refuses_a_planned_end_date(tmp_path):
+    paths = make_queue(tmp_path, {"europe": [candidate(DEU, date_end="2025-10-15"), candidate(FRA)]})
+    report = run(paths)
+    assert set(curated_records(paths)) == {FRA}
+    assert "is after 2025-09-20, the newest date among its sources" in reasons(report, DEU)

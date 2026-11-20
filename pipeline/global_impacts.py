@@ -269,6 +269,35 @@ def _start(text):
     return dt.date.fromisoformat((str(text) + "-01-01")[:10])
 
 
+def _last_day(text):
+    """The last day a date of day, month or year precision can mean."""
+    s = str(text)
+    if len(s) >= 10:
+        return dt.date.fromisoformat(s[:10])
+    if len(s) == 7:
+        first = dt.date(int(s[:4]), int(s[5:7]), 1)
+        return (first.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)
+    return dt.date(int(s[:4]), 12, 31)
+
+
+def end_date_problems(r):
+    """An end date is observed, never forecast (B11): `date_end` may not fall after the newest
+    date among the record's sources, since no source can report an end that had not happened when
+    it was published. Compared conservatively: the earliest day the end can mean against the latest
+    day the newest source date can mean. Applied only when every source is dated; an undated page
+    (`date_basis: undated_page`) may be newer than any dated one, and is not guessed at."""
+    end = r.get("date_end")
+    sources = [s for s in r.get("sources") or [] if isinstance(s, dict)]
+    precisions = ("day", "month", "year")
+    if not _date_ok(end, precisions) or not sources or not all(_date_ok(s.get("date"), precisions) for s in sources):
+        return []
+    newest = max((s["date"] for s in sources), key=_last_day)
+    if _start(end) > _last_day(newest):
+        return [f"date_end {end} is after {newest}, the newest date among its sources: no cited source could have "
+                "observed that end. An end date is observed, never forecast or planned"]
+    return []
+
+
 def _number(x):
     return isinstance(x, (int, float)) and not isinstance(x, bool)
 
@@ -602,6 +631,7 @@ def vocabulary_problems(r):
         out.append(f"date_end {end!r} is not a date or null")
     elif _date_ok(end, ("day", "month", "year")) and _date_ok(r.get("date"), ("day", "month", "year")) and end < r["date"][:len(end)]:
         out.append("date_end is before date")
+    out += end_date_problems(r)
     if r.get("geographic_precision") not in ids("geographic_precision"):
         out.append(f"geographic_precision {r.get('geographic_precision')!r}")
     if r.get("domain") not in ids("domains"):
