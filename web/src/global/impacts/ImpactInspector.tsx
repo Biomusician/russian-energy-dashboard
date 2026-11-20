@@ -57,6 +57,12 @@ function SourceRow({ s, headlines }: { s: ImpactSource; headlines: boolean }) {
       )}
       {headlines && s.title_original && s.title_en && s.title_en !== s.title_original && <div className="source-gloss dim">Gloss: {s.title_en}</div>}
       <div className="dim">
+        {s.added_by === "lead" && (
+          <span className="lead-added">
+            Added on lead review, after the blind reviews: not opened by a reviewer, and whether it repeats another cited source was
+            not checked, so it is not counted as an independent statement.{" "}
+          </span>
+        )}
         {s.opened === true ? "Opened and read by a reviewer. " : s.opened === false ? "Recorded as not opened. " : ""}
         Link: <span className={`link-state link-${link}`}>{lowerLabel("link_states", link)}</span>
         {definitionOf("link_states", link) ? ` (${definitionOf("link_states", link)})` : ""}

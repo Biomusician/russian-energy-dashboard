@@ -269,3 +269,15 @@ describe("the Gulf page's three placement rules", () => {
     expect(none.body).not.toMatch(/places its own attack records/);
   });
 });
+
+describe("a source appended on lead review is shown as such", () => {
+  it("the inspector says it was added after the blind reviews and is not counted as an independent statement", () => {
+    const base = record();
+    const added = { ...base.sources[0], ref: "s10", publisher: "SYNTHETIC operator report", added_by: "lead" as const, opened: false };
+    const insp = render(<ImpactInspector record={{ ...base, sources: [...base.sources, added] } as ImpactRecord} />);
+    expect(insp).toContain("Added on lead review, after the blind reviews");
+    expect(insp).toContain("not counted as an independent statement");
+    // A reviewed source carries no such line.
+    expect(render(<ImpactInspector record={base} />)).not.toContain("Added on lead review");
+  });
+});

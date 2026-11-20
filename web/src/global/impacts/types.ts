@@ -51,6 +51,8 @@ export interface ImpactSource {
   title_original?: string | null;
   title_en?: string | null;
   derived_claim?: string | null;
+  /** "lead": appended by a lead normalisation after the blind reviews; never a reviewed origin. */
+  added_by?: "lead" | null;
   link_check?: string | null;
 }
 
