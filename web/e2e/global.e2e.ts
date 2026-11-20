@@ -259,9 +259,15 @@ test.describe("provenance and coverage (iteration 16)", () => {
   });
 
   test("a country never searched systematically says so, whatever its sources' freshness", async ({ app, page }) => {
+    // China has since had a systematic pass, so the state is served from a modified copy of its own
+    // payload: a data-conditional skip left this copy untested in every build after that pass.
+    await page.route("**/data/systems/cn/system.json", async (route) => {
+      const res = await route.fetch();
+      const body = await res.json();
+      body.research_freshness.completeness = "never_systematic";
+      await route.fulfill({ response: res, json: body });
+    });
     await app.open("?sys=cn");
-    const sys = await countryPayload(page, "cn", "system.json");
-    test.skip(sys.research_freshness.completeness !== "never_systematic", "China has had a systematic pass");
     await expect(page.getByLabel("Research status")).toContainText("Targeted searches only");
   });
 
