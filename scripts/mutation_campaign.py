@@ -2681,7 +2681,7 @@ ITER22_CONFIDENCE_MUTATIONS = [
      [(EC_PY, _text("    return any(word not in empty for word in", "    return any(True for word in"))],
      "b22_b24_a_channel_typed_as_a_website"),
     ("the gate accepts a medium outside the vocabulary",
-     [(EC_PY, _text('    if medium is not None and str(medium).strip().lower() not in METHOD["media"]:', "    if False:"))],
+     [(EC_PY, _text('    if vocabulary and medium is not None and str(medium).strip().lower() not in METHOD["media"]:', "    if False:"))],
      "b22_b24_a_channel_typed_as_a_website"),
     ("two ministries under one national suffix are one origin",
      [(EC_JSON, _text('"shared_suffixes": ["gouv.fr", ', '"shared_suffixes": ["gouv.example", '))],
