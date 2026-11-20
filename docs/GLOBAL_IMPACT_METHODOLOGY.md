@@ -273,7 +273,7 @@ Properties, each tested and mutation-tested:
   (directness and corroboration are separate components), and many copies of one state or wire
   statement are one origin.
 
-Thresholds are provisional: no blind calibration result has been recorded yet, and the method is served with `status: "provisional: thresholds not calibrated"` until one is (`docs/EVIDENCE_CONFIDENCE_V2.md`).
+Thresholds are provisional: one blind calibration has been run and they did not pass it, and the method is served with `status: "provisional: thresholds not calibrated"` until a run passes (`docs/EVIDENCE_CONFIDENCE_V2.md` §6).
 
 ### 8.2 Attribution confidence
 

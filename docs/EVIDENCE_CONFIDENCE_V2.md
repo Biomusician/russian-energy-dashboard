@@ -226,7 +226,7 @@ effect.
 ## 6. Calibration against blind reviewers
 
 The thresholds are a claim about how a careful reader sorts records by what their sources support.
-The claim is checked blind. **It has not been checked yet.**
+The claim is checked blind. **One run has been made (19 November 2026); the thresholds did not pass it** (Results, below).
 
 ```
 .venv\Scripts\python.exe scripts\eci_calibration.py packets     # writes packets.json and key.json
@@ -273,10 +273,47 @@ version drop `-draft`.
 ### Results
 
 <!-- calibration-results:begin -->
-*Not yet run. The lead pastes `calibration_result.json` here after reviewers label the packets,
-with the decision and any parameter changed as a result (and the version bumped in
-`methodology/evidence_confidence.json`). Until then `version` stays `2.0-draft`, the served status
-is "provisional: thresholds not calibrated", and no document may claim a calibration.*
+**Run 1, 19 November 2026 (method `2.0-draft`). Result: not calibrated. The thresholds
+stay provisional, the version stays `2.0-draft`, and the theatre's multiplier is unchanged.**
+
+| | Packets | Exact | Within one | Cohen's kappa |
+|---|---|---|---|---|
+| Reviewer r2 vs reviewer r3 | 72 | 0.83 | 1.00 | 0.73 |
+| Reviewer r2 vs model | 72 | 0.50 | 0.96 | 0.10 |
+| Reviewer r3 vs model | 72 | 0.42 | 0.96 | 0.02 |
+
+- **Sample.** 72 packets from a population of 610: 13 country
+  events, 21 imported impact records and 38 impact candidates still in the
+  local queue; drawn by record kind, country or lane and source profile, never by the model's
+  category. The model labelled them High 11, Moderate 55, Limited 2, Preliminary 0, Disputed 4.
+- **Reviewers.** Two blind labelers (a sceptical standards editor and an incident analyst at a
+  regulator), each given only the packets and the plain-words question. A third labeler was
+  stopped by a usage limit before writing labels; it is not counted. All three were agents of the
+  same build, not independent people.
+- **What it says.** The reviewers agree with each other well (kappa 0.73, every packet within one
+  category). Each agrees with the model barely better than chance (kappa 0.10 and 0.02), though
+  almost always within one category. Against the pre-stated test (reviewer-model agreement no worse
+  than reviewer-reviewer, reviewer-reviewer kappa at least 0.6, no systematic one-step shift) the
+  first condition fails clearly and the third fails: on 33 packets both reviewers agree with each other
+  and not with the model.
+- **Where the model and the reviewers part.** Mostly in one direction: the model says Moderate where
+  both reviewers say High. Most of those packets are records whose origins were never reviewed
+  (country events and queue candidates without a review block), which the model holds at Moderate
+  by rule ("independence of the cited sources has not been reviewed"); the reviewers, who see the
+  sources typed, judge two first-party or press accounts as High. The model is right to refuse High
+  to an unreviewed relay chain and the reviewers cannot see relays either, so this disagreement is
+  partly the design, not a threshold error. The smaller, opposite group (model High, reviewers
+  Moderate) is two publishers with no first-party source; and three packets the model calls
+  Disputed the reviewers call Moderate or Limited, because a denial later superseded, or a conflict
+  inside one source, does not read to them as two credible sources disagreeing.
+- **What follows.** No parameter changed. Before a second run: draw only imported (reviewed)
+  records so the origin cap is not what is being measured; add a written rule for "a denial later
+  superseded" and "a figure disputed inside one source"; use at least three labelers including one
+  person outside the build; and state the kappa floor again before reading the labels.
+- **Limits.** Reviewers saw the same typed role, medium and `supports` the model reads, and no
+  source address, so a mistyped role or an unmarked relay is invisible to both. Kappa over 72
+  packets has a wide interval: read it as a direction. The per-packet comparison and the labels
+  stay in the local queue (`data/candidates/eci_calibration/`); nothing here is served.
 <!-- calibration-results:end -->
 
 ## 7. Limitations
