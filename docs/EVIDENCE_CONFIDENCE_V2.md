@@ -318,6 +318,10 @@ stay provisional, the version stays `2.0-draft`, and the theatre's multiplier is
   stay in the local queue (`data/candidates/eci_calibration/`); nothing here is served.
 <!-- calibration-results:end -->
 
+**Run 2 is prepared, not run**: population, labelers, the predeclared bar, the frozen method, key
+handling, the script changes it needs and the reviewer instructions are in
+`docs/ECI_CALIBRATION_RUN2_PLAN.md`. Without a human labeler from outside the build it does not run.
+
 ## 7. Limitations
 
 Known, and not fixed in this iteration. Each is a way the category can say more than the record
