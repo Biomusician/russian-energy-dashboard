@@ -771,7 +771,12 @@ def test_gate_requires_first_published_and_a_well_formed_id():
     refused(r, "no first_published")
     r = rec(FRA)
     r["first_published"] = "yesterday"
-    refused(r, "is not a date; the import stamps it")
+    refused(r, "first_published 'yesterday' is not a date or null")
+    r = rec(FRA)
+    r["first_published"] = None          # pending its first release: allowed, and served as null
+    assert problems(r) == []
+    r["last_revised"] = "2026-11-25"
+    refused(r, "last_revised on a record pending its first release")
     r = rec(FRA)
     r["impact_id"] = "imp-2025-03-06-fra-electricity-synthetic-grid-ransomware"
     refused(r, "impact_id must be imp-<date>-<a3>-<sector>-<slug>")
@@ -818,10 +823,15 @@ def test_a_problem_names_the_record_and_the_build_raises_it():
 
 def test_context_entries_are_dated_as_of_sourced_and_reviewed():
     for key, why in (("date", "date None is not a date"), ("as_of", "as_of None is not a date"),
-                     ("first_published", "first_published None is not a date")):
+                     ("first_published", "first_published '11 March' is not a date or null")):
         e = entry()
-        e[key] = None
+        e[key] = None if key != "first_published" else "11 March"
         assert any(why in p for p in G.context_problems([e])), key
+    e = entry()
+    e["first_published"] = None          # pending its first release
+    assert G.context_problems([e]) == []
+    e["last_revised"] = "2026-11-25"
+    assert any("pending its first release" in p for p in G.context_problems([e]))
     e = entry()
     e["sources"] = []
     assert any("no source" in p for p in G.context_problems([e]))
@@ -1184,6 +1194,7 @@ def test_the_built_artifacts_on_disk_are_the_curated_corpus_as_built():
 # --- the import ------------------------------------------------------------------------------------------
 
 I = _script("import_impacts")
+S = _script("stamp_first_published")
 DAY1, DAY2 = "2026-11-20", "2026-11-27"
 
 
@@ -1273,12 +1284,18 @@ def edit_review(paths, role, lane, cid, **changes):
     path.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
 
 
-def test_import_publishes_only_what_every_role_accepted_and_stamps_first_published(tmp_path):
+def stamp_release(paths, date):
+    """What the release lead does in the release commit: date everything pending."""
+    return S.stamp(date, curated=paths["curated"])
+
+
+def test_import_publishes_only_what_every_role_accepted_and_leaves_first_published_pending(tmp_path):
     paths = make_queue(tmp_path, {"europe": [candidate(FRA), candidate(POL)], "na": [candidate(USA)]})
     report = run(paths)
     got = curated_records(paths)
     assert set(got) == {FRA, POL, USA} == set(report["imported"])
-    assert all(r["first_published"] == DAY1 and "last_revised" not in r for r in got.values())
+    # Imported is not published: nothing is dated until a release serves it.
+    assert all(r["first_published"] is None and "last_revised" not in r for r in got.values())
     assert got[FRA]["review"]["roles"] == {"evidence": "accept", "attribution_source": "accept", "safety": "accept"}
     assert got[FRA]["review"]["review_status"] == "blind_reviewed" and got[FRA]["review"]["disposition"] == "confirmed"
     assert got[USA]["review"]["ai_check"] == "passed" and got[FRA]["review"]["ai_check"] == "not_applicable"
@@ -1301,7 +1318,12 @@ def test_import_is_idempotent_and_never_restamps(tmp_path):
     run(paths)
     assert [p.read_bytes() for p in files] == first
     assert all(b"\r" not in b for b in first)
-    # A later run, with nothing changed, keeps the first date and marks no revision.
+    # Never the run date, on any run: still pending until a release dates it.
+    run(paths, date=DAY2)
+    assert all(r["first_published"] is None for r in curated_records(paths).values())
+    assert _json(paths["curated"] / "regional_context.json")["entries"][0]["first_published"] is None
+    stamp_release(paths, DAY1)
+    # A later run, with nothing changed, keeps the release's date and marks no revision.
     run(paths, date=DAY2)
     got = curated_records(paths)
     assert all(r["first_published"] == DAY1 and "last_revised" not in r for r in got.values())
@@ -1311,6 +1333,7 @@ def test_import_is_idempotent_and_never_restamps(tmp_path):
 def test_a_changed_record_keeps_first_published_and_gains_last_revised(tmp_path):
     paths = make_queue(tmp_path, {"europe": [candidate(FRA), candidate(BRA)]})
     run(paths)
+    stamp_release(paths, DAY1)
     edit_review(paths, "safety", "europe", FRA, verdict="accept_with_correction",
                 set={"summary": "SYNTHETIC FIXTURE. A reworded summary of the incident in France."})
     run(paths, date=DAY2)
@@ -1757,7 +1780,7 @@ def test_context_entries_need_two_roles_and_pass_the_context_gate(tmp_path):
     report = run(paths)
     entries = _json(paths["curated"] / "regional_context.json")["entries"]
     assert [e["id"] for e in entries] == [good["id"]] == report["context"]["imported"]
-    assert entries[0]["first_published"] == DAY1 and entries[0]["review"]["roles"] == {"evidence": "accept", "safety": "accept"}
+    assert entries[0]["first_published"] is None and entries[0]["review"]["roles"] == {"evidence": "accept", "safety": "accept"}
     why = {r["candidate_id"]: " | ".join(r["reasons"]) for r in report["context"]["refused"]}
     assert "aggregate only" in why[bad["id"]] and "not reviewed by safety" in why[lonely["id"]]
 
@@ -1803,7 +1826,7 @@ def test_the_import_never_writes_a_review_or_a_stamp_the_lane_supplied(tmp_path)
     paths = make_queue(tmp_path / "b", {"europe": [c]})
     run(paths)
     got = curated_records(paths)[FRA]
-    assert got["first_published"] == DAY1 and got["review"]["reviewed_at"] == "2026-11-19"
+    assert got["first_published"] is None and got["review"]["reviewed_at"] == "2026-11-19"
 
 
 def test_the_real_queue_is_never_committed_and_never_read_by_the_build():
@@ -1888,7 +1911,7 @@ def test_a_citation_the_reviewers_narrowed_is_no_longer_cited_for_that_claim(tmp
 def test_set_paths_take_list_indexes_and_a_null_on_a_stray_key_deletes_it(tmp_path):
     c = candidate(FRA, lane_flags=["check date"], date_end="unknown")
     c["attribution"]["competing"] = [{"actor": "Example Group Z", "note": "SYNTHETIC. Another firm named Example Group Z.",
-                                      "status": "SUSPECTED", "source_refs": ["s4"]}]
+                                      "status": "SUSPECTED", "basis": ["cybersecurity_firm"], "source_refs": ["s4"]}]
     c["sources"][0]["access_note"] = "opened on the second try"
     paths = make_queue(tmp_path, {"europe": [c]})
     edit_review(paths, "safety", "europe", FRA, verdict="accept_with_correction",
@@ -1899,7 +1922,7 @@ def test_set_paths_take_list_indexes_and_a_null_on_a_stray_key_deletes_it(tmp_pa
     assert "lane_flags" not in got and got["date_end"] is None
     assert got["civilian_service_impact"][0]["affected"]["value"] == 118000
     assert got["sources"][3]["attribution_basis"] == "cybersecurity_firm"
-    assert got["attribution"]["competing"] == [{"actor": "Example Group Z", "source_refs": ["s4"],
+    assert got["attribution"]["competing"] == [{"actor": "Example Group Z", "basis": ["cybersecurity_firm"], "source_refs": ["s4"],
                                                 "statement": "SYNTHETIC. Another firm named Example Group Z."}]
     notes = " | ".join(report["notes"][FRA])
     assert "lane_flags" in notes and "sources.access_note" in notes and "written as null" in notes
@@ -2263,3 +2286,407 @@ def test_regional_context_names_its_group_from_the_registry():
     assert got["group"] == G.context_group()
     assert systems.GROUPS[got["group"]]["regional_context"] == G.CONTEXT_OUT
     assert [g for g, d in systems.GROUPS.items() if d.get("regional_context")] == [got["group"]]
+
+
+# --- iteration-22 release closure: first_published means first SERVED (B1) -----------------------------
+
+def test_the_import_never_writes_its_run_date_as_first_published(tmp_path):
+    """Imported is not published. Whatever --date the import runs with, a new record or context entry
+    is pending (null) until a release serves it, and a change before that release is no revision."""
+    raw = {k: v for k, v in entry().items() if k not in ("review", "first_published")}
+    paths = make_queue(tmp_path, {"europe": [candidate(FRA), candidate(BRA)]}, context={"hormuz": [raw]})
+    run(paths, date=DAY2)
+    text = (paths["curated"] / "events.json").read_text(encoding="utf-8")
+    text += (paths["curated"] / "regional_context.json").read_text(encoding="utf-8")
+    assert DAY2 not in text
+    got = curated_records(paths)
+    assert all(r["first_published"] is None for r in got.values())
+    edit_review(paths, "safety", "europe", FRA, verdict="accept_with_correction",
+                set={"summary": "SYNTHETIC FIXTURE. Reworded before the first release."})
+    run(paths, date="2026-12-01")
+    got = curated_records(paths)
+    assert got[FRA]["summary"].endswith("first release.")
+    assert got[FRA]["first_published"] is None and "last_revised" not in got[FRA]
+    e, c, lg = G.load_curated(paths["curated"])
+    assert G.gate(e, c, lg, ctx()) == []
+    served = G.build_payloads(e, c, lg, ctx(), AS_OF)
+    # Served as null, never as an invented date.
+    assert all(r["first_published"] is None for r in served[G.IMPACTS_OUT]["records"])
+    assert all(x["first_published"] is None for x in served[G.CONTEXT_OUT]["entries"])
+    assert "pending its first release" in served[G.IMPACTS_OUT]["field_notes"]["first_published"]
+
+
+def _stamp_dir(tmp_path):
+    e, c, _ = docs()
+    for r in e["records"]:
+        r.pop("last_revised", None)
+    e["records"][0]["first_published"] = "2026-11-12"
+    for r in e["records"][1:]:
+        r["first_published"] = None
+    c["entries"][0]["first_published"] = "2026-11-10"
+    for x in c["entries"][1:]:
+        x["first_published"] = None
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    S.write_json(tmp_path / "events.json", e)
+    S.write_json(tmp_path / "regional_context.json", c)
+    return tmp_path, len(e["records"]), len(c["entries"])
+
+
+def test_stamp_first_published_fills_nulls_only_and_is_idempotent(tmp_path):
+    d, n_rec, n_ctx = _stamp_dir(tmp_path)
+    before = (d / "events.json").read_bytes()
+    counts = S.stamp(DAY1, curated=d, write=False)
+    assert counts == {"events.json": {"stamped": n_rec - 1, "kept": 1},
+                      "regional_context.json": {"stamped": n_ctx - 1, "kept": 1}}
+    assert (d / "events.json").read_bytes() == before, "a dry run wrote"
+    S.stamp(DAY1, curated=d)
+    recs = _json(d / "events.json")["records"]
+    assert recs[0]["first_published"] == "2026-11-12", "a date already there was overwritten"
+    assert all(r["first_published"] == DAY1 for r in recs[1:])
+    ents = _json(d / "regional_context.json")["entries"]
+    assert ents[0]["first_published"] == "2026-11-10" and all(x["first_published"] == DAY1 for x in ents[1:])
+    once = [(d / n).read_bytes() for n in ("events.json", "regional_context.json")]
+    assert S.stamp(DAY2, curated=d) == {"events.json": {"stamped": 0, "kept": n_rec},
+                                        "regional_context.json": {"stamped": 0, "kept": n_ctx}}
+    assert [(d / n).read_bytes() for n in ("events.json", "regional_context.json")] == once
+    assert all(b"\r" not in b for b in once)
+    _, _, lg = docs()
+    assert G.gate(_json(d / "events.json"), _json(d / "regional_context.json"), lg, ctx()) == []
+
+
+@pytest.mark.parametrize("bad", ["2026-13-01", "20261120", "tomorrow", "2026-11-1", "", "2026-02-30"])
+def test_stamp_first_published_refuses_a_malformed_date(tmp_path, bad):
+    d, _, _ = _stamp_dir(tmp_path)
+    before = (d / "events.json").read_bytes()
+    with pytest.raises(ValueError, match="is not a YYYY-MM-DD date"):
+        S.stamp(bad, curated=d)
+    assert (d / "events.json").read_bytes() == before
+
+
+def test_stamp_first_published_refuses_to_go_backwards(tmp_path):
+    d, _, _ = _stamp_dir(tmp_path)
+    before = [(d / n).read_bytes() for n in ("events.json", "regional_context.json")]
+    # The newest date already there is 2026-11-12 (a record); an entry's older date does not lower the bar.
+    with pytest.raises(ValueError, match="before 2026-11-12"):
+        S.stamp("2026-11-11", curated=d)
+    assert [(d / n).read_bytes() for n in ("events.json", "regional_context.json")] == before
+    assert S.stamp("2026-11-12", curated=d)["events.json"]["stamped"] > 0      # the same day is not backwards
+
+
+def test_the_committed_corpus_dates_first_published_or_leaves_it_pending():
+    e, c, _ = G.load_curated()
+    for row in e["records"] + c["entries"]:
+        assert row.get("first_published") is None or G._date_ok(row["first_published"])
+        assert not ("last_revised" in row and row.get("first_published") is None)
+
+
+def test_a_reimport_of_a_pending_record_or_entry_keeps_it_pending(tmp_path):
+    """After the migration every curated record and entry is pending (null). The next real import must
+    keep each one null, changed or not, and add no last_revised: the old stamp wrote the run date onto
+    anything whose first_published was empty."""
+    raw = {k: v for k, v in entry().items() if k not in ("review", "first_published")}
+    paths = make_queue(tmp_path, {"europe": [candidate(FRA), candidate(BRA)]}, context={"hormuz": [raw]})
+    run(paths)
+    # The curated files as the migration leaves them: a pending record that was once given a run date.
+    events = _json(paths["curated"] / "events.json")
+    assert all(r["first_published"] is None for r in events["records"])
+    edit_review(paths, "safety", "europe", FRA, verdict="accept_with_correction",
+                set={"summary": "SYNTHETIC FIXTURE. Reworded at the re-import."})
+    run(paths, date=DAY2)
+    got = curated_records(paths)
+    assert got[FRA]["summary"].endswith("re-import.")
+    for r in got.values():
+        assert r["first_published"] is None and "last_revised" not in r, r["impact_id"]
+    ent = _json(paths["curated"] / "regional_context.json")["entries"][0]
+    assert ent["first_published"] is None and "last_revised" not in ent
+
+
+# --- iteration-22 release closure: ties in the regional context are kept and listed (S2) ----------------
+
+def test_latest_by_type_lists_every_statement_that_shares_the_newest_as_of_date():
+    e, c, lg = docs()
+    tie = copy.deepcopy(next(x for x in c["entries"] if x["id"] == "ctx-2026-09-20-synthetic-shipping-statement"))
+    tie["id"] = "ctx-2026-09-20-synthetic-shipping-second-statement"
+    tie["claim"] = "SYNTHETIC FIXTURE. A second authority's statement as of the same day."
+    c["entries"].append(tie)
+    cx = G.build_payloads(e, c, lg, ctx(), AS_OF)[G.CONTEXT_OUT]
+    shipping = sorted(x["id"] for x in cx["entries"] if x["context_type"] == "shipping_status" and x["is_latest_of_type"])
+    # No tie-break: both are the latest, and the map says so.
+    assert shipping == ["ctx-2026-09-20-synthetic-shipping-second-statement", "ctx-2026-09-20-synthetic-shipping-statement"]
+    assert cx["latest_by_type"]["shipping_status"] == shipping
+    for ctype, ids in cx["latest_by_type"].items():
+        assert ids == sorted(x["id"] for x in cx["entries"] if x["context_type"] == ctype and x["is_latest_of_type"])
+    assert set(cx["latest_by_type"]) == {x["context_type"] for x in cx["entries"]}
+    assert [k for k in cx["latest_by_type"]] == [t["id"] for t in cx["context_types"] if t["id"] in cx["latest_by_type"]]
+    assert "none is chosen" in cx["latest_note"]
+    # Without the tie, one statement per type.
+    plain = payloads()[G.CONTEXT_OUT]["latest_by_type"]
+    assert all(len(ids) == 1 for ids in plain.values())
+    empty = G.build_payloads(e, {"context_id": "gulf_hormuz", "entries": []}, lg, ctx(), AS_OF)[G.CONTEXT_OUT]
+    assert empty["latest_by_type"] == {}
+
+
+def test_the_served_context_lists_its_ties():
+    out = ROOT / "data" / "processed" / G.CONTEXT_OUT
+    if not out.exists():
+        pytest.skip("no built regional context yet")
+    cx = _json(out)
+    for ctype, ids in cx["latest_by_type"].items():
+        assert ids == sorted(x["id"] for x in cx["entries"] if x["context_type"] == ctype and x["is_latest_of_type"])
+
+
+# --- iteration-22 release closure: the served precision wording distinguishes attack records (B2) -------
+
+GULF_ATTACK_COUNTRY = {"bh", "ir", "iq", "kw", "om", "qa", "ae"}
+
+
+def _recent_scope(system_ids, scope="The Gulf country systems."):
+    return B.recent_evidence({sid: (systems.system(sid)["name"], [], []) for sid in system_ids}, scope=scope,
+                             regional=True)["scope"]
+
+
+def test_the_recent_lists_say_where_attack_records_are_placed_and_saudi_keeps_its_policy():
+    """'First-level region at most' was true and misleading: seven Gulf systems place an attack record for
+    the country only, Saudi Arabia keeps first-level region on its page (owner decision, option B), and a
+    campaign-covered record is the country's in any list that sets records side by side."""
+    members = sorted(systems.GROUPS["gulf_littoral"]["members"])
+    # The policies the sentence reads. Changing Saudi Arabia's is an owner decision (option C), not this test's.
+    policy = {sid: (_json(B.SYSTEMS_CURATED / sid / "system.json")["geography"].get("precision_policy") or {})
+              for sid in members}
+    assert {s for s, p in policy.items() if p.get("kinetic") == "country"} == GULF_ATTACK_COUNTRY
+    assert policy["sa"].get("kinetic") in (None, "admin1")
+    for scope in (_recent_scope(members), _recent_scope(list(systems.COUNTRY_SYSTEMS), "The country systems.")):
+        assert "Precision is first-level region at most." not in scope
+        assert ("An attack or sabotage record is placed for the country only in Iran, Iraq, Kuwait, Oman, Qatar and "
+                "United Arab Emirates") in scope
+        assert "Bahrain places every record for the country only." in scope
+        assert "Saudi Arabia" in scope.split("In ")[-2] + scope.split("In ")[-1]
+        assert "attack records keep first-level region on the country page under the current policy" in scope
+        assert "a record covered by the campaign policy is shown for the country only" in scope
+        assert not re.search(r"\b(five|six|seven|eight|twelve|\d+)\b", scope), scope
+    gulf = _recent_scope(members)
+    assert "In Saudi Arabia, attack records keep first-level region" in gulf
+    assert "Canada" not in gulf
+
+
+def test_the_impact_scope_says_an_attack_record_is_the_countrys_everywhere():
+    imp = payloads()[G.IMPACTS_OUT]
+    assert "An attack or sabotage record is published for the country only, in every country" in imp["scope_statement"]
+    assert "first-level-region precision, never finer" in imp["scope_statement"]
+
+
+def test_the_built_recent_lists_carry_the_policy_sentence():
+    for rel in ("global/recent_evidence.json", "global/gulf.json"):
+        path = ROOT / "data" / "processed" / rel
+        if not path.exists():
+            pytest.skip("no build yet")
+        doc = _json(path)
+        scope = (doc.get("recent") or doc)["scope"]
+        assert "Precision is first-level region at most." not in scope
+        assert "attack records keep first-level region on the country page" in scope
+
+
+# --- iteration-22 release closure: the confidence model's validators gate the import and the build (S5) ---
+
+def _with_source_change(base, ref, **change):
+    c = candidate(base)
+    for s in c["sources"]:
+        if s["ref"] == ref:
+            s.update(change)
+    return c
+
+
+def test_the_import_refuses_a_citation_the_confidence_model_refuses(tmp_path):
+    """EC.source_problems reads a shortened link, a social-platform post filed as a web page and an
+    unreadable date as the model would read them, and the import gate refuses them, naming the record."""
+    assert "bit.ly" in EC.METHOD["shortener_hosts"] and "x.com" in EC.METHOD["social_hosts"]
+    short = _with_source_change(FRA, "s1", url="https://bit.ly/3SynthFx")
+    post = _with_source_change(BRA, "s1", url="https://x.com/example_operator/status/1234567890")
+    paths = make_queue(tmp_path, {"europe": [short], "latam": [post], "na": [candidate(USA)]})
+    report = run(paths)
+    assert set(curated_records(paths)) == {USA}
+    assert "a shortened link is not a citation" in reasons(report, FRA)
+    assert "the address is on a social platform: medium must be 'social'" in reasons(report, BRA)
+    # The build refuses the same records, by the same function.
+    e, c, lg = docs()
+    for r in e["records"]:
+        if r["impact_id"] == FRA:
+            r["sources"][0]["url"] = "https://bit.ly/3SynthFx"
+    with pytest.raises(ValueError, match="a shortened link is not a citation"):
+        G.build_payloads(e, c, lg, ctx(), AS_OF)
+    # And a context entry.
+    x = entry()
+    x["sources"][0]["url"] = "https://bit.ly/3SynthCx"
+    assert any("a shortened link" in p for p in G.context_problems([x]))
+
+
+@pytest.mark.parametrize("about, why", [
+    ("attribution", "is recorded in its own block (attribution.competing)"),
+    ("ai_involvement", "is recorded in its own block"),
+    ("severity", "dispute.about 'severity' is not one of"),
+])
+def test_the_build_refuses_a_dispute_the_confidence_model_refuses(about, why):
+    """The gate's shape check takes any string for `about`; what it may be is the model's validator's call."""
+    assert EC.DISPUTE_ABOUT == G.ids("dispute_about")
+    e, c, lg = docs()
+    r = next(x for x in e["records"] if x["impact_id"] == BRA)
+    r["dispute"]["about"] = about
+    with pytest.raises(ValueError, match=re.escape(why)):
+        G.build_payloads(e, c, lg, ctx(), AS_OF)
+    refused(r, why)
+    r["dispute"]["about"] = "cause"
+    assert problems(r) == []
+
+
+def test_an_s1_account_whose_identity_rests_on_a_badge_is_refused_and_the_rest_is_left_to_review():
+    r = rec(POL)
+    social = next(s for s in r["sources"] if s["medium"] == "social")["social"]
+    assert social["account_tier"] == "S1" and problems(r) == []
+    for badge in ("Verified account", "blue tick", "Official verified profile on X"):
+        social["identity_basis"] = badge
+        refused(r, "an S1 account's identity_basis names only a platform badge")
+    # Whether a stated basis really is the organisation's own site is the reviewer's reading.
+    social["identity_basis"] = "Listed on the operator's contact page (synthetic)."
+    assert problems(r) == []
+    # S2 to S4 are never sole evidence anyway; the badge rule is S1's.
+    social["account_tier"], social["identity_basis"] = "S2", "Verified account"
+    assert not any("platform badge" in p for p in problems(r))
+
+
+# --- iteration-22 release closure: a self-claim is not a competing attribution (B6/B7) ------------------
+
+SELF_CLAIM = {"actor": "Example Group G", "actor_type": "hacktivist",
+              "statement": "SYNTHETIC. Example Group G claimed the incident on its own channel, as Example Daily "
+                           "reported; the claim is unverified.", "source_refs": ["s2"]}
+
+
+def test_a_competing_entry_resting_only_on_a_self_claim_is_refused_and_belongs_in_self_claims():
+    r = rec(DEU)
+    r["attribution"]["competing"] = [{**SELF_CLAIM, "basis": ["actor_self_claim"]}]
+    refused(r, "attribution.competing[0] rests only on the actor's own claim")
+    refused(r, "put it in attribution.self_claims")
+    # The build refuses it too.
+    e, c, lg = docs()
+    e["records"] = [r if x["impact_id"] == DEU else x for x in e["records"]]
+    with pytest.raises(ValueError, match="put it in attribution.self_claims"):
+        G.build_payloads(e, c, lg, ctx(), AS_OF)
+    # A self-claim AND an independent basis is a credible alternative: allowed, and the record is disputed.
+    r["attribution"]["competing"][0]["basis"] = ["actor_self_claim", "government"]
+    assert not any("own claim" in p for p in problems(r))
+    assert EC.attribution_confidence(r["attribution"], r["sources"]) == "DISPUTED"
+    # A competing entry needs a basis from the vocabulary.
+    r["attribution"]["competing"][0]["basis"] = []
+    refused(r, "attribution.competing[0]: basis must list who advances it")
+
+
+def test_a_competing_entry_whose_every_source_is_the_actors_own_claim_is_refused():
+    r = rec(DEU)
+    r["sources"][1]["attribution_basis"] = "media_investigation"
+    r["sources"].append(dict(CHANNEL))
+    r["attribution"]["competing"] = [{**SELF_CLAIM, "basis": ["government"], "source_refs": ["s3"]}]
+    refused(r, "every source it cites is the actor's own claim")
+
+
+def test_self_claims_are_provenance_and_never_make_a_record_disputed():
+    base = rec(DEU)
+    before = EC.attribution_confidence(base["attribution"], base["sources"])
+    r = rec(DEU)
+    r["attribution"]["self_claims"] = [dict(SELF_CLAIM)]
+    assert problems(r) == []
+    got = EC.attribution_confidence(r["attribution"], r["sources"])
+    assert got == before and got != "DISPUTED"
+    served = next(x for x in payloads(events={"schema_version": 1, "records": [r]})[G.IMPACTS_OUT]["records"])
+    assert served["attribution"]["self_claims"] == [SELF_CLAIM] and served["attribution"]["confidence"] == before
+    # A second group's own channel, cited only for its claim, is not evidence about who did it: it does
+    # not turn the press reporting the first attribution into relays of a claim.
+    r["sources"].append(dict(CHANNEL))
+    r["attribution"]["self_claims"][0]["source_refs"] = ["s3"]
+    assert problems(r) == []
+    assert EC.attribution_confidence(r["attribution"], r["sources"]) == before
+
+
+def test_a_self_claim_needs_its_actor_type_statement_and_sources_that_resolve():
+    for change, why in ((dict(actor=""), "no actor"), (dict(actor_type="group"), "actor_type 'group'"),
+                        (dict(statement=" "), "no statement"), (dict(source_refs=[]), "attribution.self_claims[0]: no source"),
+                        (dict(source_refs=["s9"]), "source_refs ['s9'] name no source"),
+                        (dict(rank=1), "field 'rank' is not part of the contract")):
+        r = rec(DEU)
+        r["attribution"]["self_claims"] = [{**SELF_CLAIM, **change}]
+        refused(r, why)
+    r = rec(DEU)
+    r["attribution"]["self_claims"] = [{**SELF_CLAIM, "source_refs": ["s1"]}]     # s1 does not support attribution
+    refused(r, "is cited for attribution but does not support it")
+    r["attribution"]["self_claims"] = {"actor": "x"}
+    refused(r, "attribution.self_claims are lists")
+
+
+CHANNEL = {"ref": "s3", "url": "https://channel.example/synthetic/post/7070", "publisher": "Example Group G channel",
+           "date": "2025-09-03", "language": "en", "source_role": "actor_self_claim", "medium": "web", "social": None,
+           "supports": ["attribution"], "opened": True, "derived_claim": "Synthetic: Example Group G claims the incident."}
+
+
+def test_the_leads_normalisation_can_move_a_self_claim_out_of_competing(tmp_path):
+    c = candidate(DEU)
+    c["attribution"]["competing"] = [{**SELF_CLAIM, "basis": ["actor_self_claim"]}]
+    paths = make_queue(tmp_path, {"europe": [c]})
+    report = run(paths)
+    assert curated_records(paths) == {} and "put it in attribution.self_claims" in reasons(report, DEU)
+    lead_file(paths, "europe", {DEU: normalise(set={"attribution.competing": [], "attribution.self_claims": [dict(SELF_CLAIM)]})})
+    report = run(paths)
+    got = curated_records(paths)[DEU]
+    assert got["attribution"]["competing"] == [] and got["attribution"]["self_claims"] == [SELF_CLAIM]
+    assert got["review"]["lead_normalisation"] is True
+    e, cx, lg = G.load_curated(paths["curated"])
+    served = G.build_payloads(e, cx, lg, ctx(), AS_OF)[G.IMPACTS_OUT]["records"][0]
+    assert served["attribution"]["confidence"] not in ("DISPUTED", None)
+
+
+def test_a_self_claim_whose_only_source_a_reviewer_removed_is_dropped_and_said(tmp_path):
+    c = candidate(DEU)
+    c["sources"].append(dict(CHANNEL))
+    c["attribution"]["self_claims"] = [{**SELF_CLAIM, "source_refs": ["s3"]}]
+    paths = make_queue(tmp_path, {"europe": [c]})
+    run(paths)
+    assert curated_records(paths)[DEU]["attribution"]["self_claims"][0]["source_refs"] == ["s3"]
+    edit_review(paths, "safety", "europe", DEU, verdict="accept_with_correction", remove_sources=["s3"])
+    report = run(paths)
+    got = curated_records(paths)[DEU]
+    assert got["attribution"]["self_claims"] == [] and [s["ref"] for s in got["sources"]] == ["s1", "s2"]
+    assert any("1 self-claim(s) dropped" in n for n in report["notes"][DEU])
+
+
+# --- iteration-22 release closure: an end date is observed, never planned (B11) -----------------------
+
+def test_an_end_date_after_the_newest_source_is_refused():
+    r = rec(DEU)                                   # sources dated 2025-09-02 and 2025-09-20
+    assert problems(r) == []
+    r["date_end"] = "2025-09-20"                   # the newest source's own day: it could have seen it
+    assert problems(r) == []
+    r["date_end"] = "2025-09-21"
+    refused(r, "date_end 2025-09-21 is after 2025-09-20, the newest date among its sources")
+    # Judged against the NEWEST source, not the first: an end between the two is fine.
+    r["date_end"] = "2025-09-10"
+    assert problems(r) == []
+    # Precision is read conservatively on both sides.
+    r["date_end"] = "2025-09"                      # could mean any day of September
+    assert problems(r) == []
+    r["sources"][1]["date"] = "2025-09"            # a month-dated source could be from the 30th
+    r["date_end"] = "2025-09-30"
+    assert problems(r) == []
+    r["date_end"] = "2025-10"
+    refused(r, "date_end 2025-10 is after 2025-09")
+
+
+def test_the_end_date_rule_does_not_guess_at_an_undated_page():
+    r = rec(DEU)
+    r["date_end"] = "2025-10-01"
+    refused(r, "the newest date among its sources")
+    r["sources"][1]["date"], r["sources"][1]["date_basis"] = None, "undated_page"
+    assert not any("newest date among its sources" in p for p in problems(r))
+
+
+def test_the_import_refuses_a_planned_end_date(tmp_path):
+    paths = make_queue(tmp_path, {"europe": [candidate(DEU, date_end="2025-10-15"), candidate(FRA)]})
+    report = run(paths)
+    assert set(curated_records(paths)) == {FRA}
+    assert "is after 2025-09-20, the newest date among its sources" in reasons(report, DEU)

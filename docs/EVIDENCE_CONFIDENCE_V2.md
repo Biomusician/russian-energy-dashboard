@@ -167,8 +167,10 @@ attribution of the relayed basis; however many outlets carry it, and whatever ba
 together they add at most one, because they may all be one press conference. Organisations that
 are parent and child in the table are one.
 
-Methodology §6 still says `ATTRIBUTED` may rest on "several independent credible attributions that
-agree"; §8.2 and the code say it needs an official basis. The code follows §8.2.
+Methodology §6 used to say `ATTRIBUTED` could rest on "several independent credible attributions
+that agree". Since the iteration-22 closure, methodology §6, §8.2 and the code say the same thing: `ATTRIBUTED`
+needs at least one attribution source with a government or law-enforcement basis (by role, or
+declared on a first-party or press source); §6 spells out how a source's basis is read.
 
 ## 4. Properties (each tested and mutation-tested)
 
@@ -184,7 +186,7 @@ agree"; §8.2 and the code say it needs an official basis. The code follows §8.
   aid has no category.
 - No set of sources that are all claims, or relays of a claim, yields more than `CLAIM_ONLY`.
 - An AI status other than `NONE_REPORTED` needs a source that supports `ai_involvement`;
-  `CONFIRMED` needs a direct source, `ASSESSED` a direct or independent one; `NONE_REPORTED` with a
+  `CONFIRMED` needs a first-party or official source, `ASSESSED` a first-party or press source; `NONE_REPORTED` with a
   role, a relation or an AI source is refused; an anonymous post is never the sole evidence.
 
 The ten adversarial cases of the iteration-22 brief each have a test (`test_case_01` …
@@ -316,6 +318,10 @@ stay provisional, the version stays `2.0-draft`, and the theatre's multiplier is
   stay in the local queue (`data/candidates/eci_calibration/`); nothing here is served.
 <!-- calibration-results:end -->
 
+**Run 2 is prepared, not run**: population, labelers, the predeclared bar, the frozen method, key
+handling, the script changes it needs and the reviewer instructions are in
+`docs/ECI_CALIBRATION_RUN2_PLAN.md`. Without a human labeler from outside the build it does not run.
+
 ## 7. Limitations
 
 Known, and not fixed in this iteration. Each is a way the category can say more than the record
@@ -328,7 +334,7 @@ supports, or a rule the data cannot yet carry.
   in the corpus carries a per-source `cause` claim, and adding the claim means re-reviewing every
   malicious-cause record. The served statement says plainly that the category does not cover cause.
 - **AI statements are checked by who speaks, not by what they say (red team 18).** `CONFIRMED`
-  needs a direct source, but nothing records whether that source *states*, *assesses* or merely
+  needs a first-party or official source, but nothing records whether that source *states*, *assesses* or merely
   *suspects* AI involvement, or whether it is about this incident. Not implemented: it needs a
   `statement_strength` on every AI source, which no record carries.
 - **The per-country summary can be laid beside another country's (red team 20).** It is served in
@@ -344,9 +350,15 @@ supports, or a rule the data cannot yet carry.
   copies; a shortened link and a news aggregator count for nothing; one account under two
   platform names is one; a wire's own site, or a publisher that names a wire, is that wire
   (`origins.wires`); a basis made of badge words establishes no identity. `source_problems` and
-  `dispute_problems` list what a gate should refuse (an unknown medium, role or tier, `supports`
-  that is not a list of claims, an unreadable date). **They are not yet called by any gate**: the
-  import script is not this module's.
+  `dispute_problems` list what a gate refuses (an unknown medium, role or tier, `supports` that is
+  not a list of claims, an unreadable date, a dispute with no `about`). Since the iteration-22
+  closure they **gate the import and the build** (methodology §12). They are deterministic checks
+  of the record's own fields: they cannot tell that a valid role was the wrong one, so a mistyped
+  role remains a reviewer-error rate this module does not measure.
+- **Internet-measurement organisations are typed as researchers (open).** Their own direct
+  measurement is secondary today, so it never counts as an originating statement or earns effect
+  points. Whether it should be first-party for connectivity claims is a question for calibration
+  run 2, not a change: `docs/ECI_SOURCE_ROLE_MEMO_22.md`.
 - **What the origin count still cannot see (red team 6: B6, B7, B8, B17).** An operator's website
   and its account under a different publisher string; its investor-relations site on a second
   domain; a wire copy a lane filed as the outlet's own reporting. Only a reviewer marking `relays`

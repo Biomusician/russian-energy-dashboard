@@ -30,8 +30,13 @@ WHAT IT DOES, in order (docs/GLOBAL_IMPACT_METHODOLOGY.md §12; REVIEW_FORMAT.md
      a mandatory reason, that a date-and-class match is a DIFFERENT EVENT (a false match). It lifts
      no hold, and an attack record can never use it. `reconcile_allow.json` is no longer read.
   7. Runs the build's own gate on each record as it will be published, and refuses what it refuses.
-  8. Stamps `first_published` on records new to the curated file. An existing record keeps its
-     date; one whose content changed also gets `last_revised`. Running twice changes nothing.
+  8. Writes `first_published: null` ("pending its first release") on a record or context entry new
+     to the curated file: the import never writes its own run date there, because a record is
+     first published when a release serves it, not when it is imported. The release lead fills the
+     nulls with the release build's date (scripts/stamp_first_published.py). An existing date is
+     kept for the life of the record; a served record whose content changed also gets
+     `last_revised` (the run date). A record still pending gets none: a change before its first
+     release is not a revision. Running twice changes nothing.
   9. Rewrites the published research note from each lane's `lane_log.json`: process facts only.
 
 ALSO:
@@ -326,8 +331,10 @@ def prune_refs(r, refs, supports=None):
     keep(r.get("attribution"), "attribution")
     keep(r.get("ai_involvement"), "ai_involvement")
     keep(r.get("dispute"), None)
-    for c in ((r.get("attribution") or {}).get("competing") or []) if isinstance(r.get("attribution"), dict) else []:
-        keep(c, "attribution")
+    a = r.get("attribution") if isinstance(r.get("attribution"), dict) else {}
+    for name in ("competing", "self_claims"):
+        for c in a.get(name) or [] if isinstance(a.get(name), list) else []:
+            keep(c, "attribution")
 
 
 def reviewed_addenda(sources, review_id, taken, reviews, moved=False):
@@ -502,6 +509,12 @@ def normalise(r, notes):
             notes.append(f"{len(a['competing']) - len(kept)} competing attribution(s) dropped: no surviving source "
                          "supports them")
             a["competing"] = kept
+    if isinstance(a, dict) and isinstance(a.get("self_claims"), list):
+        # The same for an actor's own claim kept as provenance.
+        kept = [c for c in a["self_claims"] if not isinstance(c, dict) or c.get("source_refs")]
+        if len(kept) != len(a["self_claims"]):
+            notes.append(f"{len(a['self_claims']) - len(kept)} self-claim(s) dropped: no surviving source carries them")
+            a["self_claims"] = kept
     factors = r.get("contributing_factors") if isinstance(r.get("contributing_factors"), list) else []
     if (isinstance(a, dict) and a.get("status") == "UNKNOWN" and r.get("cause_family") in G.NOT_MALICIOUS
             and not set(factors) & set(G.MALICIOUS)):
@@ -545,6 +558,8 @@ def drop_unknown(r):
     keep(a, G.ATTRIBUTION_FIELDS, "attribution")
     for c in (a.get("competing") or []) if isinstance(a, dict) and isinstance(a.get("competing"), list) else []:
         keep(c, G.COMPETING_FIELDS, "attribution.competing")
+    for c in (a.get("self_claims") or []) if isinstance(a, dict) and isinstance(a.get("self_claims"), list) else []:
+        keep(c, G.SELF_CLAIM_FIELDS, "attribution.self_claims")
     keep(r.get("ai_involvement"), G.AI_FIELDS, "ai_involvement")
     keep(r.get("dispute"), G.DISPUTE_FIELDS, "dispute")
     keep(r.get("admin1"), ("code", "name"), "admin1")
@@ -626,14 +641,18 @@ def review_block(record, verdicts, reviewed_at, roles, full=True, lead_at=None):
 
 
 def stamp(new, old, date):
-    """`first_published` once, for the life of the record; `last_revised` when its content changes."""
+    """`first_published` and `last_revised` for a record or entry as this run will write it.
+
+    New to the curated file: `first_published` is null, pending the release that first serves it
+    (never this run's date: nothing has been served yet). Already served: its date is kept for the
+    life of the record, and `last_revised` is `date` when the content changed. Still pending: null
+    again, and no `last_revised`, because a change before the first release is not a revision."""
     def body(r):
         return {k: v for k, v in r.items() if k not in ("first_published", "last_revised")}
-    out = dict(new)
-    if old is None:
-        out["first_published"] = date
-    else:
-        out["first_published"] = old.get("first_published") or date
+    out = body(new)
+    served = old.get("first_published") if old is not None else None
+    out["first_published"] = served
+    if served is not None:
         if body(new) != body(old):
             out["last_revised"] = date
         elif "last_revised" in old:
@@ -1198,7 +1217,9 @@ def print_report(report):
 def main():
     ap = argparse.ArgumentParser(description="Import reviewed impact candidates into data/curated/global_impacts.")
     ap.add_argument("--date", default=dt.date.today().isoformat(),
-                    help="first_published for records new to the curated file (default: today)")
+                    help="last_revised for a served record whose content changed, and the research note's date "
+                         "(default: today). Never first_published: a new record is written pending its first "
+                         "release (null), and scripts/stamp_first_published.py dates it at release")
     ap.add_argument("--dry-run", action="store_true",
                     help="write nothing: print what would be imported per lane and every refusal with its reason")
     args = ap.parse_args()
