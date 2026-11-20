@@ -559,16 +559,6 @@
       "lane": "gulf_states",
       "scope": "impacts",
       "research_pass": "i22-gulf_states",
-      "family": "Country-system research queues, used as a discovery list",
-      "method": "read locally; every address reused was opened again before it was cited",
-      "window": "2022-01-01 to 2026-11-12",
-      "status": "complete as a discovery aid",
-      "limitation": "The queues were built for an energy-record threshold, not a civilian-service one; water, health and telecom were never their target."
-    },
-    {
-      "lane": "gulf_states",
-      "scope": "impacts",
-      "research_pass": "i22-gulf_states",
       "family": "Cyber incidents with a service effect, all seven countries",
       "method": "2 searches (one Arabic on the Kuwait incident, one English across the Gulf for 2026); a public tracker's country pages were tried by direct fetch",
       "window": "2022-01-01 to 2026-11-19",
@@ -583,7 +573,7 @@
       "method": "direct fetch of known addresses; 1 search for 2026 events",
       "window": "2022-01-01 to 2026-11-19",
       "status": "partial",
-      "limitation": "The ministry's own site and the Iraqi News Agency's pages were not opened; statements are read as carried. Other dated shortfalls in the country queue (2023-07-04, 2024-01-12, 2024-10-01, 2024-12-26, 2025-02, 2025-05, 2026-04-04, 2026-07-16) were not re-opened and are not filed. One search found no further nationwide blackout in June-September 2026; that is not proof of none."
+      "limitation": "The ministry's own site and the Iraqi News Agency's pages were not opened; statements are read as carried. Other reported shortfalls in the window were not re-opened in this pass and are not filed. One search found no further nationwide blackout in June-September 2026; that is not proof of none."
     },
     {
       "lane": "gulf_states",
@@ -624,6 +614,16 @@
       "window": "2024-07",
       "status": "complete for this incident",
       "limitation": "Okaz, Sabq and Al Arabiya refused the fetch (403). The regulator's own site and SPA were not opened. No systematic pass over the regulator's archive."
+    },
+    {
+      "lane": "gulf_states",
+      "scope": "impacts",
+      "research_pass": "i22-gulf_states",
+      "family": "The monitored country systems’ own research lists, used to find leads",
+      "method": "read locally; every address reused was opened again before it was cited",
+      "window": "2022-01-01 to 2026-11-12",
+      "status": "complete as a discovery aid",
+      "limitation": "Those lists were built for an energy-record threshold, not a civilian-service one; water, health and telecom were never their target."
     },
     {
       "lane": "gulf_states",
