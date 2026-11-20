@@ -1072,6 +1072,17 @@ a { color: var(--accent); }
   white-space: nowrap;
   border: 0;
 }
+/* "Skip to content" on the global pages: hidden like .sr-only until it has keyboard focus. */
+.skip-link {
+  position: absolute; left: 0; top: 0;
+  width: 1px; height: 1px; padding: 0; margin: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.skip-link:focus {
+  position: fixed; left: 8px; top: 8px; z-index: 1000;
+  width: auto; height: auto; margin: 0; padding: 10px 14px; clip: auto; overflow: visible;
+  background: var(--bg-panel); color: var(--accent); border: 2px solid var(--accent); border-radius: var(--radius);
+}
 
 
 /* ---------- compact chrome: measured tuning (hotfix §9/§10) ----------
@@ -1134,6 +1145,7 @@ html[data-chrome="compact"] .map-scope-note::after {
 }
 html[data-chrome="compact"] .map-scope-note:hover::after,
 html[data-chrome="compact"] .map-scope-note:focus-within::after { content: ""; }
+.map-scope-note:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Camera presets: a row of four buttons is fine at 1900px and crowds a 1000px map. The row
    scrolls rather than wrapping over the map or clipping off its right edge. */

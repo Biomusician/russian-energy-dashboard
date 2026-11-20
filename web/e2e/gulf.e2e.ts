@@ -150,7 +150,7 @@ test.describe("Gulf group", () => {
     }
     // A missing national value is words, never a zero.
     for (const s of systems) {
-      const row = rows.filter({ has: page.getByRole("button", { name: s.name, exact: true }) });
+      const row = rows.filter({ has: page.getByRole("button", { name: `${s.name}: open its page`, exact: true }) });
       for (const v of Object.values(s.values)) if (v == null) await expect(row).toContainText("no data");
     }
     for (const src of Object.values(g.sources) as { name: string }[]) {
@@ -278,7 +278,7 @@ test.describe("Gulf group", () => {
     await app.open("?group=gulf");
     const g = await gulf(page);
     const first = (g.systems as GulfSystem[])[0];
-    const link = page.locator(".group-table").getByRole("button", { name: first.name, exact: true });
+    const link = page.locator(".group-table").getByRole("button", { name: `${first.name}: open its page`, exact: true });
     await link.focus();
     await page.keyboard.press("Enter");
     await expect(page.getByRole("heading", { name: first.name, level: 1 })).toBeVisible();
@@ -670,7 +670,7 @@ test.describe("Gulf red team", () => {
     const g = await gulf(page);
     const first = (g.systems as GulfSystem[])[0];
     const context = page.getByRole("region", { name: "Regional energy context" });
-    const row = page.locator(".group-table tbody tr").filter({ has: page.getByRole("button", { name: first.name, exact: true }) });
+    const row = page.locator(".group-table tbody tr").filter({ has: page.getByRole("button", { name: `${first.name}: open its page`, exact: true }) });
     await expect(row.locator("td").nth(3)).toHaveText("no data");
     await expect(page.locator(".group-table tfoot td").nth(1)).toHaveText(`not summed: 1 of ${g.systems.length} members have no value`);
     await expect(page.locator(".group-table tfoot td").nth(1)).not.toContainText("% of world");

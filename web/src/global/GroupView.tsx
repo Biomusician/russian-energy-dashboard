@@ -521,7 +521,7 @@ export default function GroupView({ id }: { id: string }) {
                 <tbody>
                   {shown.map((s) => (
                     <tr key={s.system_id}>
-                      <td><button className="linklike" onClick={() => navigate(s.system_id)} {...prefetchOn(s.system_id)}>{s.name}</button></td>
+                      <td><button className="linklike" aria-label={`${s.name}: open its page`} onClick={() => navigate(s.system_id)} {...prefetchOn(s.system_id)}>{s.name}</button></td>
                       <td className="small">{s.gcc_member ? "member" : "not a member"}</td>
                       <td className="small">{s.opec_member ? "member" : "not a member"}</td>
                       {Object.entries(ctx.metrics).map(([k, x]) => <td key={k} className="mono small">{fmtValue(s.values[k], x.unit)}</td>)}

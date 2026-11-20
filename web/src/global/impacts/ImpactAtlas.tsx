@@ -203,7 +203,7 @@ function AtlasBody({ payload, method }: { payload: ImpactsPayload; method: Confi
           <summary>Research coverage</summary>
           <p>Status: {payload.research.status ?? "not recorded"}
             {payload.research.window && <>; window {fmtDate(payload.research.window.start)} to {payload.research.window.end === "present" ? "the present" : fmtDate(payload.research.window.end)}</>}.</p>
-          <h3 className="eyebrow">Source families searched</h3>
+          <h2 className="eyebrow">Source families searched</h2>
           <ul>
             {payload.research.source_families.map((f, i) => (
               <li key={i}>
@@ -214,10 +214,10 @@ function AtlasBody({ payload, method }: { payload: ImpactsPayload; method: Confi
             ))}
             {payload.research.source_families.length === 0 && <li>None recorded yet.</li>}
           </ul>
-          <h3 className="eyebrow">Regions worked</h3>
+          <h2 className="eyebrow">Regions worked</h2>
           <p>{(payload.research.regions_worked ?? []).join("; ") || "None recorded yet."} A region not listed was not searched:
             the absence of a record there says nothing about what happened there.</p>
-          <h3 className="eyebrow">Known limitations</h3>
+          <h2 className="eyebrow">Known limitations</h2>
           <ul>
             {(payload.research.limitations ?? []).map((l) => <li key={l}>{l}</li>)}
             {(payload.research.limitations ?? []).length === 0 && <li>None recorded yet.</li>}
@@ -266,7 +266,7 @@ function AtlasBody({ payload, method }: { payload: ImpactsPayload; method: Confi
           <p className="small dim record-export-note">The CSV holds the records shown here, after the filters. “About this file” downloads
             a note that explains its columns and limits.</p>
           {exportMsg && <p className="small" role="status">{exportMsg}</p>}
-          <p className="small dim atlas-bias" role="note">{BIAS_SHORT}</p>
+          <p className="small dim atlas-bias atlas-bias-short" role="note">{BIAS_SHORT}</p>
 
           <AtlasCountries all={allCountries} inView={inView} chosen={chosenCountries} codes={presenceCodes(shown)}
                           onPick={(a3) => setFilters(toggleChoice(state, "country", a3), true)} />
@@ -288,7 +288,7 @@ function AtlasBody({ payload, method }: { payload: ImpactsPayload; method: Confi
                       <div key={m.ym} className="atlas-month">
                         <h4 className="atlas-month-head">{monthHeading(m.ym)}</h4>
                         <ol className="atlas-cards">
-                          {m.records.map((r) => <li key={r.impact_id} className="atlas-card"><ImpactCard record={r} /></li>)}
+                          {m.records.map((r) => <li key={r.impact_id} className="atlas-card"><ImpactCard record={r} headingLevel={5} /></li>)}
                         </ol>
                       </div>
                     ))}
@@ -330,7 +330,10 @@ function AtlasCountries({ all, inView, chosen, codes, onPick }: {
   onPick: (a3: string) => void;
 }) {
   const [map, setMap] = useState(() => typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(min-width: 900px)").matches);
+  const [narrow] = useState(() => typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(max-width: 600px)").matches);
   const present = new Set(inView.map((c) => c.a3));
+  const listed = all.filter((c) => present.has(c.a3) || chosen.includes(c.a3));
+  const list = <CountryList listed={listed} chosen={chosen} onPick={onPick} />;
   return (
     <section className="panel atlas-countries" aria-labelledby="atlas-countries-head">
       <div className="home-section-head">
@@ -347,8 +350,23 @@ function AtlasCountries({ all, inView, chosen, codes, onPick }: {
           </Suspense>
         </PanelBoundary>
       )}
+      {narrow ? (
+        // On a phone the list (dozens of buttons, about 900 px) is closed by default, so the
+        // records are not pushed a screen further down. Chosen countries keep it open.
+        <details className="atlas-country-disclosure" open={chosen.length > 0}>
+          <summary>Show the {listed.length} {listed.length === 1 ? "country" : "countries"} (tap one to filter)</summary>
+          {list}
+        </details>
+      ) : list}
+      {inView.length === 0 && chosen.length === 0 && <p className="small dim">No country has a record in this view.</p>}
+    </section>
+  );
+}
+
+function CountryList({ listed, chosen, onPick }: { listed: ImpactCountry[]; chosen: string[]; onPick: (a3: string) => void }) {
+  return (
       <ul className="atlas-country-list" id="atlas-country-list" aria-label="Countries with a published record in this view">
-        {all.filter((c) => present.has(c.a3) || chosen.includes(c.a3)).map((c) => {
+        {listed.map((c) => {
           const on = chosen.includes(c.a3);
           return (
             <li key={c.a3}>
@@ -361,8 +379,6 @@ function AtlasCountries({ all, inView, chosen, codes, onPick }: {
           );
         })}
       </ul>
-      {inView.length === 0 && chosen.length === 0 && <p className="small dim">No country has a record in this view.</p>}
-    </section>
   );
 }
 

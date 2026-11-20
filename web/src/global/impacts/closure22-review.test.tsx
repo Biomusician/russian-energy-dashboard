@@ -17,7 +17,7 @@ import { ZERO_RECORD_IMPACT_NOTE, impactTabHref } from "../homeModel";
 import { GLOSSARY, glossaryEntry } from "../glossary";
 import { IMPACT_COLUMNS, IMPACT_FIELDS, SCORE_NOTE, readmeText } from "../recordCsv";
 import { readinessLabel } from "../manifest";
-import { causeDefinition } from "../GroupImpactSections";
+import { causeDefinition, itFailureDefinition } from "../GroupImpactSections";
 import type { ConfidenceMethod, ImpactRecord, ImpactsPayload, RegionalContext } from "./types";
 
 /** The first-time-user review's findings (iteration-22 closure), one block each. Every record is
@@ -162,5 +162,18 @@ describe("C9: nits", () => {
       .toBe("A disruption caused through computer systems or networks. Malicious: an attack, not an accident or a failure.");
     expect(causeDefinition({ definition: "A kinetic attack on a site.", malicious: true })).toBe("A kinetic attack on a site.");
     expect(causeDefinition({ definition: "A storm.", malicious: false })).toBe("A storm.");
+  });
+
+  it("the IT-failure definition says it is not an attack once", () => {
+    const served = "Digitally triggered without malice. Not a cyberattack, and never counted as one.";
+    expect(itFailureDefinition(served)).toBe(served);
+    expect(itFailureDefinition("Digitally triggered without malice.")).toBe("Digitally triggered without malice. Not an attack, and never listed as cyber.");
+    expect(itFailureDefinition(null).match(/never/g)).toHaveLength(1);
+  });
+
+  it("the glossary's Attributed is the implemented rule: a government or law-enforcement basis, not agreement alone", () => {
+    const e = glossaryEntry("attributed")!;
+    expect(e.plain).toContain("at least one source supporting the attribution has a government or law-enforcement basis");
+    expect(e.plain).not.toMatch(/several independent/);
   });
 });

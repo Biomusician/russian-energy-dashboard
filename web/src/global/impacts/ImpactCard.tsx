@@ -20,7 +20,7 @@ import "../../styles/impacts.css";
  *  An abstracted (attack or sabotage) record shows the country and nothing finer, with a note
  *  that the place is withheld. An attempt is labelled as one, in words.
  */
-export function ImpactCard({ record }: { record: ImpactRecord }) {
+export function ImpactCard({ record, headingLevel = 4 }: { record: ImpactRecord; headingLevel?: 4 | 5 }) {
   useImpactVocab();
   const r = record;
   const [open, setOpen] = useState(false);
@@ -99,7 +99,7 @@ export function ImpactCard({ record }: { record: ImpactRecord }) {
         {open ? "Close evidence inspector" : `Sources (${r.sources.length})`}
         <span className="sr-only">: evidence inspector for {when}, {place}</span>
       </button>
-      {open && <ImpactInspector id={panelId} record={r} onClose={() => { setOpen(false); toggleRef.current?.focus(); }} />}
+      {open && <ImpactInspector id={panelId} record={r} headingLevel={headingLevel} onClose={() => { setOpen(false); toggleRef.current?.focus(); }} />}
     </article>
   );
 }

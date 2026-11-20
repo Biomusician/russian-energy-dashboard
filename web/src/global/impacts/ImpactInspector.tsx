@@ -65,7 +65,10 @@ function SourceRow({ s, headlines }: { s: ImpactSource; headlines: boolean }) {
   );
 }
 
-export function ImpactInspector({ record, id, onClose }: { record: ImpactRecord; id?: string; onClose?: () => void }) {
+/** `headingLevel`: 5 where the card sits under an h4 (the atlas timeline's month headings), so the
+ *  outline nests; 4 elsewhere. */
+export function ImpactInspector({ record, id, onClose, headingLevel = 4 }: { record: ImpactRecord; id?: string; onClose?: () => void; headingLevel?: 4 | 5 }) {
+  const H = headingLevel === 5 ? "h5" : "h4";
   useImpactVocab();
   const { method, failed } = useConfidenceMethod(true);
   const r = record;
@@ -76,7 +79,7 @@ export function ImpactInspector({ record, id, onClose }: { record: ImpactRecord;
   return (
     <section id={id} className="ev-inspector imp-inspector small" aria-label="Evidence inspector"
              onKeyDown={(e) => { if (e.key === "Escape" && onClose) { e.stopPropagation(); onClose(); } }}>
-      <h4>What each claim rests on</h4>
+      <H>What each claim rests on</H>
       <ul className="imp-chain">
         {chain.map((c) => (
           <li key={c.claim}>
@@ -95,7 +98,7 @@ export function ImpactInspector({ record, id, onClose }: { record: ImpactRecord;
 
       {selfClaims.length > 0 && (
         <>
-          <h4>Self-claims of responsibility (unverified)</h4>
+          <H>Self-claims of responsibility (unverified)</H>
           <ul className="imp-self-claims">
             {selfClaims.map((c, i) => {
               const cited = r.sources.filter((s) => (Array.isArray(c.source_refs) ? c.source_refs : []).includes(s.ref)).map(publisherOf);
@@ -111,25 +114,25 @@ export function ImpactInspector({ record, id, onClose }: { record: ImpactRecord;
         </>
       )}
 
-      <h4>Sources ({r.sources.length})</h4>
+      <H>Sources ({r.sources.length})</H>
       <ul className="imp-sources">
         {r.sources.map((s) => <SourceRow key={s.ref} s={s} headlines={headlines} />)}
       </ul>
       {!headlines && <p className="dim">Source headlines are not shown for an attack or sabotage record.</p>}
 
-      <h4>Evidence confidence: {confidenceLabel(r.evidence_confidence)}</h4>
+      <H>Evidence confidence: {confidenceLabel(r.evidence_confidence)}</H>
       {r.evidence_confidence && r.evidence_confidence.category != null
         ? <ConfidenceBreakdown value={r.evidence_confidence} method={method} failed={failed} />
         : <p className="imp-not-assessed">{r.evidence_confidence?.reason ?? NO_CONFIDENCE_REASON}</p>}
 
       {r.inclusion_basis != null && (
         <>
-          <h4>Why this record is included</h4>
+          <H>Why this record is included</H>
           <p>{labelOf("inclusion_bases", r.inclusion_basis)}: {definitionOf("inclusion_bases", r.inclusion_basis) ?? ""}</p>
         </>
       )}
 
-      <h4>What the evidence does not establish</h4>
+      <H>What the evidence does not establish</H>
       <ul className="ev-inspector-limits">
         {notEstablished(r).map((line, i) => <li key={i}>{line}</li>)}
       </ul>

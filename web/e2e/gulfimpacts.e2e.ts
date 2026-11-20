@@ -693,7 +693,9 @@ test.describe("Gulf overview: a broken impact file", () => {
     const region = page.getByRole("region", { name: "Reviewed impact records for this region" });
     await expect(region.getByRole("alert")).toContainText("That is a failed download, not a finding");
     expect(await region.innerText()).not.toMatch(/No impact record/);
-    await expect(section(page, "services").getByRole("alert")).toContainText("could not be loaded");
+    // The services section says it too, as a polite status: one failed file is one alert.
+    await expect(section(page, "services").getByRole("status").filter({ hasText: "could not be loaded" })).toHaveCount(1);
+    await expect(page.getByRole("alert").filter({ hasText: "impact" })).toHaveCount(1);
     // The context timeline, a different file, is unaffected.
     await expect(section(page, "context").locator(".ctx-entry")).toHaveCount(context.entries.length);
     await expect(page.getByRole("region", { name: "Recent reviewed events in this region" })).toBeVisible();

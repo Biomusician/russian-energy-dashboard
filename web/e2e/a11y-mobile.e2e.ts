@@ -200,9 +200,20 @@ test.describe("landmarks, headings and names", () => {
     await openView(page, "");
     await expect(page.getByRole("region", { name: /Start here/ })).toBeVisible();
     expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
-    // The first Tab reaches the top of the page, not the middle.
+    // The first Tab reaches the top of the page, not the middle: "Skip to content" (iteration 22
+    // closure), shown once it has focus, then the site's home link.
+    await page.keyboard.press("Tab");
+    const skip = page.getByRole("link", { name: "Skip to content" });
+    await expect(skip).toBeFocused();
+    expect((await skip.boundingBox())!.width).toBeGreaterThan(40);
     await page.keyboard.press("Tab");
     await expect(page.getByRole("link", { name: "Energy Disruption Monitor, home" })).toBeFocused();
+    // Activating it moves focus to the page's main content, without changing the address.
+    await skip.focus();
+    const before = page.url();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("main")).toBeFocused();
+    expect(page.url()).toBe(before);
   });
 
   test("the theatre's reading order reaches the header before the drawer toggles on the map", async ({ page }) => {

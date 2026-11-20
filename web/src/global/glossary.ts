@@ -93,7 +93,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     id: "attributed",
     term: "Attributed",
     aliases: ["formal attribution", "attributed attack"],
-    plain: "A government or law-enforcement body has formally attributed the incident to an actor, or several independent credible sources attribute it to the same one. The site reports who attributes; it asserts nothing itself.",
+    plain: "A government or law-enforcement body has formally attributed the incident to an actor: at least one source supporting the attribution has a government or law-enforcement basis. Agreement among other sources, however many, is not enough on its own. The site reports who attributes; it asserts nothing itself.",
     detail: "Records always read \"X attributed this to Y\", never \"Y did it\". An attribution needs at least one official source, and its date is shown because attributions often come long after the event.",
     served: (m) => definition(m, "attribution_statuses", "ATTRIBUTED"),
   },

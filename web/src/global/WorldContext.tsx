@@ -150,7 +150,8 @@ function NationalTable({ ctx, partly, onContext, systemNames }: { ctx: EnergyCon
           {rows.map((r) => (
             <tr key={r.a3}>
               <td>
-                <button className="linklike" onClick={() => { if (r.system_id) navigate(r.system_id); else onContext(r.a3); }}>{r.name}</button>
+                <button className="linklike" aria-label={`${r.name}: ${r.system_id ? "open its page" : "show its national figures on the map"}`}
+                        onClick={() => { if (r.system_id) navigate(r.system_id); else onContext(r.a3); }}>{r.name}</button>
               </td>
               <td className="small dim">{partly.has(r.a3) ? "Partly monitored"
                 : r.system_id ? (systemNames[r.system_id] && systemNames[r.system_id] !== r.name ? `Monitored, in the ${systemNames[r.system_id]} system` : "Monitored")

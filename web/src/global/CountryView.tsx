@@ -199,6 +199,17 @@ export default function CountryView({ id }: { id: string }) {
     detailsRef.current?.scrollIntoView({ block: "start" });
     detailsRef.current?.focus({ preventScroll: true });
   }, [jump]);
+  // A link that names a tab (`?sys=ir&tab=impacts`) brings that tab into view once the page has
+  // drawn (iteration 22 closure): on a phone it is a screen or more below the map. "nearest" leaves
+  // a tab that is already on screen where it is. Focus is not moved on load.
+  const [deepTab] = useState(() => { const t = tabFromSearch(window.location.search); return t != null && t !== DEFAULT_TAB; });
+  const deepDone = useRef(false);
+  useEffect(() => {
+    if (!deepTab || deepDone.current || !bundle || !detailsRef.current) return;
+    deepDone.current = true;
+    const reduce = !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    detailsRef.current.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+  }, [deepTab, bundle]);
 
   const today = localISODate(new Date());
   // The confidence filter lists its categories in the method's own order (iteration 22).

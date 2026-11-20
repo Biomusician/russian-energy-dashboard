@@ -139,6 +139,11 @@
 @media (max-width: 600px) {
   .atlas-main { padding-left: 12px; padding-right: 12px; }
   .atlas-badge { white-space: normal; }
+  /* One caveat statement above the records on a phone (iteration 22 closure): the bias note stays;
+     the first two caveats are repeated in "What this is / is not", and the short restatement under
+     the filters repeats the bias note. Nothing is removed, only not said three times. */
+  .atlas-caveats, .atlas-bias-short { display: none; }
+  .atlas-country-disclosure > summary { min-height: 44px; display: list-item; padding: 10px 0; }
   .atlas-country, .global-main a.atlas-preset { min-height: 36px; }
   .impact-card .event-facts > div { grid-template-columns: 1fr; gap: 1px; }
   .conf-components { font-size: 11px; }

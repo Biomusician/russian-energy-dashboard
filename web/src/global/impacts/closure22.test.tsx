@@ -165,7 +165,7 @@ describe("a null first_published is pending its first release, never a date", ()
   it("the CSV cell is empty and its definition says why", () => {
     expect(impactRow(old()).first_published).toBe("");
     expect(impactRecordsCsv([old()])).not.toMatch(BAD);
-    expect(IMPACT_FIELDS.first_published).toMatch(/Empty: not yet served, pending its first release/);
+    expect(IMPACT_FIELDS.first_published).toContain("Empty (null in the served data): not yet served, pending its first release.");
   });
 
   it("What's New gives no first-published date for it", () => {

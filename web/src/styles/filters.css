@@ -64,7 +64,8 @@
 .rf-sheet .rf-options label { padding: 9px 2px; font-size: 13px; min-height: 44px; align-items: center; }
 .rf-sheet .rf-options input { width: 18px; height: 18px; }
 .rf-sheet .rf-custom input[type="date"] { min-height: 44px; }
-.rf-sheet-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-top: 1px solid var(--line-soft); padding-top: 10px; }
+/* Sticky, like the head: "Showing N of M" stays in sight while a reader chooses (iteration 22 closure). */
+.rf-sheet-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-top: 1px solid var(--line-soft); padding: 10px 0 4px; position: sticky; bottom: -14px; background: var(--bg-panel); z-index: 1; }
 .rf-sheet-foot p { flex: 1 1 100%; margin: 0; color: var(--text); }
 .rf-sheet-done { border-color: var(--accent-dim); color: var(--accent); }
 

@@ -137,8 +137,11 @@ function Loading({ what }: { what: string }) {
   return <p className="small dim" role="status">Loading {what}…</p>;
 }
 
-function Failed({ what, still }: { what: string; still: string }) {
-  return <p className="warn-text small" role="alert">{what} could not be loaded. {still}</p>;
+/** One failed file is ONE alert (iteration 22 closure): the impact records say it as an alert; the
+ *  other sections that read the same file say it too, as a polite status, so a screen reader is not
+ *  interrupted three times with the same news. */
+function Failed({ what, still, alert = true }: { what: string; still: string; alert?: boolean }) {
+  return <p className="warn-text small" role={alert ? "alert" : "status"}>{what} could not be loaded. {still}</p>;
 }
 
 // ---- reported impacts ---------------------------------------------------------------------------
@@ -271,6 +274,13 @@ export function causeDefinition(f: { definition?: string; malicious?: boolean | 
   return f.malicious === true && !/malic|attack/i.test(d) ? `${d} Malicious: an attack, not an accident or a failure.` : d;
 }
 
+/** The IT-failure definition, saying once that it is not an attack: the served definition already
+ *  says so ("never counted as one"), and repeating it read as a stutter. */
+export function itFailureDefinition(served: string | null): string {
+  const d = served ?? "Digitally triggered without malice, such as a faulty software update or a system failure.";
+  return /\bnever\b/i.test(d) ? d : `${d} Not an attack, and never listed as cyber.`;
+}
+
 function Services({ payload, members }: { payload: ImpactsPayload; members: readonly string[] }) {
   const records = useMemo(() => groupRecords(payload, members), [payload, members]);
   const groups = useMemo(() => serviceGroups(records, payload.vocabularies), [records, payload]);
@@ -283,8 +293,7 @@ function Services({ payload, members }: { payload: ImpactsPayload; members: read
       <p className="small dim">Every record names one reported cause, from the list below. The words are the taxonomy's own.</p>
       <dl className="small cause-kinds">
         {families.map((f) => <div key={String(f.id)}><dt>{f.label}</dt><dd>{causeDefinition(f)}</dd></div>)}
-        {/* The served definition already says it is not an attack; the fallback says it here. */}
-        <div><dt>{itLabel}</dt><dd>{definition(payload, "digital_categories", IT_FAILURE) ?? "Digitally triggered without malice, such as a faulty software update or a system failure. Not an attack, and never listed as cyber."}</dd></div>
+        <div><dt>{itLabel}</dt><dd>{itFailureDefinition(definition(payload, "digital_categories", IT_FAILURE))}</dd></div>
       </dl>
 
       <h3>Documented effects on civilian services, by service</h3>
@@ -340,7 +349,7 @@ function Services({ payload, members }: { payload: ImpactsPayload; members: read
 
 export function ServicesSection({ impacts, members }: { impacts: Loaded<ImpactsPayload>; members: readonly string[] }) {
   if (impacts.state === "loading") return <Loading what="the impact records" />;
-  if (impacts.state === "failed") return <Failed what="The impact records" still="That is a failed download, not a finding." />;
+  if (impacts.state === "failed") return <Failed what="The impact records" still="That is a failed download, not a finding." alert={false} />;
   return <Services payload={impacts.data} members={members} />;
 }
 
@@ -437,7 +446,7 @@ export function CoverageSection({ impacts, systems }: { impacts: Loaded<ImpactsP
     <>
       <h3>How the impact layer was researched</h3>
       {impacts.state === "loading" && <Loading what="the research summary" />}
-      {impacts.state === "failed" && <Failed what="The impact layer's research summary" still="Each country's own coverage, below, is unaffected." />}
+      {impacts.state === "failed" && <Failed what="The impact layer's research summary" still="Each country's own coverage, below, is unaffected." alert={false} />}
       {impacts.state === "ready" && (
         <>
           <p className="small">

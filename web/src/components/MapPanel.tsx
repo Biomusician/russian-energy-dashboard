@@ -1337,7 +1337,9 @@ export default function MapPanel({
         )}
       </div>
 
-      <div className="map-scope-note">
+      {/* Focusable (iteration 22 closure): on a compact map the note collapses and expands on
+          hover or focus-within, and with nothing focusable inside it a keyboard could never open it. */}
+      <div className="map-scope-note" tabIndex={0} role="note" aria-label="What this map shows (scope note)">
         {/* This note must disclaim what THIS product actually is. It previously carried
             order-of-battle vocabulary ("basing", "unit positions", "readiness") inherited from a
             sibling project, which disclaimed things that do not exist here and omitted the two

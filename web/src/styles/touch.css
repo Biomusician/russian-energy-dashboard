@@ -36,6 +36,16 @@
   .global-page summary {
     min-height: 24px;
   }
+  /* Iteration 22 closure: the evidence-confidence "Why?" (28 x 15 px on every impact card), the
+     reporting-environment "…?" links and the member names in the home and Gulf tables (15 px tall)
+     reach the AA size too. A min-height only: the line keeps its text, and nothing moves sideways. */
+  .conf-why,
+  .disclosure-button.linklike,
+  .global-page button.linklike {
+    min-height: 24px;
+    min-width: 24px;
+  }
+  .global-page td button.linklike { padding: 2px 0; }
   .global-page summary { display: list-item; padding: 3px 0; }
 
   /* ---- the theatre ---- */
