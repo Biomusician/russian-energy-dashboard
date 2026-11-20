@@ -1325,7 +1325,8 @@
           ],
           "opened": false,
           "derived_claim": "UN News live coverage of 13 November 2026: transits remain below pre-conflict levels, according to UK Maritime Trade Operations; no baseline period stated.",
-          "origin": "UKMTO"
+          "origin": "UKMTO",
+          "added_by": "lead"
         }
       ],
       "first_published": null,
@@ -1469,7 +1470,8 @@
             "occurrence"
           ],
           "opened": false,
-          "derived_claim": "UN meetings coverage of 13 November 2026: the assistant secretary-general warned that shipping volumes remain below pre-conflict levels."
+          "derived_claim": "UN meetings coverage of 13 November 2026: the assistant secretary-general warned that shipping volumes remain below pre-conflict levels.",
+          "added_by": "lead"
         }
       ],
       "first_published": null,

@@ -219,7 +219,8 @@
             "effect"
           ],
           "opened": false,
-          "derived_claim": "Trade press of 31 January 2022 quoting the energy minister: the electricity restrictions on industrial plants were lifted as of 29 January 2022."
+          "derived_claim": "Trade press of 31 January 2022 quoting the energy minister: the electricity restrictions on industrial plants were lifted as of 29 January 2022.",
+          "added_by": "lead"
         }
       ],
       "episode_id": null,
@@ -2779,7 +2780,8 @@
             "effect"
           ],
           "opened": false,
-          "derived_claim": "Operator statement of 1 July 2022: Stage 4 load shedding continues until 22:00 (previously Stage 6), then Stage 2."
+          "derived_claim": "Operator statement of 1 July 2022: Stage 4 load shedding continues until 22:00 (previously Stage 6), then Stage 2.",
+          "added_by": "lead"
         }
       ],
       "episode_id": null,
@@ -5243,7 +5245,8 @@
             "effect"
           ],
           "opened": false,
-          "derived_claim": "Operator statement of 9 December 2022: load shedding is currently at Stage 5 until 05:00 on Saturday, then Stage 4 and Stage 2 over the weekend."
+          "derived_claim": "Operator statement of 9 December 2022: load shedding is currently at Stage 5 until 05:00 on Saturday, then Stage 4 and Stage 2 over the weekend.",
+          "added_by": "lead"
         }
       ],
       "episode_id": "ep-zaf-electricity-load-shedding-2022-2024",
@@ -7314,7 +7317,8 @@
           "opened": false,
           "title_original": "Final Report: Victoria market suspension on 22 April 2023",
           "title_en": "Final Report: Victoria market suspension on 22 April 2023",
-          "derived_claim": "Final market event report (May 2024): the operator suspended the electricity spot market in Victoria from 16:20 on 22 April 2023 to 17:00 on 23 April 2023 after a total loss of SCADA across the state's transmission assets."
+          "derived_claim": "Final market event report (May 2024): the operator suspended the electricity spot market in Victoria from 16:20 on 22 April 2023 to 17:00 on 23 April 2023 after a total loss of SCADA across the state's transmission assets.",
+          "added_by": "lead"
         }
       ],
       "episode_id": null,
@@ -18741,7 +18745,8 @@
             "effect"
           ],
           "opened": false,
-          "derived_claim": "Operator statement of 28 February 2025: load shedding remains suspended."
+          "derived_claim": "Operator statement of 28 February 2025: load shedding remains suspended.",
+          "added_by": "lead"
         }
       ],
       "episode_id": null,
