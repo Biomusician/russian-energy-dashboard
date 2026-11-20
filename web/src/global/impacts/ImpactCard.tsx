@@ -4,7 +4,7 @@ import { AiLine } from "./AiLine";
 import { AttributionLine } from "./AttributionLine";
 import { ConfidenceChip } from "./ConfidenceChip";
 import { ImpactInspector } from "./ImpactInspector";
-import { DISRUPTION, impactDateText, isAbstracted, isHistoricalAddition, isItFailure, placeText, serviceLine } from "./model";
+import { DISRUPTION, impactDateText, isAbstracted, isHistoricalAddition, isItFailure, isMaliciousCause, placeText, serviceLine } from "./model";
 import { definitionOf, isAbsenceWord, labelOf, lowerLabel, useImpactVocab } from "./vocab";
 import type { ImpactRecord } from "./types";
 import "../../styles/country.css";
@@ -83,7 +83,7 @@ export function ImpactCard({ record }: { record: ImpactRecord }) {
           <span className="impact-line-label">Disputed:</span> {lowerLabel("dispute_about", r.dispute.about)}. {r.dispute.statement}
         </p>
       )}
-      <AttributionLine a={r.attribution} />
+      <AttributionLine a={r.attribution} maliciousCause={isMaliciousCause(r)} />
       <AiLine ai={r.ai_involvement} />
       <ConfidenceChip value={r.evidence_confidence} />
       {abstracted && (

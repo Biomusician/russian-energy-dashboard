@@ -16,10 +16,11 @@ import { ImpactCard } from "./ImpactCard";
 import { loadConfidenceMethod, loadImpacts } from "./load";
 import { attempts as attemptsOf, disruptions, monthHeading } from "./model";
 import {
-  PAGE, activePreset, atlasFilterDefs, atlasPresets, corpusSummary, countriesPresent, groupByMonth, presenceCodes, presetQuery,
+  PAGE, activePreset, atlasFilterDefs, atlasPresets, corpusSummary, countriesPresent, groupByMonth, presenceCodes, presetCount,
+  presetEmptyText, presetQuery,
 } from "./atlasModel";
 import { labelOf } from "./vocab";
-import type { ConfidenceMethod, ImpactRecord, ImpactsPayload } from "./types";
+import type { ConfidenceMethod, ImpactCountry, ImpactRecord, ImpactsPayload } from "./types";
 import "../../styles/home.css";
 import "../../styles/impacts.css";
 
@@ -133,6 +134,7 @@ function AtlasBody({ payload, method }: { payload: ImpactsPayload; method: Confi
   const attempts = useMemo(() => attemptsOf(payload), [payload]);
   const defs = useMemo(() => atlasFilterDefs(payload, method), [payload, method]);
   const presets = useMemo(() => atlasPresets(payload), [payload]);
+  const presetCounts = useMemo(() => new Map(presets.map((p) => [p.id, presetCount(p, defs, records, today)])), [presets, defs, records, today]);
   const { state, notes } = useMemo(() => decodeFilters(search, defs), [search, defs]);
   const shown = useMemo(() => applyFilters(records, defs, state, today), [records, defs, state, today]);
   const shownAttempts = useMemo(() => applyFilters(attempts, defs, state, today), [attempts, defs, state, today]);
@@ -151,8 +153,11 @@ function AtlasBody({ payload, method }: { payload: ImpactsPayload; method: Confi
   const page = shown.slice(0, limit);
   const filterLines = describeFilters(defs, state, today);
 
+  const [exportMsg, setExportMsg] = useState<string | null>(null);
   const downloadCsv = () => {
-    downloadBlob(new Blob([impactRecordsCsv(shown)], { type: "text/csv;charset=utf-8" }), csvFilename("impacts", "records", payload.as_of));
+    const name = csvFilename("impacts", "records", payload.as_of);
+    downloadBlob(new Blob([impactRecordsCsv(shown)], { type: "text/csv;charset=utf-8" }), name);
+    setExportMsg(`Saved ${name}: ${shown.length} of ${records.length} published records.`);
   };
   const downloadReadme = () => {
     const name = csvFilename("impacts", "records", payload.as_of);
@@ -168,6 +173,7 @@ function AtlasBody({ payload, method }: { payload: ImpactsPayload; method: Confi
       columns: IMPACT_COLUMNS, fields: IMPACT_FIELDS,
     });
     downloadBlob(new Blob([text], { type: "text/plain;charset=utf-8" }), readmeFilename(name));
+    setExportMsg(`Saved ${readmeFilename(name)}.`);
   };
 
   return (
@@ -236,18 +242,30 @@ function AtlasBody({ payload, method }: { payload: ImpactsPayload; method: Confi
                    title={p.meaning}
                    onClick={(e) => { if (!plainClick(e)) return; e.preventDefault(); go(href.slice(1), true); }}>
                   {/* The tick is decoration: "chosen" is said in words and by aria-current. */}
-                  {on && <span aria-hidden="true">✓&nbsp;</span>}{p.label}{on && <span className="sr-only"> (chosen; activate to clear)</span>}
+                  {on && <span aria-hidden="true">✓&nbsp;</span>}{p.label}
+                  {" "}<span className="atlas-preset-n">{presetCounts.get(p.id) ?? 0}<span className="sr-only"> published records</span></span>
+                  {on && <span className="sr-only"> (chosen; activate to clear)</span>}
                 </a>
               );
             })}
           </nav>
           {chosenPreset && <p className="small dim atlas-preset-meaning">{presets.find((p) => p.id === chosenPreset)?.meaning}</p>}
+          {chosenPreset && presetCounts.get(chosenPreset) === 0 && (
+            <p className="small atlas-preset-empty" role="status">{presetEmptyText(presets.find((p) => p.id === chosenPreset)!)}</p>
+          )}
 
           <RecordFilterBar defs={defs} state={state} onChange={(next) => setFilters(next)} records={records} shown={shown.length}
                            today={today} noun="published records" notes={notes}>
-            <button type="button" className="ghost" onClick={downloadCsv} disabled={shown.length === 0}>Download CSV</button>
-            <button type="button" className="ghost" onClick={downloadReadme}>About this file</button>
+            <span className="record-export" role="group" aria-label="Download the records shown">
+              <button type="button" className="ghost" onClick={downloadCsv} disabled={shown.length === 0}
+                      aria-label={`Download CSV of the ${shown.length} ${shown.length === 1 ? "record" : "records"} shown`}>Download CSV</button>
+              <button type="button" className="ghost" onClick={downloadReadme}
+                      aria-label="About this file: download the note that explains the CSV">About this file</button>
+            </span>
           </RecordFilterBar>
+          <p className="small dim record-export-note">The CSV holds the records shown here, after the filters. “About this file” downloads
+            a note that explains its columns and limits.</p>
+          {exportMsg && <p className="small" role="status">{exportMsg}</p>}
           <p className="small dim atlas-bias" role="note">{BIAS_SHORT}</p>
 
           <AtlasCountries all={allCountries} inView={inView} chosen={chosenCountries} codes={presenceCodes(shown)}
@@ -296,10 +314,19 @@ function AtlasBody({ payload, method }: { payload: ImpactsPayload; method: Confi
   );
 }
 
+/** The words beside a country that is one of the monitored systems, or part of the Russia, Belarus
+ *  and Crimea theatre (iteration 22 closure). In text, not colour only. A country without one is an
+ *  impact-record country: no index, no research-maturity claim, no implied complete corpus. */
+export function monitoredTag(c: Pick<ImpactCountry, "system_id" | "theatre">): string | null {
+  if (c.system_id) return "monitored system";
+  if (c.theatre) return "monitored theatre";
+  return null;
+}
+
 /** The countries with a record in the view: the map's text alternative, and the country filter.
  *  Alphabetical, names only. No count stands beside a name. */
 function AtlasCountries({ all, inView, chosen, codes, onPick }: {
-  all: { a3: string; name: string }[]; inView: { a3: string; name: string }[]; chosen: string[]; codes: string[];
+  all: ImpactCountry[]; inView: { a3: string; name: string }[]; chosen: string[]; codes: string[];
   onPick: (a3: string) => void;
 }) {
   const [map, setMap] = useState(() => typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(min-width: 900px)").matches);
@@ -326,7 +353,9 @@ function AtlasCountries({ all, inView, chosen, codes, onPick }: {
           return (
             <li key={c.a3}>
               <button type="button" className={`atlas-country${on ? " is-on" : ""}`} aria-pressed={on} onClick={() => onPick(c.a3)}>
-                {on && <span aria-hidden="true">✓&nbsp;</span>}{c.name}<span className="sr-only">{on ? ": remove from the country filter" : ": show only this country"}</span>
+                {on && <span aria-hidden="true">✓&nbsp;</span>}{c.name}
+                {monitoredTag(c) && <>{" "}<span className="atlas-monitored-tag">({monitoredTag(c)})</span></>}
+                <span className="sr-only">{on ? ": remove from the country filter" : ": show only this country"}</span>
               </button>
             </li>
           );

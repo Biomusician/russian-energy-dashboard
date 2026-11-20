@@ -5,7 +5,7 @@ import SimpleMap from "./SimpleMap";
 import SystemSwitcher from "./SystemSwitcher";
 import ResearchCoverage from "./ResearchCoverage";
 import {
-  CAMPAIGN_STATE_LABEL, LANGUAGE_LABEL, languageNames, ENVIRONMENT_LABEL, READINESS_LABEL, RECOVERY_KIND_LABEL, RECOVERY_LABEL, RESEARCH_COMPLETENESS_LABEL,
+  CAMPAIGN_STATE_LABEL, LANGUAGE_LABEL, languageNames, ENVIRONMENT_LABEL, readinessLabel, RECOVERY_KIND_LABEL, RECOVERY_LABEL, RESEARCH_COMPLETENESS_LABEL,
   SECTOR_STATE_LABEL, labelFor, type CountrySystem, type SourceEntry, loadCountry, loadManifest, type CountryBundle, type CountryEvent, type Episode,
   type ManifestSystem, type SourceHealth,
 } from "./manifest";
@@ -365,7 +365,7 @@ export default function CountryView({ id }: { id: string }) {
         <div>
           <div className="eyebrow">Evidence readiness</div>
           <div className={`badge readiness-${sys.evidence_readiness.toLowerCase()}`}>
-            {READINESS_LABEL[sys.evidence_readiness]}
+            {readinessLabel(sys.evidence_readiness, sys.event_summary.recorded_events)}
           </div>
         </div>
         <div>

@@ -11,7 +11,7 @@
  */
 import { fmtDate } from "../../data";
 import { isAbstractedImpact } from "../recordCsv";
-import { isAbsenceWord, labelOf, lowerLabel } from "./vocab";
+import { isAbsenceWord, labelOf, lowerLabel, vocabulary } from "./vocab";
 import type { AffectedFigure, AiInvolvement, Attribution, ImpactRecord, ImpactSource, ImpactsPayload, SelfClaim, ServiceImpact } from "./types";
 
 export const DISRUPTION = "disruption";
@@ -206,6 +206,21 @@ export function sourceKind(s: ImpactSource): string {
   return `${labelOf("source_roles", s.source_role)}, ${lowerLabel("media", s.medium)}`;
 }
 
+const MALICIOUS_FALLBACK: readonly string[] = ["kinetic", "cyber", "sabotage"];
+
+/** Whether the record's reported cause, or a contributing factor, is a malicious kind of cause
+ *  (iteration 22 closure). Read from the served cause vocabulary's `malicious` flag; where the
+ *  vocabulary has not loaded, kinetic, cyber and sabotage. "unknown" and "civil disruption" are not
+ *  established as malicious, so they are not. */
+export function isMaliciousCause(r: Pick<ImpactRecord, "cause_family" | "contributing_factors">): boolean {
+  const served = vocabulary("cause_families");
+  const malicious = (id: string) => {
+    const e = served.find((x) => String(x.id) === id) as { malicious?: boolean | null } | undefined;
+    return e && typeof e.malicious === "boolean" ? e.malicious : MALICIOUS_FALLBACK.includes(id);
+  };
+  return [r.cause_family, ...(r.contributing_factors ?? [])].some(malicious);
+}
+
 /** The actors' own claims of responsibility on an attribution, as served. A malformed or absent
  *  list is no claims; an entry with neither an actor nor a statement says nothing and is dropped. */
 export function selfClaimsOf(a: Attribution | null | undefined): SelfClaim[] {
@@ -229,7 +244,8 @@ export const SELF_CLAIM_NOTE = "An actor's own claim of responsibility, recorded
 export function notEstablished(r: ImpactRecord): string[] {
   const out: string[] = [];
   const a = r.attribution;
-  if (a.status === "UNKNOWN") out.push("Who was responsible. No credible public attribution was found; that is not the same as a low-confidence attribution.");
+  if (a.status === "UNKNOWN" && !isMaliciousCause(r)) out.push("Whether the cause was malicious at all. The reported cause is not established as malicious, so there is no attribution question to answer yet.");
+  else if (a.status === "UNKNOWN") out.push("Who was responsible. No credible public attribution was found; that is not the same as a low-confidence attribution.");
   else if (a.status === "CLAIMED") out.push("That the actor who claimed responsibility carried it out. A claim is not corroboration.");
   else if (a.status === "SUSPECTED") out.push("Who was responsible. A source names a likely actor without a firm attribution.");
   else if (a.status === "ASSESSED") out.push("A formal government or law-enforcement attribution. One body's assessment is reported, with its date.");

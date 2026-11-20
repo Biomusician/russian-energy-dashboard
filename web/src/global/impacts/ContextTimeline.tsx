@@ -56,7 +56,10 @@ function Entry({ e, latestOfType }: { e: ContextEntry; latestOfType: number }) {
   return (
     <li className={`ctx-entry${latestOfType > 0 ? " ctx-latest" : " ctx-historical"}`}>
       <div className="ctx-head">
-        <span className="mono ctx-date">{fmtDate(e.date)}</span>
+        {/* "As of" leads: it is the date the statement describes. The statement's own date comes
+            second, and only where it differs. */}
+        <span className="mono ctx-date">As of {fmtDate(e.as_of)}</span>
+        {e.date !== e.as_of && <span className="ctx-published"> · statement dated {fmtDate(e.date)}</span>}
         <span className="ctx-source"> · {publishers(e.sources)} · </span>
         <span className="event-tag">{labelOf("context_types", e.context_type)}</span>
       </div>

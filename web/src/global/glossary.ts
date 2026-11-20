@@ -183,6 +183,13 @@ export const GLOSSARY: GlossaryEntry[] = [
     detail: "It is an expanding corpus, not a census: disclosure laws differ, operators may not disclose and conflicts distort reporting. Its counts are published records, never rates, and are never compared or ranked between countries. A country that appears only there is not a monitored system.",
   },
   {
+    id: "impact-record-country",
+    term: "Impact-record country",
+    aliases: ["impact record country", "not monitored", "monitored system", "impact layer only", "atlas only"],
+    plain: "A country that appears only in the impact atlas, because a reviewed impact record names it. It is not one of the monitored systems.",
+    detail: "It has no index, no claim about how far its research has got, and no implied complete set of records: the atlas lists what was reviewed and published, not everything that happened there. In the atlas's country list the monitored systems carry a \"monitored system\" tag; a country without the tag is an impact-record country.",
+  },
+  {
     id: "national-context",
     term: "National energy context",
     aliases: ["context", "context only", "world map", "energy production", "national figures"],
@@ -207,7 +214,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     id: "placement",
     term: "Placement: National, Several regions, One region",
     aliases: ["national", "several regions", "multiple regions", "country level", "one region", "first-level region", "where", "placed"],
-    plain: "How precisely a record is placed. Every page uses the same four words.",
+    plain: `How precisely a record is placed. Every page uses the same four placements: ${PLACEMENTS.map((k) => PLACEMENT_LABEL[k]).join("; ")}.`,
     detail: PLACEMENTS.map((k) => `${PLACEMENT_LABEL[k]}: ${PLACEMENT_MEANING[k]}`).join(" ")
       + " A record is never placed more precisely than one first-level region, and never at a facility's coordinates.",
   },

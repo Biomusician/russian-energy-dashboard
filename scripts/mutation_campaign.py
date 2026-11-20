@@ -2220,7 +2220,7 @@ ITER22_ATLAS_MUTATIONS = [
      [(IMP + "model.ts", _text('sources: r.sources.filter((s) => s.supports.includes(claim)) }));', 'sources: r.sources }));'))],
      "atlas_inspector_says_which_source_supports_which_claim"),
     ("the confidence score is called a probability",
-     [(IMP + "ConfidenceChip.tsx", _text(': ordinal score, not a probability.', ': the probability that the report is right.'))],
+     [(IMP + "ConfidenceChip.tsx", _text(': ordinal score, not a probability and not a share of a maximum.', ': the probability that the report is right.'))],
      "atlas_confidence_is_words_with_the_served_caveat"),
     ("an absent evidence confidence renders as the lowest category",
      [(IMP + "model.ts", _text('  if (!c || c.category == null) return NOT_ASSESSED_LABEL;', '  if (!c || c.category == null) return "Preliminary";'))],

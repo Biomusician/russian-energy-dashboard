@@ -9,7 +9,7 @@ import {
   AttributionLine, ContextTimeline, ImpactCard, loadImpacts, loadRegionalContext,
   type ImpactRecord, type ImpactResearch, type ImpactsPayload, type RegionalContext,
 } from "./impacts";
-import { impactDateText, isItFailure, placeText } from "./impacts/model";
+import { impactDateText, isItFailure, isMaliciousCause, placeText } from "./impacts/model";
 import { labelOf, lowerLabel } from "./impacts/vocab";
 import { contextDescribes } from "./impacts/brief/briefInputs";
 import {
@@ -256,11 +256,19 @@ function DigitalRow({ r }: { r: ImpactRecord }) {
         {r.cyber_mechanism && <span className="event-tag">{isItFailure(r) ? "IT failure" : "Mechanism"}: {lowerLabel("cyber_mechanisms", r.cyber_mechanism)}</span>}
       </div>
       <p className="small digital-summary">{r.summary}</p>
-      <AttributionLine a={r.attribution} />
+      <AttributionLine a={r.attribution} maliciousCause={isMaliciousCause(r)} />
       <p className="small dim digital-foot">Evidence confidence: {confidenceWord(r)}.{" "}
         <a href={`#${impactAnchor(r.impact_id)}`}>Full record and sources<span className="sr-only">: {when}, {place}</span></a></p>
     </li>
   );
+}
+
+/** A cause's served definition. A malicious cause whose definition does not say so (the served
+ *  "cyber" reads "caused through computer systems") says it here, so cyber is never read as an
+ *  ordinary IT failure. */
+export function causeDefinition(f: { definition?: string; malicious?: boolean | null }): string {
+  const d = f.definition ?? "No definition is served for this cause.";
+  return f.malicious === true && !/malic|attack/i.test(d) ? `${d} Malicious: an attack, not an accident or a failure.` : d;
 }
 
 function Services({ payload, members }: { payload: ImpactsPayload; members: readonly string[] }) {
@@ -274,8 +282,9 @@ function Services({ payload, members }: { payload: ImpactsPayload; members: read
       <h3>What each reported cause means</h3>
       <p className="small dim">Every record names one reported cause, from the list below. The words are the taxonomy's own.</p>
       <dl className="small cause-kinds">
-        {families.map((f) => <div key={String(f.id)}><dt>{f.label}</dt><dd>{f.definition ?? "No definition is served for this cause."}</dd></div>)}
-        <div><dt>{itLabel}</dt><dd>{definition(payload, "digital_categories", IT_FAILURE) ?? "Digitally triggered without malice, such as a faulty software update or a system failure."} Not an attack, and never listed as cyber.</dd></div>
+        {families.map((f) => <div key={String(f.id)}><dt>{f.label}</dt><dd>{causeDefinition(f)}</dd></div>)}
+        {/* The served definition already says it is not an attack; the fallback says it here. */}
+        <div><dt>{itLabel}</dt><dd>{definition(payload, "digital_categories", IT_FAILURE) ?? "Digitally triggered without malice, such as a faulty software update or a system failure. Not an attack, and never listed as cyber."}</dd></div>
       </dl>
 
       <h3>Documented effects on civilian services, by service</h3>

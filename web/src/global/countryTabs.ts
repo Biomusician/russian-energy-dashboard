@@ -21,7 +21,7 @@ export const DEFAULT_TAB: Tab = "events";
 
 export const TAB_LABEL: Record<Tab, string> = {
   events: "Published energy disruptions",
-  impacts: "Cyber & civilian services",
+  impacts: "Impact records (not scored)",
   regional: "Gulf & Hormuz context",
   sectors: "Sectors",
   context: "National energy context",

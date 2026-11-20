@@ -408,7 +408,10 @@ test.describe("Gulf overview: regional context", () => {
     const sorted = [...context.entries].sort((a, b) => (a.date < b.date ? 1 : -1));
     for (const [i, e] of sorted.entries()) {
       const row = entries.nth(i);
-      await expect(row.locator(".ctx-date")).toHaveText(shown(e.date));
+      // "As of" leads each card; the statement's own date follows only where it differs.
+      await expect(row.locator(".ctx-date")).toHaveText(`As of ${shown(e.as_of)}`);
+      await expect(row.locator(".ctx-published")).toHaveCount(e.date === e.as_of ? 0 : 1);
+      if (e.date !== e.as_of) await expect(row.locator(".ctx-published")).toContainText(`statement dated ${shown(e.date)}`);
       await expect(row.locator(".ctx-head")).toContainText(e.sources[0].publisher);
       await expect(row.locator(".ctx-sources a").first()).toHaveAttribute("href", /^https?:\/\//);
       await expect(row.locator(".ctx-asof")).toContainText(e.is_latest_of_type ? `As of ${shown(e.as_of)}` : `Historical statement, as of ${shown(e.as_of)}`);

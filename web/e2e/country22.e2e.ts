@@ -113,7 +113,7 @@ test.describe("first screen of a country with no published record", () => {
 });
 
 test.describe("the new tabs", () => {
-  test("Cyber & civilian services lists this country's impact records, says what the list is, and exports it", async ({ app, page }) => {
+  test("Impact records (not scored) lists this country's impact records, says what the list is and why it differs, and exports it", async ({ app, page }) => {
     await app.open("?sys=ir");
     const mine = await impactsOf(page, "ir");
     await overviewLink(page, "impacts").click();
@@ -124,6 +124,8 @@ test.describe("the new tabs", () => {
     const panel = page.locator(".country-impacts");
     await expect(panel.getByRole("heading", { name: TAB_LABEL.impacts, level: 2 })).toBeVisible();
     await expect(panel.locator(".impacts-what")).toContainText("not part of this country's published energy-disruption record and enter no count or index");
+    expect(TAB_LABEL.impacts).toBe("Impact records (not scored)");
+    await expect(panel.locator(".impacts-inclusion")).toContainText("so an event can appear here and not there. Impact records never enter a score.");
     await expect(panel.locator(".impact-list").first().locator(".impact-card")).toHaveCount(mine.records.length);
     if (mine.records.length === 0) {
       await expect(panel).toContainText("That describes this corpus, not Iran.");

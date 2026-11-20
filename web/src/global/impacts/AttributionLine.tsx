@@ -51,13 +51,25 @@ export function SelfClaims({ claims }: { claims: readonly SelfClaim[] }) {
   );
 }
 
-export function AttributionLine({ a }: { a: Attribution | null | undefined }) {
+/** `maliciousCause`: whether the record's reported cause is a malicious kind (isMaliciousCause).
+ *  false turns an UNKNOWN attribution into "no attribution question": "malicious or possibly
+ *  malicious" is not said of a grid fault or a cause nobody has established. Omitted: as before. */
+export function AttributionLine({ a, maliciousCause }: { a: Attribution | null | undefined; maliciousCause?: boolean }) {
   useImpactVocab();
   if (!a) return null;
   const selfClaims = selfClaimsOf(a);
   if (a.status === "NOT_APPLICABLE") {
     // Nothing to attribute. A claim on record is still provenance, and still only a claim.
     return selfClaims.length > 0 ? <div className="attr-line attr-not_applicable small"><SelfClaims claims={selfClaims} /></div> : null;
+  }
+  if (a.status === "UNKNOWN" && maliciousCause === false) {
+    return (
+      <div className="attr-line attr-no-question small">
+        <span className="impact-line-label">Attribution:</span> no attribution question
+        <span className="dim"> — the reported cause is not malicious, or not established as malicious.</span>
+        <SelfClaims claims={selfClaims} />
+      </div>
+    );
   }
   if (a.status === "UNKNOWN") {
     return (

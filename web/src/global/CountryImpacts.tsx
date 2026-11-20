@@ -5,7 +5,7 @@ import { confidenceMethod, labelOf, useImpactVocab } from "./impacts/vocab";
 import { RecordFilterBar } from "./RecordFilterBar";
 import { NO_FILTERS, activeFilters, applyFilters, describeFilters, type FilterState } from "./recordFilters";
 import { countryImpacts, impactFiles, impactFilters, impactOrder } from "./countryImpactModel";
-import { IMPACT_CORPUS_LINE, noImpactRecordText, type ImpactPresence } from "./countryOverview";
+import { IMPACT_CORPUS_LINE, IMPACT_INCLUSION_LINE, noImpactRecordText, type ImpactPresence } from "./countryOverview";
 import { TAB_LABEL } from "./countryTabs";
 import { inSentence } from "./countryCopy";
 import { downloadBlob } from "../download";
@@ -13,7 +13,7 @@ import { fmtDate } from "../data";
 import "../styles/country.css";
 import "../styles/countryOverview.css";
 
-/** The "Cyber & civilian services" tab of a country page (iteration 22).
+/** The "Impact records (not scored)" tab of a country page (iteration 22).
  *
  *  This country's records from the global impact layer: a separate, non-scored corpus. The tab
  *  says so before it lists anything, and nothing here reaches the country's published-record
@@ -68,6 +68,7 @@ export function CountryImpacts({ sys, impacts, today }: { sys: CountrySystem; im
     <div className="country-impacts">
       <h2>{TAB_LABEL.impacts}</h2>
       <p className="small impacts-what" role="note">{IMPACT_CORPUS_LINE}</p>
+      <p className="small impacts-inclusion">{IMPACT_INCLUSION_LINE}</p>
       {(impacts.state === "not_loaded" || impacts.state === "loading") && <p className="small dim" role="status">Loading the impact corpus…</p>}
       {impacts.state === "failed" && (
         <p className="small warn-text" role="alert">The impact corpus could not be loaded. The rest of this page is not affected; reopen this tab to try again.</p>
