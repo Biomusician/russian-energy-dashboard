@@ -168,7 +168,7 @@ together they add at most one, because they may all be one press conference. Org
 are parent and child in the table are one.
 
 Methodology §6 used to say `ATTRIBUTED` could rest on "several independent credible attributions
-that agree". Since the iteration-22 closure §6, §8.2 and the code say the same thing: `ATTRIBUTED`
+that agree". Since the iteration-22 closure, methodology §6, §8.2 and the code say the same thing: `ATTRIBUTED`
 needs at least one attribution source with a government or law-enforcement basis (by role, or
 declared on a first-party or press source); §6 spells out how a source's basis is read.
 

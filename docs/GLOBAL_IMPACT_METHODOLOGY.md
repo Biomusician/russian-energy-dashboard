@@ -126,8 +126,7 @@ for the effect. The effect leads with the degradation: the build refuses a disru
 effect sentence says nothing was affected, because that is an attempt. `civilian_service_impact`
 carries no affected figure (an entry, if any, has `affected: null`): no customers were affected,
 and the operator's customer base is not a figure for this record (§4). `inclusion_basis` is 5 or 1,
-whichever test was met. The record never names the
-control system, its make or vendor, an interface, a protocol or how access was gained (§2); never
+whichever test was met. The record never names the control system, its make or vendor, an interface, a protocol or how access was gained (§2); never
 describes the redundancy, backup or manual capability that held, or evaluates it; and never says
 whether the function is restored now (§2: no current status of anything attacked).
 
@@ -314,8 +313,8 @@ iteration 22). An `ATTRIBUTED` record with a non-empty `competing` list has attr
 - `competing` lists a **credible alternative attribution advanced by a source other than the
   actor**: a government, investigator, victim or press investigation naming a different actor.
   A non-empty list makes attribution confidence `DISPUTED`, whatever the status.
-- `self_claims` is provenance for an **actor's own unverified claim** (that it did it, or that
-  someone else did not). A self-claim goes there, never in `competing`, and never yields `DISPUTED`:
+- `self_claims` is provenance for an **actor's own unverified claim** of responsibility, by the
+  record's actor or by anyone else. A self-claim goes there, never in `competing`, and never yields `DISPUTED`:
   a group claiming an incident another body attributes elsewhere is a claim beside an attribution,
   not credible sources disagreeing.
 - `CLAIMED` is not `ATTRIBUTED`. However many outlets report a claim, it stays a claim (§8.2).
