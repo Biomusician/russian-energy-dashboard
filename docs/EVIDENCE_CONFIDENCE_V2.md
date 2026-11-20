@@ -346,9 +346,11 @@ supports, or a rule the data cannot yet carry.
   copies; a shortened link and a news aggregator count for nothing; one account under two
   platform names is one; a wire's own site, or a publisher that names a wire, is that wire
   (`origins.wires`); a basis made of badge words establishes no identity. `source_problems` and
-  `dispute_problems` list what a gate should refuse (an unknown medium, role or tier, `supports`
-  that is not a list of claims, an unreadable date). **They are not yet called by any gate**: the
-  import script is not this module's.
+  `dispute_problems` list what a gate refuses (an unknown medium, role or tier, `supports` that is
+  not a list of claims, an unreadable date, a dispute with no `about`). Since the iteration-22
+  closure they **gate the import and the build** (methodology §12). They are deterministic checks
+  of the record's own fields: they cannot tell that a valid role was the wrong one, so a mistyped
+  role remains a reviewer-error rate this module does not measure.
 - **What the origin count still cannot see (red team 6: B6, B7, B8, B17).** An operator's website
   and its account under a different publisher string; its investor-relations site on a second
   domain; a wire copy a lane filed as the outlet's own reporting. Only a reviewer marking `relays`
