@@ -1,4 +1,5 @@
 import { fmtDate } from "../../data";
+import { anyTie, latestCounts, latestEntries } from "./latestOfType";
 import { definitionOf, labelOf, lowerLabel, useImpactVocab } from "./vocab";
 import type { ContextEntry, ContextMetric, ImpactSource, RegionalContext } from "./types";
 import "../../styles/impacts.css";
@@ -7,7 +8,8 @@ import "../../styles/impacts.css";
  *
  *  Dated statements, newest first, each "<date> · <source> · <claim>". There is NO status flag:
  *  nothing here says "open" or "closed". The newest statement of each type is marked "as of" its
- *  own date; older ones are marked "historical statement". A figure is shown with its unit and with
+ *  own date; where several share the newest date, every one is marked and the copy says so in the
+ *  plural (latestOfType.ts). Older ones are marked "historical statement". A figure is shown with its unit and with
  *  what it measures, in the source's words.
  *
  *  The caveat block is fixed and always rendered: aggregate regional context only; no vessels,
@@ -40,10 +42,19 @@ export function metricText(m: ContextMetric): string | null {
   return `${q ? `${q} ` : ""}${n(m.value)}${unit}`;
 }
 
-function Entry({ e }: { e: ContextEntry }) {
+/** The "as of" line. `latestOfType` is how many statements share the type's newest place: 0 for
+ *  an older statement, 1 for the one newest, more when several share the newest date. */
+export function asOfText(e: Pick<ContextEntry, "as_of" | "context_type">, latestOfType: number): string {
+  const type = lowerLabel("context_types", e.context_type);
+  if (latestOfType > 1) return `As of ${fmtDate(e.as_of)}: one of the ${latestOfType} most recent ${type} statements on record. Not a current status.`;
+  if (latestOfType === 1) return `As of ${fmtDate(e.as_of)}: the most recent ${type} statement on record. Not a current status.`;
+  return `Historical statement, as of ${fmtDate(e.as_of)}. A later statement of this type is listed above.`;
+}
+
+function Entry({ e, latestOfType }: { e: ContextEntry; latestOfType: number }) {
   const metric = e.metric ? metricText(e.metric) : null;
   return (
-    <li className={`ctx-entry${e.is_latest_of_type ? " ctx-latest" : " ctx-historical"}`}>
+    <li className={`ctx-entry${latestOfType > 0 ? " ctx-latest" : " ctx-historical"}`}>
       <div className="ctx-head">
         <span className="mono ctx-date">{fmtDate(e.date)}</span>
         <span className="ctx-source"> · {publishers(e.sources)} · </span>
@@ -53,11 +64,7 @@ function Entry({ e }: { e: ContextEntry }) {
       {metric && e.metric && (
         <p className="ctx-metric small">Figure: <strong>{metric}</strong>{e.metric.basis ? ` — ${e.metric.basis}` : ""}</p>
       )}
-      <p className="small ctx-asof">
-        {e.is_latest_of_type
-          ? <>As of {fmtDate(e.as_of)}: the most recent {lowerLabel("context_types", e.context_type)} statement on record. Not a current status.</>
-          : <>Historical statement, as of {fmtDate(e.as_of)}. A later statement of this type is listed above.</>}
-      </p>
+      <p className="small ctx-asof">{asOfText(e, latestOfType)}</p>
       <ul className="ctx-sources small">
         {e.sources.map((s) => (
           <li key={s.ref}>
@@ -77,6 +84,9 @@ export function ContextTimeline({ ctx }: { ctx: RegionalContext }) {
   // cannot put an old statement on top.
   const entries = [...ctx.entries].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.id < b.id ? -1 : 1));
   const types = ctx.context_types.filter((t) => entries.some((e) => e.context_type === String(t.id)));
+  const latest = latestEntries(entries, ctx.latest_by_type);
+  const counts = latestCounts(entries, latest);
+  const tie = anyTie(counts);
   return (
     <section className="ctx-timeline" aria-label={ctx.label}>
       <p className="small">{ctx.statement}</p>
@@ -86,7 +96,7 @@ export function ContextTimeline({ ctx }: { ctx: RegionalContext }) {
       </div>
       {entries.length === 0
         ? <p className="small dim">{ctx.empty_reason ?? "No reviewed statement is published yet. That is an absence of published statements, not a statement that nothing was said."}</p>
-        : <ol className="ctx-entries">{entries.map((e) => <Entry key={e.id} e={e} />)}</ol>}
+        : <ol className="ctx-entries">{entries.map((e) => <Entry key={e.id} e={e} latestOfType={latest.has(e) ? counts.get(e.context_type) ?? 1 : 0} />)}</ol>}
       {types.length > 0 && (
         <details className="ctx-types small">
           <summary>What each kind of statement means</summary>
@@ -97,7 +107,9 @@ export function ContextTimeline({ ctx }: { ctx: RegionalContext }) {
           </dl>
         </details>
       )}
-      {ctx.latest_note && <p className="small dim">“As of” marks the newest statement of each kind by its own date; it is the most recent statement on record, not a current status.</p>}
+      {ctx.latest_note && <p className="small dim">{tie
+        ? "“As of” marks the newest statements of each kind by their own date; where several share the newest date, every one of them is marked. Each is among the most recent statements on record, not a current status."
+        : "“As of” marks the newest statement of each kind by its own date; it is the most recent statement on record, not a current status."}</p>}
     </section>
   );
 }

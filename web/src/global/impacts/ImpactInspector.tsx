@@ -1,7 +1,10 @@
 import { fmtDate } from "../../data";
 import { LANGUAGE_LABEL, dirFor } from "../manifest";
 import { ConfidenceBreakdown, useConfidenceMethod } from "./ConfidenceChip";
-import { NO_CONFIDENCE_REASON, claimSupport, confidenceLabel, isAbstracted, notEstablished, originsText, sourceKind } from "./model";
+import {
+  NO_CONFIDENCE_REASON, SELF_CLAIM_NOTE, claimSupport, confidenceLabel, isAbstracted, notEstablished, originsText, selfClaimText,
+  selfClaimsOf, sourceKind,
+} from "./model";
 import { definitionOf, labelOf, lowerLabel, useImpactVocab, vocabulary } from "./vocab";
 import type { ImpactRecord, ImpactSource } from "./types";
 import "../../styles/impacts.css";
@@ -69,6 +72,7 @@ export function ImpactInspector({ record, id, onClose }: { record: ImpactRecord;
   const headlines = !isAbstracted(r);
   const chain = claimSupport(r, vocabulary("claims").map((c) => String(c.id)));
   const originsBasis = r.evidence_confidence?.components?.origins?.basis ?? null;
+  const selfClaims = selfClaimsOf(r.attribution);
   return (
     <section id={id} className="ev-inspector imp-inspector small" aria-label="Evidence inspector"
              onKeyDown={(e) => { if (e.key === "Escape" && onClose) { e.stopPropagation(); onClose(); } }}>
@@ -87,6 +91,24 @@ export function ImpactInspector({ record, id, onClose }: { record: ImpactRecord;
         <p className="dim imp-origins">
           Across {r.sources.length} {r.sources.length === 1 ? "citation" : "citations"}: {originsText(r.origin_count, originsBasis)}.
         </p>
+      )}
+
+      {selfClaims.length > 0 && (
+        <>
+          <h4>Self-claims of responsibility (unverified)</h4>
+          <ul className="imp-self-claims">
+            {selfClaims.map((c, i) => {
+              const cited = r.sources.filter((s) => (Array.isArray(c.source_refs) ? c.source_refs : []).includes(s.ref)).map(publisherOf);
+              return (
+                <li key={i} className="attr-self-claim">
+                  <span className="impact-line-label">Self-claim (unverified):</span> {selfClaimText(c)}
+                  <span className="dim"> {cited.length > 0 ? `Cited: ${[...new Set(cited)].join("; ")}.` : "No cited source is listed for it."}</span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="dim">{SELF_CLAIM_NOTE}</p>
+        </>
       )}
 
       <h4>Sources ({r.sources.length})</h4>

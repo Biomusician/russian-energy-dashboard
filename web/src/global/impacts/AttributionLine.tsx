@@ -1,7 +1,7 @@
 import { fmtDate } from "../../data";
-import { attributionConfidenceLabel, basisText } from "./model";
+import { SELF_CLAIM_NOTE, attributionConfidenceLabel, basisText, selfClaimText, selfClaimsOf } from "./model";
 import { confidenceMethod, definitionOf, labelOf, lowerLabel, useImpactVocab } from "./vocab";
-import type { Attribution, CompetingAttribution } from "./types";
+import type { Attribution, CompetingAttribution, SelfClaim } from "./types";
 import "../../styles/impacts.css";
 
 /** Who is publicly said to be responsible, and by whom (iteration 22).
@@ -15,6 +15,10 @@ import "../../styles/impacts.css";
  *  - UNKNOWN: "Attribution: unknown (not established)". Not a low confidence, and no confidence
  *    word is shown beside it.
  *  - DISPUTED: every competing attribution is listed. The site does not choose.
+ *
+ *  An actor's own claim of responsibility (`self_claims`) is provenance, not an attribution: it is
+ *  shown apart, as "Self-claim (unverified)", whatever the status, never under the competing
+ *  attributions and never as the attribution itself.
  */
 
 function actorText(actor: string | null, actorType: string | null): string {
@@ -30,14 +34,37 @@ function competingSentence(c: CompetingAttribution): string {
   return `${subject} attributed this to ${actorText(c.actor, c.actor_type)}.`;
 }
 
+/** The self-claims, apart from the attribution and from any competing one. */
+export function SelfClaims({ claims }: { claims: readonly SelfClaim[] }) {
+  if (claims.length === 0) return null;
+  return (
+    <div className="attr-self-claims">
+      <ul className="attr-self-claim-list">
+        {claims.map((c, i) => (
+          <li key={i} className="attr-self-claim">
+            <span className="impact-line-label">Self-claim (unverified):</span> {selfClaimText(c)}
+          </li>
+        ))}
+      </ul>
+      <div className="dim">{SELF_CLAIM_NOTE}</div>
+    </div>
+  );
+}
+
 export function AttributionLine({ a }: { a: Attribution | null | undefined }) {
   useImpactVocab();
-  if (!a || a.status === "NOT_APPLICABLE") return null;
+  if (!a) return null;
+  const selfClaims = selfClaimsOf(a);
+  if (a.status === "NOT_APPLICABLE") {
+    // Nothing to attribute. A claim on record is still provenance, and still only a claim.
+    return selfClaims.length > 0 ? <div className="attr-line attr-not_applicable small"><SelfClaims claims={selfClaims} /></div> : null;
+  }
   if (a.status === "UNKNOWN") {
     return (
       <div className="attr-line attr-unknown small">
         <span className="impact-line-label">Attribution:</span> unknown (not established)
         <span className="dim"> — {definitionOf("attribution_statuses", "UNKNOWN") ?? "No credible public attribution."}</span>
+        <SelfClaims claims={selfClaims} />
       </div>
     );
   }
@@ -77,6 +104,7 @@ export function AttributionLine({ a }: { a: Attribution | null | undefined }) {
         ? <div className="dim">Attribution confidence {confidence?.toLowerCase()}: {meaning}</div>
         // Without the method's wording, a claim still says what a claim is worth.
         : a.status === "CLAIMED" && <div className="dim">{definitionOf("attribution_statuses", "CLAIMED") ?? "A claim is not corroboration."}</div>}
+      <SelfClaims claims={selfClaims} />
     </div>
   );
 }

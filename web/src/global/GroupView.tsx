@@ -29,6 +29,7 @@ import {
 } from "./GroupImpactSections";
 import { groupRecords } from "./groupImpacts";
 import { SECTIONS, sectionFrom, tellLines, withSection, type SectionId } from "./groupSections";
+import { attackPlacementText, precisionRulesText } from "./groupPrecision";
 import { loadConfidenceMethod } from "./impacts";
 import { gulfBriefFilename, gulfBriefInput } from "./impacts/brief/briefInputs";
 import { drawGulfImpactBrief } from "./impacts/brief/drawImpactBrief";
@@ -171,6 +172,8 @@ export default function GroupView({ id }: { id: string }) {
   }, [ctx, manifest]);
   const region = ctx && metricId ? ctx.region[metricId] : null;
   const subsetNote = subset === "gcc" ? ctx?.memberships.gcc.note : subset === "opec" ? ctx?.memberships.opec.note : ctx?.note;
+  // Every member, whatever the membership filter: the rules describe the group, not the view.
+  const precision = precisionRulesText(ctx?.systems ?? []);
 
   // A member the filter has just set aside is no longer chosen.
   const sel = selA3 && shown.some((s) => s.a3 === selA3) ? byA3.get(selA3) ?? null : null;
@@ -500,11 +503,7 @@ export default function GroupView({ id }: { id: string }) {
                 </ul>
                 <p className="small"><strong>No country here has an index or a score.</strong> The one index on this site was built
                   for a single attack campaign elsewhere, and its weights and assumptions do not carry over. A missing index is not a zero.</p>
-                <p className="small"><strong>Countries are recorded under two rules.</strong> In the systems added most recently an attack is
-                  recorded for the country as a whole, with no region, facility or operator, because in a small or concentrated
-                  system a region and a kind of facility together can name one site. A system added earlier still places attacks
-                  by region and names the facility, and keeps that convention for its records for now.
-                  Each card below says which rule applies.</p>
+                <p className="small precision-rules"><strong>{precision.lead}</strong> {precision.body}</p>
                 <p className="small dim">{readerText(ctx.not_built)}</p>
               </details>
             </div>
@@ -580,11 +579,7 @@ export default function GroupView({ id }: { id: string }) {
               <div className="sys-headline none"><span className="small">No index. Reviewed historical events and context only.</span></div>
               <div className="small dim">Reporting: {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}</div>
               {s.attack_records_placed && (
-                <div className="small dim">
-                  {s.attack_records_placed === "country"
-                    ? "Attacks are recorded for the country as a whole, with no region or facility."
-                    : "Attacks are recorded by first-level region with the facility named: the earlier rule, under which this system was added."}
-                </div>
+                <div className="small dim attack-placement">{attackPlacementText(s.attack_records_placed)}</div>
               )}
               <div className="small dim">
                 {s.last_systematic_pass ? `Latest systematic research pass ${fmtDate(s.last_systematic_pass)}` : "No systematic research pass yet"}

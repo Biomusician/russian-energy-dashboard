@@ -260,7 +260,7 @@ export const IMPACT_FIELDS: Record<(typeof IMPACT_COLUMNS)[number], string> = {
   originating_statements: "How many distinct originating statements support the record. Republications count once.",
   citations: "Each cited source as publisher, date, address; sources separated by \" | \".",
   source_headlines: "Original-language headlines of the cited sources, where the record may show them.",
-  first_published: "The build date on which the record was first served here: not the event's date and not the source's.",
+  first_published: "The build date on which the record was first served here: not the event's date and not the source's. Empty: not yet served, pending its first release.",
   publication_note: "Why cells of this row are empty, where a publication rule withholds them.",
 };
 

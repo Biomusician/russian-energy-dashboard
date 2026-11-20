@@ -87,6 +87,15 @@ export interface CompetingAttribution {
   source_refs: string[];
 }
 
+/** An actor's own, unverified claim of responsibility (iteration 22 closure). Provenance only:
+ *  never a competing attribution, never the attribution itself, and it never moves a confidence. */
+export interface SelfClaim {
+  actor: string | null;
+  actor_type: string | null;
+  statement: string | null;
+  source_refs: string[];
+}
+
 /** Who is publicly said to be responsible (§6). Never this site's own finding. */
 export interface Attribution {
   /** NOT_APPLICABLE, UNKNOWN, CLAIMED, SUSPECTED, ASSESSED, ATTRIBUTED or DISPUTED. */
@@ -97,7 +106,10 @@ export interface Attribution {
   /** The date of the attribution, which may be much later than the event. */
   as_of: string | null;
   statement: string | null;
+  /** Credible alternative attributions by a source other than the actor. A self-claim is never one. */
   competing: CompetingAttribution[];
+  /** Actors' own claims of responsibility, unverified. Optional: older payloads do not carry it. */
+  self_claims?: SelfClaim[] | null;
   source_refs: string[];
   /** HIGH, MODERATE, LOW, CLAIM_ONLY, DISPUTED, NOT_ESTABLISHED; null when not applicable. */
   confidence: string | null;
@@ -181,7 +193,8 @@ export interface ImpactRecord {
   /** "standard" or "country_abstracted" (every kinetic or sabotage record). */
   publication_policy: string;
   research_pass?: string | null;
-  /** The build date the record was first served. Not the event date, not a source date. */
+  /** The build date the record was first served. Not the event date, not a source date.
+   *  null: not yet served, pending its first release. Never a date to invent or to sort as one. */
   first_published: string | null;
   review?: {
     reviewed_at?: string; review_status?: string; roles?: Record<string, string>;
@@ -266,6 +279,9 @@ export interface RegionalContext {
   not_built: string;
   order?: string;
   latest_note?: string;
+  /** For each context type, the ids of its newest statements. Several may share the newest
+   *  as_of; all of them are the latest. Absent in older payloads: computed from the entries then. */
+  latest_by_type?: Record<string, string[]> | null;
   empty_reason: string | null;
   context_types: VocabEntry[];
   vocabularies: Vocabularies;

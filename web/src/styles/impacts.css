@@ -18,6 +18,8 @@
 .attr-line, .ai-line { padding-left: 8px; border-left: 2px solid var(--line); }
 .attr-statement, .ai-statement { margin-top: 2px; }
 .attr-competing { margin: 3px 0; padding-left: 18px; }
+.attr-self-claims { margin-top: 3px; }
+.attr-self-claim-list { margin: 3px 0; padding-left: 0; list-style: none; }
 .impact-attempt-label {
   margin: 0 0 4px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; color: var(--text);
   border: 1px dashed var(--text-faint); border-radius: var(--radius); padding: 2px 6px; display: inline-block;
