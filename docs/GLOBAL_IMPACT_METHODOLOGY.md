@@ -37,6 +37,7 @@ Never collected, stored or published, in any field, title, address, export or CS
 - vessel names, positions, tracks, AIS, tanker lists, port vulnerability;
 - IP addresses, exposed-device inventories, network topology, credentials, exploit chains,
   CVE-to-target linkage, protocols or interfaces of a named victim, current security controls;
+  device makes or models, tooling or malware family names (outside a quoted attribution statement);
 - weapon identification or selection, strike distances;
 - personal data of any kind; faces; identification of people from media.
 
@@ -72,6 +73,63 @@ records which basis applied (`inclusion_basis`).
 separate section. Only clearly documented attempts on essential services qualify (an official or
 operator statement).
 
+### 3.1 Degraded operational capability with supply continuing (B12)
+
+**PROPOSED, applied in iteration 22 closure.** Pending the owner's confirmation; until then it is
+the reading reviewers and the lead apply.
+
+<!-- B12: applied to N records -->
+
+The question: a cyber incident degrades an operator's operational or remote-control capability
+(dispatch, remote switching, monitoring of the network) while end-user supply continues, because
+staff switch to manual operation or redundancy holds. Is that a disruption or an attempt?
+
+- **DISRUPTION** (`record_kind: "disruption"`): a control or operational function that is actually
+  used to deliver the energy or civilian service was degraded or unavailable **for a meaningful
+  duration** (below), even if redundancy or manual operation prevented a customer outage. This is
+  "a real interruption or degradation of an energy system" in the sense of the inclusion contract
+  above; the record does not need a customer figure.
+- **ATTEMPT** (`record_kind: "attempt_no_service_impact"`): malicious activity with no
+  demonstrably degraded service, and no operational function degraded for a meaningful duration.
+  (The candidate wording, "no demonstrably degraded service or operational function", left a gap:
+  a degradation too brief to be meaningful was neither. It falls here.) The attempt bar above is
+  unchanged: an official or operator statement.
+
+**Meaningful duration.** The methodology has no numeric threshold for this and the sources do not
+support one: operators rarely state minutes, and a figure invented here would be false precision.
+It is judged on the two duration tests the inclusion contract already has:
+
+1. **sustained** (inclusion basis 5): the function was degraded for days, or repeatedly over weeks,
+   as a source states; or
+2. **formally recognised** (inclusion basis 1): a competent authority declared it, or classed it as a
+   reportable incident with a stated effect on operations. This is the precedent already applied to
+   grid disturbances in which generation tripped but no customer lost supply: rejected unless the
+   regulator classed them as reportable events with a stated system effect.
+
+A degradation shorter than that and not formally recognised is an attempt (if the attempt bar is
+met) or not included.
+
+**What does not count as an operational function:** corporate IT, e-mail, websites, billing or
+customer-account portals, and data theft, unless a source states that operations stopped because
+of them. An operator that halts operations as a precaution has actually interrupted service or
+output: that is a disruption on inclusion basis 5 or 6, not this rule.
+
+**Evidence.** The degradation must be stated by a first-party or official source (the operator, a
+regulator, a government body, a national CERT) or by a formal report of one. An actor's claim to
+have taken over or disrupted control systems is a claim (§6) and never establishes the
+degradation, however widely it is repeated.
+
+**What the record says, and does not.** `effect` says, in past tense and the source's words, that an
+operational function was degraded and that end-user supply continued, as the source states; the
+duration as the source gives it; `effect_specificity: "described"` unless a source gives a figure
+for the effect. The effect leads with the degradation: the build refuses a disruption whose every
+effect sentence says nothing was affected, because that is an attempt. `civilian_service_impact`
+carries no affected figure (an entry, if any, has `affected: null`): no customers were affected,
+and the operator's customer base is not a figure for this record (§4). `inclusion_basis` is 5 or 1,
+whichever test was met. The record never names the control system, its make or vendor, an interface, a protocol or how access was gained (§2); never
+describes the redundancy, backup or manual capability that held, or evaluates it; and never says
+whether the function is restored now (§2: no current status of anything attacked).
+
 ## 4. Record contract (curated: `data/curated/global_impacts/events.json`)
 
 ```json
@@ -102,7 +160,7 @@ operator statement).
     "status": "ATTRIBUTED", "actor": "Sandworm", "actor_type": "state_linked",
     "basis": ["government", "victim_operator"], "as_of": "2024-01-04",
     "statement": "Ukraine's security service attributed the attack to the Sandworm group.",
-    "competing": [], "source_refs": ["s3"]
+    "competing": [], "self_claims": [], "source_refs": ["s3"]
   },
   "ai_involvement": {"status": "NONE_REPORTED", "relation": null, "role": null, "as_of": null,
                      "statement": null, "source_refs": []},
@@ -150,6 +208,18 @@ Field rules:
   concrete effect without a figure) or `vague` ("disruption reported").
 - `civilian_service_impact[].affected.unit` is the **source's own unit**. People are not customers
   are not households are not subscribers. Nothing is converted.
+- `civilian_service_impact[].affected` is the **scale affected**: how many people, customers,
+  subscribers or facilities lost or had degraded service. It is never a restoration percentage, a
+  duration, a recovery time, or the operator's total customer base, unless the source says the whole
+  base was affected. "Power restored to 80% of customers" is not an affected figure; nor is "the
+  utility serves 1.2 million customers". Duration and restoration wording go in `duration_text`.
+- `date_end` is an **observed** endpoint only: a source reports that the disruption ended on that
+  date. An announced, expected or scheduled end ("cuts will continue until Friday", "restoration
+  expected within a week") goes in `duration_text` or `effect`, in the source's words, and
+  `date_end` stays `null`. The build refuses a `date_end` later than the newest date among the
+  record's sources, when the sources are dated: no source can have observed an end after it was
+  published. (`date_end` also widens the window in which a source counts as a dated account, §8.1,
+  which is one more reason a planned end must not stand in for an observed one.)
 - Absences are distinct and explicit. A field that may be absent uses `null` for *not applicable*
   and one of these strings where the difference matters: `"unknown"`, `"not_researched"`,
   `"withheld"`, `"no_public_evidence"`, `"source_inaccessible"`. `null` is never zero.
@@ -162,8 +232,12 @@ Field rules:
   the operator when the incident is already public under that name (a utility that announced its
   own ransomware incident). A safety reviewer decides; the default is to name the service and the
   country, not the plant.
-- `first_published`: the build date on which the record was first served. Stamped by the import
-  script. Event date, source date and first-published date are three different dates.
+- `first_published`: the build date on which the record was **first served**. `null` means not yet
+  served: the record is pending its first release. The import never stamps its own run date (an
+  import is not a release, and a record imported today may first be served days later). The release
+  lead runs `scripts/stamp_first_published.py --date <release build date>` in the release commit; it
+  fills only `null` values. **An existing date never changes**, on re-import, correction or rebuild.
+  Event date, source date and first-published date are three different dates.
 
 ## 5. Vocabularies (`methodology/impact_taxonomy.json`)
 
@@ -200,9 +274,33 @@ Attribution is separate from cause and separate from whether the event happened.
 | `UNKNOWN` | Malicious or possibly malicious; no credible public attribution. Not a low confidence: attribution is not established. |
 | `CLAIMED` | An actor claimed responsibility. A claim is not corroboration. |
 | `SUSPECTED` | A credible source names a likely actor without a firm attribution. |
-| `ASSESSED` | A competent government body, the victim or operator, or a technical investigator assesses an actor. |
-| `ATTRIBUTED` | A formal government or law-enforcement attribution, or several independent credible attributions that agree. |
-| `DISPUTED` | Credible sources materially disagree. Competing attributions are listed; the product does not choose. |
+| `ASSESSED` | A competent government body, the victim or operator, or a technical investigator assesses an actor; or several technical or press attributions agree. |
+| `ATTRIBUTED` | A formal government or law-enforcement attribution. Agreement among technical or press attributions, however many, is `ASSESSED`. |
+| `DISPUTED` | Credible sources materially disagree about the actor. Competing attributions are listed; the product does not choose. |
+
+**What `ATTRIBUTED` requires, exactly** (`pipeline/evidence_confidence.py::attribution_problems`;
+the build and the import refuse the record otherwise). At least one source that supports
+`attribution` must carry a government or law-enforcement basis
+(`methodology/evidence_confidence.json` → `attribution.official_bases`). A source's basis is:
+
+- the actor's own claim, if it is one (typed `actor_self_claim`, declared
+  `attribution_basis: "actor_self_claim"`, or published by the named actor). A claim, and any
+  outlet that relays it without a finding of its own, never counts, whatever else it says;
+- nothing, for a discovery aid or an unverified account (an anonymous post, an S4 post, an S1
+  account whose identity is not established);
+- for a first-party or press source: its declared `attribution_basis` if it has one (a wire story
+  reporting a government's attribution declares `government`), else the basis of its role:
+  `government`, `official`, `regulator` and `cert` give `government`; `law_enforcement` and
+  `court_record` give `law_enforcement`; `operator` gives `victim_operator`; `cyber_firm` gives
+  `cybersecurity_firm`; press roles give `media_investigation`;
+- for a secondary source or a researcher's post: `researcher` or `media_investigation`. A declared
+  basis is not honoured here: a post or a dataset cannot borrow a government's authority.
+
+The record-level `attribution.basis` list is descriptive and checked only against the vocabulary;
+the gate reads the sources. One official's interview is not a formal attribution, and a
+campaign-level advisory that does not name the victim attributes nothing to it (reviewer rulings,
+iteration 22). An `ATTRIBUTED` record with a non-empty `competing` list has attribution confidence
+`DISPUTED`.
 
 - `actor_type`: `state`, `state_linked`, `hacktivist`, `criminal`, `insider`, `unknown`, `other`.
   "State-linked" is not "state-controlled"; the type is the source's, not ours.
@@ -212,6 +310,18 @@ Attribution is separate from cause and separate from whether the event happened.
   never shown as contemporaneous.
 - Copy rule: "*X* attributed the incident to *Y*", never "*Y* attacked". The product reports who
   attributes; it asserts nothing itself. No actor leaderboard, no capability profile.
+- `competing` lists a **credible alternative attribution advanced by a source other than the
+  actor**: a government, investigator, victim or press investigation naming a different actor.
+  A non-empty list makes attribution confidence `DISPUTED`, whatever the status.
+- `self_claims` is provenance for an **actor's own unverified claim** of responsibility, by the
+  record's actor or by anyone else. A self-claim goes there, never in `competing`, and never yields `DISPUTED`:
+  a group claiming an incident another body attributes elsewhere is a claim beside an attribution,
+  not credible sources disagreeing.
+- `CLAIMED` is not `ATTRIBUTED`. However many outlets report a claim, it stays a claim (§8.2).
+- A malware or ransomware family name is not an actor identity. "Attacked with ransomware family Z"
+  says what tool was reported, not who used it; `actor` names a group or body only where a source
+  attributes the incident to one. (Outside an attribution statement a tool or malware name is not
+  published at all, §2.)
 
 **Attribution confidence** is computed from the attribution sources (§8), never typed by hand:
 `HIGH`, `MODERATE`, `LOW`, `CLAIM_ONLY`, `DISPUTED`, `NOT_ESTABLISHED` (for `UNKNOWN`), and absent for
@@ -230,8 +340,12 @@ A source must tie AI to **this incident**. Modern, sophisticated, automated or s
   `ai_generated_configuration_or_code`, `ai_service_dependency_failure`, `other`, `unknown`.
 - "AI may have helped" is `SUSPECTED` or `CLAIMED` with its source, never upgraded. A defender's use
   of AI to detect the attack does not set the field.
-- `CONFIRMED` needs a direct authoritative source (the operator, a government investigation or the
-  vendor's own incident report). `ASSESSED` needs an official or technical investigator.
+- `CONFIRMED` needs a first-party or official source that supports `ai_involvement` (the operator, a
+  government investigation or the vendor's own incident report). `ASSESSED` needs a first-party or
+  official source, or press or third-party reporting (an official or technical investigator, or a
+  report of one). These are checks on who is speaking, not on what the source says: whether it
+  states, assesses or only suspects AI involvement is the reviewer's check
+  (`docs/EVIDENCE_CONFIDENCE_V2.md` §7).
 - Few records are expected. The feature shows the reviewed corpus as it is; an empty filter result
   is a correct answer.
 
@@ -251,22 +365,27 @@ Computed by `pipeline/evidence_confidence.py` from the sources that support `occ
 `effect`. Output: a category, an ordinal score 0–100 (**not a probability**) and the components
 that produced it, so every card can answer "why?".
 
+The labels below are the served ones (`methodology/evidence_confidence.json`, `tiers.*.label`);
+`docs/EVIDENCE_CONFIDENCE_V2.md` §2 is the full statement of each rule.
+
 | Component | Points | Rule |
 |---|---|---|
-| Directness | 40 / 28 / 15 / 10 / 4 | The best supporting source: direct authoritative (operator, government, regulator, CERT, law enforcement, court record, or an official account on social media whose identity is established) 40; independent reporting (wire, media, specialist media, a cyber firm's own investigation) 28; secondary (aggregator, dataset restating others, a journalist's social post) 15; a researcher's social post 10; an anonymous account or an actor's self-claim 4. |
-| Independent origins | 0 / 16 / 25 | Distinct **originating statements** among direct and independent-reporting sources: one 0, two 16, three or more 25. A wire story and its republications are one origin; three releases from one utility are one origin; ten reposts are one origin at best. |
-| Effect specificity | 15 / 8 / 0 | Quantified / described / vague, counted only when a direct or independent source supports `effect`. |
-| Opened by a reviewer | 10 | At least one direct or independent supporting source was opened and read by a reviewer. |
-| Contemporaneous | 10 | At least one direct or independent supporting source is dated within 30 days of the event. |
+| Who is speaking | 40 / 28 / 15 / 10 / 4 | The best supporting source: a **first-party or official statement** (operator, government, regulator, national CERT or cyber agency, law enforcement, court record, or an official social account whose identity is established) 40; **press or third-party reporting** (wire, news outlet, specialist press, trade body, a cyber firm's own investigation) 28; a **secondary source** (a dataset restating others, a recognised journalist's post, a researcher's web publication) 15; a **researcher's social post** 10; an **unverified claim** (an anonymous account, an actor's own claim) 4. "First-party" says who is speaking, not that the statement was verified; "press or third-party" says who carried it, not that the reporting was its own work. |
+| Originating statements | 0 / 16 / 25 | Groups of first-party and press sources that share an origin, a publisher, an organisation, a filed form or a declared relay: one 0, two 16, three or more 25. A wire story and its republications are one; three releases from one utility are one; ten reposts are one at best. The count is called "independent originating statements" only when the attribution-and-source reviewer checked which sources relay which (`basis: "reviewed"`); otherwise it is "distinct publishers cited" and the record is at most Moderate. |
+| Effect specificity | 15 / 8 / 0 | Quantified / described / vague, counted only when a first-party or press source supports `effect`. |
+| Opened during research or review | 10 | A first-party or press supporting source carries `opened: true`, or the record's review block says a reviewer opened its sources. `opened: null` is "not recorded", never "not opened". |
+| Dated account | 10 | A first-party or press supporting source dated from the day before the event to 30 days after its end, or a later formal account (a dated first-party source in a formal role, or one marked `formal_account: true`). |
 
-Categories: **High** ≥ 78, **Moderate** 55–77, **Limited** 35–54, **Preliminary** < 35.
+Categories: **High** ≥ 78, **Moderate** 55–77, **Limited** 35–54, **Preliminary** < 35. The points are
+ordinal, never a percentage.
 Overrides: a record whose occurrence or effect is credibly contested is **Disputed**, whatever its
-score. A record supported only by unverified social posts or only by an actor's self-claim is at
-most **Preliminary**.
+score, and shows no total. A record supported only by unverified social posts, a researcher's post
+or an actor's own claim is at most **Preliminary**. A record whose originating statements were not
+reviewed is at most **Moderate**. A record cited only through a discovery aid (an encyclopedia, an
+aggregator) is **Not assessed** (`category: null`), never Preliminary.
 
 Properties, each tested and mutation-tested:
 - adding a source never lowers the score, and removing one never raises it, except where the source shows that two cited sources are one account (a shared publisher, organisation or declared relay);
-- adding a source never lowers the score; removing one never raises it;
 - a duplicate citation or a second citation from the same origin changes nothing;
 - source **count** never enters, only roles and origins;
 - an official source alone is not penalised for lack of corroboration it could not have
@@ -279,16 +398,21 @@ Thresholds are provisional: one blind calibration has been run and they did not 
 
 From the sources that support `attribution`, by their role and origin:
 
-- `HIGH`: a formal government or law-enforcement attribution **and** a second independent
-  attribution origin of a different basis (a technical report, the victim, a second government).
-- `MODERATE`: one formal government, law-enforcement or victim/operator attribution; or two
-  independent technical or investigative origins that agree.
+- `HIGH`: a formal government or law-enforcement attribution **and** a second attribution from a
+  separate origin with a different basis (a technical report, the victim, or law enforcement beside
+  a government). Two bodies of the same basis are one basis; organisations that are parent and
+  child in the organisation table are one origin; outlets relaying one attribution add at most one.
+- `MODERATE`: one government, law-enforcement or victim/operator attribution; or two technical or
+  investigative findings of their own, from separate origins, that agree.
 - `LOW`: a single cyber firm, researcher or media investigation.
 - `CLAIM_ONLY`: only the actor's own claim. A self-claim can never produce more than this.
 - `DISPUTED`: status `DISPUTED`. `NOT_ESTABLISHED`: status `UNKNOWN`.
 
-Status and confidence must agree: `ATTRIBUTED` needs at least `MODERATE` with an official basis;
-`CLAIMED` needs an `actor_self_claim` source; the build refuses the mismatch.
+Status and sources must agree, and the build refuses the mismatch: `ATTRIBUTED` needs an official
+basis as defined in §6 (so its confidence is at least `MODERATE`, or `DISPUTED` when `competing` is
+non-empty); `CLAIMED` needs the actor's own claim as a source and no other party's finding. The
+confidence never says more than the status: `SUSPECTED` is capped at `LOW` and `ASSESSED` at
+`MODERATE`.
 
 ### 8.3 Scope of use
 
@@ -358,6 +482,19 @@ Entry contract (`data/curated/global_impacts/regional_context.json` → `entries
 `reserve_action`, `policy_response`, `civilian_environmental`. `metric` is `null` when the statement
 has no figure.
 
+Figures in context entries:
+
+- **A numeric comparison needs a defined comparator.** "Down 40%" is published only with what it is
+  down from, as the source defines it (a stated period, a stated baseline, a named series); a change
+  with no comparator is stated in words, without the number.
+- **A number whose series cannot be identified is not published.** If the source does not say what
+  the figure measures (which flow, which aggregate, over what period) well enough to fill
+  `metric.basis`, the entry keeps its claim in words and `metric` is `null`.
+- **"Latest" is a set, not a pick.** Within one `context_type`, every entry carrying the newest
+  `as_of` date is latest; ties are all latest and none is chosen over another. The served file lists
+  them per type in `latest_by_type`. An entry older than its shelf life is historical, whatever this
+  says.
+
 ## 11. Served artifacts
 
 Registered in `pipeline/artifacts.py` (`GLOBAL_PAYLOADS`); lazy-loaded; the home page loads none of
@@ -369,7 +506,8 @@ them.
   `country_name`, `system_id` (when the country is a monitored system, else `null`),
   `evidence_confidence` (category, score, components, reasons), `attribution.confidence`,
   `origin_count`, and each source's `link_check`. Nothing is ordered by a figure.
-- `global/regional_context.json`: the Gulf and Hormuz timeline of §10.
+- `global/regional_context.json`: the Gulf and Hormuz timeline of §10, with `latest_by_type` (every
+  entry tied at the newest `as_of` of its type).
 - `global/evidence_confidence.json`: the method of §8 as data (components, thresholds, the
   definitions and the sentence that confidence is evidence quality, not severity, not probability,
   not importance), read by the confidence drawer and the glossary.
@@ -391,8 +529,18 @@ three independent reviews that do not see the researcher's rationale or each oth
   wording, loaded wording, personal data, addresses and titles that leak).
 
 `scripts/import_impacts.py` moves a record into the curated file only when all three accept, applies
-their corrections, mints abstracted ids, stamps `first_published`, and reconciles against the
-country queues: a candidate matching a record held from a country system is refused.
+their corrections, mints abstracted ids, leaves `first_published` `null` for a new record (the
+release lead stamps it, §4) and keeps an existing one unchanged, and reconciles against the country
+queues: a candidate matching a record held from a country system is refused.
+
+**The source and dispute validators gate the import and the build.**
+`pipeline/evidence_confidence.py::source_problems` (medium, role and social tier in the vocabulary;
+no shortened link; an address on a social platform is a post; `supports` and `disputes` are lists of
+claims; a readable date) and `dispute_problems` (`dispute.about` present and in the vocabulary) run
+on every candidate before it is written to the curated file and on every record when the build
+runs; a finding refuses the record, naming it. They are deterministic checks of the record's own
+fields. They do not open a source, judge whether a role was typed correctly, or detect an unmarked
+relay: those stay the reviewers' work (`docs/EVIDENCE_CONFIDENCE_V2.md` §7).
 
 ## 13. What the build refuses
 
@@ -404,4 +552,5 @@ wording (restart, repair, back online, remaining capacity) appears on an abstrac
 has no supporting source; attribution status and sources disagree; an AI status has no
 incident-specific source or no relation; a social source has no tier or identity basis, or an S3/S4
 post is the sole evidence; an attempt is filed as a disruption; a unit is missing where a value is
-given; an absence is written as zero.
+given; an absence is written as zero; a `date_end` is later than the newest dated source; a source
+or a dispute fails the validators of §12.
