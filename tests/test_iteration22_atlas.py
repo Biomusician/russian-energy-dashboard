@@ -317,11 +317,16 @@ def test_atlas_cyber_presets_never_include_an_it_failure(tmp_path_factory, serve
     presets = out["presets"]
     cyber_ids = {r["impact_id"] for r in served["payload"]["records"] if r["cause_family"] == "cyber"}
     assert set(presets["cyber"]["ids"]) == cyber_ids and cyber_ids
+    # The fixture corpus carries IT failures of its own; the preset is all of them and nothing else.
+    it_ids = {it["impact_id"]} | {r["impact_id"] for r in served["payload"]["records"]
+                                  if r["cause_family"] != "cyber" and r["cyber_mechanism"] == "it_outage_affecting_operations"}
     for pid, got in presets.items():
         if pid == "it-failure":
-            assert got["ids"] == [it["impact_id"]]
-        else:
-            assert it["impact_id"] not in got["ids"], pid
+            assert set(got["ids"]) == it_ids and len(got["ids"]) == len(it_ids)
+        elif "cyber" in pid:
+            # A cyber preset never shows an IT failure. (The AI preset selects by AI involvement, a
+            # separate claim an IT failure can carry, so it is not held to this.)
+            assert not it_ids & set(got["ids"]), pid
         if "cyber" in pid:
             assert set(got["ids"]) <= cyber_ids, pid
             assert "f.cause=cyber" in got["query"], pid
@@ -422,6 +427,21 @@ def test_atlas_confidence_is_words_with_the_served_caveat(tmp_path_factory, serv
     assert served["method"]["statement"] in out["why"]
     for reason in out["reasons"]:
         assert reason in out["why"]
+
+
+@needs_bundler
+def test_atlas_disputed_confidence_says_disputed_overrides_with_no_score(tmp_path_factory, served):
+    """A Disputed record carries no score (the model withholds it), so the sentence that Disputed
+    overrides the score cannot live inside the score line: it must stand on its own."""
+    out = _ts(tmp_path_factory, served, """
+      const r = P.records.find((x) => x.evidence_confidence.category === "DISPUTED");
+      return { found: !!r, score: r ? r.evidence_confidence.score : null,
+               why: r ? text(h(ConfidenceChip.ConfidenceBreakdown, { value: r.evidence_confidence, method: input.method })) : "" };
+    """)
+    assert out["found"], "the fixture has a Disputed record"
+    assert out["score"] is None
+    assert "Disputed overrides the score" in out["why"]
+    assert not re.search(r"null|points :", out["why"])
 
 
 NOT_ASSESSED_REASON = "Cited through a discovery aid only; a primary source is not yet attached."

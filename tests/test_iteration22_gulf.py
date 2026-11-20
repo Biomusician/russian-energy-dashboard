@@ -164,7 +164,7 @@ def _entry(eid, date, kind, claim, publisher, latest, metric=None):
 def _context():
     v = _vocabularies()
     return {
-        "schema_version": 1, "as_of": "2026-11-19", "context_id": "gulf_hormuz", "label": "The Gulf and the Strait of Hormuz",
+        "schema_version": 1, "as_of": "2026-11-19", "context_id": "gulf_hormuz", "group": "gulf_littoral", "label": "The Gulf and the Strait of Hormuz",
         "statement": "Dated, sourced statements about the Gulf and the Strait of Hormuz, in aggregate.",
         "not_built": "There is no open or closed flag and no current status: only what a named source said, and when.",
         "latest_note": "The newest statement of its type, as of its date.", "empty_reason": None,

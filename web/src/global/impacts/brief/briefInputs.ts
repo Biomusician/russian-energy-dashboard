@@ -50,14 +50,11 @@ export function briefConfidence(method: ConfidenceMethod | null): BriefConfidenc
   };
 }
 
-/** Which regional group a served context file describes. The file names itself (`context_id`) but
- *  not the group it belongs to, so the pairing is written here once; if the build serves `group`,
- *  that wins and this table is not read. */
-const CONTEXT_GROUP: Record<string, string> = { gulf_hormuz: "gulf_littoral" };
-
+/** Whether a served context file describes this group. The file names its group (`group`, served
+ *  from the registry); a file that does not name one describes no group, so its statements are
+ *  never attached to a brief by guesswork. */
 export function contextDescribes(regional: Pick<RegionalContext, "context_id"> & { group?: string | null }, groupId: string): boolean {
-  if (regional.group) return regional.group === groupId;
-  return Object.prototype.hasOwnProperty.call(CONTEXT_GROUP, regional.context_id) && CONTEXT_GROUP[regional.context_id] === groupId;
+  return typeof regional.group === "string" && regional.group !== "" && regional.group === groupId;
 }
 
 export interface GulfBriefSources {

@@ -84,13 +84,11 @@ export const IMPACT_ENTRIES: SearchEntry[] = [
               action: { type: "href", href: "?view=impacts&f.attr=ASSESSED,ATTRIBUTED&f.cause=cyber" } }),
 ];
 
-/** The regional overview that carries the dated Gulf and Strait of Hormuz context statements. */
-const REGIONAL_CONTEXT_SLUG = "gulf";
-
 /** "Gulf and Hormuz context": offered only when the manifest has that regional overview, and it
  *  opens the overview, which shows the context timeline. Aggregate statements only. */
 export function regionalContextEntries(m: Manifest): SearchEntry[] {
-  return Object.entries(m.groups ?? {}).filter(([, g]) => g.slug === REGIONAL_CONTEXT_SLUG && g.context).map(([id, g]) => makeEntry({
+  // The group whose overview carries the dated regional statements, as the manifest names it.
+  return Object.entries(m.groups ?? {}).filter(([, g]) => g.slug && g.context && g.regional_context).map(([id, g]) => makeEntry({
     key: `context:${id}`, kind: "group", label: "Gulf and Hormuz context",
     sub: `Dated, sourced, aggregate statements · on the ${g.label} overview`,
     terms: ["Gulf and Hormuz context", "Hormuz", "Strait of Hormuz", "Hormuz context", "regional context"],

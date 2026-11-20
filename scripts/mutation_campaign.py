@@ -2804,6 +2804,19 @@ ITER22_LEAD_MUTATIONS = [
      "impact_build_passes_the_review_block"),
 ]
 MUTATIONS += ITER22_LEAD_MUTATIONS
+ITER22_LEAD_MUTATIONS_2 = [
+    ("the country page offers the regional tab to a group with no regional context",
+     [("web/src/global/countryTabs.ts", _text('    if (g && typeof g.regional_context === "string" && g.regional_context && typeof g.slug === "string" && g.slug',
+                                              '    if (g && typeof g.slug === "string" && g.slug'))],
+     "regional_tab_exists_only_for_members"),
+    ("the regional context names no group",
+     [("pipeline/global_impacts.py", _text('        "group": context_group(),', '        "group": None,'))],
+     "regional_context_names_its_group_from_the_registry"),
+    ("the confidence breakdown hides that Disputed overrides the score",
+     [("web/src/global/impacts/ConfidenceChip.tsx", _text('      {value.disputed && <p className="conf-disputed">Disputed overrides the score: credible sources disagree, and this site does not choose.</p>}', ''))],
+     "disputed_confidence_says_disputed_overrides"),
+]
+MUTATIONS += ITER22_LEAD_MUTATIONS_2
 
 
 # Iteration 22: the Gulf overview's evidence sections, the regional context and the impact briefs.
@@ -2901,7 +2914,8 @@ ITER22_GULF_MUTATIONS = [
      [(G22_VIEW, _text(" It does not collect vessel positions, routes, bypass capacity or which facility depends on the strait, because those serve operations, not understanding.", ""))],
      "iter22_gulf_context_section"),
     ("the regional context is shown for a group it does not describe",
-     [(G22_INPUTS, _text(" && CONTEXT_GROUP[regional.context_id] === groupId;", ";"))],
+     [(G22_INPUTS, _text('  return typeof regional.group === "string" && regional.group !== "" && regional.group === groupId;',
+                         '  return true;'))],
      "iter22_gulf_context_section"),
     ("an unknown section name opens a guessed section",
      [(G22_SECTIONS, _text("    return BY_ID.get(name.trim().toLowerCase()) ?? null;", "    return BY_ID.get(name.trim().toLowerCase()) ?? SECTIONS[3];"))],

@@ -518,9 +518,16 @@ def test_gate_refuses_an_attribution_its_sources_do_not_support():
     for s in r["sources"]:
         s["supports"] = [c for c in s["supports"] if c != "attribution"]
     refused(r, "with no source that supports attribution")
+    # The rule, not its sentence: a record whose only attribution source is the actor's own claim
+    # stands as CLAIMED and is refused as anything firmer, and the gate carries the model's refusal.
     r = rec(ITA)
-    r["attribution"]["status"] = "ASSESSED"
-    refused(r, "rests on the actor's own claim alone")
+    assert EC.attribution_problems(r["attribution"], r["sources"]) == []
+    assert EC.attribution_confidence(r["attribution"], r["sources"]) == "CLAIM_ONLY"
+    for firmer in ("SUSPECTED", "ASSESSED", "ATTRIBUTED"):
+        r["attribution"]["status"] = firmer
+        said = EC.attribution_problems(r["attribution"], r["sources"])
+        assert said, firmer
+        assert set(said) <= set(problems(r)), firmer
 
 
 def test_gate_refuses_an_ai_status_without_an_incident_source_or_a_relation():
@@ -980,10 +987,15 @@ def test_each_served_record_adds_what_the_contract_says():
     for rid, served in by_id.items():
         raw = rec(rid)
         end = raw["date_end"] if raw["date_end"] not in G.ABSENCE else None
+        # The record's own review block goes to the model: the source-and-attribution reviewer
+        # checked which sources relay which, so a reviewed record's origin count is a reviewed one.
         assert served["evidence_confidence"] == EC.assess(raw["sources"], raw["date"], end,
-                                                          raw["effect_specificity"] or "vague", raw["dispute"]), rid
+                                                          raw["effect_specificity"] or "vague", raw["dispute"],
+                                                          review=raw["review"]), rid
+        assert served["evidence_confidence"]["components"]["origins"]["basis"] ==                ("reviewed" if EC.origins_reviewed(raw["review"]) else "publishers"), rid
         assert served["attribution"]["confidence"] == EC.attribution_confidence(raw["attribution"], raw["sources"]), rid
-        assert served["origin_count"] == len({EC.origin_of(s) for s in raw["sources"]} - {None}), rid
+        # One way of counting origins: the model's grouping, over every citation.
+        assert served["origin_count"] == EC.independent_origins(raw["sources"]), rid
         assert all(s["link_check"] in G.ids("link_states") for s in served["sources"]), rid
         assert {k: v for k, v in served.items() if k in raw and k not in ("attribution", "sources")} == \
                {k: v for k, v in raw.items() if k not in ("attribution", "sources")}, rid
@@ -2241,3 +2253,13 @@ def test_addenda_of_a_held_copy_stay_put_when_the_hold_names_no_survivor_or_they
     report = run(paths)
     assert [s["ref"] for s in curated_records(paths)[FRA]["sources"]] == ["s1", "s2", "s3", "s4"]
     assert "rejected by safety" in report["addenda"][0]["outcome"] and report["addenda"][0]["moved_from"] == f"ai/{tid}"
+
+
+def test_regional_context_names_its_group_from_the_registry():
+    """The served context file names the registry group it describes, so no page pairs a file and a
+    group by hand; exactly one registry group names this file."""
+    from pipeline import systems
+    got = payloads()[G.CONTEXT_OUT]
+    assert got["group"] == G.context_group()
+    assert systems.GROUPS[got["group"]]["regional_context"] == G.CONTEXT_OUT
+    assert [g for g, d in systems.GROUPS.items() if d.get("regional_context")] == [got["group"]]

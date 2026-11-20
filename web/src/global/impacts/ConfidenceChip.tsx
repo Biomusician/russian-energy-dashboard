@@ -85,9 +85,9 @@ export function ConfidenceBreakdown({ value, method, failed = false }: { value: 
         <p className="conf-score">
           <span className="mono">{value.score} points</span>: ordinal score, not a probability.
           {" "}The category above is the finding; the points only show how it was reached.
-          {value.disputed && " Disputed overrides the score: credible sources disagree, and this site does not choose."}
         </p>
       )}
+      {value.disputed && <p className="conf-disputed">Disputed overrides the score: credible sources disagree, and this site does not choose.</p>}
       {method?.status && <p className="conf-status">Method status: {method.status}.</p>}
       {method ? <p className="conf-statement">{method.statement}</p>
         : <p className="conf-statement dim" role="status">{failed ? "The method description could not be loaded." : "Loading the method…"}</p>}

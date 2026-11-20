@@ -30,10 +30,8 @@ export const TAB_LABEL: Record<Tab, string> = {
   method: "Why no score",
 };
 
-/** The manifest group the regional context file describes, by its overview slug. One constant:
- *  `global/regional_context.json` is one artifact about one region (methodology §10). Which systems
- *  belong to that group is read from the manifest. */
-export const REGIONAL_CONTEXT_GROUP_SLUG = "gulf";
+/** The regional context file lives in `global/` beside the manifest; a group that carries one names
+ *  it (`groups.<id>.regional_context`). Which group, and which systems belong to it, is the manifest's. */
 
 export interface RegionalGroup {
   id: string;
@@ -48,7 +46,8 @@ export function regionalGroupFor(manifest: Pick<Manifest, "groups"> | null | und
   if (!groups) return null;
   for (const id of Object.keys(groups)) {
     const g = groups[id];
-    if (g && g.slug === REGIONAL_CONTEXT_GROUP_SLUG && Array.isArray(g.members) && g.members.includes(systemId)) {
+    if (g && typeof g.regional_context === "string" && g.regional_context && typeof g.slug === "string" && g.slug
+        && Array.isArray(g.members) && g.members.includes(systemId)) {
       return { id, label: g.label, slug: g.slug };
     }
   }

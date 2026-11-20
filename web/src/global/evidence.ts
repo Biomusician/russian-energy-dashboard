@@ -39,8 +39,8 @@ export function registeredDomain(url: string | null | undefined): string {
 type Cited = { url: string; publisher?: string | null };
 
 /** The originating statement a citation carries, as far as the record shows it; null for a
- *  discovery aid. Republication the record does not name stays invisible, so this can only
- *  undercount independence, never overstate it. */
+ *  discovery aid. Republication the record does not name stays invisible, so a count built on this
+ *  can OVERSTATE independence (two outlets relaying one statement count twice). */
 export function sourceOrigin(s: Cited): string | null {
   const domain = registeredDomain(s.url);
   const publisher = (s.publisher ?? "").toLowerCase();

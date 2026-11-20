@@ -196,7 +196,9 @@ def test_country_regional_tab_exists_only_for_members_of_the_manifest_group(tmp_
         const g = ct.regionalGroupFor(input.manifest, id);
         res[id] = { group: g ? g.id : null, tabs: ct.tabsFor(g), shown: ct.resolveTab("regional", ct.tabsFor(g)) };
       }
-      return { res, noGroups: ct.regionalGroupFor({}, input.ids[0]), href: ct.tabHref("ir", "impacts"),
+      // A group the system belongs to that carries no regional context gives no regional tab.
+      const plain = ct.regionalGroupFor({ groups: { x: { label: "X", kind: "geographic", note: "", slug: "x", context: "global/x.json", members: [input.ids[0]] } } }, input.ids[0]);
+      return { res, plain, noGroups: ct.regionalGroupFor({}, input.ids[0]), href: ct.tabHref("ir", "impacts"),
                kept: ct.withTab("sys=us&r=US-TX&f.cause=technical,unknown", "impacts"), dropped: ct.withTab("sys=us&tab=impacts", "events"),
                bad: ct.tabFromSearch("?sys=us&tab=__proto__") };""", {"manifest": m, "ids": ids})
     group = next(g for g in m["groups"].values() if g.get("slug") == "gulf")
@@ -207,7 +209,7 @@ def test_country_regional_tab_exists_only_for_members_of_the_manifest_group(tmp_
         assert r["tabs"][0] == "events" and r["tabs"][1] == "impacts", sid
     assert any("regional" in r["tabs"] for r in out["res"].values())
     assert any("regional" not in r["tabs"] for r in out["res"].values())
-    assert out["noGroups"] is None
+    assert out["noGroups"] is None and out["plain"] is None
     assert out["href"] == "?sys=ir&tab=impacts"
     assert out["kept"] == "sys=us&r=US-TX&f.cause=technical,unknown&tab=impacts"
     assert out["dropped"] == "sys=us"

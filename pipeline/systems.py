@@ -88,6 +88,9 @@ GROUPS = {
         # A group with a `slug` has a regional overview at ?group=<slug>, fed by `context`.
         "slug": "gulf",
         "context": "global/gulf.json",
+        # The dated regional statements (iteration 22) describe this group and no other. Named
+        # here once: the manifest tells a page which group has them, and the file names its group.
+        "regional_context": "global/regional_context.json",
         "kind": "geographic",
         "members": ("bh", "ir", "iq", "kw", "om", "qa", "sa", "ae"),
         "note": "The eight states on the Gulf. A geographic group, not an organisation: it is not "

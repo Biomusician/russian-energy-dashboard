@@ -797,7 +797,8 @@ def source_origin(source):
     """The originating statement a citation carries, as far as the record shows it: a wire service
     the publisher field names, else the registered domain the citation sits on (three releases of
     one utility are one origin). None for a discovery aid. Republication the record does not name
-    stays invisible; this can only undercount independence, never overstate it."""
+    stays invisible, so a count built on this can overstate independence: two outlets relaying one
+    statement count twice unless a reviewer has marked the relay."""
     domain = registered_domain(source.get("url"))
     if domain in DISCOVERY_ONLY_DOMAINS or "wikipedia" in (source.get("publisher") or "").lower():
         return None
@@ -2077,6 +2078,7 @@ def build_manifest(country_payloads, theatre_snapshot, build_time):
         # Members in the registry's alphabetical order. A group is navigation, never a score.
         "groups": {g: {"label": d["label"], "kind": d["kind"], "note": d["note"],
                        "slug": d.get("slug"), "context": d.get("context"),
+                       "regional_context": d.get("regional_context"),
                        "members": [s["id"] for s in systems.SYSTEMS if s["id"] in d["members"]]}
                    for g, d in systems.GROUPS.items()},
         "comparability_statement": COMPARABILITY_STATEMENT,

@@ -42,5 +42,7 @@ export const NO_SCORE_NOT_ZERO =
  *  pages show the served one; this copy stands in while that file is loading or if it fails, so the
  *  sentence is never missing beside a confidence category. */
 export const CONFIDENCE_IS_NOT =
-  "Evidence confidence describes the quality of the public evidence for this record. It is not a probability, "
-  + "not a measure of severity, and not a statement about how important the infrastructure is.";
+  "Evidence confidence describes the sources this record cites, not everything published about the event. "
+  + "It covers whether the event happened and whether the reported effect is supported; it does not cover the "
+  + "cause, or who was responsible. It is not a probability, not a measure of severity, and not a statement about "
+  + "how important the infrastructure is.";

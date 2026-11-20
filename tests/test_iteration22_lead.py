@@ -138,3 +138,17 @@ def test_regional_context_is_the_only_served_file_with_strait_wording():
     served = json.dumps(ctx["entries"]).lower()
     for word in ("tanker", "bypass", "chokepoint", "choke point", "alternate route", "alternative route"):
         assert word not in served, word
+
+
+@needs_payload
+def test_regional_context_names_its_group_and_the_manifest_names_its_file():
+    """The registry pairs the group and the file once; both served files carry the pairing, so no
+    page pairs them by hand (iteration 22 integration: three frontend constants removed)."""
+    ctx = _json("global/regional_context.json")
+    manifest = _json("global/manifest.json")
+    group = ctx["group"]
+    assert group and manifest["groups"][group]["regional_context"] == "global/regional_context.json"
+    assert [g for g, d in manifest["groups"].items() if d.get("regional_context")] == [group]
+    src = " ".join((ROOT / "web" / "src" / "global" / f).read_text(encoding="utf-8")
+                    for f in ("countryTabs.ts", "searchIndex.ts", "impacts/brief/briefInputs.ts"))
+    assert '"gulf_littoral"' not in src and 'SLUG = "gulf"' not in src

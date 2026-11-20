@@ -46,6 +46,9 @@ export interface ManifestGroup {
   /** Present when the group has its own overview page at `?group=<slug>`. */
   slug: string | null;
   context: string | null;
+  /** The dated regional-context file that describes this group (iteration 22), or null. The
+   *  registry names it once; pages read this instead of pairing a group and a file themselves. */
+  regional_context?: string | null;
   members: string[];
 }
 

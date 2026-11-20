@@ -258,6 +258,8 @@ export interface RegionalContext {
   schema_version: number;
   as_of: string;
   context_id: string;
+  /** The registry group these statements describe (iteration 22). */
+  group?: string | null;
   label: string;
   statement: string;
   /** What is deliberately not built: no open/closed flag, no vessels, routes or bypass capacity. */

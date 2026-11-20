@@ -134,7 +134,10 @@ describe("ConfidenceChip", () => {
     for (const r of payload.records) {
       const out = render(<ConfidenceBreakdown value={r.evidence_confidence!} method={method} />);
       expect(out).not.toMatch(/\/\s*100|of 100|\d\s*%|percent/i);
-      expect(out).toContain(`${r.evidence_confidence!.score} points : ordinal score, not a probability`);
+      // A Disputed or not-assessed record carries no score: no points line, and never "null points".
+      const score = r.evidence_confidence!.score;
+      if (score == null) expect(out).not.toMatch(/null|points :/);
+      else expect(out).toContain(`${score} points : ordinal score, not a probability`);
     }
   });
 
@@ -419,7 +422,9 @@ describe("ContextTimeline", () => {
 
   it("shows a figure with its unit and what it measures", () => {
     const e = context.entries.find((x) => x.metric && x.metric.unit === "mb/d")!;
-    expect(out).toContain(`${e.metric!.value} mb/d`);
+    // A range is shown as one ("between 2 and 3 mb/d"), never as its lower bound alone.
+    const m = e.metric!;
+    expect(out).toContain(m.qualifier === "range" && m.value_upper != null ? `between ${m.value} and ${m.value_upper} mb/d` : `${m.value} mb/d`);
     expect(out).toContain(e.metric!.basis!);
   });
 });

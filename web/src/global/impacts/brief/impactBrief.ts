@@ -18,6 +18,7 @@
  *  `drawImpactBrief.ts` only places them.
  */
 import { IT_OUTAGE, NOT_ASSESSED as NOT_ASSESSED_ID, NOT_ASSESSED_LABEL, confidenceLabel } from "../model";
+import { CONFIDENCE_IS_NOT } from "../../countryCopy";
 
 /** The fields of a served impact record a brief reads. Structural, so the served type satisfies it. */
 export interface BriefSourceRecord {
@@ -264,7 +265,7 @@ function confidenceBlock(c: BriefConfidence | null): BriefBlock {
          ...c.categories.map((k) => ({ text: `${k.label}: ${k.meaning}`, dim: true })),
          { text: `${NOT_ASSESSED.label}: the build could not assess the record's evidence. It is not the lowest category.`, dim: true }]
       // The sentence that must travel even when the method file did not load.
-      : [{ text: "Evidence confidence describes the quality of the public evidence for a record. It is not a probability and not a measure of severity." }],
+      : [{ text: CONFIDENCE_IS_NOT }],
   };
 }
 

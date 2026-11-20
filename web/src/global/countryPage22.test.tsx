@@ -405,7 +405,8 @@ describe("the impact tab's model", () => {
   it("the filters are cause, sector, technology, attribution, AI and confidence, each only where it can filter", () => {
     const { records } = countryImpacts(many, "ir");
     const ids = impactFilters(many, records, method.categories.map((c) => c.id)).map((d) => d.id);
-    expect(ids).toEqual(["cause", "sector", "tech", "attr", "ai", "conf"]);
+    // "it" is the shared IT-failure filter: a separate choice from the malicious cause, never inside it.
+    expect(ids).toEqual(["cause", "it", "sector", "tech", "attr", "ai", "conf"]);
     // One record: nothing can be filtered, so no filter is offered.
     expect(impactFilters(payload, countryImpacts(payload, "ir").records)).toEqual([]);
     const conf = impactFilters(many, records, method.categories.map((c) => c.id)).find((d) => d.id === "conf");
@@ -447,14 +448,14 @@ describe("the impact tab's model", () => {
   it("no cause family is typed here: one the taxonomy adds later is counted and can be chosen", () => {
     const base = countryImpacts(many, "ir").records;
     const withNew: ImpactsPayload = { ...many, vocabularies: { ...many.vocabularies,
-      cause_families: [...(many.vocabularies.cause_families ?? []), { id: "authority_order", label: "Order by an authority" }] } };
-    const records = [{ ...base[0], cause_family: "authority_order" }, ...base.slice(1)];
-    expect(causeCounts(withNew, records).find((c) => c.id === "authority_order")).toEqual({ id: "authority_order", label: "Order by an authority", n: 1 });
+      cause_families: [...(many.vocabularies.cause_families ?? []), { id: "example_new_family", label: "Example new family" }] } };
+    const records = [{ ...base[0], cause_family: "example_new_family" }, ...base.slice(1)];
+    expect(causeCounts(withNew, records).find((c) => c.id === "example_new_family")).toEqual({ id: "example_new_family", label: "Example new family", n: 1 });
     const cause = impactFilters(withNew, records).find((d) => d.id === "cause");
-    expect(cause && cause.kind === "choice" ? cause.options.some((o) => o.value === "authority_order" && o.label === "Order by an authority") : false).toBe(true);
+    expect(cause && cause.kind === "choice" ? cause.options.some((o) => o.value === "example_new_family" && o.label === "Example new family") : false).toBe(true);
     // Not yet in the served vocabulary: still counted and selectable, under the key in plain words.
-    expect(causeCounts(many, records).find((c) => c.id === "authority_order")?.label).toBe("Authority order");
-    expect(impactExportRow(withNew, records[0])).toContain("Order by an authority");
+    expect(causeCounts(many, records).find((c) => c.id === "example_new_family")?.label).toBe("Example new family");
+    expect(impactExportRow(withNew, records[0])).toContain("Example new family");
   });
 
   it("cause counts are inside the list, in the vocabulary's order, and add up", () => {

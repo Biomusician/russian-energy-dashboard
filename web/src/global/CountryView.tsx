@@ -44,6 +44,7 @@ import { CountryRegional } from "./CountryRegional";
 import { loadConfidenceMethod } from "./impacts";
 import { impactExportSummary } from "./countryImpactModel";
 import "../styles/countryOverview.css";
+import { ImpactBriefButton } from "./impacts/brief/ImpactBriefButton";
 
 /** One country system (iteration 14).
  *
@@ -330,6 +331,9 @@ export default function CountryView({ id }: { id: string }) {
           {exporting ? "Rendering…" : "Download PNG"}
         </button>
         <button className="ghost" onClick={() => window.print()}>Print / PDF</button>
+        {/* A one-page image of this country's impact-layer evidence, with its own caveats; for a Gulf
+            member it adds the newest dated regional statements (iteration 22). */}
+        <ImpactBriefButton systemId={id} />
       </CountryHeader>
 
       {/* One main landmark per view: everything below the shared header and navigation bar. */}

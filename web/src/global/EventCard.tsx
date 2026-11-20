@@ -267,7 +267,7 @@ export function EvidenceInspector({ id, e, bundle, onClose }: {
         ))}
       </ul>
 
-      <h4>How many independent originating statements support it</h4>
+      <h4>How many separate originating statements are cited</h4>
       <p className="ev-inspector-origins">
         {countLine(origins)}.{" "}
         {origins.origins.length > 0 && <>Originating: {origins.origins.map(originLabel).join("; ")}.</>}
@@ -281,7 +281,8 @@ export function EvidenceInspector({ id, e, bundle, onClose }: {
       ) : null}
       <p className="dim">An originating statement is a wire service the citation names, otherwise the website it sits on:
         two reports from one agency count once, and a wire story republished by several outlets counts once. Republication
-        a citation does not name cannot be seen, so this can undercount independence but never overstate it.</p>
+        a citation does not name cannot be seen, so two outlets relaying one statement can count as two: this count can
+        overstate independence, which is why it is never called independent until a reviewer has checked it.</p>
 
       {confidence && <ConfidenceSection confidence={confidence} statement={statement} />}
 

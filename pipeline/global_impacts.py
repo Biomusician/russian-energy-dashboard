@@ -726,6 +726,10 @@ def vocabulary_problems(r):
             out.append(f"dispute needs about (one of {ids('dispute_about')}) and a statement, or is null")
         else:
             out += _unknown_keys(d, DISPUTE_FIELDS, "dispute")
+        # The confidence model reads `dispute` to decide Disputed, and reads anything it cannot
+        # place as a dispute about the record. Its own refusals are added by name, so a shape the
+        # model would have to guess at never reaches it.
+        out += [f"dispute: {p}" for p in EC.dispute_problems(d)]
     return out
 
 
@@ -1110,8 +1114,8 @@ CAVEATS = (
     "complete record for that country.",
     "An attack or sabotage record is published for the country only, with no place, operator, method, headline or "
     "later status.",
-    "Evidence confidence describes the quality of the public evidence. It is not a probability, not severity and not "
-    "a statement about how important any infrastructure is.",
+    "Evidence confidence describes the sources a record cites, not everything published about the event. It is "
+    "not a probability, not severity and not a statement about how important any infrastructure is.",
 )
 EMPTY_REASON = ("No reviewed record has been published yet. That is the state of the review, not a finding that "
                 "nothing happened.")
@@ -1125,8 +1129,10 @@ FIELD_NOTES = {
     "digital_category": "cyber for a cyberattack (the cause family or a contributing factor is cyber); it_failure for "
                         "a disruption digitally triggered without malice, such as a faulty software update; else "
                         "null. Two separate filters: an IT failure is never counted as cyber.",
-    "origin_count": "Distinct originating statements among the record's citations. A wire story and its copies are "
-                    "one; discovery aids are none. Not a count of links.",
+    "origin_count": "Distinct originating statements among all of the record's citations, grouped as the "
+                    "confidence method groups them: a wire story and its copies are one, an organisation's "
+                    "releases are one, a relay adds none, discovery aids are none. Not a count of links. The "
+                    "confidence component counts the same way over the sources that support occurrence or effect.",
     "first_published": "The build date on which this record was first served. Not the event date and not a source date.",
     "link_check": "The citation's state at the last automated link check, or unchecked. A failed link says nothing "
                   "about the record.",
@@ -1190,7 +1196,9 @@ def serve_record(r, ctx):
     out["evidence_confidence"] = EC.assess(r["sources"], r["date"], end, specificity,
                                            r.get("dispute"), review=r.get("review"))
     out["attribution"]["confidence"] = EC.attribution_confidence(r["attribution"], r["sources"])
-    out["origin_count"] = len({EC.origin_of(s) for s in r["sources"]} - {None})
+    # The model's own grouping (shared origin, publisher, organisation, relay, filed form), over
+    # every citation: one way of counting, here and in the confidence components.
+    out["origin_count"] = EC.independent_origins(r["sources"])
     out["digital_category"] = digital_category(r)
     for s in out["sources"]:
         s["link_check"] = _link_check(s, ctx)
@@ -1256,6 +1264,16 @@ def build_impacts(events_doc, research_log, ctx, as_of):
     }
 
 
+def context_group():
+    """The registry group the regional context describes. From the registry, where the group names
+    this artifact; a page reads the served `group` and never pairs the two itself."""
+    found = [g for g, d in systems.GROUPS.items() if d.get("regional_context") == CONTEXT_OUT]
+    if len(found) != 1:
+        raise ValueError(f"global impacts: exactly one group in pipeline/systems.py names {CONTEXT_OUT} "
+                         f"as its regional_context; found {found}")
+    return found[0]
+
+
 def build_context(context_doc, research_log, ctx, as_of):
     today = dt.date.fromisoformat(as_of)
     known = [e for e in context_doc["entries"] if e["date"] <= as_of]
@@ -1275,6 +1293,7 @@ def build_context(context_doc, research_log, ctx, as_of):
         "schema_version": SCHEMA_VERSION,
         "as_of": as_of,
         "context_id": CONTEXT_ID,
+        "group": context_group(),
         "label": context_doc.get("label") or "The Gulf and the Strait of Hormuz",
         "statement": CONTEXT_STATEMENT,
         "not_built": CONTEXT_NOT_BUILT,
