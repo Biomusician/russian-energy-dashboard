@@ -83,8 +83,9 @@ export function ConfidenceBreakdown({ value, method, failed = false }: { value: 
       )}
       {value.score != null && (
         <p className="conf-score">
-          <span className="mono">{value.score} points</span>: ordinal score, not a probability.
-          {" "}The category above is the finding; the points only show how it was reached.
+          {/* No "percent" and no "out of a hundred", not even to deny it: both read as a probability. */}
+          <span className="mono">{value.score} points</span>: ordinal score, not a probability and not a share of a maximum.
+          {" "}The category above is the finding; the points only show how it was reached, and records are never ranked by them.
         </p>
       )}
       {value.disputed && <p className="conf-disputed">Disputed overrides the score: credible sources disagree, and this site does not choose.</p>}

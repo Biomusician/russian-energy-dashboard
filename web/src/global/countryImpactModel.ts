@@ -1,4 +1,4 @@
-/** The "Cyber & civilian services" tab of a country page, as plain functions (iteration 22).
+/** The "Impact records (not scored)" tab of a country page, as plain functions (iteration 22).
  *
  *  The impact layer is a separate, non-scored corpus (docs/GLOBAL_IMPACT_METHODOLOGY.md). This
  *  module picks one country's records out of it, defines the tab's filters, counts the records by
@@ -12,7 +12,7 @@ import { impactsFor } from "./impacts/load";
 import type { ImpactRecord, ImpactsPayload, VocabEntry } from "./impacts/types";
 import type { FilterDef, FilterOption } from "./recordFilters";
 import { IMPACT_COLUMNS, IMPACT_FIELDS, csvFilename, impactRecordsCsv, readmeFilename, readmeText } from "./recordCsv";
-import { IMPACT_CORPUS_LINE, noImpactRecordText } from "./countryOverview";
+import { IMPACT_CORPUS_LINE, IMPACT_INCLUSION_LINE, noImpactRecordText } from "./countryOverview";
 import { CONFIDENCE_IS_NOT, inSentence } from "./countryCopy";
 import { NOT_ASSESSED, confidenceBucket, confidenceLabel } from "./impacts/model";
 
@@ -194,7 +194,7 @@ export function impactExportSummary(name: string, records: readonly ImpactRecord
   const rows = ordered.slice(0, EXPORT_ROW_LIMIT).map((r) => impactExportRow(payload, r));
   const left = ordered.length - rows.length;
   return {
-    title: `Cyber & civilian services: reviewed impact records for ${inSentence(name)}`,
+    title: `Impact records (not scored): reviewed impact records for ${inSentence(name)}`,
     lines,
     rows,
     more: left > 0 ? `and ${left} earlier ${left === 1 ? "record" : "records"}, listed on the page.` : null,
@@ -211,7 +211,7 @@ export function impactFiles(systemId: string, name: string, shown: readonly Impa
   const csvName = csvFilename(systemId, "impacts", payload.as_of);
   const rows = impactOrder(shown);
   const readme = readmeText({
-    title: `Reviewed impact records (cyber and civilian services): ${name}`,
+    title: `Reviewed impact records (not scored): ${name}`,
     csvName,
     scope: `${systemId} (${name}), global impact layer`,
     buildDate: payload.as_of,
@@ -221,6 +221,7 @@ export function impactFiles(systemId: string, name: string, shown: readonly Impa
     filters: filterLines,
     limitations: [
       IMPACT_CORPUS_LINE,
+      IMPACT_INCLUSION_LINE,
       ...(payload.caveats ?? []),
       rows.some(isAbstracted)
         ? "Some rows are attack or sabotage records published at country level. Their region, facility, operator and source headlines are empty in this file, and publication_note says why."

@@ -28,6 +28,20 @@ export function recordLine(recordReviewed: string | null | undefined, today: str
   return dated("Record reviewed", recordReviewed, today);
 }
 
+/** Where a country card with no qualifying record points next (iteration 22 closure): its impact
+ *  records tab, a separate corpus with its own inclusion rule. No count: the home page loads no
+ *  impact file and the manifest carries no per-country impact figure, so the card says where to
+ *  look, never how much is there. */
+export function impactTabHref(systemId: string): string {
+  return `?sys=${encodeURIComponent(systemId)}&tab=impacts`;
+}
+
+export const ZERO_RECORD_IMPACT_NOTE = {
+  before: "Also see its ",
+  link: "impact records tab",
+  after: ": a separate layer with no index and its own, broader inclusion rule, so it may hold reviewed records this card does not.",
+} as const;
+
 /** A record published under an attack campaign's safeguards. In a list that sets countries side
  *  by side it carries "National" and a row key instead of its own id and place.
  *

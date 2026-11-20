@@ -62,6 +62,18 @@ export function showWhatsNew(): boolean {
   return true;
 }
 
+/** "Skip to content" (iteration 22 closure): the first stop on every global page, shown on focus.
+ *  It moves focus to the page's one <main>, whichever page this bar sits on, without changing the
+ *  address (a hash would be read by the pages that keep state in the address). */
+function skipToContent(e: React.MouseEvent<HTMLAnchorElement>) {
+  const main = document.querySelector<HTMLElement>("main");
+  if (!main) return;
+  e.preventDefault();
+  if (!main.hasAttribute("tabindex")) main.setAttribute("tabindex", "-1");
+  main.focus({ preventScroll: true });
+  main.scrollIntoView({ block: "start", behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+}
+
 export function GlobalNavBar({ trail, search = true, extra }: { trail: Crumb[]; search?: boolean; extra?: React.ReactNode }) {
   // On a phone the secondary tools fold behind one "Menu" toggle, as the theatre's do behind "Tools":
   // five stacked rows of buttons took a third of the screen. Search and the system picker stay out.
@@ -102,6 +114,7 @@ export function GlobalNavBar({ trail, search = true, extra }: { trail: Crumb[]; 
 
   return (
     <div className="global-nav">
+      <a className="skip-link" href="#main-content" onClick={skipToContent}>Skip to content</a>
       <a className="product-home" href={window.location.pathname} onClick={(e) => go(e, "")}
         aria-label="Energy Disruption Monitor, home">Energy Disruption Monitor</a>
       <Breadcrumb trail={trail} />
@@ -435,7 +448,9 @@ export function GlossaryDialog() {
   };
 
   return (
-    <dialog ref={ref} className="glossary-dialog" aria-labelledby="glossary-title" onClose={onClose}>
+    // Named by the section it opened to, then "Glossary" (iteration 22 closure): "How this works"
+    // opened a dialog announced only as "Glossary".
+    <dialog ref={ref} className="glossary-dialog" aria-labelledby={focusId ? `gl-${focusId}-t glossary-title` : "glossary-title"} onClose={onClose}>
       <div className="glossary-head">
         <h2 id="glossary-title" tabIndex={-1}>Glossary</h2>
         <button className="ghost" type="button" onClick={() => ref.current?.close()}>Close</button>

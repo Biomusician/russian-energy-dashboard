@@ -823,6 +823,14 @@ export const READINESS_LABEL: Record<Readiness, string> = {
   INSUFFICIENT_EVIDENCE: "Insufficient evidence",
 };
 
+/** The readiness badge's words for a system. "Reported events, no index" over a system with no
+ *  qualifying record would say events exist; with none, the badge says no index and no record yet,
+ *  in the zero-record wording the rest of the page uses (iteration 22 closure). */
+export function readinessLabel(readiness: Readiness, recordedEvents: number | null | undefined): string {
+  if (readiness === "CONTEXT_ONLY" && recordedEvents === 0) return "No index; no qualifying records yet";
+  return READINESS_LABEL[readiness];
+}
+
 export const SECTOR_STATE_LABEL: Record<SectorState, string> = {
   SCORED: "Scored",
   EXPERIMENTAL: "Experimental",

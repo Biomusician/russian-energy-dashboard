@@ -12,7 +12,7 @@ import { loadContext, type EnergyContext } from "./context";
 import { impactsHref, navigate, navigateGroup, navigateTo } from "./router";
 import { prefetchOn } from "./prefetch";
 import { PanelBoundary } from "../components/ViewBoundary";
-import { dated, recordLine } from "./homeModel";
+import { ZERO_RECORD_IMPACT_NOTE, dated, impactTabHref, recordLine } from "./homeModel";
 import { laneLine } from "./laneCoverage";
 import { localISODate } from "../freshness";
 import { Disclosure, ResearchPreviewTag } from "./Disclosure";
@@ -264,6 +264,14 @@ function SystemCard({ s, manifest, lastPass, today }: {
         )}
       </div>
       {record && <div className="small">{record}</div>}
+      {s.record_reviewed === null && (
+        <div className="small home-impact-note">{ZERO_RECORD_IMPACT_NOTE.before}
+          <a href={impactTabHref(s.id)} onClick={(e) => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+            e.preventDefault();
+            navigateTo(impactTabHref(s.id));
+          }}>{ZERO_RECORD_IMPACT_NOTE.link}<span className="sr-only"> for {s.name}</span></a>{ZERO_RECORD_IMPACT_NOTE.after}</div>
+      )}
       <div className="small dim">{lastPass ? dated("Last researched", lastPass, today) : lastPass === null ? "No systematic search yet" : ""}</div>
       <div className="small dim">
         Reporting: <Disclosure label={labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}

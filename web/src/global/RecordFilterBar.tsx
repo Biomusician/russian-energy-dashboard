@@ -61,6 +61,7 @@ export function RecordFilterBar<R>({ defs, state, onChange, records, shown, toda
   const openRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const rowRef = useRef<HTMLDivElement>(null);
+  const doneRef = useRef<HTMLButtonElement>(null);
   const total = records.length;
   const hidden = total - shown;
   const active = activeFilters(defs, state);
@@ -79,7 +80,14 @@ export function RecordFilterBar<R>({ defs, state, onChange, records, shown, toda
   useEffect(() => { if (!phone) setSheet(false); else setOpen(null); }, [phone]);
 
   const closeSheet = () => { setSheet(false); openRef.current?.focus(); };
-  const clear = () => onChange({ choices: {}, dates: {} });
+  // "Clear filters" disables itself once nothing is on. Focus left on a disabled button falls to the
+  // page body, so it moves first: to the first filter menu (desktop), the Filters button (phone row)
+  // or the sheet's "Show N records" (inside the sheet). The count line announces the result. Iteration 22 closure.
+  const clear = () => {
+    onChange({ choices: {}, dates: {} });
+    (phone ? openRef.current : rowRef.current?.querySelector<HTMLButtonElement>("button:not(:disabled)"))?.focus();
+  };
+  const clearInSheet = () => { onChange({ choices: {}, dates: {} }); doneRef.current?.focus(); };
 
   const sheetKeys = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeSheet(); return; }
@@ -148,8 +156,8 @@ export function RecordFilterBar<R>({ defs, state, onChange, records, shown, toda
                 Showing <strong>{shown}</strong> of <strong>{total}</strong> {noun}.
                 {hidden > 0 && <> The filters hide <strong>{hidden}</strong>.</>}
               </p>
-              <button type="button" className="ghost" onClick={clear} disabled={active.length === 0}>Clear filters</button>
-              <button type="button" className="ghost rf-sheet-done" onClick={closeSheet}>Show {shown} {shown === 1 ? "record" : "records"}</button>
+              <button type="button" className="ghost" onClick={clearInSheet} disabled={active.length === 0}>Clear filters</button>
+              <button ref={doneRef} type="button" className="ghost rf-sheet-done" onClick={closeSheet}>Show {shown} {shown === 1 ? "record" : "records"}</button>
             </div>
           </div>
         </div>

@@ -2187,7 +2187,7 @@ ITER22_ATLAS_MUTATIONS = [
          '  if (!a.confidence) return null;'))],
      "atlas_unknown_attribution_never_renders_as_low_confidence"),
     ("not-applicable attribution renders a line",
-     [(IMP + "AttributionLine.tsx", _text('  if (!a || a.status === "NOT_APPLICABLE") return null;', '  if (!a) return null;'))],
+     [(IMP + "AttributionLine.tsx", _text('  if (a.status === "NOT_APPLICABLE") {', '  if (false) {'))],
      "atlas_not_applicable_attribution_renders_nothing"),
     ("a disputed attribution shows only its first competing attribution",
      [(IMP + "AttributionLine.tsx", _text('            {a.competing.map((c, i) => (', '            {a.competing.slice(0, 1).map((c, i) => ('))],
@@ -2246,7 +2246,7 @@ ITER22_ATLAS_MUTATIONS = [
      [(IMP + "model.ts", _text('sources: r.sources.filter((s) => s.supports.includes(claim)) }));', 'sources: r.sources }));'))],
      "atlas_inspector_says_which_source_supports_which_claim"),
     ("the confidence score is called a probability",
-     [(IMP + "ConfidenceChip.tsx", _text(': ordinal score, not a probability.', ': the probability that the report is right.'))],
+     [(IMP + "ConfidenceChip.tsx", _text(': ordinal score, not a probability and not a share of a maximum.', ': the probability that the report is right.'))],
      "atlas_confidence_is_words_with_the_served_caveat"),
     ("an absent evidence confidence renders as the lowest category",
      [(IMP + "model.ts", _text('  if (!c || c.category == null) return NOT_ASSESSED_LABEL;', '  if (!c || c.category == null) return "Preliminary";'))],
@@ -2289,7 +2289,7 @@ ITER22_ATLAS_MUTATIONS = [
      [(IMP + "ContextTimeline.tsx", _text('        <p><strong>{CONTEXT_CAVEAT}</strong></p>\n', ''))],
      "atlas_context_timeline_keeps_its_caveat_and_has_no_status_flag"),
     ("an older context statement is shown as the latest",
-     [(IMP + "ContextTimeline.tsx", _text('        {e.is_latest_of_type\n          ? <>As of', '        {true\n          ? <>As of'))],
+     [(IMP + "ContextTimeline.tsx", _text('latestOfType={latest.has(e) ? counts.get(e.context_type) ?? 1 : 0}', 'latestOfType={counts.get(e.context_type) ?? 1}'))],
      "atlas_context_timeline_keeps_its_caveat_and_has_no_status_flag"),
     ("the context timeline trusts the file's order",
      [(IMP + "ContextTimeline.tsx", _text(
@@ -3039,6 +3039,72 @@ CLOSURE_MUTATIONS = [
 MUTATIONS += CLOSURE_MUTATIONS
 
 
+# Iteration 22 release closure, frontend: self-claims shown apart, a null first_published never a
+# date, tied newest context statements kept and spoken of in the plural, and the Gulf page's three
+# placement rules. Caught by tests/test_iteration22_closure_frontend.py running the SHIPPED
+# TypeScript; the browser-level proof is web/e2e/closure22.e2e.ts and closure22.test.tsx.
+CL_ATTR = "web/src/global/impacts/AttributionLine.tsx"
+CL_CARD = "web/src/global/impacts/ImpactCard.tsx"
+CL_WN = "web/src/global/whatsNewText.ts"
+CL_CSV = "web/src/global/recordCsv.ts"
+CL_TL = "web/src/global/impacts/ContextTimeline.tsx"
+CL_LATEST = "web/src/global/impacts/latestOfType.ts"
+CL_REGIONAL = "web/src/global/CountryRegional.tsx"
+CL_BRIEF = "web/src/global/impacts/brief/impactBrief.ts"
+CL_PRECISION = "web/src/global/groupPrecision.ts"
+ITER22_CLOSURE_FRONTEND_MUTATIONS = [
+    ("a self-claim is listed with the competing attributions",
+     [(CL_ATTR, _text("            {a.competing.map((c, i) => (",
+                      '            {[...a.competing, ...selfClaims.map((x) => ({ ...x, basis: ["actor_self_claim"] }))].map((c, i) => ('))],
+     "closure22_self_claim_is_never_a_competing"),
+    ("a self-claim is shown as the attribution itself",
+     [(CL_ATTR, _text("    disputed ? null : actorText(a.actor, a.actor_type),",
+                      "    disputed ? null : actorText(selfClaims[0]?.actor ?? a.actor, a.actor_type),"))],
+     "closure22_self_claim_is_never_a_competing"),
+    ("a self-claim beside an assessed attribution is not shown",
+     [(CL_ATTR, _text("      <SelfClaims claims={selfClaims} />\n    </div>", "    </div>"))],
+     "closure22_self_claim_is_never_a_competing"),
+    ("a card with no first_published says it was added on a placeholder date",
+     [(CL_CARD, _text("      {isHistoricalAddition(r) && r.first_published && (", "      {(isHistoricalAddition(r) || r.first_published == null) && ("))],
+     "closure22_null_first_published"),
+    ("What's New gives a null first_published a date",
+     [(CL_WN, _text('isFirstPublishedDay(it.first_published)) s += `; first published ${recordDate(it.first_published)}`;',
+                    'true) s += `; first published ${recordDate(it.first_published || new Date(0).toISOString().slice(0, 10))}`;'))],
+     "closure22_null_first_published"),
+    ("the CSV fills a null first_published with a date",
+     [(CL_CSV, _text("    first_published: text(r.first_published),", '    first_published: text(r.first_published ?? "1970-01-01"),'))],
+     "closure22_null_first_published"),
+    ("the timeline speaks of one latest statement over several",
+     [(CL_TL, _text("  if (latestOfType > 1) return `As of ${fmtDate(e.as_of)}: one of the ${latestOfType} most recent ${type} statements on record. Not a current status.`;\n", ""))],
+     "closure22_tied_latest"),
+    ("an older payload's tie is settled by its one flag",
+     [(CL_LATEST, _text("    for (const e of ofType) if (e.is_latest_of_type === true || days.has(e.as_of)) out.add(e);",
+                        "    for (const e of ofType) if (e.is_latest_of_type === true || (flagged.length === 0 && days.has(e.as_of))) out.add(e);"))],
+     "closure22_tied_latest"),
+    ("the country tab keeps one statement per kind",
+     [(CL_REGIONAL, _text("  return { ...ctx, entries: ctx.entries.filter((e) => latest.has(e)) };",
+                          "  return { ...ctx, entries: ctx.entries.filter((e, i, all) => latest.has(e) && all.findIndex((x) => latest.has(x) && x.context_type === e.context_type) === i) };"))],
+     "closure22_tied_latest"),
+    ("the country tab's lead stays singular over a tie",
+     [(CL_REGIONAL, _text('  const lead = tie ? "The newest statements of each kind (where several share the newest date, all are shown)" : "The newest statement of each kind";',
+                          '  const lead = "The newest statement of each kind";'))],
+     "closure22_tied_latest"),
+    ("a brief carries one of several tied statements",
+     [(CL_BRIEF, _text("    for (const x of group) {", "    for (const x of group.slice(0, 1)) {"))],
+     "closure22_tied_latest"),
+    ("a brief's note stays singular over a tie",
+     [(CL_BRIEF, _text("  const tie = statements.some((s) => (s.ofType ?? 1) > 1);", "  const tie = false;"))],
+     "closure22_tied_latest"),
+    ("the Gulf page drops that impact-layer attacks are always country level",
+     [(CL_PRECISION, _text('    "In the impact records on this page that holds for every country, always.",\n', ""))],
+     "closure22_gulf_placement"),
+    ("the admin1 card loses the impact layer's country-level rule",
+     [(CL_PRECISION, _text(" In the impact records on this page they are country level. ${OTHERS}`;", " ${OTHERS}`;"))],
+     "closure22_gulf_placement"),
+]
+MUTATIONS += ITER22_CLOSURE_FRONTEND_MUTATIONS
+
+
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
     for d in COPY_DIRS:
@@ -3060,6 +3126,7 @@ TEST_FILES += ("tests/test_iteration22_confidence.py", "tests/test_iteration22_w
 TEST_FILES += ("tests/test_iteration22_country.py",)
 TEST_FILES += ("tests/test_iteration22_lead.py",)
 TEST_FILES += ("tests/test_iteration22_gulf.py",)
+TEST_FILES += ("tests/test_iteration22_closure_frontend.py",)
 
 
 def _run(box, k):

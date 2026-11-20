@@ -21,6 +21,12 @@ export function recordDate(date: string | null | undefined): string {
   return fmtDate(date ?? null);
 }
 
+/** A served first-publication date that is a real calendar day. null means the record is not yet
+ *  served (pending its first release), and anything else is not a date to show. */
+export function isFirstPublishedDay(v: string | null | undefined): v is string {
+  return typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+}
+
 /** The line under a category: dates for new records, never a count. */
 export function changeSummary(c: WhatsNewChange): string {
   if (c.category === "records_added" && c.event_dates) {
@@ -97,7 +103,8 @@ export function impactItemText(it: WhatsNewImpactItem, category: string): string
     // "Unknown" says nothing either way: neither date supports a claim.
     if (it.timing === "backfill") s += " — historical record found by research, not a new event";
     else if (it.timing === "new_event") s += " — new event";
-    if (it.timing && it.timing !== "unknown" && it.first_published) s += `; first published ${recordDate(it.first_published)}`;
+    // null is "pending its first release": no date to give, and nothing is written in its place.
+    if (it.timing && it.timing !== "unknown" && isFirstPublishedDay(it.first_published)) s += `; first published ${recordDate(it.first_published)}`;
   } else if (it.from && it.to) {
     const what = category === "attribution_updated" ? "attribution"
       : category === "ai_status_updated" ? "AI involvement" : "evidence confidence";

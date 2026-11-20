@@ -11,8 +11,8 @@
  */
 import { fmtDate } from "../../data";
 import { isAbstractedImpact } from "../recordCsv";
-import { isAbsenceWord, labelOf, lowerLabel } from "./vocab";
-import type { AffectedFigure, AiInvolvement, Attribution, ImpactRecord, ImpactSource, ImpactsPayload, ServiceImpact } from "./types";
+import { isAbsenceWord, labelOf, lowerLabel, vocabulary } from "./vocab";
+import type { AffectedFigure, AiInvolvement, Attribution, ImpactRecord, ImpactSource, ImpactsPayload, SelfClaim, ServiceImpact } from "./types";
 
 export const DISRUPTION = "disruption";
 /** The one mechanism a non-malicious, digitally triggered failure carries (§4). */
@@ -206,15 +206,54 @@ export function sourceKind(s: ImpactSource): string {
   return `${labelOf("source_roles", s.source_role)}, ${lowerLabel("media", s.medium)}`;
 }
 
+const MALICIOUS_FALLBACK: readonly string[] = ["kinetic", "cyber", "sabotage"];
+
+/** Whether the record's reported cause, or a contributing factor, is a malicious kind of cause
+ *  (iteration 22 closure). Read from the served cause vocabulary's `malicious` flag; where the
+ *  vocabulary has not loaded, kinetic, cyber and sabotage. "unknown" and "civil disruption" are not
+ *  established as malicious, so they are not. */
+export function isMaliciousCause(r: Pick<ImpactRecord, "cause_family" | "contributing_factors">): boolean {
+  const served = vocabulary("cause_families");
+  const malicious = (id: string) => {
+    const e = served.find((x) => String(x.id) === id) as { malicious?: boolean | null } | undefined;
+    return e && typeof e.malicious === "boolean" ? e.malicious : MALICIOUS_FALLBACK.includes(id);
+  };
+  return [r.cause_family, ...(r.contributing_factors ?? [])].some(malicious);
+}
+
+/** The actors' own claims of responsibility on an attribution, as served. A malformed or absent
+ *  list is no claims; an entry with neither an actor nor a statement says nothing and is dropped. */
+export function selfClaimsOf(a: Attribution | null | undefined): SelfClaim[] {
+  const list = a && Array.isArray(a.self_claims) ? a.self_claims : [];
+  return list.filter((c): c is SelfClaim => !!c && typeof c === "object" && (!!c.statement || !!c.actor));
+}
+
+/** The sentence a self-claim is shown as, after "Self-claim (unverified):". The served statement
+ *  when there is one; otherwise who claimed it, in words that say it is a claim. */
+export function selfClaimText(c: SelfClaim): string {
+  if (c.statement) return c.statement;
+  const type = c.actor_type ? ` (${lowerLabel("actor_types", c.actor_type)})` : "";
+  return `${c.actor ?? "An actor"}${type} claimed responsibility.`;
+}
+
+/** Said once under the self-claims, wherever they are shown. */
+export const SELF_CLAIM_NOTE = "An actor's own claim of responsibility, recorded as provenance. "
+  + "It is not an attribution, not a competing attribution, and it does not change the attribution or its confidence.";
+
 /** What the evidence for this record does not establish. Derived from the record's own fields. */
 export function notEstablished(r: ImpactRecord): string[] {
   const out: string[] = [];
   const a = r.attribution;
-  if (a.status === "UNKNOWN") out.push("Who was responsible. No credible public attribution was found; that is not the same as a low-confidence attribution.");
+  if (a.status === "UNKNOWN" && !isMaliciousCause(r)) out.push("Whether the cause was malicious at all. The reported cause is not established as malicious, so there is no attribution question to answer yet.");
+  else if (a.status === "UNKNOWN") out.push("Who was responsible. No credible public attribution was found; that is not the same as a low-confidence attribution.");
   else if (a.status === "CLAIMED") out.push("That the actor who claimed responsibility carried it out. A claim is not corroboration.");
   else if (a.status === "SUSPECTED") out.push("Who was responsible. A source names a likely actor without a firm attribution.");
   else if (a.status === "ASSESSED") out.push("A formal government or law-enforcement attribution. One body's assessment is reported, with its date.");
   else if (a.status === "DISPUTED") out.push("Which attribution is right. Credible sources disagree and this site does not choose between them.");
+  // A self-claim beside another status: the claim is recorded, and it is still only a claim.
+  if (a.status !== "CLAIMED" && selfClaimsOf(a).length > 0) {
+    out.push("That an actor who claimed responsibility carried it out. A self-claim is not corroboration and is not counted as an attribution.");
+  }
   if (!aiReported(r.ai_involvement)) out.push("Whether AI played any part. No source ties AI to this incident, which is not a finding that none was involved.");
   else {
     if (r.ai_involvement.status !== "CONFIRMED") out.push(`That AI was involved. It is ${lowerLabel("ai_statuses", r.ai_involvement.status)}, not confirmed.`);

@@ -38,7 +38,7 @@ export function briefImpacts(payload: ImpactsPayload | null, records: readonly I
 }
 
 export function briefContextStatements(regional: RegionalContext): BriefStatement[] {
-  return briefStatements(regional.entries, labelled(regional.context_types));
+  return briefStatements(regional.entries, labelled(regional.context_types), regional.latest_by_type);
 }
 
 export function briefConfidence(method: ConfidenceMethod | null): BriefConfidence | null {

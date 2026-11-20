@@ -13,7 +13,7 @@
  *  - The default view is every published record. No preset or default hides low-confidence records.
  */
 import {
-  NO_FILTERS, encodeFilters,
+  NO_FILTERS, applyFilters, encodeFilters,
   type ChoiceFilter, type FilterDef, type FilterOption, type FilterState,
 } from "../recordFilters";
 import {
@@ -127,6 +127,22 @@ export function presetState(preset: AtlasPreset, defs: readonly FilterDef<Impact
     if (known.length > 0) choices[id] = known;
   }
   return { choices, dates: {} };
+}
+
+/** How many published records a preset shows (iteration 22 closure), so a chip that leads to an
+ *  empty view says so before it is chosen. A preset whose filter is not on this page shows none:
+ *  dropping that filter would count every record. A count of records, never of a country's. */
+export function presetCount(preset: AtlasPreset, defs: readonly FilterDef<ImpactRecord>[], records: readonly ImpactRecord[], today: string): number {
+  const state = presetState(preset, defs);
+  if (Object.keys(preset.choices).some((id) => !state.choices[id])) return 0;
+  return applyFilters(records, defs, state, today).length;
+}
+
+/** The line under a chosen preset that matches nothing: an empty result is a correct answer. */
+export function presetEmptyText(preset: AtlasPreset): string {
+  return preset.id === "ai"
+    ? "No reviewed record currently reports AI involvement. That is a statement about this corpus, not a finding that AI played no part anywhere."
+    : "No published record currently matches this preset. That is a statement about this corpus, which is not a census.";
 }
 
 /** The address fragment for a preset ("f.cause=cyber&f.sector=electricity"). */

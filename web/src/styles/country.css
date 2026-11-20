@@ -44,10 +44,10 @@
   margin-top: 6px; padding: 8px 10px; border-left: 2px solid var(--accent-dim);
   background: var(--bg-panel-2); border-radius: var(--radius);
 }
-.ev-inspector h4 {
+.ev-inspector h4, .ev-inspector h5 {
   margin: 10px 0 3px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim);
 }
-.ev-inspector h4:first-child { margin-top: 0; }
+.ev-inspector h4:first-child, .ev-inspector h5:first-child { margin-top: 0; }
 .ev-inspector p { margin: 3px 0; line-height: 1.5; }
 .ev-inspector ul { margin: 3px 0; padding-left: 18px; }
 .ev-inspector li { margin: 2px 0; line-height: 1.45; }

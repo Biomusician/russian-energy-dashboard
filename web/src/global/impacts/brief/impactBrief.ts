@@ -19,6 +19,7 @@
  */
 import { IT_OUTAGE, NOT_ASSESSED as NOT_ASSESSED_ID, NOT_ASSESSED_LABEL, confidenceLabel } from "../model";
 import { CONFIDENCE_IS_NOT } from "../../countryCopy";
+import { latestCounts, latestEntries } from "../latestOfType";
 
 /** The fields of a served impact record a brief reads. Structural, so the served type satisfies it. */
 export interface BriefSourceRecord {
@@ -117,6 +118,7 @@ export interface BriefMetric { value: number | null; value_upper?: number | null
 
 /** The fields of a served regional-context entry a brief reads. */
 export interface BriefSourceEntry {
+  id?: string;
   as_of: string;
   context_type: string;
   claim: string;
@@ -125,7 +127,9 @@ export interface BriefSourceEntry {
   is_latest_of_type?: boolean;
 }
 
-export interface BriefStatement { asOf: string; type: string; claim: string; figure: string | null; source: string }
+/** `ofType`: how many of the type's newest statements the brief carries (more than one when
+ *  several share the newest date; all of them are carried, never one picked). */
+export interface BriefStatement { asOf: string; type: string; claim: string; figure: string | null; source: string; ofType?: number }
 
 const QUALIFIER_WORDS: Record<string, string> = { about: "about ", at_least: "at least ", at_most: "up to " };
 
@@ -152,23 +156,33 @@ function isoDate(iso: string): string {
   return `${Number(m[3])} ${months[Number(m[2]) - 1] ?? m[2]} ${m[1]}`;
 }
 
-/** The newest statement of each type, newest first, at most five. A brief is a snapshot: it carries
- *  the most recent statement on record for a type with its date, never an older one beside it and
- *  never a status. */
-export function briefStatements(entries: readonly BriefSourceEntry[], typeLabels: readonly Labelled[]): BriefStatement[] {
+/** The newest statements of each type, newest first, at most five. A brief is a snapshot: it carries
+ *  the most recent statements on record for a type with their date, never an older one beside them
+ *  and never a status. Where several statements of a type share the newest date, all of them are
+ *  carried or none: a type that does not fit whole is left out rather than cut to an arbitrary one.
+ *  `latestByType` is the served map; without it the latest are read from the entries. */
+export function briefStatements(entries: readonly BriefSourceEntry[], typeLabels: readonly Labelled[], latestByType?: unknown): BriefStatement[] {
   const label = (id: string) => typeLabels.find((t) => t.id === id)?.label ?? id;
+  const latest = latestEntries(entries, latestByType);
+  const counts = latestCounts(entries, latest);
   const seen = new Set<string>();
   const out: BriefStatement[] = [];
-  for (const e of [...entries].sort((a, b) => (a.as_of < b.as_of ? 1 : a.as_of > b.as_of ? -1 : 0))) {
+  const newestFirst = [...entries].sort((a, b) => (a.as_of < b.as_of ? 1 : a.as_of > b.as_of ? -1 : 0));
+  for (const e of newestFirst) {
     if (seen.has(e.context_type)) continue;
     seen.add(e.context_type);
-    out.push({
-      asOf: e.as_of,
-      type: label(e.context_type),
-      claim: e.claim,
-      figure: e.metric ? metricText(e.metric) : null,
-      source: [...new Set(e.sources.map((s) => s.publisher).filter(Boolean))].join("; ") || "source not stated",
-    });
+    const group = newestFirst.filter((x) => x.context_type === e.context_type && latest.has(x));
+    if (group.length === 0 || out.length + group.length > MAX_BRIEF_STATEMENTS) continue;
+    for (const x of group) {
+      out.push({
+        asOf: x.as_of,
+        type: label(x.context_type),
+        claim: x.claim,
+        figure: x.metric ? metricText(x.metric) : null,
+        source: [...new Set(x.sources.map((s) => s.publisher).filter(Boolean))].join("; ") || "source not stated",
+        ofType: counts.get(x.context_type) ?? 1,
+      });
+    }
     if (out.length >= MAX_BRIEF_STATEMENTS) break;
   }
   return out;
@@ -256,6 +270,16 @@ function statementLines(statements: readonly BriefStatement[]): BriefLine[] {
   return out;
 }
 
+/** The line under the Gulf brief's statements. Plural where a type carries more than one newest
+ *  statement: "the most recent statement" over two statements would pick one in words. */
+export function statementsNote(statements: readonly BriefStatement[]): string {
+  const tie = statements.some((s) => (s.ofType ?? 1) > 1);
+  const recent = tie
+    ? "the most recent on record for its type (where several statements of a type share the newest date, all of them are shown)"
+    : "the most recent on record for its type";
+  return `Each statement is as of its own date: ${recent}, not a current status. No open or closed status is published. A market movement is not an infrastructure loss.`;
+}
+
 function confidenceBlock(c: BriefConfidence | null): BriefBlock {
   return {
     heading: "Evidence confidence",
@@ -315,7 +339,7 @@ export function gulfImpactBrief(x: GulfBriefInput): ImpactBrief {
     : x.statements.length === 0
       ? [{ text: "No reviewed regional context statement has been published yet." }]
       : statementLines(x.statements);
-  context.push({ text: "Each statement is as of its own date: the most recent on record for its type, not a current status. No open or closed status is published. A market movement is not an infrastructure loss.", dim: true });
+  context.push({ text: statementsNote(x.statements ?? []), dim: true });
 
   return {
     title: `${x.group.label}: reported impacts and regional context`,

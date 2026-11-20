@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { CountrySystem } from "./manifest";
 import { ContextTimeline, loadRegionalContext, type RegionalContext } from "./impacts";
+import { anyTie, latestCounts, latestEntries } from "./impacts/latestOfType";
 import { TAB_LABEL, type RegionalGroup } from "./countryTabs";
 import { inSentence } from "./countryCopy";
 import { navigateGroup } from "./router";
@@ -16,10 +17,20 @@ import "../styles/countryOverview.css";
  *  It says nothing about any facility in this country, and the tab says so first.
  */
 
-/** The newest statement of each kind, as the build marks them: the country page's compact view.
- *  The served flag is used as it is; nothing here decides what is newest. */
+/** The newest statements of each kind, as the build marks them: the country page's compact view.
+ *  The served `latest_by_type` (or, in an older payload, the served flags and the statements tied
+ *  with them) is used as it is. Several statements of one kind can share the newest date; all of
+ *  them are kept, never one picked over the others. */
 export function latestOfEachType(ctx: RegionalContext): RegionalContext {
-  return { ...ctx, entries: ctx.entries.filter((e) => e.is_latest_of_type) };
+  const latest = latestEntries(ctx.entries, ctx.latest_by_type);
+  return { ...ctx, entries: ctx.entries.filter((e) => latest.has(e)) };
+}
+
+/** The sentence above the compact view: plural when a kind has more than one newest statement. */
+export function compactLead(compact: RegionalContext, older: number): string {
+  const tie = anyTie(latestCounts(compact.entries, latestEntries(compact.entries, compact.latest_by_type)));
+  const lead = tie ? "The newest statements of each kind (where several share the newest date, all are shown)" : "The newest statement of each kind";
+  return older > 0 ? `${lead}; ${older} earlier ${older === 1 ? "statement is" : "statements are"} on the full timeline.` : `${lead}.`;
 }
 
 export function regionalNote(name: string): string {
@@ -47,8 +58,7 @@ export function CountryRegional({ sys, group }: { sys: CountrySystem; group: Reg
       {compact && (
         <>
           {compact.entries.length > 0 && (
-            <p className="small dim">The newest statement of each kind
-              {older > 0 ? `; ${older} earlier ${older === 1 ? "statement is" : "statements are"} on the full timeline.` : "."}</p>
+            <p className="small dim regional-lead">{compactLead(compact, older)}</p>
           )}
           <ContextTimeline ctx={compact} />
         </>

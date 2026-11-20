@@ -336,7 +336,11 @@ test.describe("Gulf overview: cyber and civilian services", () => {
     await expect(failures).toHaveCount(1);
     await expect(failures.first()).toContainText("IT failure:");
     await expect(sec.getByRole("list", { name: "Cyber records, newest first" })).not.toContainText("IT failure:");
-    await expect(sec.locator(".cause-kinds")).toContainText("Not an attack, and never listed as cyber");
+    // Said once: the served definition says it ("Not a cyberattack, and never counted as one"), or,
+    // without one, the page's own sentence does (iteration 22 closure: it used to say both).
+    const itDef = await sec.locator(".cause-kinds div").last().locator("dd").innerText();
+    expect(itDef).toMatch(/Not a cyberattack, and never counted as one|Not an attack, and never listed as cyber/);
+    expect(itDef.match(/\bnever\b/g)).toHaveLength(1);
     // Every cause the taxonomy has is explained in the taxonomy's own words.
     for (const c of impacts.vocabularies.cause_families) await expect(sec.locator(".cause-kinds")).toContainText(c.label);
     // Attribution is shown as who attributes, row by row; there is no actor table.
@@ -408,7 +412,10 @@ test.describe("Gulf overview: regional context", () => {
     const sorted = [...context.entries].sort((a, b) => (a.date < b.date ? 1 : -1));
     for (const [i, e] of sorted.entries()) {
       const row = entries.nth(i);
-      await expect(row.locator(".ctx-date")).toHaveText(shown(e.date));
+      // "As of" leads each card; the statement's own date follows only where it differs.
+      await expect(row.locator(".ctx-date")).toHaveText(`As of ${shown(e.as_of)}`);
+      await expect(row.locator(".ctx-published")).toHaveCount(e.date === e.as_of ? 0 : 1);
+      if (e.date !== e.as_of) await expect(row.locator(".ctx-published")).toContainText(`statement dated ${shown(e.date)}`);
       await expect(row.locator(".ctx-head")).toContainText(e.sources[0].publisher);
       await expect(row.locator(".ctx-sources a").first()).toHaveAttribute("href", /^https?:\/\//);
       await expect(row.locator(".ctx-asof")).toContainText(e.is_latest_of_type ? `As of ${shown(e.as_of)}` : `Historical statement, as of ${shown(e.as_of)}`);
@@ -690,7 +697,9 @@ test.describe("Gulf overview: a broken impact file", () => {
     const region = page.getByRole("region", { name: "Reviewed impact records for this region" });
     await expect(region.getByRole("alert")).toContainText("That is a failed download, not a finding");
     expect(await region.innerText()).not.toMatch(/No impact record/);
-    await expect(section(page, "services").getByRole("alert")).toContainText("could not be loaded");
+    // The services section says it too, as a polite status: one failed file is one alert.
+    await expect(section(page, "services").getByRole("status").filter({ hasText: "could not be loaded" })).toHaveCount(1);
+    await expect(page.getByRole("alert").filter({ hasText: "impact" })).toHaveCount(1);
     // The context timeline, a different file, is unaffected.
     await expect(section(page, "context").locator(".ctx-entry")).toHaveCount(context.entries.length);
     await expect(page.getByRole("region", { name: "Recent reviewed events in this region" })).toBeVisible();

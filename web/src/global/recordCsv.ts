@@ -256,11 +256,11 @@ export const IMPACT_FIELDS: Record<(typeof IMPACT_COLUMNS)[number], string> = {
   ai_involvement_role: "The role the source describes.",
   ai_involvement_as_of: "The date of that statement.",
   evidence_confidence: "Evidence confidence category: the quality of the public evidence that it happened and of the reported effect. Not a probability, a severity or an importance.",
-  evidence_confidence_score: "The ordinal score behind the category (0 to 100). Not a probability.",
+  evidence_confidence_score: "The ordinal score behind the category (0 to 100). Not a probability and not a percentage; never rank or sort records by it.",
   originating_statements: "How many distinct originating statements support the record. Republications count once.",
   citations: "Each cited source as publisher, date, address; sources separated by \" | \".",
   source_headlines: "Original-language headlines of the cited sources, where the record may show them.",
-  first_published: "The build date on which the record was first served here: not the event's date and not the source's.",
+  first_published: "The build date on which the record was first served here: not the event's date and not the source's. Empty (null in the served data): not yet served, pending its first release.",
   publication_note: "Why cells of this row are empty, where a publication rule withholds them.",
 };
 
@@ -370,6 +370,10 @@ export interface ReadmeInput {
 }
 
 /** "About this file": plain text, one fact per line, so it can be read anywhere. */
+/** Said in every README of a file that carries the evidence-confidence score (iteration 22 closure). */
+export const SCORE_NOTE = "evidence_confidence_score is ordinal: it is not a probability and not a percentage, and records must not be ranked or sorted by it. "
+  + "The evidence_confidence category beside it is the finding.";
+
 export function readmeText(i: ReadmeInput): string {
   const hidden = i.total - i.shown;
   const lines = [
@@ -392,6 +396,7 @@ export function readmeText(i: ReadmeInput): string {
     "- Each row is a publicly reported record that met the inclusion rule and passed review. Records still in review are not published and are not in this file.",
     "- A record is not a measure of severity, and nothing here ranks a country, a region or a facility.",
     ...i.limitations.filter(Boolean).map((l) => `- ${l}`),
+    ...(i.columns.includes("evidence_confidence_score") ? [`- ${SCORE_NOTE}`] : []),
     "",
     "Format",
     ...CSV_CONVENTIONS.map((c) => `- ${c}`),

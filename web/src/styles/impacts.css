@@ -18,6 +18,8 @@
 .attr-line, .ai-line { padding-left: 8px; border-left: 2px solid var(--line); }
 .attr-statement, .ai-statement { margin-top: 2px; }
 .attr-competing { margin: 3px 0; padding-left: 18px; }
+.attr-self-claims { margin-top: 3px; }
+.attr-self-claim-list { margin: 3px 0; padding-left: 0; list-style: none; }
 .impact-attempt-label {
   margin: 0 0 4px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; color: var(--text);
   border: 1px dashed var(--text-faint); border-radius: var(--radius); padding: 2px 6px; display: inline-block;
@@ -104,6 +106,8 @@
 .global-main a.atlas-preset:hover, .global-main a.atlas-preset:focus-visible { border-color: var(--accent-dim); color: var(--accent); }
 .global-main a.atlas-preset.is-on { border-color: var(--accent); color: var(--accent); font-weight: 600; }
 .atlas-preset-meaning { margin: -6px 0 0; }
+.atlas-preset-n { font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+.atlas-preset-empty { margin: 4px 0 0; }
 
 .atlas-countries .home-section-head { margin-bottom: 4px; }
 .atlas-country-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 5px; }
@@ -113,6 +117,7 @@
 }
 .atlas-country:hover, .atlas-country:focus-visible { border-color: var(--accent-dim); color: var(--accent); }
 .atlas-country.is-on { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.atlas-monitored-tag { font-size: 11px; color: var(--text-dim); font-weight: 400; }
 .atlas-map { height: min(46vh, 420px); min-height: 260px; display: flex; margin-top: 8px; }
 .atlas-map-key { margin: 4px 0 0; color: var(--text-dim); display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
 .atlas-key-swatch { display: inline-block; width: 11px; height: 11px; border: 1px solid var(--text-faint); margin-right: 5px; vertical-align: -1px; }
@@ -134,6 +139,11 @@
 @media (max-width: 600px) {
   .atlas-main { padding-left: 12px; padding-right: 12px; }
   .atlas-badge { white-space: normal; }
+  /* One caveat statement above the records on a phone (iteration 22 closure): the bias note stays;
+     the first two caveats are repeated in "What this is / is not", and the short restatement under
+     the filters repeats the bias note. Nothing is removed, only not said three times. */
+  .atlas-caveats, .atlas-bias-short { display: none; }
+  .atlas-country-disclosure > summary { min-height: 44px; display: list-item; padding: 10px 0; }
   .atlas-country, .global-main a.atlas-preset { min-height: 36px; }
   .impact-card .event-facts > div { grid-template-columns: 1fr; gap: 1px; }
   .conf-components { font-size: 11px; }

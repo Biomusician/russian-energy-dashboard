@@ -75,6 +75,12 @@ export const IMPACT_CORPUS_LINE =
   "Reviewed impact records from a separate, non-scored corpus. They are not part of this country's published "
   + "energy-disruption record and enter no count or index.";
 
+/** Why an event can be in the impact tab and not in the country's own record (iteration 22 closure). */
+export const IMPACT_INCLUSION_LINE =
+  "This country's published energy disruptions follow the country system's own inclusion rule. The impact layer has its own, "
+  + "broader contract (energy and essential civilian services, cyber, technical and natural causes), so an event can appear here "
+  + "and not there. Impact records never enter a score.";
+
 /** One line about the impact corpus, by what is known. A count only once the file has been read,
  *  and always beside the words that say it is another corpus. */
 export function impactLine(name: string, impacts: ImpactPresence): string {
