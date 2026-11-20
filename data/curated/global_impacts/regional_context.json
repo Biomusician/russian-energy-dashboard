@@ -858,7 +858,7 @@
       "metric": {
         "value": -0.5,
         "unit": "percent",
-        "basis": "expected change in global natural gas demand in 2026 (IEA, as reported by Pipeline & Gas Journal)"
+        "basis": "expected annual change in global natural gas demand in 2026 against 2025, which the source calls the third annual contraction in seven years (IEA quarterly Gas Market Report, as reported by Pipeline & Gas Journal)"
       },
       "sources": [
         {
@@ -884,7 +884,9 @@
         "roles": {
           "evidence": "accept_with_correction",
           "safety": "accept"
-        }
+        },
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -999,12 +1001,8 @@
       "date": "2026-08-12",
       "as_of": "2026-08-12",
       "context_type": "aggregate_supply",
-      "claim": "The IEA said in its monthly oil market report that global oil supply had fallen well below demand for reasons including the disruption at the Strait of Hormuz, and forecast that global oil supply would fall by 4.3 million barrels per day in 2026, Reuters reported; the Reuters report put cumulative stock draws since the war started at 410 million barrels.",
-      "metric": {
-        "value": -4.3,
-        "unit": "million b/d",
-        "basis": "forecast change in global oil supply in 2026 (IEA Oil Market Report, August 2026, as reported by Reuters)"
-      },
+      "claim": "The IEA said in its monthly oil market report that global oil supply had fallen well below demand for reasons including the disruption at the Strait of Hormuz, and forecast a larger fall in global oil supply in 2026 than in its July report, Reuters reported; the Reuters report put cumulative stock draws since the war started at 410 million barrels.",
+      "metric": null,
       "sources": [
         {
           "ref": "s1",
@@ -1018,7 +1016,7 @@
             "occurrence"
           ],
           "opened": true,
-          "derived_claim": "Reuters report of the IEA August report: supply to fall 4.3 mb/d in 2026; 410 million barrel stock draw.",
+          "derived_claim": "Reuters report of the IEA August report: a larger 2026 supply fall than the July report forecast; 410 million barrel stock draw since the war started.",
           "origin": "Reuters",
           "social": null
         },
@@ -1034,7 +1032,7 @@
             "occurrence"
           ],
           "opened": true,
-          "derived_claim": "Summarises the same IEA report: supply forecast to fall 4.3 million b/d in 2026; demand to decline 1.6 million b/d.",
+          "derived_claim": "Summarises the same IEA report: global oil supply forecast to fall in 2026, partly offset by higher production from the Americas.",
           "origin": "IEA",
           "social": null
         }
@@ -1045,7 +1043,9 @@
         "roles": {
           "evidence": "accept_with_correction",
           "safety": "accept"
-        }
+        },
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {

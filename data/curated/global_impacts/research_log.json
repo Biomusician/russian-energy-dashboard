@@ -193,7 +193,7 @@
       "method": "site search (blackout Sumatra; Bali blackout; Aceh power outage; Batam blackout; PDNS; ransomware; national data center)",
       "window": "2025-11 to 2026-10 in practice",
       "status": "done for 2026 events; not done before late 2025",
-      "limitation": "The English search returns little before late 2025, so the Sumatra outage of 4-5 June 2024, the Bali outage of 2 May 2025, the Aceh outage of 29 Sept 2025 and the Batam outage of 1 Jan 2023 (all on the discovery list) were not sourced. No PLN press release and no Indonesian-language source reached."
+      "limitation": "The English search returns little before late 2025, so the Bali outage of 2 May 2025, the Aceh outage of 29 Sept 2025 and the Batam outage of 1 Jan 2023 (all on the discovery list) were not sourced. No PLN press release and no Indonesian-language source reached."
     },
     {
       "lane": "asia",
@@ -1010,7 +1010,7 @@
       "scope": "impacts",
       "research_pass": "i22-mideast",
       "family": "Web search for discovery (wire and regional press)",
-      "method": "12 web searches: one 2026 cyber sweep, one per incident already known to the researcher, to find addresses (Beirut airport, Israeli hospital ransomware, Israeli irrigation controllers, Egypt load shedding, Tunisia blackout, Syria blackout, Tunisia water cuts, Aden blackout), one Turkish-language cyber sweep, one 2026 blackout sweep, one 2025-2026 North Africa/Levant cyber sweep.",
+      "method": "12 web searches: one 2026 cyber sweep, one per incident already known to the researcher, to find addresses (eight incidents in Egypt, Israel, Lebanon, Syria, Tunisia and Yemen), one Turkish-language cyber sweep, one 2026 blackout sweep, one 2025-2026 North Africa/Levant cyber sweep.",
       "window": "2022-2026",
       "status": "done",
       "limitation": "Discovery leaned on incidents the researcher already knew of; the two open-ended 2026 sweeps returned mostly out-of-scope countries. Coverage is a sample, not a census."
@@ -1618,9 +1618,9 @@
   ],
   "latest_research_date": "2026-11-19",
   "lead_holds": {
-    "held": 23,
+    "held": 25,
     "duplicates_across_lanes": 8,
-    "safety_grounds": 5,
+    "safety_grounds": 7,
     "other_grounds": 10
   }
 }
