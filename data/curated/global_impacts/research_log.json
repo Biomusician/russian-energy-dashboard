@@ -30,10 +30,10 @@
       "scope": "impacts",
       "research_pass": "i22-africa_latam",
       "family": "National and regional media",
-      "method": "WebSearch then direct fetch",
+      "method": "web search, then direct fetch",
       "window": "2022-2026",
       "status": "sampled per event, not enumerated",
-      "limitation": "One to three articles per event. Several Nigerian and Ghanaian outlets refused the fetch tool."
+      "limitation": "One to three articles per event. Several Nigerian and Ghanaian outlets refused automated requests."
     },
     {
       "lane": "africa_latam",
@@ -53,24 +53,24 @@
       "method": "direct fetch of press-releases index",
       "window": "2022-05 to 2026-08",
       "status": "listed, nothing filed",
-      "limitation": "All releases are PDFs that the fetch tool cannot read; no Ghana grid record was filed. Dates of interest: 9 May 2022, 8 Sep 2023, 3 Mar 2024, 1 May 2025, 10 Feb 2026, 20 Aug 2026."
+      "limitation": "All releases are PDFs that could not be read when fetched; no Ghana grid record was filed. Dates of interest: 9 May 2022, 8 Sep 2023, 3 Mar 2024, 1 May 2025, 10 Feb 2026, 20 Aug 2026."
     },
     {
       "lane": "africa_latam",
       "scope": "impacts",
       "research_pass": "i22-africa_latam",
       "family": "Operator press archive: ZESCO (Zambia)",
-      "method": "direct fetch of media_releases.php pages 1 and 2",
+      "method": "the regulator's media-releases index, pages 1 and 2, fetched directly",
       "window": "2024-07 to 2025-09",
       "status": "partial",
-      "limitation": "Statements are PDFs; the fetch tool returned undecoded binary, so only titles, dates and index summaries were read. Hours of rationing were not confirmed."
+      "limitation": "Statements are PDFs that could not be decoded when fetched, so only titles, dates and index summaries were read. Hours of rationing were not confirmed."
     },
     {
       "lane": "africa_latam",
       "scope": "impacts",
       "research_pass": "i22-africa_latam",
       "family": "Specialist cyber media and cyber firms",
-      "method": "WebSearch then direct fetch",
+      "method": "web search, then direct fetch",
       "window": "2022-2026",
       "status": "sampled per event",
       "limitation": "No national CERT incident archive was found or enumerated for any country in scope."
@@ -104,6 +104,16 @@
       "window": "2025-08 to 2026-11",
       "status": "partial",
       "limitation": "OpenAI report pages returned HTTP 403. An Anthropic 2026 misuse report mentioned by a secondary page was not located on the newsroom index. Microsoft reports not checked."
+    },
+    {
+      "lane": "ai",
+      "scope": "impacts",
+      "research_pass": "i22-ai",
+      "family": "Existing monitored-system records",
+      "method": "the published events of the United States and China country systems, read locally",
+      "window": "all",
+      "status": "done",
+      "limitation": "Only the United States and China systems were scanned; the two incidents found are in Moldova and Romania, which are not monitored systems."
     },
     {
       "lane": "ai",
@@ -173,7 +183,7 @@
       "method": "direct fetch from search results",
       "window": "2022",
       "status": "partial",
-      "limitation": "CERT-In not enumerated. No Indian cyber incident with a stated service disruption in energy was found; AIIMS (Nov 2022, healthcare) left to the water/health lane."
+      "limitation": "CERT-In not enumerated. No Indian cyber incident with a stated service disruption in energy was found; the AIIMS hospital incident (November 2022, healthcare) was left to the water and health research."
     },
     {
       "lane": "asia",
@@ -300,10 +310,10 @@
       "scope": "impacts",
       "research_pass": "i22-eurasia",
       "family": "Duplicate check against the project's own data",
-      "method": "Read data/curated/incidents.csv (theatre) and listed data/curated/systems (country systems).",
+      "method": "The theatre's incident list and the monitored country systems' published events were read locally.",
       "window": "all",
       "status": "complete",
-      "limitation": "None of the monitored country systems is in this lane's region. One overlap found: the 16 July 2024 technical outage in southern Russia is already in the theatre (cur-2024-07-16-rostov-npp), so it was not filed here."
+      "limitation": "None of the monitored country systems is in the region searched. One overlap was found: a 16 July 2024 technical outage in southern Russia is already in the theatre, so it was not filed here."
     },
     {
       "lane": "eurasia",
@@ -313,7 +323,7 @@
       "method": "Opened Ukrainian government portal pages and Interfax / Interfax-Ukraine reports returned by search; chose addresses that name no place, operator or weapon.",
       "window": "2022-11 to 2026-01",
       "status": "complete for the four records filed",
-      "limitation": "The energy ministry site (mev.gov.ua) and Ukrainska Pravda refuse the fetch tool. No strike list was built and no recovery or later status was researched, by instruction."
+      "limitation": "The energy ministry site (mev.gov.ua) and Ukrainska Pravda refused automated requests. No strike list was built and no recovery or later status was researched: the project's scope rules exclude both."
     },
     {
       "lane": "eurasia",
@@ -333,7 +343,7 @@
       "method": "Opened each post linked from an opened article through Telegram's public embed.",
       "window": "2023-2025",
       "status": "complete for the records filed",
-      "limitation": "Five posts did not render through the embed (see inaccessible_sources). Identity of operator channels rests on The Record's links."
+      "limitation": "Five posts did not render through the embed and were recorded as inaccessible. Identity of operator channels rests on The Record's links."
     },
     {
       "lane": "eurasia",
@@ -353,17 +363,17 @@
       "method": "Opened pages returned by the allowance searches.",
       "window": "2023-2026",
       "status": "partial",
-      "limitation": "No operator or ministry page was opened for the 2026 Central Asia and Georgia blackouts; both are after the model's knowledge cutoff and rest on the opened pages only."
+      "limitation": "No operator or ministry page was opened for the 2026 Central Asia and Georgia blackouts; both rest on the media pages opened."
     },
     {
       "lane": "eurasia",
       "scope": "impacts",
       "research_pass": "i22-eurasia",
       "family": "The Record (Recorded Future News) article archive",
-      "method": "Downloaded the site's public sitemap (7 pages, 12,687 addresses), filtered slugs by country, actor and operator keywords (1,276 hits), then by service-effect keywords; opened the shortlisted articles with the fetch tool.",
+      "method": "Downloaded the site's public sitemap (7 pages, 12,687 addresses), filtered slugs by country, actor and operator keywords (1,276 hits), then by service-effect keywords; opened the shortlisted articles directly.",
       "window": "2022-01 to 2026-11",
       "status": "partial",
-      "limitation": "After about 35 article fetches the site answered HTTP 520 with Retry-After; I stopped rather than keep requesting. 14 shortlisted articles were not opened (see unfinished). Sitemap dates before March 2023 are migration dates, not publication dates. Slug filtering misses incidents whose slug names neither the country nor a service word."
+      "limitation": "After about 35 article requests the site answered HTTP 520 with Retry-After, and requests were stopped rather than repeated. 14 shortlisted articles were not opened. Sitemap dates before March 2023 are migration dates, not publication dates. Slug filtering misses incidents whose slug names neither the country nor a service word."
     },
     {
       "lane": "eurasia",
@@ -463,7 +473,7 @@
       "method": "direct fetch of every quarterly post by its predictable address; no search used",
       "window": "2022-04 to 2026-09",
       "status": "complete for this family",
-      "limitation": "Q1 2022 was not fetched. Pages were read through a summarising reader, not in full. For Q1-Q3 2026 I asked for attack-linked or uncaused items as country and date only. Cloudflare is one origin however many pages are cited. The posts list networks by name; none is carried into a record."
+      "limitation": "Q1 2022 was not fetched. Pages were read through a summarising reader, not in full. For Q1-Q3 2026, attack-linked or uncaused items were read as country and date only. Cloudflare is one origin however many pages are cited. The posts list networks by name; none is carried into a record."
     },
     {
       "lane": "gulf_civil2",
@@ -523,7 +533,7 @@
       "method": "1 search, then direct fetch of two pages",
       "window": "2022-11",
       "status": "partial",
-      "limitation": "Both notices give no scale and no duration. Other results name governorates in their addresses and were not opened. The September 2022 and September 2025 electricity outages are already filed by gulf_states."
+      "limitation": "Both notices give no scale and no duration. Other results name governorates in their addresses and were not opened. The September 2022 and September 2025 electricity outages were already covered by the Gulf states research pass."
     },
     {
       "lane": "gulf_civil2",
@@ -544,6 +554,16 @@
       "window": "2023 to 2025",
       "status": "not achieved",
       "limitation": "Results were the 19 July 2024 global software-update failure (the national cyber authority called the effect minimal; flight delays named airports) and undated or unreliable pages. Nothing was opened."
+    },
+    {
+      "lane": "gulf_states",
+      "scope": "impacts",
+      "research_pass": "i22-gulf_states",
+      "family": "Country-system research queues, used as a discovery list",
+      "method": "read locally; every address reused was opened again before it was cited",
+      "window": "2022-01-01 to 2026-11-12",
+      "status": "complete as a discovery aid",
+      "limitation": "The queues were built for an energy-record threshold, not a civilian-service one; water, health and telecom were never their target."
     },
     {
       "lane": "gulf_states",
@@ -623,7 +643,7 @@
       "method": "1 Arabic search",
       "window": "2025",
       "status": "not achieved",
-      "limitation": "The only water effect filed is a line inside the UAE rainstorm record. Bahrain and Qatar have no record at all from this lane."
+      "limitation": "The only water effect recorded is a line inside the UAE rainstorm record. Bahrain and Qatar have no record from this research pass."
     },
     {
       "lane": "gulf_states",
@@ -800,7 +820,7 @@
       "scope": "impacts",
       "research_pass": "i22-iran_power",
       "family": "International wires (AFP, AP, Anadolu), read on republishing sites",
-      "method": "WebSearch to locate, then WebFetch of each cited copy",
+      "method": "web search to locate, then a direct fetch of each cited copy",
       "window": "2023-01 to 2025-11",
       "status": "partial",
       "limitation": "Found by event-specific queries, not by enumerating an archive; Reuters was not reached; wtop.com (AP) returned 404 and jordantimes.com (AFP) 403, so other copies were used."
@@ -810,7 +830,7 @@
       "scope": "impacts",
       "research_pass": "i22-iran_power",
       "family": "Iranian news agencies in Persian (Mehr, IRNA, ISNA, ILNA, IMNA, Tasnim) and Barq News",
-      "method": "WebFetch of mehrnews.com and barghnews.com site searches; en.irna.ir search; two article addresses from the discovery list",
+      "method": "direct fetch of mehrnews.com and barghnews.com site searches; en.irna.ir search; two article addresses from the Wikipedia reference list",
       "window": "2026-09 to 2026-11 only",
       "status": "partial",
       "limitation": "mehrnews.com loads and its search works, but results are newest-first and reach only autumn 2026; paging back was not attempted. barghnews.com loaded early in the pass and later failed to resolve. en.irna.ir search returned only a redirect notice. ilna.ir closed the socket twice, imna.ir did not resolve, jahanesanat.ir closed the socket. No article from inside Iran in Persian is cited."
@@ -820,7 +840,7 @@
       "scope": "impacts",
       "research_pass": "i22-iran_power",
       "family": "Iranian outlets in English (Tabnak English, Press TV, Mehr English, Tehran Times)",
-      "method": "WebFetch of article pages; site searches on en.mehrnews.com and tehrantimes.com",
+      "method": "direct fetch of article pages; site searches on en.mehrnews.com and tehrantimes.com",
       "window": "2024-11 to 2025-09",
       "status": "partial",
       "limitation": "The site searches rank by date or loosely by text and returned almost nothing on outages; only two articles from this family are cited."
@@ -830,17 +850,17 @@
       "scope": "impacts",
       "research_pass": "i22-iran_power",
       "family": "Official: Tavanir, Energy Ministry (moe.gov.ir, PAVEN), Iran Grid Management Company, NIGC, Shana",
-      "method": "Direct WebFetch of tavanir.org.ir",
+      "method": "direct fetch of tavanir.org.ir",
       "window": null,
       "status": "inaccessible",
-      "limitation": "tavanir.org.ir refused the connection. The other official sites were not tried in this pass: earlier passes (research_log.json, lane IR3) found them unreadable from outside Iran, and time went to opening the outlets that carry their statements. Every official statement in this lane is read as carried by another publisher."
+      "limitation": "tavanir.org.ir refused the connection. The other official sites were not tried in this pass: an earlier research pass found them unreadable from outside Iran, and time went to opening the outlets that carry their statements. Every official statement here is read as carried by another publisher."
     },
     {
       "lane": "iran_power",
       "scope": "impacts",
       "research_pass": "i22-iran_power",
       "family": "Persian-language media outside Iran (Iran International, RFE/RL Radio Farda)",
-      "method": "WebFetch of article pages found by search or by the Wikipedia discovery list",
+      "method": "direct fetch of article pages found by search or through the Wikipedia reference list",
       "window": "2022-01 to 2025-08",
       "status": "partial",
       "limitation": "Opposition-leaning or US-funded outlets: treated as media origins and paired with a second origin wherever one was found. Only one Persian-edition article was read."
@@ -850,7 +870,7 @@
       "scope": "impacts",
       "research_pass": "i22-iran_power",
       "family": "Specialist energy press (MEES, S&P Global)",
-      "method": "WebFetch",
+      "method": "direct fetch",
       "window": "2022-01, 2024-11",
       "status": "partial",
       "limitation": "MEES is paywalled after the lead and only the lead was read. S&P refused the fetch."
@@ -860,7 +880,7 @@
       "scope": "impacts",
       "research_pass": "i22-iran_power",
       "family": "Wikipedia, discovery only (never cited)",
-      "method": "WebFetch of en.wikipedia.org/wiki/Iranian_energy_crisis; the reference list was used to find originals",
+      "method": "direct fetch of the English Wikipedia article on the Iranian energy crisis; its reference list was used to find originals",
       "window": "2022 to 2026-09",
       "status": "partial",
       "limitation": "The page carries a banner about possible machine-generated text and is thin before late 2024. Many of its references are advocacy sites (NCRI, Iran Focus, Iran News Update) that were not opened or used. The 2023 Khoy earthquake page address guessed for discovery returned 404."
@@ -870,27 +890,27 @@
       "scope": "impacts",
       "research_pass": "i22-iran_power2",
       "family": "English-language media and wires already opened in the first pass (AP, Al Jazeera, Iran International)",
-      "method": "Reuse of pages opened in iran_power; one new page opened (Al Jazeera, 24 Nov 2025)",
+      "method": "reuse of pages opened in the first Iran power research pass; one new page opened (Al Jazeera, 24 Nov 2025)",
       "window": "2022-12 to 2025-05",
       "status": "partial",
-      "limitation": "Each was opened for another event and supports the new records only in part; see each derived_claim."
+      "limitation": "Each was opened for another event and supports the new records only in part; each citation says what it supports."
     },
     {
       "lane": "iran_power2",
       "scope": "impacts",
       "research_pass": "i22-iran_power2",
       "family": "Official and agency pages in Persian (IRNA, ISNA, Mehr, Tasnim, Shana, PAVEN, moe.gov.ir, Tavanir, Donya-e-Eqtesad, Eghtesad News, ILNA)",
-      "method": "Direct WebFetch of home pages and site-search addresses, retried at the start and end of the pass",
+      "method": "direct fetch of home pages and site-search addresses, retried at the start and end of the pass",
       "window": null,
       "status": "inaccessible",
-      "limitation": "irna.ir, isna.ir and financialtribune.com return only a 'transferring to the website' notice; mehrnews.com (which answered twice in the first pass), shana.ir, eghtesadnews.com, donya-e-eqtesad.com and tehrantimes.com closed the socket; tasnimnews.com and paven.ir did not resolve. moe.gov.ir and tavanir.org.ir were not retried after the first pass's refusals. No official or agency page is cited in either lane."
+      "limitation": "irna.ir, isna.ir and financialtribune.com return only a 'transferring to the website' notice; mehrnews.com (which answered twice in the first pass), shana.ir, eghtesadnews.com, donya-e-eqtesad.com and tehrantimes.com closed the socket; tasnimnews.com and paven.ir did not resolve. moe.gov.ir and tavanir.org.ir were not retried after the first pass's refusals. No official or agency page is cited in either Iran power research pass."
     },
     {
       "lane": "iran_power2",
       "scope": "impacts",
       "research_pass": "i22-iran_power2",
       "family": "Radio Farda (RFE/RL Persian service), Persian originals",
-      "method": "Site search on radiofarda.com, then WebFetch of each article",
+      "method": "site search on radiofarda.com, then a direct fetch of each article",
       "window": "2022-12 to 2025-05 for cited articles",
       "status": "partial",
       "limitation": "One US-funded outlet outside Iran: a single origin. Its search matches all query words, so each query sees a thin slice; the result sets for winter 1404 (2025-26) and for 1405 were empty for every energy-closure or scheduled-cut wording tried."
@@ -942,7 +962,7 @@
       "family": "National CERTs and cyber agencies outside Israel (USOM Türkiye, EG-CERT, JO-CERT/NCSC Jordan, tunCERT/ANCS, DGSSI/maCERT, Lebanon, Algeria)",
       "method": "Not reached.",
       "window": "2022-2026",
-      "status": "not_started",
+      "status": "not started",
       "limitation": "No incident archive of any of these bodies was enumerated."
     },
     {
@@ -953,7 +973,7 @@
       "method": "Direct fetch of addresses found by search, by Wikipedia reference lists (discovery only) or by a site's own search (Daily Sabah).",
       "window": "2022-2026",
       "status": "partial",
-      "limitation": "Arabic used for the Egyptian telecom fire only; Hebrew and Turkish primaries were not opened (Turkish search returned nothing usable). Several outlets refused the fetcher (see inaccessible_sources)."
+      "limitation": "Arabic used for the Egyptian telecom fire only; Hebrew and Turkish primaries were not opened (Turkish search returned nothing usable). Several outlets refused automated requests and were recorded as inaccessible."
     },
     {
       "lane": "mideast",
@@ -984,6 +1004,16 @@
       "window": "Oct 2023",
       "status": "partial",
       "limitation": "Only the electricity-supply statement was read and recorded; nothing after the event date was researched, by design."
+    },
+    {
+      "lane": "mideast",
+      "scope": "impacts",
+      "research_pass": "i22-mideast",
+      "family": "Web search for discovery (wire and regional press)",
+      "method": "12 web searches: one 2026 cyber sweep, one per incident already known to the researcher, to find addresses (Beirut airport, Israeli hospital ransomware, Israeli irrigation controllers, Egypt load shedding, Tunisia blackout, Syria blackout, Tunisia water cuts, Aden blackout), one Turkish-language cyber sweep, one 2026 blackout sweep, one 2025-2026 North Africa/Levant cyber sweep.",
+      "window": "2022-2026",
+      "status": "done",
+      "limitation": "Discovery leaned on incidents the researcher already knew of; the two open-ended 2026 sweeps returned mostly out-of-scope countries. Coverage is a sample, not a census."
     },
     {
       "lane": "mideast",
@@ -1022,7 +1052,7 @@
       "family": "FBI/DOJ press releases and indictments; state utility commissions; operator 8-K index",
       "method": "not reached",
       "window": "2022-2026",
-      "status": "not_started",
+      "status": "not started",
       "limitation": "Time box; one Halliburton 8-K reference was seen through BleepingComputer only."
     },
     {
@@ -1072,8 +1102,8 @@
       "family": "CISA advisories and alerts index",
       "method": "direct fetch of the index with the advisory-type filter and with the site's own full-text search ('operational disruption')",
       "window": "2022-2026",
-      "status": "not_enumerable_in_time",
-      "limitation": "The index is dominated by known-exploited-vulnerability alerts and the type filter does not isolate joint advisories; at 10 items per page a full pass is about 500 fetches. AA25-343A describes effects only in general terms (temporary loss of view, manual intervention, some physical damage) and names no US or Canadian victim, so it yields attribution context, not a new record. AA23-335A and the 2024 water fact sheets were not opened (water lane)."
+      "status": "not enumerable in the time available",
+      "limitation": "The index is dominated by known-exploited-vulnerability alerts and the type filter does not isolate joint advisories; at 10 items per page a full pass is about 500 fetches. AA25-343A describes effects only in general terms (temporary loss of view, manual intervention, some physical damage) and names no US or Canadian victim, so it yields attribution context, not a new record. AA23-335A and the 2024 water fact sheets were not opened (left to the water research)."
     },
     {
       "lane": "na2",
@@ -1083,7 +1113,7 @@
       "method": "direct fetch of the justice.gov press-release search",
       "window": "2022-2026",
       "status": "inaccessible",
-      "limitation": "justice.gov refuses the fetch tool. No DOJ or FBI document was opened, so no attribution addendum could be written for any na/ record."
+      "limitation": "justice.gov refused automated requests. No DOJ or FBI document was opened, so no attribution source from them could be added to any North America record."
     },
     {
       "lane": "na2",
@@ -1143,7 +1173,7 @@
       "method": "direct fetch of a known release",
       "window": "2024",
       "status": "done for that release",
-      "limitation": "The February 2024 release on Iranian officials linked to water-controller intrusions was not opened (water lane)."
+      "limitation": "The February 2024 release on Iranian officials linked to water-controller intrusions was not opened (left to the water research)."
     },
     {
       "lane": "oceania",
@@ -1219,6 +1249,16 @@
       "lane": "oceania2",
       "scope": "impacts",
       "research_pass": "i22-oceania2",
+      "family": "New Zealand NCSC (ncsc.govt.nz) Cyber Threat Reports",
+      "method": "Direct fetch of the reports index and the 2025 and 2026 report pages.",
+      "window": "2022 to 2026",
+      "status": "nothing filed",
+      "limitation": "The web pages give aggregate statistics only: no named, dated or sector-specific incident. The full PDF reports were not opened and may contain anonymised case studies. CERT NZ quarterly reports were not reached."
+    },
+    {
+      "lane": "oceania2",
+      "scope": "impacts",
+      "research_pass": "i22-oceania2",
       "family": "Operator statements",
       "method": "Direct fetch.",
       "window": "2026-11",
@@ -1279,6 +1319,16 @@
       "lane": "oilgas",
       "scope": "impacts",
       "research_pass": "i22-oilgas",
+      "family": "Other research passes' filings and the published events of the Canada, China, India and United States systems",
+      "method": "read locally",
+      "window": "all",
+      "status": "done",
+      "limitation": "none"
+    },
+    {
+      "lane": "oilgas",
+      "scope": "impacts",
+      "research_pass": "i22-oilgas",
       "family": "Wikipedia incident pages (discovery only, never cited)",
       "method": "direct fetch",
       "window": "2022 to 2025",
@@ -1323,7 +1373,7 @@
       "method": "three searches (Ecuador, Zambia, Vietnam), site searches on two outlets, then direct fetch",
       "window": "2022-2024",
       "status": "partial",
-      "limitation": "Five countries filed. Reuters, AP, BBC, the Guardian and CNN refuse this lane's fetch tool, which removed the usual wire corroboration."
+      "limitation": "Five countries filed. Reuters, AP, BBC, the Guardian and CNN refused automated requests, which removed the usual wire corroboration."
     },
     {
       "lane": "renewables",
@@ -1343,14 +1393,14 @@
       "method": "direct fetch of company press pages; one search to locate coverage",
       "window": "2022",
       "status": "partial",
-      "limitation": "Enercon and Deutsche Windtechnik statements are gone from the live sites and web.archive.org is blocked for this lane's fetch tool."
+      "limitation": "Enercon and Deutsche Windtechnik statements are gone from the live sites, and web.archive.org refused automated requests."
     },
     {
       "lane": "renewables",
       "scope": "impacts",
       "research_pass": "i22-renewables",
       "family": "Reliability regulator event reports (NERC inverter-based resource disturbances)",
-      "method": "one search to find current addresses; direct fetch of four report PDFs; text extracted locally with a stdlib script because the fetch tool returned raw PDF",
+      "method": "one search to find current addresses; direct fetch of four report PDFs; text extracted locally because the fetched files were raw PDF",
       "window": "2022-2023",
       "status": "partial",
       "limitation": "The NERC index of major event reports returned navigation only, so nothing after April 2023 was enumerated; a WECC 2025 progress report on inverter-based resource disturbances in the Western Interconnection and an ERCOT 2025 presentation on battery storage events surfaced in search and were not read. Local text extraction is crude: figures were read from running text, tables only partly."
@@ -1423,7 +1473,7 @@
       "method": "direct fetch of known or search-returned pages",
       "window": "2022-2026",
       "status": "not readable",
-      "limitation": "Ofcom and CRTC returned HTTP 403; both FCC PDFs downloaded but their text was not extractable by the fetch tool and no PDF reader is installed. All four are cited opened:false or not cited; no figure was taken from them. ACMA's own pages were not reached (read through ABC reporting)."
+      "limitation": "Ofcom and CRTC returned HTTP 403; both FCC PDFs downloaded but their text could not be extracted. All four are cited as not opened, or not cited; no figure was taken from them. ACMA's own pages were not reached (read through ABC reporting)."
     },
     {
       "lane": "telecom_transport",
@@ -1440,7 +1490,7 @@
       "scope": "impacts",
       "research_pass": "i22-telecom_transport",
       "family": "Web search (9 of 10 calls)",
-      "method": "WebSearch",
+      "method": "web search",
       "window": "2025-2026",
       "status": "done",
       "limitation": "Searches are US-weighted and English-only; Asia, Africa and Latin America are essentially unsearched"
@@ -1459,11 +1509,31 @@
       "lane": "water_health",
       "scope": "impacts",
       "research_pass": "i22-water_health",
+      "family": "Local and regional media",
+      "method": "direct fetch",
+      "window": "2023-2026",
+      "status": "done for the records filed",
+      "limitation": "Used where no operator page could be opened."
+    },
+    {
+      "lane": "water_health",
+      "scope": "impacts",
+      "research_pass": "i22-water_health",
       "family": "National cyber agencies and intelligence services outside the US",
       "method": "direct fetch",
       "window": "2024-2025",
       "status": "partly done",
       "limitation": "No archive was walked end to end. DNSC returned HTTP 403. ANSSI, BSI, ACSC, INCD and the Polish and Norwegian services were not checked."
+    },
+    {
+      "lane": "water_health",
+      "scope": "impacts",
+      "research_pass": "i22-water_health",
+      "family": "Operator and provider incident pages",
+      "method": "direct fetch, following links from trade coverage",
+      "window": "2023-2026",
+      "status": "done for the records filed",
+      "limitation": "Several operator pages are gone or blocked: Ascension (404), Arkansas City (404), CHSF (redirects to a list), Clayton County Water Authority (429), Wirral trust (500), NHS England (challenge page), Advanced (404), CommonSpirit (404), Ardent (404)."
     },
     {
       "lane": "water_health",
@@ -1493,7 +1563,7 @@
       "method": "direct fetch of known addresses",
       "window": "2022-2025",
       "status": "partly done",
-      "limitation": "Not an enumeration of CISA's or EPA's archives: only the items I already knew. The 2026 FBI/CISA/EPA statements on the July 2026 water incidents were not opened (known only through media). hhs.gov returned HTTP 403."
+      "limitation": "Not an enumeration of CISA's or EPA's archives: only incidents already known to the researcher were looked up. The 2026 FBI/CISA/EPA statements on the July 2026 water incidents were not opened (known only through media). hhs.gov returned HTTP 403."
     },
     {
       "lane": "water_health",
@@ -1503,7 +1573,17 @@
       "method": "not reached",
       "window": "2022-2026",
       "status": "not started",
-      "limitation": "Named in the task as good families; budget went to opening sources for 2026 incidents instead. HSE Ireland's major incident (2021) is before the window."
+      "limitation": "Listed as a source family to search; the search budget went to opening sources for 2026 incidents instead. HSE Ireland's major incident (2021) is before the window."
+    },
+    {
+      "lane": "water_health",
+      "scope": "impacts",
+      "research_pass": "i22-water_health",
+      "family": "Wikipedia (discovery only, never cited)",
+      "method": "two article pages fetched for reference lists; API attempted",
+      "window": "2022-2023",
+      "status": "abandoned",
+      "limitation": "The API answered HTTP 429 after the first batch, and requests were stopped rather than retried. No record filed here cites Wikipedia."
     },
     {
       "lane": "water_health",
@@ -1513,7 +1593,7 @@
       "method": "direct fetch; SecurityWeek addresses reconstructed from AP headlines",
       "window": "2022-2026",
       "status": "partly done",
-      "limitation": "apnews.com, reuters.com, bbc.co.uk, theguardian.com and web.archive.org cannot be fetched by this tool; npr.org timed out (text.npr.org worked). About half of the reconstructed addresses missed (404), so coverage follows what I could guess, not what exists."
+      "limitation": "apnews.com, reuters.com, bbc.co.uk, theguardian.com and web.archive.org refused automated requests; npr.org timed out (text.npr.org worked). About half of the reconstructed addresses missed (404), so coverage follows the addresses that could be reconstructed, not what exists."
     }
   ],
   "regions_worked": [
@@ -1528,12 +1608,16 @@
     "North America",
     "Oceania"
   ],
-  "limitations": [],
+  "limitations": [
+    "The corpus is a sample, not a census: each research pass searched one region or theme within a search budget, and an incident not found here is not evidence that none happened.",
+    "Many international wire services and several national outlets refused automated requests, so wire-level corroboration is often second-hand; each source family states where.",
+    "Official archives were enumerated in a few places only, as each source family states; elsewhere an official statement is usually read as carried by a news outlet."
+  ],
   "latest_research_date": "2026-11-19",
   "lead_holds": {
-    "held": 12,
+    "held": 14,
     "duplicates_across_lanes": 8,
-    "safety_grounds": 3,
+    "safety_grounds": 5,
     "other_grounds": 1
   }
 }

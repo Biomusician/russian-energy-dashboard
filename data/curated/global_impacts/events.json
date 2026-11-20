@@ -121,7 +121,7 @@
       "record_kind": "disruption",
       "date": "2022-01-24",
       "date_precision": "day",
-      "date_end": "2022-01-26",
+      "date_end": "2022-01-29",
       "country_a3": "TUR",
       "admin1": null,
       "geographic_precision": "country",
@@ -140,12 +140,12 @@
           "service": "electricity",
           "geographic_scope": "national",
           "affected": {
-            "value": 3,
-            "unit": "days of power cuts to organised industrial zones",
-            "qualifier": "exact",
-            "source_says": "three days of power outages in organised industrial zones"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "power cuts to organised industrial zones nationwide; no count of zones or plants given"
           },
-          "duration_text": "three days, 24 to 26 January 2022",
+          "duration_text": "announced as three days from 24 January 2022; the energy minister said the restrictions on industrial plants were lifted as of 29 January 2022",
           "source_refs": [
             "s1",
             "s2"
@@ -205,6 +205,21 @@
           ],
           "opened": true,
           "derived_claim": "Reports the transmission operator's notification of electricity cuts to all organised industrial zones from 24 January and the stated cause of the fall in gas supply from Iran."
+        },
+        {
+          "ref": "s3",
+          "url": "https://www.steelorbis.com/steel-news/latest-news/botas-natural-gas-flow-cuts-to-turkish-industrial-consumers-eased-electricity-restrictions-ended-1231712.htm",
+          "publisher": "SteelOrbis",
+          "date": "2022-01-31",
+          "language": "en",
+          "source_role": "specialist_media",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "effect"
+          ],
+          "opened": false,
+          "derived_claim": "Trade press of 31 January 2022 quoting the energy minister: the electricity restrictions on industrial plants were lifted as of 29 January 2022."
         }
       ],
       "episode_id": null,
@@ -222,7 +237,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -248,7 +265,7 @@
       "summary": "A failure in the interconnected Central Asian power grid on 25 January 2022 cut electricity across Kyrgyzstan, much of Uzbekistan and southern Kazakhstan.",
       "effect": "Power was lost in cities across the three countries, including the capitals, for several hours; energy ministries and the Kazakh grid operator attributed it to a disturbance in the shared grid. The opened report gives no customer figures.",
       "effect_specificity": "described",
-      "inclusion_basis": 2,
+      "inclusion_basis": 4,
       "civilian_service_impact": [
         {
           "service": "electricity",
@@ -318,7 +335,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -458,10 +477,10 @@
           "service": "fuel_supply",
           "geographic_scope": "national",
           "affected": {
-            "value": 100,
-            "unit": "million cubic metres of gas per day (delivered to power plants)",
-            "qualifier": "about",
-            "source_says": "Electricity generation in Iran needs around 220 million cubic meters of gas per day, while in January deliveries declined to 100 million cubic meters"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "Electricity generation in Iran needs around 220 million cubic meters of gas per day, while in January deliveries declined to 100 million cubic meters (a remaining delivery level, not a scale affected)"
           },
           "duration_text": "January 2022; days not established",
           "source_refs": [
@@ -536,7 +555,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -1033,16 +1054,16 @@
       "summary": "A cyberattack on the KA-SAT satellite network on 24 February 2022 interrupted consumer satellite broadband in Ukraine and elsewhere in Europe; the operator, Viasat, published its own incident overview.",
       "effect": "The operator reported that several thousand customers in Ukraine and tens of thousands of other fixed broadband customers across Europe lost service when their modems dropped off the network; the network was stabilised within days and replacement modems were shipped. The UK government statement also notes disruption to wind farms in central Europe.",
       "effect_specificity": "described",
-      "inclusion_basis": 2,
+      "inclusion_basis": 4,
       "civilian_service_impact": [
         {
           "service": "telecom",
           "geographic_scope": "national",
           "affected": {
-            "value": null,
-            "unit": "customers",
+            "value": "unknown",
+            "unit": null,
             "qualifier": null,
-            "source_says": "several thousand customers located in Ukraine"
+            "source_says": "several thousand customers located in Ukraine and tens of thousands of other fixed broadband customers across Europe (operator's counts, not precise figures)"
           },
           "duration_text": "network largely stabilised within hours and fully within several days; affected modems replaced over the following weeks",
           "source_refs": [
@@ -1139,7 +1160,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -2050,7 +2073,7 @@
       "contributing_factors": [],
       "cyber_mechanism": "unknown_cyber_mechanism",
       "summary": "A wind-turbine maintenance company based in Germany was hit by a cyberattack on its IT systems during the night of 11 April 2022 and, as a precaution, cut connections and deactivated remote monitoring functions for the turbines it services.",
-      "effect": "Remote monitoring of serviced turbines was deactivated as a precaution; the company said the turbines were never endangered or damaged. Neither opened source gives the number of turbines or the duration.",
+      "effect": "Remote monitoring of serviced turbines was deactivated as a precaution; the company said the connections were reactivated after one to two days, that maintenance resumed on 14 April 2022 with minor restrictions, and that the turbines were never endangered or damaged. No opened source gives the number of turbines.",
       "effect_specificity": "described",
       "inclusion_basis": null,
       "civilian_service_impact": [],
@@ -2123,7 +2146,7 @@
           "opened": false,
           "title_original": "Cyber attack on Deutsche Windtechnik",
           "title_en": "Cyber attack on Deutsche Windtechnik",
-          "derived_claim": "The company's own statement (connection reset on fetch; the site has since moved and the item is no longer listed; not read)."
+          "derived_claim": "Company statement of 22 April 2022: remote data monitoring connections were switched off for security reasons and reactivated after one to two days; maintenance resumed on 14 April with minor restrictions; turbines never endangered."
         }
       ],
       "episode_id": null,
@@ -2141,7 +2164,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -2637,7 +2662,7 @@
       "record_kind": "disruption",
       "date": "2022-06-28",
       "date_precision": "day",
-      "date_end": "2022-07-01",
+      "date_end": "2022-06-30",
       "country_a3": "ZAF",
       "admin1": null,
       "geographic_precision": "country",
@@ -2663,7 +2688,7 @@
             "qualifier": "exact",
             "source_says": "6,000MW have to be removed from the grid on a rolling basis (Daily Maverick)"
           },
-          "duration_text": "Stage 6 windows on 28, 29 and 30 June and 1 July 2022, with lower stages between",
+          "duration_text": "Stage 6 windows on 28, 29 and 30 June 2022 (the last until midnight on 30 June), with lower stages between; on 1 July the operator kept Stage 4 in force in place of the Stage 6 it had announced for that day",
           "source_refs": [
             "s1",
             "s2"
@@ -2739,7 +2764,22 @@
             "occurrence"
           ],
           "opened": true,
-          "derived_claim": "Operator statement of 30 June 2022 extending Stage 6 windows because of the continued strike (seen in the operator's news index; statement page not opened)."
+          "derived_claim": "Operator statement extending Stage 6 because of the continued strike: Stage 6 from 14:00 until midnight on 30 June 2022 and announced again from 05:00 on Friday 1 July; 17,467 MW unavailable due to breakdowns and 3,161 MW on planned maintenance."
+        },
+        {
+          "ref": "s4",
+          "url": "https://www.eskom.co.za/due-to-lower-than-anticipated-demand-stage-4-loadshedding-will-continue-to-be-implemented-until-2200-loadshedding-will-then-be-reduced-to-stage-2-at-2200-until-0700-for-both-saturday-and-sunday/",
+          "publisher": "Eskom",
+          "date": "2022-07-01",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "effect"
+          ],
+          "opened": false,
+          "derived_claim": "Operator statement of 1 July 2022: Stage 4 load shedding continues until 22:00 (previously Stage 6), then Stage 2."
         }
       ],
       "episode_id": null,
@@ -2757,7 +2797,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -3497,12 +3539,12 @@
           "service": "water",
           "geographic_scope": "regional",
           "affected": {
-            "value": 20,
-            "unit": "hours a day without water",
-            "qualifier": "at_most",
-            "source_says": "in many areas water is still cut for up to 20 hours a day (Radio Farda, translated from Persian)"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "water cuts in many areas; no household figure"
           },
-          "duration_text": "About four weeks by 8 September 2022 (start day not established).",
+          "duration_text": "water cut for up to 20 hours a day in many areas; about four weeks by 8 September 2022 (start day not established)",
           "source_refs": [
             "s1",
             "s2",
@@ -4576,102 +4618,6 @@
       }
     },
     {
-      "impact_id": "imp-2022-11-15-mda-electricity-attack-9a9305",
-      "record_kind": "disruption",
-      "date": "2022-11-15",
-      "date_precision": "day",
-      "date_end": null,
-      "country_a3": "MDA",
-      "admin1": null,
-      "geographic_precision": "country",
-      "domain": "energy",
-      "sector": "electricity",
-      "technology": "withheld",
-      "cause_family": "kinetic",
-      "contributing_factors": [],
-      "cyber_mechanism": null,
-      "summary": "On 15 November 2022 electricity was cut across Moldova following an attack on the power system of neighbouring Ukraine.",
-      "effect": "Electricity was cut across Moldova for a short time; the president said the attack on Ukraine's infrastructure had affected large numbers of people outside Ukraine. No customer figure was given.",
-      "effect_specificity": "described",
-      "inclusion_basis": 2,
-      "civilian_service_impact": [
-        {
-          "service": "electricity",
-          "geographic_scope": "national",
-          "affected": {
-            "value": null,
-            "unit": "unknown",
-            "qualifier": null,
-            "source_says": "power cut across Moldova; no figure given"
-          },
-          "duration_text": "brief; same day",
-          "source_refs": [
-            "s1"
-          ]
-        }
-      ],
-      "attribution": {
-        "status": "SUSPECTED",
-        "actor": "Russia",
-        "actor_type": "state",
-        "basis": [
-          "media_investigation"
-        ],
-        "as_of": "2022-11-15",
-        "statement": "RFE/RL reported on 15 November 2022 that the outage followed Russian attacks on Ukraine's power system; Moldova's president condemned the attacks on Ukraine's infrastructure, and the report quotes no official naming the attacker.",
-        "competing": [],
-        "source_refs": [
-          "s1"
-        ]
-      },
-      "ai_involvement": {
-        "status": "NONE_REPORTED",
-        "relation": null,
-        "role": null,
-        "as_of": null,
-        "statement": null,
-        "source_refs": []
-      },
-      "dispute": null,
-      "sources": [
-        {
-          "ref": "s1",
-          "url": "https://www.rferl.org/a/power-outages-moldova-russia-strikes-ukraine/32132192.html",
-          "publisher": "RFE/RL",
-          "date": "2022-11-15",
-          "language": "en",
-          "source_role": "media",
-          "medium": "web",
-          "social": null,
-          "supports": [
-            "occurrence",
-            "effect",
-            "attribution"
-          ],
-          "opened": true,
-          "derived_claim": "Reports the nationwide power cut in Moldova on 15 November 2022 and the statements of the deputy prime minister and the president.",
-          "attribution_basis": "media_investigation"
-        }
-      ],
-      "episode_id": null,
-      "episode_basis": null,
-      "publication_policy": "country_abstracted",
-      "research_pass": "i22-eurasia",
-      "first_published": null,
-      "review": {
-        "reviewed_at": "2026-11-19",
-        "review_status": "blind_reviewed",
-        "roles": {
-          "evidence": "accept",
-          "attribution_source": "accept_with_correction",
-          "safety": "accept_with_correction"
-        },
-        "ai_check": "not_applicable",
-        "social_check": "not_applicable",
-        "disposition": "corrected"
-      }
-    },
-    {
       "impact_id": "imp-2022-11-23-ukr-electricity-attack-12913f",
       "record_kind": "disruption",
       "date": "2022-11-23",
@@ -4689,7 +4635,7 @@
       "summary": "On 23 November 2022 Ukraine's government stated that, after an attack on the power system, the great majority of electricity consumers across the country had lost power and emergency outages were in effect nationwide.",
       "effect": "Government statement: the great majority of electricity consumers in the whole country were without power, emergency outages applied nationwide, and the loss of electricity could affect heat and water supply.",
       "effect_specificity": "described",
-      "inclusion_basis": 2,
+      "inclusion_basis": 4,
       "civilian_service_impact": [
         {
           "service": "electricity",
@@ -4782,7 +4728,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -5013,7 +4961,7 @@
       "record_kind": "disruption",
       "date": "2022-11",
       "date_precision": "month",
-      "date_end": "2022-12",
+      "date_end": null,
       "country_a3": "VUT",
       "admin1": null,
       "geographic_precision": "country",
@@ -5090,7 +5038,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -5236,7 +5186,7 @@
             "qualifier": null,
             "source_says": "19,052 MW unavailable due to breakdowns; 4,984 MW on planned maintenance; Stage 6 until Friday 05:00"
           },
-          "duration_text": "Stage 6 in force on 7 December 2022 and scheduled until 05:00 on 9 December, then Stage 5",
+          "duration_text": "Stage 6 in force from 7 December 2022 until 05:00 on 9 December, as scheduled; the operator reported Stage 5 in force on 9 December; load shedding continued at lower stages",
           "source_refs": [
             "s1"
           ]
@@ -5279,6 +5229,21 @@
           "title_original": "Stage 6 loadshedding will continue to be implemented until Friday morning at 05:00, whereafter it will be reduced to Stage 5 until Saturday morning",
           "title_en": "Stage 6 loadshedding will continue to be implemented until Friday morning at 05:00, whereafter it will be reduced to Stage 5 until Saturday morning",
           "derived_claim": "Operator statement of 7 December 2022: Stage 6 continues until 05:00 Friday, with 19,052 MW of breakdowns and 4,984 MW of planned maintenance; seven units broke down and five were late returning."
+        },
+        {
+          "ref": "s2",
+          "url": "https://www.eskom.co.za/stage-4-loadshedding-will-be-implemented-from-0500-on-saturday-morning-and-be-reduced-to-stage-2-on-sunday/",
+          "publisher": "Eskom",
+          "date": "2022-12-09",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "effect"
+          ],
+          "opened": false,
+          "derived_claim": "Operator statement of 9 December 2022: load shedding is currently at Stage 5 until 05:00 on Saturday, then Stage 4 and Stage 2 over the weekend."
         }
       ],
       "episode_id": "ep-zaf-electricity-load-shedding-2022-2024",
@@ -5296,7 +5261,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -5326,10 +5293,10 @@
           "service": "electricity",
           "geographic_scope": "regional",
           "affected": {
-            "value": 300000,
-            "unit": "families (prepaid water and energy users)",
-            "qualifier": "at_least",
-            "source_says": "los usuarios de agua y energía prepago son más de 300.000 familias; decenas de miles de familias llevan ya seis días sin agua y sin luz"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "decenas de miles de familias llevan ya seis días sin agua y sin luz (tens of thousands of families); 300,000 families is the number of prepaid water and energy users, not a count of those affected"
           },
           "duration_text": "six days for tens of thousands of prepaid families as of 18 December 2022, per El Colombiano",
           "source_refs": [
@@ -5442,7 +5409,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -5724,12 +5693,12 @@
           "service": "electricity",
           "geographic_scope": "national",
           "affected": {
-            "value": 12,
-            "unit": "hours of power cuts per day",
-            "qualifier": "at_most",
-            "source_says": "12-hour blackouts with no end date; capacity reduced from its installed 1080 MW to below 400 MW"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "nationwide rationing; capacity reduced from its installed 1080 MW to below 400 MW; no customer figure"
           },
-          "duration_text": "from 3 January 2023, indefinite when announced",
+          "duration_text": "blackouts of up to 12 hours a day from 3 January 2023, indefinite when announced",
           "source_refs": [
             "s1"
           ]
@@ -5790,7 +5759,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -6059,10 +6030,10 @@
           "service": "fuel_supply",
           "geographic_scope": "national",
           "affected": {
-            "value": 15,
-            "unit": "million cubic metres of gas per day (steel industry consumption; need 40)",
-            "qualifier": "exact",
-            "source_says": "the steel industry needs 40 million cubic meters of gas daily, but at present their consumption has reached 15 million cubic meters per day"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "the steel industry needs 40 million cubic meters of gas daily, but at present their consumption has reached 15 million cubic meters per day (a remaining level; the shortfall is not stated as a figure)"
           },
           "duration_text": "not stated",
           "source_refs": [
@@ -6170,7 +6141,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -7175,12 +7148,12 @@
           "service": "water",
           "geographic_scope": "national",
           "affected": {
-            "value": 7,
-            "unit": "hours of mains cut per night",
-            "qualifier": "exact",
-            "source_says": "water cut off daily from 9pm to 4am"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "nightly mains cuts; no household figure"
           },
-          "duration_text": "nightly from 31 March 2023; quota and bans stated to run until 30 September 2023; no end date given for the nightly cut",
+          "duration_text": "water cut off daily from 9pm to 4am from 31 March 2023; quota and bans stated to run until 30 September 2023; no end date given for the nightly cut",
           "source_refs": [
             "s1",
             "s2"
@@ -7259,7 +7232,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -7281,7 +7256,7 @@
       "contributing_factors": [],
       "cyber_mechanism": "it_outage_affecting_operations",
       "summary": "A service interruption to all grid telemetry (SCADA) data for Victoria on 22 April 2023 led the market operator to suspend the electricity spot market in the state for a little over 24 hours.",
-      "effect": "The market operator reported the interruption at 16:00, suspended the Victorian spot market from 16:20 on 22 April and declared a major incident for its energy management system; the market resumed at 17:00 on 23 April 2023. No loss of supply is reported in the opened source and the root cause was still under investigation.",
+      "effect": "The market operator reported the interruption at 16:00, suspended the Victorian spot market from 16:20 on 22 April and declared a major incident for its energy management system. Its final report on the event (May 2024) states that the suspension ran until 17:00 on 23 April 2023. No loss of supply is reported in the sources read.",
       "effect_specificity": "described",
       "inclusion_basis": 1,
       "civilian_service_impact": [],
@@ -7322,6 +7297,24 @@
           "title_original": "Glitch with Victorian SCADA data triggers (>24 hour) Market Suspension in Victorian Region – Saturday 22nd April 2023",
           "title_en": "Glitch with Victorian SCADA data triggers (>24 hour) Market Suspension in Victorian Region – Saturday 22nd April 2023",
           "derived_claim": "Reports the market operator's notices: interruption to all Victorian SCADA at 16:00 on 22 April 2023, spot market suspended in Victoria until 17:00 on 23 April, a major incident declared."
+        },
+        {
+          "ref": "s2",
+          "url": "https://aemo.com.au/-/media/files/electricity/nem/market_notices_and_events/market_event_reports/2023/final-report---victoria-market-suspension-on-22-april-2023.pdf?la=en",
+          "publisher": "Australian Energy Market Operator (AEMO)",
+          "date": "2024-05",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "report",
+          "social": null,
+          "supports": [
+            "occurrence",
+            "effect"
+          ],
+          "opened": false,
+          "title_original": "Final Report: Victoria market suspension on 22 April 2023",
+          "title_en": "Final Report: Victoria market suspension on 22 April 2023",
+          "derived_claim": "Final market event report (May 2024): the operator suspended the electricity spot market in Victoria from 16:20 on 22 April 2023 to 17:00 on 23 April 2023 after a total loss of SCADA across the state's transmission assets."
         }
       ],
       "episode_id": null,
@@ -7339,7 +7332,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -8191,7 +8186,7 @@
             "value": 108.5,
             "unit": "MW of industrial load unpowered",
             "qualifier": "about",
-            "source_says": "the plant's capacity fell from 545 MW to 245 MW (August 2023)"
+            "source_says": "about 108.5 MW of industrial load remained unpowered in the Mangystau energy region as of 01:00 on 12 August 2023 (KEGOC, 12 August 2023)"
           },
           "duration_text": "blackout on 3 July 2023; controlled blackouts of three to five hours a week scheduled from mid-August 2023 through at least 18 August; end not stated",
           "source_refs": [
@@ -8286,7 +8281,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -8440,10 +8437,10 @@
           "service": "transport",
           "geographic_scope": "national",
           "affected": {
-            "value": 6,
-            "unit": "hours",
-            "qualifier": "at_least",
-            "source_says": "outage lasted at least 6 hours"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "online services unavailable; no user figure"
           },
           "duration_text": "at least six hours on 5 July 2023",
           "source_refs": [
@@ -8488,8 +8485,8 @@
             "platform": "telegram",
             "handle": "telerzd",
             "display_name": "Телеграмма РЖД",
-            "account_tier": "S1",
-            "identity_basis": "Channel linked by The Record (specialist media) as the organisation's own statement channel; post opened by the attribution reviewer on 2026-11-19 and consistent with that report; not confirmed against the organisation's own website (not reachable to the reviewer).",
+            "account_tier": "S2",
+            "identity_basis": "Not established from the operator's own site: rzd.ru could not be fetched on 2026-11-19. Second-hand only: The Record links the channel as the operator's statement channel. Tier S2 for that reason.",
             "posted_at": "2023-07-05T08:33:14+00:00"
           },
           "supports": [
@@ -8535,7 +8532,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "passed",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -8543,7 +8542,7 @@
       "record_kind": "disruption",
       "date": "2023-07",
       "date_precision": "month",
-      "date_end": "2024-07-21",
+      "date_end": null,
       "country_a3": "EGY",
       "admin1": null,
       "geographic_precision": "country",
@@ -8564,12 +8563,12 @@
           "service": "electricity",
           "geographic_scope": "national",
           "affected": {
-            "value": 2,
-            "unit": "hours of scheduled cut per day (three hours from June 2024)",
-            "qualifier": "about",
-            "source_says": "rolling power cuts of two hours across neighbourhoods; extended to three hours per day nationwide in June 2024"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "rolling power cuts across neighbourhoods, extended nationwide in June 2024; no customer figure given"
           },
-          "duration_text": "July 2023 to an announced suspension from 21 July 2024, stated to run to the end of the summer",
+          "duration_text": "from July 2023, rolling cuts of about two hours a day, three hours a day nationwide from June 2024; the government announced the cuts would be suspended from 21 July 2024 for the summer (announced; the end is not observed in the sources read)",
           "source_refs": [
             "s1",
             "s2",
@@ -8684,7 +8683,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -9369,7 +9370,7 @@
       "record_kind": "disruption",
       "date": "2023-09-13",
       "date_precision": "day",
-      "date_end": "2023-09-19",
+      "date_end": null,
       "country_a3": "NZL",
       "admin1": {
         "code": "NZ-AUK",
@@ -9391,7 +9392,7 @@
           "service": "transport",
           "geographic_scope": "regional",
           "affected": null,
-          "duration_text": "payment and top-up channels degraded from 13 September 2023; agency expected full restoration by end of 19 September 2023; services kept running",
+          "duration_text": "payment and top-up channels degraded from 13 September 2023; the agency said they would be progressively restored over 19 September 2023 (expected; restoration not confirmed in the sources read); services kept running",
           "source_refs": [
             "s1",
             "s2"
@@ -9399,18 +9400,16 @@
         }
       ],
       "attribution": {
-        "status": "SUSPECTED",
+        "status": "CLAIMED",
         "actor": "Medusa",
         "actor_type": "criminal",
         "basis": [
-          "victim_operator",
-          "researcher"
+          "actor_self_claim"
         ],
-        "as_of": "2023-09-14",
-        "statement": "The transport agency's chief executive, as reported by RNZ, attributed the incident to ransomware called Medusa and said the attackers' identity was not known; a threat analyst later said the Medusa group claimed on its site to have stolen the agency's data.",
+        "as_of": "2023-09-19",
+        "statement": "RNZ reported on 19 September 2023 that a group calling itself Medusa claimed on its leak site to have stolen the agency's data, as relayed by a threat analyst who said no evidence had been posted; the claim is unverified. The agency's chief executive said on 14 September 2023 that the attackers' identity was not known, and no government or investigator attributed the attack.",
         "competing": [],
         "source_refs": [
-          "s1",
           "s2"
         ]
       },
@@ -9435,13 +9434,12 @@
           "social": null,
           "supports": [
             "occurrence",
-            "effect",
-            "attribution"
+            "effect"
           ],
           "opened": true,
           "title_original": "No customer data compromised in suspected cyberattack - AT",
           "title_en": "No customer data compromised in suspected cyberattack - AT",
-          "derived_claim": "Reports the agency's chief executive saying the incident was a ransomware attack and naming the group he held responsible; lists the unavailable top-up and payment channels and confirms services kept running."
+          "derived_claim": "Reports the agency's chief executive confirming a ransomware incident and saying the attackers' identity was not known; lists the unavailable top-up and payment channels and confirms services kept running."
         },
         {
           "ref": "s2",
@@ -9460,7 +9458,8 @@
           "opened": true,
           "title_original": "Ransomware site claims to have stolen Auckland Transport data",
           "title_en": "Ransomware site claims to have stolen Auckland Transport data",
-          "derived_claim": "Reports a threat analyst saying a ransomware group listed the agency on its site, the agency's refusal to pay, and its expectation that the card system would be fully restored by end of 19 September."
+          "derived_claim": "Reports a threat analyst saying a ransomware group listed the agency on its site, the agency's refusal to pay, and its expectation that the card system would be fully restored by end of 19 September.",
+          "attribution_basis": "actor_self_claim"
         }
       ],
       "episode_id": null,
@@ -9478,7 +9477,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -10831,7 +10832,7 @@
       "summary": "Piped gas supply in part of Chattogram Division, Bangladesh, stopped from the night of 18 January 2024 after a technical fault at a floating LNG regasification unit, according to the energy ministry and the regional gas distributor.",
       "effect": "Households, restaurants, CNG filling stations, industry and power generation in the distributor's area were without gas on 19 January; the distributor gave no prior notice. Supply began returning late on 19 January and was still at low pressure and uneven on 20 January. The distributor, Karnaphuli Gas Distribution Company, has 601,914 subscribers, 597,561 of them household connections; the sources give this as its customer base, not as a count of those cut off.",
       "effect_specificity": "described",
-      "inclusion_basis": 2,
+      "inclusion_basis": 4,
       "civilian_service_impact": [
         {
           "service": "fuel_supply",
@@ -10921,7 +10922,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -10943,7 +10946,7 @@
       "contributing_factors": [],
       "cyber_mechanism": "ot_ics_disruption",
       "summary": "A cyberattack on a municipal district-heating company in Ukraine's Lviv Oblast disrupted heating and hot water in part of one city overnight on 22-23 January 2024.",
-      "effect": "The heating company said a hacker attack interrupted heating and hot water in a part of the city with about 100,000 residents; restoration of full supply was planned for the end of 23 January.",
+      "effect": "The heating company said a hacker attack interrupted heating and hot water; the city council said 324 individual heating points stopped in a residential area of the city where about 100,000 people live, that 175 were working again at the time of the report, and that full supply was planned to be back by the end of 23 January.",
       "effect_specificity": "quantified",
       "inclusion_basis": 2,
       "civilian_service_impact": [
@@ -10951,10 +10954,10 @@
           "service": "district_energy",
           "geographic_scope": "local",
           "affected": {
-            "value": null,
-            "unit": "unknown",
-            "qualifier": null,
-            "source_says": "heating and hot water interrupted in a part of the city with about 100,000 residents"
+            "value": 324,
+            "unit": "individual heating points stopped",
+            "qualifier": "exact",
+            "source_says": "324 individual heating points stopped in a residential area where about 100,000 people live (the area's population, not a count of people affected) (city council, via Ekonomichna Pravda)"
           },
           "duration_text": "overnight on 22-23 January 2024; restoration planned by the end of 23 January (contemporaneous report)",
           "source_refs": [
@@ -11014,7 +11017,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -11133,10 +11138,10 @@
           "service": "telecom",
           "geographic_scope": "national",
           "affected": {
-            "value": 4,
-            "unit": "hours",
-            "qualifier": "about",
-            "source_says": "inaccessible for nearly four hours"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "sites in the national domain inaccessible; no figure"
           },
           "duration_text": "nearly four hours on 30 January 2024",
           "source_refs": [
@@ -11177,8 +11182,8 @@
             "platform": "telegram",
             "handle": "mintsifry",
             "display_name": "Минцифры России",
-            "account_tier": "S1",
-            "identity_basis": "Channel linked by The Record (specialist media) as the organisation's own statement channel; post opened by the attribution reviewer on 2026-11-19 and consistent with that report; not confirmed against the organisation's own website (not reachable to the reviewer).",
+            "account_tier": "S2",
+            "identity_basis": "Not established from the ministry's own site: digital.gov.ru refused connections on 2026-11-19; only third-party channel catalogues describe it as official. Second-hand: The Record links it as the ministry's channel. Tier S2 for that reason.",
             "posted_at": "2024-01-30T19:20:25+00:00"
           },
           "supports": [
@@ -11220,7 +11225,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "passed",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -12034,10 +12041,10 @@
           "service": "healthcare",
           "geographic_scope": "national",
           "affected": {
-            "value": 94,
-            "unit": "percent of surveyed hospitals reporting financial impact",
-            "qualifier": "exact",
-            "source_says": "94% of hospitals reported financial impact"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "94% of hospitals in a survey of nearly 1,000 reported financial impact (a survey share, not a count of hospitals affected)"
           },
           "duration_text": "pharmacy e-prescribing restored 1 March 2024; claims services restored in stages through April 2024",
           "source_refs": [
@@ -12049,10 +12056,10 @@
           "service": "healthcare",
           "geographic_scope": "national",
           "affected": {
-            "value": 74,
-            "unit": "percent of surveyed hospitals reporting direct patient care impact",
-            "qualifier": "exact",
-            "source_says": "74% of hospitals reported direct patient care impact"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "74% of hospitals in a survey of nearly 1,000 reported direct patient care impact (a survey share, not a count of hospitals affected)"
           },
           "duration_text": "survey conducted 9 to 12 March 2024",
           "source_refs": [
@@ -12215,7 +12222,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -12690,7 +12699,7 @@
       "record_kind": "disruption",
       "date": "2024-04-16",
       "date_precision": "day",
-      "date_end": "2024-04-17",
+      "date_end": null,
       "country_a3": "ARE",
       "admin1": null,
       "geographic_precision": "country",
@@ -12791,7 +12800,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -13795,7 +13806,7 @@
       "record_kind": "disruption",
       "date": "2024-06-05",
       "date_precision": "day",
-      "date_end": "2024-07-04",
+      "date_end": null,
       "country_a3": "CAN",
       "admin1": {
         "code": "CA-AB",
@@ -15727,7 +15738,7 @@
       "summary": "During a severe drought in September 2024 a hydropower complex in Ecuador went offline as its reservoir neared its minimum, and the government extended scheduled power cuts nationwide from 23 September.",
       "effect": "From 23 September 2024 cuts ran in the morning, afternoon and night nationwide, up to 9 to 11 hours a day in the cities reported, as explained by the minister chairing the national emergency committee. A national outlet reported the hydropower complex, which can supply up to 1,756 MW, delivered 74 MW on 24 September.",
       "effect_specificity": "quantified",
-      "inclusion_basis": 2,
+      "inclusion_basis": 4,
       "civilian_service_impact": [
         {
           "service": "electricity",
@@ -15828,7 +15839,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -15847,7 +15860,7 @@
       "contributing_factors": [],
       "cyber_mechanism": null,
       "summary": "On 25 September 2024 Kuwait's communications regulator said international internet connectivity had been degraded and that internet service quality had declined nationwide.",
-      "effect": "The Communications and Information Technology Regulatory Authority said that 30 percent of internet service had been restored by 02:00 on 26 September and that it expected full service within the following 24 hours. The opened report does not state the share of service lost or the cause, or confirm when full service returned.",
+      "effect": "The Communications and Information Technology Regulatory Authority said internet service quality had declined across the country from 25 September 2024 after an international connection was cut, that 30 percent of internet service had been restored by 02:00 on 26 September, and that it expected full service within the following 24 hours. The source does not state what caused the cut or the share of service lost, or confirm when full service returned.",
       "effect_specificity": "described",
       "inclusion_basis": 4,
       "civilian_service_impact": [
@@ -15856,11 +15869,11 @@
           "geographic_scope": "national",
           "affected": {
             "value": "unknown",
-            "unit": "percent of internet service restored by 02:00 on 26 September 2024 (regulator's figure)",
+            "unit": null,
             "qualifier": null,
-            "source_says": "restoration of 30% of internet service"
+            "source_says": "a decline in internet service quality across the country; share of service lost and users affected not stated"
           },
-          "duration_text": "from 25 September 2024; regulator expected full service within 24 hours of 02:00 on 26 September; end not confirmed",
+          "duration_text": "from 25 September 2024; the regulator said 30 percent of internet service was restored early on 26 September and full service was expected within the following 24 hours; end not confirmed",
           "source_refs": [
             "s3"
           ]
@@ -15919,7 +15932,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -17067,23 +17082,21 @@
           "government"
         ],
         "as_of": "2024-12-26",
-        "statement": "Ukraine's security service said on 20 December 2024 that it suspected hackers linked to Russian military intelligence (GRU), and the deputy prime minister said the attack was carried out by 'the Russians', as reported by The Record on 20 and 26 December 2024. Separately, the group XakNet claimed the attack on its own channel on 19 December 2024.",
-        "competing": [
+        "statement": "Ukraine's security service said on 20 December 2024 that it suspected hackers linked to Russian military intelligence (GRU), and the deputy prime minister said the attack was carried out by 'the Russians', as reported by The Record on 20 and 26 December 2024.",
+        "competing": [],
+        "source_refs": [
+          "s1",
+          "s2"
+        ],
+        "self_claims": [
           {
             "actor": "XakNet",
             "actor_type": "hacktivist",
-            "basis": [
-              "actor_self_claim"
-            ],
             "statement": "The group XakNet claimed the attack on its own channel on 19 December 2024, as reported by The Record; the claim is unverified.",
             "source_refs": [
               "s1"
             ]
           }
-        ],
-        "source_refs": [
-          "s1",
-          "s2"
         ]
       },
       "ai_involvement": {
@@ -17475,7 +17488,7 @@
       "summary": "A severe drought in 2024 cut output at Zambia's hydropower stations, which supply most of the country's electricity, and the national utility imposed load rationing nationwide that lengthened through the year.",
       "effect": "On 29 June 2024 the utility said rationing averaged 12 hours a day and the deficit stood at 831 MW: 1,268 MW available against demand of 2,216 MW, with one of its hydropower stations producing 98 MW against 1,080 MW installed. In August the energy minister said daily cuts would rise from 14 to 17 hours from 1 September.",
       "effect_specificity": "quantified",
-      "inclusion_basis": 2,
+      "inclusion_basis": 3,
       "civilian_service_impact": [
         {
           "service": "electricity",
@@ -17576,7 +17589,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -17634,12 +17649,12 @@
           "service": "electricity",
           "geographic_scope": "regional",
           "affected": {
-            "value": 4,
-            "unit": "hours of rolling cuts per day",
-            "qualifier": "at_most",
-            "source_says": "rolling cuts of 1 hour on January 3, 3 hours on January 4 and 4 hours on January 5"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "rolling cuts; no customer figure"
           },
-          "duration_text": "rolling cuts from 3 January 2025",
+          "duration_text": "rolling cuts from 3 January 2025: 1 hour on 3 January, 3 hours on 4 January, 4 hours on 5 January",
           "source_refs": [
             "s2"
           ]
@@ -17732,7 +17747,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -18237,12 +18254,12 @@
           "service": "electricity",
           "geographic_scope": "national",
           "affected": {
-            "value": 768000,
-            "unit": "homes, farms, schools and businesses",
-            "qualifier": "at_least",
-            "source_says": "power restored to over 768,000 homes, farms, schools and businesses"
+            "value": 725000,
+            "unit": "homes, farms and businesses",
+            "qualifier": "about",
+            "source_says": "approx. 725,000 homes, farms and businesses without power as at 12.30pm on 24 January 2025 (ESB Networks, 24 January 2025)"
           },
-          "duration_text": "nearly three weeks for the last customers; no exact restoration date in the opened sources",
+          "duration_text": "nearly three weeks for the last customers; the operator said on 12 February 2025 that power had been restored to over 768,000 homes, farms, schools and businesses since 24 January (a cumulative restoration count)",
           "source_refs": [
             "s1",
             "s2"
@@ -18710,6 +18727,21 @@
           "title_original": "Following the recovery of the generation capacity and replenishment of emergency reserves, loadshedding will be suspended at 5:00 AM",
           "title_en": "Following the recovery of the generation capacity and replenishment of emergency reserves, loadshedding will be suspended at 5:00 AM",
           "derived_claim": "Operator statement of 26 February 2025: load shedding suspended from 05:00 after generation capacity recovered; the preceding cuts followed multiple unconnected technical unit trips. The statement does not name the stage."
+        },
+        {
+          "ref": "s3",
+          "url": "https://www.eskom.co.za/loadshedding-remains-suspended-r16-69-billion-in-year-on-year-diesel-savings-achieved-ongoing-high-levels-of-planned-maintenance-continue/",
+          "publisher": "Eskom",
+          "date": "2025-02-28",
+          "language": "en",
+          "source_role": "operator",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "effect"
+          ],
+          "opened": false,
+          "derived_claim": "Operator statement of 28 February 2025: load shedding remains suspended."
         }
       ],
       "episode_id": null,
@@ -18727,7 +18759,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -19759,12 +19793,12 @@
           "service": "transport",
           "geographic_scope": "national",
           "affected": {
-            "value": 89,
-            "unit": "hours",
-            "qualifier": "exact",
-            "source_says": "restored after 89 hours of nonstop work"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "online ticket sales, website and mobile app unavailable nationwide; no figure for users affected"
           },
-          "duration_text": "online ticketing unavailable from 23 March to 27 March 2025",
+          "duration_text": "online ticketing unavailable from 23 March 2025; the operator said the website and app were back online after 89 hours of nonstop work (27 March 2025)",
           "source_refs": [
             "s1",
             "s2",
@@ -19805,7 +19839,7 @@
             "handle": "UkrzalInfo",
             "display_name": "Укрзалізниця",
             "account_tier": "S1",
-            "identity_basis": "Channel linked by The Record (specialist media) as the organisation's own statement channel; post opened by the attribution reviewer on 2026-11-19 and consistent with that report; not confirmed against the organisation's own website (not reachable to the reviewer).",
+            "identity_basis": "Linked from the operator's own site https://uz-vezemo.uz.gov.ua/ (live, checked 2026-11-19), which links https://t.me/UkrzalInfo.",
             "posted_at": "2025-03-24T05:50:36+00:00"
           },
           "supports": [
@@ -19889,7 +19923,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "passed",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -20260,7 +20296,7 @@
             "qualifier": null,
             "source_says": "no figure for customers whose metering or billing was disrupted; the operator says 'hundreds of thousands of current and former customers' had information in the breach, and SecurityWeek's 'roughly 280,000' is likewise the data-breach count"
           },
-          "duration_text": "estimated billing from spring 2025; operator reported estimated bills back to about 2% or less by 31 March 2026",
+          "duration_text": "estimated billing from spring 2025; the operator reported on 31 March 2026 that meter connections to its billing system were restored and estimated bills were back to a normal level of about 2% or less",
           "source_refs": [
             "s1",
             "s2"
@@ -20364,7 +20400,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -20625,10 +20663,10 @@
           "service": "healthcare",
           "geographic_scope": "local",
           "affected": {
-            "value": 3,
-            "unit": "days",
-            "qualifier": "about",
-            "source_says": "three-day operational shutdown"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "three-day operational shutdown; no patient figure"
           },
           "duration_text": "about three days from 10 May 2025",
           "source_refs": [
@@ -20673,7 +20711,7 @@
             "handle": "chuv_prok",
             "display_name": "Прокуратура Чувашии",
             "account_tier": "S1",
-            "identity_basis": "Channel linked by The Record (specialist media) as the organisation's own statement channel; post opened by the attribution reviewer on 2026-11-19 and consistent with that report; not confirmed against the organisation's own website (not reachable to the reviewer).",
+            "identity_basis": "Linked from the regional prosecutor's office page on the Prosecutor General's Office portal (epp.genproc.gov.ru/ru/proc_21/), which lists t.me/chuv_prok (checked 2026-11-19).",
             "posted_at": "2025-05-15T12:48:32+00:00"
           },
           "supports": [
@@ -20718,7 +20756,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "passed",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -22297,8 +22337,8 @@
             "platform": "telegram",
             "handle": "aeroflot_pr",
             "display_name": "По SUти (Aeroflot press service)",
-            "account_tier": "S1",
-            "identity_basis": "Channel linked by The Record (specialist media) as the organisation's own statement channel; post opened by the attribution reviewer on 2026-11-19 and consistent with that report; not confirmed against the organisation's own website (not reachable to the reviewer).",
+            "account_tier": "S2",
+            "identity_basis": "Not established from the airline's own site: aeroflot.ru returned HTTP 503 on 2026-11-19. Second-hand only: The Record links the channel as the airline's press-service channel. Tier S2 for that reason.",
             "posted_at": "2025-07-28T10:30:38+00:00"
           },
           "supports": [
@@ -22449,7 +22489,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "passed",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -22476,10 +22518,10 @@
           "service": "healthcare",
           "geographic_scope": "national",
           "affected": {
-            "value": 1000,
-            "unit": "stores",
-            "qualifier": "about",
-            "source_says": "the chain 'operates about 1,000 stores' and its operations halted on 29 July; a second chain that 'runs more than 110 pharmacies' suspended operations; headline: 'hundreds' of pharmacies shut down"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "operations halted at a chain that 'operates about 1,000 stores' (its store base, not a count of stores shut), about half of which reopened by the next day; a second chain that 'runs more than 110 pharmacies' suspended operations; headline: 'hundreds' of pharmacies shut down (The Record)"
           },
           "duration_text": "from 29 July 2025; half of the larger chain's pharmacies open again the same evening; full duration not established",
           "source_refs": [
@@ -22521,8 +22563,8 @@
             "platform": "telegram",
             "handle": "apteki_stolichki",
             "display_name": "Аптеки «Столички»",
-            "account_tier": "S1",
-            "identity_basis": "Channel linked by The Record (specialist media) as the organisation's own statement channel; post opened by the attribution reviewer on 2026-11-19 and consistent with that report; not confirmed against the organisation's own website (not reachable to the reviewer).",
+            "account_tier": "S2",
+            "identity_basis": "Not established from the chain's own site: stolichki.ru returned HTTP 403 on 2026-11-19. Second-hand only: The Record links the channel as the chain's statement channel. Tier S2 for that reason.",
             "posted_at": "2025-07-29T15:12:28+00:00"
           },
           "supports": [
@@ -22545,8 +22587,8 @@
             "platform": "telegram",
             "handle": "aptekaneopharm",
             "display_name": "Сеть аптек НЕОФАРМ",
-            "account_tier": "S1",
-            "identity_basis": "Channel linked by The Record (specialist media) as the organisation's own statement channel; post opened by the attribution reviewer on 2026-11-19 and consistent with that report; not confirmed against the organisation's own website (not reachable to the reviewer).",
+            "account_tier": "S2",
+            "identity_basis": "Not established from the chain's own site: neopharm.ru returned HTTP 403 on 2026-11-19. Second-hand only: The Record links the channel as the chain's statement channel. Tier S2 for that reason.",
             "posted_at": "2025-07-30T10:55:10+00:00"
           },
           "supports": [
@@ -22589,7 +22631,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "passed",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -23051,10 +23095,10 @@
           "service": "telecom",
           "geographic_scope": "multi_region",
           "affected": {
-            "value": 605,
-            "unit": "emergency call attempts",
-            "qualifier": "exact",
-            "source_says": "75 per cent of Triple Zero calls failed, from a total of 605 attempts"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "75 per cent of Triple Zero calls failed, from a total of 605 attempts during the outage (ABC, citing the regulator's case); the number of failed calls is not stated"
           },
           "duration_text": "about 13 to 14 hours on 18 September 2025",
           "source_refs": [
@@ -23921,91 +23965,6 @@
           "evidence": "accept_with_correction",
           "attribution_source": "accept",
           "safety": "accept"
-        },
-        "ai_check": "not_applicable",
-        "social_check": "not_applicable",
-        "disposition": "corrected"
-      }
-    },
-    {
-      "impact_id": "imp-2025-10-can-water-facility-control-system-tampering",
-      "record_kind": "disruption",
-      "date": "2025-10",
-      "date_precision": "month",
-      "date_end": null,
-      "country_a3": "CAN",
-      "admin1": null,
-      "geographic_precision": "country",
-      "domain": "civilian_service",
-      "sector": "water",
-      "technology": null,
-      "cause_family": "cyber",
-      "contributing_factors": [],
-      "cyber_mechanism": "malicious_configuration_change",
-      "summary": "Canada's national cyber agency reported in October 2025 that a control system at a water facility had been tampered with in recent weeks, degrading service for its community.",
-      "effect": "The Canadian Centre for Cyber Security said the tampering resulted in degraded service for the facility's community. No place, date or number of people was given.",
-      "effect_specificity": "described",
-      "inclusion_basis": 2,
-      "civilian_service_impact": [
-        {
-          "service": "water",
-          "geographic_scope": "local",
-          "affected": "unknown",
-          "duration_text": "not stated",
-          "source_refs": [
-            "s1"
-          ]
-        }
-      ],
-      "attribution": {
-        "status": "UNKNOWN",
-        "actor": null,
-        "actor_type": null,
-        "basis": [],
-        "as_of": null,
-        "statement": "The Canadian Centre for Cyber Security's alert of 29 October 2025, which says hacktivists are increasingly abusing internet-accessible industrial control systems, named no group or actor for the water facility incident.",
-        "competing": [],
-        "source_refs": []
-      },
-      "ai_involvement": {
-        "status": "NONE_REPORTED",
-        "relation": null,
-        "role": null,
-        "as_of": null,
-        "statement": null,
-        "source_refs": []
-      },
-      "dispute": null,
-      "sources": [
-        {
-          "ref": "s1",
-          "url": "https://www.cyber.gc.ca/en/alerts-advisories/al25-016-internet-accessible-industrial-control-systems-ics-abused-hacktivists",
-          "publisher": "Canadian Centre for Cyber Security",
-          "date": "2025-10-29",
-          "language": "en",
-          "source_role": "cert",
-          "medium": "web",
-          "social": null,
-          "supports": [
-            "occurrence",
-            "effect"
-          ],
-          "opened": true,
-          "derived_claim": "National cyber agency alert: incidents reported to the Centre and the RCMP in recent weeks included a water facility where tampering degraded service for its community; attributed generically to hacktivists."
-        }
-      ],
-      "episode_id": null,
-      "episode_basis": null,
-      "publication_policy": "standard",
-      "research_pass": "i22-water_health",
-      "first_published": null,
-      "review": {
-        "reviewed_at": "2026-11-19",
-        "review_status": "blind_reviewed",
-        "roles": {
-          "evidence": "accept_with_correction",
-          "attribution_source": "accept_with_correction",
-          "safety": "accept_with_correction"
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
@@ -26175,7 +26134,7 @@
       "summary": "A cascade of line disconnections on 31 January 2026 blacked out most of Moldova for several hours and forced emergency outages in several regions of Ukraine; both governments described a technical failure.",
       "effect": "In Moldova the grid was disconnected at 10:42 local time; trolleybuses stopped, traffic lights went out, border and customs operations were disrupted and medical facilities switched to emergency power; supply returned after more than five hours. Ukraine's energy minister described a technological disruption on two high-voltage lines causing a cascade of disconnections, with emergency outage schedules in several regions.",
       "effect_specificity": "described",
-      "inclusion_basis": 2,
+      "inclusion_basis": 4,
       "civilian_service_impact": [
         {
           "service": "electricity",
@@ -26277,7 +26236,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -26548,7 +26509,7 @@
       "summary": "A widespread electricity outage hit Greater Santo Domingo and several southern provinces of the Dominican Republic on 23 February 2026, about three months after the national blackout of November 2025.",
       "effect": "The state transmission company confirmed the blackout and said service was being restored progressively. The Santo Domingo metro and traffic signals kept working. The opened source gives no cause and no customer figure.",
       "effect_specificity": "described",
-      "inclusion_basis": 2,
+      "inclusion_basis": 4,
       "civilian_service_impact": [
         {
           "service": "electricity",
@@ -26619,7 +26580,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -27957,12 +27920,12 @@
           "service": "electricity",
           "geographic_scope": "national",
           "affected": {
-            "value": 700000,
-            "unit": "customers",
-            "qualifier": "about",
-            "source_says": "islandwide outage; the utility has 700,000 customers (Al Jazeera)"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "all-island outage (utility's preliminary report, via The Gleaner, 10 June 2026); no count of customers who lost power; 700,000 is the utility's total customer base (Al Jazeera, 6 June 2026)"
           },
-          "duration_text": "about nine and a half hours, 9:02pm on 5 June to 6:34am on 6 June",
+          "duration_text": "about nine and a half hours, 9:02pm on 5 June to 6:34am on 6 June; 20 percent of customers restored by 2am and 500,000 of the utility's 700,000 customers overnight, per the minister",
           "source_refs": [
             "s1",
             "s2"
@@ -28216,12 +28179,12 @@
           "service": "electricity",
           "geographic_scope": "regional",
           "affected": {
-            "value": 20,
-            "unit": "hours without grid electricity per day",
-            "qualifier": "about",
-            "source_says": "power cuts reached about 20 hours a day"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "power cuts; no customer figure"
           },
-          "duration_text": "reported as persistent through 2026",
+          "duration_text": "power cuts reached about 20 hours a day; reported as persistent through 2026",
           "source_refs": [
             "s1",
             "s2"
@@ -28308,7 +28271,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -28570,7 +28535,7 @@
       "summary": "Georgia's power system separated from a neighbouring grid shortly after midnight on 24 July 2026 and collapsed, causing a nationwide blackout; a second widespread outage followed on the morning of 25 July.",
       "effect": "Electricity was lost across the country; the capital's water utility said its pumping stations stopped automatically and warned of low water pressure. In the 25 July outage the capital's metro halted, water and internet were disrupted and rail transport stopped nationwide, according to one report. Supply was reported back nationwide by about 08:00 on 25 July. The regulator's preliminary findings point to a line outage; the line's owner disputes this, and the State Security Service is examining whether sabotage was involved.",
       "effect_specificity": "described",
-      "inclusion_basis": 2,
+      "inclusion_basis": 4,
       "civilian_service_impact": [
         {
           "service": "electricity",
@@ -28723,7 +28688,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -28784,22 +28751,20 @@
         ],
         "as_of": "2026-08-20",
         "statement": "Cybersecurity Dive reported on 20 August 2026 that authorities, which it did not name, suspect Iran-nexus groups were behind the July 2026 attacks; NPR reported on 12 August 2026 that federal officials and experts suspected Iran and that an unnamed expert cited intelligence linking the activity to Iran's IRGC. No US government body had formally named a responsible party, and Minnesota officials said it was not clear that one actor carried out all the attacks.",
-        "competing": [
+        "competing": [],
+        "source_refs": [
+          "s6",
+          "s7"
+        ],
+        "self_claims": [
           {
             "actor": "APT Iran",
             "actor_type": "unknown",
-            "basis": [
-              "actor_self_claim"
-            ],
             "statement": "A group calling itself APT Iran claimed the Minnesota attacks and said it was working with CyberAv3ngers, according to Check Point Research as reported by Cybersecurity Dive on 20 August 2026; the claim is not verified.",
             "source_refs": [
               "s7"
             ]
           }
-        ],
-        "source_refs": [
-          "s6",
-          "s7"
         ]
       },
       "ai_involvement": {
@@ -28954,7 +28919,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -29097,12 +29064,12 @@
           "service": "electricity",
           "geographic_scope": "regional",
           "affected": {
-            "value": 10,
-            "unit": "hours of outage (as described by one resident quoted in the wire report)",
-            "qualifier": "at_least",
-            "source_says": "outages lasting more than ten hours"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "prolonged outages; no customer figure"
           },
-          "duration_text": "reported in its sixth consecutive week on 3 September 2026",
+          "duration_text": "outages lasting more than ten hours, as described by one resident; reported in its sixth consecutive week on 3 September 2026",
           "source_refs": [
             "s1",
             "s2"
@@ -30373,18 +30340,18 @@
       "summary": "A storm damaged high-voltage transmission lines on 11 November 2026 and cut electricity across much of Morocco's Casablanca-Settat region during the evening rush hour.",
       "effect": "The regional distribution company said a fault on the national operator's high-voltage lines cut residential, commercial and industrial supply across much of the region from 16:48. The national operator said several transmission lines were damaged. Traffic lights stopped, tram services and businesses were disrupted and internet connections were interrupted in some neighbourhoods. The government said power was restored in three hours. No customer figure was published.",
       "effect_specificity": "quantified",
-      "inclusion_basis": 2,
+      "inclusion_basis": 4,
       "civilian_service_impact": [
         {
           "service": "electricity",
           "geographic_scope": "regional",
           "affected": {
-            "value": 3,
-            "unit": "hours until supply was restored",
-            "qualifier": "about",
-            "source_says": "power was restored in three hours"
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": "supply cut across much of the Casablanca-Settat region from 16:48; no customer figure published"
           },
-          "duration_text": "about three hours, per the government spokesperson",
+          "duration_text": "about three hours; the government spokesperson said power was restored in three hours",
           "source_refs": [
             "s1",
             "s2",
@@ -30486,7 +30453,9 @@
         },
         "ai_check": "not_applicable",
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {

@@ -41,12 +41,8 @@
       "date": "2026-03-10",
       "as_of": "2026-03-09",
       "context_type": "market_response",
-      "claim": "The U.S. EIA said the Brent crude oil spot price settled at $94 per barrel on 9 March, up about 50% from the beginning of the year and the highest since September 2023, and that prices had risen as petroleum shipments through the Strait of Hormuz had fallen. It said that as of 9 March the strait was \"effectively closed to most shipping traffic\".",
-      "metric": {
-        "value": 94,
-        "unit": "USD per barrel",
-        "basis": "Brent, settlement on March 9, as stated in the report's highlights ('Brent settled at $94 per barrel (b) on March 9'); the report does not say which Brent price this is, and its text separately gives the Brent crude oil spot price as $104/b on March 9 (EIA, Short-Term Energy Outlook, March 2026)"
-      },
+      "claim": "The U.S. EIA said in its March 2026 Short-Term Energy Outlook that the Brent crude oil spot price had risen sharply following the onset of military action in the Middle East, and that crude oil prices had risen as petroleum shipments through the Strait of Hormuz had fallen. It said that as of 9 March, when it finalised its forecast, the strait was \"effectively closed to most shipping traffic\".",
+      "metric": null,
       "sources": [
         {
           "ref": "s1",
@@ -70,7 +66,9 @@
         "roles": {
           "evidence": "accept_with_correction",
           "safety": "accept_with_correction"
-        }
+        },
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -78,12 +76,8 @@
       "date": "2026-03-10",
       "as_of": "2026-03-10",
       "context_type": "aggregate_trade",
-      "claim": "UNCTAD said military escalation had disrupted shipping flows through the Strait of Hormuz, which carries around one quarter of global seaborne oil trade, and that around one third of global seaborne fertilizer trade, about 16 million tonnes, passes through it. It said freight rates for oil shipping and war-risk insurance premiums were surging.",
-      "metric": {
-        "value": 16,
-        "unit": "million tonnes",
-        "basis": "global seaborne fertilizer trade passing through the strait, 'around one-third' (UNCTAD)"
-      },
+      "claim": "UNCTAD said military escalation had disrupted shipping flows through the Strait of Hormuz, which carries around one quarter of global seaborne oil trade, and that around one third of global seaborne fertilizer trade passes through it. It said freight rates for oil shipping and war-risk insurance premiums were surging.",
+      "metric": null,
       "sources": [
         {
           "ref": "s1",
@@ -123,7 +117,9 @@
         "roles": {
           "evidence": "accept",
           "safety": "accept"
-        }
+        },
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -199,13 +195,8 @@
       "date": "2026-03-11",
       "as_of": "2026-03-11",
       "context_type": "aggregate_trade",
-      "claim": "The IEA said, in an announcement carried by Hydrocarbon Engineering, that the conflict had impeded oil flows through the Strait of Hormuz, with export volumes of crude and refined products \"currently at less than 10% of pre-conflict levels\". It said an average of 20 million barrels per day of crude oil and oil products transited the strait in 2025, around 25% of the world's seaborne oil trade.",
-      "metric": {
-        "value": 10,
-        "unit": "percent of pre-conflict levels",
-        "qualifier": "at_most",
-        "basis": "export volumes of crude and refined products through the strait, 'currently at less than 10% of pre-conflict levels' (IEA, as carried by Hydrocarbon Engineering)"
-      },
+      "claim": "The IEA said, in an announcement carried by Hydrocarbon Engineering, that the conflict had impeded oil flows through the Strait of Hormuz and that export volumes of crude and refined products were far below pre-conflict levels; the announcement does not define the pre-conflict baseline. It said an average of 20 million barrels per day of crude oil and oil products transited the strait in 2025, around 25% of the world's seaborne oil trade.",
+      "metric": null,
       "sources": [
         {
           "ref": "s1",
@@ -230,7 +221,9 @@
         "roles": {
           "evidence": "accept_with_correction",
           "safety": "accept"
-        }
+        },
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -409,14 +402,8 @@
       "date": "2026-03-26",
       "as_of": "2026-03-26",
       "context_type": "civilian_environmental",
-      "claim": "FAO's Chief Economist said disruption to trade through the Strait of Hormuz was a shock to agrifood systems globally, and that global fertilizer prices could average 15 to 20 percent higher in the first half of 2026 if the crisis persisted.",
-      "metric": {
-        "value": 15,
-        "value_upper": 20,
-        "unit": "percent",
-        "basis": "possible average rise in global fertilizer prices in the first half of 2026 if the crisis persists (FAO)",
-        "qualifier": "range"
-      },
+      "claim": "FAO's Chief Economist said disruption to trade through the Strait of Hormuz was a shock to agrifood systems globally, and that global fertilizer prices could average higher in the first half of 2026 if the crisis persisted; the briefing gives a percentage range without stating what it is compared with.",
+      "metric": null,
       "sources": [
         {
           "ref": "s1",
@@ -541,7 +528,7 @@
       "date": "2026-04-24",
       "as_of": "2026-04-24",
       "context_type": "aggregate_supply",
-      "claim": "The National reported that the IEA said, in a quarterly gas report released on 24 April, that worldwide LNG supplies had dropped by about 20%, and that each month without LNG cargoes moving through the region results in about 10 billion cubic metres of LNG supply loss.",
+      "claim": "The National reported that the IEA said, in a quarterly gas report released on 24 April, that worldwide LNG supplies had dropped sharply, and that each month without LNG cargoes moving through the region results in about 10 billion cubic metres of LNG supply loss.",
       "metric": {
         "value": 10,
         "unit": "bcm per month",
@@ -587,7 +574,9 @@
         "roles": {
           "evidence": "accept_with_correction",
           "safety": "accept"
-        }
+        },
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -793,13 +782,8 @@
       "date": "2026-06-15",
       "as_of": "2026-06-15",
       "context_type": "policy_response",
-      "claim": "The IMO Secretary-General welcomed an agreement between the United States and Iran and said it would allow the IMO to advance a plan to evacuate thousands of seafarers stranded in the area, cautioning that implementation would take time. He said the IMO had verified at least 46 attacks on international shipping since 28 February.",
-      "metric": {
-        "value": 46,
-        "unit": "attacks",
-        "qualifier": "at_least",
-        "basis": "attacks on international shipping in and around the strait verified by the IMO since 28 February 2026"
-      },
+      "claim": "The IMO Secretary-General welcomed an agreement between the United States and Iran and said it would allow the IMO to advance its plan to evacuate the thousands of seafarers stranded in the area, cautioning that implementation would take time to ensure the necessary safety and security guarantees were in place.",
+      "metric": null,
       "sources": [
         {
           "ref": "s1",
@@ -823,7 +807,9 @@
         "roles": {
           "evidence": "accept",
           "safety": "accept"
-        }
+        },
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -1215,7 +1201,7 @@
       "metric": {
         "value": -4.8,
         "unit": "million b/d",
-        "basis": "change in global crude oil refinery inputs in the second quarter of 2026, about 6% (EIA, Today in Energy)"
+        "basis": "fall in global crude oil refinery inputs in the second quarter of 2026, 'or 6%', following the start of conflict (EIA, Today in Energy, citing Kpler data); the comparison period is not stated"
       },
       "sources": [
         {
@@ -1240,7 +1226,9 @@
         "roles": {
           "evidence": "accept",
           "safety": "accept"
-        }
+        },
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -1258,7 +1246,7 @@
       "sources": [
         {
           "ref": "s1",
-          "url": "https://www.eia.gov/outlooks/steo/",
+          "url": "https://www.eia.gov/outlooks/steo/archives/nov26.pdf",
           "publisher": "U.S. Energy Information Administration",
           "date": "2026-11-10",
           "language": "en",
@@ -1278,7 +1266,9 @@
         "roles": {
           "evidence": "accept",
           "safety": "accept"
-        }
+        },
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -1286,13 +1276,8 @@
       "date": "2026-11-10",
       "as_of": "2026-11-10",
       "context_type": "shipping_status",
-      "claim": "Gulf News reported, under a headline crediting UKMTO, that marine traffic through the Strait of Hormuz remained \"well below normal but not stalled\" (its text does not attribute the phrase to UKMTO), and that traffic in UKMTO's latest weekly report, as of 10 November, was about 65% below pre-conflict levels. Al Jazeera later reported that shipping through the strait was approximately 65 percent below pre-war levels, citing UKMTO's latest report.",
-      "metric": {
-        "value": 65,
-        "unit": "percent below pre-conflict levels",
-        "qualifier": "about",
-        "basis": "shipping through the strait relative to pre-conflict levels, from UKMTO's latest weekly report as reported by Gulf News and Al Jazeera; neither report states the baseline period or who made the comparison"
-      },
+      "claim": "UN News and Al Jazeera, citing UK Maritime Trade Operations (UKMTO), reported in mid-November that shipping through the Strait of Hormuz remained below pre-conflict levels; Gulf News, under a headline crediting UKMTO, described traffic as \"well below normal but not stalled\" (its text does not attribute the phrase to UKMTO). None of the reports states the baseline period used for the comparison.",
+      "metric": null,
       "sources": [
         {
           "ref": "s1",
@@ -1325,6 +1310,22 @@
           "derived_claim": "Repeats the UKMTO figure of about 65% below pre-war levels.",
           "origin": "UKMTO",
           "social": null
+        },
+        {
+          "ref": "s3",
+          "url": "https://news.un.org/en/story/2026/11/1168804",
+          "publisher": "UN News",
+          "date": "2026-11-13",
+          "language": "en",
+          "source_role": "government",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence"
+          ],
+          "opened": false,
+          "derived_claim": "UN News live coverage of 13 November 2026: transits remain below pre-conflict levels, according to UK Maritime Trade Operations; no baseline period stated.",
+          "origin": "UKMTO"
         }
       ],
       "first_published": null,
@@ -1381,7 +1382,7 @@
       "date": "2026-11-13",
       "as_of": "2026-10-31",
       "context_type": "aggregate_supply",
-      "claim": "The IEA said in its monthly oil market report that the oil market was set to return to surplus in the fourth quarter of 2026, with inventories rising by 1.7 million barrels per day in October, and that attacks on shipping remained a downside risk, The National reported.",
+      "claim": "The IEA said in its monthly oil market report that the oil market was set to return to surplus in the fourth quarter of 2026, with crude inventories rising by 1.7 million barrels per day in October, and that attacks on shipping remained a downside risk, The National reported.",
       "metric": {
         "value": 1.7,
         "unit": "million b/d",
@@ -1426,20 +1427,18 @@
         "roles": {
           "evidence": "accept_with_correction",
           "safety": "accept_with_correction"
-        }
+        },
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
       "id": "ctx-2026-11-13-un-security-council-briefing",
       "date": "2026-11-13",
-      "as_of": "2026-11-11",
+      "as_of": "2026-11-13",
       "context_type": "shipping_status",
-      "claim": "A UN assistant secretary-general told the Security Council that \"the present maritime arrangements in the Middle East remain costly, unpredictable, and unsafe\" and that the IMO had recorded 136 security incidents involving vessels in the area between 1 March and 11 November, Al Jazeera reported.",
-      "metric": {
-        "value": 136,
-        "unit": "security incidents",
-        "basis": "security incidents involving vessels recorded by the IMO from 1 March to 11 November 2026 (UN briefing, as reported by Al Jazeera)"
-      },
+      "claim": "A UN assistant secretary-general told the Security Council on 13 November that the volume of maritime shipments remained below pre-conflict levels, according to the UN's meeting coverage; Al Jazeera reported that he described the present maritime arrangements in the Middle East as \"costly, unpredictable, and unsafe\".",
+      "metric": null,
       "sources": [
         {
           "ref": "s1",
@@ -1456,6 +1455,21 @@
           "derived_claim": "Report of the UN briefing to the Security Council on 13 November: 136 incidents; maritime arrangements 'costly, unpredictable, and unsafe'.",
           "origin": "United Nations",
           "social": null
+        },
+        {
+          "ref": "s2",
+          "url": "https://press.un.org/en/2026/sc16509.doc.htm",
+          "publisher": "United Nations (Meetings Coverage and Press Releases)",
+          "date": "2026-11-13",
+          "language": "en",
+          "source_role": "government",
+          "medium": "web",
+          "social": null,
+          "supports": [
+            "occurrence"
+          ],
+          "opened": false,
+          "derived_claim": "UN meetings coverage of 13 November 2026: the assistant secretary-general warned that shipping volumes remain below pre-conflict levels."
         }
       ],
       "first_published": null,
@@ -1464,7 +1478,9 @@
         "roles": {
           "evidence": "accept",
           "safety": "accept"
-        }
+        },
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -1476,7 +1492,7 @@
       "metric": {
         "value": 19,
         "unit": "percent",
-        "basis": "increase in collective oil shipments through the main maritime passages around the Middle East in the third quarter of 2026 (EIA, Today in Energy); not a figure for the Strait of Hormuz alone"
+        "basis": "increase in collective oil shipments through key passages around the Middle East in the third quarter of 2026 (EIA, Today in Energy); the comparison period is not stated in that sentence, and the article compares Hormuz flows with the second quarter; not a figure for the Strait of Hormuz alone"
       },
       "sources": [
         {
@@ -1501,7 +1517,9 @@
         "roles": {
           "evidence": "accept",
           "safety": "accept"
-        }
+        },
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     }
   ]
