@@ -543,7 +543,7 @@
       "method": "3 searches (telecom English, weather and services English, Arabic outage terms), then direct fetch of two pages",
       "window": "2022 to 2026",
       "status": "not achieved",
-      "limitation": "Two leads were opened and neither can be filed: 11 February 2024 (the national utility said rain interrupted service in several parts of the country; no scale, duration or service named) and 26 July 2024 (the largest operator's network failure after a contractor damaged main lines; the opened report gives no scope or duration and every address found names the operator). Plain statement: no qualifying Qatar record was found."
+      "limitation": "Two leads were opened and neither could be filed: the opened reports gave no scale, duration or scope for the service effect. Plain statement: no qualifying Qatar record was found."
     },
     {
       "lane": "gulf_civil2",
@@ -573,7 +573,7 @@
       "method": "2 searches (one Arabic on the Kuwait incident, one English across the Gulf for 2026); a public tracker's country pages were tried by direct fetch",
       "window": "2022-01-01 to 2026-11-19",
       "status": "partial",
-      "limitation": "The tracker pages returned 404 and the CSIS incident list returned 403. The 2026 search returned only reports of physical attacks, which were not opened or pursued. A single headline about a cyber incident at hospitals in eastern Saudi Arabia was seen undated and could not be opened."
+      "limitation": "The tracker pages returned 404 and a second incident list returned 403. The 2026 search returned only reports of physical attacks, which were not opened or pursued. One further undated headline about a cyber incident could not be opened."
     },
     {
       "lane": "gulf_states",
@@ -693,7 +693,7 @@
       "method": "Two searches.",
       "window": "2026-04-08 to 2026-07-08",
       "status": "partial",
-      "limitation": "Only the July move is filed, and as an intraday quote. The April ceasefire move (Oil & Gas Journal: both benchmarks fell towards $95, largest one-day decline since 2020) was read but not filed because the page gave no settlement value."
+      "limitation": "Only the July move is filed, and as an intraday quote. The April ceasefire move was read but not filed because the page gave no settlement value."
     },
     {
       "lane": "hormuz",
@@ -723,7 +723,7 @@
       "method": "Read the current index page and three articles.",
       "window": "2026-04-30 to 2026-11-19",
       "status": "partial",
-      "limitation": "Earlier index pages (March to September) not enumerated. The 30 April article on reserve releases (17.5 million barrels released to 24 April) was read but not filed."
+      "limitation": "Earlier index pages (March to September) not enumerated. The 30 April article on reserve releases was read but not filed."
     },
     {
       "lane": "hormuz",
@@ -883,7 +883,7 @@
       "method": "direct fetch of the English Wikipedia article on the Iranian energy crisis; its reference list was used to find originals",
       "window": "2022 to 2026-09",
       "status": "partial",
-      "limitation": "The page carries a banner about possible machine-generated text and is thin before late 2024. Many of its references are advocacy sites (NCRI, Iran Focus, Iran News Update) that were not opened or used. The 2023 Khoy earthquake page address guessed for discovery returned 404."
+      "limitation": "The page carries a banner about possible machine-generated text and is thin before late 2024. Many of its references are advocacy sites (NCRI, Iran Focus, Iran News Update) that were not opened or used. The address of a further page guessed for discovery returned 404."
     },
     {
       "lane": "iran_power2",
@@ -1611,13 +1611,16 @@
   "limitations": [
     "The corpus is a sample, not a census: each research pass searched one region or theme within a search budget, and an incident not found here is not evidence that none happened.",
     "Many international wire services and several national outlets refused automated requests, so wire-level corroboration is often second-hand; each source family states where.",
-    "Official archives were enumerated in a few places only, as each source family states; elsewhere an official statement is usually read as carried by a news outlet."
+    "Official archives were enumerated in a few places only, as each source family states; elsewhere an official statement is usually read as carried by a news outlet.",
+    "Some widely reported disruptions are not in the corpus. Examples: weather-driven power outages in the United States (Hurricanes Ian, Beryl, Helene and Milton, and the rolling outages of Winter Storm Elliott); any record for India or China; the December 2023 cyberattack on fuel-station payments in Iran; utility losses in the February 2023 earthquakes in Türkiye and Syria and the January 2024 Noto earthquake in Japan. Most were not reached within the search budget. Their absence here says nothing about whether or how they happened.",
+    "Coverage of kinetic attacks and sabotage is thin: few such records are published, only a handful for Ukraine's power system since 2022, and none from the 2026 Gulf conflict, whose attack records, where published, are on the country systems' own pages. The corpus is not a record of attacks.",
+    "Outages of single generating assets appear only where a research pass happened to find them; no systematic source for them was searched, so those records are a sample, not a list."
   ],
   "latest_research_date": "2026-11-19",
   "lead_holds": {
-    "held": 14,
+    "held": 23,
     "duplicates_across_lanes": 8,
     "safety_grounds": 5,
-    "other_grounds": 1
+    "other_grounds": 10
   }
 }

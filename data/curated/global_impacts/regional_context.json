@@ -210,7 +210,7 @@
             "occurrence"
           ],
           "opened": true,
-          "derived_claim": "Carries the IEA statement on export volumes at less than 10% of pre-conflict levels and the 2025 baseline.",
+          "derived_claim": "Carries the IEA statement that export volumes were far below pre-conflict levels, and the 2025 transit baseline.",
           "origin": "IEA",
           "social": null
         }
@@ -417,7 +417,7 @@
             "occurrence"
           ],
           "opened": true,
-          "derived_claim": "FAO Chief Economist's briefing: fertilizer prices could average 15-20 percent higher in the first half of 2026 if the crisis persists.",
+          "derived_claim": "FAO Chief Economist's briefing: fertilizer prices could average higher in the first half of 2026 if the crisis persists; the range given has no stated comparator.",
           "social": null
         }
       ],
@@ -548,7 +548,7 @@
             "occurrence"
           ],
           "opened": true,
-          "derived_claim": "Reports the IEA quarterly gas report: LNG supply down about 20%; about 10 bcm lost per month.",
+          "derived_claim": "Reports the IEA quarterly gas report: LNG supply dropped sharply; about 10 bcm lost per month without cargoes moving through the region.",
           "origin": "IEA",
           "social": null
         },
@@ -797,7 +797,7 @@
             "occurrence"
           ],
           "opened": true,
-          "derived_claim": "IMO Secretary-General welcomes the agreement; evacuation plan for stranded seafarers; at least 46 verified attacks.",
+          "derived_claim": "IMO Secretary-General welcomes the agreement and its plan to evacuate stranded seafarers.",
           "social": null
         }
       ],
@@ -1091,7 +1091,7 @@
       "date": "2026-10-06",
       "as_of": "2026-09-30",
       "context_type": "aggregate_supply",
-      "claim": "The U.S. EIA assessed that crude oil production shut-ins averaged 4.8 million barrels per day in September, down from 5.8 million barrels per day in August and from 10.9 million barrels per day at the peak in May, and said it expected continued volatility in crude oil flows.",
+      "claim": "The U.S. EIA assessed that crude oil production shut-ins averaged 4.8 million barrels per day in September, down from 5.8 million barrels per day in August and from 10.9 million barrels per day at the peak in May, and said it expected continued volatility in crude oil flows. Its July outlook had put the May peak at 11.2 million barrels per day; the two are estimates made at different dates.",
       "metric": {
         "value": 4.8,
         "unit": "million b/d",
@@ -1135,7 +1135,9 @@
         "roles": {
           "evidence": "accept",
           "safety": "accept"
-        }
+        },
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-19"
       }
     },
     {
@@ -1197,12 +1199,8 @@
       "date": "2026-11-03",
       "as_of": "2026-09-30",
       "context_type": "aggregate_supply",
-      "claim": "The U.S. EIA said global crude oil refinery inputs fell by 4.8 million barrels per day, about 6%, in the second quarter of 2026 following the start of the conflict, and rose by 1.8 million barrels per day in the third quarter while remaining about 5% below the same period of 2025.",
-      "metric": {
-        "value": -4.8,
-        "unit": "million b/d",
-        "basis": "fall in global crude oil refinery inputs in the second quarter of 2026, 'or 6%', following the start of conflict (EIA, Today in Energy, citing Kpler data); the comparison period is not stated"
-      },
+      "claim": "The U.S. EIA said global crude oil refinery inputs fell in the second quarter of 2026 following the start of the conflict, and rose in the third quarter while remaining about 5% below the same period of 2025.",
+      "metric": null,
       "sources": [
         {
           "ref": "s1",
@@ -1216,7 +1214,7 @@
             "occurrence"
           ],
           "opened": true,
-          "derived_claim": "Global refinery inputs: down 4.8 million b/d in 2Q26, up 1.8 million b/d in 3Q26.",
+          "derived_claim": "Global refinery inputs fell in the second quarter of 2026 after the conflict began and rose in the third quarter, still about 5% below the third quarter of 2025.",
           "social": null
         }
       ],
@@ -1274,7 +1272,7 @@
     {
       "id": "ctx-2026-11-10-ukmto-traffic-level",
       "date": "2026-11-10",
-      "as_of": "2026-11-10",
+      "as_of": "2026-11-14",
       "context_type": "shipping_status",
       "claim": "UN News and Al Jazeera, citing UK Maritime Trade Operations (UKMTO), reported in mid-November that shipping through the Strait of Hormuz remained below pre-conflict levels; Gulf News, under a headline crediting UKMTO, described traffic as \"well below normal but not stalled\" (its text does not attribute the phrase to UKMTO). None of the reports states the baseline period used for the comparison.",
       "metric": null,
@@ -1291,7 +1289,7 @@
             "occurrence"
           ],
           "opened": true,
-          "derived_claim": "UKMTO characterisation: well below normal but not stalled; about 65% below pre-conflict levels.",
+          "derived_claim": "UKMTO characterisation, as reported: traffic well below normal but not stalled, and below pre-conflict levels.",
           "origin": "UKMTO",
           "social": null
         },
@@ -1307,7 +1305,7 @@
             "occurrence"
           ],
           "opened": true,
-          "derived_claim": "Repeats the UKMTO figure of about 65% below pre-war levels.",
+          "derived_claim": "Reports UKMTO saying traffic remained below pre-war levels.",
           "origin": "UKMTO",
           "social": null
         },
@@ -1438,7 +1436,7 @@
       "date": "2026-11-13",
       "as_of": "2026-11-13",
       "context_type": "shipping_status",
-      "claim": "A UN assistant secretary-general told the Security Council on 13 November that the volume of maritime shipments remained below pre-conflict levels, according to the UN's meeting coverage; Al Jazeera reported that he described the present maritime arrangements in the Middle East as \"costly, unpredictable, and unsafe\".",
+      "claim": "Al Jazeera reported on 14 November that a UN assistant secretary-general, briefing the Security Council on 13 November, described the present maritime arrangements in the Middle East as \"costly, unpredictable, and unsafe\"; the UN's meeting coverage records his warning that shipping volumes remained below pre-conflict levels.",
       "metric": null,
       "sources": [
         {
@@ -1453,7 +1451,7 @@
             "occurrence"
           ],
           "opened": true,
-          "derived_claim": "Report of the UN briefing to the Security Council on 13 November: 136 incidents; maritime arrangements 'costly, unpredictable, and unsafe'.",
+          "derived_claim": "Report of the UN briefing to the Security Council on 13 November: maritime arrangements described as 'costly, unpredictable, and unsafe'.",
           "origin": "United Nations",
           "social": null
         },
@@ -1490,12 +1488,8 @@
       "date": "2026-11-19",
       "as_of": "2026-09-30",
       "context_type": "aggregate_trade",
-      "claim": "The U.S. EIA said collective oil shipments through the main maritime passages around the Middle East increased by 19% in the third quarter of 2026, and that shipments through the Strait of Hormuz increased compared with the second quarter, \"when flows were severely constrained following the onset of the conflict\".",
-      "metric": {
-        "value": 19,
-        "unit": "percent",
-        "basis": "increase in collective oil shipments through key passages around the Middle East in the third quarter of 2026 (EIA, Today in Energy); the comparison period is not stated in that sentence, and the article compares Hormuz flows with the second quarter; not a figure for the Strait of Hormuz alone"
-      },
+      "claim": "The U.S. EIA said oil shipments through the Strait of Hormuz increased in the third quarter of 2026 compared with the second quarter, \"when flows were severely constrained following the onset of the conflict\".",
+      "metric": null,
       "sources": [
         {
           "ref": "s1",
@@ -1509,7 +1503,7 @@
             "occurrence"
           ],
           "opened": true,
-          "derived_claim": "Collective shipments up 19% in 3Q26; Hormuz shipments up on the second quarter.",
+          "derived_claim": "Hormuz shipments rose in the third quarter of 2026 compared with the second quarter.",
           "social": null
         }
       ],

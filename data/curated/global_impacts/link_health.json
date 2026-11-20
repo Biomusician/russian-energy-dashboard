@@ -1,0 +1,13 @@
+{
+  "checked": "2026-11-19",
+  "note": "Automated link check (scripts/check_source_links.py fetch) of the short or numeric citation addresses of country-abstracted impact records, round-2 ruling R8. reachable means reached at the same address, with no redirect.",
+  "link_states": {
+    "https://orf.at/stories/3416422/": "reachable",
+    "https://orf.at/stories/3405152/": "reachable",
+    "https://fr.businessam.be/?p=158973": "reachable",
+    "https://en.interfax.com.ua/news/economic/988027.html": "reachable",
+    "https://interfax.com/newsroom/top-stories/102562/": "reachable",
+    "https://interfax.com/newsroom/top-stories/102670/": "reachable",
+    "https://pravda.com.ua/eng/news/2024/05/15/7455973": "blocked"
+  }
+}
