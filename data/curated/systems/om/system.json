@@ -56,9 +56,7 @@
         "الرستاق"
       ],
       "OM-MA": [
-        "مسقط",
-        "Mina al Fahal",
-        "Mina Al Fahal"
+        "مسقط"
       ],
       "OM-BU": [
         "Buraimi",
@@ -91,9 +89,7 @@
       ],
       "OM-WU": [
         "Wusta",
-        "الوسطى",
-        "Duqm",
-        "الدقم"
+        "الوسطى"
       ],
       "OM-ZA": [
         "Dhahira",
@@ -109,7 +105,18 @@
         "Salalah",
         "صلالة"
       ]
-    }
+    },
+    "gate_aliases": {
+      "OM-MA": [
+        "Mina al Fahal",
+        "Mina Al Fahal"
+      ],
+      "OM-WU": [
+        "Duqm",
+        "الدقم"
+      ]
+    },
+    "gate_aliases_note": "gate_aliases: names of places inside a unit other than the unit itself and its capital (towns, ports, islands, industrial areas, terminals, refinery, LNG and gas-processing sites, fields). Read by the import gate when it checks citation addresses; never served (release closure round 3, NS-2). unit_aliases, which are served and join the site search, hold only the unit's own name in other spellings and scripts and the name of its capital."
   },
   "sectors": [
     {

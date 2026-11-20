@@ -51,9 +51,7 @@
       "BH-14": [
         "Southern Governorate",
         "Janubiyah",
-        "الجنوبية",
-        "Awali",
-        "عوالي"
+        "الجنوبية"
       ],
       "BH-15": [
         "Muharraq",
@@ -63,9 +61,7 @@
       "BH-16": [
         "Wusta",
         "Central Governorate",
-        "الوسطى",
-        "Sitra",
-        "سترة"
+        "الوسطى"
       ],
       "BH-17": [
         "Northern Governorate",
@@ -73,6 +69,17 @@
         "الشمالية"
       ]
     },
+    "gate_aliases": {
+      "BH-14": [
+        "Awali",
+        "عوالي"
+      ],
+      "BH-16": [
+        "Sitra",
+        "سترة"
+      ]
+    },
+    "gate_aliases_note": "gate_aliases: names of places inside a unit other than the unit itself and its capital (towns, ports, islands, industrial areas, terminals, refinery, LNG and gas-processing sites, fields). Read by the import gate when it checks citation addresses; never served (release closure round 3, NS-2). unit_aliases, which are served and join the site search, hold only the unit's own name in other spellings and scripts and the name of its capital.",
     "display_names": {
       "BH-13": "Capital",
       "BH-14": "Southern",

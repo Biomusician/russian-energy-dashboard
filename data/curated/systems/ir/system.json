@@ -76,11 +76,7 @@
         "خوزستان",
         "Ahvaz",
         "Ahwaz",
-        "اهواز",
-        "Abadan",
-        "آبادان",
-        "Mahshahr",
-        "ماهشهر"
+        "اهواز"
       ],
       "IR-07": [
         "فارس",
@@ -107,9 +103,7 @@
         "Baluchistan",
         "سیستان و بلوچستان",
         "Zahedan",
-        "زاهدان",
-        "Chabahar",
-        "چابهار"
+        "زاهدان"
       ],
       "IR-12": [
         "Kurdistan",
@@ -141,17 +135,10 @@
         "Boyer-Ahmad",
         "کهگیلویه و بویراحمد",
         "Yasuj",
-        "یاسوج",
-        "Gachsaran",
-        "گچساران"
+        "یاسوج"
       ],
       "IR-18": [
-        "بوشهر",
-        "Asaluyeh",
-        "Assaluyeh",
-        "عسلویه",
-        "Kangan",
-        "کنگان"
+        "بوشهر"
       ],
       "IR-19": [
         "زنجان"
@@ -166,9 +153,7 @@
         "هرمزگان",
         "Bandar Abbas",
         "بندرعباس",
-        "بندر عباس",
-        "Qeshm",
-        "قشم"
+        "بندر عباس"
       ],
       "IR-23": [
         "تهران",
@@ -207,7 +192,35 @@
         "Karaj",
         "کرج"
       ]
-    }
+    },
+    "gate_aliases": {
+      "IR-06": [
+        "Abadan",
+        "آبادان",
+        "Mahshahr",
+        "ماهشهر"
+      ],
+      "IR-11": [
+        "Chabahar",
+        "چابهار"
+      ],
+      "IR-17": [
+        "Gachsaran",
+        "گچساران"
+      ],
+      "IR-18": [
+        "Asaluyeh",
+        "Assaluyeh",
+        "عسلویه",
+        "Kangan",
+        "کنگان"
+      ],
+      "IR-22": [
+        "Qeshm",
+        "قشم"
+      ]
+    },
+    "gate_aliases_note": "gate_aliases: names of places inside a unit other than the unit itself and its capital (towns, ports, islands, industrial areas, terminals, refinery, LNG and gas-processing sites, fields). Read by the import gate when it checks citation addresses; never served (release closure round 3, NS-2). unit_aliases, which are served and join the site search, hold only the unit's own name in other spellings and scripts and the name of its capital."
   },
   "sectors": [
     {

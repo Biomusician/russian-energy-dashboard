@@ -51,11 +51,7 @@
       "QA-KH": [
         "Al Khor",
         "Khor",
-        "الخور",
-        "Ras Laffan",
-        "Laffan",
-        "راس لفان",
-        "رأس لفان"
+        "الخور"
       ],
       "QA-MS": [
         "Al Shamal",
@@ -65,9 +61,7 @@
       "QA-RA": [
         "Al Rayyan",
         "Rayyan",
-        "الريان",
-        "Dukhan",
-        "دخان"
+        "الريان"
       ],
       "QA-US": [
         "Umm Slal",
@@ -77,17 +71,32 @@
       "QA-WA": [
         "Wakra",
         "Wakrah",
-        "الوكرة",
-        "Mesaieed",
-        "Umm Said",
-        "مسيعيد"
+        "الوكرة"
       ],
       "QA-ZA": [
         "Daayen",
         "Al Daayen",
         "الضعاين"
       ]
-    }
+    },
+    "gate_aliases": {
+      "QA-KH": [
+        "Ras Laffan",
+        "Laffan",
+        "راس لفان",
+        "رأس لفان"
+      ],
+      "QA-RA": [
+        "Dukhan",
+        "دخان"
+      ],
+      "QA-WA": [
+        "Mesaieed",
+        "Umm Said",
+        "مسيعيد"
+      ]
+    },
+    "gate_aliases_note": "gate_aliases: names of places inside a unit other than the unit itself and its capital (towns, ports, islands, industrial areas, terminals, refinery, LNG and gas-processing sites, fields). Read by the import gate when it checks citation addresses; never served (release closure round 3, NS-2). unit_aliases, which are served and join the site search, hold only the unit's own name in other spellings and scripts and the name of its capital."
   },
   "sectors": [
     {

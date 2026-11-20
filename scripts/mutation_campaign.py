@@ -2985,9 +2985,39 @@ CLOSURE_MUTATIONS = [
                  'and e["is_latest_of_type"])[:1]\n                      for t in TAXONOMY["context_types"]'))],
      "latest_by_type_lists_every_statement"),
     ("the recent lists say 'first-level region at most' again",
-     [("pipeline/build_systems.py", _text('{precision_statement({sid: v[0] for sid, v in all_events.items()}, aggregating=True)}',
+     [("pipeline/build_systems.py", _text('{precision_statement({sid: v[0] for sid, v in all_events.items()}, aggregating=True, events_by_system={sid: v[1] for sid, v in all_events.items()})}',
                                           'Precision is first-level region at most.'))],
      "recent_lists_say_where_attack_records_are_placed"),
+    # Release closure round 3 (NS-2): site names in a campaign system are gate-only, never served.
+    ("a campaign system's site name is served again in its unit aliases",
+     [("data/curated/systems/qa/system.json", _artifact(lambda d: (
+         d["geography"]["unit_aliases"]["QA-KH"].append("Ras Laffan"),
+         d["geography"]["gate_aliases"]["QA-KH"].remove("Ras Laffan"))))],
+     "site_names_are_gate_only"),
+    ("the served system file carries the gate-only names",
+     [("pipeline/build_systems.py", _text('    return {k: v for k, v in geo_doc.items() if k not in GATE_ONLY_GEOGRAPHY}',
+                                          '    return dict(geo_doc)'))],
+     "served_geography_carries_no_gate_only_key or site_names_are_gate_only"),
+    ("a name listed both served and gate-only is served",
+     [("pipeline/build_systems.py", _text('    if both:\n        raise ValueError(f"{system_id}: served unit_aliases also listed as gate-only: {both}")',
+                                          '    if False:\n        raise ValueError(f"{system_id}: served unit_aliases also listed as gate-only: {both}")'))],
+     "listed_both_served_and_gate_only"),
+    ("the import gate stops reading the gate-only names",
+     [("pipeline/build_systems.py", _text('    rows += [(code, alias) for code, aliases in (geo_doc.get("gate_aliases") or {}).items() for alias in aliases]\n',
+                                          ''))],
+     "served_geography_carries_no_gate_only_key or reads_a_place_in_any_common_spelling"),
+    # Release closure round 3 (NS-3): the sentence says only what served records do.
+    ("the precision sentence says a system publishes attack records because its policy allows them",
+     [("pipeline/build_systems.py", _text('hits = [e for e in events_by_system.get(sid) or [] if e.get("cause") in KINETIC_CAUSES]',
+                                          'hits = [{"cause": "kinetic_strike", "region_code": "x", "facility_name": "x", "publication": {}}]'))],
+     "precision_sentence_says_only_what_served_records_do"),
+    ("the precision sentence opens with 'never finer than first-level region' beside 'facility detail' again",
+     [("pipeline/build_systems.py", _text('out = ["Each country\'s own policy sets where its records are placed."]',
+                                          'out = ["Precision is set by each country\'s own policy, and is never finer than first-level region."]'))],
+     "precision_sentence_says_only_what_served_records_do"),
+    ("the precision sentence says 'under the owner's current decision' of attack records with no campaign block",
+     [("pipeline/build_systems.py", _text('covered = any(e.get("publication") for e in hits)', 'covered = True'))],
+     "precision_sentence_says_only_what_served_records_do"),
     ("the precision sentence counts Saudi Arabia among the country-only systems",
      [("pipeline/build_systems.py", _text('if p.get("kinetic") == "country" and p.get("other") != "country"]',
                                           'if p.get("other") != "country"]'))],
@@ -3180,6 +3210,7 @@ TEST_FILES += ("tests/test_iteration22_lead.py",)
 TEST_FILES += ("tests/test_iteration22_gulf.py",)
 TEST_FILES += ("tests/test_iteration22_closure_frontend.py",)
 TEST_FILES += ("tests/test_iteration22_round2.py",)
+TEST_FILES += ("tests/test_iteration22_round3.py",)
 
 
 def _run(box, k):

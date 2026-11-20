@@ -1005,7 +1005,29 @@ def unit_name_rows(doc, us):
     rows = [(code, name) for code, name, _ in us]
     rows += [(code, name) for code, name in (geo_doc.get("display_names") or {}).items()]
     rows += [(code, alias) for code, aliases in (geo_doc.get("unit_aliases") or {}).items() for alias in aliases]
+    # Places inside a unit that are not the unit or its capital (towns, ports, energy sites): the gate
+    # reads them, the served file never carries them (served_geography).
+    rows += [(code, alias) for code, aliases in (geo_doc.get("gate_aliases") or {}).items() for alias in aliases]
     return rows
+
+
+# Curated geography keys the import gate reads and no served file carries (release closure round 3, NS-2).
+GATE_ONLY_GEOGRAPHY = ("gate_aliases", "gate_aliases_note")
+
+
+def served_geography(geo_doc, system_id):
+    """The curated geography block as served: without the gate-only names.
+
+    Research broadly, publish narrowly. A campaign-restricted system's served aliases fed the site
+    search, which turned an export terminal's or a refinery site's name into its first-level region
+    (round-2 finding S-4). The gate still needs those names to read citation addresses, so they live
+    in `gate_aliases`, which is stripped here; the build refuses a served alias that is also listed
+    as gate-only, so a name cannot sit in both lists and leak through the served one."""
+    gate = {fold(a) for aliases in (geo_doc.get("gate_aliases") or {}).values() for a in aliases}
+    both = sorted(a for aliases in (geo_doc.get("unit_aliases") or {}).values() for a in aliases if fold(a) in gate)
+    if both:
+        raise ValueError(f"{system_id}: served unit_aliases also listed as gate-only: {both}")
+    return {k: v for k, v in geo_doc.items() if k not in GATE_ONLY_GEOGRAPHY}
 
 
 def _bounds(geoms):
@@ -1857,7 +1879,7 @@ def build_system(system_id, admin1, admin0, as_of):
         "reporting_note": doc["reporting_note"],
         "comparability": "none",
         "comparability_statement": COMPARABILITY_STATEMENT,
-        "geography": {**doc["geography"], "source": "Natural Earth 1:10m admin-1 (default edition)",
+        "geography": {**served_geography(doc["geography"], system_id), "source": "Natural Earth 1:10m admin-1 (default edition)",
                       "bounds": _bounds(kept),
                       # Where the map opens. Defaults to the full extent; a curated override
                       # exists for the US, whose full extent (the Aleutians to Florida) leaves
@@ -2107,35 +2129,64 @@ def _names(names):
     return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
 
 
-def precision_statement(names_by_system, aggregating=False):
-    """Where these systems place a record, read from each system's own precision policy.
+def precision_statement(names_by_system, aggregating=False, events_by_system=None):
+    """Where these systems place a record, read from each system's own precision policy, and what
+    their served attack records actually carry, read from the records themselves.
 
     "First-level region at most" alone was true and misleading beside systems that place an attack
     record for the country only (iteration 19) while Saudi Arabia keeps first-level region for
     attack records under the iteration-20 owner decision (option B). The sentence says which is
     which, by name and never by a count of systems, and changes when a policy changes. In an
     aggregating list (`aggregating`) a campaign-covered record is the country's whatever its own
-    system records (`recent_evidence`), and the sentence says that too."""
+    system records (`recent_evidence`), and the sentence says that too.
+
+    Release closure round 3 (NS-3): the round-2 sentence opened with "never finer than first-level
+    region" and then said some pages publish "facility detail", and it named Canada, China, India
+    and the United States as publishing attack records although none serves one. A policy that
+    allows something is not a page that shows it: whether a system "publishes attack records", and
+    with what detail, is read from its served events (`events_by_system`, sid -> events), never
+    from the policy alone."""
+    events_by_system = events_by_system or {}
+
     def policy_of(sid):
         # A system that states no policy places every record by first-level region at most, the
         # rule gulf_context.py also reads ("attack_records_placed").
         path = SYSTEMS_CURATED / sid / "system.json"
         return ((read_json(path).get("geography") or {}).get("precision_policy") or {}) if path.exists() else {}
-    policy = {names_by_system[sid]: policy_of(sid) for sid in names_by_system}
-    every = [s for s, p in policy.items() if p.get("other") == "country"]
-    attacks = [s for s, p in policy.items() if p.get("kinetic") == "country" and p.get("other") != "country"]
+    policy = {sid: policy_of(sid) for sid in names_by_system}
+    name = names_by_system.get
+    every = [name(s) for s, p in policy.items() if p.get("other") == "country"]
+    attacks = [name(s) for s, p in policy.items() if p.get("kinetic") == "country" and p.get("other") != "country"]
     regional = [s for s, p in policy.items() if p.get("kinetic") != "country"]
-    out = ["Precision is set by each country's own policy, and is never finer than first-level region."]
+    out = ["Each country's own policy sets where its records are placed."]
     if attacks:
         out.append(f"An attack or sabotage record is placed for the country only in {_names(attacks)}; "
                    "their other records are placed by first-level region at most.")
     if every:
         out.append(f"{_names(every)} places every record for the country only.")
-    if regional:
-        # Round-2 ruling R12 (finding S-7): "keep first-level region" understated what those pages
-        # publish. The policy is unchanged; the sentence now says what is on the page.
-        out.append(f"In {_names(regional)}, the country's own page publishes attack records with first-level region "
-                   "and facility detail under the owner's current decision, like every other eligible record.")
+    # Regional-policy systems, split by what their served records do. Grouped by the exact detail
+    # served, so two systems are named together only when the same words are true of both.
+    publishing, silent = {}, []
+    for sid in regional:
+        hits = [e for e in events_by_system.get(sid) or [] if e.get("cause") in KINETIC_CAUSES]
+        if not hits:
+            silent.append(name(sid))
+            continue
+        detail = [w for w, present in (("first-level region", any(e.get("region_code") for e in hits)),
+                                       ("facility detail", any(e.get("facility_name") for e in hits))) if present]
+        # "Under the owner's current decision" only where the records are campaign-covered: the
+        # iteration-20 decision (option B) is about publishing those, not about attack records at large.
+        covered = any(e.get("publication") for e in hits)
+        publishing.setdefault((tuple(detail), covered), []).append(name(sid))
+    for (detail, covered), names in sorted(publishing.items(), key=lambda kv: sorted(kv[1])):
+        with_ = f" with {' and '.join(detail)}" if detail else " for the country only"
+        under = " under the owner's current decision" if covered else ""
+        own = "the country's own page publishes" if len(names) == 1 else "each country's own page publishes"
+        out.append(f"In {_names(names)}, {own} attack records{with_}{under}.")
+    if silent:
+        verb = "serves" if len(silent) == 1 else "serve"
+        out.append(f"{_names(silent)} {verb} no attack or sabotage record; records there are placed by "
+                   "first-level region at most.")
     if aggregating:
         out.append("In this list, a record covered by the campaign policy is shown for the country only, whatever "
                    "its own system records.")
@@ -2197,7 +2248,7 @@ def recent_evidence(all_events, scope="The country systems.", regional=False, re
     return {
         "order": "newest first; never by size or severity",
         # Never a count of systems typed here: it said "five" for a list of twelve (iteration 19).
-        "scope": f"{scope} Qualifying records only, grouped by episode. {precision_statement({sid: v[0] for sid, v in all_events.items()}, aggregating=True)}",
+        "scope": f"{scope} Qualifying records only, grouped by episode. {precision_statement({sid: v[0] for sid, v in all_events.items()}, aggregating=True, events_by_system={sid: v[1] for sid, v in all_events.items()})}",
         "note": ("What was publicly reported, found and reviewed: counts here are not rates of disruption and "
                  "are not comparable between countries. Events can date back to 2022, but systematic research "
                  "for these systems began in 2026, so older records were found later, not monitored as they happened."),

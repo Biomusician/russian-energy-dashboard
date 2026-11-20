@@ -666,7 +666,12 @@ state may be null until it is fetched.
 
 - `system.json` → `geography.display_names` `{code: name}`: the name shown for a unit where the map
   file's name is a former name or an unusual spelling. `geography.unit_aliases` `{code: [names]}`:
-  other spellings, read only by the import gate when it checks citation addresses.
+  the unit's own name in other spellings and scripts, and the name of its capital. Served: the import gate
+  reads them when it checks citation addresses, and the site search finds the unit by them.
+  `geography.gate_aliases` `{code: [names]}` (with `gate_aliases_note`): every other place inside the unit
+  that a citation address could name (towns, ports, islands, industrial areas, terminals, refinery, LNG and
+  gas-processing sites, fields). Read by the import gate only and **never served**: the build strips them
+  and refuses a name listed in both (round 3, NS-2: research broadly, publish narrowly).
 - `regions.geojson` feature → `records_placed` (boolean). `false` where this system places no
   record in the unit; `recorded_events` is then `null`, never `0`.
 - `conflict_campaigns.json` → `status_sources` is a list of `{publisher, published}`. No address.

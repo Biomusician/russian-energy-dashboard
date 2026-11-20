@@ -350,9 +350,10 @@ the build and the import refuse the record otherwise). At least one source that 
   basis is not honoured here: a post or a dataset cannot borrow a government's authority.
 
 The record-level `attribution.basis` list is descriptive and checked only against the vocabulary;
-the gate reads the sources. One official's interview is not a formal attribution, and a
-campaign-level advisory that does not name the victim attributes nothing to it (reviewer rulings,
-iteration 22). An `ATTRIBUTED` record with a non-empty `competing` list has attribution confidence
+the gate reads the sources. One official's interview is not by itself a formal attribution: a press
+relay of an official's remark is `ATTRIBUTED` only where it meets the contract above (a source declaring
+a government basis), as the round-2 rulings below restate. A campaign-level advisory that does not name
+the victim attributes nothing to it (reviewer rulings, iteration 22). An `ATTRIBUTED` record with a non-empty `competing` list has attribution confidence
 `DISPUTED`.
 
 - `actor_type`: `state`, `state_linked`, `hacktivist`, `criminal`, `insider`, `unknown`, `other`.
@@ -381,8 +382,11 @@ Rulings applied in release closure round 2 (R3), one rule each:
 - No actor and no actor type is derived from a description of the tool: officials or reporters who
   name a ransomware strain have named no actor (`UNKNOWN`, with the strain only in the statement),
   and "unidentified ransomware operators" is not a competing attribution.
-- A ransom note or a leak-site listing is the actor's own claim: it goes in `self_claims`, and the
-  record is `CLAIMED` only where that is the only actor evidence.
+- A ransom note or a leak-site listing is the actor's own claim. Where it is the only actor evidence the
+  record is `CLAIMED`, and the attribution block itself is the claim (actor, statement and sources are the
+  claim's; `self_claims` is null, because there is nothing for a claim to sit beside). Where another
+  party also names an actor (a government, the victim, an investigator), the status follows that finding
+  and the claim goes in `self_claims` (round 3, verifier note N-5: the doc now says what the data does).
 - `SUSPECTED` needs a source that suspects an actor of **this** incident; a campaign-level suspicion
   that does not single out the victim attributes nothing to it (`UNKNOWN`).
 - A government's statement about an attack on its own country says, in the statement, that the

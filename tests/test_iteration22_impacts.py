@@ -2555,9 +2555,18 @@ def test_the_served_context_lists_its_ties():
 GULF_ATTACK_COUNTRY = {"bh", "ir", "iq", "kw", "om", "qa", "ae"}
 
 
-def _recent_scope(system_ids, scope="The Gulf country systems."):
-    return B.recent_evidence({sid: (systems.system(sid)["name"], [], []) for sid in system_ids}, scope=scope,
-                             regional=True)["scope"]
+def _recent_scope(system_ids, scope="The Gulf country systems.", events=None):
+    events = events or {}
+    return B.recent_evidence({sid: (systems.system(sid)["name"], events.get(sid, []), []) for sid in system_ids},
+                             scope=scope, regional=True)["scope"]
+
+
+# Synthetic served events, the only shape precision_statement reads: cause, region, facility, campaign block.
+_SA_ATTACK = {"event_id": "sa-x1", "cause": "kinetic_strike", "region_code": "SA-04", "facility_name": "synthetic",
+              "publication": {"rule": "active_campaign_current_status_withheld"}}
+_SERVED_NOW = {"sa": [_SA_ATTACK, {"event_id": "sa-x2", "cause": "unknown", "region_code": "SA-04"}],
+               "ca": [{"event_id": "ca-x1", "cause": "natural_hazard", "region_code": "CA-ON", "facility_name": "synthetic"}],
+               "us": [{"event_id": "us-x1", "cause": "technical", "region_code": "US-TX"}]}
 
 
 def test_the_recent_lists_say_where_attack_records_are_placed_and_saudi_keeps_its_policy():
@@ -2570,18 +2579,44 @@ def test_the_recent_lists_say_where_attack_records_are_placed_and_saudi_keeps_it
               for sid in members}
     assert {s for s, p in policy.items() if p.get("kinetic") == "country"} == GULF_ATTACK_COUNTRY
     assert policy["sa"].get("kinetic") in (None, "admin1")
-    for scope in (_recent_scope(members), _recent_scope(list(systems.COUNTRY_SYSTEMS), "The country systems.")):
+    for scope in (_recent_scope(members, events=_SERVED_NOW),
+                  _recent_scope(list(systems.COUNTRY_SYSTEMS), "The country systems.", events=_SERVED_NOW)):
         assert "Precision is first-level region at most." not in scope
         assert ("An attack or sabotage record is placed for the country only in Iran, Iraq, Kuwait, Oman, Qatar and "
                 "United Arab Emirates") in scope
         assert "Bahrain places every record for the country only." in scope
-        assert "Saudi Arabia" in scope.split("In ")[-2] + scope.split("In ")[-1]
-        assert "the country's own page publishes attack records with first-level region and facility detail under the owner's current decision" in scope
+        assert ("In Saudi Arabia, the country's own page publishes attack records with first-level region and "
+                "facility detail under the owner's current decision.") in scope
         assert "a record covered by the campaign policy is shown for the country only" in scope
         assert not re.search(r"\b(five|six|seven|eight|twelve|\d+)\b", scope), scope
-    gulf = _recent_scope(members)
-    assert "In Saudi Arabia, the country's own page publishes attack records with first-level region and facility detail" in gulf
+    gulf = _recent_scope(members, events=_SERVED_NOW)
     assert "Canada" not in gulf
+
+
+def test_the_precision_sentence_says_only_what_served_records_do():
+    """Round 3 (NS-3). The round-2 sentence opened "never finer than first-level region" and then said some pages
+    publish "facility detail", and it named Canada, China, India and the United States as publishing attack
+    records although none serves one. Whether a page publishes attack records, and with what detail, is read
+    from its served events, never from its policy alone."""
+    every = list(systems.COUNTRY_SYSTEMS)
+    scope = _recent_scope(every, "The country systems.", events=_SERVED_NOW)
+    assert "never finer than first-level region" not in scope
+    # Only Saudi Arabia serves an attack record here, so only Saudi Arabia is said to publish them.
+    publishes = [sentence for sentence in scope.split(". ") if "publishes attack records" in sentence]
+    assert publishes == ["In Saudi Arabia, the country's own page publishes attack records with first-level region "
+                         "and facility detail under the owner's current decision"], publishes
+    assert ("Canada, China, India and United States serve no attack or sabotage record; records there are placed "
+            "by first-level region at most.") in scope
+    # With no served attack record anywhere, nobody publishes one, whatever the policy allows.
+    bare = _recent_scope(every, "The country systems.")
+    assert "publishes attack records" not in bare and "facility detail" not in bare
+    assert "Canada, China, India, Saudi Arabia and United States serve no attack or sabotage record" in bare
+    # An attack record served without a campaign block or a facility name says exactly that, and no more.
+    plain = {"ca": [{"event_id": "ca-x2", "cause": "sabotage", "region_code": "CA-ON"}]}
+    one = _recent_scope(every, "The country systems.", events=plain)
+    assert "In Canada, the country's own page publishes attack records with first-level region." in one
+    assert "owner's current decision" not in one and "facility detail" not in one
+    assert "Canada" not in one.split("serve no attack")[0].split("publishes attack records")[-1]
 
 
 def test_the_impact_scope_says_an_attack_record_is_the_countrys_everywhere():
@@ -2598,7 +2633,21 @@ def test_the_built_recent_lists_carry_the_policy_sentence():
         doc = _json(path)
         scope = (doc.get("recent") or doc)["scope"]
         assert "Precision is first-level region at most." not in scope
-        assert "the country's own page publishes attack records with first-level region and facility detail" in scope
+        assert "never finer than first-level region" not in scope
+        # Every system the sentence says publishes attack records serves one, and every system it says
+        # serves none serves none (round 3, NS-3): read against the built country events.
+        for sid in systems.COUNTRY_SYSTEMS:
+            name = systems.system(sid)["name"]
+            events = _json(ROOT / "data" / "processed" / "systems" / sid / "events.json")
+            events = events["events"] if isinstance(events, dict) else events
+            served = any(e.get("cause") in B.KINETIC_CAUSES for e in events)
+            said = [x for x in scope.split(". ") if "publishes attack records" in x and name in x]
+            if said:
+                assert served, (rel, name)
+            if served and B.SYSTEMS_CURATED.joinpath(sid, "system.json").exists():
+                pol = (_json(B.SYSTEMS_CURATED / sid / "system.json")["geography"].get("precision_policy") or {})
+                if pol.get("kinetic") != "country" and name in scope:
+                    assert said, (rel, name)
 
 
 # --- iteration-22 release closure: the confidence model's validators gate the import and the build (S5) ---
