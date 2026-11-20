@@ -136,7 +136,7 @@ test.describe("Gulf group", () => {
       await expect(card.getByText("Later status of attacked facilities is not published")).toHaveCount(s.recovery_status_withheld ? 1 : 0);
       // Why two neighbours' attack records look different is said on the card, not left to guess.
       await expect(card).toContainText(s.attack_records_placed === "country"
-        ? "Attacks are recorded for the country as a whole" : "Attacks are recorded by first-level region");
+        ? "Attacks and sabotage are recorded for the country as a whole" : "Attacks are recorded by first-level region");
       // A card carries no event count: eight numbers side by side are a league table.
       await expect(card).not.toContainText(/\d+\s+(qualifying|reported|recorded)/i);
     }
