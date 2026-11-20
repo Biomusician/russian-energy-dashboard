@@ -91,8 +91,12 @@ REQUIRED_SOURCE_FIELDS = ("ref", "url", "publisher", "date", "language", "source
 SOCIAL_FIELDS = ("platform", "handle", "display_name", "account_tier", "identity_basis", "posted_at")
 IMPACT_FIELDS = ("service", "geographic_scope", "affected", "duration_text", "source_refs")
 AFFECTED_FIELDS = ("value", "unit", "qualifier", "source_says")
-ATTRIBUTION_FIELDS = ("status", "actor", "actor_type", "basis", "as_of", "statement", "competing", "source_refs")
+ATTRIBUTION_FIELDS = ("status", "actor", "actor_type", "basis", "as_of", "statement", "competing", "self_claims",
+                      "source_refs")
 COMPETING_FIELDS = ("actor", "actor_type", "basis", "by", "as_of", "statement", "source_refs")
+# An actor's own, unverified claim of responsibility, kept as provenance (attribution.self_claims).
+# Never a competing attribution and never read by the confidence model.
+SELF_CLAIM_FIELDS = ("actor", "actor_type", "statement", "source_refs")
 AI_FIELDS = ("status", "relation", "role", "as_of", "statement", "source_refs")
 DISPUTE_FIELDS = ("about", "statement", "source_refs")
 # The lead's normalisation pass (scripts/import_impacts.py, reviews/lead/): mechanical rewrites of
@@ -263,6 +267,35 @@ def _date_ok(text, precisions=("day",)):
 
 def _start(text):
     return dt.date.fromisoformat((str(text) + "-01-01")[:10])
+
+
+def _last_day(text):
+    """The last day a date of day, month or year precision can mean."""
+    s = str(text)
+    if len(s) >= 10:
+        return dt.date.fromisoformat(s[:10])
+    if len(s) == 7:
+        first = dt.date(int(s[:4]), int(s[5:7]), 1)
+        return (first.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)
+    return dt.date(int(s[:4]), 12, 31)
+
+
+def end_date_problems(r):
+    """An end date is observed, never forecast (B11): `date_end` may not fall after the newest
+    date among the record's sources, since no source can report an end that had not happened when
+    it was published. Compared conservatively: the earliest day the end can mean against the latest
+    day the newest source date can mean. Applied only when every source is dated; an undated page
+    (`date_basis: undated_page`) may be newer than any dated one, and is not guessed at."""
+    end = r.get("date_end")
+    sources = [s for s in r.get("sources") or [] if isinstance(s, dict)]
+    precisions = ("day", "month", "year")
+    if not _date_ok(end, precisions) or not sources or not all(_date_ok(s.get("date"), precisions) for s in sources):
+        return []
+    newest = max((s["date"] for s in sources), key=_last_day)
+    if _start(end) > _last_day(newest):
+        return [f"date_end {end} is after {newest}, the newest date among its sources: no cited source could have "
+                "observed that end. An end date is observed, never forecast or planned"]
+    return []
 
 
 def _number(x):
@@ -489,11 +522,22 @@ def source_problems(sources, claims=EC.CLAIMS):
                     out.append(f"{w}: a social post needs an account tier, one of {ids('social_tiers')}")
                 if not str(social.get("identity_basis") or "").strip():
                     out.append(f"{w}: a social post needs identity_basis; a platform badge is not identity")
+                elif social.get("account_tier") == "S1" and not EC._identity_established(social):
+                    # The one deterministic part of the S1 rule (methodology §9). Whether the basis
+                    # really is the organisation's own site or a long-standing institutional
+                    # reference is the attribution-and-source reviewer's reading, not the gate's.
+                    out.append(f"{w}: an S1 account's identity_basis names only a platform badge; a badge is not "
+                               "identity: say how the account was tied to the organisation")
                 for k in ("platform", "handle"):
                     if not social.get(k):
                         out.append(f"{w}: a social post needs its {k}")
         elif social is not None:
             out.append(f"{w}: social is set on a source whose medium is not social")
+        # The confidence model's own refusals of a citation it would otherwise read conservatively
+        # (a shortened link, a post on a social platform filed as a web page, an unreadable date).
+        # Called here, so the import gate and the build both apply them. Medium and role are this
+        # layer's taxonomy words, checked above.
+        out += [f"{w}: {p}" for p in EC.source_problems(s, vocabulary=False)]
     return out
 
 
@@ -546,6 +590,11 @@ def claim_problems(r):
             if not c.get("source_refs"):
                 out.append(f"attribution.competing[{i}]: no source")
             out += refs(f"attribution.competing[{i}]", c.get("source_refs") or [], "attribution")
+    for i, c in enumerate(a.get("self_claims") or [] if isinstance(a.get("self_claims"), list) else []):
+        if isinstance(c, dict):
+            if not c.get("source_refs"):
+                out.append(f"attribution.self_claims[{i}]: no source")
+            out += refs(f"attribution.self_claims[{i}]", c.get("source_refs") or [], "attribution")
     ai = r.get("ai_involvement") or {}
     out += refs("ai_involvement", ai.get("source_refs") or [], "ai_involvement")
     d = r.get("dispute")
@@ -555,6 +604,8 @@ def claim_problems(r):
         out += [f"dispute: source_refs {[x for x in d.get('source_refs') or [] if x not in by_ref]} name no source"] \
             if any(x not in by_ref for x in d.get("source_refs") or []) else []
     out += EC.attribution_problems(r.get("attribution"), sources)
+    # What may be a competing attribution and what is only an actor's own claim.
+    out += EC.attribution_dispute_problems(r.get("attribution"), sources)
     out += EC.ai_problems(r.get("ai_involvement"), sources)
     return out
 
@@ -580,6 +631,7 @@ def vocabulary_problems(r):
         out.append(f"date_end {end!r} is not a date or null")
     elif _date_ok(end, ("day", "month", "year")) and _date_ok(r.get("date"), ("day", "month", "year")) and end < r["date"][:len(end)]:
         out.append("date_end is before date")
+    out += end_date_problems(r)
     if r.get("geographic_precision") not in ids("geographic_precision"):
         out.append(f"geographic_precision {r.get('geographic_precision')!r}")
     if r.get("domain") not in ids("domains"):
@@ -698,14 +750,18 @@ def vocabulary_problems(r):
             out.append(f"attribution is {status} on a record that is not a malicious act")
         if a.get("as_of") is not None and not _date_ok(a["as_of"], ("day", "month", "year")):
             out.append(f"attribution.as_of {a['as_of']!r} is not a date")
-        if not isinstance(a.get("basis", []), list) or not isinstance(a.get("competing", []), list):
-            out.append("attribution.basis and attribution.competing are lists")
+        if (not isinstance(a.get("basis", []), list) or not isinstance(a.get("competing", []), list)
+                or not isinstance(a.get("self_claims", []), list)):
+            out.append("attribution.basis, attribution.competing and attribution.self_claims are lists")
         else:
             for i, c in enumerate(a.get("competing") or []):
                 if not isinstance(c, dict) or not (c.get("actor") or c.get("statement")):
                     out.append(f"attribution.competing[{i}] needs an actor or a statement of the competing attribution")
                 else:
                     out += _unknown_keys(c, COMPETING_FIELDS, f"attribution.competing[{i}]")
+            for i, c in enumerate(a.get("self_claims") or []):
+                if isinstance(c, dict):
+                    out += _unknown_keys(c, SELF_CLAIM_FIELDS, f"attribution.self_claims[{i}]")
         if status not in (None, "NOT_APPLICABLE", "UNKNOWN") and not str(a.get("statement") or "").strip():
             out.append("an attribution needs a statement of who attributes it to whom")
     ai = r.get("ai_involvement")
@@ -722,14 +778,14 @@ def vocabulary_problems(r):
             out.append("an AI-involvement finding needs a statement of what the source says")
     d = r.get("dispute")
     if d is not None:
-        if not isinstance(d, dict) or d.get("about") not in ids("dispute_about") or not str(d.get("statement") or "").strip():
+        if not isinstance(d, dict) or not isinstance(d.get("about"), str) or not str(d.get("statement") or "").strip():
             out.append(f"dispute needs about (one of {ids('dispute_about')}) and a statement, or is null")
         else:
             out += _unknown_keys(d, DISPUTE_FIELDS, "dispute")
-        # The confidence model reads `dispute` to decide Disputed, and reads anything it cannot
-        # place as a dispute about the record. Its own refusals are added by name, so a shape the
-        # model would have to guess at never reaches it.
-        out += [f"dispute: {p}" for p in EC.dispute_problems(d)]
+    # The confidence model reads `dispute` to decide Disputed, and reads anything it cannot place
+    # as a dispute about the record. Its validator is the one that says what `about` may be (the
+    # shape check above does not), so a dispute the model would have to guess at never reaches it.
+    out += [f"dispute: {p}" for p in EC.dispute_problems(d)]
     return out
 
 
@@ -762,6 +818,23 @@ def geography_problems(r, ctx):
     return out
 
 
+def stamp_problems(r):
+    """`first_published` is the date of the release that first served the record, or null while it
+    is pending its first release; `last_revised` exists only on a served record, on or after it."""
+    out = []
+    first = r.get("first_published")
+    if first is not None and not _date_ok(first):
+        out.append(f"first_published {first!r} is not a date or null (null: pending its first release; the "
+                   "release lead dates it with scripts/stamp_first_published.py)")
+    if "last_revised" in r:
+        if first is None:
+            out.append("last_revised on a record pending its first release: a change before it is served is not a "
+                       "revision")
+        elif not _date_ok(r["last_revised"]) or (_date_ok(first) and r["last_revised"] < first):
+            out.append("last_revised is a date on or after first_published")
+    return out
+
+
 def identity_problems(r):
     """The id's form, and the dates the record carries about itself."""
     out = []
@@ -770,11 +843,7 @@ def identity_problems(r):
     prefix = f"imp-{r.get('date')}-{a3}-{r.get('sector')}-"
     if not ID_STANDARD.fullmatch(iid) or not iid.startswith(prefix) or len(iid) > 110:
         out.append(f"impact_id must be imp-<date>-<a3>-<sector>-<slug> (expected to start {prefix!r})")
-    if not _date_ok(r.get("first_published")):
-        out.append(f"first_published {r.get('first_published')!r} is not a date; the import stamps it")
-    if "last_revised" in r and (not _date_ok(r["last_revised"]) or (_date_ok(r.get("first_published"))
-                                                                    and r["last_revised"] < r["first_published"])):
-        out.append("last_revised is a date on or after first_published")
+    out += stamp_problems(r)
     if r.get("episode_id") is not None and (not re.fullmatch(r"[a-z0-9_]+(-[a-z0-9_]+)*", str(r["episode_id"]))
                                             or not str(r.get("episode_basis") or "").strip()):
         out.append("episode_id is null or a lower-case slug with an episode_basis")
@@ -827,6 +896,9 @@ def _prose(r):
     for c in a.get("competing") or []:
         if isinstance(c, dict):
             parts += [c.get("statement"), c.get("actor"), c.get("by")]
+    for c in a.get("self_claims") or [] if isinstance(a.get("self_claims"), list) else []:
+        if isinstance(c, dict):
+            parts += [c.get("statement"), c.get("actor")]
     ai = r.get("ai_involvement") if isinstance(r.get("ai_involvement"), dict) else {}
     parts.append(ai.get("statement"))
     if isinstance(r.get("dispute"), dict):
@@ -985,9 +1057,10 @@ def context_problems(entries):
         if not re.fullmatch(r"ctx-\d{4}-\d{2}-\d{2}-[a-z0-9]+(-[a-z0-9]+)*", str(e.get("id") or "")) \
                 or not str(e.get("id")).startswith(f"ctx-{e.get('date')}-"):
             p.append("id must be ctx-<date>-<slug>")
-        for k in ("date", "as_of", "first_published"):
+        for k in ("date", "as_of"):
             if not _date_ok(e.get(k)):
                 p.append(f"{k} {e.get(k)!r} is not a date: every statement is dated and says as of when")
+        p += stamp_problems(e)
         # `as_of` may be earlier than `date`: a report published today about last week's position.
         if _date_ok(e.get("date")) and e["date"] < WINDOW_START:
             p.append(f"date is before the corpus window ({WINDOW_START})")
@@ -1101,8 +1174,9 @@ def link_problems(link_states, events_doc, context_doc):
 # --- build ------------------------------------------------------------------------------------------
 
 SCOPE_STATEMENT = (
-    "Reviewed, publicly reported disruptions to energy systems and essential civilian services, at country or "
-    "first-level-region precision, from 2022 to the present. Each record says what service was affected, what kind "
+    "Reviewed, publicly reported disruptions to energy systems and essential civilian services, from 2022 to the "
+    "present. An attack or sabotage record is published for the country only, in every country; any other record "
+    "at country or first-level-region precision, never finer. Each record says what service was affected, what kind "
     "of cause is reported, who is publicly said to be responsible and how firmly, and how strong the public evidence is.")
 CAVEATS = (
     "This is not a census. Disclosure laws differ, operators may not disclose, conflicts distort reporting and media "
@@ -1133,7 +1207,8 @@ FIELD_NOTES = {
                     "confidence method groups them: a wire story and its copies are one, an organisation's "
                     "releases are one, a relay adds none, discovery aids are none. Not a count of links. The "
                     "confidence component counts the same way over the sources that support occurrence or effect.",
-    "first_published": "The build date on which this record was first served. Not the event date and not a source date.",
+    "first_published": "The build date on which this record was first served. Null means not yet served: pending its "
+                       "first release. Not the event date and not a source date.",
     "link_check": "The citation's state at the last automated link check, or unchecked. A failed link says nothing "
                   "about the record.",
     "date_basis": "Present, as undated_page, on a citation whose page carries no date of its own; its date is then "
@@ -1159,7 +1234,9 @@ CONTEXT_NOT_BUILT = (
     "record. A market movement is never presented as infrastructure loss.")
 CONTEXT_ORDER = "By statement date, newest first, then by id."
 LATEST_NOTE = ("is_latest_of_type marks the newest statement of its type by its as-of date. It is the most recent "
-               "statement on record, shown as of that date, and older ones are historical. It is not a current status.")
+               "statement on record, shown as of that date, and older ones are historical. It is not a current status. "
+               "Where several statements of one type share the newest as-of date, every one of them is marked and "
+               "latest_by_type lists them all: none is chosen over another.")
 
 
 def _place(a3, ctx):
@@ -1289,6 +1366,11 @@ def build_context(context_doc, research_log, ctx, as_of):
         for s in out["sources"]:
             s["link_check"] = _link_check(s, ctx)
         entries.append(out)
+    # Ties are kept on purpose: two statements as of the same newest day are both the latest, and
+    # breaking the tie (by id, by source) would present one as more current than the other. The map
+    # lets a page say "latest statements" when there is more than one.
+    latest_by_type = {t["id"]: sorted(e["id"] for e in entries if e["context_type"] == t["id"] and e["is_latest_of_type"])
+                      for t in TAXONOMY["context_types"] if t["id"] in newest}
     return {
         "schema_version": SCHEMA_VERSION,
         "as_of": as_of,
@@ -1299,6 +1381,7 @@ def build_context(context_doc, research_log, ctx, as_of):
         "not_built": CONTEXT_NOT_BUILT,
         "order": CONTEXT_ORDER,
         "latest_note": LATEST_NOTE,
+        "latest_by_type": latest_by_type,
         "empty_reason": None if entries else "No reviewed statement has been published yet.",
         "context_types": TAXONOMY["context_types"],
         "vocabularies": _labels(("source_roles", "media", "link_states", "affected_qualifiers", "source_date_bases")),
