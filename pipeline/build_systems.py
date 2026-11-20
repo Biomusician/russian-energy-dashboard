@@ -2101,6 +2101,41 @@ def _days(a, b):
     return (dt.date.fromisoformat(b) - dt.date.fromisoformat(a)).days
 
 
+def _names(system_ids):
+    """Registry names, alphabetical, as one phrase: "A", "A and B", "A, B and C"."""
+    names = sorted(systems.system(s)["name"] for s in system_ids)
+    return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+
+
+def precision_statement(system_ids, aggregating=False):
+    """Where these systems place a record, read from each system's own precision policy.
+
+    "First-level region at most" alone was true and misleading beside systems that place an attack
+    record for the country only (iteration 19) while Saudi Arabia keeps first-level region for
+    attack records under the iteration-20 owner decision (option B). The sentence says which is
+    which, by name and never by a count of systems, and changes when a policy changes. In an
+    aggregating list (`aggregating`) a campaign-covered record is the country's whatever its own
+    system records (`recent_evidence`), and the sentence says that too."""
+    policy = {sid: ((read_json(SYSTEMS_CURATED / sid / "system.json").get("geography") or {}).get("precision_policy") or {})
+              for sid in system_ids}
+    every = [s for s, p in policy.items() if p.get("other") == "country"]
+    attacks = [s for s, p in policy.items() if p.get("kinetic") == "country" and p.get("other") != "country"]
+    regional = [s for s, p in policy.items() if p.get("kinetic") != "country"]
+    out = ["Precision is set by each country's own policy, and is never finer than first-level region."]
+    if attacks:
+        out.append(f"An attack or sabotage record is placed for the country only in {_names(attacks)}; "
+                   "their other records are placed by first-level region at most.")
+    if every:
+        out.append(f"{_names(every)} places every record for the country only.")
+    if regional:
+        out.append(f"In {_names(regional)}, attack records keep first-level region on the country page under the "
+                   "current policy, like every other eligible record.")
+    if aggregating:
+        out.append("In this list, a record covered by the campaign policy is shown for the country only, whatever "
+                   "its own system records.")
+    return " ".join(out)
+
+
 def recent_evidence(all_events, scope="The country systems.", regional=False, restricted=frozenset()):
     """The most recent qualifying episodes across the given country systems, newest first.
 
@@ -2156,7 +2191,7 @@ def recent_evidence(all_events, scope="The country systems.", regional=False, re
     return {
         "order": "newest first; never by size or severity",
         # Never a count of systems typed here: it said "five" for a list of twelve (iteration 19).
-        "scope": f"{scope} Qualifying records only, grouped by episode. Precision is first-level region at most.",
+        "scope": f"{scope} Qualifying records only, grouped by episode. {precision_statement(sorted(all_events), aggregating=True)}",
         "note": ("What was publicly reported, found and reviewed: counts here are not rates of disruption and "
                  "are not comparable between countries. Events can date back to 2022, but systematic research "
                  "for these systems began in 2026, so older records were found later, not monitored as they happened."),

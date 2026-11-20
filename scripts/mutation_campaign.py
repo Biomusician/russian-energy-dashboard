@@ -2954,6 +2954,18 @@ CLOSURE_MUTATIONS = [
     ("impacts: a record pending its first release may carry last_revised",
      [(GI, _text('        if first is None:\n            out.append("last_revised on a record pending', '        if False:\n            out.append("last_revised on a record pending'))],
      "gate_requires_first_published_and_a_well_formed_id"),
+    ("regional context: a tie for the latest statement is broken arbitrarily",
+     [(GI, _text('and e["is_latest_of_type"])\n                      for t in TAXONOMY["context_types"]',
+                 'and e["is_latest_of_type"])[:1]\n                      for t in TAXONOMY["context_types"]'))],
+     "latest_by_type_lists_every_statement"),
+    ("the recent lists say 'first-level region at most' again",
+     [("pipeline/build_systems.py", _text('{precision_statement(sorted(all_events), aggregating=True)}',
+                                          'Precision is first-level region at most.'))],
+     "recent_lists_say_where_attack_records_are_placed"),
+    ("the precision sentence counts Saudi Arabia among the country-only systems",
+     [("pipeline/build_systems.py", _text('if p.get("kinetic") == "country" and p.get("other") != "country"]',
+                                          'if p.get("other") != "country"]'))],
+     "recent_lists_say_where_attack_records_are_placed"),
 ]
 MUTATIONS += CLOSURE_MUTATIONS
 

@@ -1115,8 +1115,9 @@ def link_problems(link_states, events_doc, context_doc):
 # --- build ------------------------------------------------------------------------------------------
 
 SCOPE_STATEMENT = (
-    "Reviewed, publicly reported disruptions to energy systems and essential civilian services, at country or "
-    "first-level-region precision, from 2022 to the present. Each record says what service was affected, what kind "
+    "Reviewed, publicly reported disruptions to energy systems and essential civilian services, from 2022 to the "
+    "present. An attack or sabotage record is published for the country only, in every country; any other record "
+    "at country or first-level-region precision, never finer. Each record says what service was affected, what kind "
     "of cause is reported, who is publicly said to be responsible and how firmly, and how strong the public evidence is.")
 CAVEATS = (
     "This is not a census. Disclosure laws differ, operators may not disclose, conflicts distort reporting and media "
@@ -1174,7 +1175,9 @@ CONTEXT_NOT_BUILT = (
     "record. A market movement is never presented as infrastructure loss.")
 CONTEXT_ORDER = "By statement date, newest first, then by id."
 LATEST_NOTE = ("is_latest_of_type marks the newest statement of its type by its as-of date. It is the most recent "
-               "statement on record, shown as of that date, and older ones are historical. It is not a current status.")
+               "statement on record, shown as of that date, and older ones are historical. It is not a current status. "
+               "Where several statements of one type share the newest as-of date, every one of them is marked and "
+               "latest_by_type lists them all: none is chosen over another.")
 
 
 def _place(a3, ctx):
@@ -1304,6 +1307,11 @@ def build_context(context_doc, research_log, ctx, as_of):
         for s in out["sources"]:
             s["link_check"] = _link_check(s, ctx)
         entries.append(out)
+    # Ties are kept on purpose: two statements as of the same newest day are both the latest, and
+    # breaking the tie (by id, by source) would present one as more current than the other. The map
+    # lets a page say "latest statements" when there is more than one.
+    latest_by_type = {t["id"]: sorted(e["id"] for e in entries if e["context_type"] == t["id"] and e["is_latest_of_type"])
+                      for t in TAXONOMY["context_types"] if t["id"] in newest}
     return {
         "schema_version": SCHEMA_VERSION,
         "as_of": as_of,
@@ -1314,6 +1322,7 @@ def build_context(context_doc, research_log, ctx, as_of):
         "not_built": CONTEXT_NOT_BUILT,
         "order": CONTEXT_ORDER,
         "latest_note": LATEST_NOTE,
+        "latest_by_type": latest_by_type,
         "empty_reason": None if entries else "No reviewed statement has been published yet.",
         "context_types": TAXONOMY["context_types"],
         "vocabularies": _labels(("source_roles", "media", "link_states", "affected_qualifiers", "source_date_bases")),

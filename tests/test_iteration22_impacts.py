@@ -2399,3 +2399,88 @@ def test_a_reimport_of_a_pending_record_or_entry_keeps_it_pending(tmp_path):
         assert r["first_published"] is None and "last_revised" not in r, r["impact_id"]
     ent = _json(paths["curated"] / "regional_context.json")["entries"][0]
     assert ent["first_published"] is None and "last_revised" not in ent
+
+
+# --- iteration-22 release closure: ties in the regional context are kept and listed (S2) ----------------
+
+def test_latest_by_type_lists_every_statement_that_shares_the_newest_as_of_date():
+    e, c, lg = docs()
+    tie = copy.deepcopy(next(x for x in c["entries"] if x["id"] == "ctx-2026-09-20-synthetic-shipping-statement"))
+    tie["id"] = "ctx-2026-09-20-synthetic-shipping-second-statement"
+    tie["claim"] = "SYNTHETIC FIXTURE. A second authority's statement as of the same day."
+    c["entries"].append(tie)
+    cx = G.build_payloads(e, c, lg, ctx(), AS_OF)[G.CONTEXT_OUT]
+    shipping = sorted(x["id"] for x in cx["entries"] if x["context_type"] == "shipping_status" and x["is_latest_of_type"])
+    # No tie-break: both are the latest, and the map says so.
+    assert shipping == ["ctx-2026-09-20-synthetic-shipping-second-statement", "ctx-2026-09-20-synthetic-shipping-statement"]
+    assert cx["latest_by_type"]["shipping_status"] == shipping
+    for ctype, ids in cx["latest_by_type"].items():
+        assert ids == sorted(x["id"] for x in cx["entries"] if x["context_type"] == ctype and x["is_latest_of_type"])
+    assert set(cx["latest_by_type"]) == {x["context_type"] for x in cx["entries"]}
+    assert [k for k in cx["latest_by_type"]] == [t["id"] for t in cx["context_types"] if t["id"] in cx["latest_by_type"]]
+    assert "none is chosen" in cx["latest_note"]
+    # Without the tie, one statement per type.
+    plain = payloads()[G.CONTEXT_OUT]["latest_by_type"]
+    assert all(len(ids) == 1 for ids in plain.values())
+    empty = G.build_payloads(e, {"context_id": "gulf_hormuz", "entries": []}, lg, ctx(), AS_OF)[G.CONTEXT_OUT]
+    assert empty["latest_by_type"] == {}
+
+
+def test_the_served_context_lists_its_ties():
+    out = ROOT / "data" / "processed" / G.CONTEXT_OUT
+    if not out.exists():
+        pytest.skip("no built regional context yet")
+    cx = _json(out)
+    for ctype, ids in cx["latest_by_type"].items():
+        assert ids == sorted(x["id"] for x in cx["entries"] if x["context_type"] == ctype and x["is_latest_of_type"])
+
+
+# --- iteration-22 release closure: the served precision wording distinguishes attack records (B2) -------
+
+GULF_ATTACK_COUNTRY = {"bh", "ir", "iq", "kw", "om", "qa", "ae"}
+
+
+def _recent_scope(system_ids, scope="The Gulf country systems."):
+    return B.recent_evidence({sid: (systems.system(sid)["name"], [], []) for sid in system_ids}, scope=scope,
+                             regional=True)["scope"]
+
+
+def test_the_recent_lists_say_where_attack_records_are_placed_and_saudi_keeps_its_policy():
+    """'First-level region at most' was true and misleading: seven Gulf systems place an attack record for
+    the country only, Saudi Arabia keeps first-level region on its page (owner decision, option B), and a
+    campaign-covered record is the country's in any list that sets records side by side."""
+    members = sorted(systems.GROUPS["gulf_littoral"]["members"])
+    # The policies the sentence reads. Changing Saudi Arabia's is an owner decision (option C), not this test's.
+    policy = {sid: (_json(B.SYSTEMS_CURATED / sid / "system.json")["geography"].get("precision_policy") or {})
+              for sid in members}
+    assert {s for s, p in policy.items() if p.get("kinetic") == "country"} == GULF_ATTACK_COUNTRY
+    assert policy["sa"].get("kinetic") in (None, "admin1")
+    for scope in (_recent_scope(members), _recent_scope(list(systems.COUNTRY_SYSTEMS), "The country systems.")):
+        assert "Precision is first-level region at most." not in scope
+        assert ("An attack or sabotage record is placed for the country only in Iran, Iraq, Kuwait, Oman, Qatar and "
+                "United Arab Emirates") in scope
+        assert "Bahrain places every record for the country only." in scope
+        assert "Saudi Arabia" in scope.split("In ")[-2] + scope.split("In ")[-1]
+        assert "attack records keep first-level region on the country page under the current policy" in scope
+        assert "a record covered by the campaign policy is shown for the country only" in scope
+        assert not re.search(r"\b(five|six|seven|eight|twelve|\d+)\b", scope), scope
+    gulf = _recent_scope(members)
+    assert "In Saudi Arabia, attack records keep first-level region" in gulf
+    assert "Canada" not in gulf
+
+
+def test_the_impact_scope_says_an_attack_record_is_the_countrys_everywhere():
+    imp = payloads()[G.IMPACTS_OUT]
+    assert "An attack or sabotage record is published for the country only, in every country" in imp["scope_statement"]
+    assert "first-level-region precision, never finer" in imp["scope_statement"]
+
+
+def test_the_built_recent_lists_carry_the_policy_sentence():
+    for rel in ("global/recent_evidence.json", "global/gulf.json"):
+        path = ROOT / "data" / "processed" / rel
+        if not path.exists():
+            pytest.skip("no build yet")
+        doc = _json(path)
+        scope = (doc.get("recent") or doc)["scope"]
+        assert "Precision is first-level region at most." not in scope
+        assert "attack records keep first-level region on the country page" in scope
