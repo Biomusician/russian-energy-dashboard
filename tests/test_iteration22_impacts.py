@@ -2484,3 +2484,70 @@ def test_the_built_recent_lists_carry_the_policy_sentence():
         scope = (doc.get("recent") or doc)["scope"]
         assert "Precision is first-level region at most." not in scope
         assert "attack records keep first-level region on the country page" in scope
+
+
+# --- iteration-22 release closure: the confidence model's validators gate the import and the build (S5) ---
+
+def _with_source_change(base, ref, **change):
+    c = candidate(base)
+    for s in c["sources"]:
+        if s["ref"] == ref:
+            s.update(change)
+    return c
+
+
+def test_the_import_refuses_a_citation_the_confidence_model_refuses(tmp_path):
+    """EC.source_problems reads a shortened link, a social-platform post filed as a web page and an
+    unreadable date as the model would read them, and the import gate refuses them, naming the record."""
+    assert "bit.ly" in EC.METHOD["shortener_hosts"] and "x.com" in EC.METHOD["social_hosts"]
+    short = _with_source_change(FRA, "s1", url="https://bit.ly/3SynthFx")
+    post = _with_source_change(BRA, "s1", url="https://x.com/example_operator/status/1234567890")
+    paths = make_queue(tmp_path, {"europe": [short], "latam": [post], "na": [candidate(USA)]})
+    report = run(paths)
+    assert set(curated_records(paths)) == {USA}
+    assert "a shortened link is not a citation" in reasons(report, FRA)
+    assert "the address is on a social platform: medium must be 'social'" in reasons(report, BRA)
+    # The build refuses the same records, by the same function.
+    e, c, lg = docs()
+    for r in e["records"]:
+        if r["impact_id"] == FRA:
+            r["sources"][0]["url"] = "https://bit.ly/3SynthFx"
+    with pytest.raises(ValueError, match="a shortened link is not a citation"):
+        G.build_payloads(e, c, lg, ctx(), AS_OF)
+    # And a context entry.
+    x = entry()
+    x["sources"][0]["url"] = "https://bit.ly/3SynthCx"
+    assert any("a shortened link" in p for p in G.context_problems([x]))
+
+
+@pytest.mark.parametrize("about, why", [
+    ("attribution", "is recorded in its own block (attribution.competing)"),
+    ("ai_involvement", "is recorded in its own block"),
+    ("severity", "dispute.about 'severity' is not one of"),
+])
+def test_the_build_refuses_a_dispute_the_confidence_model_refuses(about, why):
+    """The gate's shape check takes any string for `about`; what it may be is the model's validator's call."""
+    assert EC.DISPUTE_ABOUT == G.ids("dispute_about")
+    e, c, lg = docs()
+    r = next(x for x in e["records"] if x["impact_id"] == BRA)
+    r["dispute"]["about"] = about
+    with pytest.raises(ValueError, match=re.escape(why)):
+        G.build_payloads(e, c, lg, ctx(), AS_OF)
+    refused(r, why)
+    r["dispute"]["about"] = "cause"
+    assert problems(r) == []
+
+
+def test_an_s1_account_whose_identity_rests_on_a_badge_is_refused_and_the_rest_is_left_to_review():
+    r = rec(POL)
+    social = next(s for s in r["sources"] if s["medium"] == "social")["social"]
+    assert social["account_tier"] == "S1" and problems(r) == []
+    for badge in ("Verified account", "blue tick", "Official verified profile on X"):
+        social["identity_basis"] = badge
+        refused(r, "an S1 account's identity_basis names only a platform badge")
+    # Whether a stated basis really is the organisation's own site is the reviewer's reading.
+    social["identity_basis"] = "Listed on the operator's contact page (synthetic)."
+    assert problems(r) == []
+    # S2 to S4 are never sole evidence anyway; the badge rule is S1's.
+    social["account_tier"], social["identity_basis"] = "S2", "Verified account"
+    assert not any("platform badge" in p for p in problems(r))

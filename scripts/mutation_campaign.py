@@ -2966,6 +2966,19 @@ CLOSURE_MUTATIONS = [
      [("pipeline/build_systems.py", _text('if p.get("kinetic") == "country" and p.get("other") != "country"]',
                                           'if p.get("other") != "country"]'))],
      "recent_lists_say_where_attack_records_are_placed"),
+    ("impacts import: the confidence model's source_problems is not called",
+     [(GI, _text('        out += [f"{w}: {p}" for p in EC.source_problems(s, vocabulary=False)]', '        pass'))],
+     "import_refuses_a_citation_the_confidence_model_refuses"),
+    ("impacts build: the confidence model's dispute_problems is not called",
+     [(GI, _text('\n    out += [f"dispute: {p}" for p in EC.dispute_problems(d)]', '\n    pass'))],
+     "build_refuses_a_dispute_the_confidence_model_refuses"),
+    ("a record dispute about who did it passes",
+     [(EC_PY, _text('        if a in ("attribution", "ai_involvement"):', '        if False:')),
+      (EC_PY, _text('DISPUTE_ABOUT = ("occurrence", "effect", "cause")', 'DISPUTE_ABOUT = CLAIMS + ("cause",)'))],
+     "build_refuses_a_dispute_the_confidence_model_refuses"),
+    ("an S1 account whose identity is a badge passes",
+     [(GI, _text('elif social.get("account_tier") == "S1" and not EC._identity_established(social):', 'elif False:'))],
+     "s1_account_whose_identity_rests_on_a_badge"),
 ]
 MUTATIONS += CLOSURE_MUTATIONS
 

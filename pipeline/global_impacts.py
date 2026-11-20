@@ -489,11 +489,22 @@ def source_problems(sources, claims=EC.CLAIMS):
                     out.append(f"{w}: a social post needs an account tier, one of {ids('social_tiers')}")
                 if not str(social.get("identity_basis") or "").strip():
                     out.append(f"{w}: a social post needs identity_basis; a platform badge is not identity")
+                elif social.get("account_tier") == "S1" and not EC._identity_established(social):
+                    # The one deterministic part of the S1 rule (methodology §9). Whether the basis
+                    # really is the organisation's own site or a long-standing institutional
+                    # reference is the attribution-and-source reviewer's reading, not the gate's.
+                    out.append(f"{w}: an S1 account's identity_basis names only a platform badge; a badge is not "
+                               "identity: say how the account was tied to the organisation")
                 for k in ("platform", "handle"):
                     if not social.get(k):
                         out.append(f"{w}: a social post needs its {k}")
         elif social is not None:
             out.append(f"{w}: social is set on a source whose medium is not social")
+        # The confidence model's own refusals of a citation it would otherwise read conservatively
+        # (a shortened link, a post on a social platform filed as a web page, an unreadable date).
+        # Called here, so the import gate and the build both apply them. Medium and role are this
+        # layer's taxonomy words, checked above.
+        out += [f"{w}: {p}" for p in EC.source_problems(s, vocabulary=False)]
     return out
 
 
@@ -722,14 +733,14 @@ def vocabulary_problems(r):
             out.append("an AI-involvement finding needs a statement of what the source says")
     d = r.get("dispute")
     if d is not None:
-        if not isinstance(d, dict) or d.get("about") not in ids("dispute_about") or not str(d.get("statement") or "").strip():
+        if not isinstance(d, dict) or not isinstance(d.get("about"), str) or not str(d.get("statement") or "").strip():
             out.append(f"dispute needs about (one of {ids('dispute_about')}) and a statement, or is null")
         else:
             out += _unknown_keys(d, DISPUTE_FIELDS, "dispute")
-        # The confidence model reads `dispute` to decide Disputed, and reads anything it cannot
-        # place as a dispute about the record. Its own refusals are added by name, so a shape the
-        # model would have to guess at never reaches it.
-        out += [f"dispute: {p}" for p in EC.dispute_problems(d)]
+    # The confidence model reads `dispute` to decide Disputed, and reads anything it cannot place
+    # as a dispute about the record. Its validator is the one that says what `about` may be (the
+    # shape check above does not), so a dispute the model would have to guess at never reaches it.
+    out += [f"dispute: {p}" for p in EC.dispute_problems(d)]
     return out
 
 

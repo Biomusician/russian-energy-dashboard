@@ -62,6 +62,9 @@ BASIS_OF_ROLE = {"government": "government", "official": "government", "regulato
                  "specialist_media": "media_investigation", "industry": "media_investigation",
                  "actor_self_claim": "actor_self_claim"}
 
+# What a record's `dispute` may be about (methodology §4, impact_taxonomy.json `dispute_about`).
+DISPUTE_ABOUT = ("occurrence", "effect", "cause")
+
 AI_STATUSES = ("NONE_REPORTED", "CLAIMED", "SUSPECTED", "ASSESSED", "CONFIRMED")
 AI_RELATIONS = ("ai_assisted", "ai_operational_cause")
 AI_ROLES = ("attacker_assistance", "social_engineering_generation", "malware_or_script_generation",
@@ -742,16 +745,20 @@ def ai_problems(ai, sources):
 
 # --- the method, as served data ---------------------------------------------------------------------
 
-def source_problems(source):
+def source_problems(source, vocabulary=True):
     """What a gate should refuse before a source is scored: values outside the vocabulary. Scoring
     itself reads each of these conservatively (an unknown role is secondary, a post with no tier is
     unverified, a shortened link counts for nothing), so a record that slips past is understated,
-    never overstated; the gate is what makes the typing mean something."""
+    never overstated; the gate is what makes the typing mean something.
+
+    `vocabulary=False` leaves the medium and role words to a caller with its own, stricter
+    vocabulary (the impact layer's taxonomy writes `report` where the country systems write
+    `document`); every other check still applies."""
     out = []
     medium = source.get("medium")
-    if medium is not None and str(medium).strip().lower() not in METHOD["media"]:
+    if vocabulary and medium is not None and str(medium).strip().lower() not in METHOD["media"]:
         out.append(f"medium {medium!r} is not one of {tuple(METHOD['media'])}")
-    if source.get("source_role") not in METHOD["role_tier"]:
+    if vocabulary and source.get("source_role") not in METHOD["role_tier"]:
         out.append(f"source_role {source.get('source_role')!r} is not one of {tuple(sorted(METHOD['role_tier']))}")
     if _on(_host(source), METHOD["shortener_hosts"]):
         out.append("a shortened link is not a citation: cite the page it points to")
@@ -779,10 +786,18 @@ def dispute_problems(dispute):
         return ["dispute must be an object with `about`"]
     about = dispute.get("about")
     about = [about] if isinstance(about, str) else list(about or [])
-    known = CLAIMS + ("cause",)
+    known = DISPUTE_ABOUT
     if not about:
         return [f"dispute needs `about`, one or more of {known}"]
-    return [f"dispute.about {a!r} is not one of {known}" for a in about if a not in known]
+    out = []
+    for a in about:
+        if a in ("attribution", "ai_involvement"):
+            # Who did it is disputed through attribution.competing (status DISPUTED), never here.
+            out.append(f"dispute.about {a!r}: a disagreement about {a} is recorded in its own block "
+                       "(attribution.competing), not as a dispute of the record")
+        elif a not in known:
+            out.append(f"dispute.about {a!r} is not one of {known}")
+    return out
 
 
 def calibration_status():
