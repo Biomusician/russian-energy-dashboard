@@ -1911,7 +1911,7 @@ def test_a_citation_the_reviewers_narrowed_is_no_longer_cited_for_that_claim(tmp
 def test_set_paths_take_list_indexes_and_a_null_on_a_stray_key_deletes_it(tmp_path):
     c = candidate(FRA, lane_flags=["check date"], date_end="unknown")
     c["attribution"]["competing"] = [{"actor": "Example Group Z", "note": "SYNTHETIC. Another firm named Example Group Z.",
-                                      "status": "SUSPECTED", "source_refs": ["s4"]}]
+                                      "status": "SUSPECTED", "basis": ["cybersecurity_firm"], "source_refs": ["s4"]}]
     c["sources"][0]["access_note"] = "opened on the second try"
     paths = make_queue(tmp_path, {"europe": [c]})
     edit_review(paths, "safety", "europe", FRA, verdict="accept_with_correction",
@@ -1922,7 +1922,7 @@ def test_set_paths_take_list_indexes_and_a_null_on_a_stray_key_deletes_it(tmp_pa
     assert "lane_flags" not in got and got["date_end"] is None
     assert got["civilian_service_impact"][0]["affected"]["value"] == 118000
     assert got["sources"][3]["attribution_basis"] == "cybersecurity_firm"
-    assert got["attribution"]["competing"] == [{"actor": "Example Group Z", "source_refs": ["s4"],
+    assert got["attribution"]["competing"] == [{"actor": "Example Group Z", "basis": ["cybersecurity_firm"], "source_refs": ["s4"],
                                                 "statement": "SYNTHETIC. Another firm named Example Group Z."}]
     notes = " | ".join(report["notes"][FRA])
     assert "lane_flags" in notes and "sources.access_note" in notes and "written as null" in notes

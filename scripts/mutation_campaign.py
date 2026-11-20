@@ -2959,7 +2959,7 @@ CLOSURE_MUTATIONS = [
                  'and e["is_latest_of_type"])[:1]\n                      for t in TAXONOMY["context_types"]'))],
      "latest_by_type_lists_every_statement"),
     ("the recent lists say 'first-level region at most' again",
-     [("pipeline/build_systems.py", _text('{precision_statement(sorted(all_events), aggregating=True)}',
+     [("pipeline/build_systems.py", _text('{precision_statement({sid: v[0] for sid, v in all_events.items()}, aggregating=True)}',
                                           'Precision is first-level region at most.'))],
      "recent_lists_say_where_attack_records_are_placed"),
     ("the precision sentence counts Saudi Arabia among the country-only systems",
