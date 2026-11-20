@@ -340,7 +340,7 @@ def added_source_problems(reviewed, r, added):
         if not isinstance(src, dict) or not src.get("ref"):
             problems.append("an added source is not a source with a ref")
             continue
-        new = {**copy.deepcopy(src), "opened": False}
+        new = {**copy.deepcopy(src), "opened": False, "added_by": "lead"}
         ref = new["ref"]
         if ref in used:
             problems.append(f"added source {ref!r} reuses a ref the record already has or had; a lead adds, never replaces")
@@ -577,7 +577,7 @@ def clean_sources(sources):
         if isinstance(s, dict):
             s = {k: s[k] for k in G.SOURCE_FIELDS if k in s}
             s.setdefault("social", None)
-            for k in ("title_original", "title_en", "origin", "attribution_basis", "date_basis"):
+            for k in ("title_original", "title_en", "origin", "attribution_basis", "date_basis", "added_by"):
                 if s.get(k) is None:
                     s.pop(k, None)
             out.append(s)

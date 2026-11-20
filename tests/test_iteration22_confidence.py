@@ -1049,3 +1049,25 @@ def test_the_served_definition_of_attributed_states_the_rule_the_gate_applies():
     text = next(s["definition"] for s in tax["attribution_statuses"] if s["id"] == "ATTRIBUTED")
     assert "government or law-enforcement" in text and "Assessed" in text
     assert "several independent" not in text
+
+
+def test_a_source_the_lead_added_is_never_counted_as_a_reviewed_origin():
+    # Lead decision, iteration-22 closure: a citation appended by the lead after the blind reviews was
+    # never checked for relays by the attribution-and-source reviewer. It supports what it supports,
+    # but it never raises the reviewed count of independent originating statements.
+    one = src("media", site="first.example", supports=["occurrence", "effect"])
+    other = src("specialist_media", site="trade.example", supports=["effect"])
+    reviewed_pair = assess([one, other])
+    assert reviewed_pair["components"]["origins"]["count"] == 2
+    lead = assess([one, {**other, "added_by": "lead"}])
+    assert lead["components"]["origins"] == {"count": 1, "points": 0, "basis": "reviewed"}
+    assert lead["score"] < reviewed_pair["score"] and lead["score"] == assess([one])["score"]
+    assert any("added on lead review" in r and "independence not reviewed" in r for r in lead["reasons"])
+    # Where the count is only of publishers (nobody reviewed relays), it counts like any publisher.
+    unreviewed = assess([one, {**other, "added_by": "lead"}], review=None)
+    assert unreviewed["components"]["origins"] == {"count": 2, "points": unreviewed["components"]["origins"]["points"],
+                                                   "basis": "publishers"}
+    assert unreviewed["category"] != "HIGH"
+    # The marker is a closed vocabulary.
+    assert EC.source_problems({**other, "added_by": "lead"}) == []
+    assert any("added_by" in p for p in EC.source_problems({**other, "added_by": "reviewer"}))

@@ -83,7 +83,8 @@ RECORD_FIELDS = (
     "research_pass", "first_published", "last_revised", "review")
 OPTIONAL_RECORD_FIELDS = ("countries_a3", "last_revised")
 SOURCE_FIELDS = ("ref", "url", "publisher", "date", "date_basis", "language", "source_role", "medium", "social",
-                 "supports", "opened", "title_original", "title_en", "derived_claim", "origin", "attribution_basis")
+                 "supports", "opened", "title_original", "title_en", "derived_claim", "origin", "attribution_basis",
+                 "added_by")
 # The one reason a citation may carry no date: the page itself has none (a city's running timeline,
 # an agency landing page). Such a source earns nothing for "reported at the time".
 UNDATED = "undated_page"
@@ -1239,6 +1240,9 @@ FIELD_NOTES = {
                   "about the record.",
     "date_basis": "Present, as undated_page, on a citation whose page carries no date of its own; its date is then "
                   "null. Such a source earns nothing for being reported at the time.",
+    "added_by": "Present, as lead, on a citation the release lead added after every blind role had accepted the "
+                "record. It is never marked opened, and its independence was not reviewed: it is never counted as "
+                "an independent originating statement.",
     "lead_normalisation": "Present and true in a review block where, after every blind role accepted the record, the "
                           "lead rewrote a spelling or a wording into the contract's; lead_normalisation_at is the date. "
                           "It changes no verdict.",

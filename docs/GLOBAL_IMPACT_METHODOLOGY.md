@@ -371,7 +371,7 @@ The labels below are the served ones (`methodology/evidence_confidence.json`, `t
 | Component | Points | Rule |
 |---|---|---|
 | Who is speaking | 40 / 28 / 15 / 10 / 4 | The best supporting source: a **first-party or official statement** (operator, government, regulator, national CERT or cyber agency, law enforcement, court record, or an official social account whose identity is established) 40; **press or third-party reporting** (wire, news outlet, specialist press, trade body, a cyber firm's own investigation) 28; a **secondary source** (a dataset restating others, a recognised journalist's post, a researcher's web publication) 15; a **researcher's social post** 10; an **unverified claim** (an anonymous account, an actor's own claim) 4. "First-party" says who is speaking, not that the statement was verified; "press or third-party" says who carried it, not that the reporting was its own work. |
-| Originating statements | 0 / 16 / 25 | Groups of first-party and press sources that share an origin, a publisher, an organisation, a filed form or a declared relay: one 0, two 16, three or more 25. A wire story and its republications are one; three releases from one utility are one; ten reposts are one at best. The count is called "independent originating statements" only when the attribution-and-source reviewer checked which sources relay which (`basis: "reviewed"`); otherwise it is "distinct publishers cited" and the record is at most Moderate. |
+| Originating statements | 0 / 16 / 25 | Groups of first-party and press sources that share an origin, a publisher, an organisation, a filed form or a declared relay: one 0, two 16, three or more 25. A wire story and its republications are one; three releases from one utility are one; ten reposts are one at best. The count is called "independent originating statements" only when the attribution-and-source reviewer checked which sources relay which (`basis: "reviewed"`); otherwise it is "distinct publishers cited" and the record is at most Moderate. A source the lead added after the blind reviews (`added_by: "lead"`) is never counted as a reviewed originating statement: it may lower the count, never raise it. |
 | Effect specificity | 15 / 8 / 0 | Quantified / described / vague, counted only when a first-party or press source supports `effect`. |
 | Opened during research or review | 10 | A first-party or press supporting source carries `opened: true`, or the record's review block says a reviewer opened its sources. `opened: null` is "not recorded", never "not opened". |
 | Dated account | 10 | A first-party or press supporting source dated from the day before the event to 30 days after its end, or a later formal account (a dated first-party source in a formal role, or one marked `formal_account: true`). |
@@ -530,8 +530,9 @@ three independent reviews that do not see the researcher's rationale or each oth
 
 `scripts/import_impacts.py` moves a record into the curated file only when all three accept, applies
 their corrections, then the lead's normalisation (mechanical rewrites that change no verdict; it may
-append a citation, which is always `opened: false` and passes every source validator, but never alter
-or drop one except by removal), mints abstracted ids, leaves `first_published` `null` for a new record (the
+append a citation, which is always `opened: false` and `added_by: "lead"` and passes every source
+validator, but never alter or drop one except by removal; such a citation never counts as a reviewed
+originating statement, §8.1), mints abstracted ids, leaves `first_published` `null` for a new record (the
 release lead stamps it, §4) and keeps an existing one unchanged, and reconciles against the country
 queues: a candidate matching a record held from a country system is refused.
 

@@ -46,6 +46,11 @@ EFFECT_SPECIFICITY = tuple(METHOD["effect_points"])
 TIER_ORDER = ("unverified", "researcher_social", "secondary", "independent", "direct")
 CATEGORIES = tuple(c["id"] for c in METHOD["categories"]) + (METHOD["disputed"]["id"],)
 ORIGIN_BASES = ("reviewed", "publishers")
+# A source the release lead appended after the blind reviews (`added_by: "lead"`). The
+# attribution-and-source reviewer never checked whether it relays another citation, so it is never
+# counted as a REVIEWED independent origin. It still supports what it supports, and it still counts
+# where the basis is only "publishers", which is an upper bound anyway.
+ADDED_BY = ("lead",)
 
 ATTRIBUTION_STATUSES = ("NOT_APPLICABLE", "UNKNOWN", "CLAIMED", "SUSPECTED", "ASSESSED", "ATTRIBUTED", "DISPUTED")
 ATTRIBUTION_CONFIDENCE = ("HIGH", "MODERATE", "LOW", "CLAIM_ONLY", "DISPUTED", "NOT_ESTABLISHED")
@@ -354,6 +359,11 @@ def independent_origins(sources):
     return len({find(i) for i in range(len(counted))})
 
 
+def lead_added(source):
+    """A source appended by a lead normalisation, after the blind reviews."""
+    return source.get("added_by") == "lead"
+
+
 def origins_reviewed(review):
     """Whether a reviewer checked which of a record's sources relay which. True for a record whose
     review block shows the source-and-attribution role accepting it (impact records: that reviewer
@@ -434,6 +444,13 @@ def assess(sources, date, date_end=None, effect_specificity="described", dispute
     best = max(tiers, key=TIER_ORDER.index) if tiers else None
     strong = [s for s, t in zip(backing, tiers) if t in METHOD["corroborating_tiers"]]
     origin_count = independent_origins(strong)
+    unreviewed = 0
+    if basis == "reviewed":
+        # A lead-added source never raises a reviewed count: the reviewer who checks relays did not
+        # see it. It may still lower the count (a citation that shows two sources are one).
+        reviewed_only = independent_origins([s for s in strong if not lead_added(s)])
+        unreviewed = sum(1 for s in strong if lead_added(s))
+        origin_count = min(origin_count, reviewed_only)
 
     directness = METHOD["tiers"][best]["points"] if best else 0
     origin_points = METHOD["origin_points"][str(min(origin_count, 3))] if origin_count else 0
@@ -484,6 +501,9 @@ def assess(sources, date, date_end=None, effect_specificity="described", dispute
     else:
         reasons.append(f"{origin_count} distinct publishers cited; whether they relay one statement was not reviewed"
                        if origin_count >= 2 else "One publisher cited")
+    if unreviewed:
+        reasons.append(("A source added on lead review is" if unreviewed == 1 else f"{unreviewed} sources added on lead review are")
+                       + " not counted as an originating statement: independence not reviewed")
     if effect_backed:
         reasons.append({"quantified": "Effect quantified by a source", "described": "Effect described, not quantified",
                         "vague": "Effect reported only in general terms"}.get(effect_specificity, "Effect not assessed"))
@@ -833,6 +853,8 @@ def source_problems(source, vocabulary=True):
             out.append(f"{field} must be a list of {CLAIMS}, not {value!r}")
     if source.get("date") and _date(source["date"]) is None:
         out.append(f"date {source['date']!r} cannot be read: use YYYY, YYYY-MM or YYYY-MM-DD")
+    if "added_by" in source and source["added_by"] not in ADDED_BY:
+        out.append(f"added_by {source['added_by']!r} is not one of {ADDED_BY}")
     return out
 
 
@@ -888,7 +910,8 @@ def method():
                         "form and the operator that filed it are one; a relay is the statement it relays. "
                         "Where a reviewer checked which sources relay which, the count is of independent "
                         "statements. Where nobody did, it is a count of distinct publishers, an upper bound, "
-                        "and the record cannot be High."},
+                        "and the record cannot be High. A source added on lead review, after the blind reviews, "
+                        "is never counted as an independent statement: its independence was not reviewed."},
             {"id": "effect", "label": "How specific the reported effect is", "max": METHOD["effect_points"]["quantified"],
              "meaning": "Quantified, described or only general, as a first-party source or the press reports it."},
             {"id": "opened", "label": "Opened during research or review", "max": METHOD["opened_points"],

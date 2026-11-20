@@ -2179,11 +2179,13 @@ def _added(ref="s9", **changes):
 def test_a_lead_patch_can_append_a_source_never_opened_and_never_in_place_of_one(tmp_path):
     paths = make_queue(tmp_path, {"europe": [candidate(FRA)]})
     before = {s["ref"]: s for s in rec(FRA)["sources"]}
-    lead_file(paths, "europe", {FRA: normalise(add_sources=[_added()], reason="Dates the observed end.")})
+    lead_file(paths, "europe", {FRA: normalise(add_sources=[_added(added_by=None)], reason="Dates the observed end.")})
     run(paths)
     got = {s["ref"]: s for s in curated_records(paths)[FRA]["sources"]}
     # Appended, and opened is false whatever the patch said: the lead is not the evidence reviewer.
-    assert set(got) == set(before) | {"s9"} and got["s9"]["opened"] is False
+    # It is marked as the lead's, whatever the patch said, so it never counts as a reviewed origin.
+    assert set(got) == set(before) | {"s9"} and got["s9"]["opened"] is False and got["s9"]["added_by"] == "lead"
+    assert all("added_by" not in got[ref] for ref in before)
     assert got["s9"]["url"] == _added()["url"]
     for ref, s in before.items():
         assert {k: v for k, v in got[ref].items() if k != "opened"} == {k: v for k, v in s.items() if k != "opened"}
