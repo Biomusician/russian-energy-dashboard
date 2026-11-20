@@ -351,6 +351,10 @@ supports, or a rule the data cannot yet carry.
   closure they **gate the import and the build** (methodology §12). They are deterministic checks
   of the record's own fields: they cannot tell that a valid role was the wrong one, so a mistyped
   role remains a reviewer-error rate this module does not measure.
+- **Internet-measurement organisations are typed as researchers (open).** Their own direct
+  measurement is secondary today, so it never counts as an originating statement or earns effect
+  points. Whether it should be first-party for connectivity claims is a question for calibration
+  run 2, not a change: `docs/ECI_SOURCE_ROLE_MEMO_22.md`.
 - **What the origin count still cannot see (red team 6: B6, B7, B8, B17).** An operator's website
   and its account under a different publisher string; its investor-relations site on a second
   domain; a wire copy a lane filed as the outlet's own reporting. Only a reviewer marking `relays`
