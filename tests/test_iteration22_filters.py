@@ -427,3 +427,48 @@ def test_country_view_exports_the_shown_list_and_no_other():
     src = VIEW.read_text(encoding="utf-8")
     assert "countryExport(bundle.system, shown, scope.length," in src
     assert not re.search(r"countryExport\(bundle\.system, (events|bundle\.events|scope),", src)
+
+
+# ---------------- iteration-22 release closure: test-architecture red team ----------------
+# Written for mutations that left every test above green (scripts/mutation_campaign.py, TESTARCH22_MUTATIONS).
+
+@needs_bundler
+def test_csv_writes_no_key_outside_its_columns_and_its_name_is_never_shaped_by_the_address(tmp_path_factory):
+    out = run_ts(tmp_path_factory, MODS, """
+      return { csv: rc.toCsv(["a", "b"], [{ a: "1", b: "2", hidden: input.secret }]),
+               name: rc.csvFilename("../../ir?x=<script>", "events", "2026-11-19") };
+    """, {"secret": SECRET})
+    head, rows = _rows(out["csv"])
+    assert head == ["a", "b"] and rows == [{"a": "1", "b": "2"}]
+    assert SECRET not in out["csv"], "a key outside the listed columns reached the file"
+    assert re.fullmatch(r"edm-[a-z0-9-]+-events-2026-11-19\.csv", out["name"]), out["name"]
+
+
+@needs_bundler
+def test_csv_readme_states_every_filter_in_force_and_the_build_date(tmp_path_factory):
+    """The file travels without the page: the README is where the filters and the build date go with it."""
+    out = run_ts(tmp_path_factory, MODS, """
+      return rc.readmeText({ title: "Reported events: Example", csvName: "edm-xx-events-2026-11-19.csv", scope: "xx",
+        buildDate: "2026-11-19", downloaded: "2026-11-20", shown: 3, total: 10,
+        filters: ["Cause: SENTINEL-CAUSE", "Date: from 2024-01-01"], limitations: [], columns: ["a"], fields: { a: "A." } });
+    """)
+    assert "Site build date: 2026-11-19" in out
+    assert "- Cause: SENTINEL-CAUSE" in out and "- Date: from 2024-01-01" in out
+    assert "leave out 7 of the 10" in out and "Records in this file: 3 of 10" in out
+
+
+@needs_bundler
+def test_csv_an_abstracted_impact_record_exports_no_end_date(tmp_path_factory):
+    """When service came back is later status. The gate keeps it off an abstracted record; the export,
+    which trusts the payload no further than it must, empties the cell whatever the payload carries."""
+    base = {"impact_id": "imp-2024-01-01-xxx-electricity-attack-a1b2c3", "record_kind": "disruption", "date": "2024-01-01",
+            "date_end": "2024-01-09", "country_a3": "XXX", "geographic_precision": "country", "cause_family": "kinetic",
+            "publication_policy": "country_abstracted", "summary": "A disruption was reported."}
+    out = run_ts(tmp_path_factory, MODS, """
+      return { abstracted: rc.impactRecordsCsv([input.base]),
+               standard: rc.impactRecordsCsv([{ ...input.base, cause_family: "weather", publication_policy: "standard" }]) };
+    """, {"base": base})
+    _, rows = _rows(out["abstracted"])
+    assert rows[0]["date_end"] == "" and "2024-01-09" not in out["abstracted"]
+    _, std = _rows(out["standard"])
+    assert std[0]["date_end"] == "2024-01-09"
