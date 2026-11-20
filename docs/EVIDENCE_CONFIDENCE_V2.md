@@ -10,8 +10,8 @@ The tests are `tests/test_iteration22_confidence.py` and, for the methodology re
 `tests/test_iteration22_redteam.py`.
 
 **Status: provisional.** The method version is `2.0-draft` and the method is served with
-`status: "provisional: thresholds not calibrated"`. No blind calibration result has been recorded
-(§5). A test ties the two: while the version ends `-draft`, no document may say otherwise.
+`status: "provisional: thresholds not calibrated"`. One blind calibration has been
+run and the thresholds did not pass it (Results, below). A test ties the two: while the version ends `-draft`, no document may say otherwise.
 
 ## 1. What it is, and is not
 

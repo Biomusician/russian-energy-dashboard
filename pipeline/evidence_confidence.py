@@ -29,7 +29,7 @@ High. A record cited only through an encyclopedia or an aggregator is not assess
 research state, not weak evidence.
 
 Every parameter is in methodology/evidence_confidence.json. While its version ends in "-draft" the
-thresholds are provisional: no blind calibration result has been recorded.
+thresholds are provisional: no blind calibration run has passed.
 """
 
 import datetime as dt

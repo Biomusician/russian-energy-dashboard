@@ -222,13 +222,15 @@ describe("search", () => {
   });
 
   it("offers the Gulf and Hormuz context only where the manifest has that overview", () => {
-    const m = { systems: [], groups: { gulf: { label: "Gulf littoral", slug: "gulf", context: "global/gulf.json", members: [], kind: "region" } } } as unknown as Manifest;
+    const m = { systems: [], groups: { gulf: { label: "Gulf littoral", slug: "gulf", context: "global/gulf.json", regional_context: "global/regional_context.json", members: [], kind: "region" } } } as unknown as Manifest;
     const e = regionalContextEntries(m);
     expect(e).toHaveLength(1);
     expect(searchEntries(e, "hormuz")[0].entry.action).toEqual({ type: "group", slug: "gulf" });
     expect(e[0].label).toBe("Gulf and Hormuz context");
     expect(regionalContextEntries({ systems: [], groups: {} } as unknown as Manifest)).toEqual([]);
     expect(regionalContextEntries({ systems: [], groups: { gcc: { label: "GCC", members: [], kind: "membership" } } } as unknown as Manifest)).toEqual([]);
+    // An overview page without the dated regional statements offers no such entry.
+    expect(regionalContextEntries({ systems: [], groups: { gulf: { label: "Gulf littoral", slug: "gulf", context: "global/gulf.json", members: [], kind: "region" } } } as unknown as Manifest)).toEqual([]);
   });
 });
 

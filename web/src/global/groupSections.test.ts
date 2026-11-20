@@ -161,10 +161,12 @@ describe("the regional context", () => {
   });
 
   it("belongs to the group it describes and to no other", () => {
-    expect(contextDescribes(ctx, "gulf_littoral")).toBe(true);
-    expect(contextDescribes(ctx, "gcc")).toBe(false);
+    // The served file names its group; nothing else pairs them.
+    expect(contextDescribes({ ...ctx, group: "gulf_littoral" }, "gulf_littoral")).toBe(true);
+    expect(contextDescribes({ ...ctx, group: "gulf_littoral" }, "gcc")).toBe(false);
     expect(contextDescribes({ context_id: "constructor" }, "gulf_littoral")).toBe(false);
-    // If the build names the group itself, that wins.
+    // A file that names no group describes none: its id alone is never read as a group.
+    expect(contextDescribes({ context_id: "gulf_hormuz" }, "gulf_littoral")).toBe(false);
     expect(contextDescribes({ context_id: "gulf_hormuz", group: "opec" }, "opec")).toBe(true);
     expect(contextDescribes({ context_id: "gulf_hormuz", group: "opec" }, "gulf_littoral")).toBe(false);
   });

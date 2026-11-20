@@ -2070,3 +2070,6 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
 .home-tag { display: inline-block; font-size: 10.5px; padding: 1px 7px; border-radius: 10px; color: var(--text-dim);
   border: 1px solid var(--line); }
 .home-tag-preview { border-style: dashed; border-color: var(--text-faint); }
+
+/* Iteration 22: the country impact brief sits above the impact records it summarises. */
+.impact-brief-row { margin: 0 0 10px; }

@@ -405,9 +405,10 @@ def test_while_the_version_is_a_draft_the_method_is_served_as_provisional(monkey
 def test_no_document_says_the_thresholds_were_calibrated_while_the_results_are_not_recorded():
     doc = (ROOT / "docs" / "EVIDENCE_CONFIDENCE_V2.md").read_text(encoding="utf-8")
     results = doc.split("<!-- calibration-results:begin -->")[1].split("<!-- calibration-results:end -->")[0]
-    not_run = "Not yet run" in results
-    assert not_run == EC.METHOD["version"].endswith("-draft"), "the results block and the version disagree"
-    if not not_run:
+    # A run that failed keeps the draft; only a recorded pass may drop it.
+    passed = re.search(r"Result:\s*calibrated", results) is not None
+    assert (not passed) == EC.METHOD["version"].endswith("-draft"), "the results block and the version disagree"
+    if passed:
         return
     texts = [p for p in (ROOT / "docs").glob("*.md")] + [ROOT / "methodology" / "evidence_confidence.json",
                                                           ROOT / "pipeline" / "evidence_confidence.py"]

@@ -331,9 +331,6 @@ export default function CountryView({ id }: { id: string }) {
           {exporting ? "Rendering…" : "Download PNG"}
         </button>
         <button className="ghost" onClick={() => window.print()}>Print / PDF</button>
-        {/* A one-page image of this country's impact-layer evidence, with its own caveats; for a Gulf
-            member it adds the newest dated regional statements (iteration 22). */}
-        <ImpactBriefButton systemId={id} />
       </CountryHeader>
 
       {/* One main landmark per view: everything below the shared header and navigation bar. */}
@@ -519,6 +516,11 @@ export default function CountryView({ id }: { id: string }) {
               filterNotes={[...(clearedNote ? [clearedNote] : []), ...decoded!.notes]}
             />
           )}
+          {/* A one-page image of this country's impact-layer evidence, with its own caveats; for a Gulf
+              member it adds the newest dated regional statements (iteration 22). It sits with the
+              records it summarises, not in the header: a fourth header button pushed the map out of a
+              phone's first screen. */}
+          {tab === "impacts" && <div className="impact-brief-row"><ImpactBriefButton systemId={id} /></div>}
           {tab === "impacts" && <CountryImpacts sys={sys} impacts={impacts} today={today} />}
           {tab === "regional" && regional && <CountryRegional sys={sys} group={regional} />}
           {tab === "sectors" && <SectorsPanel bundle={bundle} />}

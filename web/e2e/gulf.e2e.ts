@@ -39,8 +39,12 @@ const ROUTES = /hormuz|tanker|choke ?point|shipping lane|bypass/i;
 // for every other section, the event feed, the impact cards and the energy table. And wording that
 // names a ship, a path, bypass capacity or what depends on what is forbidden everywhere, that section
 // included: its only appearance is in the two fixed statements of what is NOT collected.
+// §10 lets an authority's aggregate statement say ships or vessels ("about 20,000 seafarers on ships in
+// the Gulf", "ship transits down by about 95 percent"); what it never allows is one ship: a name, a
+// number, a position, a track, a flag or a list. NEVER is that rule, not the bare word (the first
+// version forbade the word and failed on the real IMO and UNCTAD statements, never on a leak).
 const CONTEXT_LABEL = "Gulf & Hormuz context";
-const NEVER = /tanker|vessel|\bships?\b|bypass|choke ?point|\broutes?\b|\bdepend\w*/i;
+const NEVER = /tanker|bypass|choke ?point|\broutes?\b|\bdepend\w*|\bAIS\b|\bMMSI\b|\b(vessel|ship)s? (named|called|list)|\blist of (ships|vessels)|(vessel|ship)[- ]track|\b(positions?|locations?) of (the |a |an )?(ship|vessel)|\b[a-z]+-flagged\b|\bwarships?\b/i;
 
 /** The page's text outside the context section. The section's own name, where it is the link to it,
  *  is the one string of that section allowed out. Hidden text is read too. */

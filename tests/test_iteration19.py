@@ -526,7 +526,9 @@ def test_the_manifest_carries_groups_and_no_rankable_figure_for_them():
         if group["kind"] == "membership":
             assert not group.get("slug") and not group.get("context"), f"{gid}: a membership is a filter, not a page"
     for d in g.values():
-        assert set(d) == {"label", "kind", "note", "slug", "context", "members"}
+        # `regional_context` (iteration 22) names a file, never a figure.
+        assert set(d) == {"label", "kind", "note", "slug", "context", "regional_context", "members"}
+        assert d["regional_context"] in (None, "global/regional_context.json")
     by = {s["id"]: s for s in m["systems"]}
     for sid in NEW:
         assert by[sid]["index"] is None and by[sid]["headline"] is None

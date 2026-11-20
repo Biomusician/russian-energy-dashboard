@@ -82,7 +82,7 @@ test.describe("evidence inspector", () => {
     await expect(panel).toBeVisible();
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
     for (const h of ["Why this record is included", "Where the report came from",
-      "How many independent originating statements support it", "What this report does not establish", "Review"]) {
+      "How many separate originating statements are cited", "What this report does not establish", "Review"]) {
       await expect(panel.getByRole("heading", { name: h, exact: true })).toBeVisible();
     }
     // Plain words by default: no clause number until the reader asks for the technical detail.

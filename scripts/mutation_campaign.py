@@ -2599,7 +2599,7 @@ ITER22_CONFIDENCE_MUTATIONS = [
      "while_the_version_is_a_draft"),
     ("the methodology says the thresholds were calibrated",
      [("docs/GLOBAL_IMPACT_METHODOLOGY.md", _text(
-         "Thresholds are provisional: no blind calibration result has been recorded yet,",
+         "Thresholds are provisional: one blind calibration has been run and they did not pass it,",
          "Thresholds were calibrated against blind reviewer labels,"))],
      "no_document_says_the_thresholds_were_calibrated"),
     ("a source that disputes a claim still backs it",

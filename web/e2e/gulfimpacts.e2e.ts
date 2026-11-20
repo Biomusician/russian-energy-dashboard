@@ -46,7 +46,8 @@ const json = (page: Page, path: string) => page.evaluate((p) => fetch(p).then((r
  *  becomes an IT failure, so that label has a record to show. */
 function onMembers(payload: Payload, members: Member[]): Payload {
   let i = 0;
-  let itFailure = false;
+  // The fixture may already carry its own IT failure; only add one if it does not.
+  let itFailure = payload.records.some((r) => r.cause_family !== "cyber" && r.cyber_mechanism === IT_OUTAGE);
   const place = (r: Rec): Rec => {
     if (r.country_a3 === "MULTI") return r;
     const m = members[i++ % members.length];
@@ -533,6 +534,20 @@ test.describe("Gulf overview: impact brief", () => {
       expect(part.spread, `${what} is blank`).toBeGreaterThan(100);
       expect(part.distinct, `${what} is blank`).toBeGreaterThan(3);
     }
+    await expect(page.getByRole("status").filter({ hasText: "Impact brief saved" })).toContainText("carries its own caveats");
+  });
+
+  test("a country's impact brief sits with its impact records, not in the header, and downloads as an image", async ({ app, page }) => {
+    await serveLayer(page);
+    await app.open("?sys=ae");
+    // The header keeps three buttons, so a phone's first screen still reaches the map.
+    await expect(page.locator(".page-title .head-actions").getByRole("button", { name: "Download impact brief (PNG)" })).toHaveCount(0);
+    await page.locator('button[data-tab="impacts"]').click();
+    const [download] = await Promise.all([page.waitForEvent("download"), app.button("Download impact brief (PNG)").click()]);
+    expect(readBytes((await download.path())!).subarray(1, 4).toString("ascii")).toBe("PNG");
+    const whole = await pixelStats(page, readBytes((await download.path())!));
+    expect(whole.width).toBe(1600);
+    expect(whole.spread).toBeGreaterThan(120);
     await expect(page.getByRole("status").filter({ hasText: "Impact brief saved" })).toContainText("carries its own caveats");
   });
 
