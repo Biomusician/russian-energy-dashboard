@@ -907,6 +907,8 @@ def test_the_research_note_publishes_process_facts_only():
     ("limitation", "Left to the water lane."),
     ("limitation", "An earlier pass (na2) found nothing."),
     ("limitation", "Already in the theatre as imp-2024-07-16-rus-electricity-outage."),
+    ("limitation", "Other dated shortfalls in the country queue were not re-opened."),
+    ("family", "Country-system research queues, used as a discovery list"),
 ])
 def test_the_research_note_refuses_first_person_and_pipeline_wording(field, text):
     lg = docs()[2]

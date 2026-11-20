@@ -3377,6 +3377,9 @@ ITER22_RELEASE_MUTATIONS = [
      [(GI, _text('isinstance(c.get("affected"), dict) and _number(c["affected"].get("value"))',
                  'isinstance(c.get("affected"), dict) and c["affected"].get("value") is not None'))],
      "basis_2_without_a_figure_is_refused"),
+    ("the research-note wording check does not read queue wording",
+     [(GI, _text(r'|\b[a-z]+\d\b|\bqueues?\b")', r'|\b[a-z]+\d\b")'))],
+     "the_research_note_refuses_first_person_and_pipeline_wording"),
 ]
 MUTATIONS += ITER22_RELEASE_MUTATIONS
 

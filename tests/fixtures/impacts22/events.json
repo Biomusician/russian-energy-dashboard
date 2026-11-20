@@ -1251,7 +1251,7 @@
       "summary": "SYNTHETIC FIXTURE. An attack damaged electricity infrastructure in Ukraine, the authorities said.",
       "effect": "SYNTHETIC FIXTURE. Scheduled power cuts were introduced for households.",
       "effect_specificity": "described",
-      "inclusion_basis": 2,
+      "inclusion_basis": 4,
       "civilian_service_impact": [
         {
           "service": "electricity",

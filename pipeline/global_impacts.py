@@ -252,7 +252,7 @@ LOG_FORBIDDEN = re.compile(B.HELD_WORDING.pattern + r"|\breject\w*|\bnear[- ]mis
 LOG_PROCESS_WORDING = re.compile(
     r"\bI\b|\bI'(m|ve|d)\b|\b[Mm]y\b|\b[Ww]e\b|\b[Oo]ur\b|\bus\b|fetch tool|\bWeb ?(Search|Fetch)\b|"
     r"knowledge cut-?off|\bthe model\b|\bthe task\b|\b(by|per|on) instruction|data/|\.csv\b|\.json\b|"
-    r"\b[A-Za-z0-9]+_[A-Za-z0-9_]+\b|\b(imp|ctx)-\d{4}|\blanes?\b|\b[a-z]+\d\b")
+    r"\b[A-Za-z0-9]+_[A-Za-z0-9_]+\b|\b(imp|ctx)-\d{4}|\blanes?\b|\b[a-z]+\d\b|\bqueues?\b")
 
 # A figure about an event, a market or a stock in served research-note text (round-2 ruling R11,
 # finding S-5): a price, a percentage, a volume or a count of people or customers. A note may count
