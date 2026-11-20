@@ -206,8 +206,18 @@ export function impactExportSummary(name: string, records: readonly ImpactRecord
 export interface ImpactFiles { csvName: string; csv: string; readmeName: string; readme: string }
 
 /** The two files for the impact records shown: the CSV, and the note that explains it. */
+/** The country file's note says what the atlas note says about attempts (cyber red team S-5): they
+ *  are listed apart on the page and are not rows of the file. */
+export const ATTEMPTS_NOT_IN_FILE =
+  "Documented attempts with no reported service disruption are listed apart on the page and are not in this file.";
+
+/** The country CSV and its README. The README carries the same corpus caveats and research
+ *  limitations as the Impact Atlas README (a sample, not a census; what the search budget left out),
+ *  because a country file is a slice of the same corpus and inherits every limit of it. */
 export function impactFiles(systemId: string, name: string, shown: readonly ImpactRecord[], total: number,
-                            filterLines: readonly string[], payload: Pick<ImpactsPayload, "as_of" | "caveats">, today: string): ImpactFiles {
+                            filterLines: readonly string[],
+                            payload: Pick<ImpactsPayload, "as_of" | "caveats"> & { research?: Pick<ImpactsPayload["research"], "limitations"> },
+                            today: string): ImpactFiles {
   const csvName = csvFilename(systemId, "impacts", payload.as_of);
   const rows = impactOrder(shown);
   const readme = readmeText({
@@ -223,6 +233,8 @@ export function impactFiles(systemId: string, name: string, shown: readonly Impa
       IMPACT_CORPUS_LINE,
       IMPACT_INCLUSION_LINE,
       ...(payload.caveats ?? []),
+      ATTEMPTS_NOT_IN_FILE,
+      ...(payload.research?.limitations ?? []),
       rows.some(isAbstracted)
         ? "Some rows are attack or sabotage records published at country level. Their region, facility, operator and source headlines are empty in this file, and publication_note says why."
         : "",

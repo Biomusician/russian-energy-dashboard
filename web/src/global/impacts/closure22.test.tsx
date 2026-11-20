@@ -7,7 +7,7 @@ import { ContextTimeline, asOfText } from "./ContextTimeline";
 import { ImpactCard } from "./ImpactCard";
 import { ImpactInspector } from "./ImpactInspector";
 import { anyTie, latestCounts, latestEntries } from "./latestOfType";
-import { isHistoricalAddition, notEstablished, selfClaimsOf } from "./model";
+import { LEAD_ADDED_NOT_COUNTED, isHistoricalAddition, notEstablished, selfClaimsOf } from "./model";
 import { forgetVocabularies, registerMethod, registerVocabularies } from "./vocab";
 import { briefRecords, briefStatements, statementsNote, MAX_BRIEF_STATEMENTS, type BriefSourceEntry } from "./brief/impactBrief";
 import { compactLead, latestOfEachType } from "../CountryRegional";
@@ -279,5 +279,13 @@ describe("a source appended on lead review is shown as such", () => {
     expect(insp).toContain("not counted as an independent statement");
     // A reviewed source carries no such line.
     expect(render(<ImpactInspector record={base} />)).not.toContain("Added on lead review");
+  });
+
+  it("the origins line says a lead-added citation is not counted, and only where one is cited (R4, A9)", () => {
+    const base = { ...record(), origin_count: 1 } as ImpactRecord;
+    const added = { ...base.sources[0], ref: "s10", publisher: "SYNTHETIC operator report", added_by: "lead" as const, opened: false };
+    const withLead = render(<ImpactInspector record={{ ...base, sources: [...base.sources, added] } as ImpactRecord} />);
+    expect(withLead).toContain(LEAD_ADDED_NOT_COUNTED);
+    expect(render(<ImpactInspector record={base} />)).not.toContain(LEAD_ADDED_NOT_COUNTED);
   });
 });

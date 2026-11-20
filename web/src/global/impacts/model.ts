@@ -80,6 +80,11 @@ export function confidenceLabel(c: ConfidenceLike | null | undefined): string {
 /** What the origins figure counts, by its served basis. Where only publishers were counted the
  *  line says so: whether they relay one statement was not reviewed, so they are not called
  *  independent. A build with no basis gets the bare number and no claim about what it counts. */
+/** Beside the origins count on a record that cites a lead-added source (round-2 ruling R4): the
+ *  served count never includes it, nor an actor's own claim or a discovery aid. */
+export const LEAD_ADDED_NOT_COUNTED =
+  "A citation added on lead review is not counted, and neither is an actor's own claim or a discovery aid.";
+
 export function originsText(count: number, basis: string | null | undefined): string {
   if (basis === "publishers") return `${count} distinct ${count === 1 ? "publisher" : "publishers"} cited; whether they relay one statement was not reviewed`;
   if (basis === "reviewed") return `${count} originating ${count === 1 ? "statement" : "statements"}, as established on review`;

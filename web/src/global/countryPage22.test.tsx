@@ -15,7 +15,7 @@ import { ConfidenceSummary } from "./ConfidenceSummary";
 import { countryFilters } from "./countryFilters";
 import { CONFIDENCE_IS_NOT, RESEARCH_PREVIEW_DEFINITION } from "./countryCopy";
 import {
-  EXPORT_ROW_LIMIT, causeCounts, countryImpacts, impactExportRow, impactExportSummary, impactFiles, impactFilters, impactOrder,
+  ATTEMPTS_NOT_IN_FILE, EXPORT_ROW_LIMIT, causeCounts, countryImpacts, impactExportRow, impactExportSummary, impactFiles, impactFilters, impactOrder,
 } from "./countryImpactModel";
 import { CountryImpacts, impactPresence, researchRanText } from "./CountryImpacts";
 import { latestOfEachType, regionalNote } from "./CountryRegional";
@@ -511,6 +511,19 @@ describe("the impact tab's model", () => {
     expect(f.readme).toContain(`Records in this file: 3 of ${records.length}`);
     expect(f.readme).toContain("separate, non-scored corpus");
     expect(f.readme).toContain("- Cause: Cyber");
+  });
+
+  it("the README says attempts are not in the file and carries the corpus research limitations (cyber S-5)", () => {
+    const { records } = countryImpacts(many, "ir");
+    const limits = ["The corpus is a sample, not a census: a test limitation.", "A second research limitation."];
+    const f = impactFiles("ir", "Iran", records.slice(0, 2), records.length, [],
+                          { ...many, research: { ...many.research, limitations: limits } }, "2026-11-19");
+    expect(f.readme).toContain(`- ${ATTEMPTS_NOT_IN_FILE}`);
+    expect(ATTEMPTS_NOT_IN_FILE).toContain("not in this file");
+    for (const l of limits) expect(f.readme).toContain(`- ${l}`);
+    // A payload that carries no research block still gets the attempts line, and nothing breaks.
+    const bare = impactFiles("ir", "Iran", [], 0, [], { as_of: many.as_of, caveats: many.caveats }, "2026-11-19");
+    expect(bare.readme).toContain(ATTEMPTS_NOT_IN_FILE);
   });
 });
 

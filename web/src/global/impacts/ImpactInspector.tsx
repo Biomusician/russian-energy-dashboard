@@ -2,7 +2,7 @@ import { fmtDate } from "../../data";
 import { LANGUAGE_LABEL, dirFor } from "../manifest";
 import { ConfidenceBreakdown, useConfidenceMethod } from "./ConfidenceChip";
 import {
-  NO_CONFIDENCE_REASON, SELF_CLAIM_NOTE, claimSupport, confidenceLabel, isAbstracted, notEstablished, originsText, selfClaimText,
+  LEAD_ADDED_NOT_COUNTED, NO_CONFIDENCE_REASON, SELF_CLAIM_NOTE, claimSupport, confidenceLabel, isAbstracted, notEstablished, originsText, selfClaimText,
   selfClaimsOf, sourceKind,
 } from "./model";
 import { definitionOf, labelOf, lowerLabel, useImpactVocab, vocabulary } from "./vocab";
@@ -99,6 +99,9 @@ export function ImpactInspector({ record, id, onClose, headingLevel = 4 }: { rec
       {r.origin_count != null && originsBasis && (
         <p className="dim imp-origins">
           Across {r.sources.length} {r.sources.length === 1 ? "citation" : "citations"}: {originsText(r.origin_count, originsBasis)}.
+          {/* The served count leaves out lead-added citations, actors' own claims and discovery aids
+              (round-2 ruling R4); where a lead-added citation is present, say so beside the count. */}
+          {r.sources.some((s) => s.added_by === "lead") && ` ${LEAD_ADDED_NOT_COUNTED}`}
         </p>
       )}
 
