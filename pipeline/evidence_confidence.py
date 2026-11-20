@@ -616,9 +616,24 @@ def _attribution_evidence(sources, attribution=None):
     return backing, named, claims
 
 
+def _attribution_sources(attribution, sources):
+    """The sources attribution is judged on: every source but those cited only by `self_claims`.
+    An actor's own claim kept as provenance is never evidence about who did it, for or against:
+    left in, a second group's claim would turn the press reporting the first attribution into
+    relays of a claim."""
+    a = attribution or {}
+    cited = set(a.get("source_refs") or [])
+    cited |= {x for c in a.get("competing") or [] if isinstance(c, dict) for x in c.get("source_refs") or []}
+    claims = a.get("self_claims") if isinstance(a.get("self_claims"), list) else []
+    only = {x for c in claims if isinstance(c, dict) for x in c.get("source_refs") or []} - cited
+    return [s for s in sources if s.get("ref") not in only]
+
+
 def attribution_confidence(attribution, sources):
     """Attribution confidence from the sources that support `attribution`. None when attribution
-    does not apply; NOT_ESTABLISHED (not "low") when nobody credible attributes."""
+    does not apply; NOT_ESTABLISHED (not "low") when nobody credible attributes. DISPUTED comes
+    from the status or from `competing` only: `self_claims` never make a record disputed."""
+    sources = _attribution_sources(attribution, sources)
     status = (attribution or {}).get("status")
     if status in (None, "NOT_APPLICABLE"):
         return None
@@ -664,6 +679,7 @@ def attribution_confidence(attribution, sources):
 def attribution_problems(attribution, sources):
     """Where an attribution's status says more (or less) than its sources do."""
     out = []
+    sources = _attribution_sources(attribution, sources)
     a = attribution or {}
     status = a.get("status")
     if status not in ATTRIBUTION_STATUSES:
@@ -705,6 +721,49 @@ def attribution_problems(attribution, sources):
     for b in a.get("basis") or []:
         if b not in ATTRIBUTION_BASES:
             out.append(f"attribution basis {b!r} is not one of {ATTRIBUTION_BASES}")
+    return out
+
+
+def attribution_dispute_problems(attribution, sources):
+    """What may stand as a competing attribution, and the shape of an actor's own claims.
+
+    `competing` is a credible alternative attribution advanced by someone other than the actor: an
+    entry whose basis is only the actor's own claim, or whose every cited source is the actor's own
+    claim, is refused (it belongs in `self_claims`), because it would make the record DISPUTED on
+    the strength of a boast. An entry whose basis adds an independent one (a government, a
+    vendor) stays. `self_claims` entries are provenance: actor, type, statement, sources."""
+    a = attribution or {}
+    out = []
+    by_ref = {s.get("ref"): s for s in sources if isinstance(s, dict)}
+    competing = a.get("competing") if isinstance(a.get("competing"), list) else []
+    for i, c in enumerate(competing):
+        if not isinstance(c, dict):
+            continue
+        w = f"attribution.competing[{i}]"
+        basis = c.get("basis")
+        if not isinstance(basis, list) or not basis or any(b not in ATTRIBUTION_BASES for b in basis):
+            out.append(f"{w}: basis must list who advances it, from {ATTRIBUTION_BASES}")
+        elif set(basis) == {"actor_self_claim"}:
+            out.append(f"{w} rests only on the actor's own claim: a self-claim is not a competing attribution; "
+                       "put it in attribution.self_claims")
+        cited = [by_ref[x] for x in c.get("source_refs") or [] if x in by_ref]
+        if cited and all(_own_claim(s, {"actor": c.get("actor")}) for s in cited):
+            out.append(f"{w}: every source it cites is the actor's own claim: a self-claim is not a competing "
+                       "attribution; put it in attribution.self_claims")
+    claims = a.get("self_claims", [])
+    for i, c in enumerate(claims if isinstance(claims, list) else []):
+        w = f"attribution.self_claims[{i}]"
+        if not isinstance(c, dict):
+            out.append(f"{w} is not an object")
+            continue
+        if not str(c.get("actor") or "").strip():
+            out.append(f"{w}: no actor: a self-claim names who claims it")
+        if c.get("actor_type") not in ACTOR_TYPES:
+            out.append(f"{w}: actor_type {c.get('actor_type')!r} is not one of {ACTOR_TYPES}")
+        if not str(c.get("statement") or "").strip():
+            out.append(f"{w}: no statement of what was claimed and where it was reported")
+        if not isinstance(c.get("source_refs"), list) or not c["source_refs"]:
+            out.append(f"{w}: source_refs must list the record's sources that carry the claim")
     return out
 
 

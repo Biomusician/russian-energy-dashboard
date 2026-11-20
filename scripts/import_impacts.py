@@ -331,8 +331,10 @@ def prune_refs(r, refs, supports=None):
     keep(r.get("attribution"), "attribution")
     keep(r.get("ai_involvement"), "ai_involvement")
     keep(r.get("dispute"), None)
-    for c in ((r.get("attribution") or {}).get("competing") or []) if isinstance(r.get("attribution"), dict) else []:
-        keep(c, "attribution")
+    a = r.get("attribution") if isinstance(r.get("attribution"), dict) else {}
+    for name in ("competing", "self_claims"):
+        for c in a.get(name) or [] if isinstance(a.get(name), list) else []:
+            keep(c, "attribution")
 
 
 def reviewed_addenda(sources, review_id, taken, reviews, moved=False):
@@ -507,6 +509,12 @@ def normalise(r, notes):
             notes.append(f"{len(a['competing']) - len(kept)} competing attribution(s) dropped: no surviving source "
                          "supports them")
             a["competing"] = kept
+    if isinstance(a, dict) and isinstance(a.get("self_claims"), list):
+        # The same for an actor's own claim kept as provenance.
+        kept = [c for c in a["self_claims"] if not isinstance(c, dict) or c.get("source_refs")]
+        if len(kept) != len(a["self_claims"]):
+            notes.append(f"{len(a['self_claims']) - len(kept)} self-claim(s) dropped: no surviving source carries them")
+            a["self_claims"] = kept
     factors = r.get("contributing_factors") if isinstance(r.get("contributing_factors"), list) else []
     if (isinstance(a, dict) and a.get("status") == "UNKNOWN" and r.get("cause_family") in G.NOT_MALICIOUS
             and not set(factors) & set(G.MALICIOUS)):
@@ -550,6 +558,8 @@ def drop_unknown(r):
     keep(a, G.ATTRIBUTION_FIELDS, "attribution")
     for c in (a.get("competing") or []) if isinstance(a, dict) and isinstance(a.get("competing"), list) else []:
         keep(c, G.COMPETING_FIELDS, "attribution.competing")
+    for c in (a.get("self_claims") or []) if isinstance(a, dict) and isinstance(a.get("self_claims"), list) else []:
+        keep(c, G.SELF_CLAIM_FIELDS, "attribution.self_claims")
     keep(r.get("ai_involvement"), G.AI_FIELDS, "ai_involvement")
     keep(r.get("dispute"), G.DISPUTE_FIELDS, "dispute")
     keep(r.get("admin1"), ("code", "name"), "admin1")

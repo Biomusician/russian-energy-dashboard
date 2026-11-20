@@ -2551,3 +2551,105 @@ def test_an_s1_account_whose_identity_rests_on_a_badge_is_refused_and_the_rest_i
     # S2 to S4 are never sole evidence anyway; the badge rule is S1's.
     social["account_tier"], social["identity_basis"] = "S2", "Verified account"
     assert not any("platform badge" in p for p in problems(r))
+
+
+# --- iteration-22 release closure: a self-claim is not a competing attribution (B6/B7) ------------------
+
+SELF_CLAIM = {"actor": "Example Group G", "actor_type": "hacktivist",
+              "statement": "SYNTHETIC. Example Group G claimed the incident on its own channel, as Example Daily "
+                           "reported; the claim is unverified.", "source_refs": ["s2"]}
+
+
+def test_a_competing_entry_resting_only_on_a_self_claim_is_refused_and_belongs_in_self_claims():
+    r = rec(DEU)
+    r["attribution"]["competing"] = [{**SELF_CLAIM, "basis": ["actor_self_claim"]}]
+    refused(r, "attribution.competing[0] rests only on the actor's own claim")
+    refused(r, "put it in attribution.self_claims")
+    # The build refuses it too.
+    e, c, lg = docs()
+    e["records"] = [r if x["impact_id"] == DEU else x for x in e["records"]]
+    with pytest.raises(ValueError, match="put it in attribution.self_claims"):
+        G.build_payloads(e, c, lg, ctx(), AS_OF)
+    # A self-claim AND an independent basis is a credible alternative: allowed, and the record is disputed.
+    r["attribution"]["competing"][0]["basis"] = ["actor_self_claim", "government"]
+    assert not any("own claim" in p for p in problems(r))
+    assert EC.attribution_confidence(r["attribution"], r["sources"]) == "DISPUTED"
+    # A competing entry needs a basis from the vocabulary.
+    r["attribution"]["competing"][0]["basis"] = []
+    refused(r, "attribution.competing[0]: basis must list who advances it")
+
+
+def test_a_competing_entry_whose_every_source_is_the_actors_own_claim_is_refused():
+    r = rec(DEU)
+    r["sources"][1]["attribution_basis"] = "media_investigation"
+    r["sources"].append(dict(CHANNEL))
+    r["attribution"]["competing"] = [{**SELF_CLAIM, "basis": ["government"], "source_refs": ["s3"]}]
+    refused(r, "every source it cites is the actor's own claim")
+
+
+def test_self_claims_are_provenance_and_never_make_a_record_disputed():
+    base = rec(DEU)
+    before = EC.attribution_confidence(base["attribution"], base["sources"])
+    r = rec(DEU)
+    r["attribution"]["self_claims"] = [dict(SELF_CLAIM)]
+    assert problems(r) == []
+    got = EC.attribution_confidence(r["attribution"], r["sources"])
+    assert got == before and got != "DISPUTED"
+    served = next(x for x in payloads(events={"schema_version": 1, "records": [r]})[G.IMPACTS_OUT]["records"])
+    assert served["attribution"]["self_claims"] == [SELF_CLAIM] and served["attribution"]["confidence"] == before
+    # A second group's own channel, cited only for its claim, is not evidence about who did it: it does
+    # not turn the press reporting the first attribution into relays of a claim.
+    r["sources"].append(dict(CHANNEL))
+    r["attribution"]["self_claims"][0]["source_refs"] = ["s3"]
+    assert problems(r) == []
+    assert EC.attribution_confidence(r["attribution"], r["sources"]) == before
+
+
+def test_a_self_claim_needs_its_actor_type_statement_and_sources_that_resolve():
+    for change, why in ((dict(actor=""), "no actor"), (dict(actor_type="group"), "actor_type 'group'"),
+                        (dict(statement=" "), "no statement"), (dict(source_refs=[]), "attribution.self_claims[0]: no source"),
+                        (dict(source_refs=["s9"]), "source_refs ['s9'] name no source"),
+                        (dict(rank=1), "field 'rank' is not part of the contract")):
+        r = rec(DEU)
+        r["attribution"]["self_claims"] = [{**SELF_CLAIM, **change}]
+        refused(r, why)
+    r = rec(DEU)
+    r["attribution"]["self_claims"] = [{**SELF_CLAIM, "source_refs": ["s1"]}]     # s1 does not support attribution
+    refused(r, "is cited for attribution but does not support it")
+    r["attribution"]["self_claims"] = {"actor": "x"}
+    refused(r, "attribution.self_claims are lists")
+
+
+CHANNEL = {"ref": "s3", "url": "https://channel.example/synthetic/post/7070", "publisher": "Example Group G channel",
+           "date": "2025-09-03", "language": "en", "source_role": "actor_self_claim", "medium": "web", "social": None,
+           "supports": ["attribution"], "opened": True, "derived_claim": "Synthetic: Example Group G claims the incident."}
+
+
+def test_the_leads_normalisation_can_move_a_self_claim_out_of_competing(tmp_path):
+    c = candidate(DEU)
+    c["attribution"]["competing"] = [{**SELF_CLAIM, "basis": ["actor_self_claim"]}]
+    paths = make_queue(tmp_path, {"europe": [c]})
+    report = run(paths)
+    assert curated_records(paths) == {} and "put it in attribution.self_claims" in reasons(report, DEU)
+    lead_file(paths, "europe", {DEU: normalise(set={"attribution.competing": [], "attribution.self_claims": [dict(SELF_CLAIM)]})})
+    report = run(paths)
+    got = curated_records(paths)[DEU]
+    assert got["attribution"]["competing"] == [] and got["attribution"]["self_claims"] == [SELF_CLAIM]
+    assert got["review"]["lead_normalisation"] is True
+    e, cx, lg = G.load_curated(paths["curated"])
+    served = G.build_payloads(e, cx, lg, ctx(), AS_OF)[G.IMPACTS_OUT]["records"][0]
+    assert served["attribution"]["confidence"] not in ("DISPUTED", None)
+
+
+def test_a_self_claim_whose_only_source_a_reviewer_removed_is_dropped_and_said(tmp_path):
+    c = candidate(DEU)
+    c["sources"].append(dict(CHANNEL))
+    c["attribution"]["self_claims"] = [{**SELF_CLAIM, "source_refs": ["s3"]}]
+    paths = make_queue(tmp_path, {"europe": [c]})
+    run(paths)
+    assert curated_records(paths)[DEU]["attribution"]["self_claims"][0]["source_refs"] == ["s3"]
+    edit_review(paths, "safety", "europe", DEU, verdict="accept_with_correction", remove_sources=["s3"])
+    report = run(paths)
+    got = curated_records(paths)[DEU]
+    assert got["attribution"]["self_claims"] == [] and [s["ref"] for s in got["sources"]] == ["s1", "s2"]
+    assert any("1 self-claim(s) dropped" in n for n in report["notes"][DEU])

@@ -91,8 +91,12 @@ REQUIRED_SOURCE_FIELDS = ("ref", "url", "publisher", "date", "language", "source
 SOCIAL_FIELDS = ("platform", "handle", "display_name", "account_tier", "identity_basis", "posted_at")
 IMPACT_FIELDS = ("service", "geographic_scope", "affected", "duration_text", "source_refs")
 AFFECTED_FIELDS = ("value", "unit", "qualifier", "source_says")
-ATTRIBUTION_FIELDS = ("status", "actor", "actor_type", "basis", "as_of", "statement", "competing", "source_refs")
+ATTRIBUTION_FIELDS = ("status", "actor", "actor_type", "basis", "as_of", "statement", "competing", "self_claims",
+                      "source_refs")
 COMPETING_FIELDS = ("actor", "actor_type", "basis", "by", "as_of", "statement", "source_refs")
+# An actor's own, unverified claim of responsibility, kept as provenance (attribution.self_claims).
+# Never a competing attribution and never read by the confidence model.
+SELF_CLAIM_FIELDS = ("actor", "actor_type", "statement", "source_refs")
 AI_FIELDS = ("status", "relation", "role", "as_of", "statement", "source_refs")
 DISPUTE_FIELDS = ("about", "statement", "source_refs")
 # The lead's normalisation pass (scripts/import_impacts.py, reviews/lead/): mechanical rewrites of
@@ -557,6 +561,11 @@ def claim_problems(r):
             if not c.get("source_refs"):
                 out.append(f"attribution.competing[{i}]: no source")
             out += refs(f"attribution.competing[{i}]", c.get("source_refs") or [], "attribution")
+    for i, c in enumerate(a.get("self_claims") or [] if isinstance(a.get("self_claims"), list) else []):
+        if isinstance(c, dict):
+            if not c.get("source_refs"):
+                out.append(f"attribution.self_claims[{i}]: no source")
+            out += refs(f"attribution.self_claims[{i}]", c.get("source_refs") or [], "attribution")
     ai = r.get("ai_involvement") or {}
     out += refs("ai_involvement", ai.get("source_refs") or [], "ai_involvement")
     d = r.get("dispute")
@@ -566,6 +575,8 @@ def claim_problems(r):
         out += [f"dispute: source_refs {[x for x in d.get('source_refs') or [] if x not in by_ref]} name no source"] \
             if any(x not in by_ref for x in d.get("source_refs") or []) else []
     out += EC.attribution_problems(r.get("attribution"), sources)
+    # What may be a competing attribution and what is only an actor's own claim.
+    out += EC.attribution_dispute_problems(r.get("attribution"), sources)
     out += EC.ai_problems(r.get("ai_involvement"), sources)
     return out
 
@@ -709,14 +720,18 @@ def vocabulary_problems(r):
             out.append(f"attribution is {status} on a record that is not a malicious act")
         if a.get("as_of") is not None and not _date_ok(a["as_of"], ("day", "month", "year")):
             out.append(f"attribution.as_of {a['as_of']!r} is not a date")
-        if not isinstance(a.get("basis", []), list) or not isinstance(a.get("competing", []), list):
-            out.append("attribution.basis and attribution.competing are lists")
+        if (not isinstance(a.get("basis", []), list) or not isinstance(a.get("competing", []), list)
+                or not isinstance(a.get("self_claims", []), list)):
+            out.append("attribution.basis, attribution.competing and attribution.self_claims are lists")
         else:
             for i, c in enumerate(a.get("competing") or []):
                 if not isinstance(c, dict) or not (c.get("actor") or c.get("statement")):
                     out.append(f"attribution.competing[{i}] needs an actor or a statement of the competing attribution")
                 else:
                     out += _unknown_keys(c, COMPETING_FIELDS, f"attribution.competing[{i}]")
+            for i, c in enumerate(a.get("self_claims") or []):
+                if isinstance(c, dict):
+                    out += _unknown_keys(c, SELF_CLAIM_FIELDS, f"attribution.self_claims[{i}]")
         if status not in (None, "NOT_APPLICABLE", "UNKNOWN") and not str(a.get("statement") or "").strip():
             out.append("an attribution needs a statement of who attributes it to whom")
     ai = r.get("ai_involvement")
@@ -851,6 +866,9 @@ def _prose(r):
     for c in a.get("competing") or []:
         if isinstance(c, dict):
             parts += [c.get("statement"), c.get("actor"), c.get("by")]
+    for c in a.get("self_claims") or [] if isinstance(a.get("self_claims"), list) else []:
+        if isinstance(c, dict):
+            parts += [c.get("statement"), c.get("actor")]
     ai = r.get("ai_involvement") if isinstance(r.get("ai_involvement"), dict) else {}
     parts.append(ai.get("statement"))
     if isinstance(r.get("dispute"), dict):
