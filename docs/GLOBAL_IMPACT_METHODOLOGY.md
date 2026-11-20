@@ -78,7 +78,38 @@ operator statement).
 **PROPOSED, applied in iteration 22 closure.** Pending the owner's confirmation; until then it is
 the reading reviewers and the lead apply.
 
-**Applied:** re-reviewed on 19 November 2026 against all 78 cyber records and attempts then in the corpus (one has since been held on other grounds); no record changed kind. Boundary cases: `imp-2022-03-31-deu-electricity-wind-manufacturer-it-incident-remote-access` stays a disruption (basis 5); `imp-2022-04-11-deu-electricity-wind-service-company-remote-monitoring`, `imp-2025-12-29-pol-electricity-energy-sector-destructive-cyber`, `imp-2024-01-usa-water-small-town-systems-cyberattack` and `imp-2024-09-22-usa-water-treatment-manual-operations` stay attempts.
+**Applied:** first re-review on 19 November 2026 against all 78 cyber records and attempts then in
+the corpus, with no change of kind. A second sweep the same day (release closure round 2, rulings R1
+and R2) applied the billing test and the basis-1 reading below to every cyber record and attempt, and
+changed these:
+
+- **Became attempts** (only billing, metering-to-billing, customer, website or IT systems were
+  affected, supply continued, and a first-party statement meets the attempt bar):
+  `imp-2025-04-25-can-electricity-nova-scotia-power-ransomware`,
+  `imp-2023-01-15-can-electricity-qulliq-energy-cyberattack`,
+  `imp-2025-03-23-ukr-transport-railway-online-services-cyberattack` and
+  `imp-2022-01-24-blr-transport-railway-ticketing-cyberattack` (tickets stayed obtainable at stations).
+- **Not included** (the same test, and no first-party or official source cited for an attempt, so
+  held by the lead): the British Virgin Islands and Sint Maarten utility ransomware records, the
+  Cameroon utility record (customer operations affected; no source says customers could not buy
+  electricity), the Costa Rica fuel company record (sales continued by hand), the Auckland travel-card
+  record (passengers kept boarding) and the 2023 Russian railway website record.
+- **Became a disruption:** `imp-2025-12-29-pol-electricity-energy-sector-destructive-cyber`, basis 1:
+  the national CERT's published incident report states an effect on operations (remote control and
+  communication with the distribution system operator lost at more than 30 sites). The duration is not
+  stated, so basis 5 is not met; basis 1 is. The same reading makes the Danish water record's basis 1
+  (a government intelligence service's formal published account of a destructive attack with a stated
+  effect).
+- **Stayed disruptions under the payment exception:** the prepaid electricity vending records (South
+  Africa, Ghana, Colombia's prepaid recharge), where customers could not buy the service; and the
+  Canadian fuel retailer's card-payment outage across its national network, which is the inclusion
+  contract's own basis-4 example ("payments at fuel stations nationwide").
+
+Boundary cases unchanged: `imp-2022-03-31-deu-electricity-wind-manufacturer-it-incident-remote-access`
+stays a disruption (basis 5, twelve days); `imp-2022-04-11-deu-electricity-wind-service-company-remote-monitoring`
+(one to two days, company statement only), `imp-2024-01-usa-water-small-town-systems-cyberattack` and
+`imp-2024-09-22-usa-water-treatment-manual-operations` stay attempts: no formal recognition with a
+stated effect, and no degradation for days.
 
 The question: a cyber incident degrades an operator's operational or remote-control capability
 (dispatch, remote switching, monitoring of the network) while end-user supply continues, because
@@ -104,15 +135,28 @@ It is judged on the two duration tests the inclusion contract already has:
 2. **formally recognised** (inclusion basis 1): a competent authority declared it, or classed it as a
    reportable incident with a stated effect on operations. This is the precedent already applied to
    grid disturbances in which generation tripped but no customer lost supply: rejected unless the
-   regulator classed them as reportable events with a stated system effect.
+   regulator classed them as reportable events with a stated system effect. A national CERT's or a
+   government agency's published incident report that states an effect on operations is formal
+   recognition in this sense (round-2 ruling R2); an operator's own statement, a vendor's report or
+   a press account is not. One rule, no exception.
 
 A degradation shorter than that and not formally recognised is an attempt (if the attempt bar is
 met) or not included.
 
-**What does not count as an operational function:** corporate IT, e-mail, websites, billing or
-customer-account portals, and data theft, unless a source states that operations stopped because
-of them. An operator that halts operations as a precaution has actually interrupted service or
-output: that is a disruption on inclusion basis 5 or 6, not this rule.
+**What does not count as an operational function:** corporate IT, e-mail, websites, post-paid
+billing and metering-to-billing, customer-account portals, internal IT and data theft, unless a
+source states that operations stopped because of them. A utility whose billing or customer systems
+failed while supply continued has had an intrusion with no service disruption: that is an attempt
+(if a first-party or official statement meets the attempt bar) or not included. An operator that
+halts operations as a precaution has actually interrupted service or output: that is a disruption
+on inclusion basis 5 or 6, not this rule; "operations halted" with no supply or output effect stated
+anywhere is not enough.
+
+**Exception: where paying is how the service is obtained** (round-2 ruling R1). Where payment or
+top-up IS how customers obtain the service (prepaid electricity tokens, transit fare payment, fuel
+sales at the pump), its unavailability **that stops customers obtaining the service** is a service
+disruption. Unavailability that does not stop them (tickets still sold at stations, passengers
+allowed to board, fuel sold by hand) is not.
 
 **Evidence.** The degradation must be stated by a first-party or official source (the operator, a
 regulator, a government body, a national CERT) or by a formal report of one. An actor's claim to
@@ -177,7 +221,7 @@ whether the function is restored now (§2: no current status of anything attacke
   "first_published": "2026-11-20",
   "review": {"reviewed_at": "2026-11-19", "review_status": "blind_reviewed",
              "roles": {"evidence": "accept", "attribution_source": "accept", "safety": "accept"},
-             "ai_check": "not_applicable", "social_check": "not_applicable", "disposition": "confirmed"}
+             "social_check": "not_applicable", "disposition": "confirmed"}
 }
 ```
 
@@ -213,6 +257,15 @@ Field rules:
   duration, a recovery time, or the operator's total customer base, unless the source says the whole
   base was affected. "Power restored to 80% of customers" is not an affected figure; nor is "the
   utility serves 1.2 million customers". Duration and restoration wording go in `duration_text`.
+  Nor is it a remaining level ("connectivity fell to 62%", "allocations cut to 75%"), a depth of
+  restriction, a monitor's traffic magnitude, a system's coverage, a relief measure, a count of
+  systems targeted or a nominal stage size: those stay in `source_says`, with `value: "unknown"`.
+- **No figure has one shape** (round-2 ruling R10): a service that was affected with no scale stated
+  is `{"value": "unknown", "unit": <the source's unit or null>, "qualifier": null, "source_says":
+  <the source's words or null>}`; another absence word (`not_researched`, `source_inaccessible`)
+  takes the same shape. `affected: null` means **not applicable** (a record of degraded operational
+  capability with no customer affected, §3.1). A bare word, `value: null` and `unit: "unknown"` are
+  refused by the gate; the import writes the canonical shape and the build serves only it.
 - `date_end` is an **observed** endpoint only: a source reports that the disruption ended on that
   date. An announced, expected or scheduled end ("cuts will continue until Friday", "restoration
   expected within a week") goes in `duration_text` or `effect`, in the source's words, and
@@ -323,6 +376,28 @@ iteration 22). An `ATTRIBUTED` record with a non-empty `competing` list has attr
   attributes the incident to one. (Outside an attribution statement a tool or malware name is not
   published at all, §2.)
 
+Rulings applied in release closure round 2 (R3), one rule each:
+
+- No actor and no actor type is derived from a description of the tool: officials or reporters who
+  name a ransomware strain have named no actor (`UNKNOWN`, with the strain only in the statement),
+  and "unidentified ransomware operators" is not a competing attribution.
+- A ransom note or a leak-site listing is the actor's own claim: it goes in `self_claims`, and the
+  record is `CLAIMED` only where that is the only actor evidence.
+- `SUSPECTED` needs a source that suspects an actor of **this** incident; a campaign-level suspicion
+  that does not single out the victim attributes nothing to it (`UNKNOWN`).
+- A government's statement about an attack on its own country says, in the statement, that the
+  attributing government is the victim.
+- A formal published attribution by a government body is `ATTRIBUTED` when the contract above is met;
+  a press relay of an official's remark is `ATTRIBUTED` only if it meets the same contract.
+- A government that assesses a published claim of responsibility as authentic has assessed the
+  claimant (`ASSESSED`); the claim itself is a self-claim.
+- A competing entry with no actor (a denial, "no evidence was found") is not a competing attribution:
+  the challenge lives in the statement and the `dispute` block, and the status follows from what is
+  left (a victim's accusation challenged by press is `SUSPECTED`).
+- An open investigation of possible sabotage makes the cause unestablished: `UNKNOWN`, never
+  `NOT_APPLICABLE`, with the cause family `unknown` where the cause itself is disputed.
+- Attribution written into `summary` or `effect` must match the block and rest on a cited source.
+
 **Attribution confidence** is computed from the attribution sources (§8), never typed by hand:
 `HIGH`, `MODERATE`, `LOW`, `CLAIM_ONLY`, `DISPUTED`, `NOT_ESTABLISHED` (for `UNKNOWN`), and absent for
 `NOT_APPLICABLE`.
@@ -371,7 +446,7 @@ The labels below are the served ones (`methodology/evidence_confidence.json`, `t
 | Component | Points | Rule |
 |---|---|---|
 | Who is speaking | 40 / 28 / 15 / 10 / 4 | The best supporting source: a **first-party or official statement** (operator, government, regulator, national CERT or cyber agency, law enforcement, court record, or an official social account whose identity is established) 40; **press or third-party reporting** (wire, news outlet, specialist press, trade body, a cyber firm's own investigation) 28; a **secondary source** (a dataset restating others, a recognised journalist's post, a researcher's web publication) 15; a **researcher's social post** 10; an **unverified claim** (an anonymous account, an actor's own claim) 4. "First-party" says who is speaking, not that the statement was verified; "press or third-party" says who carried it, not that the reporting was its own work. |
-| Originating statements | 0 / 16 / 25 | Groups of first-party and press sources that share an origin, a publisher, an organisation, a filed form or a declared relay: one 0, two 16, three or more 25. A wire story and its republications are one; three releases from one utility are one; ten reposts are one at best. The count is called "independent originating statements" only when the attribution-and-source reviewer checked which sources relay which (`basis: "reviewed"`); otherwise it is "distinct publishers cited" and the record is at most Moderate. A source the lead added after the blind reviews (`added_by: "lead"`) is never counted as a reviewed originating statement: it may lower the count, never raise it. |
+| Originating statements | 0 / 16 / 25 | Groups of first-party and press sources that share an origin, a publisher, an organisation, a filed form or a declared relay: one 0, two 16, three or more 25. A wire story and its republications are one; three releases from one utility are one; ten reposts are one at best. The count is called "independent originating statements" only when the attribution-and-source reviewer checked which sources relay which (`basis: "reviewed"`); otherwise it is "distinct publishers cited" and the record is at most Moderate. A source the lead added after the blind reviews (`added_by: "lead"`) is never counted as a reviewed originating statement: it may lower the count, never raise it. By the lead's round-2 ruling (R4) such a source may still set "who is speaking" when it is first-party: who published it is a fact of the citation, not of a review. |
 | Effect specificity | 15 / 8 / 0 | Quantified / described / vague, counted only when a first-party or press source supports `effect`. |
 | Opened during research or review | 10 | A first-party or press supporting source carries `opened: true`, or the record's review block says a reviewer opened its sources. `opened: null` is "not recorded", never "not opened". |
 | Dated account | 10 | A first-party or press supporting source dated from the day before the event to 30 days after its end, or a later formal account (a dated first-party source in a formal role, or one marked `formal_account: true`). |
@@ -462,7 +537,10 @@ Owner direction for iteration 22 (brief §6) narrows the earlier rule that the p
   an alternate route; bypass capacity; which facility or port depends on the strait; port
   vulnerability; which asset would have the greatest effect. The builder refuses the wording.
 - **No single status flag.** Not "open" or "closed": dated statements with their source and their
-  "as of" date. An entry older than its stated shelf life is shown as historical, never as current.
+  "as of" date. No entry carries a shelf life (round-2 ruling R12: not modelled). What is served is
+  each entry's `age_days` and, on the newest entries of each type, `is_latest_of_type`, which
+  `latest_note` defines as "the most recent statement on record, shown as of that date ... not a
+  current status". No entry is ever presented as current.
 - Context is context. It never enters an index, a count or a country's record; a market movement is
   never presented as infrastructure loss; causality is stated only where the source states it.
 
@@ -492,8 +570,7 @@ Figures in context entries:
   `metric.basis`, the entry keeps its claim in words and `metric` is `null`.
 - **"Latest" is a set, not a pick.** Within one `context_type`, every entry carrying the newest
   `as_of` date is latest; ties are all latest and none is chosen over another. The served file lists
-  them per type in `latest_by_type`. An entry older than its shelf life is historical, whatever this
-  says.
+  them per type in `latest_by_type`. Latest is not current: the reader sees the entry's age beside it.
 
 ## 11. Served artifacts
 
@@ -505,7 +582,10 @@ them.
   latest research date), and `records[]` in date order, newest first. Each served record adds
   `country_name`, `system_id` (when the country is a monitored system, else `null`),
   `evidence_confidence` (category, score, components, reasons), `attribution.confidence`,
-  `origin_count`, and each source's `link_check`. Nothing is ordered by a figure.
+  `origin_count`, and each source's `link_check`. Nothing is ordered by a figure. `origin_count`
+  never counts a citation the lead added after the blind reviews, an actor's own claim (a source typed
+  as one or published by the actor) or a discovery aid (round-2 ruling R4), so the inspector's line
+  cannot count what the confidence component beside it does not.
 - `global/regional_context.json`: the Gulf and Hormuz timeline of §10, with `latest_by_type` (every
   entry tied at the newest `as_of` of its type).
 - `global/evidence_confidence.json`: the method of §8 as data (components, thresholds, the
@@ -524,7 +604,10 @@ three independent reviews that do not see the researcher's rationale or each oth
 - **Attribution and source**: checks each source's role, medium, origin and what it really
   supports; checks attribution status against the sources; applies the AI check ("does the source
   tie AI materially to this incident?") and the social check (identity established? direct evidence
-  or discovery? independently corroborated? a repeat of another origin?).
+  or discovery? independently corroborated? a repeat of another origin?). The review files do not
+  record the AI check per record, so the served `review.ai_check` is present only as `passed` on a
+  record with reported AI involvement, and absent elsewhere (round-2 ruling R5); it is never stamped
+  `not_applicable`.
 - **Safety and abstraction**: checks §2 and §4 (precision, abstraction, exploit detail, status
   wording, loaded wording, personal data, addresses and titles that leak).
 
@@ -558,4 +641,10 @@ post is the sole evidence; an attempt is filed as a disruption; a unit is missin
 given; an absence is written as zero; a `date_end` is later than the newest dated source; a source
 or a dispute fails the validators of §12; a served research note speaks in the first person or names
 a tool, a file path, an internal id, a research lane or an enum as code (the note states process
-facts in the third person).
+facts in the third person), or carries a figure from a source (a price, a percentage, a volume, a
+count of people or customers; round-2 ruling R11); an abstracted record cites a short or redirecting
+address form (a shortener, `?p=<n>`, `/node/<n>`, `article-<n>.html`, AMP) that the automated link
+check has not reached at that same address (`reachable` in `link_health.json`; round-2 ruling R8);
+`civilian_service_impact[].affected` is a bare word, has `value: null` or has `unit: "unknown"`;
+`review.ai_check` is anything but `passed` on a record with reported AI involvement, or present on
+one without.

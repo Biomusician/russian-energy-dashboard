@@ -2132,8 +2132,10 @@ def precision_statement(names_by_system, aggregating=False):
     if every:
         out.append(f"{_names(every)} places every record for the country only.")
     if regional:
-        out.append(f"In {_names(regional)}, attack records keep first-level region on the country page under the "
-                   "current policy, like every other eligible record.")
+        # Round-2 ruling R12 (finding S-7): "keep first-level region" understated what those pages
+        # publish. The policy is unchanged; the sentence now says what is on the page.
+        out.append(f"In {_names(regional)}, the country's own page publishes attack records with first-level region "
+                   "and facility detail under the owner's current decision, like every other eligible record.")
     if aggregating:
         out.append("In this list, a record covered by the campaign policy is shown for the country only, whatever "
                    "its own system records.")

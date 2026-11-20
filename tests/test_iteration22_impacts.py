@@ -618,9 +618,9 @@ def test_gate_refuses_an_absence_written_as_zero_or_as_an_empty_string():
     r = rec(POL)
     r["civilian_service_impact"][0]["duration_text"] = ""
     refused(r, "an empty string")
-    # The served record keeps a null a null.
+    # A missing figure is served as the word, never as zero and never as a bare null (round-2 R10).
     served = next(x for x in payloads()[G.IMPACTS_OUT]["records"] if x["impact_id"] == POL)
-    assert served["civilian_service_impact"][0]["affected"]["value"] is None
+    assert served["civilian_service_impact"][0]["affected"]["value"] == "unknown"
     assert served["technology"] is None and served["date_end"] is None
 
 
@@ -1048,8 +1048,9 @@ def test_each_served_record_adds_what_the_contract_says():
                                                           review=raw["review"]), rid
         assert served["evidence_confidence"]["components"]["origins"]["basis"] ==                ("reviewed" if EC.origins_reviewed(raw["review"]) else "publishers"), rid
         assert served["attribution"]["confidence"] == EC.attribution_confidence(raw["attribution"], raw["sources"]), rid
-        # One way of counting origins: the model's grouping, over every citation.
-        assert served["origin_count"] == EC.independent_origins(raw["sources"]), rid
+        # One way of counting origins: the model's grouping, over every citation that can be an
+        # originating statement (no lead-added citation, actor's own claim or discovery aid; R4).
+        assert served["origin_count"] == EC.served_origin_count(raw["sources"], raw["attribution"]), rid
         assert all(s["link_check"] in G.ids("link_states") for s in served["sources"]), rid
         assert {k: v for k, v in served.items() if k in raw and k not in ("attribution", "sources")} == \
                {k: v for k, v in raw.items() if k not in ("attribution", "sources")}, rid
@@ -1342,7 +1343,7 @@ def test_import_publishes_only_what_every_role_accepted_and_leaves_first_publish
     assert all(r["first_published"] is None and "last_revised" not in r for r in got.values())
     assert got[FRA]["review"]["roles"] == {"evidence": "accept", "attribution_source": "accept", "safety": "accept"}
     assert got[FRA]["review"]["review_status"] == "blind_reviewed" and got[FRA]["review"]["disposition"] == "confirmed"
-    assert got[USA]["review"]["ai_check"] == "passed" and got[FRA]["review"]["ai_check"] == "not_applicable"
+    assert got[USA]["review"]["ai_check"] == "passed" and "ai_check" not in got[FRA]["review"]
     assert got[POL]["review"]["social_check"] == "passed"
     assert report["by_lane"] == {"europe": {"imported": 2, "refused": 0, "not_reviewed": 0},
                                  "na": {"imported": 1, "refused": 0, "not_reviewed": 0}}
@@ -2575,11 +2576,11 @@ def test_the_recent_lists_say_where_attack_records_are_placed_and_saudi_keeps_it
                 "United Arab Emirates") in scope
         assert "Bahrain places every record for the country only." in scope
         assert "Saudi Arabia" in scope.split("In ")[-2] + scope.split("In ")[-1]
-        assert "attack records keep first-level region on the country page under the current policy" in scope
+        assert "the country's own page publishes attack records with first-level region and facility detail under the owner's current decision" in scope
         assert "a record covered by the campaign policy is shown for the country only" in scope
         assert not re.search(r"\b(five|six|seven|eight|twelve|\d+)\b", scope), scope
     gulf = _recent_scope(members)
-    assert "In Saudi Arabia, attack records keep first-level region" in gulf
+    assert "In Saudi Arabia, the country's own page publishes attack records with first-level region and facility detail" in gulf
     assert "Canada" not in gulf
 
 
@@ -2597,7 +2598,7 @@ def test_the_built_recent_lists_carry_the_policy_sentence():
         doc = _json(path)
         scope = (doc.get("recent") or doc)["scope"]
         assert "Precision is first-level region at most." not in scope
-        assert "attack records keep first-level region on the country page" in scope
+        assert "the country's own page publishes attack records with first-level region and facility detail" in scope
 
 
 # --- iteration-22 release closure: the confidence model's validators gate the import and the build (S5) ---

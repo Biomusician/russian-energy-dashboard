@@ -534,6 +534,14 @@ def normalise(r, notes):
         if not has_figure and aff.get("qualifier") is not None:
             notes.append(f"qualifier {aff.get('qualifier')!r} removed: there is no figure for it to qualify")
             aff["qualifier"] = None
+    for c in r.get("civilian_service_impact") or []:
+        # One spelling of "affected, no figure" (round-2 ruling R10): {"value": "unknown", ...}.
+        # null stays null: it means not applicable, and only a reviewer or the lead can say otherwise.
+        if isinstance(c, dict) and c.get("affected") is not None:
+            fixed = G.canonical_affected(c["affected"])
+            if fixed != c["affected"]:
+                notes.append("an affected entry with no figure written in the one canonical form")
+                c["affected"] = fixed
     a = r.get("attribution")
     for c in (a.get("competing") or []) if isinstance(a, dict) else []:
         if isinstance(c, dict):
@@ -673,9 +681,12 @@ def review_block(record, verdicts, reviewed_at, roles, full=True, lead_at=None):
     corrected = any(verdicts[role]["verdict"] == "accept_with_correction" for role in roles) or bool(lead)
     ai = (record.get("ai_involvement") or {}).get("status") not in (None, "NONE_REPORTED")
     social = any(s.get("medium") == "social" for s in record.get("sources") or [])
-    return {"reviewed_at": reviewed_at, "review_status": "blind_reviewed", "roles": out["roles"],
-            # The attribution-and-source role applies both checks; it accepted, so where they apply they passed.
-            "ai_check": "passed" if ai else "not_applicable",
+    # The attribution-and-source role applies both checks and accepted the record, so where a check
+    # applies it passed. The AI check is not recorded per record in any review file (round-2 ruling R5):
+    # its result is stated only where AI involvement is reported, and otherwise the field is left out
+    # rather than stamped "not_applicable", which said the check did not apply.
+    checks = {"ai_check": "passed"} if ai else {}
+    return {"reviewed_at": reviewed_at, "review_status": "blind_reviewed", "roles": out["roles"], **checks,
             "social_check": "passed" if social else "not_applicable",
             "disposition": "corrected" if corrected else "confirmed", **lead}
 

@@ -254,6 +254,14 @@ LOG_PROCESS_WORDING = re.compile(
     r"knowledge cut-?off|\bthe model\b|\bthe task\b|\b(by|per|on) instruction|data/|\.csv\b|\.json\b|"
     r"\b[A-Za-z0-9]+_[A-Za-z0-9_]+\b|\b(imp|ctx)-\d{4}|\blanes?\b|\b[a-z]+\d\b")
 
+# A figure about an event, a market or a stock in served research-note text (round-2 ruling R11,
+# finding S-5): a price, a percentage, a volume or a count of people or customers. A note may count
+# its own searches and pages ("3 searches", "two pages"); a figure of what a lead reported is a fact
+# about work that was not filed, and a note states process facts only.
+LOG_FIGURE = re.compile(
+    r"[$€£]\s?\d|\d[\d,.]*\s?(%|(percent|per cent|million|billion|bcm|mb/d|b/d|barrels|"
+    r"MW|GW|households|customers|homes|people)\b)", re.I)
+
 # imp-<date>-<a3>-<sector>-<slug>: the sector is its vocabulary id as written ("fuel_supply").
 ID_STANDARD = re.compile(r"imp-(\d{4}(?:-\d{2}){0,2})-([a-z]{3,5})-([a-z_]+)-([a-z0-9]+(?:-[a-z0-9]+)*)")
 ADMIN1_CODE = re.compile(r"[A-Z]{2}-[A-Z0-9]{1,3}")
@@ -478,6 +486,38 @@ def technical_problems(x):
 
 def _unknown_keys(obj, allowed, where):
     return [f"{where}: field {k!r} is not part of the contract" for k in sorted(set(obj) - set(allowed))]
+
+
+def canonical_affected(aff):
+    """`civilian_service_impact[].affected` in its one served shape (round-2 ruling R10, finding E-S8).
+
+    Five spellings of "the service was affected and no source gives the scale" had grown up: the
+    bare word "unknown", {"value": "unknown"}, {"value": null}, {"value": null, "unit": "unknown"}
+    and a vague quantity kept as {"value": null, "unit": "homes"}. A reader could not tell them
+    from `null`, which means not applicable (a record of degraded operational capability with no
+    customer affected, methodology section 3.1). The one shape is an object whose `value` is the
+    absence word, keeping the source's own unit and words where it gave them:
+        {"value": "unknown", "unit": "homes" | null, "qualifier": null, "source_says": "..." | null}
+    Other absence words (not_researched, source_inaccessible, ...) keep their own meaning and the
+    same shape. `null` and a figure are returned unchanged. Idempotent."""
+    if aff is None:
+        return None
+    if isinstance(aff, str):
+        word = aff if aff in ABSENCE else "unknown"
+        return {"value": word, "unit": None, "qualifier": None, "source_says": None if aff in ABSENCE else aff}
+    if not isinstance(aff, dict):
+        return aff
+    value = aff.get("value")
+    if value is not None and value not in ABSENCE:
+        return aff
+    out = dict(aff)
+    out["value"] = value if value in ABSENCE else "unknown"
+    if out.get("unit") in ABSENCE or (isinstance(out.get("unit"), str) and not out["unit"].strip()):
+        out["unit"] = None
+    out["qualifier"] = None
+    out.setdefault("unit", None)
+    out.setdefault("source_says", None)
+    return {k: out[k] for k in AFFECTED_FIELDS if k in out}
 
 
 def _absent_or(value, allowed):
@@ -724,11 +764,18 @@ def vocabulary_problems(r):
         if c.get("duration_text") is not None and not isinstance(c["duration_text"], str):
             out.append(f"{w}: duration_text is text, null or an absence word")
         aff = c.get("affected")
-        if aff is None or aff in ABSENCE:
+        if aff is None:
             continue
         if not isinstance(aff, dict):
-            out.append(f"{w}: affected is an object, null or an absence word")
+            # Round-2 ruling R10: one shape for "no figure". A bare word was one of five spellings.
+            out.append(f"{w}: affected is null (not applicable) or an object; no figure is written "
+                       '{"value": "unknown", ...} with the unit and words the source gave, never a bare word')
             continue
+        if aff.get("value") is None:
+            out.append(f"{w}: affected.value is null; null affected means not applicable, and a service affected "
+                       'with no figure is {"value": "unknown", ...}')
+        if aff.get("unit") in ABSENCE:
+            out.append(f"{w}: affected.unit {aff.get('unit')!r}: the unit is the source's own word, or null")
         out += _unknown_keys(aff, AFFECTED_FIELDS, w + ".affected")
         value = aff.get("value")
         # No figure: null where none applies, an absence word where the source gives none. The
@@ -888,9 +935,18 @@ def review_problems(r, roles=REVIEW_ROLES, full=True):
             out.append(f"review disposition {v.get('disposition')!r}")
         ai_needed = (r.get("ai_involvement") or {}).get("status") not in (None, "NONE_REPORTED")
         social_needed = any(isinstance(s, dict) and s.get("medium") == "social" for s in r.get("sources") or [])
-        for key, needed in (("ai_check", ai_needed), ("social_check", social_needed)):
-            if v.get(key) not in CHECKS or (needed and v.get(key) != "passed"):
-                out.append(f"review.{key} is {v.get(key)!r}; it must be passed where it applies, else not_applicable")
+        if v.get("social_check") not in CHECKS or (social_needed and v.get("social_check") != "passed"):
+            out.append(f"review.social_check is {v.get('social_check')!r}; it must be passed where it applies, else "
+                       "not_applicable")
+        # The AI check (round-2 ruling R5): no reviewer file records it per record, so a value is served
+        # only where it is known, on a record with reported AI involvement that the attribution-and-source
+        # reviewer accepted. "not_applicable" stamped on every other record claimed the check did not
+        # apply, which on a cyber record is false; elsewhere the field is left out.
+        if ai_needed and v.get("ai_check") != "passed":
+            out.append(f"review.ai_check is {v.get('ai_check')!r}; a record with reported AI involvement says passed")
+        if not ai_needed and "ai_check" in v:
+            out.append(f"review.ai_check is {v.get('ai_check')!r} on a record with no reported AI involvement; no "
+                       "review file records that check per record, so the field is left out")
     return out
 
 
@@ -966,6 +1022,24 @@ def abstracted_stem(r):
 ABSTRACTED_ADDRESS_METHOD = re.compile(r"\b(strikes?|struck|shell(ed|ing)|explosions?|explosives?|blasts?|arson)\b", re.I)
 
 
+# A short or redirecting address form (round-2 ruling R8, findings X-1 and S-6): an opaque alias
+# that answers with a redirect to the publisher's slugged address, which can name the place, the
+# operator or the method an abstracted record withholds. A shortener host, a WordPress "?p=<n>",
+# a Drupal "/node/<n>", an "article-<n>.html" alias, an AMP form. On an abstracted record such an
+# address stands only where the automated link check reached it at that same address (`reachable`);
+# unchecked, redirected, blocked or dead, the citation is refused. The checker's own flag
+# (scripts/check_source_links.py, SHORT_LINK) marks the same forms for replacement.
+ALIAS_ADDRESS = re.compile(
+    r"^https?://(www\.)?(" + "|".join(re.escape(h) for h in EC.METHOD["shortener_hosts"]) + r")/"
+    r"|^https?://[^/?#]+/?\?(p|page_id|id|nid|story_id|articleid)=\d+$"
+    r"|/node/\d+/?$|/article-\d+\.html?$|/amp/?$|[?&](amp|outputType=amp)\b|^https?://amp\.", re.I)
+
+
+def alias_unresolved(url, ctx):
+    """True for a short or redirecting address form the link check has not reached at that address."""
+    return bool(ALIAS_ADDRESS.search(str(url or ""))) and (ctx or {}).get("link_states", {}).get(url) != "reachable"
+
+
 def abstraction_problems(r, ctx):
     """An attack is the country's: no region, headline, method, later status, or place in an address.
 
@@ -997,6 +1071,9 @@ def abstraction_problems(r, ctx):
             out.append(f"source {s.get('ref')!r}: the citation address states how the attack was carried out")
         if B.status_wording(B.address_words(path)):
             out.append(f"source {s.get('ref')!r}: the citation address carries status wording")
+        if alias_unresolved(url, ctx):
+            out.append(f"source {s.get('ref')!r}: the citation address is a short or redirecting form the link check "
+                       "has not reached at that address; where it lands may name what the record withholds")
     hit = B.status_wording(_prose(r))
     if hit:
         out.append(f"status wording on an abstracted record ({hit.group(0)!r})")
@@ -1159,6 +1236,10 @@ def log_problems(research_log):
             if hit:
                 out.append(f"{w}.{k}: first-person or pipeline wording ({hit.group(0)!r}); a note states process facts "
                            "in the third person, without tool names, file paths, ids or lane names")
+            hit = LOG_FIGURE.search(str(f.get(k) or ""))
+            if hit:
+                out.append(f"{w}.{k}: a figure from a source ({hit.group(0)!r}); a note states process facts, never "
+                           "what an unfiled lead reported")
     for i, text in enumerate(research_log.get("limitations") or []):
         hit = LOG_PROCESS_WORDING.search(str(text))
         if hit:
@@ -1230,10 +1311,16 @@ FIELD_NOTES = {
     "digital_category": "cyber for a cyberattack (the cause family or a contributing factor is cyber); it_failure for "
                         "a disruption digitally triggered without malice, such as a faulty software update; else "
                         "null. Two separate filters: an IT failure is never counted as cyber.",
-    "origin_count": "Distinct originating statements among all of the record's citations, grouped as the "
+    "origin_count": "Distinct originating statements among the record's citations, grouped as the "
                     "confidence method groups them: a wire story and its copies are one, an organisation's "
-                    "releases are one, a relay adds none, discovery aids are none. Not a count of links. The "
-                    "confidence component counts the same way over the sources that support occurrence or effect.",
+                    "releases are one, a relay adds none. Never counted: a discovery aid (an encyclopedia or an "
+                    "aggregator), an actor's own claim of responsibility, and a citation the lead added after the "
+                    "blind reviews. Not a count of links. The confidence component counts the same way over the "
+                    "sources that support occurrence or effect.",
+    "ai_check": "Present, as passed, only on a record where a source reports AI involvement and the "
+                "attribution-and-source reviewer accepted it. Absent elsewhere: reviewers were asked whether any "
+                "source ties AI to the incident, but their files do not record that check per record, so no "
+                "result is served for it.",
     "first_published": "The build date on which this record was first served. Null means not yet served: pending its "
                        "first release. Not the event date and not a source date.",
     "link_check": "The citation's state at the last automated link check, or unchecked. A failed link says nothing "
@@ -1305,8 +1392,13 @@ def serve_record(r, ctx):
     out["attribution"]["confidence"] = EC.attribution_confidence(r["attribution"], r["sources"])
     # The model's own grouping (shared origin, publisher, organisation, relay, filed form), over
     # every citation: one way of counting, here and in the confidence components.
-    out["origin_count"] = EC.independent_origins(r["sources"])
+    # Lead-added citations, actors' own claims and discovery aids are never originating statements
+    # (round-2 ruling R4), so this line and the confidence component cannot contradict each other.
+    out["origin_count"] = EC.served_origin_count(r["sources"], r.get("attribution"))
     out["digital_category"] = digital_category(r)
+    for c in out.get("civilian_service_impact") or []:
+        if isinstance(c, dict):
+            c["affected"] = canonical_affected(c.get("affected"))
     for s in out["sources"]:
         s["link_check"] = _link_check(s, ctx)
     return out

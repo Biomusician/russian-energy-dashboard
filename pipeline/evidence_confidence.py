@@ -364,6 +364,27 @@ def lead_added(source):
     return source.get("added_by") == "lead"
 
 
+def served_origin_count(sources, attribution=None):
+    """The record-level `origin_count`: originating statements among every citation, counted as
+    `independent_origins` counts them, after leaving out what is never an originating statement
+    (round-2 ruling R4, finding A9): a source the lead added after the blind reviews (nobody checked
+    whether it relays another), an actor's own claim of responsibility (a boast is not a report), and
+    a discovery aid, a role-typed aggregator included. Without this the inspector's line could count
+    a lead-added citation as "established on review" while the confidence component beside it does
+    not count it, and the panel would contradict itself."""
+    kept = [s for s in sources if isinstance(s, dict) and not lead_added(s)
+            and not _actor_speaking(s, attribution) and not is_discovery_aid(s)]
+    return independent_origins(kept)
+
+
+def _actor_speaking(source, attribution=None):
+    """The actor itself is the speaker: a source typed as the actor's own claim, or one the named
+    actor published. Narrower than `_own_claim`: a news report that relays a claim (declared
+    `attribution_basis: "actor_self_claim"`) carries the claim for attribution, but its account of
+    what happened is still press reporting and is counted where the confidence component counts it."""
+    return source.get("source_role") == "actor_self_claim" or _published_by_actor(source, attribution)
+
+
 def origins_reviewed(review):
     """Whether a reviewer checked which of a record's sources relay which. True for a record whose
     review block shows the source-and-attribution role accepting it (impact records: that reviewer

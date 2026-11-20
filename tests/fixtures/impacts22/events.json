@@ -24,7 +24,12 @@
         {
           "service": "district_energy",
           "geographic_scope": "local",
-          "affected": "unknown",
+          "affected": {
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": null
+          },
           "duration_text": "not_researched",
           "source_refs": [
             "s1"
@@ -100,7 +105,6 @@
           "attribution_source": "accept",
           "safety": "accept"
         },
-        "ai_check": "not_applicable",
         "social_check": "not_applicable",
         "disposition": "confirmed"
       }
@@ -212,7 +216,6 @@
           "attribution_source": "accept",
           "safety": "accept"
         },
-        "ai_check": "not_applicable",
         "social_check": "not_applicable",
         "disposition": "confirmed"
       }
@@ -311,7 +314,6 @@
           "attribution_source": "accept",
           "safety": "accept"
         },
-        "ai_check": "not_applicable",
         "social_check": "passed",
         "disposition": "confirmed"
       }
@@ -428,7 +430,6 @@
           "attribution_source": "accept",
           "safety": "accept"
         },
-        "ai_check": "not_applicable",
         "social_check": "not_applicable",
         "disposition": "corrected"
       }
@@ -459,7 +460,7 @@
           "service": "electricity",
           "geographic_scope": "national",
           "affected": {
-            "value": null,
+            "value": "unknown",
             "unit": null,
             "qualifier": null,
             "source_says": "households and offices (no figure given)"
@@ -520,7 +521,6 @@
           "attribution_source": "accept",
           "safety": "accept"
         },
-        "ai_check": "not_applicable",
         "social_check": "not_applicable",
         "disposition": "confirmed"
       }
@@ -549,7 +549,7 @@
           "service": "telecom",
           "geographic_scope": "national",
           "affected": {
-            "value": null,
+            "value": "unknown",
             "unit": null,
             "qualifier": null,
             "source_says": "its mobile subscribers nationwide (no figure given)"
@@ -641,7 +641,6 @@
           "attribution_source": "accept",
           "safety": "accept"
         },
-        "ai_check": "not_applicable",
         "social_check": "passed",
         "disposition": "confirmed"
       }
@@ -718,7 +717,6 @@
           "attribution_source": "accept",
           "safety": "accept"
         },
-        "ai_check": "not_applicable",
         "social_check": "not_applicable",
         "disposition": "confirmed"
       }
@@ -870,7 +868,6 @@
           "attribution_source": "accept",
           "safety": "accept"
         },
-        "ai_check": "not_applicable",
         "social_check": "not_applicable",
         "disposition": "confirmed"
       }
@@ -899,7 +896,7 @@
           "service": "electricity",
           "geographic_scope": "multi_country",
           "affected": {
-            "value": null,
+            "value": "unknown",
             "unit": null,
             "qualifier": null,
             "source_says": "consumers in both countries (no figure given)"
@@ -914,7 +911,7 @@
           "service": "transport",
           "geographic_scope": "multi_country",
           "affected": {
-            "value": null,
+            "value": "unknown",
             "unit": null,
             "qualifier": null,
             "source_says": "rail passengers (no figure given)"
@@ -995,7 +992,6 @@
           "attribution_source": "accept",
           "safety": "accept"
         },
-        "ai_check": "not_applicable",
         "social_check": "not_applicable",
         "disposition": "confirmed"
       },
@@ -1028,7 +1024,7 @@
           "service": "water",
           "geographic_scope": "local",
           "affected": {
-            "value": null,
+            "value": "unknown",
             "unit": null,
             "qualifier": null,
             "source_says": "residents of the utility's service area (no figure given)"
@@ -1117,7 +1113,6 @@
           "attribution_source": "accept",
           "safety": "accept"
         },
-        "ai_check": "not_applicable",
         "social_check": "passed",
         "disposition": "confirmed"
       }
@@ -1149,7 +1144,7 @@
           "service": "healthcare",
           "geographic_scope": "regional",
           "affected": {
-            "value": null,
+            "value": "unknown",
             "unit": null,
             "qualifier": null,
             "source_says": "emergency patients in the region (no figure given)"
@@ -1234,7 +1229,6 @@
           "attribution_source": "accept",
           "safety": "accept"
         },
-        "ai_check": "not_applicable",
         "social_check": "not_applicable",
         "disposition": "confirmed"
       }
@@ -1263,7 +1257,7 @@
           "service": "electricity",
           "geographic_scope": "national",
           "affected": {
-            "value": null,
+            "value": "unknown",
             "unit": null,
             "qualifier": null,
             "source_says": "households (no figure given)"
@@ -1340,7 +1334,6 @@
           "attribution_source": "accept",
           "safety": "accept"
         },
-        "ai_check": "not_applicable",
         "social_check": "not_applicable",
         "disposition": "confirmed"
       }
@@ -1368,7 +1361,12 @@
         {
           "service": "wastewater",
           "geographic_scope": "local",
-          "affected": "unknown",
+          "affected": {
+            "value": "unknown",
+            "unit": null,
+            "qualifier": null,
+            "source_says": null
+          },
           "duration_text": "about one week, per the operator",
           "source_refs": [
             "s1"
@@ -1490,7 +1488,6 @@
           "attribution_source": "accept",
           "safety": "accept"
         },
-        "ai_check": "not_applicable",
         "social_check": "not_applicable",
         "disposition": "confirmed"
       }
@@ -1566,7 +1563,6 @@
           "attribution_source": "accept",
           "safety": "accept"
         },
-        "ai_check": "not_applicable",
         "social_check": "not_applicable",
         "disposition": "confirmed"
       }
@@ -1709,7 +1705,7 @@
           "service": "transport",
           "geographic_scope": "regional",
           "affected": {
-            "value": null,
+            "value": "unknown",
             "unit": null,
             "qualifier": null,
             "source_says": "commuters on the affected lines (no figure given)"

@@ -3105,6 +3105,58 @@ ITER22_CLOSURE_FRONTEND_MUTATIONS = [
 MUTATIONS += ITER22_CLOSURE_FRONTEND_MUTATIONS
 
 
+# --- Iteration 22 release closure, round 2 (rulings R4, R5, R8, R10, R11) --------------------------------
+ITER22_ROUND2_MUTATIONS = [
+    ("round 2 R4: the served origin count counts a citation the lead added",
+     [(EC_PY, _text("    kept = [s for s in sources if isinstance(s, dict) and not lead_added(s)\n",
+                    "    kept = [s for s in sources if isinstance(s, dict) and True\n"))],
+     "origin_count_leaves_out_lead_added or lead_added_citation_never_raises"),
+    ("round 2 R4: the served origin count counts an actor's own claim",
+     [(EC_PY, _text('    return source.get("source_role") == "actor_self_claim" or _published_by_actor(source, attribution)',
+                    "    return False"))],
+     "origin_count_leaves_out_lead_added"),
+    ("round 2 R4: the build serves the plain grouping as origin_count again",
+     [(GI, _text('    out["origin_count"] = EC.served_origin_count(r["sources"], r.get("attribution"))',
+                 '    out["origin_count"] = EC.independent_origins(r["sources"])'))],
+     "lead_added_citation_never_raises or each_served_record_adds_what_the_contract_says"),
+    ("round 2 R5: the import stamps not_applicable as the AI check on every record",
+     [(II, _text('    checks = {"ai_check": "passed"} if ai else {}',
+                 '    checks = {"ai_check": "passed" if ai else "not_applicable"}'))],
+     "import_writes_no_ai_check"),
+    ("round 2 R5: the gate lets an AI check stand on a record with no reported AI involvement",
+     [(GI, _text('        if not ai_needed and "ai_check" in v:', "        if False:"))],
+     "ai_check_is_passed_where_ai_is_reported"),
+    ("round 2 R8: an abstracted record may cite an unresolved short address",
+     [(GI, _text("        if alias_unresolved(url, ctx):", "        if False:"))],
+     "refuses_an_unresolved_short_address"),
+    ("round 2 R8: a redirected short address counts as resolved",
+     [(GI, _text('.get("link_states", {}).get(url) != "reachable"',
+                 '.get("link_states", {}).get(url) not in ("reachable", "redirected")'))],
+     "refuses_an_unresolved_short_address"),
+    ("round 2 R10: the gate accepts a null value as no figure",
+     [(GI, _text('        if aff.get("value") is None:\n            out.append(f"{w}: affected.value is null',
+                 '        if False:\n            out.append(f"{w}: affected.value is null'))],
+     "gate_refuses_the_other_spellings"),
+    ("round 2 R10: the gate accepts 'unknown' as a unit",
+     [(GI, _text('        if aff.get("unit") in ABSENCE:\n            out.append(f"{w}: affected.unit',
+                 '        if False:\n            out.append(f"{w}: affected.unit'))],
+     "gate_refuses_the_other_spellings"),
+    ("round 2 R10: the canonical form keeps a null value",
+     [(GI, _text('    out["value"] = value if value in ABSENCE else "unknown"', '    out["value"] = value'))],
+     "every_spelling_of_no_figure_becomes_the_one_canonical_form"),
+    ("round 2 R10: the build serves the curated spelling as it is",
+     [(GI, _text('            c["affected"] = canonical_affected(c.get("affected"))', "            pass"))],
+     "build_serves_the_canonical_form"),
+    ("round 2 R10: the import keeps a lane's spelling of no figure",
+     [(II, _text('            fixed = G.canonical_affected(c["affected"])', '            fixed = c["affected"]'))],
+     "import_writes_the_canonical_form"),
+    ("round 2 R11: a served research note may carry a figure from a source",
+     [(GI, _text('            hit = LOG_FIGURE.search(str(f.get(k) or ""))', "            hit = None"))],
+     "research_note_with_a_figure_from_a_source_is_refused"),
+]
+MUTATIONS += ITER22_ROUND2_MUTATIONS
+
+
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
     for d in COPY_DIRS:
@@ -3127,6 +3179,7 @@ TEST_FILES += ("tests/test_iteration22_country.py",)
 TEST_FILES += ("tests/test_iteration22_lead.py",)
 TEST_FILES += ("tests/test_iteration22_gulf.py",)
 TEST_FILES += ("tests/test_iteration22_closure_frontend.py",)
+TEST_FILES += ("tests/test_iteration22_round2.py",)
 
 
 def _run(box, k):
