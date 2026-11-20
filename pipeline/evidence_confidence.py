@@ -796,7 +796,7 @@ def ai_problems(ai, sources):
             status == "CLAIMED" and any(s.get("source_role") == "actor_self_claim" for s in backing)):
         out.append(f"ai_involvement is {status} on unverified posts alone; an anonymous account is never sole evidence")
     if status == "CONFIRMED" and "direct" not in tiers:
-        out.append("CONFIRMED needs a direct authoritative source (operator, government or the vendor's own report)")
+        out.append("CONFIRMED needs a first-party or official source (operator, government or the vendor's own report)")
     if status == "ASSESSED" and not tiers & {"direct", "independent"}:
         out.append("ASSESSED needs an official or technical investigator as its source")
     return out

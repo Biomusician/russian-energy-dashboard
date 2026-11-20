@@ -202,6 +202,12 @@ def test_gate_refuses_method_wording_on_an_abstracted_record_and_in_its_addresse
     r = rec(UKR)
     r["sources"][0]["url"] = "https://newsroom.example/synthetic/missile-attack-on-grid"
     refused(r, "citation address states how the attack was carried out")
+    # "strikes" is not in the country systems' method list (a labour strike is no leak there); on a
+    # record published without its method it is one.
+    for slug in ("power-outages-after-strikes-on-grid", "grid-struck-overnight", "explosion-at-substation"):
+        r = rec(UKR)
+        r["sources"][0]["url"] = f"https://newsroom.example/synthetic/{slug}/123.html"
+        refused(r, "citation address states how the attack was carried out")
 
 
 def test_gate_refuses_status_wording_on_an_abstracted_record_and_in_its_addresses():
@@ -883,6 +889,44 @@ def test_the_research_note_publishes_process_facts_only():
     bad = copy.deepcopy(lg)
     bad["source_families"][0]["method"] = "Enumerated tanker reports."
     assert any("shipping or route wording in an impact research note" in p for p in G.log_problems(bad))
+
+
+@pytest.mark.parametrize("field,text", [
+    ("limitation", "After 35 requests the site refused; I stopped rather than retry."),
+    ("limitation", "Only the items I'm aware of."),
+    ("limitation", "Several outlets refused the fetch tool."),
+    ("method", "WebSearch, then WebFetch of each page."),
+    ("limitation", "Both are after the model's knowledge cutoff."),
+    ("limitation", "Named in the task as a family to search."),
+    ("limitation", "No later status was researched, by instruction."),
+    ("method", "Read data/curated/incidents.csv locally."),
+    ("limitation", "Records were read from events.json."),
+    ("limitation", "Its attribution is NOT_APPLICABLE."),
+    ("status", "not_started"),
+    ("limitation", "Already filed by gulf_states."),
+    ("limitation", "Left to the water lane."),
+    ("limitation", "An earlier pass (na2) found nothing."),
+    ("limitation", "Already in the theatre as imp-2024-07-16-rus-electricity-outage."),
+])
+def test_the_research_note_refuses_first_person_and_pipeline_wording(field, text):
+    lg = docs()[2]
+    bad = copy.deepcopy(lg)
+    bad["source_families"][0][field] = text
+    assert any("first-person or pipeline wording" in p for p in G.log_problems(bad)), text
+    bad = copy.deepcopy(lg)
+    bad["limitations"] = [text]
+    assert any("first-person or pipeline wording" in p for p in G.log_problems(bad)), text
+
+
+def test_the_research_note_keeps_process_facts_in_the_third_person():
+    lg = docs()[2]
+    for text in ("After about 35 requests the site answered HTTP 520, and requests were stopped rather than repeated.",
+                 "AI-related incidents in the US and the EU were searched; CERT-In was not enumerated.",
+                 "Reuters and AP refused automated requests; text.npr.org worked.", "not started", "partial"):
+        ok = copy.deepcopy(lg)
+        ok["source_families"][0]["limitation"] = text
+        ok["limitations"] = [text]
+        assert G.log_problems(ok) == [], text
 
 
 # --- the build ---------------------------------------------------------------------------------------------
@@ -2079,7 +2123,7 @@ def test_the_leads_normalisation_cannot_rescue_a_record_a_role_rejected_or_did_n
     ({"verdict": "accept", "set": {"summary": "SYNTHETIC. Rewritten."}}, "its verdict is 'accept'"),
     ({"verdict": "reject", "reason": "The lead disagrees."}, "its verdict is 'reject'"),
     ({"set": {"summary": "SYNTHETIC. Rewritten."}}, "its verdict is None"),
-    (normalise(sources_opened=["s1"]), "a normalisation has `set` and `remove_sources` only"),
+    (normalise(sources_opened=["s1"]), "a normalisation has `set`, `remove_sources` and `add_sources` only"),
     (normalise(set={"admin1": {"code": "FR-IDF", "name": "Île-de-France"}, "geographic_precision": "admin1"}),
      "it would give a region to a record the reviewers accepted without one"),
     (normalise(set={"no_such_list[3].x": 1}), "lead correction could not be applied"),
@@ -2121,6 +2165,74 @@ def test_a_lead_patch_cannot_mark_a_source_opened(tmp_path):
     run(paths)
     s4 = next(x for x in curated_records(paths)[FRA]["sources"] if x["ref"] == "s4")
     assert s4["opened"] is False and s4["publisher"] == "Example Agency"
+
+
+def _added(ref="s9", **changes):
+    src = {"ref": ref, "url": "https://example.org/synthetic/later-operator-statement", "publisher": "Example Operator",
+           "date": "2025-03-20", "language": "en", "source_role": "operator", "medium": "web", "social": None,
+           "supports": ["effect"], "opened": True,
+           "derived_claim": "SYNTHETIC. A later operator statement that service had come back."}
+    src.update(changes)
+    return src
+
+
+def test_a_lead_patch_can_append_a_source_never_opened_and_never_in_place_of_one(tmp_path):
+    paths = make_queue(tmp_path, {"europe": [candidate(FRA)]})
+    before = {s["ref"]: s for s in rec(FRA)["sources"]}
+    lead_file(paths, "europe", {FRA: normalise(add_sources=[_added()], reason="Dates the observed end.")})
+    run(paths)
+    got = {s["ref"]: s for s in curated_records(paths)[FRA]["sources"]}
+    # Appended, and opened is false whatever the patch said: the lead is not the evidence reviewer.
+    assert set(got) == set(before) | {"s9"} and got["s9"]["opened"] is False
+    assert got["s9"]["url"] == _added()["url"]
+    for ref, s in before.items():
+        assert {k: v for k, v in got[ref].items() if k != "opened"} == {k: v for k, v in s.items() if k != "opened"}
+
+
+@pytest.mark.parametrize("added,why", [
+    ([_added(ref="s1")], "reuses a ref the record already has or had"),
+    ([_added(url=None)], "added source 's9': source 's9': no url"),
+    ([_added(medium="pamphlet")], "medium 'pamphlet' is not in the vocabulary"),
+    ([_added(url="https://x.com/example/status/1")], "medium must be 'social'"),
+    ([_added(supports=[])], "supports [] must name at least one of"),
+    ([_added(date="20 March")], "is not a date"),
+    ([_added(), _added(ref="s10")], "repeats an address the record already cites"),
+    ({"ref": "s9"}, "add_sources is a non-empty list of sources"),
+])
+def test_a_source_the_lead_appends_runs_through_every_source_validator(tmp_path, added, why):
+    paths = make_queue(tmp_path, {"europe": [candidate(FRA), candidate(BRA)]})
+    lead_file(paths, "europe", {FRA: normalise(add_sources=added)})
+    report = run(paths)
+    assert set(curated_records(paths)) == {BRA}
+    assert "lead normalisation refused" in reasons(report, FRA) and why in reasons(report, FRA)
+
+
+def test_a_lead_patch_cannot_reuse_the_ref_of_a_source_it_removes(tmp_path):
+    paths = make_queue(tmp_path, {"europe": [candidate(FRA)]})
+    lead_file(paths, "europe", {FRA: normalise(remove_sources=["s4"], add_sources=[_added(ref="s4")])})
+    assert "reuses a ref the record already has or had" in reasons(run(paths), FRA)
+    assert curated_records(paths) == {}
+
+
+@pytest.mark.parametrize("renamer", ["safety", "lead"])
+def test_a_record_served_under_a_reviewers_or_the_leads_name_and_then_held_is_withdrawn(tmp_path, renamer):
+    # Found in the iteration-22 closure: a hold refused the candidate before its new name was read, so
+    # the record served under that name stayed in the curated file as if it came from elsewhere.
+    # Written with a stem the import rewrites (no day), as the served case was: the record is served
+    # under the rebuilt name, which is neither the filed id nor the name as the reviewer typed it.
+    typed = "imp-2025-03-fra-electricity-synthetic-renamed-record"
+    renamed = "imp-2025-03-05-fra-electricity-synthetic-renamed-record"
+    paths = make_queue(tmp_path, {"europe": [candidate(FRA), candidate(BRA)]})
+    if renamer == "lead":
+        lead_file(paths, "europe", {FRA: normalise(set={"impact_id": typed})})
+    else:
+        edit_review(paths, "safety", "europe", FRA, verdict="accept_with_correction", set={"impact_id": typed})
+    run(paths)
+    assert set(curated_records(paths)) == {renamed, BRA}
+    (paths["queue"] / "lead_holds.json").write_text(json.dumps({"holds": {f"europe/{FRA}": "Owner decision pending."}}),
+                                                     encoding="utf-8")
+    report = run(paths)
+    assert set(curated_records(paths)) == {BRA} and report["withdrawn"] == [renamed]
 
 
 def test_a_lead_patch_can_say_a_page_is_undated_and_nothing_else_makes_a_source_dateless(tmp_path):

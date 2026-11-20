@@ -43,7 +43,7 @@
     {"id": "natural_hazard", "label": "Natural hazard", "malicious": false, "definition": "Weather, wildfire, flood, earthquake or another natural event."},
     {"id": "supply_shortfall", "label": "Supply shortfall", "malicious": false, "definition": "Not enough fuel, water or generation to meet demand."},
     {"id": "civil_disruption", "label": "Civil disruption", "malicious": null, "definition": "A strike, protest or unrest that interrupted the service."},
-    {"id": "authority_order", "label": "Ordered by an authority", "malicious": false, "definition": "A service restricted or shut down by order of an authority (for example an exam-period or protest-period internet shutdown). Not a malicious incident: attribution is NOT_APPLICABLE and the record says who ordered it only as a source states."},
+    {"id": "authority_order", "label": "Ordered by an authority", "malicious": false, "definition": "A service restricted or shut down by order of an authority (for example an exam-period or protest-period internet shutdown). Not a malicious incident: attribution does not apply, and the record says who ordered it only as a source states."},
     {"id": "unknown", "label": "Cause not established", "malicious": null, "definition": "Public sources do not establish the cause."}
   ],
   "country_cause_to_family": {
@@ -140,7 +140,7 @@
     {"id": "CLAIMED", "label": "Claimed", "definition": "An actor claimed responsibility. A claim is not corroboration."},
     {"id": "SUSPECTED", "label": "Suspected", "definition": "A credible source names a likely actor without a firm attribution."},
     {"id": "ASSESSED", "label": "Assessed", "definition": "A government body, the victim or a technical investigator assesses that an actor was responsible."},
-    {"id": "ATTRIBUTED", "label": "Attributed", "definition": "A formal government or law-enforcement attribution, or several independent attributions that agree."},
+    {"id": "ATTRIBUTED", "label": "Attributed", "definition": "A formal government or law-enforcement attribution: at least one source behind the attribution is a government or law-enforcement finding. Agreement among technical or press attributions, however many, is Assessed."},
     {"id": "DISPUTED", "label": "Disputed", "definition": "Credible sources attribute the incident differently, and the product does not choose."}
   ],
   "actor_types": [

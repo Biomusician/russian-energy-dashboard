@@ -243,6 +243,16 @@ CONTEXT_CASED = re.compile(r"\b(M/?[TV]|VLCC|ULCC|SS)\s+[A-Z][\w-]+")
 # "Refused" is not on the list: a site that refused the fetcher is a process fact.
 LOG_FORBIDDEN = re.compile(B.HELD_WORDING.pattern + r"|\breject\w*|\bnear[- ]miss\w*", re.I)
 
+# First-person and pipeline wording in served research-note text (iteration-22 closure, finding C8):
+# a note states what was searched, which source families, what could not be reached and what was
+# not researched, in the third person. Never a researcher's "I", a tool's name, a file path, an
+# internal record id, a research lane's name or an enum spelled as code. Case-sensitive on purpose:
+# "I" and "us" as pronouns, "AI" and "US" as words; a snake_case token is an id, not prose.
+LOG_PROCESS_WORDING = re.compile(
+    r"\bI\b|\bI'(m|ve|d)\b|\b[Mm]y\b|\b[Ww]e\b|\b[Oo]ur\b|\bus\b|fetch tool|\bWeb ?(Search|Fetch)\b|"
+    r"knowledge cut-?off|\bthe model\b|\bthe task\b|\b(by|per|on) instruction|data/|\.csv\b|\.json\b|"
+    r"\b[A-Za-z0-9]+_[A-Za-z0-9_]+\b|\b(imp|ctx)-\d{4}|\blanes?\b|\b[a-z]+\d\b")
+
 # imp-<date>-<a3>-<sector>-<slug>: the sector is its vocabulary id as written ("fuel_supply").
 ID_STANDARD = re.compile(r"imp-(\d{4}(?:-\d{2}){0,2})-([a-z]{3,5})-([a-z_]+)-([a-z0-9]+(?:-[a-z0-9]+)*)")
 ADMIN1_CODE = re.compile(r"[A-Z]{2}-[A-Z0-9]{1,3}")
@@ -948,6 +958,13 @@ def abstracted_stem(r):
     return f"imp-{r.get('date')}-{str(r.get('country_a3') or '').lower()}-{r.get('sector')}-{word}-"
 
 
+# Method words read in an abstracted record's citation addresses on top of B.METHOD_WORDING. That list
+# is shared with the country systems, where "strike" is also a labour strike and an address naming a
+# strike is no leak; on a record published without its method, "...-strikes-..." in the address says
+# how the attack was carried out (iteration 22 closure, a served address that named it).
+ABSTRACTED_ADDRESS_METHOD = re.compile(r"\b(strikes?|struck|shell(ed|ing)|explosions?|explosives?|blasts?|arson)\b", re.I)
+
+
 def abstraction_problems(r, ctx):
     """An attack is the country's: no region, headline, method, later status, or place in an address.
 
@@ -974,9 +991,9 @@ def abstraction_problems(r, ctx):
         if s.get("title_original") or s.get("title_en"):
             out.append(f"source {s.get('ref')!r}: a headline on a record published without its place")
         url = str(s.get("url") or "")
-        if B.method_in_address(url):
-            out.append(f"source {s.get('ref')!r}: the citation address states how the attack was carried out")
         path = re.sub(r"^https?://[^/]+", "", url)
+        if B.method_in_address(url) or ABSTRACTED_ADDRESS_METHOD.search(B.address_words(path)):
+            out.append(f"source {s.get('ref')!r}: the citation address states how the attack was carried out")
         if B.status_wording(B.address_words(path)):
             out.append(f"source {s.get('ref')!r}: the citation address carries status wording")
     hit = B.status_wording(_prose(r))
@@ -1136,6 +1153,15 @@ def log_problems(research_log):
             out.append(f"{w}: shipping or route wording in an impact research note")
         if f.get("scope") == "regional_context" and (CONTEXT_CASED.search(text) or CONTEXT_FORBIDDEN.search(text)):
             out.append(f"{w}: vessel, route, port or dependence wording")
+        for k in ("family", "method", "window", "status", "limitation"):
+            hit = LOG_PROCESS_WORDING.search(str(f.get(k) or ""))
+            if hit:
+                out.append(f"{w}.{k}: first-person or pipeline wording ({hit.group(0)!r}); a note states process facts "
+                           "in the third person, without tool names, file paths, ids or lane names")
+    for i, text in enumerate(research_log.get("limitations") or []):
+        hit = LOG_PROCESS_WORDING.search(str(text))
+        if hit:
+            out.append(f"research log limitations[{i}]: first-person or pipeline wording ({hit.group(0)!r})")
     for path, _, v in _walk(research_log):
         if isinstance(v, str) and LOG_FORBIDDEN.search(v):
             out.append(f"research log {path}: speaks of held, rejected or candidate work ({LOG_FORBIDDEN.search(v).group(0)!r})")

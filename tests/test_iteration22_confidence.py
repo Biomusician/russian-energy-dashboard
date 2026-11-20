@@ -587,7 +587,7 @@ def test_confirmed_ai_needs_a_direct_source_and_assessed_an_investigator():
     assert EC.ai_problems(ai("CONFIRMED"), [AI_OPERATOR]) == []
     for weaker in ([AI_FIRM], [src("media", supports=["ai_involvement"])],
                    [post("S2", role="media", handle="reporter", publisher="A reporter", supports=["ai_involvement"])]):
-        assert any("CONFIRMED needs a direct authoritative source" in p for p in EC.ai_problems(ai("CONFIRMED"), weaker))
+        assert any("CONFIRMED needs a first-party or official source" in p for p in EC.ai_problems(ai("CONFIRMED"), weaker))
     assert EC.ai_problems(ai("ASSESSED"), [AI_FIRM]) == []
     aggregator = src("aggregator", site="feeds.example", supports=["ai_involvement"])
     assert any("ASSESSED needs" in p for p in EC.ai_problems(ai("ASSESSED"), [aggregator]))
@@ -1039,3 +1039,13 @@ def test_the_shadow_study_and_the_calibration_tool_write_no_payload():
     for marker in ("<!-- shadow-study:begin -->", "<!-- shadow-study:end -->", "<!-- calibration-results:begin -->",
                    "The bar for ever replacing the theatre multiplier", '"theatre_shadow"'):
         assert marker in doc, marker
+
+
+def test_the_served_definition_of_attributed_states_the_rule_the_gate_applies():
+    # The taxonomy used to say ATTRIBUTED could come from "several independent attributions that
+    # agree"; the gate (EC.attribution_problems) requires a government or law-enforcement basis, and
+    # agreement among technical or press attributions is ASSESSED (closure finding).
+    tax = json.loads((ROOT / "methodology" / "impact_taxonomy.json").read_text(encoding="utf-8"))
+    text = next(s["definition"] for s in tax["attribution_statuses"] if s["id"] == "ATTRIBUTED")
+    assert "government or law-enforcement" in text and "Assessed" in text
+    assert "several independent" not in text

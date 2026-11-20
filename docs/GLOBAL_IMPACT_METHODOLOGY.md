@@ -78,7 +78,7 @@ operator statement).
 **PROPOSED, applied in iteration 22 closure.** Pending the owner's confirmation; until then it is
 the reading reviewers and the lead apply.
 
-<!-- B12: applied to N records -->
+**Applied:** re-reviewed on 19 November 2026 against all 78 cyber records and attempts then in the corpus (one has since been held on other grounds); no record changed kind. Boundary cases: `imp-2022-03-31-deu-electricity-wind-manufacturer-it-incident-remote-access` stays a disruption (basis 5); `imp-2022-04-11-deu-electricity-wind-service-company-remote-monitoring`, `imp-2025-12-29-pol-electricity-energy-sector-destructive-cyber`, `imp-2024-01-usa-water-small-town-systems-cyberattack` and `imp-2024-09-22-usa-water-treatment-manual-operations` stay attempts.
 
 The question: a cyber incident degrades an operator's operational or remote-control capability
 (dispatch, remote switching, monitoring of the network) while end-user supply continues, because
@@ -529,7 +529,9 @@ three independent reviews that do not see the researcher's rationale or each oth
   wording, loaded wording, personal data, addresses and titles that leak).
 
 `scripts/import_impacts.py` moves a record into the curated file only when all three accept, applies
-their corrections, mints abstracted ids, leaves `first_published` `null` for a new record (the
+their corrections, then the lead's normalisation (mechanical rewrites that change no verdict; it may
+append a citation, which is always `opened: false` and passes every source validator, but never alter
+or drop one except by removal), mints abstracted ids, leaves `first_published` `null` for a new record (the
 release lead stamps it, §4) and keeps an existing one unchanged, and reconciles against the country
 queues: a candidate matching a record held from a country system is refused.
 
@@ -553,4 +555,6 @@ has no supporting source; attribution status and sources disagree; an AI status 
 incident-specific source or no relation; a social source has no tier or identity basis, or an S3/S4
 post is the sole evidence; an attempt is filed as a disruption; a unit is missing where a value is
 given; an absence is written as zero; a `date_end` is later than the newest dated source; a source
-or a dispute fails the validators of §12.
+or a dispute fails the validators of §12; a served research note speaks in the first person or names
+a tool, a file path, an internal id, a research lane or an enum as code (the note states process
+facts in the third person).

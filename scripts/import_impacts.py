@@ -17,7 +17,8 @@ WHAT IT DOES, in order (docs/GLOBAL_IMPACT_METHODOLOGY.md §12; REVIEW_FORMAT.md
      the same format; `accept_with_correction`, `set` and `remove_sources` only): mechanical
      rewrites of a spelling or a wording into the contract's. It changes no verdict, cannot weaken
      the publication policy, give a record a region, mark a source opened or change the cause of an
-     attack, and the published review block says it was made and when.
+     attack, and the published review block says it was made and when. It may APPEND a citation
+     (`add_sources`): a new ref and a new address, never opened, through every source validator.
   4. Every kinetic or sabotage record becomes country-abstracted: no region, no headline, no end
      date, and an id minted from a keyed hash (the country import's key; never printed).
   5. Dedupes across lanes: same country and sector, dates within a day. The one the reviewers
@@ -89,7 +90,7 @@ LEAD = "lead"
 # already reviewed, so what remains to check is the social check (identity, tier, origin, what the
 # post itself states; both reviewers open the post) and safety.
 ADDENDA_ROLES = ("attribution_source", "safety")
-LEAD_KEYS = ("verdict", "set", "remove_sources", "reason", "note")
+LEAD_KEYS = ("verdict", "set", "remove_sources", "add_sources", "reason", "note")
 PASS = B.BLIND_PASS
 VERDICTS = PASS + ("reject",)
 # Where a lane worked, for the published research note. A thematic lane names no region.
@@ -298,7 +299,7 @@ def apply_lead(reviewed, patch, patched_at):
                         "decides nothing")
     extra = sorted(set(patch) - set(LEAD_KEYS))
     if extra:
-        problems.append(f"it carries {extra}; a normalisation has `set` and `remove_sources` only")
+        problems.append(f"it carries {extra}; a normalisation has `set`, `remove_sources` and `add_sources` only")
     if not G._date_ok(patched_at):
         problems.append("the lead's file gives no reviewed_at date")
     if problems:
@@ -309,6 +310,7 @@ def apply_lead(reviewed, patch, patched_at):
         if isinstance(src, dict):
             # Opened is what the evidence reviewer or the lane found, never what a later patch says.
             src["opened"] = opened.get(src.get("ref"), False)
+    problems += added_source_problems(reviewed, r, patch.get("add_sources"))
     if G.is_attack(reviewed) and (not G.is_attack(r) or r.get("cause_family") != reviewed.get("cause_family")):
         problems.append("it would change the cause of a kinetic or sabotage record")
     if reviewed.get("publication_policy") == G.ABSTRACTED and r.get("publication_policy") != G.ABSTRACTED:
@@ -316,6 +318,44 @@ def apply_lead(reviewed, patch, patched_at):
     if reviewed.get("admin1") is None and r.get("admin1") is not None:
         problems.append("it would give a region to a record the reviewers accepted without one")
     return r, [f"lead normalisation refused: {p}" for p in problems]
+
+
+def added_source_problems(reviewed, r, added):
+    """Append the lead's new citations to `r` (in place); return why any cannot be added.
+
+    A lead may cite a source the reviewers did not (an operator's later statement that dates an
+    observed end). It can only ADD: a ref no source of the reviewed record ever used, an address the
+    record does not already cite, and `opened: false` whatever the patch says, because the lead
+    opening a page is not the evidence reviewer opening it. Each new source runs through the same
+    validators as every other (G.source_problems), so a malformed one refuses the record. Changing
+    or dropping an existing source stays `set` and `remove_sources`."""
+    if added is None:
+        return []
+    if not isinstance(added, list) or not added:
+        return ["add_sources is a non-empty list of sources"]
+    problems = []
+    used = {s.get("ref") for s in (reviewed.get("sources") or []) + (r.get("sources") or []) if isinstance(s, dict)}
+    cited = {s.get("url") for s in r.get("sources") or [] if isinstance(s, dict)}
+    for src in added:
+        if not isinstance(src, dict) or not src.get("ref"):
+            problems.append("an added source is not a source with a ref")
+            continue
+        new = {**copy.deepcopy(src), "opened": False}
+        ref = new["ref"]
+        if ref in used:
+            problems.append(f"added source {ref!r} reuses a ref the record already has or had; a lead adds, never replaces")
+            continue
+        if new.get("url") in cited:
+            problems.append(f"added source {ref!r} repeats an address the record already cites")
+            continue
+        found = G.source_problems([new])
+        if found:
+            problems += [f"added source {ref!r}: {p}" for p in found]
+            continue
+        used.add(ref)
+        cited.add(new.get("url"))
+        r.setdefault("sources", []).append(new)
+    return problems
 
 
 def prune_refs(r, refs, supports=None):
@@ -932,6 +972,24 @@ def run(queue=QUEUE, curated=G.IMPACTS_CURATED, date=None, country_queues=COUNTR
             # accepted is taken out of the curated file instead of lingering there.
             known_ids.update({original_id, canonical_id(original_id, cand), abstract_id(cand, original_id, key),
                               abstract_id({**cand, "cause_family": "kinetic"}, original_id, key)})
+            # And every name a reviewer or the lead gave it, read BEFORE a hold: a record served under
+            # a reviewer's name and then held must be withdrawn, not kept as if it came from elsewhere.
+            named, _ = verdicts_for(reviews, lane, original_id, ROLE_ORDER)
+            lead_named, lead_named_at = lead_patch(reviews, lane, original_id)
+            for v in list(named.values()) + ([lead_named] if lead_named else []):
+                renamed = (v.get("set") or {}).get("impact_id")
+                if renamed:
+                    known_ids.add(str(renamed))
+            if named:
+                # The id it would be published under, shaped exactly as below (stem rebuilt from the
+                # reviewed date, country and sector). Only a name: nothing here is imported.
+                trial, _ = apply_reviews(cand, named)
+                if lead_named:
+                    trial, _ = apply_lead(trial, lead_named, lead_named_at)
+                try:
+                    known_ids.add(str(shape(trial, original_id, key, False, [])["impact_id"]))
+                except (TypeError, AttributeError, KeyError, ValueError):
+                    pass
             hold = holds.get(item["key"], holds.get(original_id))
             if hold is not None:
                 report["lead_holds"]["count"] += 1
