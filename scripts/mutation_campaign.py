@@ -3360,6 +3360,26 @@ ITER22_LINK_MUTATIONS = [
 ]
 MUTATIONS += ITER22_LINK_MUTATIONS
 
+# Release closure: the two guards the test-architecture red team reported as missing (affected is a
+# scale; basis 2 needs the source's figure), added once rounds 2-3 had normalised the corpus.
+ITER22_RELEASE_MUTATIONS = [
+    ("an affected unit that is a duration or a restoration passes",
+     [(GI, _text('            if isinstance(aff.get("unit"), str) and AFFECTED_NOT_A_SCALE.search(aff["unit"]):',
+                 '            if False:'))],
+     "an_affected_figure_that_is_a_duration_or_a_restoration_is_refused"),
+    ("restoration wording is not read in the affected unit",
+     [(GI, _text('|restor|recover", re.I)', '", re.I)'))],
+     "an_affected_figure_that_is_a_duration_or_a_restoration_is_refused"),
+    ("basis 2 passes with no figure",
+     [(GI, _text('    if not attempt and basis == 2 and not any(', '    if not attempt and basis == -2 and not any('))],
+     "basis_2_without_a_figure_is_refused"),
+    ("basis 2 is satisfied by an absence word in the affected value",
+     [(GI, _text('isinstance(c.get("affected"), dict) and _number(c["affected"].get("value"))',
+                 'isinstance(c.get("affected"), dict) and c["affected"].get("value") is not None'))],
+     "basis_2_without_a_figure_is_refused"),
+]
+MUTATIONS += ITER22_RELEASE_MUTATIONS
+
 
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
@@ -3386,6 +3406,7 @@ TEST_FILES += ("tests/test_iteration22_closure_frontend.py",)
 TEST_FILES += ("tests/test_iteration22_round2.py",)
 TEST_FILES += ("tests/test_iteration22_round3.py",)
 TEST_FILES += ("tests/test_iteration22_linkhealth.py",)
+TEST_FILES += ("tests/test_iteration22_release.py",)
 
 
 def _run(box, k):

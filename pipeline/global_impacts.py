@@ -488,6 +488,9 @@ def _unknown_keys(obj, allowed, where):
     return [f"{where}: field {k!r} is not part of the contract" for k in sorted(set(obj) - set(allowed))]
 
 
+AFFECTED_NOT_A_SCALE = re.compile(r"\b(?:minutes?|hours?|days?|weeks?|months?|years?)\b|restor|recover", re.I)
+
+
 def canonical_affected(aff):
     """`civilian_service_impact[].affected` in its one served shape (round-2 ruling R10, finding E-S8).
 
@@ -789,11 +792,23 @@ def vocabulary_problems(r):
                 out.append(f"{w}: a value without the source's own words (source_says)")
             if aff.get("qualifier") not in ids("affected_qualifiers"):
                 out.append(f"{w}: qualifier {aff.get('qualifier')!r} is not one of {ids('affected_qualifiers')}")
+            # Methodology section 4: affected is the scale affected. A duration, a recovery time or a
+            # restoration share is not a scale, and once read as one it says the wrong thing.
+            if isinstance(aff.get("unit"), str) and AFFECTED_NOT_A_SCALE.search(aff["unit"]):
+                out.append(f"{w}: affected.unit {aff['unit']!r} is a duration or a restoration figure; "
+                           "affected is the scale affected, and time or restoration belongs in duration_text or effect")
         else:
             if aff.get("qualifier") is not None:
                 out.append(f"{w}: a qualifier with no value")
             if aff.get("unit") is not None and (not isinstance(aff["unit"], str) or not aff["unit"].strip()):
                 out.append(f"{w}: unit is text or null")
+
+    # Basis 2 is "in the source's own figure and unit": without a figure the record meets basis 4 or
+    # another basis, or none, and a country-wide loss never needs an invented count.
+    if not attempt and basis == 2 and not any(
+            isinstance(c, dict) and isinstance(c.get("affected"), dict) and _number(c["affected"].get("value"))
+            for c in impacts):
+        out.append("inclusion_basis 2 (large population affected) needs the source's figure in an affected value")
 
     a = r.get("attribution")
     if not isinstance(a, dict):
