@@ -43,7 +43,9 @@ describe("C1: a country card with no qualifying record points to its impact reco
     expect(impactTabHref("ir")).toBe("?sys=ir&tab=impacts");
     expect(impactTabHref("a b")).toBe("?sys=a%20b&tab=impacts");
     expect(Object.values(ZERO_RECORD_IMPACT_NOTE).join("")).not.toMatch(/\d/);
-    expect(ZERO_RECORD_IMPACT_NOTE.after).toMatch(/non-scored/);
+    expect(ZERO_RECORD_IMPACT_NOTE.after).toMatch(/no index/);
+    // The home cards never say "score", not even to deny one (home.e2e.ts).
+    expect(Object.values(ZERO_RECORD_IMPACT_NOTE).join("")).not.toMatch(/score/i);
   });
 });
 

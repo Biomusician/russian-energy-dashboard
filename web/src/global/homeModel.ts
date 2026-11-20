@@ -39,7 +39,7 @@ export function impactTabHref(systemId: string): string {
 export const ZERO_RECORD_IMPACT_NOTE = {
   before: "Also see its ",
   link: "impact records tab",
-  after: ": a separate, non-scored layer with its own, broader inclusion rule, so it may hold reviewed records this card does not.",
+  after: ": a separate layer with no index and its own, broader inclusion rule, so it may hold reviewed records this card does not.",
 } as const;
 
 /** A record published under an attack campaign's safeguards. In a list that sets countries side

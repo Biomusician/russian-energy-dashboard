@@ -336,7 +336,11 @@ test.describe("Gulf overview: cyber and civilian services", () => {
     await expect(failures).toHaveCount(1);
     await expect(failures.first()).toContainText("IT failure:");
     await expect(sec.getByRole("list", { name: "Cyber records, newest first" })).not.toContainText("IT failure:");
-    await expect(sec.locator(".cause-kinds")).toContainText("Not an attack, and never listed as cyber");
+    // Said once: the served definition says it ("Not a cyberattack, and never counted as one"), or,
+    // without one, the page's own sentence does (iteration 22 closure: it used to say both).
+    const itDef = await sec.locator(".cause-kinds div").last().locator("dd").innerText();
+    expect(itDef).toMatch(/Not a cyberattack, and never counted as one|Not an attack, and never listed as cyber/);
+    expect(itDef.match(/\bnever\b/g)).toHaveLength(1);
     // Every cause the taxonomy has is explained in the taxonomy's own words.
     for (const c of impacts.vocabularies.cause_families) await expect(sec.locator(".cause-kinds")).toContainText(c.label);
     // Attribution is shown as who attributes, row by row; there is no actor table.
