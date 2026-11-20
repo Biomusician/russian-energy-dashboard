@@ -1942,7 +1942,7 @@ ITER22_IMPACT_MUTATIONS = [
      'gate_refuses_an_attempt_filed_as_a_disruption_and_the_reverse'),
     ('impacts: a record with no first_published passes',
      [(GI, _text('    out += [f"no {k}" for k in RECORD_FIELDS if k not in r and k not in OPTIONAL_RECORD_FIELDS]\n', '')),
-      (GI, _text('        out.append(f"first_published {r.get(\'first_published\')!r} is not a date; the import stamps it")', '        pass'))],
+      (GI, _text('    if first is not None and not _date_ok(first):', '    if False:'))],
      'gate_requires_first_published_and_a_well_formed_id'),
     ('impacts: the safety role need not have accepted',
      [(GI, _text('        if got.get(role) not in B.BLIND_PASS:', '        if got.get(role) not in B.BLIND_PASS and role != "safety":'))],
@@ -2078,7 +2078,7 @@ ITER22_IMPACT_MUTATIONS = [
                  '            parts += [r[k].get("reason"), r[k].get("note"), r[k].get("outcome"), json.dumps(r[k].get("roles"))]'))],
      'hold_is_classified_from_its_reasons_not_from_the_names_of_the_review_roles'),
     ('impacts import: first_published is restamped on a rerun',
-     [(II, _text('        out["first_published"] = old.get("first_published") or date', '        out["first_published"] = date'))],
+     [(II, _text('    out["first_published"] = served\n', '    out["first_published"] = served if old is None else date\n'))],
      'import_is_idempotent_and_never_restamps'),
     ('impacts import: a changed record gets no last_revised',
      [(II, _text('        if body(new) != body(old):', '        if False:'))],
@@ -2929,6 +2929,33 @@ ITER22_GULF_MUTATIONS = [
      "iter22_gulf_sections_have_addresses"),
 ]
 MUTATIONS += ITER22_GULF_MUTATIONS
+
+# Iteration-22 release closure (code worker): first_published means first served; self-claims are not
+# competing attributions; the confidence model's source and dispute validators gate the import and
+# the build; an end date is observed; ties in the regional context; the Gulf precision wording.
+STAMP = "scripts/stamp_first_published.py"
+CLOSURE_MUTATIONS = [
+    ("impacts import: the run date is stamped as first_published again",
+     [(II, _text('    out["first_published"] = served\n', '    out["first_published"] = served or date\n'))],
+     "import_never_writes_its_run_date_as_first_published or leaves_first_published_pending"),
+    ("impacts import: a re-imported pending record or entry is given the run date",
+     [(II, _text('    served = old.get("first_published") if old is not None else None',
+                 '    served = (old.get("first_published") or date) if old is not None else None'))],
+     "reimport_of_a_pending_record_or_entry_keeps_it_pending"),
+    ("stamp_first_published overwrites a date already there",
+     [(STAMP, _text('            if row.get("first_published") is None:', '            if True:'))],
+     "stamp_first_published_fills_nulls_only"),
+    ("stamp_first_published goes backwards",
+     [(STAMP, _text('    if newest is not None and date < newest:', '    if False:'))],
+     "stamp_first_published_refuses_to_go_backwards"),
+    ("stamp_first_published accepts a malformed date",
+     [(STAMP, _text('    if not valid_date(date):', '    if not date:'))],
+     "stamp_first_published_refuses_a_malformed_date"),
+    ("impacts: a record pending its first release may carry last_revised",
+     [(GI, _text('        if first is None:\n            out.append("last_revised on a record pending', '        if False:\n            out.append("last_revised on a record pending'))],
+     "gate_requires_first_published_and_a_well_formed_id"),
+]
+MUTATIONS += CLOSURE_MUTATIONS
 
 
 def _sandbox():

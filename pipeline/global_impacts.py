@@ -762,6 +762,23 @@ def geography_problems(r, ctx):
     return out
 
 
+def stamp_problems(r):
+    """`first_published` is the date of the release that first served the record, or null while it
+    is pending its first release; `last_revised` exists only on a served record, on or after it."""
+    out = []
+    first = r.get("first_published")
+    if first is not None and not _date_ok(first):
+        out.append(f"first_published {first!r} is not a date or null (null: pending its first release; the "
+                   "release lead dates it with scripts/stamp_first_published.py)")
+    if "last_revised" in r:
+        if first is None:
+            out.append("last_revised on a record pending its first release: a change before it is served is not a "
+                       "revision")
+        elif not _date_ok(r["last_revised"]) or (_date_ok(first) and r["last_revised"] < first):
+            out.append("last_revised is a date on or after first_published")
+    return out
+
+
 def identity_problems(r):
     """The id's form, and the dates the record carries about itself."""
     out = []
@@ -770,11 +787,7 @@ def identity_problems(r):
     prefix = f"imp-{r.get('date')}-{a3}-{r.get('sector')}-"
     if not ID_STANDARD.fullmatch(iid) or not iid.startswith(prefix) or len(iid) > 110:
         out.append(f"impact_id must be imp-<date>-<a3>-<sector>-<slug> (expected to start {prefix!r})")
-    if not _date_ok(r.get("first_published")):
-        out.append(f"first_published {r.get('first_published')!r} is not a date; the import stamps it")
-    if "last_revised" in r and (not _date_ok(r["last_revised"]) or (_date_ok(r.get("first_published"))
-                                                                    and r["last_revised"] < r["first_published"])):
-        out.append("last_revised is a date on or after first_published")
+    out += stamp_problems(r)
     if r.get("episode_id") is not None and (not re.fullmatch(r"[a-z0-9_]+(-[a-z0-9_]+)*", str(r["episode_id"]))
                                             or not str(r.get("episode_basis") or "").strip()):
         out.append("episode_id is null or a lower-case slug with an episode_basis")
@@ -985,9 +998,10 @@ def context_problems(entries):
         if not re.fullmatch(r"ctx-\d{4}-\d{2}-\d{2}-[a-z0-9]+(-[a-z0-9]+)*", str(e.get("id") or "")) \
                 or not str(e.get("id")).startswith(f"ctx-{e.get('date')}-"):
             p.append("id must be ctx-<date>-<slug>")
-        for k in ("date", "as_of", "first_published"):
+        for k in ("date", "as_of"):
             if not _date_ok(e.get(k)):
                 p.append(f"{k} {e.get(k)!r} is not a date: every statement is dated and says as of when")
+        p += stamp_problems(e)
         # `as_of` may be earlier than `date`: a report published today about last week's position.
         if _date_ok(e.get("date")) and e["date"] < WINDOW_START:
             p.append(f"date is before the corpus window ({WINDOW_START})")
@@ -1133,7 +1147,8 @@ FIELD_NOTES = {
                     "confidence method groups them: a wire story and its copies are one, an organisation's "
                     "releases are one, a relay adds none, discovery aids are none. Not a count of links. The "
                     "confidence component counts the same way over the sources that support occurrence or effect.",
-    "first_published": "The build date on which this record was first served. Not the event date and not a source date.",
+    "first_published": "The build date on which this record was first served. Null means not yet served: pending its "
+                       "first release. Not the event date and not a source date.",
     "link_check": "The citation's state at the last automated link check, or unchecked. A failed link says nothing "
                   "about the record.",
     "date_basis": "Present, as undated_page, on a citation whose page carries no date of its own; its date is then "
