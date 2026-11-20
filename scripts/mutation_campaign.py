@@ -3187,6 +3187,99 @@ ITER22_ROUND2_MUTATIONS = [
 MUTATIONS += ITER22_ROUND2_MUTATIONS
 
 
+# Iteration 22: link health of the impact layer and the regional context (scripts/check_source_links.py
+# --impacts). Caught by tests/test_iteration22_linkhealth.py, which needs no network.
+LC22 = "scripts/check_source_links.py"
+ITER22_LINK_MUTATIONS = [
+    ("a refusal by the site is recorded as dead",
+     [(LC22, _text('        if e.code in BLOCKED_HTTP:\n            state = "blocked"\n',
+                   '        if e.code in BLOCKED_HTTP:\n            state = "dead"\n'))],
+     "link_health_blocked_is_never_dead"),
+    ("a bot challenge behind a 503 is recorded as an error, not a refusal",
+     [(LC22, _text('            state = "blocked" if _challenged(e) else "error"', '            state = "error"'))],
+     "link_health_blocked_is_never_dead"),
+    ("a timeout is recorded as dead",
+     [(LC22, _text('        return {"state": "error", "http": None, "detail": "timeout"}',
+                   '        return {"state": "dead", "http": None, "detail": "timeout"}'))],
+     "link_health_a_checker_failure_is_never_dead"),
+    ("a refused connection is recorded as dead",
+     [(LC22, _text('        return {"state": "blocked", "http": None, "detail": "the server refused or dropped the connection"}',
+                   '        return {"state": "dead", "http": None, "detail": "the server refused or dropped the connection"}'))],
+     "link_health_a_checker_failure_is_never_dead"),
+    ("one failed DNS lookup marks a host dead",
+     [(LC22, _text('            return {"state": "error", "http": None, "detail": "DNS: no such host", "dns_not_found": True}',
+                   '            return {"state": "dead", "http": None, "detail": "DNS: no such host", "dns_not_found": True}'))],
+     "link_health_a_checker_failure_is_never_dead"),
+    ("a host DNS cannot find is dead without a second lookup",
+     [(LC22, _text('        sleep(DNS_RETRY_WAIT)\n        r = fetch_one(url)\n', ''))],
+     "link_health_dns_not_found_is_dead_only_after_a_second_lookup"),
+    ("a removal notice is read from the article body",
+     [(LC22, _text('    texts = [title or ""] + [m.group(1)', '    texts = [html, title or ""] + [m.group(1)'))],
+     "link_health_removal_is_read_from_the_title_and_description_only"),
+    ("a host that refused is asked again in the same run",
+     [(LC22, _text('            if results[url]["state"] == "blocked":\n                refused.add(host)\n', ''))],
+     "link_health_one_request_per_url_a_pause_per_host"),
+    ("the run ignores its request cap",
+     [(LC22, _text('        elif asked >= cap:', '        elif False:'))],
+     "link_health_one_request_per_url_a_pause_per_host"),
+    ("the run no longer pauses between requests to one host",
+     [(LC22, _text('            if wait > 0:\n                sleep(wait)\n', ''))],
+     "link_health_one_request_per_url_a_pause_per_host"),
+    ("the impact layer counts a redirect to a home page as dead",
+     [(LC22, _text('            elif kind == "general_page" and gone_is_dead:', '            elif kind == "general_page":'))],
+     "link_health_impact_redirect_to_a_home_page_is_not_dead"),
+    ("the country file carries a state outside its five",
+     [(LC22, _text(' if u in results and results[u]["state"] in SYSTEM_STATES))', ' if u in results))'))],
+     "link_health_country_file_carries_only_its_five_states"),
+    ("the public impact file speaks of a citation no record publishes",
+     [(LC22, _text('for u in published if u in results and', 'for u in results if u in results and'))],
+     "link_health_public_file_holds_published_citations"),
+    ("the public impact file records unchecked and archived states",
+     [(LC22, _text('    allowed = set(impact_states()) - {"unchecked", "archived_copy"}', '    allowed = set(impact_states()) | {"fine"}'))],
+     "link_health_public_file_holds_published_citations"),
+    ("the redirect-safety scan reads only the cited address",
+     [(LC22, _text('        for where, address in (("cited address", url), ("final address", final)):',
+                   '        for where, address in (("cited address", url),):'))],
+     "link_health_safety_scan_reads_the_final_address"),
+    ("the redirect-safety scan stops looking for Gulf region names",
+     [(LC22, _text('    if any(GI.names_in(words, L["phrases"][sid]) or IC.names_the_place(url, L["unit_words"][sid]) for sid in gulf_sids):',
+                   '    if False:'))],
+     "link_health_safety_scan_reads_the_final_address"),
+    ("the redirect-safety scan stops looking for facility names",
+     [(LC22, _text('    if any(L["facility"].get(sid) and IC.names_the_place(url, L["facility"][sid]) for sid in own_sids):',
+                   '    if False:'))],
+     "link_health_safety_scan_reads_the_final_address"),
+    ("the redirect-safety scan stops looking for an attack method",
+     [(LC22, _text('    if B.method_in_address(url):\n        kinds.append("method")', '    if False:\n        kinds.append("method")'))],
+     "link_health_safety_scan_reads_the_final_address"),
+    ("the redirect-safety scan stops looking for status wording",
+     [(LC22, _text('    if B.status_wording(B.address_words(path)):', '    if False:'))],
+     "link_health_safety_scan_reads_the_final_address"),
+    ("the redirect-safety scan skips the Gulf records",
+     [(LC22, _text('    return item.get("publication_policy") == ABSTRACTED or bool(set(_countries(item)) & L["gulf_a3"])',
+                   '    return item.get("publication_policy") == ABSTRACTED'))],
+     "link_health_safety_scan_reads_the_final_address"),
+    ("the redirect-safety scan skips the regional context",
+     [(LC22, _text('    if corpus == "context":\n        return True\n', '    if corpus == "context":\n        return False\n'))],
+     "link_health_safety_scan_covers_abstracted_gulf_and_context"),
+    ("the redirect-safety scan no longer reads the context's own ban list",
+     [(LC22, _text('    route = GI.CONTEXT_CASED.search(path) or GI.CONTEXT_FORBIDDEN.search(B.address_words(path))\n',
+                   '    route = None\n'))],
+     "link_health_safety_scan_covers_abstracted_gulf_and_context"),
+    ("the redirect-safety scan stops flagging facility words on an abstracted record",
+     [(LC22, _text('    if abstracted and set(re.findall', '    if False and set(re.findall'))],
+     "link_health_safety_scan_covers_abstracted_gulf_and_context"),
+    ("an unread short link on a sensitive record passes the scan",
+     [(LC22, _text('        if not final and _unresolvable(url):', '        if False:'))],
+     "link_health_an_unread_short_link_on_a_sensitive_record_is_a_hit"),
+    ("a redirect-safety hit quotes the address",
+     [(LC22, _text('            hits.append({"corpus": corpus, "id": iid, "field": f"sources[{ref}].url", "kind": kind,',
+                   '            hits.append({"corpus": corpus, "id": iid, "field": f"sources[{ref}].url", "kind": kind, "address": final,'))],
+     "link_health_safety_scan_reads_the_final_address"),
+]
+MUTATIONS += ITER22_LINK_MUTATIONS
+
+
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
     for d in COPY_DIRS:
@@ -3211,6 +3304,7 @@ TEST_FILES += ("tests/test_iteration22_gulf.py",)
 TEST_FILES += ("tests/test_iteration22_closure_frontend.py",)
 TEST_FILES += ("tests/test_iteration22_round2.py",)
 TEST_FILES += ("tests/test_iteration22_round3.py",)
+TEST_FILES += ("tests/test_iteration22_linkhealth.py",)
 
 
 def _run(box, k):
