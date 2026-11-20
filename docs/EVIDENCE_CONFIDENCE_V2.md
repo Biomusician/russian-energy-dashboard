@@ -167,8 +167,10 @@ attribution of the relayed basis; however many outlets carry it, and whatever ba
 together they add at most one, because they may all be one press conference. Organisations that
 are parent and child in the table are one.
 
-Methodology §6 still says `ATTRIBUTED` may rest on "several independent credible attributions that
-agree"; §8.2 and the code say it needs an official basis. The code follows §8.2.
+Methodology §6 used to say `ATTRIBUTED` could rest on "several independent credible attributions
+that agree". Since the iteration-22 closure §6, §8.2 and the code say the same thing: `ATTRIBUTED`
+needs at least one attribution source with a government or law-enforcement basis (by role, or
+declared on a first-party or press source); §6 spells out how a source's basis is read.
 
 ## 4. Properties (each tested and mutation-tested)
 
@@ -184,7 +186,7 @@ agree"; §8.2 and the code say it needs an official basis. The code follows §8.
   aid has no category.
 - No set of sources that are all claims, or relays of a claim, yields more than `CLAIM_ONLY`.
 - An AI status other than `NONE_REPORTED` needs a source that supports `ai_involvement`;
-  `CONFIRMED` needs a direct source, `ASSESSED` a direct or independent one; `NONE_REPORTED` with a
+  `CONFIRMED` needs a first-party or official source, `ASSESSED` a first-party or press source; `NONE_REPORTED` with a
   role, a relation or an AI source is refused; an anonymous post is never the sole evidence.
 
 The ten adversarial cases of the iteration-22 brief each have a test (`test_case_01` …
@@ -328,7 +330,7 @@ supports, or a rule the data cannot yet carry.
   in the corpus carries a per-source `cause` claim, and adding the claim means re-reviewing every
   malicious-cause record. The served statement says plainly that the category does not cover cause.
 - **AI statements are checked by who speaks, not by what they say (red team 18).** `CONFIRMED`
-  needs a direct source, but nothing records whether that source *states*, *assesses* or merely
+  needs a first-party or official source, but nothing records whether that source *states*, *assesses* or merely
   *suspects* AI involvement, or whether it is about this incident. Not implemented: it needs a
   `statement_strength` on every AI source, which no record carries.
 - **The per-country summary can be laid beside another country's (red team 20).** It is served in

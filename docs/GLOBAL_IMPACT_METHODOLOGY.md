@@ -200,9 +200,33 @@ Attribution is separate from cause and separate from whether the event happened.
 | `UNKNOWN` | Malicious or possibly malicious; no credible public attribution. Not a low confidence: attribution is not established. |
 | `CLAIMED` | An actor claimed responsibility. A claim is not corroboration. |
 | `SUSPECTED` | A credible source names a likely actor without a firm attribution. |
-| `ASSESSED` | A competent government body, the victim or operator, or a technical investigator assesses an actor. |
-| `ATTRIBUTED` | A formal government or law-enforcement attribution, or several independent credible attributions that agree. |
-| `DISPUTED` | Credible sources materially disagree. Competing attributions are listed; the product does not choose. |
+| `ASSESSED` | A competent government body, the victim or operator, or a technical investigator assesses an actor; or several technical or press attributions agree. |
+| `ATTRIBUTED` | A formal government or law-enforcement attribution. Agreement among technical or press attributions, however many, is `ASSESSED`. |
+| `DISPUTED` | Credible sources materially disagree about the actor. Competing attributions are listed; the product does not choose. |
+
+**What `ATTRIBUTED` requires, exactly** (`pipeline/evidence_confidence.py::attribution_problems`;
+the build and the import refuse the record otherwise). At least one source that supports
+`attribution` must carry a government or law-enforcement basis
+(`methodology/evidence_confidence.json` → `attribution.official_bases`). A source's basis is:
+
+- the actor's own claim, if it is one (typed `actor_self_claim`, declared
+  `attribution_basis: "actor_self_claim"`, or published by the named actor). A claim, and any
+  outlet that relays it without a finding of its own, never counts, whatever else it says;
+- nothing, for a discovery aid or an unverified account (an anonymous post, an S4 post, an S1
+  account whose identity is not established);
+- for a first-party or press source: its declared `attribution_basis` if it has one (a wire story
+  reporting a government's attribution declares `government`), else the basis of its role:
+  `government`, `official`, `regulator` and `cert` give `government`; `law_enforcement` and
+  `court_record` give `law_enforcement`; `operator` gives `victim_operator`; `cyber_firm` gives
+  `cybersecurity_firm`; press roles give `media_investigation`;
+- for a secondary source or a researcher's post: `researcher` or `media_investigation`. A declared
+  basis is not honoured here: a post or a dataset cannot borrow a government's authority.
+
+The record-level `attribution.basis` list is descriptive and checked only against the vocabulary;
+the gate reads the sources. One official's interview is not a formal attribution, and a
+campaign-level advisory that does not name the victim attributes nothing to it (reviewer rulings,
+iteration 22). An `ATTRIBUTED` record with a non-empty `competing` list has attribution confidence
+`DISPUTED`.
 
 - `actor_type`: `state`, `state_linked`, `hacktivist`, `criminal`, `insider`, `unknown`, `other`.
   "State-linked" is not "state-controlled"; the type is the source's, not ours.
@@ -230,8 +254,12 @@ A source must tie AI to **this incident**. Modern, sophisticated, automated or s
   `ai_generated_configuration_or_code`, `ai_service_dependency_failure`, `other`, `unknown`.
 - "AI may have helped" is `SUSPECTED` or `CLAIMED` with its source, never upgraded. A defender's use
   of AI to detect the attack does not set the field.
-- `CONFIRMED` needs a direct authoritative source (the operator, a government investigation or the
-  vendor's own incident report). `ASSESSED` needs an official or technical investigator.
+- `CONFIRMED` needs a first-party or official source that supports `ai_involvement` (the operator, a
+  government investigation or the vendor's own incident report). `ASSESSED` needs a first-party or
+  official source, or press or third-party reporting (an official or technical investigator, or a
+  report of one). These are checks on who is speaking, not on what the source says: whether it
+  states, assesses or only suspects AI involvement is the reviewer's check
+  (`docs/EVIDENCE_CONFIDENCE_V2.md` §7).
 - Few records are expected. The feature shows the reviewed corpus as it is; an empty filter result
   is a correct answer.
 
@@ -251,22 +279,27 @@ Computed by `pipeline/evidence_confidence.py` from the sources that support `occ
 `effect`. Output: a category, an ordinal score 0–100 (**not a probability**) and the components
 that produced it, so every card can answer "why?".
 
+The labels below are the served ones (`methodology/evidence_confidence.json`, `tiers.*.label`);
+`docs/EVIDENCE_CONFIDENCE_V2.md` §2 is the full statement of each rule.
+
 | Component | Points | Rule |
 |---|---|---|
-| Directness | 40 / 28 / 15 / 10 / 4 | The best supporting source: direct authoritative (operator, government, regulator, CERT, law enforcement, court record, or an official account on social media whose identity is established) 40; independent reporting (wire, media, specialist media, a cyber firm's own investigation) 28; secondary (aggregator, dataset restating others, a journalist's social post) 15; a researcher's social post 10; an anonymous account or an actor's self-claim 4. |
-| Independent origins | 0 / 16 / 25 | Distinct **originating statements** among direct and independent-reporting sources: one 0, two 16, three or more 25. A wire story and its republications are one origin; three releases from one utility are one origin; ten reposts are one origin at best. |
-| Effect specificity | 15 / 8 / 0 | Quantified / described / vague, counted only when a direct or independent source supports `effect`. |
-| Opened by a reviewer | 10 | At least one direct or independent supporting source was opened and read by a reviewer. |
-| Contemporaneous | 10 | At least one direct or independent supporting source is dated within 30 days of the event. |
+| Who is speaking | 40 / 28 / 15 / 10 / 4 | The best supporting source: a **first-party or official statement** (operator, government, regulator, national CERT or cyber agency, law enforcement, court record, or an official social account whose identity is established) 40; **press or third-party reporting** (wire, news outlet, specialist press, trade body, a cyber firm's own investigation) 28; a **secondary source** (a dataset restating others, a recognised journalist's post, a researcher's web publication) 15; a **researcher's social post** 10; an **unverified claim** (an anonymous account, an actor's own claim) 4. "First-party" says who is speaking, not that the statement was verified; "press or third-party" says who carried it, not that the reporting was its own work. |
+| Originating statements | 0 / 16 / 25 | Groups of first-party and press sources that share an origin, a publisher, an organisation, a filed form or a declared relay: one 0, two 16, three or more 25. A wire story and its republications are one; three releases from one utility are one; ten reposts are one at best. The count is called "independent originating statements" only when the attribution-and-source reviewer checked which sources relay which (`basis: "reviewed"`); otherwise it is "distinct publishers cited" and the record is at most Moderate. |
+| Effect specificity | 15 / 8 / 0 | Quantified / described / vague, counted only when a first-party or press source supports `effect`. |
+| Opened during research or review | 10 | A first-party or press supporting source carries `opened: true`, or the record's review block says a reviewer opened its sources. `opened: null` is "not recorded", never "not opened". |
+| Dated account | 10 | A first-party or press supporting source dated from the day before the event to 30 days after its end, or a later formal account (a dated first-party source in a formal role, or one marked `formal_account: true`). |
 
-Categories: **High** ≥ 78, **Moderate** 55–77, **Limited** 35–54, **Preliminary** < 35.
+Categories: **High** ≥ 78, **Moderate** 55–77, **Limited** 35–54, **Preliminary** < 35. The points are
+ordinal, never a percentage.
 Overrides: a record whose occurrence or effect is credibly contested is **Disputed**, whatever its
-score. A record supported only by unverified social posts or only by an actor's self-claim is at
-most **Preliminary**.
+score, and shows no total. A record supported only by unverified social posts, a researcher's post
+or an actor's own claim is at most **Preliminary**. A record whose originating statements were not
+reviewed is at most **Moderate**. A record cited only through a discovery aid (an encyclopedia, an
+aggregator) is **Not assessed** (`category: null`), never Preliminary.
 
 Properties, each tested and mutation-tested:
 - adding a source never lowers the score, and removing one never raises it, except where the source shows that two cited sources are one account (a shared publisher, organisation or declared relay);
-- adding a source never lowers the score; removing one never raises it;
 - a duplicate citation or a second citation from the same origin changes nothing;
 - source **count** never enters, only roles and origins;
 - an official source alone is not penalised for lack of corroboration it could not have
@@ -279,16 +312,21 @@ Thresholds are provisional: one blind calibration has been run and they did not 
 
 From the sources that support `attribution`, by their role and origin:
 
-- `HIGH`: a formal government or law-enforcement attribution **and** a second independent
-  attribution origin of a different basis (a technical report, the victim, a second government).
-- `MODERATE`: one formal government, law-enforcement or victim/operator attribution; or two
-  independent technical or investigative origins that agree.
+- `HIGH`: a formal government or law-enforcement attribution **and** a second attribution from a
+  separate origin with a different basis (a technical report, the victim, or law enforcement beside
+  a government). Two bodies of the same basis are one basis; organisations that are parent and
+  child in the organisation table are one origin; outlets relaying one attribution add at most one.
+- `MODERATE`: one government, law-enforcement or victim/operator attribution; or two technical or
+  investigative findings of their own, from separate origins, that agree.
 - `LOW`: a single cyber firm, researcher or media investigation.
 - `CLAIM_ONLY`: only the actor's own claim. A self-claim can never produce more than this.
 - `DISPUTED`: status `DISPUTED`. `NOT_ESTABLISHED`: status `UNKNOWN`.
 
-Status and confidence must agree: `ATTRIBUTED` needs at least `MODERATE` with an official basis;
-`CLAIMED` needs an `actor_self_claim` source; the build refuses the mismatch.
+Status and sources must agree, and the build refuses the mismatch: `ATTRIBUTED` needs an official
+basis as defined in §6 (so its confidence is at least `MODERATE`, or `DISPUTED` when `competing` is
+non-empty); `CLAIMED` needs the actor's own claim as a source and no other party's finding. The
+confidence never says more than the status: `SUSPECTED` is capped at `LOW` and `ASSESSED` at
+`MODERATE`.
 
 ### 8.3 Scope of use
 
