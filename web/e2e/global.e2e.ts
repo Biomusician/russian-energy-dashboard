@@ -208,9 +208,15 @@ test.describe("episodes and source freshness (iteration 15)", () => {
   });
 
   test("a region view keeps records separate and says which episode each belongs to", async ({ app, page }) => {
-    await app.open("?sys=us&r=US-NC");
-    await expect(page.locator(".event-item").filter({ hasText: "North Carolina" }).first())
-      .toContainText("Part of an episode: Hurricane Helene");
+    // A Helene record's region, read from the payload: the storm's member states change as records
+    // are held or added (four were held in iteration 23 for Wikipedia-only figures).
+    await app.open("?sys=us");
+    const payload = await countryPayload(page, "us", "events.json");
+    const helene = payload.episodes.find((e: { episode_id: string }) => e.episode_id === "us-2024-09-hurricane-helene");
+    const member = payload.events.find((e: { event_id: string; region_code?: string | null }) =>
+      helene.event_ids.includes(e.event_id) && e.region_code);
+    await app.open(`?sys=us&r=${member.region_code}`);
+    await expect(page.locator(`#ev-${member.event_id}`)).toContainText("Part of an episode: Hurricane Helene");
   });
 
   test("every source shows when it was checked, and the search log says where it stopped", async ({ app, page }) => {
