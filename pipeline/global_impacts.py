@@ -1483,6 +1483,25 @@ def build_impacts(events_doc, research_log, ctx, as_of):
     }
 
 
+DISRUPTION = "disruption"
+PRESENCE_NOTE = ("Countries with at least one published disruption record in the Impact Atlas. Attempts do not count. "
+                 "A list of codes, never a count: a country absent from it has no published record here, "
+                 "which is not the same as no disruption.")
+
+
+def impact_presence(payload):
+    """Which countries the home page may say have impact records (iteration 23), from the served
+    payload by the Impact Atlas's own rule (`countriesPresent` over `disruptions()`): a published
+    disruption, a multi-country record counting for each of its countries, attempts excluded.
+
+    Codes only, sorted, so nothing in it can be read as a size or an order. `attempt_only` names the
+    countries whose only records are attempts: the home links those to the unfiltered atlas, because
+    the atlas ignores a country filter that matches no disruption."""
+    present = {a3 for r in payload["records"] if r["record_kind"] == DISRUPTION for a3 in _countries(r)}
+    attempted = {a3 for r in payload["attempts"] for a3 in _countries(r)} - present
+    return {"countries": sorted(present), "attempt_only": sorted(attempted), "note": PRESENCE_NOTE}
+
+
 def context_group():
     """The registry group the regional context describes. From the registry, where the group names
     this artifact; a page reads the served `group` and never pairs the two itself."""

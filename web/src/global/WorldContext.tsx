@@ -1,218 +1,50 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type maplibregl from "maplibre-gl";
-import SimpleMap from "./SimpleMap";
-import {
-  ELEC_FUELS, ROLE_LABEL, UNIT_SHORT, fmtValue, mixShares, modesFor,
-  type ContextRow, type EnergyContext, type MapMode,
-} from "./context";
+import SimpleMap, { withoutHighlight } from "./SimpleMap";
+import { loadContext, modesFor, type EnergyContext, type MapMode } from "./context";
 import { composeContextFrame, contextFilename } from "./contextExport";
 import { loadWorld, type Manifest } from "./manifest";
 import { MapGeometryPlaceholder } from "../components/MapLoadIndicator";
-import { navigate } from "./router";
 import { downloadBlob, exportMapPng } from "../mapExport";
-import { fmtDate } from "../data";
+import { MAP_COLOURS, NAV_FILL, NAV_HATCH, UNIT_EXPR, hoverLabel, type Bbox, type WorldIndex } from "./homeSelection";
 
-/** The world map of national energy context (iteration 18).
+// The country pages read the national figures from here; they now live beside the table.
+export { NationalFigures } from "./NationalContext";
+
+/** The home page's world map (iteration 18; map-first since iteration 23).
  *
- *  THE WORLD PICTURE IS NOT THE WORLD INCIDENT CORPUS. Fill colour is a national energy figure;
- *  monitoring is a separate mark, a thick outline, named in the legend. Selecting a context-only
- *  country opens a small card of national figures and fetches nothing else: no dossier, no event
- *  count, no zero. Selecting a monitored system opens it.
+ *  TWO MODES, ONE MAP. "Where to explore" (the default) colours only what one click does: a
+ *  monitored system, in one neutral colour for the theatre and the countries alike; Crimea and
+ *  Sevastopol with the occupied hatch; everything else the base colour. Nothing is coloured by a
+ *  count, a score, an index value or a maturity, and impact-record presence is told on hover and in
+ *  the selection card, never painted. "National energy" is the iteration-18 context map unchanged:
+ *  a national figure for colour, monitoring as a separate thick outline, a PNG export.
+ *
+ *  The map is never the only route. The panel beside it lists every destination as text and the
+ *  search finds every country; this component is loaded lazily and the page works without it.
  */
 
-const MONITORED_FALLBACK = "#1e5560";
-const OCCUPIED = "#5b4a1e";
-const OTHER = "#141c25";
-// Names people type that are not in a country's name.
-const SEARCH_ALIASES: Record<string, string> = {
-  us: "united states", usa: "united states", uk: "united kingdom", uae: "united arab emirates",
-};
+export type HomeMapMode = "explore" | "energy";
 
-// The label carries the definition's qualifier ("incl. lease condensate", "dry", "net"), and the
-// full definition is the hover text: a bare "Crude oil" invited comparison with crude-only figures.
-function Figure({ label, value, title }: { label: string; value: string; title?: string }) {
-  return <div className="ctx-fig" title={title}><span className="dim">{label}</span><span className="mono">{value}</span></div>;
-}
+const WORLD_BOUNDS: Bbox = [-170, -50, 179, 78];
+const NOTHING = ["==", ["get", "a3"], "\u0000"];
+const MONITORED = ["!=", ["get", "system_id"], null];
+// A place drawn smaller than this, in CSS pixels, gets a ring when it is pointed at.
+const SMALL_PX = 14;
 
-export function NationalFigures({ row, ctx }: { row: ContextRow; ctx: EnergyContext }) {
-  const m = ctx.metrics;
-  const v = row.values;
-  const shares = mixShares(row);
-  const elecTotal = v.electricity_generation;
-  const roles = Object.entries(row.roles.by_commodity).filter(([, r]) => r);
-  return (
-    <>
-      <div className="ctx-figs">
-        <Figure label={`Energy production, ${ctx.comparison_year}`} title={m.total_production.definition} value={fmtValue(v.total_production, m.total_production.unit)} />
-        <Figure label={`Energy consumption, ${ctx.comparison_year}`} title={m.total_consumption.definition} value={fmtValue(v.total_consumption, m.total_consumption.unit)} />
-        <Figure label={`${m.crude_production.label}, ${ctx.comparison_year}`} title={m.crude_production.definition} value={fmtValue(v.crude_production, m.crude_production.unit)} />
-        <Figure label={`${m.gas_production.label.replace(/ production$/, "")}, ${ctx.comparison_year}`} title={m.gas_production.definition} value={fmtValue(v.gas_production, m.gas_production.unit)} />
-        <Figure label={`Coal, ${ctx.comparison_year}`} title={m.coal_production.definition} value={fmtValue(v.coal_production, m.coal_production.unit)} />
-        <Figure label={`${m.electricity_generation.label}, ${ctx.comparison_year}`} title={m.electricity_generation.definition} value={fmtValue(elecTotal, m.electricity_generation.unit)} />
-      </div>
-      {row.scope_note && <p className="small dim">{row.scope_note}</p>}
-      {shares.length > 0 && (
-        <div>
-          <div className="eyebrow">Production mix</div>
-          <div className="mix-bar" role="img"
-            aria-label={shares.map((s) => `${s.label} ${Math.round(s.share * 100)}%`).join(", ")}>
-            {shares.map((s) => <span key={s.id} style={{ width: `${s.share * 100}%`, background: s.color }} />)}
-          </div>
-          <div className="small dim">{shares.map((s) => `${s.label} ${Math.round(s.share * 100)}%`).join(" · ")}</div>
-          {ctx.accounting_convention && <div className="small dim">{ctx.accounting_convention}</div>}
-        </div>
-      )}
-      {elecTotal != null && elecTotal > 0 && (
-        <div className="small dim">Electricity by source: {ELEC_FUELS
-          .map(([id, label]) => [label, (v[id] ?? 0) / elecTotal] as const)
-          .filter(([, s]) => s >= 0.01)
-          .map(([label, s]) => `${label} ${Math.round(s * 100)}%`).join(" · ")}</div>
-      )}
-      {row.roles.overall && (
-        <div className="small">{ROLE_LABEL[row.roles.overall]}
-          {roles.length > 0 && <span className="dim"> ({roles.map(([k, r]) => `${k}: ${String(r).replace("net_", "").replace("about_", "")}`).join(", ")}; oil here counts all liquids, including refinery gain)</span>}
-        </div>
-      )}
-    </>
-  );
-}
-
-function SourceLine({ ctx }: { ctx: EnergyContext }) {
-  return (
-    <div className="small dim">
-      {ctx.comparison_year} figures. Source: <a href={ctx.source.url} target="_blank" rel="noreferrer">{ctx.source.name}</a>,
-      release of {fmtDate(ctx.source.release)}.
-    </div>
-  );
-}
-
-function ContextCard({ row, ctx, note, onClose }: { row: ContextRow; ctx: EnergyContext; note?: string | null; onClose: () => void }) {
-  const closeRef = useRef<HTMLButtonElement | null>(null);
-  const opener = useRef<Element | null>(null);
-  useEffect(() => {
-    opener.current = document.activeElement;
-    closeRef.current?.focus();
-  }, [row.a3]);
-  const close = () => { onClose(); (opener.current as HTMLElement | null)?.focus?.(); };
-  // Part of a monitored country lies outside its monitored area (eastern Russia). Saying "not
-  // searched" there would be false for the country and is not what the map means.
-  const partial = !!row.system_id;
-  return (
-    <aside className="context-card panel" role="region" aria-label={`${row.name}: national energy context`}
-      onKeyDown={(e) => { if (e.key === "Escape") close(); }}>
-      <div className="section-head">
-        <h3>{row.name}</h3>
-        <button ref={closeRef} className="ghost" onClick={close} aria-label={`Close ${row.name}`}>Close</button>
-      </div>
-      <div className="badge context-only-badge">{partial ? "This area is outside the monitored part of the country" : "Not systematically monitored for disruptions"}</div>
-      <NationalFigures row={row} ctx={ctx} />
-      {note && <p className="small dim">{note}</p>}
-      {partial ? (
-        <p className="small dim">National energy statistics for the whole country. Events are recorded only for the monitored
-          area. <button className="linklike" onClick={() => navigate(row.system_id as string)}>Open the monitored area</button></p>
-      ) : (
-        <p className="small dim">National energy statistics only. This site has no disruption record for {row.name}:
-          it was not searched, so nothing can be said here about what has or has not happened there.</p>
-      )}
-      <SourceLine ctx={ctx} />
-    </aside>
-  );
-}
-
-function NationalTable({ ctx, partly, onContext, systemNames }: { ctx: EnergyContext; partly: Set<string>; onContext: (a3: string) => void; systemNames: Record<string, string> }) {
-  const [sort, setSort] = useState<string | null>(null);
-  const cols = ctx.map_metrics;
-  const rows = useMemo(() => {
-    if (!sort) return ctx.countries;
-    // Sorting is the reader's own request. The default order is alphabetical, and nulls stay last.
-    return [...ctx.countries].sort((a, b) => (b.values[sort] ?? -1) - (a.values[sort] ?? -1));
-  }, [ctx, sort]);
-  return (
-    <div className="table-scroll">
-      <p className="small dim">One source, one year ({ctx.comparison_year}). Alphabetical by default; choose a column to
-        sort by that national figure. "No data" is not zero. Energy production says nothing about disruption or importance.</p>
-      <table className="sector-table national-table">
-        <caption className="sr-only">National energy figures, {ctx.comparison_year}, one source; choose a column heading to sort</caption>
-        <thead>
-          <tr>
-            <th aria-sort={sort ? "none" : "ascending"}><button className="linklike" onClick={() => setSort(null)}>Country</button></th>
-            <th>Status</th>
-            {cols.map((c) => (
-              <th key={c} aria-sort={sort === c ? "descending" : "none"}>
-                <button className="linklike" onClick={() => setSort(c)}>
-                  {ctx.metrics[c].label} ({UNIT_SHORT[ctx.metrics[c].unit]})
-                </button>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.a3}>
-              <td>
-                <button className="linklike" aria-label={`${r.name}: ${r.system_id ? "open its page" : "show its national figures on the map"}`}
-                        onClick={() => { if (r.system_id) navigate(r.system_id); else onContext(r.a3); }}>{r.name}</button>
-              </td>
-              <td className="small dim">{partly.has(r.a3) ? "Partly monitored"
-                : r.system_id ? (systemNames[r.system_id] && systemNames[r.system_id] !== r.name ? `Monitored, in the ${systemNames[r.system_id]} system` : "Monitored")
-                : "Context only"}</td>
-              {cols.map((c) => <td key={c} className="mono small">{fmtValue(r.values[c], ctx.metrics[c].unit).replace(/ .*$/, (s) => (s === " data" ? " data" : ""))}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function CountrySearch({ ctx, onContext, aliases }: {
-  ctx: EnergyContext; onContext: (a3: string) => void; aliases: Record<string, string[]>;
+export default function WorldContext({ world, worldError, manifest, index, mode, onMode, selected, highlighted, fitTo, onPick }: {
+  world: GeoJSON.FeatureCollection | null; worldError: string | null; manifest: Manifest | null; index: WorldIndex | null;
+  mode: HomeMapMode; onMode: (m: HomeMapMode) => void;
+  selected: string[]; highlighted: string | string[] | null; fitTo: Bbox | null;
+  onPick: (props: Record<string, unknown>, how: { touch: boolean }) => void;
 }) {
-  const [q, setQ] = useState("");
-  const hits = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (s.length < 2) return [];
-    const alias = SEARCH_ALIASES[s];
-    // A monitored country is also found by its name in its own script (manifest aliases).
-    const own = (r: ContextRow) => (r.system_id ? aliases[r.system_id] ?? [] : []).some((a) => a.toLowerCase().includes(s));
-    const match = (r: ContextRow) => r.name.toLowerCase().includes(s) || r.a3.toLowerCase() === s || own(r);
-    const named = alias ? ctx.countries.filter((r) => r.name.toLowerCase() === alias) : [];
-    return [...named, ...ctx.countries.filter((r) => match(r) && !named.includes(r))].slice(0, 8);
-  }, [q, ctx, aliases]);
-  return (
-    <div className="country-search">
-      <label className="small">Find a country{" "}
-        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Find a country" placeholder="e.g. Australia" />
-      </label>
-      {hits.length > 0 && (
-        <ul className="search-hits">
-          {hits.map((r) => (
-            <li key={r.a3}>
-              <button className="linklike" onClick={() => { setQ(""); if (r.system_id) navigate(r.system_id); else onContext(r.a3); }}>
-                {r.name}
-              </button>
-              <span className="small dim"> {r.system_id ? "· Monitored system" : "· Global energy context · Not systematically monitored"}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-      {q.trim().length >= 2 && hits.length === 0 && <div className="small dim">No country by that name in this dataset.</div>}
-    </div>
-  );
-}
-
-/** `ctx` and `ctxError` come from the page, which waits for the context file before it draws this
- *  section: loading it here as well drew the section once without it and then moved everything
- *  below when it arrived (iteration 21). */
-export default function WorldContext({ world, worldError, manifest, ctx, ctxError }: {
-  world: GeoJSON.FeatureCollection | null; worldError: string | null; manifest: Manifest | null;
-  ctx: EnergyContext | null; ctxError: string | null;
-}) {
-  const [modeId, setModeId] = useState<string | null>(null);
-  const [cardA3, setCardA3] = useState<string | null>(null);
-  const [hover, setHover] = useState<string | null>(null);
+  const [ctx, setCtx] = useState<EnergyContext | null>(null);
+  const [ctxError, setCtxError] = useState<string | null>(null);
+  const [metric, setMetric] = useState<string | null>(null);
+  const [hover, setHover] = useState<{ unit: string; text: string } | null>(null);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [moved, setMoved] = useState(0);
   const mapRef = useRef<maplibregl.Map | null>(null);
   // "Try again" on a map file that failed (iteration 22): asked for again here. The loader never
   // keeps a failed request, so this is a new one, and the page's own state is left alone.
@@ -224,49 +56,50 @@ export default function WorldContext({ world, worldError, manifest, ctx, ctxErro
   };
   const shownWorld = world ?? retried;
 
+  // The national figures are fetched only when the reader asks for them (iteration 23): the
+  // default map does not use them, and they are 165 kB.
+  useEffect(() => {
+    if (mode !== "energy" || ctx) return;
+    let live = true;
+    setCtxError(null);
+    loadContext().then((c) => { if (live) setCtx(c); })
+      .catch((e) => { if (live) setCtxError(e instanceof Error ? e.message : String(e)); });
+    return () => { live = false; };
+  }, [mode, ctx]);
+
   const modes = useMemo(() => (ctx ? modesFor(ctx) : []), [ctx]);
-  const mode: MapMode | null = modes.find((m) => m.id === modeId) ?? modes[0] ?? null;
+  const energy: MapMode | null = modes.find((m) => m.id === metric) ?? modes[0] ?? null;
   const byA3 = useMemo(() => new Map((ctx?.countries ?? []).map((r) => [r.a3, r])), [ctx]);
-  const noteOf = useMemo(() => {
-    const out = new Map<string, string>();
-    for (const f of shownWorld?.features ?? []) {
-      const p = f.properties as { a3?: string; note?: string | null; status?: string } | null;
-      // Crimea's feature carries a3 UKR. Its note is about Crimea and must not reach Ukraine's card.
-      if (p?.a3 && p.note && p.status !== "occupied" && !out.has(p.a3)) out.set(p.a3, p.note);
-    }
-    return out;
-  }, [shownWorld]);
-  // A country drawn both with and without a system id is monitored in part.
-  const partly = useMemo(() => {
-    const monitored = new Set<string>();
-    const not = new Set<string>();
-    for (const f of shownWorld?.features ?? []) {
-      const p = f.properties as { a3?: string; system_id?: string | null; status?: string } | null;
-      if (!p?.a3 || p.status === "occupied") continue;
-      (p.system_id ? monitored : not).add(p.a3);
-    }
-    return new Set([...monitored].filter((a) => not.has(a)));
-  }, [shownWorld]);
+  const explore = mode === "explore";
+  const fill = (explore || !energy ? NAV_FILL : energy.fill) as maplibregl.ExpressionSpecification;
 
-  // Without the context file the map falls back to showing only where is monitored.
-  const fill = (mode?.fill ?? ["case",
-    ["==", ["get", "status"], "occupied"], OCCUPIED,
-    ["!=", ["get", "system_id"], null], MONITORED_FALLBACK,
-    OTHER]) as maplibregl.ExpressionSpecification;
-
-  const monitoredNames = manifest?.systems.map((s) => s.name) ?? [];
-  const aliases = useMemo(() => Object.fromEntries((manifest?.systems ?? []).map((s) => [s.id, s.aliases ?? []])), [manifest]);
-  const card = cardA3 ? byA3.get(cardA3) : undefined;
+  // What the pointer is over is outlined as a whole unit; otherwise whatever the panel points at.
+  const pointed = hover?.unit ?? highlighted;
+  // A ring for one small place pointed at or chosen (Bahrain is a few pixels wide at world zoom).
+  const ringUnit = typeof pointed === "string" ? pointed : selected.length === 1 ? selected[0] : null;
+  const locator = useMemo((): [number, number] | null => {
+    const m = mapRef.current;
+    const b = ringUnit ? index?.bounds.get(ringUnit) : undefined;
+    if (!m || !b) return null;
+    const a = m.project([b[0], b[1]]);
+    const c = m.project([b[2], b[3]]);
+    if (Math.max(Math.abs(c.x - a.x), Math.abs(c.y - a.y)) >= SMALL_PX) return null;
+    return [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
+  }, [ringUnit, index, moved]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const runExport = async () => {
     const m = mapRef.current;
-    if (!m || !ctx || !mode) { setExportMsg("The map is not ready yet."); return; }
+    if (!m || !ctx || !energy) { setExportMsg("The map is not ready yet."); return; }
     setExporting(true);
     setExportMsg(null);
     try {
-      const res = await exportMapPng({ source: m, width: 1600, height: 900, pixelRatio: 1,
-                                       compose: (c) => composeContextFrame(c, ctx, mode, monitoredNames) });
-      downloadBlob(res.blob, contextFilename(ctx, mode));
+      const res = await exportMapPng({
+        source: m, width: 1600, height: 900, pixelRatio: 1,
+        // The reader's own hover and selection marks stay on the screen, not in the file.
+        transformStyle: (s) => { const clean = withoutHighlight(s); return { ...clean, layers: clean.layers.filter((l) => l.id !== "hatch") }; },
+        compose: (c) => composeContextFrame(c, ctx, energy, manifest?.systems.map((s) => s.name) ?? []),
+      });
+      downloadBlob(res.blob, contextFilename(ctx, energy));
       setExportMsg(`Exported ${res.width}×${res.height}.`);
     } catch (err) {
       setExportMsg(err instanceof Error ? err.message : String(err));
@@ -275,116 +108,94 @@ export default function WorldContext({ world, worldError, manifest, ctx, ctxErro
     }
   };
 
+  const describeEnergy = (p: Record<string, unknown>) => {
+    const row = byA3.get(String(p.a3));
+    const value = energy ? energy.describe(row) : "";
+    // The figure belongs to the country; Crimea has no national figure of its own.
+    const occupied = p.status === "occupied";
+    const name = occupied ? `${row?.name ?? String(p.a3)} (national figure)` : String(p.name ?? p.a3);
+    return `${name}${value ? `: ${value}` : ""}`;
+  };
+
   return (
-    <section aria-label="World energy context" className="world-context">
-      <div className="section-head">
-        <h2>World energy context</h2>
-        {ctx && <button className="ghost" onClick={runExport} disabled={exporting}>{exporting ? "Rendering…" : "Download PNG"}</button>}
-      </div>
-      {ctxError && (
-        <p className="warn-text" role="alert">Global energy context unavailable. The monitored systems below are not affected.</p>
-      )}
-      {ctx && mode && (
-        <details className="map-controls" open>
-          <summary>Map controls</summary>
-          <div className="map-control-row">
-            <label className="small">Colour the map by{" "}
-              <select aria-label="Map metric" value={mode.id} onChange={(e) => setModeId(e.target.value)}>
+    <section aria-label="World map" className="home-map">
+      <div className="home-map-bar">
+        <div className="home-mode" role="group" aria-label="Map mode">
+          <button type="button" className="ghost" aria-pressed={explore} onClick={() => onMode("explore")}>Where to explore</button>
+          <button type="button" className="ghost" aria-pressed={!explore} onClick={() => onMode("energy")}>National energy</button>
+        </div>
+        {!explore && energy && (
+          <>
+            <label className="small">Colour by{" "}
+              <select aria-label="Map metric" value={energy.id} onChange={(e) => setMetric(e.target.value)}>
                 {modes.map((m) => <option key={m.id} value={m.id}>{m.title}</option>)}
               </select>
             </label>
-            <CountrySearch ctx={ctx} onContext={setCardA3} aliases={aliases} />
-          </div>
-        </details>
+            <button className="ghost" type="button" onClick={runExport} disabled={exporting}>{exporting ? "Rendering…" : "Download PNG"}</button>
+          </>
+        )}
+      </div>
+      {!explore && ctxError && (
+        <p className="warn-text small" role="alert">Global energy context unavailable. The monitored systems are not affected.</p>
       )}
-      <div className="global-map-wrap">
+      <div className="home-map-box">
         {shownWorld ? (
           <SimpleMap
             data={shownWorld}
-            bounds={[-170, -50, 179, 78]}
-            // The polygons can be drawn before the figures that colour them arrive.
-            loadingData={!ctx && !ctxError}
-            alternative="The national figures table below has every figure."
+            bounds={WORLD_BOUNDS}
+            loadingData={!explore && !ctx && !ctxError}
+            alternative="The list beside the map has every destination, and the search finds every country."
             idProp="a3"
-            selected={cardA3}
+            matchExpr={UNIT_EXPR}
+            dissolve
+            selected={selected}
+            highlighted={pointed}
             fill={fill}
-            outlineFilter={["!=", ["get", "system_id"], null]}
-            pickable={(p) => !!p.system_id || byA3.has(String(p.a3))}
-            onPick={(id, p) => {
-              const sid = p?.system_id as string | null | undefined;
-              if (sid) navigate(sid);
-              else if (id) setCardA3(id);
-            }}
+            outlineFilter={(explore ? NOTHING : MONITORED) as maplibregl.ExpressionSpecification}
+            hatch={explore ? { filter: NAV_HATCH, color: MAP_COLOURS.hatch } : null}
+            locator={locator}
+            fitTo={fitTo}
+            onPick={(_id, p, how) => { if (p) onPick(p, how ?? { touch: false }); }}
             onHover={(p) => {
-              if (!p) { setHover(null); return; }
-              const row = byA3.get(String(p.a3));
-              const value = mode ? mode.describe(row) : "";
-              // The figure belongs to the country; Crimea has no national figure of its own.
-              const occupied = p.status === "occupied";
-              const name = occupied ? `${row?.name ?? "Ukraine"} (national figure)` : String(p.name ?? p.a3);
-              const where = p.system_id ? (occupied ? "Crimea: monitored in the Russia, Belarus & Crimea view, select to open" : "monitored, select to open")
-                : row?.system_id ? "outside the monitored area" : "context only, not monitored";
-              setHover(`${name}${value ? `: ${value}` : ""} · ${where}`);
+              if (!p || !manifest) { setHover(null); return; }
+              const unit = p.system_id ? String(p.system_id) : String(p.a3);
+              setHover({ unit, text: explore ? hoverLabel(p, index, manifest) : describeEnergy(p) });
             }}
-            ariaLabel={mode
-              ? `World map coloured by ${mode.title}. Monitored systems have a thick outline. For a keyboard route use the search box, or the national figures table in the world profile.`
-              : "World map. Monitored systems are highlighted; select one to open it."}
-            attribution="Energy data: U.S. EIA International Energy Statistics. Boundaries: Natural Earth (public domain), line of actual control. Crimea is drawn as Ukrainian territory under Russian occupation."
-            onMap={(m) => { mapRef.current = m; }}
+            ariaLabel={explore
+              ? "World map: where to explore. Monitored systems share one colour. The list “Where to explore” beside the map has every destination as text, and the search finds every country."
+              : `World map coloured by ${energy?.title ?? "national energy figures"}. Monitored systems have a thick outline. The national figures table below the map has every figure.`}
+            attribution={`${explore ? "" : "Energy data: U.S. EIA International Energy Statistics. "}Boundaries: Natural Earth, line of actual control; Crimea drawn as Ukrainian territory under Russian occupation. Ctrl (⌘) + scroll zooms.`}
+            onMap={(m) => {
+              mapRef.current = m;
+              m?.on("moveend", () => setMoved((n) => n + 1));
+              setMoved((n) => n + 1);
+            }}
             pageScrollsFirst
           />
         ) : (
           <MapGeometryPlaceholder failed={!!worldError && !retrying} onRetry={retryWorld}
-            alternative="The national figures table below has every figure." />
+            alternative="The list beside the map has every destination, and the search finds every country." />
         )}
-        <div className="map-hover-line small mono" aria-live="off">{hover ?? " "}</div>
+        {/* Pointer only, and said again in the panel and the card: aria-hidden so it is not read twice. */}
+        <div className="home-map-label small" aria-hidden="true">{hover?.text ?? ""}</div>
       </div>
-      <p className="small dim map-wheel-hint">Scrolling moves the page. To zoom, hold Ctrl (⌘ on a Mac) while scrolling, use
-        the + and − buttons, or click the map first. On a touch screen, move the map with two fingers.</p>
-      {mode && ctx ? (
+      {explore ? (
+        <div className="map-legend-mini home-legend" aria-label="Map legend">
+          <span><i style={{ background: MAP_COLOURS.monitored }} />Monitored system: the theatre or a country system (one colour; not a measure)</span>
+          <span><i className="hatch-swatch" />Crimea and Sevastopol: Ukrainian territory under Russian occupation, monitored in the theatre</span>
+          <span><i style={{ background: MAP_COLOURS.base }} />No monitored system: select a country to see what this site holds for it</span>
+        </div>
+      ) : energy ? (
         <div className="map-legend-mini" aria-label="Map legend">
-          <span className="legend-title"><strong>{mode.title}</strong> <span className="dim">({mode.unitNote})</span></span>
-          {mode.legend.map((l) => <span key={l.label}><i style={{ background: l.color }} />{l.label}</span>)}
+          <span className="legend-title"><strong>{energy.title}</strong> <span className="dim">({energy.unitNote})</span></span>
+          {energy.legend.map((l) => <span key={l.label}><i style={{ background: l.color }} />{l.label}</span>)}
           <span className="legend-monitored"><i className="outline-swatch" /> Thick outline: systematically monitored. Colour says nothing about monitoring.</span>
           <span className="small dim">Crimea is Ukrainian, occupied, and monitored in the Russia, Belarus &amp; Crimea view; only the monitored parts of Russia are outlined.</span>
         </div>
       ) : (
-        <div className="map-legend-mini">
-          <span><i style={{ background: MONITORED_FALLBACK }} /> monitored system (same colour for all — not a measure)</span>
-          <span><i style={{ background: OCCUPIED }} /> Crimea: Ukrainian, occupied; monitored in the Russia, Belarus &amp; Crimea view</span>
-        </div>
+        <div className="map-legend-mini" aria-label="Map legend"><span className="dim">{ctxError ? "National energy figures could not be loaded." : "Loading national energy figures…"}</span></div>
       )}
       {exportMsg && <p className="small" role="status">{exportMsg}</p>}
-      {card && ctx && <ContextCard row={card} ctx={ctx} note={noteOf.get(card.a3)} onClose={() => setCardA3(null)} />}
-      {ctx && <WorldProfile ctx={ctx} partly={partly} onContext={setCardA3}
-                             systemNames={Object.fromEntries((manifest?.systems ?? []).map((s) => [s.id, s.name]))} />}
     </section>
-  );
-}
-
-function WorldProfile({ ctx, partly, onContext, systemNames }: { ctx: EnergyContext; partly: Set<string>; onContext: (a3: string) => void; systemNames: Record<string, string> }) {
-  const w = ctx.world.values;
-  const total = w.total_production;
-  const monitored = ctx.countries.filter((r) => r.system_id).reduce((a, r) => a + (r.values.total_production ?? 0), 0);
-  const fake: ContextRow = { a3: "WLD", name: "World", on_map: false, system_id: null, values: w, newer: {}, roles: { overall: null, by_commodity: {} } };
-  const shares = mixShares(fake);
-  return (
-    <div className="panel global-note world-profile">
-      <div className="eyebrow">World energy profile, {ctx.comparison_year}</div>
-      <p className="small">
-        World production: {fmtValue(total, ctx.metrics.total_production.unit)}.{" "}
-        {shares.map((s) => `${s.label} ${Math.round(s.share * 100)}%`).join(" · ")}.
-        {total ? ` The countries containing the monitored systems produced ${Math.round((monitored / total) * 100)}% of it; the map shows the rest for context only.` : ""}
-      </p>
-      {ctx.accounting_convention && <p className="small dim">{ctx.accounting_convention}</p>}
-      {/* No "largest producers" list (iteration 20, §80): a top-N selection is a ranking even when
-          printed alphabetically. The national figures are in the table below, alphabetical. */}
-      <details>
-        <summary className="small">National figures table ({ctx.countries.length} countries and territories)</summary>
-        <NationalTable ctx={ctx} partly={partly} onContext={onContext} systemNames={systemNames} />
-      </details>
-      <SourceLine ctx={ctx} />
-      <p className="small dim">{ctx.not_scoring}</p>
-    </div>
   );
 }

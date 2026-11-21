@@ -4,24 +4,33 @@
  *  manifest, which every view has already loaded. Glossary concepts are in the bundle. Region
  *  names are added only where they are cheap: the theatre's region list (one small file, fetched
  *  the first time the search box is focused) and the regions of any country whose page this tab
- *  has already loaded. The home page never fetches a country's files to build the index.
+ *  has already loaded. The home page never fetches a country's files to build the index. Every
+ *  country on the world map (iteration 23) comes from the world geometry: on the home page it is
+ *  already loaded; elsewhere it is fetched the first time the box is focused.
+ *
+ *  WHAT AN OPTION SAYS. What choosing it does: a monitored system opens; a country without one is
+ *  selected on the home map, as a click there would, and says whether the Impact Atlas holds
+ *  records for it. Never a maturity, a count or a score.
  *
  *  ORDER. How well the words match, then kind, then name. Never a figure: a search result list
  *  is not a ranking of systems.
  */
 
 import type { Manifest } from "./manifest";
+import { STATUS, stateOf, systemOf, type WorldIndex } from "./homeSelection";
 import { GLOSSARY } from "./glossary";
 import { matchScore, normalizeForSearch } from "./searchNormalize";
 import { loadRegionRows } from "../data";
 
-export type SearchKind = "system" | "group" | "view" | "region" | "concept";
+export type SearchKind = "system" | "group" | "country" | "view" | "region" | "concept";
 
 export type SearchAction =
   | { type: "system"; id: string }
   | { type: "group"; slug: string }
   | { type: "href"; href: string }
-  | { type: "concept"; id: string };
+  | { type: "concept"; id: string }
+  /** Select a place on the home map (a unit: a system id or a country code). */
+  | { type: "select"; key: string };
 
 export interface SearchEntry {
   key: string;
@@ -36,10 +45,10 @@ export interface SearchEntry {
 
 export interface SearchHit { entry: SearchEntry; score: number; matched: string }
 
-const KIND_ORDER: Record<SearchKind, number> = { system: 0, group: 1, view: 2, region: 3, concept: 4 };
+const KIND_ORDER: Record<SearchKind, number> = { system: 0, group: 1, country: 2, view: 3, region: 4, concept: 5 };
 
 export const KIND_LABEL: Record<SearchKind, string> = {
-  system: "System", group: "Regional overview", view: "View", region: "Region", concept: "Glossary",
+  system: "System", group: "Regional overview", country: "Country", view: "View", region: "Region", concept: "Glossary",
 };
 
 export function makeEntry(e: Omit<SearchEntry, "folded">): SearchEntry {
@@ -49,8 +58,7 @@ export function makeEntry(e: Omit<SearchEntry, "folded">): SearchEntry {
 export function systemEntries(m: Manifest): SearchEntry[] {
   return m.systems.map((s) => makeEntry({
     key: `system:${s.id}`, kind: "system", label: s.name,
-    sub: s.kind === "theatre" ? "Monitored area · has an index"
-      : `Country system · no index${s.maturity === "research_preview" ? " · research preview" : ""}`,
+    sub: s.kind === "theatre" ? "The indexed system · opens it" : `${STATUS.country_system} · opens it`,
     terms: [s.name, ...(s.aliases ?? [])],
     action: { type: "system", id: s.id },
   }));
@@ -148,6 +156,51 @@ export function countryRegionEntries(src: CountryRegionSource): SearchEntry[] {
       action: { type: "href", href: `?sys=${encodeURIComponent(src.systemId)}&r=${encodeURIComponent(u.code)}` },
     });
   });
+}
+
+// Names people type that are not in a country's name on the map. Keyed by that name, so a renamed
+// country simply loses its alias.
+const NAME_ALIASES: Record<string, string[]> = {
+  "united kingdom": ["UK", "Britain", "Great Britain"],
+  "united states of america": ["US", "USA"],
+  "united arab emirates": ["UAE"],
+};
+
+/** Every country on the world map that the system entries do not already find by name. A country
+ *  inside a system (Belarus, Hong Kong) opens that system; any other is selected on the home map. */
+export function countryEntries(idx: WorldIndex, m: Manifest): SearchEntry[] {
+  return idx.countries.flatMap((c) => {
+    const aliases = NAME_ALIASES[c.name.toLowerCase()] ?? [];
+    const sys = systemOf(m, c.unit);
+    if (sys) {
+      const [a, b] = [normalizeForSearch(sys.name), normalizeForSearch(c.name)];
+      if (a.startsWith(b) || b.startsWith(a)) return [];
+      return [makeEntry({
+        key: `country:${c.a3}`, kind: "country", label: c.name,
+        sub: `In the ${sys.name} ${sys.kind === "theatre" ? "theatre" : "system"} · opens it`,
+        terms: [c.name, ...aliases], action: { type: "system", id: sys.id },
+      })];
+    }
+    const state = stateOf(c.unit, idx, m);
+    const within = state === "outside_area" ? systemOf(m, idx.partOf.get(c.unit) ?? "") : undefined;
+    const sub = within ? `Partly monitored, in the ${within.name} ${within.kind === "theatre" ? "theatre" : "system"}` : STATUS[state];
+    return [makeEntry({
+      key: `country:${c.a3}`, kind: "country", label: c.name, sub: `${sub} · selects it on the map`,
+      terms: [c.name, ...aliases, c.a3], action: { type: "select", key: c.unit },
+    })];
+  });
+}
+
+/** The place an option points at, for the home map to outline: a unit, or `group:<id>`. */
+export function previewKey(e: SearchEntry, m: Manifest): string | null {
+  const a = e.action;
+  if (a.type === "system") return a.id || null;
+  if (a.type === "select") return a.key;
+  if (a.type === "group") {
+    const hit = Object.entries(m.groups ?? {}).find(([, g]) => g.slug === a.slug);
+    return hit ? `group:${hit[0]}` : null;
+  }
+  return null;
 }
 
 /** Ranked hits for `query`. Empty query, empty list. */

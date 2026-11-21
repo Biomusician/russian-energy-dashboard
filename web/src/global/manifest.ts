@@ -78,7 +78,13 @@ export interface Manifest {
   comparability_statement: string;
   reporting_environments: Record<string, string>;
   systems: ManifestSystem[];
+  /** Iteration 23. Which countries have at least one published disruption record in the Impact
+   *  Atlas (codes only, by the atlas's own rule), and which have only attempts. Absent in older
+   *  builds or dropped when malformed: the home then says it could not check, never "no record". */
+  impact_presence?: ImpactPresence;
 }
+
+export interface ImpactPresence { countries: string[]; attempt_only: string[]; note: string }
 
 export interface SectorEntry {
   sector: string;
@@ -689,6 +695,8 @@ export function sanitizeManifest(m: Manifest): Manifest {
   const box = (b: unknown) => Array.isArray(b) && b.length === 4 && b.every((x) => typeof x === "number" && Number.isFinite(x));
   const out: Manifest = { ...m };
   if (out.corpus !== undefined && !obj(out.corpus)) delete out.corpus;
+  if (out.impact_presence !== undefined && !(obj(out.impact_presence) && strings(out.impact_presence.countries)
+      && strings(out.impact_presence.attempt_only))) delete out.impact_presence;
   if (out.groups !== undefined) {
     const kept: Record<string, ManifestGroup> = {};
     if (obj(out.groups)) {

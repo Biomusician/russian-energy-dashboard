@@ -57,7 +57,8 @@ export function composeContextFrame(map: HTMLCanvasElement, ctx: EnergyContext, 
   c.fillRect(0, H - fh, W, fh);
   c.fillStyle = DIM;
   c.font = `${Math.round(13 * s)}px ${SANS}`;
-  fit(`Monitored for disruptions: ${monitored.join(", ")}. Other countries are context only: no disruption record, not zero disruptions.`,
+  // Iteration 23: "no disruption record" was false for the countries the Impact Atlas holds records for.
+  fit(`Monitored for disruptions: ${monitored.join(", ")}. Other countries have no monitored system; some have records in the Impact Atlas. No record is not zero disruptions.`,
              pad, H - Math.round(34 * s));
   fit("Energy production is context, never a measure of disruption, importance or exposure. Energy Disruption Monitor · boundaries: Natural Earth (line of actual control); Crimea drawn as Ukrainian, occupied",
              pad, H - Math.round(14 * s));
