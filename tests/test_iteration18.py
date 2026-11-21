@@ -547,15 +547,24 @@ def test_the_frontend_holds_no_country_list_for_the_context_layer():
 
 @pytest.mark.repo_hygiene
 def test_a_context_country_can_never_open_a_dossier():
-    """A dossier is reached only with a system id from the registry; a context row has none."""
-    src = (ROOT / "web" / "src" / "global" / "WorldContext.tsx").read_text(encoding="utf-8")
+    """A dossier is reached only with a system id from the registry; a context row has none.
+    Iteration 23: the world map no longer navigates itself (the home decides with
+    homeSelection.pickAction, tested in test_iteration23_home), and the national table, now in
+    NationalContext.tsx, still navigates only with a row's system id."""
+    g = ROOT / "web" / "src" / "global"
+    src = (g / "NationalContext.tsx").read_text(encoding="utf-8")
     calls = re.findall(r"[^\n;{]*\bnavigate\([^)]*\)", src)
     assert calls
     for c in calls:
         if "import" in c:
             continue
-        assert re.search(r"if \((r\.system_id|sid)\) navigate\((r\.system_id|sid)\)|navigate\(row\.system_id as string\)", c), c
-    assert "events.json" not in src
+        assert re.search(r"if \(r\.system_id\) navigate\(r\.system_id\)", c), c
+    world = re.sub(r"/\*.*?\*/|^\s*//.*$", "", (g / "WorldContext.tsx").read_text(encoding="utf-8"), flags=re.S | re.M)
+    assert "navigate(" not in world, "the map hands every click to the home, which opens only a system"
+    for text in (src, world):
+        assert "events.json" not in text
+    model = (g / "homeSelection.ts").read_text(encoding="utf-8")
+    assert 'return systemOf(m, unit) && !touch ? "open" : "select";' in model
 
 
 @pytest.mark.repo_hygiene

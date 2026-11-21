@@ -44,12 +44,15 @@ def test_every_route_renders_inside_a_view_boundary_keyed_on_the_route():
 
 
 def test_the_home_panels_each_have_their_own_boundary():
-    home = _read("global/GlobalHome.tsx")
-    for panel in ("<WorldContext", "<RecentEvidencePanel", "<WhatsNew", "<DataQualityPanel", 'className="home-systems"'):
-        at = home.index(panel)
-        opened = home.rfind("<PanelBoundary", 0, at)
-        closed = home.rfind("</PanelBoundary>", 0, at)
-        assert opened > closed, f"{panel} is not inside a PanelBoundary"
+    # Iteration 23: the map and the panel live in HomeStage; the parts below the map in GlobalHome.
+    for rel, panels in (("global/GlobalHome.tsx", ("<RecentEvidencePanel", "<WhatsNew", "<QualityFold", "<NationalFold")),
+                        ("global/HomeStage.tsx", ("<WorldContext", "<SystemPanel"))):
+        home = _read(rel)
+        for panel in panels:
+            at = home.index(panel)
+            opened = home.rfind("<PanelBoundary", 0, at)
+            closed = home.rfind("</PanelBoundary>", 0, at)
+            assert opened > closed, f"{panel} is not inside a PanelBoundary"
 
 
 def test_boundaries_catch_and_offer_a_way_out():

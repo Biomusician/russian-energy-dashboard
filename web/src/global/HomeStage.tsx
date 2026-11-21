@@ -5,7 +5,7 @@ import SystemPanel from "./SystemPanel";
 import SelectionCard from "./SelectionCard";
 import { hrefFor } from "./router";
 import {
-  HOME_SELECT_EVENT, STATUS, cardFor, groupBounds, indexWorld, openFromHome, readHomeState, stateOf, systemOf, unitName,
+  EXPLORE_ATTRIBUTION, HOME_SELECT_EVENT, MAP_COLOURS, STATUS, cardFor, groupBounds, groupIdOf, indexWorld, openFromHome, pickAction, readHomeState, stateOf, unitName,
   unitsOf, writeHomeState, type Bbox, type CardAction, type Feature, type PanelRow,
 } from "./homeSelection";
 import type { HomeMapMode } from "./WorldContext";
@@ -57,19 +57,17 @@ export default function HomeStage({ manifest, world, worldError, preview }: {
   const opened = initial.ret;
   const stageRef = useRef<HTMLDivElement | null>(null);
 
-  const isSystem = useCallback((key: string) => !!systemOf(manifest, key), [manifest]);
-
   const select = useCallback((key: string, opts: { touch?: boolean; feature?: Feature; zoom?: boolean } = {}) => {
     const opener = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null;
     setSelection({ key, feature: opts.feature, touch: !!opts.touch, opener });
     writeHomeState(key, null);
     if (key.startsWith("group:")) {
-      setFitTo(groupBounds(manifest, key.slice("group:".length)));
+      setFitTo(groupBounds(manifest, groupIdOf(key)));
     } else if (opts.zoom) {
       const b = index?.bounds.get(key);
       if (b && Math.max(b[2] - b[0], b[3] - b[1]) < SMALL_DEGREES) setFitTo([b[0] - 3, b[1] - 3, b[2] + 3, b[3] + 3]);
     }
-    const label = key.startsWith("group:") ? manifest.groups?.[key.slice("group:".length)]?.label ?? key : unitName(key, index, manifest);
+    const label = key.startsWith("group:") ? manifest.groups?.[groupIdOf(key)]?.label ?? key : unitName(key, index, manifest);
     const status = key.startsWith("group:") ? "Regional overview" : STATUS[stateOf(key, index, manifest)];
     setAnnounce(`Selected ${label}: ${status}`);
   }, [manifest, index]);
@@ -80,9 +78,9 @@ export default function HomeStage({ manifest, world, worldError, preview }: {
 
   /** Everything that chooses a place comes here. */
   const pick = useCallback((key: string, opts: { touch?: boolean; feature?: Feature; ret?: string; fromList?: boolean } = {}) => {
-    if (isSystem(key) && !opts.touch) { open(hrefFor(key), opts.ret ?? `row:${key}`); return; }
+    if (pickAction(key, manifest, !!opts.touch) === "open") { open(hrefFor(key), opts.ret ?? `row:${key}`); return; }
     select(key, { touch: opts.touch, feature: opts.feature, zoom: opts.fromList });
-  }, [isSystem, open, select]);
+  }, [manifest, open, select]);
 
   const close = useCallback(() => {
     const back = selection?.opener;
@@ -100,15 +98,18 @@ export default function HomeStage({ manifest, world, worldError, preview }: {
     return () => window.removeEventListener(HOME_SELECT_EVENT, on);
   }, [pick]);
 
-  // Escape closes the card or sheet wherever focus is (on the map canvas, for one).
+  // Escape closes the card or sheet wherever focus is (on the map canvas, for one). Caught before
+  // the page's own Escape-closes-a-disclosure rule, so it closes the card and not the A to Z list
+  // that opened it.
   useEffect(() => {
     if (!selection) return;
     const on = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || document.querySelector("dialog[open]") || e.defaultPrevented) return;
+      e.preventDefault();
       close();
     };
-    document.addEventListener("keydown", on);
-    return () => document.removeEventListener("keydown", on);
+    document.addEventListener("keydown", on, true);
+    return () => document.removeEventListener("keydown", on, true);
   }, [selection, close]);
 
   // Back: focus returns to the control the reader left from.
@@ -133,10 +134,24 @@ export default function HomeStage({ manifest, world, worldError, preview }: {
   return (
     <div className="home-stage" ref={stageRef}>
       <div className="home-stage-map">
+        <div className="home-map-bar">
+          <div className="home-mode" role="group" aria-label="Map mode">
+            <button type="button" className="ghost" aria-pressed={mode === "explore"} onClick={() => setMode("explore")}>Where to explore</button>
+            <button type="button" className="ghost" aria-pressed={mode === "energy"} onClick={() => setMode("energy")}>National energy</button>
+          </div>
+        </div>
         <PanelBoundary label="The world map">
-          <Suspense fallback={<div className="home-map home-map-wait"><div className="home-map-box simple-map placeholder">Loading map…</div></div>}>
+          {/* The same boxes as the map it stands in for, so nothing moves when the map code lands. */}
+          <Suspense fallback={(
+            <div className="home-map home-map-wait">
+              <div className="home-map-box">
+                <div className="simple-map placeholder" role="status">Loading map…</div>
+                <p className="map-credits">{EXPLORE_ATTRIBUTION}</p>
+              </div>
+            </div>
+          )}>
             <WorldContext world={world} worldError={worldError} manifest={manifest} index={index}
-              mode={mode} onMode={setMode}
+              mode={mode}
               selected={selection ? unitsOf(selection.key, manifest) : []}
               highlighted={highlighted ?? null} fitTo={fitTo}
               onPick={(p, how) => {
@@ -147,6 +162,13 @@ export default function HomeStage({ manifest, world, worldError, preview }: {
               }} />
           </Suspense>
         </PanelBoundary>
+        {mode === "explore" && (
+          <div className="map-legend-mini home-legend" aria-label="Map legend">
+            <span><i style={{ background: MAP_COLOURS.monitored }} />Monitored system: the theatre or a country system (one colour; not a measure)</span>
+            <span><i className="hatch-swatch" />Crimea and Sevastopol: Ukrainian territory under Russian occupation, monitored in the theatre</span>
+            <span><i style={{ background: MAP_COLOURS.base }} />No monitored system: select a country to see what this site holds for it</span>
+          </div>
+        )}
       </div>
       <PanelBoundary label="The list of places to explore">
         <SystemPanel manifest={manifest} index={index} opened={opened}

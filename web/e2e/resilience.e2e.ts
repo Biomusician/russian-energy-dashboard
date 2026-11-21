@@ -25,10 +25,15 @@ function recordData(page: Page): string[] {
 }
 
 const picker = (page: Page) => page.getByRole("combobox", { name: "Monitored system" });
+/** A system's row in the home's "Where to explore" panel (iteration 23; the cards are gone). */
+const row = (page: Page, name: string) =>
+  page.locator("#where-to-explore").getByRole("link", { name: new RegExp(`^${name}( |$)`) });
 
-/** The rest of the app still works: another country opens and its map draws, then the theatre. */
+/** The rest of the app still works: another country opens and its map draws, then the theatre. The
+ *  home has no picker since iteration 23: from there the panel row opens the country. */
 async function restStillWorks(page: Page, app: { mapIdle: () => Promise<void> }, country = ["ca", "Canada"]) {
-  await picker(page).selectOption(country[0]);
+  if (await picker(page).count()) await picker(page).selectOption(country[0]);
+  else await row(page, country[1]).click();
   await expect(page.getByRole("heading", { name: country[1], level: 1 })).toBeVisible();
   await app.mapIdle();
   await picker(page).selectOption("ru");
@@ -52,11 +57,11 @@ test.describe("what each route fetches", () => {
     // Each home file once.
     expect(seen.length).toBe(new Set(seen).size);
 
-    // An explicit hover on one card prefetches that country, and only that one.
-    await app.button("Open Canada").hover();
+    // An explicit hover on one row prefetches that country, and only that one.
+    await row(page, "Canada").hover();
     await expect.poll(() => seen.filter((p) => p.startsWith("systems/")).sort())
       .toEqual(["systems/ca/events.json", "systems/ca/regions.geojson", "systems/ca/system.json"]);
-    await app.button("Open Canada").click();
+    await row(page, "Canada").click();
     await expect(page.getByRole("heading", { name: "Canada", level: 1 })).toBeVisible();
     await app.mapIdle();
     // Opening it used the prefetched files: nothing for Canada was fetched twice.
@@ -71,15 +76,15 @@ test.describe("what each route fetches", () => {
     await page.route("**/data/systems/bh/events.json", (r) => (++calls === 1 ? r.fulfill({ status: 500, body: "" }) : r.continue()));
     await app.open("");
     const failed = page.waitForResponse("**/data/systems/bh/events.json");
-    await app.button("Open Bahrain").hover();
+    await row(page, "Bahrain").hover();
     await failed;
     await page.waitForLoadState("networkidle");
     // No unhandled rejection reached the page, and the home is unchanged.
     expect(app.errors).toEqual([]);
     await expect(page.getByRole("alert")).toHaveCount(0);
-    await expect(page.getByRole("article").first()).toBeVisible();
+    await expect(row(page, "Bahrain")).toBeVisible();
     // The failed prefetch was not kept: opening Bahrain asks again, and this time it loads.
-    await app.button("Open Bahrain").click();
+    await row(page, "Bahrain").click();
     await expect(page.getByRole("heading", { name: "Bahrain", level: 1 })).toBeVisible();
     await app.mapIdle();
     await expect(page.getByRole("alert")).toHaveCount(0);
@@ -99,7 +104,9 @@ test.describe("what each route fetches", () => {
     await app.mapIdle();
     await picker(page).selectOption("");
     await app.mapIdle();
-    await picker(page).selectOption("group:gulf");
+    // The home has no picker since iteration 23: its panel's Gulf row is the way back in.
+    await page.locator('#where-to-explore a.hp-row[href="?group=gulf"]').click();
+    await expect(page).toHaveURL(/\?group=gulf$/);
     await app.mapIdle();
     const count = (f: string) => seen.filter((p) => p === f).length;
     expect(count("global/manifest.json")).toBe(1);
@@ -168,7 +175,7 @@ test.describe("what each route fetches", () => {
     const regions = page.waitForResponse("**/data/regions.json");
     await page.getByLabel(/Search systems, regions and terms/).first().focus();
     await regions;
-    await picker(page).selectOption("ru");
+    await page.locator("#where-to-explore .hp-theatre").click();
     await app.mapIdle();
     await expect(page.locator(".ribbon")).toContainText("ESDI");
     expect(seen).toContain("incidents.json");
@@ -188,7 +195,7 @@ test.describe("a broken file costs only the view that reads it", () => {
       // The home is untouched by it.
       await picker(page).selectOption("");
       await app.mapIdle();
-      await expect(page.getByRole("article", { name: "Oman" })).toBeVisible();
+      await expect(row(page, "Oman")).toBeVisible();
     });
   }
 
@@ -244,9 +251,11 @@ test.describe("a broken file costs only the view that reads it", () => {
   test("a malformed national context file: the home and a country's context tab say so; the rest works", async ({ app, page }) => {
     await page.route("**/data/global/energy_context.json", (r) => wrongShape(r, { countries: [{ a3: "X" }], comparison_year: 2024 }));
     await app.open("");
+    // The default map needs no national figures (iteration 23); the national-energy mode says so.
+    await page.getByRole("button", { name: "National energy" }).click();
     await expect(page.getByRole("alert").filter({ hasText: "Global energy context unavailable" })).toBeVisible();
-    await expect(page.getByRole("article")).not.toHaveCount(0);
-    await app.button("Open India").click();
+    await expect(page.locator("#where-to-explore a.hp-row")).not.toHaveCount(0);
+    await row(page, "India").click();
     await app.mapIdle();
     await page.getByRole("button", { name: "Energy context" }).click();
     await expect(page.getByRole("alert").filter({ hasText: "Global energy context unavailable" })).toBeVisible();
@@ -269,8 +278,10 @@ test.describe("a broken file costs only the view that reads it", () => {
     });
     await app.open("");
     await expect(page.locator(".corpus-totals")).toHaveCount(0);
+    await expect(page.locator("#fold-corpus")).toHaveCount(0);
     const m = await page.evaluate(() => fetch("/data/global/manifest.json").then((r) => r.json()));
-    await expect(page.getByRole("article")).toHaveCount(m.systems.length);
+    // Every system and the atlas, the Gulf row and Compare.
+    await expect(page.locator("#where-to-explore a.hp-row")).toHaveCount(m.systems.length + 3);
     await restStillWorks(page, app);
     await page.goto("/?group=gulf");
     await app.mapIdle();
@@ -297,8 +308,8 @@ test.describe("a broken file costs only the view that reads it", () => {
     app.allowConsoleError(/malformed/);
     await page.route("**/data/global/world.geojson", (r) => wrongShape(r, { type: "FeatureCollection", features: "x" }));
     await page.goto("/");
-    await expect(page.getByRole("region", { name: "World energy context" })).toContainText("Map unavailable");
-    await expect(page.getByRole("article").first()).toBeVisible();
+    await expect(page.getByRole("region", { name: "World map" })).toContainText("Map unavailable");
+    await expect(row(page, "Canada")).toBeVisible();
     await page.goto("/?group=gulf");
     await expect(page.locator(".group-table")).toBeVisible();
     await expect(page.getByText("Map unavailable. The table below has every figure.")).toBeVisible();
@@ -325,9 +336,11 @@ test.describe("a broken file costs only the view that reads it", () => {
     await page.route("**/data/global/data_quality.json", (r) => wrongShape(r, { systems: [{ name: "x" }] }));
     await page.route("**/data/global/recent_evidence.json", (r) => wrongShape(r, { episodes: [{ members: 3 }] }));
     await app.open("");
+    await page.locator("#fold-quality > summary").click();
+    await page.locator("#fold-recent > summary").click();
     await expect(page.getByRole("alert").filter({ hasText: "The data-quality summary could not be loaded" })).toBeVisible();
     await expect(page.getByRole("alert").filter({ hasText: "The recent list could not be loaded" })).toBeVisible();
-    await expect(page.getByRole("article").first()).toBeVisible();
+    await expect(row(page, "Canada")).toBeVisible();
     await restStillWorks(page, app);
   });
 });
@@ -346,11 +359,13 @@ test.describe("error boundaries: what validation cannot enumerate", () => {
       await route.fulfill({ response: res, json: d });
     });
     await app.open("");
+    await page.locator("#fold-recent > summary").click();
     await expect(page.getByRole("alert", { name: "Recent evidence: could not be shown" })).toBeVisible();
     // The rest of the home is all there.
-    await expect(page.getByLabel("Map legend")).toContainText("Total primary energy production");
+    await expect(page.getByLabel("Map legend")).toContainText("Monitored system");
+    await page.locator("#fold-quality > summary").click();
     await expect(page.getByRole("region", { name: "Data quality" })).toBeVisible();
-    await expect(page.getByRole("article").first()).toBeVisible();
+    await expect(row(page, "Canada")).toBeVisible();
     await restStillWorks(page, app);
   });
 
@@ -358,7 +373,7 @@ test.describe("error boundaries: what validation cannot enumerate", () => {
     app.allowConsoleError(/failed:|Failed to fetch dynamically imported module|Failed to load resource|above error|react\.dev/i);
     await page.route(/\/assets\/CountryView-[^/]*\.js$/, (r) => r.fulfill({ status: 404, body: "" }));
     await app.open("");
-    await app.button("Open Oman").click();
+    await row(page, "Oman").click();
     const failed = page.getByRole("alert", { name: "This country's page could not be shown" });
     await expect(failed).toBeVisible();
     await expect(failed).toContainText("could not be downloaded");
@@ -367,9 +382,9 @@ test.describe("error boundaries: what validation cannot enumerate", () => {
     await page.getByRole("button", { name: "Return to the overview" }).click();
     await app.mapIdle();
     await expect(page.getByRole("heading", { name: "Energy Disruption Monitor", level: 1 })).toBeVisible();
-    await expect(page.getByRole("article").first()).toBeVisible();
+    await expect(row(page, "Oman")).toBeVisible();
     // Another kind of view still opens: the boundary was the country view's alone.
-    await picker(page).selectOption("group:gulf");
+    await page.locator("#where-to-explore").getByRole("link", { name: /^Gulf littoral/ }).click();
     await app.mapIdle();
     await expect(page.getByRole("heading", { name: "Gulf littoral overview", level: 1 })).toBeVisible();
     await picker(page).selectOption("ru");

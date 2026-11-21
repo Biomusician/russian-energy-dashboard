@@ -80,7 +80,7 @@ export default function SystemPanel({ manifest, index, opened, onHighlight, onOp
             </>
           )))}
         </div>
-        {section("regional").length > 0 && (
+        {section("regional")[0] && (
           <div className="hp-section">
             <h3 className="eyebrow">Regional overview</h3>
             {section("regional").map((r) => (

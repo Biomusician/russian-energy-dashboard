@@ -8,7 +8,8 @@ import type { CardAction, CardModel } from "./homeSelection";
  *  are told the same thing.
  *
  *  The sheet is not modal: the map above it stays usable, and a second tap replaces it. Escape or
- *  Close dismisses it and gives focus back to whatever opened it. Its buttons go to addresses the
+ *  Close dismisses it (HomeStage listens for Escape on the whole page) and gives focus back to
+ *  whatever opened it. Its buttons go to addresses the
  *  site already has; a country with no system and no record gets no button at all. */
 
 export default function SelectionCard({ card, sheet, onClose, onAction }: {
@@ -16,8 +17,7 @@ export default function SelectionCard({ card, sheet, onClose, onAction }: {
 }) {
   const Heading = sheet ? "h2" : "h3";
   return (
-    <aside className={`sel-card${sheet ? " sel-sheet" : " panel"}`} aria-labelledby="sel-card-title" data-sel={card.key}
-      onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}>
+    <aside className={`sel-card${sheet ? " sel-sheet" : " panel"}`} aria-labelledby="sel-card-title" data-sel={card.key}>
       <div className="sel-card-head">
         <Heading id="sel-card-title" className="sel-card-title">{card.heading}</Heading>
         <button type="button" className="ghost sel-close" onClick={onClose} aria-label={`Close ${card.heading}`}>Close</button>

@@ -194,7 +194,7 @@
 .home-map-box { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .home-map-box > .simple-map-shell { flex: 1; min-height: 0; }
 .home-map-box > .simple-map-shell .simple-map-stage { flex: 1; min-height: 0; }
-.home-map-box.placeholder { display: grid; place-items: center; }
+.home-map-box > .simple-map.placeholder { flex: 1; min-height: 0; display: grid; place-items: center; }
 .home-map-label {
   position: absolute; left: 8px; top: 60px; z-index: 3; max-width: calc(100% - 16px); pointer-events: none;
   background: rgba(7, 9, 12, 0.92); border: 1px solid var(--line); padding: 4px 8px; border-radius: var(--radius);
@@ -282,7 +282,7 @@
   .home-map-box { flex: none; }
   /* The aspect of the world itself, so no band of empty ocean takes the height of a phone. */
   .home-map-box > .simple-map-shell .simple-map-stage { flex: none; height: 62vw; min-height: 220px; }
-  .home-map-box.placeholder, .home-map-wait .home-map-box { height: 62vw; min-height: 220px; }
+  .home-map-box > .simple-map.placeholder { flex: none; height: 62vw; min-height: 220px; }
   .home-map-label { top: 56px; }
   .home-panel { height: auto; }
   .hp-body { overflow: visible; }

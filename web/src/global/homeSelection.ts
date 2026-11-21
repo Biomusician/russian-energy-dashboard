@@ -113,6 +113,13 @@ export function stateOf(unit: string, idx: WorldIndex | null, m: Manifest): Unit
   return "no_record";
 }
 
+/** What choosing a unit does. With a mouse, a keyboard or the search, a monitored system opens: the
+ *  hover label or the option already said so. A place without a system has no page, so it is
+ *  selected and its card is the destination. A finger gets the card first for everything. */
+export function pickAction(unit: string, m: Manifest, touch: boolean): "open" | "select" {
+  return systemOf(m, unit) && !touch ? "open" : "select";
+}
+
 /** One status line per state: the hover label, the card, the search option and the announcement
  *  all say the same words. No count and no maturity: those belong on each system's own page. */
 export const STATUS: Record<UnitState, string> = {
@@ -201,6 +208,11 @@ function occupiedLines(unit: string, idx: WorldIndex | null, m: Manifest): { lin
   };
 }
 
+/** The group id in a selection key ("group:gulf_littoral" -> "gulf_littoral"). */
+export function groupIdOf(key: string): string {
+  return key.replace(/^group:/, "");
+}
+
 /** The feature a tap landed on, when it is not the whole unit (Hong Kong in China, Crimea in the
  *  theatre). */
 export interface Feature { name: string; occupied?: boolean }
@@ -209,7 +221,7 @@ export interface Feature { name: string; occupied?: boolean }
  *  in the manifest answers to. */
 export function cardFor(key: string, idx: WorldIndex | null, m: Manifest, feature?: Feature): CardModel | null {
   if (key.startsWith("group:")) {
-    const id = key.slice("group:".length);
+    const id = groupIdOf(key);
     const g = m.groups?.[id];
     if (!g || !g.slug) return null;
     return {
@@ -330,7 +342,7 @@ export function panelRows(m: Manifest): PanelRow[] {
 /** The units a selection or a pointer covers: a group's members, or the one unit. */
 export function unitsOf(key: string | null, m: Manifest | null): string[] {
   if (!key) return [];
-  if (key.startsWith("group:")) return m?.groups?.[key.slice("group:".length)]?.members ?? [];
+  if (key.startsWith("group:")) return m?.groups?.[groupIdOf(key)]?.members ?? [];
   return [key];
 }
 
@@ -358,6 +370,10 @@ export const NAV_FILL = [
   ["!=", ["get", "system_id"], null], MAP_COLOURS.monitored,
   MAP_COLOURS.base,
 ];
+
+/** The credits under the home map, in each mode. */
+export const EXPLORE_ATTRIBUTION = "Boundaries: Natural Earth, line of actual control; Crimea drawn as Ukrainian territory under Russian occupation. Ctrl (⌘) + scroll zooms.";
+export const ENERGY_ATTRIBUTION = `Energy data: U.S. EIA International Energy Statistics. ${EXPLORE_ATTRIBUTION}`;
 
 /** The features drawn with the occupied hatch: status, from the geometry. */
 export const NAV_HATCH = ["==", ["get", "status"], "occupied"];

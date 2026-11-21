@@ -54,7 +54,7 @@ test.describe("where am I, and the way home", () => {
       await expect(crumbs.locator('[aria-current="page"]')).toHaveText(theatre.name);
       await expect(page).toHaveTitle(`Energy Disruption Monitor — ${theatre.name}`);
       await crumbs.getByRole("link", { name: "Home" }).click();
-      await expect(page.getByRole("heading", { name: "Monitored systems" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Where to explore" })).toBeVisible();
       await expect(page).not.toHaveURL(/sys=/);
       await page.goBack();
       await app.mapIdle();

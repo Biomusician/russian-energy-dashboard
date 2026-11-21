@@ -6,7 +6,7 @@ import { composeContextFrame, contextFilename } from "./contextExport";
 import { loadWorld, type Manifest } from "./manifest";
 import { MapGeometryPlaceholder } from "../components/MapLoadIndicator";
 import { downloadBlob, exportMapPng } from "../mapExport";
-import { MAP_COLOURS, NAV_FILL, NAV_HATCH, UNIT_EXPR, hoverLabel, type Bbox, type WorldIndex } from "./homeSelection";
+import { ENERGY_ATTRIBUTION, EXPLORE_ATTRIBUTION, MAP_COLOURS, NAV_FILL, NAV_HATCH, UNIT_EXPR, hoverLabel, type Bbox, type WorldIndex } from "./homeSelection";
 
 // The country pages read the national figures from here; they now live beside the table.
 export { NationalFigures } from "./NationalContext";
@@ -32,9 +32,9 @@ const MONITORED = ["!=", ["get", "system_id"], null];
 // A place drawn smaller than this, in CSS pixels, gets a ring when it is pointed at.
 const SMALL_PX = 14;
 
-export default function WorldContext({ world, worldError, manifest, index, mode, onMode, selected, highlighted, fitTo, onPick }: {
+export default function WorldContext({ world, worldError, manifest, index, mode, selected, highlighted, fitTo, onPick }: {
   world: GeoJSON.FeatureCollection | null; worldError: string | null; manifest: Manifest | null; index: WorldIndex | null;
-  mode: HomeMapMode; onMode: (m: HomeMapMode) => void;
+  mode: HomeMapMode;
   selected: string[]; highlighted: string | string[] | null; fitTo: Bbox | null;
   onPick: (props: Record<string, unknown>, how: { touch: boolean }) => void;
 }) {
@@ -75,7 +75,7 @@ export default function WorldContext({ world, worldError, manifest, index, mode,
 
   // What the pointer is over is outlined as a whole unit; otherwise whatever the panel points at.
   const pointed = hover?.unit ?? highlighted;
-  // A ring for one small place pointed at or chosen (Bahrain is a few pixels wide at world zoom).
+  // A ring for one small place pointed at or chosen (the smallest Gulf states are a few pixels wide at world zoom).
   const ringUnit = typeof pointed === "string" ? pointed : selected.length === 1 ? selected[0] : null;
   const locator = useMemo((): [number, number] | null => {
     const m = mapRef.current;
@@ -119,22 +119,18 @@ export default function WorldContext({ world, worldError, manifest, index, mode,
 
   return (
     <section aria-label="World map" className="home-map">
-      <div className="home-map-bar">
-        <div className="home-mode" role="group" aria-label="Map mode">
-          <button type="button" className="ghost" aria-pressed={explore} onClick={() => onMode("explore")}>Where to explore</button>
-          <button type="button" className="ghost" aria-pressed={!explore} onClick={() => onMode("energy")}>National energy</button>
+      {/* The mode toggle and the default legend are drawn by the page (HomeStage), outside this
+          lazily loaded part, so the first screen has its final size before the map code arrives. */}
+      {!explore && energy && (
+        <div className="home-map-bar">
+          <label className="small">Colour by{" "}
+            <select aria-label="Map metric" value={energy.id} onChange={(e) => setMetric(e.target.value)}>
+              {modes.map((m) => <option key={m.id} value={m.id}>{m.title}</option>)}
+            </select>
+          </label>
+          <button className="ghost" type="button" onClick={runExport} disabled={exporting}>{exporting ? "Rendering…" : "Download PNG"}</button>
         </div>
-        {!explore && energy && (
-          <>
-            <label className="small">Colour by{" "}
-              <select aria-label="Map metric" value={energy.id} onChange={(e) => setMetric(e.target.value)}>
-                {modes.map((m) => <option key={m.id} value={m.id}>{m.title}</option>)}
-              </select>
-            </label>
-            <button className="ghost" type="button" onClick={runExport} disabled={exporting}>{exporting ? "Rendering…" : "Download PNG"}</button>
-          </>
-        )}
-      </div>
+      )}
       {!explore && ctxError && (
         <p className="warn-text small" role="alert">Global energy context unavailable. The monitored systems are not affected.</p>
       )}
@@ -164,7 +160,7 @@ export default function WorldContext({ world, worldError, manifest, index, mode,
             ariaLabel={explore
               ? "World map: where to explore. Monitored systems share one colour. The list “Where to explore” beside the map has every destination as text, and the search finds every country."
               : `World map coloured by ${energy?.title ?? "national energy figures"}. Monitored systems have a thick outline. The national figures table below the map has every figure.`}
-            attribution={`${explore ? "" : "Energy data: U.S. EIA International Energy Statistics. "}Boundaries: Natural Earth, line of actual control; Crimea drawn as Ukrainian territory under Russian occupation. Ctrl (⌘) + scroll zooms.`}
+            attribution={explore ? EXPLORE_ATTRIBUTION : ENERGY_ATTRIBUTION}
             onMap={(m) => {
               mapRef.current = m;
               m?.on("moveend", () => setMoved((n) => n + 1));
@@ -173,19 +169,16 @@ export default function WorldContext({ world, worldError, manifest, index, mode,
             pageScrollsFirst
           />
         ) : (
-          <MapGeometryPlaceholder failed={!!worldError && !retrying} onRetry={retryWorld}
-            alternative="The list beside the map has every destination, and the search finds every country." />
+          <>
+            <MapGeometryPlaceholder failed={!!worldError && !retrying} onRetry={retryWorld}
+              alternative="The list beside the map has every destination, and the search finds every country." />
+            <p className="map-credits">{explore ? EXPLORE_ATTRIBUTION : ENERGY_ATTRIBUTION}</p>
+          </>
         )}
         {/* Pointer only, and said again in the panel and the card: aria-hidden so it is not read twice. */}
         <div className="home-map-label small" aria-hidden="true">{hover?.text ?? ""}</div>
       </div>
-      {explore ? (
-        <div className="map-legend-mini home-legend" aria-label="Map legend">
-          <span><i style={{ background: MAP_COLOURS.monitored }} />Monitored system: the theatre or a country system (one colour; not a measure)</span>
-          <span><i className="hatch-swatch" />Crimea and Sevastopol: Ukrainian territory under Russian occupation, monitored in the theatre</span>
-          <span><i style={{ background: MAP_COLOURS.base }} />No monitored system: select a country to see what this site holds for it</span>
-        </div>
-      ) : energy ? (
+      {explore ? null : energy ? (
         <div className="map-legend-mini" aria-label="Map legend">
           <span className="legend-title"><strong>{energy.title}</strong> <span className="dim">({energy.unitNote})</span></span>
           {energy.legend.map((l) => <span key={l.label}><i style={{ background: l.color }} />{l.label}</span>)}

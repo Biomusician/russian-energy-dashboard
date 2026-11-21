@@ -79,6 +79,8 @@ const PRIMARY = [
   ".start-here button", ".page-title .head-actions button", ".country-side .tabs button", ".ev-inspector-toggle",
   ".member-btn", ".compare-col-actions button", ".compare-picker select", ".map-tool",
   ".drawer-btn", ".legend-toggle", ".camera-controls button", "button.play",
+  // Iteration 23, the map-first home: the panel rows, the map-mode toggle and the selection card.
+  ".hp-row", ".hp-show", ".home-mode button", ".sel-actions .home-action",
   ".maplibregl-ctrl-zoom-in", ".maplibregl-ctrl-zoom-out",
 ].join(", ");
 // The theatre header's controls: 24 px (AA), not 44, because the header's height is capped so the
@@ -121,7 +123,8 @@ test.describe("phone width: 44 px touch targets", () => {
 
   test("inline disclosures reach the 24 px AA minimum", async ({ page }) => {
     await page.setViewportSize(PHONE);
-    await openView(page, "");
+    // The home carries no badge since iteration 23; a research-preview country's phone page does.
+    await openView(page, "?sys=bh");
     const heights = await page.locator(".disclosure-button.badge, .disclosure-button.home-tag").evaluateAll(
       (els) => els.map((e) => e.getBoundingClientRect().height));
     expect(heights.length).toBeGreaterThan(0);
@@ -198,7 +201,7 @@ test.describe("landmarks, headings and names", () => {
 
   test("the home page does not move focus on a first visit", async ({ page }) => {
     await openView(page, "");
-    await expect(page.getByRole("region", { name: /Start here/ })).toBeVisible();
+    await expect(page.locator("#where-to-explore")).toBeVisible();
     expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
     // The first Tab reaches the top of the page, not the middle: "Skip to content" (iteration 22
     // closure), shown once it has focus, then the site's home link.
@@ -236,8 +239,12 @@ test.describe("Escape closes, focus returns", () => {
 
   test("badge disclosures, the evidence inspector and the theatre's toggles", async ({ app, page }) => {
     let checked = 0;
-    await openView(page, "");
-    await escapeCloses(page, page.locator(".disclosure-button").first()); checked++;
+    // The home carries no badge since iteration 23; a research-preview country's page does, in
+    // the caveat line a phone shows first.
+    await page.setViewportSize(PHONE);
+    await openView(page, "?sys=bh");
+    await escapeCloses(page, page.locator(".disclosure-button.research-partial").first()); checked++;
+    await page.setViewportSize({ width: 1440, height: 900 });
     await openView(page, "?sys=us");
     const toggle = page.locator(".ev-inspector-toggle").first();
     await escapeCloses(page, toggle); checked++;
@@ -259,7 +266,7 @@ test.describe("Escape closes, focus returns", () => {
 
   test("a native <details> closes on Escape and gives focus back to its summary", async ({ page }) => {
     let checked = 0;
-    for (const [q, sel] of [["?compare=us,ca,sa", "details.compare-def"], ["?group=gulf", "details"], ["", "details.dq-system"]] as const) {
+    for (const [q, sel] of [["?compare=us,ca,sa", "details.compare-def"], ["?group=gulf", "details"], ["", "details.home-fold"]] as const) {
       await openView(page, q);
       const details = page.locator(sel).filter({ has: page.locator("summary:visible") }).first();
       const summary = details.locator("summary");
