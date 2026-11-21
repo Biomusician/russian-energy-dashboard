@@ -25,7 +25,7 @@ PY = sys.executable
 COPY_DIRS = ("pipeline", "scripts", "tests", "methodology", "data/curated", "data/processed",
              "web/public/data", "web/src", "docs")
 COPY_FILES = ("pyproject.toml", "web/package.json", "data/raw/ne_10m_admin_1.geojson", "data/raw/ne_50m_admin_0.geojson",
-              "CLAUDE.md", "README.md")
+              "CLAUDE.md", "README.md", ".github/workflows/ci.yml")
 
 
 def _text(old, new):
@@ -4008,6 +4008,55 @@ F23_GLOSS = "web/src/global/help/glossary.ts"
 F23_SI = "web/src/global/searchIndex.ts"
 F23_HS = "web/src/global/homeSelection.ts"
 ITER23_FIX_MUTATIONS = [
+    ("T-1: the embargo releases every effect of a campaign incident",
+     [("pipeline/recovery.py", _text("            if rel is not None and when >= rel:", "            if True:"))],
+     "t1_the_embargo"),
+    ("T-1: the embargo releases an undated effect",
+     [("pipeline/recovery.py", _text("            if rel is not None and when >= rel:", "            if rel is None or when >= rel:"))],
+     "t1_the_embargo"),
+    ("T-1: no incident counts as a campaign member",
+     [("pipeline/recovery.py", _text("        if inc is None or not is_campaign_member(inc, camp):\n            kept[iid] = effects", "        if True:\n            kept[iid] = effects"))],
+     "t1_the_embargo"),
+    ("T-2: a region named in an abstracted record's text is not refused",
+     [("pipeline/global_impacts.py", _text('            out.append(f"an abstracted record names a first-level region of {a3}: {named}")', "            pass"))],
+     "region_name_on_an_abstracted_record"),
+    ("T-2: a region named in an abstracted record's address is not refused",
+     [("pipeline/global_impacts.py", _text("                out.append(f\"source {s.get('ref')!r}: the citation address names a first-level region of {a3}\")", "                pass"))],
+     "region_name_on_an_abstracted_record"),
+    ("T-2: the address check reads the outlet's host",
+     [("pipeline/global_impacts.py", _text('addr_path = re.sub(r"^https?://[^/]+"', 'addr_path = re.sub(r"^https?://"'))],
+     "region_name_on_an_abstracted_record"),
+    ("T-2: a country outside the systems has no region names",
+     [("pipeline/global_impacts.py", _text('        ctx["unit_names"][key] = name_phrases(sorted(names), exclude=(ctx["names"].get(a3, ""),))',
+                                           '        ctx["unit_names"][key] = []'))],
+     "region_names_for_any_country"),
+    ("T-4: an abstracted record's text is read only for the shared method words",
+     [("pipeline/global_impacts.py", _text("    hit = ABSTRACTED_ADDRESS_METHOD.search(_prose(r))", "    hit = B.METHOD_WORDING.search(_prose(r))"))],
+     "method_words_in_an_abstracted"),
+    ("T-5: the malware-family check is never run",
+     [("pipeline/global_impacts.py", _text("    out += family_problems(r)\n", ""))],
+     "named_malware_family"),
+    ("T-5: a family introduced by name ('dubbed') passes",
+     [("pipeline/global_impacts.py", _text("(strain|variant|dubbed|called|named|known as)", "(strain|variant)"))],
+     "named_malware_family"),
+    ("T-5: the family check reads non-digital records",
+     [("pipeline/global_impacts.py", _text("    if digital_category(r) is None:\n        return []\n    # Headlines are left out", "    # Headlines are left out"))],
+     "group_named_in_the_attribution"),
+    ("T-3: a missing bundler skips again in CI",
+     [("tests/test_iteration21_testarch.py", _text(' and not os.environ.get("EDM_REQUIRE_BUNDLER")', ""))],
+     "t3_ci_python_job"),
+    ("T-3: CI's Python job does not install node_modules",
+     [(".github/workflows/ci.yml", _text("      - name: Install the frontend's bundler\n        working-directory: web\n        run: npm ci\n", ""))],
+     "t3_ci_python_job"),
+    ("T-3: CI does not require the bundler",
+     [(".github/workflows/ci.yml", _text('          EDM_REQUIRE_BUNDLER: "1"\n', ""))],
+     "t3_ci_python_job"),
+    ("T-6: the parser reads the distance column into a field",
+     [("pipeline/fetch_wikipedia.py", _text('"capacity_mtpa": capacity,', '"capacity_mtpa": capacity, "distance": txt(cols.get("distance (km)", 4)),'))],
+     "t6_the_parser"),
+    ("T-6: the parser carries the distance value under a harmless name",
+     [("pipeline/fetch_wikipedia.py", _text('"capacity_mtpa": capacity,', '"capacity_mtpa": capacity, "notes": txt(4),'))],
+     "t6_the_parser"),
     ("F-2: Help promises no facility is ever named",
      [("web/src/global/help/content.ts", _text(" A record may name the facility it concerns, except where the safeguards below withhold it.",
                                               " Nothing finer than a first-level region is published."))],
@@ -4159,6 +4208,7 @@ ITER23_FIX_MUTATIONS = [
 ]
 MUTATIONS += ITER23_FIX_MUTATIONS
 TEST_FILES += ("tests/test_iteration23_fixes.py",)
+TEST_FILES += ("tests/test_iteration23_testarch.py",)
 
 
 if __name__ == "__main__":

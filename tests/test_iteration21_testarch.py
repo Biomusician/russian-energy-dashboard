@@ -49,7 +49,10 @@ def _node():
 NODE = _node()
 _ESBUILD = _find("web/node_modules", ("esbuild",))
 NODE_MODULES = _ESBUILD.parent if _ESBUILD else None
-needs_bundler = pytest.mark.skipif(NODE is None or NODE_MODULES is None,
+# CI sets EDM_REQUIRE_BUNDLER: there a missing bundler fails these tests instead of skipping them.
+# The Python job skipped all of them for want of `npm ci`, so the campaign's "every mutant caught"
+# held on this machine only (final test-architecture red team T-3, iteration 23).
+needs_bundler = pytest.mark.skipif((NODE is None or NODE_MODULES is None) and not os.environ.get("EDM_REQUIRE_BUNDLER"),
                                    reason="no Node or no web/node_modules/esbuild to run the shipped TypeScript")
 needs_payload = pytest.mark.skipif(not (WEB / "global" / "manifest.json").exists(), reason="no built payload")
 

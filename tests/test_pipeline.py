@@ -503,6 +503,33 @@ FORBIDDEN_FIELDS = {
     "vulnerability", "target_priority", "ingress", "egress", "command_post",
     "distance_km", "distance_to_ukraine", "range_km", "strike_range",
 }
+# Read by token as well (final test-architecture red team T-6, iteration 23): a key named
+# "distance" or "km_from_front" passed a whole-name list. Every token here is absent from the
+# served payload today; "range" and "km" are refused only beside a word that makes them a reach
+# ("esdi_range" and "total_length_km" are not), and "readiness" stays whole-name because
+# "evidence_readiness" is research readiness.
+FORBIDDEN_TOKENS = {"distance", "ingress", "egress", "front", "frontline", "vulnerability", "vulnerable",
+                    "priority", "reach", "position", "location", "tactical"}
+REACH_WORDS = {"km", "strike", "target", "from", "to", "front", "m"}
+
+
+def _key_tokens(k):
+    return re.findall(r"[a-z]+", re.sub(r"([a-z])([A-Z])", r"\1_\2", str(k)).lower())
+
+
+def out_of_scope_key(k):
+    t = set(_key_tokens(k))
+    return (str(k).lower() in FORBIDDEN_FIELDS or bool(t & FORBIDDEN_TOKENS)
+            or ("range" in t and bool(t & REACH_WORDS)) or ("km" in t and bool(t & {"from", "to", "target", "front"})))
+
+
+def test_out_of_scope_keys_are_read_by_token():
+    for k in ("distance", "km_from_front", "distanceKm", "strikeRange", "range_m", "target_priority_rank",
+              "frontline_km", "reach_km", "currentPosition", "location"):
+        assert out_of_scope_key(k), k
+    for k in ("esdi_range", "range_days", "total_length_km", "evidence_readiness", "assessed_readiness",
+              "reference_range_mtpa", "drawn_length_km"):
+        assert not out_of_scope_key(k), k
 
 
 @pytest.mark.skipif(not (PROCESSED / "incidents.json").exists(),
@@ -514,7 +541,7 @@ def test_emitted_data_carries_no_out_of_scope_fields():
     def walk(node):
         if isinstance(node, dict):
             for k, v in node.items():
-                if k.lower() in FORBIDDEN_FIELDS:
+                if out_of_scope_key(k):
                     found.add(k)
                 walk(v)
         elif isinstance(node, list):
@@ -1558,6 +1585,27 @@ COORD_KEYS = {"lat", "lon", "lng", "latitude", "longitude", "coordinates", "geom
 #   * nothing in it is linked to an incident.
 # Exempting it without that test would convert a caught question into a silent allowance.
 COORD_ALLOWED_FILES = {"assets.json", "pipeline_registry.json"}  # + every *.geojson, below
+# By token too (T-6): "centroid", "bbox", "latlng" or "position" passed the whole-name list. Not
+# "lng" or "geometry" as tokens: "lng_terminal" is liquefied natural gas and "detailed_geometry_km" a
+# length. regions.json may carry a region's centroid and bounding box: the admin region is the
+# unit the map presents, so that is the dashboard's own precision, not a facility's.
+COORD_TOKENS = {"lat", "lon", "latitude", "longitude", "coord", "coords", "coordinate", "coordinates", "latlng",
+                "lonlat", "centroid", "bbox", "position", "xy", "geojson"}
+COORD_REGION_KEYS = {"centroid", "bbox"}
+
+
+def coord_key(name, k):
+    if name.replace("\\", "/") == "regions.json" and k in COORD_REGION_KEYS:
+        return False
+    return k.lower() in COORD_KEYS or k.lower() == "point" or bool(set(_key_tokens(k)) & COORD_TOKENS)
+
+
+def test_coordinate_keys_are_read_by_token():
+    for k in ("centroid", "bbox", "latLng", "event_lat", "position_xy", "coordinates", "point"):
+        assert coord_key("incidents.json", k), k
+    for k in ("lng_terminal", "detailed_geometry_km", "at_point", "relation", "is_latest_of_type"):
+        assert not coord_key("incidents.json", k), k
+    assert not coord_key("regions.json", "centroid") and coord_key("regions.json", "lat")
 
 
 def _walk_keys(node):
@@ -1583,7 +1631,7 @@ def test_no_out_of_scope_fields_anywhere_in_served_payload():
     for name in names:
         fp = PROCESSED / name
         bad = {k for k in _walk_keys(json.loads(fp.read_text(encoding="utf-8")))
-               if k.lower() in FORBIDDEN_FIELDS}
+               if out_of_scope_key(k)}
         if bad:
             offenders[name] = sorted(bad)
     assert not offenders, f"out-of-scope fields present in served data: {offenders}"
@@ -1603,7 +1651,7 @@ def test_event_and_analysis_files_carry_no_coordinates():
             continue
         fp = PROCESSED / name
         bad = {k for k in _walk_keys(json.loads(fp.read_text(encoding="utf-8")))
-               if k.lower() in COORD_KEYS}
+               if coord_key(name, k)}
         if bad:
             offenders[name] = sorted(bad)
     assert not offenders, f"coordinate keys leaked into event/analysis data: {offenders}"

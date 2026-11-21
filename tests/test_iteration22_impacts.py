@@ -32,7 +32,9 @@ AS_OF = "2026-11-19"
 KEY = b"test-key-not-the-real-one"
 # Unit names for the campaign systems, injected so no test needs the Natural Earth cache.
 UNIT_NAMES = {"ir": ["khuzestan", "tehran", "bushehr"], "iq": ["basrah", "al basrah", "kurdistan"],
-              "sa": ["eastern province"], "ae": ["abu dhabi"], "bh": [], "kw": [], "om": [], "qa": []}
+              "sa": ["eastern province"], "ae": ["abu dhabi"], "bh": [], "kw": [], "om": [], "qa": [],
+              # A country that is not a system: its region names are read for abstracted records only (T-2).
+              "a3:UKR": ["kharkiv", "lviv"]}
 
 FRA = "imp-2025-03-05-fra-electricity-synthetic-grid-ransomware"
 POL = "imp-2024-11-18-pol-telecom-synthetic-network-outage"
@@ -208,6 +210,76 @@ def test_gate_refuses_method_wording_on_an_abstracted_record_and_in_its_addresse
         r = rec(UKR)
         r["sources"][0]["url"] = f"https://newsroom.example/synthetic/{slug}/123.html"
         refused(r, "citation address states how the attack was carried out")
+
+
+@pytest.mark.parametrize("text", [
+    "Saboteurs used explosives on the line.", "An arson attack cut supply.", "A blast damaged the substation.",
+    "The plant was struck overnight.",
+])
+def test_gate_refuses_method_words_in_an_abstracted_records_text(text):
+    """T-4 (final test-architecture red team, iteration 23): the address list's method words were
+    refused in an abstracted record's addresses but allowed in its text."""
+    r = rec(UKR)
+    r["summary"] = "SYNTHETIC FIXTURE. " + text
+    refused(r, "method wording on an abstracted record")
+
+
+def test_method_words_stay_allowed_on_a_record_published_with_its_place():
+    r = rec(BRA)
+    r["summary"] += " A transformer explosion followed the storm."
+    assert not [p for p in problems(r) if "method wording" in p]
+
+
+def test_gate_refuses_a_region_name_on_an_abstracted_record_outside_the_campaign_systems():
+    """T-2 (final test-architecture red team, iteration 23): place names were checked only in
+    campaign-restricted systems, though every attack record, everywhere, carries no place."""
+    r = rec(UKR)
+    assert not [p for p in problems(r) if "first-level region" in p], "the fixture passes"
+    r["summary"] = "SYNTHETIC FIXTURE. Electricity infrastructure in Kharkiv was damaged."
+    refused(r, "an abstracted record names a first-level region of UKR")
+    r = rec(UKR)
+    r["sources"][0]["url"] = "https://newsroom.example/synthetic/lviv-power-outage/1.html"
+    refused(r, "the citation address names a first-level region of UKR")
+    # The host is the outlet, not the event's place.
+    r = rec(UKR)
+    r["sources"][0]["url"] = "https://lviv-news.example/synthetic/power-outage/1.html"
+    assert not [p for p in problems(r) if "first-level region" in p]
+
+
+def test_a_region_name_on_a_record_published_with_its_place_is_not_refused():
+    r = rec(BRA)
+    r["summary"] += " Kharkiv is not in Brazil, and no Brazilian region is listed for the test."
+    assert not [p for p in problems(r) if "first-level region" in p]
+
+
+@pytest.mark.needs_raw_cache
+@pytest.mark.skipif(not (ROOT / "data" / "raw" / "ne_10m_admin_1.geojson").exists(),
+                    reason="Natural Earth cache not present")
+def test_region_names_for_any_country_come_from_natural_earth():
+    c = G.load_context(WORLD)
+    assert "kharkiv" in G.country_unit_phrases(c, "UKR")
+    assert "ukraine" not in G.country_unit_phrases(c, "UKR"), "the country's own name is spared"
+    assert "texas" in G.country_unit_phrases(c, "USA"), "a monitored system reads its own rows"
+
+
+@pytest.mark.parametrize("text", [
+    "Industroyer2 malware cut power to the grid.", "The LockBit ransomware encrypted billing systems.",
+    "A wiper dubbed AcidPour erased the servers.", "A malware strain was found on the network.",
+])
+def test_gate_refuses_a_named_malware_family_outside_the_attribution(text):
+    """T-5 (final test-architecture red team, iteration 23)."""
+    r = rec(FRA)
+    r["summary"] += " " + text
+    refused(r, "a malware family or tool is named outside the attribution")
+
+
+def test_a_group_named_in_the_attribution_is_not_a_family_finding():
+    r = rec(FRA)
+    r.setdefault("attribution", {})["actor"] = "LockBit"
+    assert not [p for p in problems(r) if "malware family" in p]
+    r = rec(BRA)
+    r["summary"] += " Acid rain was not reported."      # not a digital record: the check is not read
+    assert not [p for p in problems(r) if "malware family" in p]
 
 
 def test_gate_refuses_status_wording_on_an_abstracted_record_and_in_its_addresses():

@@ -679,3 +679,13 @@ check has not reached at that same address (`reachable` in `link_health.json`; r
 `civilian_service_impact[].affected` is a bare word, has `value: null` or has `unit: "unknown"`;
 `review.ai_check` is anything but `passed` on a record with reported AI involvement, or present on
 one without.
+
+Added at the iteration-23 release (final test-architecture red team): an abstracted record names a
+first-level region of its country in its text, its id or its citation's path, in any country (a
+monitored system's own region names, otherwise Natural Earth's admin-1 names; the address's host is
+the outlet and is not read); an abstracted record's text uses a method word (strike, struck,
+shelling, explosion, explosive, blast, arson); a digital record names a malware family or tool, or
+introduces one ("malware dubbed ..."), in its own text. The attribution and a cited headline are
+not read for a family name: a ransomware group shares its tool's name and is an attribution claim
+(owner question P6). What the family list cannot catch is an unlisted name written without such a
+phrase; that rests on the safety reviewer.

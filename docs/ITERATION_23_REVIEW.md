@@ -268,6 +268,7 @@ New, none implemented:
 | P3 Gulf phone header | Gulf country pages shift by 0.18 on a phone when the breadcrumb gains its group crumb (§26). Delay the header until the manifest loads, or give every phone page a two-row header |
 | P4 Held-record counts in What's New | What's New caps lists and never counts the remainder ("capped and flagged, never counted"); a reader asked how many were held. Add a count field, or keep the rule |
 | P5 Means named in theatre records | A theatre record's title and text may name the broad means its source reports ("drone attack"); Gulf attack records name none. Help now says so (F-2). (a) keep; (b) abstract means in theatre text as the Gulf does; (c) keep in sources only |
+| P6 Ransomware names in attribution | "No malware family" is enforced in a cyber record's own text (T-5). Ransomware groups share their tool's name, and five records name one as the claimed actor; one attribution statement reports, from a cited outlet, that a named ransomware was involved. (a) attribution may name the group, as now; (b) attribution names an actor only, never a tool; (c) abstract group names to "a ransomware group" |
 
 ## 24. Tests
 
@@ -279,7 +280,7 @@ phone, Back/Forward) and the wide-font first-screen checks.
 
 The final methodology red team ("find one claim the product makes that its implementation cannot
 justify") returned five findings and two notes, all handled (F-1 to F-5, N-1, N-2, P5 in the
-findings table). The final test-architecture red team is reported in §25.
+findings table). The final test-architecture red team (six findings, T-1 to T-6, all fixed; owner question P6) is reported in §25.
 
 ## 25. Mutations
 
@@ -297,7 +298,36 @@ survivors**, zero invalid anchors, zero errors. Iteration 22 released with 829.
 Both fixes are in `a86b243`; the three affected mutants were rerun and caught. **996 mutants, all
 caught.** `--only PREFIX` runs a subset for spot checks; the release gate runs all.
 
-TEST_ARCH_RED_TEAM
+**Final test-architecture red team** (§129–131). An independent Claude agent, reading only (it ran
+nothing and opened no queue), looked for regressions every test would pass. A first agent stalled on
+a permission prompt and returned nothing; it was replaced. Six findings, five on safety, all verified
+against the code and fixed, each with a refusal test and mutants (`T-1`–`T-6` in the campaign):
+
+- **T-1** The theatre's effect embargo was only asked "is anything still withheld today?", which a
+  version withholding nothing answers best. A synthetic campaign now checks what is held, when it is
+  released, and that an undated report never is.
+- **T-2** Place names on an abstracted impact record were read only in campaign-restricted systems,
+  though the rule is "no place, everywhere". The gate now reads every country's first-level region
+  names (a system's own rows, otherwise Natural Earth's admin-1) in the text, the id and the
+  citation's path. No served record was refused.
+- **T-3** CI's Python job never installed `node_modules`, so it skipped about two hundred tests that
+  bundle the shipped TypeScript (Crimea's wording, the map's neutral colours, Help, the impact
+  views): the campaign's "all caught" held on this machine only. The job now runs `npm ci`, and
+  `EDM_REQUIRE_BUNDLER` turns a skip into a failure. These tests have not yet run on Linux; §28
+  records the first CI run.
+- **T-4** Method words (explosion, blast, arson, strike) were refused in an abstracted record's
+  addresses but not its text. Both are read now.
+- **T-5** The cyber gate had no malware-family check. It now refuses a named family or a "malware
+  dubbed ..." phrase in a digital record's own text. Group names in the attribution, and in a cited
+  headline, are left alone: five served records name a ransomware group as the claimed actor, and
+  one attribution statement reports a named ransomware. Whether that is allowed is owner question P6.
+- **T-6** The out-of-scope and coordinate key checks compared whole key names, so `distance`,
+  `km_from_front` or `centroid` passed; and the strike-table parser was never run by a test. Keys
+  are read by token now (with stated exceptions: `lng_terminal` is liquefied natural gas, a region's
+  centroid is the map's own unit), and a fixture table with a Distance column proves the parser
+  never carries its value.
+
+With these, **1,012 mutants**.
 
 ## 26. Performance
 
@@ -348,7 +378,7 @@ PENDING.
 
 ## 31. Recommended iteration 24
 
-1. Owner decisions M1–M15 and P1–P5, starting with the ones that block nothing else: P1 error
+1. Owner decisions M1–M15 and P1–P6, starting with the ones that block nothing else: P1 error
    reporting, M15 social tier, M10 attribution instrument, M5 cohort flag.
 2. Re-source and re-review the held US, Canadian and Chinese records; a reviewer for the two
    undeclared-relay candidates.
@@ -387,3 +417,10 @@ PENDING.
 | F-4 | Theatre | Coverage ratios not at the headline's visual weight | BUG (CLAUDE.md rule) | 19 px regular vs 40 px semibold | Honesty figures read as footnotes | Headline typeface and weight, ≥2/3 size | No |
 | F-5 | Impact | A country hold reached the impact layer only at the next impact import | BUG | import order | A held event could stay served | Country import stops until reconciled | No |
 | P5 | Theatre | Broad means named in theatre text, not in Gulf attack records | OWNER DECISION | record titles | Inconsistent abstraction across layers | Memo P5 | Yes |
+| T-1 | Theatre | Effect embargo never tested withholding anything | BUG (test) | `recovery.embargo_effects` | A broken embargo would publish later status | Synthetic campaign test; 3 mutants | No |
+| T-2 | Impact | Abstracted records' place names read only in campaign systems | BUG | `abstraction_problems` | A place on an attack record outside the Gulf | Gate reads every country's regions | No |
+| T-3 | CI | Python job skipped ~200 bundler tests | BUG (process) | `ci.yml` had no `npm ci` | Safety tests green unrun in CI | `npm ci` + `EDM_REQUIRE_BUNDLER` | No |
+| T-4 | Impact | Method words refused in addresses, not text | BUG | `ABSTRACTED_ADDRESS_METHOD` | Method on an abstracted record | Text read too | No |
+| T-5 | Impact | No malware-family check | BUG | `EXPLOIT_WORDING` | Tooling named on a cyber record | Family check; P6 | No |
+| T-6 | Theatre | Key checks by whole name; parser untested | BUG (test) | `FORBIDDEN_FIELDS`, `fetch_wikipedia.build` | Distance column could return | Token match; fixture test | No |
+| P6 | Impact | Ransomware group names in attribution | OWNER DECISION | 5 records | Tool named as actor | Memo P6 | Yes |

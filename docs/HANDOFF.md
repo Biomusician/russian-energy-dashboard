@@ -38,7 +38,7 @@ Current, durable state of the project. Read this first when resuming.
 Released 21 November 2026 (the production SHA is in the review §29). See [ITERATION_23_REVIEW.md](ITERATION_23_REVIEW.md), then
 [METHODOLOGY_RED_TEAM_23.md](METHODOLOGY_RED_TEAM_23.md) (137 findings, owner memos M1–M15) and
 [METHODOLOGY_CONSISTENCY_MATRIX_23.md](METHODOLOGY_CONSISTENCY_MATRIX_23.md). Owner questions: review
-§23 (M1–M15, P1–P5) plus the standing ones. Nothing was ruled on the owner's behalf.
+§23 (M1–M15, P1–P6) plus the standing ones. Nothing was ruled on the owner's behalf.
 
 **What a new session most needs to know.**
 
@@ -68,7 +68,7 @@ Released 21 November 2026 (the production SHA is in the review §29). See [ITERA
 - **The ribbon's honesty figures** stand at the headline's typeface and weight (F-4), and "capacity
   quantified" counts MW or Mt/yr figures, with observed per-event effects counted apart
   (`incidents_with_reported_effect`, never scored).
-- **Mutation campaign:** 996 mutants, all caught at release. `--only PREFIX` runs a subset for spot checks; a
+- **Mutation campaign:** 1,012 mutants. The last red team (review §25, T-1–T-6) found code no mutant touched: read a new gate rule's refusal test before trusting a green campaign. `--only PREFIX` runs a subset for spot checks; a
   release gate runs all. Do not branch-switch or commit while it runs: its tests read the repo's git
   state through `EDM_GIT_ROOT`.
 - **Next-day refresh simulation** needs a clock shim (a `sitecustomize.py` on `PYTHONPATH` that

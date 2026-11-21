@@ -76,6 +76,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # About two hundred tests bundle the shipped TypeScript with esbuild and run it (Crimea's
+      # wording, the map's neutral colours, Help, the impact views). Without node_modules they
+      # skip, and this job went green having run none of them. EDM_REQUIRE_BUNDLER below turns
+      # that skip into a failure.
+      - name: Install the frontend's bundler
+        working-directory: web
+        run: npm ci
 
       - name: Install test dependency
         run: pip install pytest
@@ -92,6 +102,8 @@ jobs:
       # The few tests that genuinely need a build or a live request are opt-in behind
       # RUN_BUILD_TESTS and run in refresh.yml, which builds anyway and keeps a data/raw cache.
       - name: Test against the committed payload
+        env:
+          EDM_REQUIRE_BUNDLER: "1"
         run: python -m pytest
 
       - name: The payload must be present, or the suite skipped most of itself

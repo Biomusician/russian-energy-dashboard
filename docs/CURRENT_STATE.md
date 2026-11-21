@@ -39,4 +39,4 @@
 - **Per-incident effects**: 14 across 14 incidents
 
 ## Tests
-- **Python test functions** (`tests/test_pipeline.py`): 486 (pytest reports more cases — some functions are parametrized)
+- **Python test functions** (`tests/test_pipeline.py`): 488 (pytest reports more cases — some functions are parametrized)

@@ -170,6 +170,19 @@ EXPLOIT_WORDING = re.compile("|".join([
     r"\bshodan\b", r"exposed[- ]device (list|inventor)", r"network (topology|diagram|map)",
 ]), re.I)
 
+# A named malware family or tool, or a sentence that introduces one (final test-architecture red
+# team T-5, iteration 23). Read only on a digital record, outside its attribution: a group that
+# shares its name with its ransomware ("ALPHV") is an attribution claim, a separate claim with its
+# own sources, and so is a cited headline (owner question P6). WHAT IT CATCHES: the families most reported against energy,
+# utilities and hospitals, and "<malware word> called/dubbed/known as". WHAT IT CANNOT: an
+# unlisted name written without such a phrase. Ambiguous words ("play") are left out.
+MALWARE_FAMILY = re.compile(
+    r"\b(industroyer\w*|crash ?override|triton|trisis|havex|black ?energy|not ?petya|petya|wanna ?cry|stuxnet|"
+    r"pipedream|incontroller|cosmic ?energy|frosty ?goop|fuxnet|kill ?disk|acid ?rain|dark ?side|lock ?bit|ryuk|"
+    r"conti|black ?cat|alphv|cl[o0]p|revil|sodinokibi|rhysida|black ?basta|qilin|ragnar ?locker|egregor|babuk)\b"
+    r"|\b(malware|ransomware|wiper|trojan|botnet|worm|implant)\s+(strain|variant|dubbed|called|named|known as)\b",
+    re.I)
+
 # Wording that says a service was NOT affected: an attempt filed as a disruption.
 NO_IMPACT_WORDING = re.compile(
     r"\bno (reported |known |apparent )?(service |operational |customer )?(disruption|impact|interruption|outage|effect)\b|"
@@ -425,6 +438,7 @@ def load_context(world_path=None, unit_names=None, link_states=None):
         "restricted": frozenset(sid for sid in systems.COUNTRY_SYSTEMS
                                 if (states.get(sid) or {}).get("state") in B.RESTRICTING_STATES),
         "unit_names": dict(unit_names or {}),
+        "unit_names_given": unit_names is not None,
         "link_states": link_states,
     }
 
@@ -437,6 +451,27 @@ def _unit_phrases(ctx, system_id):
 
 def _countries(r):
     return list(r.get("countries_a3") or []) if r.get("country_a3") == MULTI else [r.get("country_a3")]
+
+
+def country_unit_phrases(ctx, a3):
+    """The first-level region names of any country, for the abstraction check (final
+    test-architecture red team T-2, iteration 23). A monitored system's are its own rows; any other
+    country's are Natural Earth's admin-1 names, the same edition the systems use. A context built
+    with `unit_names` (tests without the Natural Earth cache) reads only what it was given, under
+    the system id or "a3:<A3>"."""
+    sid = ctx["system_of"].get(a3)
+    key = sid or f"a3:{a3}"
+    if ctx.get("unit_names_given"):
+        return ctx["unit_names"].get(key, [])
+    if sid:
+        return _unit_phrases(ctx, sid)
+    if key not in ctx["unit_names"]:
+        if "admin" not in _ADMIN:
+            _ADMIN["admin"] = (B.load_admin1(), B.load_admin0())
+        names = {f["properties"][k] for f in _ADMIN["admin"][0]["features"]
+                 if f["properties"].get("adm0_a3") == a3 for k in ("name", "name_en") if f["properties"].get(k)}
+        ctx["unit_names"][key] = name_phrases(sorted(names), exclude=(ctx["names"].get(a3, ""),))
+    return ctx["unit_names"][key]
 
 
 def restricted_systems(r, ctx):
@@ -502,6 +537,21 @@ def technical_problems(x):
         if key != "url" and EXPLOIT_WORDING.search(v):
             out.append(f"{path}: exploit or access-method wording ({EXPLOIT_WORDING.search(v).group(0)!r})")
     return out
+
+
+def family_problems(r):
+    """A digital record names no malware family or tool outside its attribution (T-5)."""
+    if digital_category(r) is None:
+        return []
+    # Headlines are left out: they are the cited outlet's words and name the claimed group as often as
+    # the record's attribution does ("Black cat: how the cyber-mercenaries ... operate"). P6.
+    parts = [r.get("summary"), r.get("effect"), r.get("episode_basis")]
+    for c in r.get("civilian_service_impact") or []:
+        if isinstance(c, dict) and isinstance(c.get("affected"), dict):
+            parts.append(c["affected"].get("source_says"))
+    hit = MALWARE_FAMILY.search(" \n ".join(str(p) for p in parts if p))
+    return [f"a malware family or tool is named outside the attribution ({hit.group(0)!r}): the broad "
+            "mechanism is the ceiling"] if hit else []
 
 
 def _unknown_keys(obj, allowed, where):
@@ -1142,6 +1192,25 @@ def abstraction_problems(r, ctx):
     hit = B.status_wording(_prose(r))
     if hit:
         out.append(f"status wording on an abstracted record ({hit.group(0)!r})")
+    # The address list's method words hold for the text too: B.METHOD_WORDING, shared with the
+    # country systems, has no explosion, blast or arson (final test-architecture red team T-4).
+    hit = ABSTRACTED_ADDRESS_METHOD.search(_prose(r))
+    if hit:
+        out.append(f"method wording on an abstracted record ({hit.group(0)!r})")
+    # Region names, in any country. A campaign-restricted system's are refused on every record by
+    # campaign_problems; this covers every other country, where they were not read at all (T-2).
+    # The citation's path is read, not its host: an outlet named for its city is not the event's place.
+    for a3 in _countries(r):
+        if ctx["system_of"].get(a3) in ctx["restricted"]:
+            continue
+        phrases = country_unit_phrases(ctx, a3)
+        named = names_in(" \n ".join([_prose(r), _id_words(r)]), phrases)
+        if named:
+            out.append(f"an abstracted record names a first-level region of {a3}: {named}")
+        for s in _sources(r):
+            addr_path = re.sub(r"^https?://[^/]+", "", str(s.get("url") or ""))
+            if names_in(B.address_words(addr_path), phrases):
+                out.append(f"source {s.get('ref')!r}: the citation address names a first-level region of {a3}")
     # Duration in words, in our prose and in the claims we keep from each source (_prose reads both).
     hit = DURATION_WORDING.search(_prose(r))
     if hit:
@@ -1185,6 +1254,7 @@ def one_record_problems(r, ctx):
     out += wording_problems(r)
     out += abstraction_problems(r, ctx)
     out += campaign_problems(r, ctx)
+    out += family_problems(r)
     out += review_problems(r)
     return out
 
