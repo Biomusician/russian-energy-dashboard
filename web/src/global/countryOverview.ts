@@ -111,8 +111,8 @@ function searchReasons(sys: OverviewSystem): string[] {
   // No number: the overview counts nothing on a page with no record, and the Research coverage
   // tab gives the groups by state.
   if (blocked > 0) {
-    out.push(`${blocked === 1 ? "a source group" : "some source groups"} could not be read in the latest search `
-      + "(the source refused automated access or did not load)");
+    // Why it could not be read is on the Research coverage tab; this sentence sits above the map on a phone.
+    out.push(`${blocked === 1 ? "a source group" : "some source groups"} could not be read in the latest search`);
   }
   if (rf.completeness !== "complete") out.push("the latest search pass is partial");
   return out;
