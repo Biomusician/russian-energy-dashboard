@@ -283,9 +283,21 @@ findings table). The final test-architecture red team is reported in §25.
 
 ## 25. Mutations
 
-PENDING: complete campaign on the release tree. The campaign holds 988 mutants (829 at the iteration-22
-release; iteration 23 added theatre, help, impact, home, record-correction and fix lists). Every
-iteration-23 list ran to zero survivors in its own clone; the merged anchors validate.
+The complete campaign ran on the release tree (`04bbe5e`): 995 mutants, 993 caught, **two real
+survivors**, zero invalid anchors, zero errors. Iteration 22 released with 829.
+
+- *help_facts carries a note that names a data file* survived because the mutant had become
+  equivalent: it swapped in the freshness note, which stopped naming a file when its wording
+  changed. The path check also missed workflow files (`.yml`, `.github/`). The mutant now swaps in
+  the field that does name one, and the check catches it.
+- *XL-01: every historical context statement says its newer one is above* survived because the
+  test read only the served file, where every newer statement happens to be drawn above. A
+  synthetic order now reaches all three places, with one added mutant for the both-sides case.
+
+Both fixes are in `a86b243`; the three affected mutants were rerun and caught. **996 mutants, all
+caught.** `--only PREFIX` runs a subset for spot checks; the release gate runs all.
+
+TEST_ARCH_RED_TEAM
 
 ## 26. Performance
 
@@ -307,7 +319,10 @@ the breadcrumb gains its "Gulf littoral" crumb and wraps (owner item P3).
 
 ## 27. Moving-main integration
 
-PENDING.
+`main` did not move during the iteration: `origin/main` was still the iteration-22 release
+(`8f17610`) when the release began, so the branch fast-forwarded with nothing to merge. The release
+build ran on `main`, where What's New reads the production lineage (comparison mode `production`,
+against the last published build before this one).
 
 ## 28. CI
 
