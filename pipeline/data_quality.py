@@ -480,10 +480,15 @@ def cannot_tell_you(snapshot, explanations):
         items.append({
             "question": "Whether a specific facility has actually been repaired",
             "answer": (
-                f"Usually not. {rs['unresolved_count']} reported disruptions have no published "
-                "restoration report, so their decline over time is modelled decay, not evidence "
-                "of repair. Where a restoration WAS observed, the record says so and the evidence kind travels with "
-                "the number."),
+                # unresolved_count is a model count (build_index: facilities still in the index
+                # that no full-reconstitution report has closed), never "no restoration report":
+                # this sentence said the latter (iteration 23, first-time-user red team H-01).
+                f"Usually not. {rs['unresolved_count']} struck facilities are still counted in the index "
+                "with no report that closes the disruption"
+                + (f" ({rs['unresolved_with_recovery_report']} of them carry a partial-restart or restoration "
+                   "report that did not close it)" if rs.get("unresolved_with_recovery_report") else "")
+                + ", so their decline over time is modelled decay, not evidence of repair. Where a restoration "
+                "WAS observed, the record says so and the evidence kind travels with the number."),
             "basis": "recovery_stats",
         })
 

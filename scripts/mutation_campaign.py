@@ -3858,6 +3858,11 @@ ITER23_RECORDS_MUTATIONS = [
     ("a lead correction is dated by its lane file, not by itself",
      [("scripts/import_impacts.py", _text('str(v.get("reviewed_at") or doc.get("reviewed_at") or "")', 'str(doc.get("reviewed_at") or "")'))],
      "a_lead_correction_carries_its_own_date"),
+    ("H-01: the model count is called disruptions with no published restoration report",
+     [("pipeline/data_quality.py", _text(
+         "struck facilities are still counted in the index \"",
+         "reported disruptions have no published restoration report \""))],
+     "h01_the_cannot_tell_you_list_never_calls_the_model_count"),
 ]
 MUTATIONS += ITER23_RECORDS_MUTATIONS
 

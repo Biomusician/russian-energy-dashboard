@@ -9,6 +9,7 @@ tests/test_iteration21_testarch.py), so a mutant in Ribbon.tsx or Methodology.ts
 what these tests execute.
 """
 import csv
+import copy
 import json
 import re
 from pathlib import Path
@@ -512,3 +513,17 @@ def test_a_reconstructed_payload_says_so_on_the_ribbon(tmp_path_factory):
     assert "Pinned-source reconstruction for 2026-01-01" in text
     current = _text(run_ts(tmp_path_factory, THEATRE, RENDER_RIBBON, _payload()))
     assert "reconstruction" not in current.lower()
+
+
+def test_h01_the_cannot_tell_you_list_never_calls_the_model_count_no_restoration_report():
+    """H-01 (first-time-user red team). recovery_stats.unresolved_count is a model count of facilities
+    still in the index; the served "cannot tell you" sentence called it disruptions with no
+    published restoration report, though some of them carry one."""
+    from pipeline import data_quality as DQ
+    snap = copy.deepcopy(_snap())
+    snap["recovery_stats"] = {**snap["recovery_stats"], "unresolved_count": 49, "unresolved_with_recovery_report": 6}
+    explanations = json.loads((ROOT / "data" / "processed" / "explanations_regional.json").read_text(encoding="utf-8"))
+    text = " ".join(i["answer"] for i in DQ.cannot_tell_you(snap, explanations))
+    assert "have no published restoration report" not in text
+    assert "49 struck facilities are still counted in the index with no report that closes the disruption" in text
+    assert "(6 of them carry a partial-restart or restoration report that did not close it)" in text
