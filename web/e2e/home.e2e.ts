@@ -175,19 +175,20 @@ test.describe("global search", () => {
     await expect(page).toHaveTitle(/United States/);
   });
 
-  test("a glossary concept opens the glossary at that entry", async ({ app, page }) => {
+  test("a glossary concept opens its entry on the Help page, and Back returns", async ({ app, page }) => {
     await app.open("");
     const box = page.getByRole("combobox", { name: SEARCH });
     await box.fill("exposure");
     await results(page).filter({ hasText: "Glossary" }).first().click();
-    const dialog = page.getByRole("dialog", { name: "Glossary" });
-    await expect(dialog).toBeVisible();
+    await expect(page).toHaveURL(/\?view=help#g-exposure$/);
     await expect(page.getByRole("heading", { name: "Exposure", level: 3, exact: true })).toBeFocused();
+    await page.goBack();
+    await expect(page.getByRole("region", { name: /Start here/ })).toBeVisible();
   });
 });
 
 test.describe("Start here", () => {
-  test("dismissal persists across a reload and How to read this brings it back", async ({ app, page }) => {
+  test("dismissal persists across a reload, and the same points open Help", async ({ app, page }) => {
     await app.open("");
     const panel = page.getByRole("region", { name: /Start here/ });
     await expect(panel).toBeVisible();
@@ -197,13 +198,12 @@ test.describe("Start here", () => {
     await page.reload();
     await app.mapIdle();
     await expect(page.getByRole("region", { name: /Start here/ })).toHaveCount(0);
-    await page.getByRole("button", { name: "How to read this" }).click();
-    await expect(page.getByRole("region", { name: /Start here/ })).toBeVisible();
-    await expect(page.getByRole("heading", { name: /Start here/ })).toBeFocused();
-    // Reopening clears the memory, so a reload shows it again.
-    await page.reload();
-    await app.mapIdle();
-    await expect(page.getByRole("region", { name: /Start here/ })).toBeVisible();
+    // The panel's six points are the first section of Help, from the same list (help/glossary.ts).
+    await page.locator(".global-nav").getByRole("link", { name: "Help", exact: true }).click();
+    await expect(page).toHaveURL(/\?view=help$/);
+    const first = page.locator("section[aria-labelledby=start-here] ol.help-points").first();
+    await expect(first.getByRole("listitem")).toHaveCount(6);
+    await expect(first).toContainText("No index is not zero.");
   });
 
   test("still works, and never crashes the page, when storage throws", async ({ app, page }) => {
@@ -221,45 +221,35 @@ test.describe("Start here", () => {
     await expect(page.getByRole("region", { name: /Start here/ })).toBeVisible();
   });
 
-  test("How to read this on a country page goes home with the panel open", async ({ app, page }) => {
-    await app.open("");
-    await page.getByRole("region", { name: /Start here/ }).getByRole("button", { name: "Dismiss" }).click();
+  test("Help on a country page opens Help without losing the page: Back returns to it", async ({ app, page }) => {
     await app.open("?sys=ca");
-    await page.getByRole("button", { name: "How to read this" }).click();
-    await expect(page.getByRole("heading", { name: "Energy Disruption Monitor", level: 1 })).toBeVisible();
-    await expect(page.getByRole("region", { name: /Start here/ })).toBeVisible();
+    await page.locator(".global-nav").getByRole("link", { name: "Help", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Help: how to read this site", level: 1 })).toBeVisible();
+    await page.goBack();
+    await expect(page).toHaveURL(/\?sys=ca$/);
+    await expect(page.getByRole("heading", { name: "Canada", level: 1 })).toBeVisible();
   });
 });
 
 test.describe("glossary", () => {
-  test("opens from the bar, Escape closes it, and focus returns to the button", async ({ app, page }) => {
-    await app.open("");
-    const button = page.getByRole("button", { name: "Glossary", exact: true });
-    await button.click();
-    const dialog = page.getByRole("dialog", { name: "Glossary" });
-    await expect(dialog).toBeVisible();
+  test("lives on the Help page: every term, each with More detail, reached from the old link", async ({ page }) => {
+    await page.goto("/?help=glossary");
+    await expect(page).toHaveURL(/\?view=help#glossary$/);
+    const glossary = page.locator("section[aria-labelledby=glossary]");
     for (const term of ["ESDI", "Exposure", "Transmission burden", "Episode", "Research preview", "Originating statement",
-                        "source health", "As published", "Sector state", "Publication safeguard", "No index", "National energy context"]) {
-      await expect(dialog).toContainText(term);
+                        "Source health", "As published", "Sector state", "Publication safeguards", "No index", "National energy context"]) {
+      await expect(glossary).toContainText(term);
     }
-    await expect(page.getByRole("heading", { name: "Glossary", level: 2 })).toBeFocused();
-    await dialog.locator("summary", { hasText: "More detail" }).first().click();
-    await expect(dialog.locator("details").first()).toHaveAttribute("open", "");
-    await page.keyboard.press("Escape");
-    await expect(dialog).toBeHidden();
-    await expect(button).toBeFocused();
+    await expect(page.getByRole("heading", { name: "Glossary (A–Z)", level: 2 })).toBeFocused();
+    await glossary.locator("summary", { hasText: "More detail" }).first().click();
+    await expect(glossary.locator("details").first()).toHaveAttribute("open", "");
   });
 
-  test("How this works opens the method, and ?help=glossary opens the glossary on load", async ({ app, page }) => {
+  test("How this works on the home page opens its Help section", async ({ app, page }) => {
     await app.open("");
-    await page.getByRole("button", { name: "How this works" }).first().click();
-    await expect(page.getByRole("heading", { name: "How this works", level: 3 })).toBeFocused();
-    await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
-    await expect(page.getByRole("dialog")).toBeHidden();
-    await page.goto("/?help=glossary");
-    await expect(page.getByRole("dialog", { name: "Glossary" })).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(page).not.toHaveURL(/help=glossary/);
+    await page.getByRole("region", { name: /Start here/ }).getByRole("link", { name: /How this works/ }).click();
+    await expect(page).toHaveURL(/\?view=help#how-it-works$/);
+    await expect(page.getByRole("heading", { name: "How this works, in six steps", level: 3 })).toBeFocused();
   });
 });
 

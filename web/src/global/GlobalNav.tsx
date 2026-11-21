@@ -1,39 +1,32 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { loadManifest, type Manifest } from "./manifest";
 import { IMPACTS_VIEW, LOCATION_EVENT, impactsHref, navigate, navigateGroup, navigateTo } from "./router";
-import { GLOSSARY, HOW_IT_WORKS, glossaryDetail, type ServedMethod } from "./glossary";
+import { HELP_VIEW, helpHref } from "./help/anchors";
 import {
   CONCEPT_ENTRIES, KIND_LABEL, VIEW_ENTRIES, groupEntries, loadTheatreRegions, loadedCountryRegions,
   onCountryRegions, regionalContextEntries, searchEntries, systemEntries, theatreRegionEntries,
   type SearchEntry, type SearchHit, type TheatreRegion,
 } from "./searchIndex";
-import { requestStartHere } from "./startHereMemory";
 import "../styles/home.css";
 import "../styles/sitebar.css";
 
 /** Navigation shared by every global view (iteration 21): a breadcrumb home, one search box,
- *  the glossary, "How to read this" and a copy-link control. One bar per view, so one `/`
- *  shortcut and one glossary dialog per page. */
+ *  Help and a copy-link control. One bar per view, so one `/` shortcut per page.
+ *
+ *  Iteration 23: "How to read this", "How this works" and "Glossary" were three entries to three
+ *  different things (a panel on the home page, which took the reader away from the page they were
+ *  reading; and a modal with no address). They are one "Help" link to a page of its own. */
 
 export interface Crumb { label: string; href?: string }
 
-const GLOSSARY_EVENT = "edm:glossary";
-export const START_HERE_EVENT = "edm:starthere";
-
-/** Open the glossary, optionally at one entry. Any view's bar listens. */
+/** Open the glossary at one entry, or "How this works": the Help page's own section, as a new
+ *  history entry so Back returns to where the reader was. */
 export function openGlossary(id?: string) {
-  window.dispatchEvent(new CustomEvent(GLOSSARY_EVENT, { detail: id ?? null }));
+  navigateTo(helpHref(!id ? "glossary" : id === "how-it-works" ? "how-it-works" : `g-${id}`));
 }
 
 function isHome(): boolean {
-  return window.location.search.replace(/^\?/, "") === "" || /^(help=glossary)?$/.test(window.location.search.slice(1));
-}
-
-/** "How to read this": on the home page it reopens the Start-here panel; elsewhere it goes home
- *  (a new history entry, so Back returns) with the panel open. */
-export function howToRead() {
-  if (isHome()) window.dispatchEvent(new Event(START_HERE_EVENT));
-  else { requestStartHere(); navigate(null); }
+  return window.location.search.replace(/^\?/, "") === "";
 }
 
 /** The home panel that lists what changed since the previous build (WhatsNew.tsx). */
@@ -90,7 +83,6 @@ export function GlobalNavBar({ trail, search = true, extra }: { trail: Crumb[]; 
     const t = toggleRef.current;
     if (t && t.offsetParent !== null) t.focus();
   };
-  const run = (f: () => void) => () => { if (open) closeMenu(); f(); };
 
   useEffect(() => {
     if (!open) return;
@@ -140,15 +132,20 @@ export function GlobalNavBar({ trail, search = true, extra }: { trail: Crumb[]; 
               if (open) closeMenu();
               goWhatsNew();
             }}>What's new</a>
-          <button className="ghost" type="button" onClick={run(howToRead)}>How to read this</button>
-          <button className="ghost" type="button" onClick={run(() => openGlossary("how-it-works"))}>How this works</button>
-          <button className="ghost" type="button" onClick={run(() => openGlossary())}>Glossary</button>
+          {/* How to read the site, the method and the glossary: one page with an address. */}
+          <a className="ghost nav-link" href={helpHref()}
+            aria-current={new URLSearchParams(window.location.search).get("view") === HELP_VIEW ? "page" : undefined}
+            onClick={(e) => {
+              if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+              e.preventDefault();
+              if (open) closeMenu();
+              navigateTo(helpHref());
+            }}>Help</a>
           {/* Stays open after copying, so its confirmation can be read. */}
           <CopyLinkButton />
         </div>
         {extra}
       </div>
-      <GlossaryDialog />
     </div>
   );
 }
@@ -259,7 +256,7 @@ function runAction(entry: SearchEntry) {
   if (a.type === "system") navigate(a.id || null);
   else if (a.type === "group") navigateGroup(a.slug);
   else if (a.type === "href") navigateTo(a.href);
-  else openGlossary(a.id);
+  else openGlossary(a.id);  // a glossary concept: its entry on the Help page
 }
 
 /** One accessible combobox: the ARIA 1.2 pattern, list autocomplete, no dependency. */
@@ -394,91 +391,3 @@ export function GlobalSearch({ compact = false, inputRef }: { compact?: boolean;
     </div>
   );
 }
-
-// ---- glossary ---------------------------------------------------------------------------------
-
-/** The glossary as a modal dialog: Escape closes it and focus returns to what opened it.
- *  `?help=glossary` opens it on load, so a link can point straight at it. */
-export function GlossaryDialog() {
-  const ref = useRef<HTMLDialogElement | null>(null);
-  const opener = useRef<HTMLElement | null>(null);
-  const [focusId, setFocusId] = useState<string | null>(null);
-  const [initial] = useState(() => new URLSearchParams(window.location.search).get("help") === "glossary");
-  // The served definitions behind the evidence, attribution and AI entries. Fetched the first time
-  // the glossary is opened, never on page load; until then, and if it fails, each entry shows its
-  // own wording.
-  const [served, setServed] = useState<ServedMethod | null>(null);
-  const asked = useRef(false);
-
-  const show = (entry: string | null) => {
-    const d = ref.current;
-    if (!d) return;
-    if (!d.open) {
-      opener.current = document.activeElement as HTMLElement | null;
-      d.showModal();
-    }
-    if (!asked.current) {
-      asked.current = true;
-      import("./impacts/load").then((m) => m.loadConfidenceMethod()).then(setServed).catch(() => { asked.current = false; });
-    }
-    setFocusId(entry);
-    const target = entry ? d.querySelector<HTMLElement>(`#gl-${entry} h3`) : d.querySelector<HTMLElement>("h2");
-    target?.focus();
-    target?.scrollIntoView?.({ block: "start" });
-  };
-
-  useEffect(() => {
-    const on = (e: Event) => show((e as CustomEvent).detail ?? null);
-    window.addEventListener(GLOSSARY_EVENT, on);
-    if (initial) show(null);
-    return () => window.removeEventListener(GLOSSARY_EVENT, on);
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
-
-  const onClose = () => {
-    setFocusId(null);
-    const p = new URLSearchParams(window.location.search);
-    if (p.get("help") === "glossary") {
-      p.delete("help");
-      const q = p.toString();
-      window.history.replaceState(null, "", q ? `${window.location.pathname}?${q}` : window.location.pathname);
-    }
-    const o = opener.current;
-    opener.current = null;
-    if (o && document.contains(o)) o.focus();
-  };
-
-  return (
-    // Named by the section it opened to, then "Glossary" (iteration 22 closure): "How this works"
-    // opened a dialog announced only as "Glossary".
-    <dialog ref={ref} className="glossary-dialog" aria-labelledby={focusId ? `gl-${focusId}-t glossary-title` : "glossary-title"} onClose={onClose}>
-      <div className="glossary-head">
-        <h2 id="glossary-title" tabIndex={-1}>Glossary</h2>
-        <button className="ghost" type="button" onClick={() => ref.current?.close()}>Close</button>
-      </div>
-      <p className="small dim">Plain-language meanings of the words this site uses. Open “More detail” for the technical version.
-        Press Escape to close.</p>
-      <section id="gl-how-it-works" className={`glossary-entry how-it-works${focusId === "how-it-works" ? " focused" : ""}`} aria-labelledby="gl-how-it-works-t">
-        <h3 id="gl-how-it-works-t" tabIndex={-1}>How this works</h3>
-        <ol className="small">
-          {HOW_IT_WORKS.map((s) => <li key={s.step}><strong>{s.step}.</strong> {s.text}</li>)}
-        </ol>
-      </section>
-      <h3 className="eyebrow glossary-terms-head">Terms, alphabetical</h3>
-      <div className="glossary-list">
-        {/* <article>, not a labelled <section>: twelve "region" landmarks inside one dialog made a
-            screen reader's landmark list longer than the glossary itself (iteration 21). */}
-        {GLOSSARY.map((g) => (
-          <article key={g.id} id={`gl-${g.id}`} className={`glossary-entry${focusId === g.id ? " focused" : ""}`} aria-labelledby={`gl-${g.id}-t`}>
-            <h3 id={`gl-${g.id}-t`} tabIndex={-1}>{g.term}</h3>
-            <p>{g.plain}</p>
-            <details open={focusId === g.id || undefined}>
-              <summary className="small">More detail<span className="sr-only"> on {g.term}</span></summary>
-              <p className="small dim">{glossaryDetail(g, served)}</p>
-            </details>
-          </article>
-        ))}
-      </div>
-    </dialog>
-  );
-}
-

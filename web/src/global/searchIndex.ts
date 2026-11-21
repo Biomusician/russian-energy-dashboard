@@ -1,7 +1,8 @@
 /** What the global search can find, and how results are ordered.
  *
  *  SOURCES, AND WHAT THEY COST. Systems, their aliases and the regional overviews come from the
- *  manifest, which every view has already loaded. Glossary concepts are in the bundle. Region
+ *  manifest, which every view has already loaded. Glossary concepts are in the bundle, and each
+ *  opens its entry on the Help page (`?view=help#g-<id>`, iteration 23). Region
  *  names are added only where they are cheap: the theatre's region list (one small file, fetched
  *  the first time the search box is focused) and the regions of any country whose page this tab
  *  has already loaded. The home page never fetches a country's files to build the index.
@@ -11,7 +12,7 @@
  */
 
 import type { Manifest } from "./manifest";
-import { GLOSSARY } from "./glossary";
+import { GLOSSARY } from "./help/glossary";
 import { matchScore, normalizeForSearch } from "./searchNormalize";
 import { loadRegionRows } from "../data";
 
@@ -107,6 +108,8 @@ export const VIEW_ENTRIES: SearchEntry[] = [
 export const CONCEPT_ENTRIES: SearchEntry[] = [
   makeEntry({ key: "concept:how-it-works", kind: "concept", label: "How this works", sub: "The method in six plain steps",
               terms: ["How this works", "methodology", "method", "how to read"], action: { type: "concept", id: "how-it-works" } }),
+  makeEntry({ key: "concept:help", kind: "concept", label: "Help", sub: "How to read this site: every section and the glossary",
+              terms: ["Help", "how to read this", "glossary", "explain", "what does this mean"], action: { type: "href", href: "?view=help" } }),
   ...GLOSSARY.map((g) => makeEntry({
     key: `concept:${g.id}`, kind: "concept", label: g.term, sub: g.plain.length > 90 ? `${g.plain.slice(0, 88)}…` : g.plain,
     terms: [g.term, ...g.aliases], action: { type: "concept", id: g.id },

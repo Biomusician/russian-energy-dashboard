@@ -61,7 +61,7 @@ test.describe("what's new in the data", () => {
       }
     }
     expect(idsChecked).toBeGreaterThan(0);
-    for (const h of hrefs) expect(h).toMatch(/^\?sys=[a-z]{2}(#(ev-[A-Za-z0-9_-]+|tab-(research|method)))?$|^#|^https?:/);
+    for (const h of hrefs) expect(h).toMatch(/^\?sys=[a-z]{2}(#(ev-[A-Za-z0-9_-]+|tab-(research|method)))?$|^\?view=help#[a-z-]+$|^#|^https?:/);
     for (const sid of GULF) {
       await expect(panel.locator(`.wn-system[data-system="${sid}"] a.wn-record`)).toHaveCount(0);
     }
@@ -129,7 +129,7 @@ test.describe("what's new in the data", () => {
       recordId = e.event_id;
       body.available = true;
       body.comparison = { previous_as_of: "2026-11-11", current_as_of: "2026-11-12", mode: "production", basis: "b" };
-      body.global = [{ category: "methodology", notes: ["The inclusion threshold for country records was revised."], link: { anchor: "why-head" } }];
+      body.global = [{ category: "methodology", notes: ["The inclusion threshold for country records was revised."], link: { help: "whats-new" } }];
       body.unchanged = [];
       body.impact_layer = [
         { category: "impact_record_added", notes: [], more: false, all_backfill: false, all_new_events: false, items: [
@@ -163,7 +163,8 @@ test.describe("what's new in the data", () => {
     await expect(panel.locator('.wn-system[data-system="sa"] .wn-items li')).toHaveText(["Mar 2022 · National · Oil refinery"]);
     const record = panel.locator('.wn-system[data-system="us"] a.wn-record');
     await expect(record).toHaveAttribute("href", `?sys=us#${anchor}`);
-    await expect(panel.locator(".wn-global a.wn-link")).toHaveAttribute("href", "#why-head");
+    // A rule change links to its Help section (iteration 23), not to a home-page heading.
+    await expect(panel.locator(".wn-global a.wn-link")).toHaveAttribute("href", "?view=help#whats-new");
 
     // The impact layer is said once, apart from any country, and tells a backfill from a new event.
     const impact = panel.locator(".wn-impact");

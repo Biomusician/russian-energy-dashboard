@@ -74,7 +74,7 @@ export const MATURITY_DEFINITION = `${RESEARCH_PREVIEW_DEFINITION} Monitored mea
 export const NO_INDEX_MEANING = "No index is not a zero.";
 
 const GENERIC_NO_INDEX =
-  "Only one monitored area on this site has a disruption index. Its weights and recovery assumptions were designed " +
+  "Only one monitored area on this site has an index, an exposure index. Its weights and recovery assumptions were designed " +
   "for that area and are not transferred to other countries. No index is not a zero.";
 
 /** Source-group states, one bucket per state, in the words every other page uses (laneCoverage.ts).

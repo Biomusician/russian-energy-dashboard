@@ -14,7 +14,8 @@ import { TAB_LABEL } from "../countryTabs";
 import { IMPACT_INCLUSION_LINE } from "../countryOverview";
 import { impactFiles } from "../countryImpactModel";
 import { ZERO_RECORD_IMPACT_NOTE, impactTabHref } from "../homeModel";
-import { GLOSSARY, glossaryEntry } from "../glossary";
+import { GLOSSARY, glossaryEntry } from "../help/glossary";
+import { GLOSSARY_DETAIL } from "../help/glossaryDetail";
 import { IMPACT_COLUMNS, IMPACT_FIELDS, SCORE_NOTE, readmeText } from "../recordCsv";
 import { readinessLabel } from "../manifest";
 import { causeDefinition, itFailureDefinition } from "../GroupImpactSections";
@@ -70,8 +71,8 @@ describe("C3: monitored systems are tagged in words; impact-record countries are
   it("the glossary defines an impact-record country, alphabetically placed, and placement lists its four words", () => {
     const e = glossaryEntry("impact-record-country")!;
     expect(e.term).toBe("Impact-record country");
-    expect(e.detail).toMatch(/no index/);
-    expect(e.detail).toMatch(/no implied complete set of records/);
+    expect(GLOSSARY_DETAIL[e.id].detail).toMatch(/no index/);
+    expect(GLOSSARY_DETAIL[e.id].detail).toMatch(/no implied complete set of records/);
     const placement = glossaryEntry("placement")!;
     expect(placement.plain).toContain("four placements: National; Several regions; One region; National, under safeguards.");
     const at = GLOSSARY.findIndex((g) => g.id === "impact-record-country");

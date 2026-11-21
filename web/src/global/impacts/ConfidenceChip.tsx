@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { loadConfidenceMethod } from "./load";
+import { LearnMore } from "../help/LearnMore";
 import { NO_CONFIDENCE_REASON, confidenceLabel, originsText } from "./model";
 import { confidenceMethod, lowerLabel, useImpactVocab } from "./vocab";
 import type { ConfidenceMethod, EvidenceConfidence } from "./types";
@@ -92,6 +93,7 @@ export function ConfidenceBreakdown({ value, method, failed = false }: { value: 
       {method?.status && <p className="conf-status">Method status: {method.status}.</p>}
       {method ? <p className="conf-statement">{method.statement}</p>
         : <p className="conf-statement dim" role="status">{failed ? "The method description could not be loaded." : "Loading the method…"}</p>}
+      <p className="conf-learn"><LearnMore anchor="evidence-confidence" /></p>
     </div>
   );
 }

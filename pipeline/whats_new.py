@@ -514,6 +514,7 @@ def global_changes(prev, curr):
     (prev_events, prev_has), (_curr_events, curr_has) = confidence(prev), confidence(curr)
     pv = (pick(prev, "evidence_confidence_summary") or {}).get("method_version")
     cv = (pick(curr, "evidence_confidence_summary") or {}).get("method_version")
+    rules = len(notes)
     if prev_events and curr_has and not prev_has:
         notes.append("Each published country record now shows an evidence-confidence category, computed "
                      "from its published citations. No record changed.")
@@ -521,8 +522,11 @@ def global_changes(prev, curr):
         notes.append(f"The evidence-confidence method was revised (version {cv}). A record's category can "
                      "move with no change to the record.")
     if notes:
-        # The home page's own account of how this works, on the page the panel sits on.
-        out.append({"category": "methodology", "notes": notes, "link": {"anchor": "why-head"}})
+        # The Help section that explains the change (iteration 23): Evidence confidence when that is
+        # all that changed, else the section on reading this panel. A Help anchor, never a home-page
+        # DOM id: the home's "Why these systems" heading is about selection, not about the change.
+        help_anchor = "evidence-confidence" if rules == 0 else "whats-new"
+        out.append({"category": "methodology", "notes": notes, "link": {"help": help_anchor}})
     pc, cc = prev.get("energy_context") or {}, curr.get("energy_context") or {}
     ps, cs = pc.get("source") or {}, cc.get("source") or {}
     if pc and cc:

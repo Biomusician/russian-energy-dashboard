@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import SystemSwitcher from "../SystemSwitcher";
 import { GlobalNavBar } from "../GlobalNav";
+import { LearnMore } from "../help/LearnMore";
 import { PanelBoundary } from "../../components/ViewBoundary";
 import { RecordFilterBar } from "../RecordFilterBar";
 import {
@@ -189,7 +190,7 @@ function AtlasBody({ payload, method }: { payload: ImpactsPayload; method: Confi
           {summary.first && summary.last && <>{" · "}records from {fmtDate(summary.first)} to {fmtDate(summary.last)}</>}
           {" · "}research last run {summary.researched ? fmtDate(summary.researched) : "not recorded"}
         </p>
-        <p className="small dim atlas-bias" role="note">{BIAS_NOTE}</p>
+        <p className="small dim atlas-bias" role="note">{BIAS_NOTE} <LearnMore anchor="impact-records" /></p>
         <details className="atlas-what small">
           <summary>What this is / is not</summary>
           <p><strong>It is</strong> a reviewed, expanding corpus: each record passed three independent reviews before it
@@ -264,7 +265,7 @@ function AtlasBody({ payload, method }: { payload: ImpactsPayload; method: Confi
             </span>
           </RecordFilterBar>
           <p className="small dim record-export-note">The CSV holds the records shown here, after the filters. “About this file” downloads
-            a note that explains its columns and limits.</p>
+            a note that explains its columns and limits. <LearnMore anchor="exports" /></p>
           {exportMsg && <p className="small" role="status">{exportMsg}</p>}
           <p className="small dim atlas-bias atlas-bias-short" role="note">{BIAS_SHORT}</p>
 

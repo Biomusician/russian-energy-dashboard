@@ -440,7 +440,7 @@ def _build_coverage(in_aoi, benchmark, snapshot):
             "by_period": benchmark.get("by_period"),
             "note": (
                 "Benchmark-aligned coverage: numerator and denominator are the SAME oil-strike "
-                "universe. Iterations 1-5 divided ALL energy events by this oil-only benchmark, "
+                "universe. Earlier versions divided ALL energy events by this oil-only benchmark, "
                 "which mixed universes and overstated coverage; that is corrected here."
             ),
         }
@@ -845,6 +845,11 @@ def main():
     # curated corpus carries anything the scope boundary forbids.
     from pipeline import global_impacts
     global_impacts.build(snapshot["as_of"])
+
+    # The Help page's live values (iteration 23), copied from the payloads just written so the page
+    # never downloads the snapshot or the impact corpus to state a caveat (pipeline/help_facts.py).
+    from pipeline import help_facts
+    write_json(outputs.processed() / help_facts.OUT, help_facts.build(outputs.processed()))
 
 
     # Single source of truth for headline numbers (§2) — regenerated every CURRENT build so no

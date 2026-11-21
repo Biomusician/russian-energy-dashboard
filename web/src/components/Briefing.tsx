@@ -14,6 +14,7 @@ import { useState } from "react";
 import type { BriefingContext, BriefingOptions } from "../briefing";
 import { briefingFilename } from "../briefing";
 import { fmtDate } from "../data";
+import { LearnMore } from "../global/help/LearnMore";
 
 export default function Briefing({
   ctx, options, onOptions, onExit, onExport, busy, error, lastResult,
@@ -146,6 +147,7 @@ export default function Briefing({
               </label>
             ))}
 
+            <p className="small"><LearnMore anchor="exports" label="What every export carries" /></p>
             <p className="small">
               Filename: <span className="mono">{briefingFilename(ctx)}</span>
             </p>

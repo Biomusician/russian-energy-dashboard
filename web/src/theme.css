@@ -2085,3 +2085,13 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
 
 /* Iteration 22: the country impact brief sits above the impact records it summarises. */
 .impact-brief-row { margin: 0 0 10px; }
+
+/* "Learn more" (iteration 23, help/LearnMore.tsx): a plain link to one Help section, on every view. */
+.learn-more { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap;
+  text-transform: none; letter-spacing: normal; font-family: var(--sans); font-weight: normal; }
+/* The theatre header's height is capped on a phone (theatre-ux.e2e.ts); there the Tools menu's Help
+   entry is the way in, so the headline's link is dropped. */
+.hl-learn { font-size: 11px; }
+@media (max-width: 600px) { .hl-learn { display: none; } }
+.head-learn { font-size: 12px; align-self: center; }
+.learn-more:hover, .learn-more:focus-visible { color: var(--text); }

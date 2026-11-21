@@ -62,12 +62,12 @@ test.describe("one research-coverage vocabulary", () => {
 
   test("the glossary lists the states and the placement words from the same definitions", async ({ page }) => {
     await page.goto("/?help=glossary");
-    const dlg = page.getByRole("dialog", { name: "Glossary" });
-    await expect(dlg).toBeVisible();
-    await expect(dlg.locator("#gl-research-coverage")).toContainText("planned searches run (not exhaustive)");
-    await expect(dlg.locator("#gl-research-coverage")).toContainText("source unavailable");
-    const place = dlg.locator("#gl-placement");
-    for (const w of ["National:", "Several regions:", "One region:", "National, under safeguards:"]) await expect(place).toContainText(w);
+    const term = (id: string) => page.locator(".help-term").filter({ has: page.locator(`#g-${id}`) });
+    await term("research-coverage").locator("summary").click();
+    await expect(term("research-coverage")).toContainText("planned searches run (not exhaustive)");
+    await expect(term("research-coverage")).toContainText("source unavailable");
+    await term("placement").locator("summary").click();
+    for (const w of ["National:", "Several regions:", "One region:", "National, under safeguards:"]) await expect(term("placement")).toContainText(w);
   });
 });
 
@@ -136,10 +136,8 @@ test.describe("phone: the site bar's secondary tools fold behind Menu", () => {
       const menuId = await toggle.getAttribute("aria-controls");
       expect(menuId).toBeTruthy();
       const menu = page.locator(`[id="${menuId}"]`);
-      for (const name of ["How to read this", "How this works", "Glossary", "Copy view link"]) {
-        await expect(bar.getByRole("button", { name, exact: true })).toBeHidden();
-      }
-      await expect(bar.getByRole("link", { name: "What's new" })).toBeHidden();
+      await expect(bar.getByRole("button", { name: "Copy view link", exact: true })).toBeHidden();
+      for (const name of ["What's new", "Help"]) await expect(bar.getByRole("link", { name, exact: true })).toBeHidden();
       await expect(bar.getByLabel("Monitored system")).toBeVisible();
       if (q) await expect(bar.getByRole("combobox", { name: /Search systems/ })).toBeVisible();
       // The bar costs far less of the screen than the five rows it used to take.
@@ -167,18 +165,15 @@ test.describe("phone: the site bar's secondary tools fold behind Menu", () => {
     });
   }
 
-  test("the glossary opened from the menu returns focus to Menu when closed", async ({ page }) => {
+  test("Help opened from the menu is a page of its own, and Back returns to the country", async ({ page }) => {
     await page.setViewportSize(PHONE);
     await openView(page, "?sys=us");
     const toggle = page.locator(".global-nav").getByRole("button", { name: "Menu" });
     await toggle.click();
-    await page.locator(".global-nav").getByRole("button", { name: "Glossary", exact: true }).click();
-    const dlg = page.getByRole("dialog", { name: "Glossary" });
-    await expect(dlg).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(dlg).toBeHidden();
-    await expect(toggle).toBeFocused();
-    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await page.locator(".global-nav").getByRole("link", { name: "Help", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Help: how to read this site", level: 1 })).toBeVisible();
+    await page.goBack();
+    await expect(page).toHaveURL(/\?sys=us$/);
   });
 
   test("on a wide screen there is no Menu toggle and every tool is in the bar", async ({ page }) => {
@@ -186,10 +181,10 @@ test.describe("phone: the site bar's secondary tools fold behind Menu", () => {
     await openView(page, "?sys=us");
     const bar = page.locator(".global-nav");
     await expect(bar.getByRole("button", { name: "Menu" })).toBeHidden();
-    for (const name of ["How to read this", "How this works", "Glossary", "Copy view link"]) {
-      await expect(bar.getByRole("button", { name, exact: true })).toBeVisible();
-    }
-    await expect(bar.getByRole("link", { name: "What's new" })).toBeVisible();
+    await expect(bar.getByRole("button", { name: "Copy view link", exact: true })).toBeVisible();
+    for (const name of ["What's new", "Help"]) await expect(bar.getByRole("link", { name, exact: true })).toBeVisible();
+    // One entry for reading help: the three it replaced are gone (iteration 23).
+    for (const name of ["How to read this", "How this works", "Glossary"]) await expect(bar.getByRole("button", { name, exact: true })).toHaveCount(0);
   });
 });
 

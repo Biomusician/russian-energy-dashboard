@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { LearnMore } from "./help/LearnMore";
 import type maplibregl from "maplibre-gl";
 import SimpleMap, { withoutHighlight } from "./SimpleMap";
 import SystemSwitcher from "./SystemSwitcher";
@@ -505,6 +506,7 @@ export default function GroupView({ id }: { id: string }) {
                   for a single attack campaign elsewhere, and its weights and assumptions do not carry over. A missing index is not a zero.</p>
                 <p className="small precision-rules"><strong>{precision.lead}</strong> {precision.body}</p>
                 <p className="small dim">{readerText(ctx.not_built)}</p>
+                <p className="small"><LearnMore anchor="gulf-context" /></p>
               </details>
             </div>
 
@@ -573,7 +575,7 @@ export default function GroupView({ id }: { id: string }) {
               </div>
               {s.maturity === "research_preview" && <div><ResearchPreviewTag /></div>}
               {s.recovery_status_withheld && (
-                <div><Disclosure label="Later status of attacked facilities is not published" className="badge context-only-badge"
+                <div><Disclosure label="Later status of attacked facilities is not published" className="badge context-only-badge" learnMore="withheld"
                   text="While attacks on energy facilities are still being reported, or it is uncertain whether they have ended, an attack is published as an event but the facility's later repair, restart or operating status is not." /></div>
               )}
               <div className="sys-headline none"><span className="small">No index. Reviewed historical events and context only.</span></div>

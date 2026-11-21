@@ -1,0 +1,79 @@
+/* Iteration 23: the Help page (HelpPage.tsx). The "Learn more" link's style is in theme.css,
+   because every view uses it and this file loads with Help only.
+   Built on theme.css tokens. A document, read top to bottom: a measure of about 75 characters,
+   real headings, and no colour that carries meaning. */
+
+.help-page { background: var(--bg); }
+.help-layout {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; align-items: start;
+  padding: 0 16px 48px; max-width: 1180px; width: 100%; box-sizing: border-box; margin: 0 auto;
+}
+.help-main { min-width: 0; max-width: 760px; font-size: 14px; line-height: 1.6; }
+.help-main p, .help-main li, .help-main dd { overflow-wrap: anywhere; }
+.help-title { font-size: 22px; margin: 18px 0 4px; line-height: 1.25; }
+.help-meta { margin: 0 0 8px; }
+
+/* A deep link lands the heading clear of the top edge, and of the sticky picker on a phone. */
+.help-main h2, .help-main h3 { scroll-margin-top: 16px; }
+.help-main h2:focus:not(:focus-visible), .help-main h3:focus:not(:focus-visible) { outline: none; }
+.help-main h2:focus-visible, .help-main h3:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.help-section { border-top: 1px solid var(--line); padding: 14px 0 6px; margin-top: 14px; }
+.help-section h2 { font-size: 18px; margin: 0 0 6px; line-height: 1.3; }
+.help-subsection h3, .help-term h3 { font-size: 15px; margin: 18px 0 4px; }
+.help-answer { font-size: 15px; color: var(--text); font-weight: 500; }
+.help-main a { color: var(--accent); }
+.help-main ul, .help-main ol { padding-left: 22px; }
+.help-main li { margin: 3px 0; }
+
+.help-served { color: var(--text); }
+.help-status { border-left: 3px solid var(--amber); background: var(--bg-panel-2); padding: 8px 12px; margin: 8px 0; }
+.help-status p { margin: 4px 0; }
+.help-derived-missing { font-style: italic; }
+.help-defs { margin: 8px 0; }
+.help-defs > div { margin: 6px 0; }
+.help-defs dt { font-weight: 600; }
+.help-defs dd { margin: 0 0 0 14px; color: var(--text-dim); }
+.help-details { margin: 10px 0; border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 6px 10px; background: var(--bg-panel); }
+.help-details > summary { cursor: pointer; color: var(--accent); }
+.help-details[open] > summary { margin-bottom: 6px; }
+.help-table { border-collapse: collapse; font-size: 12.5px; min-width: 420px; }
+.help-table th, .help-table td { border-bottom: 1px solid var(--line-soft); padding: 4px 8px; text-align: left; vertical-align: top; }
+.help-table caption { text-align: left; padding-bottom: 4px; }
+.help-see { color: var(--text-dim); }
+.help-term { border-top: 1px dashed var(--line-soft); }
+.help-term:first-child { border-top: none; }
+
+/* Contents: a phone gets a sticky picker; a wide screen gets the sticky list beside the text. */
+.help-toc { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 8px 0; border-bottom: 1px solid var(--line); }
+.help-toc-head { margin: 0 0 6px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
+.help-toc-list { display: none; }
+.help-picker { display: flex; flex-direction: column; gap: 3px; }
+.help-picker select {
+  min-height: 44px; width: 100%; background: var(--bg-inset); color: var(--text); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 6px 8px; font: inherit; font-size: 14px;
+}
+@media (max-width: 899px) {
+  .help-toc-head { display: none; }
+  /* The picker is about 70 px tall and stays on screen: a jumped-to heading must clear it. */
+  .help-main h2, .help-main h3 { scroll-margin-top: 84px; }
+}
+
+@media (min-width: 900px) {
+  .help-layout { grid-template-columns: 250px minmax(0, 1fr); gap: 32px; }
+  .help-toc {
+    border-bottom: none; padding: 18px 0; max-height: 100vh; overflow-y: auto; box-sizing: border-box;
+  }
+  .help-toc-list { display: block; list-style: none; margin: 0; padding: 0; font-size: 12.5px; line-height: 1.35; }
+  .help-toc-list li { margin: 0; }
+  .help-toc-list a { display: block; padding: 4px 8px; color: var(--text-dim); text-decoration: none; border-left: 2px solid transparent; }
+  .help-toc-list a:hover, .help-toc-list a:focus-visible { color: var(--accent); }
+  .help-toc-list a[aria-current="location"] { color: var(--text); border-left-color: var(--accent); }
+  .help-picker { display: none; }
+}
+
+@media print {
+  .help-toc { display: none; }
+  .help-layout { display: block; }
+  .help-details { border: none; }
+}

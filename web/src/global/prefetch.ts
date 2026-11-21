@@ -49,6 +49,9 @@ export function prefetchRoute(route: Route): void {
     // no other route's bundle, and this is the ONLY branch that asks for the impact files: the
     // home page fetches none of them.
     quiet(import("./impacts/load").then((m) => m.loadImpacts()));
+  } else if (route.view === "help") {
+    // Help's own small file, beside its code. Never the snapshot or the impact corpus.
+    quiet(import("./help/facts").then((m) => m.loadHelpFacts()));
   }
 }
 

@@ -103,7 +103,8 @@ def test_the_manifest_carries_each_countrys_review_date_and_null_for_no_record()
 
 @pytest.mark.repo_hygiene
 def test_reader_copy_on_the_new_surfaces_has_no_build_vocabulary():
-    for name in ("GlobalHome.tsx", "GlobalNav.tsx", "StartHere.tsx", "glossary.ts", "GlobalPanels.tsx"):
+    for name in ("GlobalHome.tsx", "GlobalNav.tsx", "StartHere.tsx", "help/glossary.ts", "help/glossaryDetail.ts",
+                 "help/content.ts", "GlobalPanels.tsx"):
         strings = re.findall(r'"([^"\n]{12,})"|>([^<>{}\n]{12,})<', _code(WEB_SRC / name))
         text = " ".join(a or b for a, b in strings)
         assert strings, name
