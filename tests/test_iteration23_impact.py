@@ -667,3 +667,24 @@ def test_an05_the_build_refuses_a_record_that_names_an_encyclopedia():
     events[0]["effect"] = str(events[0].get("effect") or "") + " (Wikipedia)"
     assert any("names an encyclopedia as a source" in p
                for p in B.record_problems("us", doc, events, profile, B.load_campaigns(), log))
+
+
+@needs_payload
+def test_f1_an_abstracted_record_states_no_duration_in_any_prose(ctx):
+    """Final methodology red team F-1. The German sabotage record's duration field was withheld but
+    its summary said "for several days" and a source's derived claim "a multi-day outage"."""
+    r = _one_abstracted()
+    assert not [p for p in G.abstraction_problems(r, ctx) if "how long service was out" in p]
+    for where, text in (("summary", "Households lost power for several days."),
+                        ("effect", "Supply was cut; a multi-day outage followed."),
+                        ("derived", "Reports customers had been without power since the Saturday."),
+                        ("derived", "Reports a three-week-long outage."), ("summary", "Lost power for 36 hours.")):
+        bad = copy.deepcopy(r)
+        if where == "derived":
+            bad["sources"][0]["derived_claim"] = text
+        else:
+            bad[where] = text
+        assert any("how long service was out" in p for p in G.abstraction_problems(bad, ctx)), text
+    for r in _served_records():
+        if r.get("publication_policy") == G.ABSTRACTED:
+            assert not [p for p in G.abstraction_problems(r, ctx) if "how long service was out" in p], r["impact_id"]

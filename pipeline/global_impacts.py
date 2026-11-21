@@ -108,6 +108,15 @@ ENTRY_FIELDS = ("id", "date", "as_of", "context_type", "claim", "metric", "sourc
                 "last_revised", "review")
 METRIC_FIELDS = ("value", "value_upper", "qualifier", "unit", "basis")
 METRIC_QUALIFIERS = ("about", "at_least", "at_most", "range")
+# How long an outage lasted, in words: on an abstracted record it is later status, like an end date.
+# A German record said "for several days" in its summary and "a multi-day outage" in a source's
+# derived claim after its duration field was withheld (final methodology red team, iteration 23).
+DURATION_WORDING = re.compile(
+    r"\b(?:several|many|multiple|a\s+few|\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+"
+    r"(?:more\s+)?(?:hours?|days?|weeks?|months?)\b"
+    r"|\bmulti-?(?:hour|day|week|month)\b"
+    r"|\bwithout\s+(?:power|electricity|service|supply|water|heat(?:ing)?)\s+since\b"
+    r"|\b(?:hours?|days?|weeks?)[- ]long\b", re.I)
 # The scopes that are a national or regional service (inclusion basis 4); "local" is not one.
 WIDE_SCOPES = ("national", "regional", "multi_region", "multi_country")
 # The one mechanism a record that is not a cyberattack may carry (methodology §4).
@@ -1133,6 +1142,10 @@ def abstraction_problems(r, ctx):
     hit = B.status_wording(_prose(r))
     if hit:
         out.append(f"status wording on an abstracted record ({hit.group(0)!r})")
+    # Duration in words, in our prose and in the claims we keep from each source (_prose reads both).
+    hit = DURATION_WORDING.search(_prose(r))
+    if hit:
+        out.append(f"an abstracted record states how long service was out ({hit.group(0)!r}): later status")
     return out
 
 

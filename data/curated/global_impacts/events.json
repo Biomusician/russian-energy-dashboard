@@ -22835,7 +22835,7 @@
       "cause_family": "sabotage",
       "contributing_factors": [],
       "cyber_mechanism": null,
-      "summary": "In early January 2026 an act of sabotage against electricity distribution infrastructure in Germany left tens of thousands of households without power for several days.",
+      "summary": "In early January 2026 an act of sabotage against electricity distribution infrastructure in Germany left tens of thousands of households without power.",
       "effect": "About 45,000 households and more than 2,200 businesses lost electricity.",
       "effect_specificity": "quantified",
       "inclusion_basis": 2,
@@ -22919,7 +22919,7 @@
             "attribution"
           ],
           "opened": true,
-          "derived_claim": "Reports that 45,000 households and 2,200 businesses had been without power since the Saturday, a multi-day outage, and that the regional interior administration considered a published claim authentic while a second letter was unconfirmed.",
+          "derived_claim": "Reports that 45,000 households and 2,200 businesses lost power, and that the regional interior administration considered a published claim authentic while a second letter was unconfirmed.",
           "attribution_basis": "government"
         }
       ],

@@ -3874,6 +3874,9 @@ ITER23_RECORDS_MUTATIONS = [
     ("AN-05: the encyclopedia rule reads the summary only",
      [("pipeline/build_systems.py", _text('for field in ("summary", "effect", "threshold_basis")', 'for field in ("summary",)'))],
      "an05"),
+    ("F-1: duration wording in an abstracted record's prose is not checked",
+     [("pipeline/global_impacts.py", _text("    hit = DURATION_WORDING.search(_prose(r))", "    hit = None"))],
+     "f1_an_abstracted_record_states_no_duration_in_any_prose"),
 ]
 MUTATIONS += ITER23_RECORDS_MUTATIONS
 
