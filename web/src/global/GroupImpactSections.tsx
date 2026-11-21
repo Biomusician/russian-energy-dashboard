@@ -3,6 +3,7 @@ import { fmtDate } from "../data";
 import { localISODate } from "../freshness";
 import { CountryLink } from "./feedItems";
 import { ResearchPreviewTag } from "./Disclosure";
+import { LearnMore } from "./help/LearnMore";
 import RecordFilterBar from "./RecordFilterBar";
 import { applyFilters, decodeFilters, encodeFilters, hidingFilters, withFilterQuery, withoutFilters, type FilterState } from "./recordFilters";
 import {
@@ -384,7 +385,7 @@ function Context({ ctx }: { ctx: RegionalContext }) {
       )}
       <p className="small ctx-count" role="status">
         Showing <strong>{shown.entries.length}</strong> of <strong>{ctx.entries.length}</strong> dated statements, newest first.
-        Each is as of its own date. No single status is given.
+        Each is as of its own date. No single status is given. <LearnMore anchor="gulf-context" />
       </p>
       <ContextTimeline ctx={shown} />
       {/* Here and not under Research coverage: a source family's name may speak of shipping, and
@@ -467,6 +468,7 @@ export function CoverageSection({ impacts, systems }: { impacts: Loaded<ImpactsP
 
       <h3 id="what-is-withheld">What is withheld</h3>
       <ul className="small withheld-list">{WITHHELD.map((w) => <li key={w}>{w}</li>)}</ul>
+      <p className="small"><LearnMore anchor="withheld" /></p>
 
       <h3>Each country's own research coverage</h3>
       <p className="small dim">Alphabetical. Each country's page has a Research coverage tab that lists its search source group by source group.</p>

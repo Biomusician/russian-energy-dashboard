@@ -13,6 +13,9 @@ const GroupView = lazy(importGroupView);
 const CompareView = lazy(() => import("./global/CompareView"));
 // The Impact Atlas and its corpus load only when the atlas is opened (iteration 22).
 const ImpactAtlas = lazy(() => import("./global/impacts/ImpactAtlas"));
+// The Help page and its prose load only when Help is opened (iteration 23): the home bundle carries
+// the section list and the glossary terms its links and search need, never the Help text.
+const HelpPage = lazy(() => import("./global/help/HelpPage"));
 
 /** What the error boundary calls a view, and its address without saved state. A route this does not
  *  name still gets a boundary, under the generic label. */
@@ -26,6 +29,8 @@ export function describe(route: Route): { key: string; label: string; cleanHref?
     case "compare": return { key: "compare", label: "The comparison", cleanHref: "?compare=" };
     // Not keyed on the filters: a filter edit keeps the boundary and the loaded corpus.
     case "impacts": return { key: "impacts", label: "The impact atlas", cleanHref: "?view=impacts" };
+    // Not keyed on the section: moving between sections keeps the page and its loaded facts.
+    case "help": return { key: "help", label: "The help page", cleanHref: "?view=help" };
     default: return { key: (route as { view: string }).view, label: "This view" };
   }
 }
@@ -41,6 +46,7 @@ export function defaultTitle(route: ReturnType<typeof routeFor>): string {
     case "country": return `${base} — country system`;
     case "compare": return `${base} — compare systems`;
     case "impacts": return `${base} — impact atlas`;
+    case "help": return `${base} — help`;
     default: return base;
   }
 }
@@ -69,6 +75,7 @@ export default function Root() {
         {/* Not keyed: an edit to the selection keeps the countries already loaded. */}
         {route.view === "compare" && <CompareView ids={route.ids} />}
         {route.view === "impacts" && <ImpactAtlas />}
+        {route.view === "help" && <HelpPage />}
       </Suspense>
     </ViewBoundary>
   );

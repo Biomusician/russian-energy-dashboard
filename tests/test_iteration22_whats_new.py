@@ -141,7 +141,7 @@ def test_the_arrival_of_evidence_confidence_is_one_method_note_not_a_change_to_e
     curr = _with_confidence(T._bump(prev))
     d = _derive(prev, curr)
     assert d["systems"] == [], "a derived label on every record read as a change to each country"
-    assert d["global"] == [{"category": "methodology", "link": {"anchor": "why-head"}, "notes": [
+    assert d["global"] == [{"category": "methodology", "link": {"help": "evidence-confidence"}, "notes": [
         "Each published country record now shows an evidence-confidence category, computed from its "
         "published citations. No record changed."]}]
     # Once it is there, a build that changes nothing says so...

@@ -2085,3 +2085,7 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
 
 /* Iteration 22: the country impact brief sits above the impact records it summarises. */
 .impact-brief-row { margin: 0 0 10px; }
+
+/* "Learn more" (iteration 23, help/LearnMore.tsx): a plain link to one Help section, on every view. */
+.learn-more { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.learn-more:hover, .learn-more:focus-visible { color: var(--text); }

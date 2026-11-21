@@ -967,7 +967,8 @@ export interface WhatsNewChange {
   aggregated?: boolean;
   /** Where the page explains this kind of change: a tab of the country's page, or a section of
    *  the home page. Never a record. */
-  link?: { system_id?: string; tab?: string; anchor?: string };
+  /** `help`: a section of the Help page (iteration 23), e.g. "evidence-confidence". */
+  link?: { system_id?: string; tab?: string; help?: string };
 }
 
 /** One impact record in the panel (iteration 22): its public id, date, country and sector. */

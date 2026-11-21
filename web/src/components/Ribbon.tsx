@@ -8,6 +8,7 @@ import { severityColor } from "../palette";
 import { noReportMeaning } from "../statusDelay";
 import type { InspectTarget } from "./Inspector";
 import TheatreBar, { type TheatreTool } from "./TheatreBar";
+import { LearnMore } from "../global/help/LearnMore";
 import type { TheatreMode } from "../theatreMode";
 import "../styles/theatre.css";
 
@@ -115,6 +116,7 @@ export default function Ribbon({
                       onClick={explainHeadline}>
                 Why this number?
               </button>
+              {" "}<LearnMore anchor="esdi" className="hl-learn" />
             </p>
             <p className="hl-scale" title="Belarus, the monitored Russian regions and occupied Crimea.">
               {/* METHODOLOGY §1 in one line: a share, weighted, and exposure rather than loss. */}
@@ -144,6 +146,7 @@ export default function Ribbon({
                 {payloadReconstructed && isLatest
                   ? bundle.snapshot.history_concept!.label
                   : reconstructionLabel(currentDate)}
+                {" "}<LearnMore anchor="history" />
               </p>
             )}
           </div>
@@ -234,7 +237,7 @@ export default function Ribbon({
               one repair time. These are as-at-build counts; only the ESDI follows the scrubber, so
               the group says so once, in words, instead of on every label. */}
           <div className="recovery-group" title="Counted at the publication date — these do not follow the timeline scrubber; only the index does.">
-            <span className="rg-head">Recovery evidence · <span className="warn-text">not timeline-linked</span></span>
+            <span className="rg-head">Recovery evidence · <span className="warn-text">not timeline-linked</span> · <LearnMore anchor="recovery" /></span>
             <div className="rg-stats">
               <RecoveryStat value={rs.unresolved_count} color="var(--amber)"
                             label="with no restoration report by the cut-off"

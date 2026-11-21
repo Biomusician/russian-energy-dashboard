@@ -381,10 +381,13 @@ def cannot_tell_you(snapshot, explanations):
     items = []
     uncovered = snapshot.get("sectors_uncovered") or []
     if uncovered:
+        # Reader words, not sector keys: this list is shown on the theatre page and in Help.
+        names = [SECTORS.get(s, s) for s in uncovered]
+        listed = " and ".join([", ".join(names[:-1]), names[-1]] if len(names) > 1 else names)
         items.append({
-            "question": "How much gas or coal infrastructure is disrupted",
+            "question": f"How much {' or '.join(n.lower() for n in names)} infrastructure is disrupted",
             "answer": (
-                f"Not known. {', '.join(uncovered)} have no published capacity denominator, so "
+                f"Not known. {listed} {'has' if len(names) == 1 else 'have'} no published capacity denominator, so "
                 "they are excluded from the composite and their weight redistributed. Documented "
                 "strikes in these sectors exist and are NOT scored. Excluded is not zero."),
             "basis": "sectors_uncovered",
@@ -456,8 +459,8 @@ def cannot_tell_you(snapshot, explanations):
             "question": "The true current installed generating base",
             "answer": (
                 f"Not known. The census vintage is {gen.get('vintage')}, and it "
-                f"{gen.get('known_bias')}. The measured effect on the index is published in "
-                "docs/GENERATION_DENOMINATOR_AUDIT.md."),
+                f"{gen.get('known_bias')}. The measured effect on the index is published with "
+                "the project's methodology documentation."),
             "basis": "electric_generation denominator",
         })
 

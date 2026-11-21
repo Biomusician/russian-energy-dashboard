@@ -21,7 +21,6 @@
   .global-page .member-btn,
   .global-nav .product-home,
   .global-nav .breadcrumb a,
-  .glossary-head button.ghost,
   .gsearch input {
     min-height: 44px;
   }

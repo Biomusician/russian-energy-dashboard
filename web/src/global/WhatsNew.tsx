@@ -5,6 +5,7 @@ import { WHATS_NEW_ID, showWhatsNew } from "./GlobalNav";
 import { fmtDate } from "../data";
 import { localISODate } from "../freshness";
 import { readerText } from "./readerText";
+import { LearnMore } from "./help/LearnMore";
 import { buildAgeText, changeLink, changeSummary, impactItemText, impactSummary, indexText, itemText, recordHref } from "./whatsNewText";
 import "../styles/whatsnew.css";
 
@@ -163,7 +164,7 @@ export function WhatsNewPanel({ data, failed, now }: { data: WhatsNewData | null
               ))}
             </dl>
           </details>
-          <p className="small dim">{readerText(data.note)}</p>
+          <p className="small dim">{readerText(data.note)} <LearnMore anchor="whats-new" /></p>
         </>
       )}
     </section>

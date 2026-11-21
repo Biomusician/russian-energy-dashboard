@@ -71,8 +71,10 @@ export function changeLink(c: WhatsNewChange): { href: string; label: string; sa
   if (l.system_id && l.tab === "method") {
     return { href: `?sys=${encodeURIComponent(l.system_id)}#tab-method`, label: "How this country is assessed", samePage: false };
   }
-  if (l.anchor && /^[A-Za-z][A-Za-z0-9_-]*$/.test(l.anchor)) {
-    return { href: `#${l.anchor}`, label: "How this works", samePage: true };
+  // A Help section (iteration 23). It used to be a home-page heading id ("why-head"), which explained
+  // how the systems were chosen, not the change it was linked from.
+  if (l.help && /^[a-z][a-z0-9-]*$/.test(l.help)) {
+    return { href: `?view=help#${l.help}`, label: "Learn more in Help", samePage: false };
   }
   return null;
 }

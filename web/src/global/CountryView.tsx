@@ -13,6 +13,7 @@ import { EventCard, fmtEventDate } from "./EventCard";
 import { EmptyCorpus } from "./EmptyCorpus";
 import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
 import { NO_SCORE_NOT_ZERO, RESEARCH_PREVIEW_DEFINITION, RESEARCH_PREVIEW_LABEL, inSentence, noScorePlain } from "./countryCopy";
+import { LearnMore } from "./help/LearnMore";
 import { confidenceOptions, eventAnchor } from "./evidence";
 import { ConfidenceSummary } from "./ConfidenceSummary";
 import { laneLine } from "./laneCoverage";
@@ -342,6 +343,7 @@ export default function CountryView({ id }: { id: string }) {
           {exporting ? "Rendering…" : "Download PNG"}
         </button>
         <button className="ghost" onClick={() => window.print()}>Print / PDF</button>
+        <LearnMore anchor="exports" label="About exports" className="head-learn" />
       </CountryHeader>
 
       {/* One main landmark per view: everything below the shared header and navigation bar. */}
@@ -371,7 +373,7 @@ export default function CountryView({ id }: { id: string }) {
         <div className="no-index">
           <div className="no-index-value" aria-label="No index">No index</div>
           {/* Said once, plainly (iteration 20, §70). */}
-          <div className="small no-index-plain">{sys.no_index_reason}</div>
+          <div className="small no-index-plain">{sys.no_index_reason} <LearnMore anchor="why-no-country-score" /></div>
         </div>
         <div>
           <div className="eyebrow">Evidence readiness</div>
@@ -424,7 +426,7 @@ export default function CountryView({ id }: { id: string }) {
             <p className="small research-preview-statement">
               {/* The one definition, stated in full where the page explains itself. */}
               <span className="badge research-partial">{RESEARCH_PREVIEW_LABEL}</span>{" "}
-              {RESEARCH_PREVIEW_DEFINITION}
+              {RESEARCH_PREVIEW_DEFINITION} <LearnMore anchor="research-coverage" />
             </p>
           )}
           {sys.campaign_state && sys.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && (
@@ -434,6 +436,7 @@ export default function CountryView({ id }: { id: string }) {
               {readerText(sys.campaign_state.basis)} Checked {fmtDate(sys.campaign_state.checked)}. While that holds, an attack
               is recorded as having happened, with its date, the kind of infrastructure and the effect reported at
               the time. Whether a facility has been repaired, restarted or is operating is not published.
+              {" "}<LearnMore anchor="withheld" />
             </p>
           )}
           {sys.geography.precision_policy && (
@@ -593,7 +596,7 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
     <div className="research-status" aria-label="Research status">
       {/* Two questions, two labelled answers (iteration 20, §68): how much of the planned search is
           done, and whether the registered sources were checked on schedule. */}
-      <div className="eyebrow">Research coverage <span className="dim">· how much of the planned historical search is done</span></div>
+      <div className="eyebrow">Research coverage <span className="dim">· how much of the planned historical search is done</span> <LearnMore anchor="research-coverage" /></div>
       <div className="small">
         <span className={`badge research-${rf.completeness}`}>
           {sys.research_log.passes.length === 0 ? "No search has been run yet" : RESEARCH_COMPLETENESS_LABEL[rf.completeness]}
@@ -608,7 +611,7 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
             last worked on {fmtDate(rf.last_systematic_pass)}{overdue ? "; a new pass is due" : ""}.</span>
         )}
       </div>
-      <div className="eyebrow">Source health <span className="dim">· whether the registered sources were checked on schedule</span></div>
+      <div className="eyebrow">Source health <span className="dim">· whether the registered sources were checked on schedule</span> <LearnMore anchor="source-health" /></div>
       <div className="small">
         <span className={`source-freshness sources-${late.length ? "stale" : "current"}`}>
           {late.length
@@ -695,7 +698,8 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
         </span>
       </RecordFilterBar>
       <p className="small dim record-export-note">The CSV holds the records shown here, after the filters. “About this file” explains its
-        columns and limits: these are the published records in this corpus, not a census, and counts are not comparable across countries.</p>
+        columns and limits: these are the published records in this corpus, not a census, and counts are not comparable across countries.
+        {" "}<LearnMore anchor="exports" /></p>
       {exportMsg && <p className="small" role="status">{exportMsg}</p>}
       {filtering && shown.length === 0 && (
         <p className="small filter-empty" role="status">No published record in this list matches the filters. That describes the
@@ -1117,7 +1121,7 @@ function MethodPanel({ bundle }: { bundle: CountryBundle }) {
       <h2>Why no score</h2>
       <p className="no-score-plain">{noScorePlain(s.name)}</p>
       <h3>No score is not a score of zero</h3>
-      <p className="small">{NO_SCORE_NOT_ZERO}</p>
+      <p className="small">{NO_SCORE_NOT_ZERO} <LearnMore anchor="why-no-country-score" /></p>
       <p className="small dim">{s.no_index_reason}</p>
       <h3>What this page shows instead</h3>
       <ul className="small">

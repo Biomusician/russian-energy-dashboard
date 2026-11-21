@@ -1,4 +1,4 @@
-/* Iteration 21: the global home's first screen, shared navigation (breadcrumb, search, glossary,
+/* Iteration 21: the global home's first screen, shared navigation (breadcrumb, search, Help,
    copy link) and the Start-here panel. Built on theme.css tokens. Research state and record
    state are words and shapes, never a status colour: every tag below is the same neutral hue. */
 
@@ -110,27 +110,6 @@
 .dq-questions { margin: 6px 0; }
 .dq-questions dt { font-weight: 600; font-size: 12.5px; margin-top: 10px; }
 .dq-questions dd { margin: 3px 0 0; line-height: 1.5; }
-
-/* ---- glossary dialog ---- */
-.glossary-dialog {
-  width: min(760px, calc(100vw - 24px)); max-height: min(86vh, 900px); padding: 0;
-  background: var(--bg-panel); color: var(--text); border: 1px solid var(--line); border-radius: 4px; overflow-y: auto;
-}
-.glossary-dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
-.glossary-dialog[open] { display: flex; flex-direction: column; }
-.glossary-head { display: flex; justify-content: space-between; align-items: center; gap: 10px;
-  padding: 12px 16px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg-panel); }
-.glossary-head h2 { font-size: 16px; }
-.glossary-dialog > p, .glossary-dialog > section, .glossary-dialog > h3, .glossary-list { padding: 0 16px; }
-.glossary-dialog > p { margin: 10px 0; }
-.glossary-entry { padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
-.glossary-entry h3 { font-size: 13.5px; margin: 0 0 4px; }
-.glossary-entry h3:focus-visible, .glossary-head h2:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.glossary-entry p { margin: 4px 0; font-size: 13px; line-height: 1.5; }
-.glossary-entry.focused { border-left: 2px solid var(--accent); padding-left: 10px; }
-.glossary-entry ol { margin: 4px 0; padding-left: 20px; display: grid; gap: 4px; line-height: 1.45; }
-.glossary-terms-head { margin: 14px 0 0; }
-.glossary-list { padding-bottom: 16px; }
 
 .map-wheel-hint { margin: 0; }
 

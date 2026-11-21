@@ -256,7 +256,7 @@ def test_a_threshold_version_change_is_one_rule_change_never_a_country_improving
     # Iteration 22: a rule change also says where the page explains how this works.
     assert d["global"] == [{"category": "methodology", "notes": [
         "The inclusion threshold for country records was revised (version 2026-12-01.1)."],
-        "link": {"anchor": "why-head"}}]
+        "link": {"help": "whats-new"}}]
     assert d["systems"] == []
     assert not re.search(r"improv|better|worse|safer", json.dumps([d["global"], d["systems"]]).lower())
 

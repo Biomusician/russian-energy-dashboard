@@ -9,7 +9,8 @@
 import { useEffect, useRef, useState } from "react";
 import SystemSwitcher from "../global/SystemSwitcher";
 import { loadManifest } from "../global/manifest";
-import { compareHref, navigate, navigateCompare } from "../global/router";
+import { compareHref, navigate, navigateCompare, navigateTo } from "../global/router";
+import { helpHref } from "../global/help/anchors";
 import { MODES, MODE_LABEL, type TheatreMode } from "../theatreMode";
 
 /** The theatre's reader-facing name. Read from the manifest so the header, the system picker
@@ -141,6 +142,15 @@ export default function TheatreBar({
              e.preventDefault(); setToolsOpen(false); navigateCompare([]);
            }}>
           Compare systems
+        </a>
+        {/* The same Help page every other view links to (iteration 23): the theatre was the one view
+            with no way to the glossary or the explanation of its own index. A route, so a real link. */}
+        <a className="tb-link" href={helpHref()}
+           onClick={(e) => {
+             if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+             e.preventDefault(); setToolsOpen(false); navigateTo(helpHref());
+           }}>
+          Help
         </a>
       </div>
     </div>

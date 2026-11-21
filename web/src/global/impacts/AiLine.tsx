@@ -1,4 +1,5 @@
 import { fmtDate } from "../../data";
+import { LearnMore } from "../help/LearnMore";
 import { aiReported } from "./model";
 import { definitionOf, labelOf, lowerLabel, useImpactVocab } from "./vocab";
 import type { AiInvolvement } from "./types";
@@ -32,7 +33,7 @@ export function AiLine({ ai }: { ai: AiInvolvement | null | undefined }) {
   const meaning = ai.relation ? definitionOf("ai_relations", ai.relation) : null;
   return (
     <div className={`ai-line ai-${ai.status.toLowerCase()} small`}>
-      <span className="impact-line-label">AI involvement:</span> {parts.join(" · ")}
+      <span className="impact-line-label">AI involvement:</span> {parts.join(" · ")} <LearnMore anchor="ai-involvement" />
       {ai.statement && <div className="ai-statement">{ai.statement}</div>}
       {meaning && <div className="dim">{meaning}</div>}
     </div>
