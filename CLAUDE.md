@@ -84,7 +84,7 @@ Gulf (`global/regional_context.json`) and the evidence-confidence method
   to that incident; a defender's use of AI, or a general warning, is not involvement.
 - **Evidence Confidence v2 counts independent originating statements, never links.** It is not a
   probability, not severity, not importance, and no file ranks anything by it. **The theatre's
-  scoring multiplier is still v1**; replacing it needs the seven conditions in
+  scoring multiplier is still v1**; replacing it needs the eight conditions in
   `docs/EVIDENCE_CONFIDENCE_V2.md`, which have not been met.
 - **Regional context is one artifact of aggregate, dated, sourced statements** (shipping status as
   an authority stated it, aggregate trade and supply, market and reserve responses, policy,
