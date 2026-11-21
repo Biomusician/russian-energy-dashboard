@@ -1,6 +1,5 @@
 # Iteration 23 review: map-first navigation, a Help Center, and a methodology adversary
 
-<!-- status: in-progress -->
 
 Iteration 22 added new kinds of evidence. Iteration 23 adds no data source and no country: it makes
 the world map the way in, moves the teaching out of the home page into a Help Center, and turns seven
@@ -272,7 +271,8 @@ New, none implemented:
 
 ## 24. Tests
 
-Gate on the release-candidate tree (`04bbe5e`, 21 November): pytest 2,097 passed, 2 skipped (the
+Final gate on the release tree (`24db80a`, 21 November, after both red teams): pytest 2,117 passed,
+2 skipped (the
 two that need a warm raw cache); `tsc -b` clean; vitest 726 in 47 files; Vite build; Playwright 564 of
 564, which includes the project's own accessibility checks (keyboard order, focus, roles and names, touch targets; no axe engine is installed), the screenshot-review captures, every Help deep link, the
 map-routing cases (monitored, theatre, impact-only, none, Gulf, the small Gulf states, keyboard,
@@ -327,7 +327,8 @@ against the code and fixed, each with a refusal test and mutants (`T-1`–`T-6` 
   centroid is the map's own unit), and a fixture table with a Distance column proves the parser
   never carries its value.
 
-With these, **1,012 mutants**.
+With these, **1,012 mutants**. The complete campaign was rerun on the final tree (`24db80a`):
+**1,012 attempted, 1,012 caught**, zero survivors, zero invalid anchors, zero errors, baseline green.
 
 ## 26. Performance
 
