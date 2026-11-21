@@ -23,7 +23,7 @@
  *  Pure, with type imports and import-free vocabulary modules only: the Python tests run this file
  *  in Node as it ships.
  */
-import type { CountrySystem } from "./manifest";
+import type { CountrySystem, Manifest, ManifestSystem } from "./manifest";
 import { inSentence } from "./countryCopy";
 import { isCampaignRestricted } from "./laneCoverage";
 import { TAB_LABEL, type RegionalGroup, type Tab } from "./countryTabs";
@@ -86,10 +86,28 @@ export const IMPACT_INCLUSION_LINE =
   + "research, so an event can appear here and not there: because the impact layer covers more, or because the country's own search "
   + "did not reach or could not read the sources that report it. Impact records never enter a score.";
 
+/** What the manifest's presence list says about a country system before the corpus is read:
+ *  "records" (a published disruption), "attempts" (documented attempts only), "none", or null when
+ *  the manifest carries no list or no codes for the system. */
+export type ListedPresence = "records" | "attempts" | "none" | null;
+
+export function listedPresence(m: Pick<Manifest, "impact_presence"> | null, entry: Pick<ManifestSystem, "admin0_a3"> | null): ListedPresence {
+  const pres = m?.impact_presence;
+  const codes = entry?.admin0_a3;
+  if (!pres || !codes || codes.length === 0) return null;
+  if (codes.some((a) => pres.countries.includes(a))) return "records";
+  if (codes.some((a) => pres.attempt_only.includes(a))) return "attempts";
+  return "none";
+}
+
 /** One line about the impact corpus, by what is known. A count only once the file has been read,
- *  and always beside the words that say it is another corpus. */
-export function impactLine(name: string, impacts: ImpactPresence): string {
+ *  and always beside the words that say it is another corpus. Before that, the manifest's presence
+ *  list (iteration 23, AN-10): the first screen of a country with no impact record said "reviewed
+ *  impact records" until the tab was opened. */
+export function impactLine(name: string, impacts: ImpactPresence, listed: ListedPresence = null): string {
   if (impacts.state === "failed") return "the impact corpus could not be loaded; the rest of this page is unaffected.";
+  if (impacts.state !== "ready" && listed === "none") return `no impact record yet, which describes that corpus, not ${inSentence(name)}.`;
+  if (impacts.state !== "ready" && listed === "attempts") return "documented attempts only, no disruption record, in a separate, non-scored corpus.";
   if (impacts.state !== "ready") return "reviewed impact records, in a separate, non-scored corpus.";
   if (impacts.records === 0 && impacts.attempts === 0) return `no impact record yet, which describes that corpus, not ${inSentence(name)}.`;
   const parts: string[] = [];
@@ -134,7 +152,7 @@ export function sourceCheckLine(registered: number, overdue: number, blockedGrou
   return `${head}${blocked}`;
 }
 
-export function countryOverview(sys: OverviewSystem, impacts: ImpactPresence, regional: RegionalGroup | null): Overview {
+export function countryOverview(sys: OverviewSystem, impacts: ImpactPresence, regional: RegionalGroup | null, listed: ListedPresence = null): Overview {
   const name = inSentence(sys.name);
   const n = sys.event_summary.recorded_events;
   const restricted = isCampaignRestricted(sys);
@@ -155,7 +173,7 @@ export function countryOverview(sys: OverviewSystem, impacts: ImpactPresence, re
     publishedNote = "What was reported and found, not everything that happened.";
   }
 
-  const known: OverviewLink[] = [{ tab: "impacts", label: TAB_LABEL.impacts, line: impactLine(sys.name, impacts) }];
+  const known: OverviewLink[] = [{ tab: "impacts", label: TAB_LABEL.impacts, line: impactLine(sys.name, impacts, listed) }];
   if (regional) known.push({ tab: "regional", label: TAB_LABEL.regional, line: "regional statements; no facility named." });
   known.push({ tab: "context", label: TAB_LABEL.context, line: "system size, never disruption." });
   known.push({ tab: "research", label: TAB_LABEL.research, line: "what was and was not searched." });
@@ -163,11 +181,12 @@ export function countryOverview(sys: OverviewSystem, impacts: ImpactPresence, re
   const withheld: string[] = [];
   if (restricted) {
     // Identical whatever the research log holds: beside a short list of published attack records, a
-    // count of what is in review, or even the fact that something is, hints at the campaign's scale.
+    // count of what is in review hints at the campaign's scale. That candidates remain in review is
+    // said on the same page (RECORDED), so only the number is withheld (iteration 23, AN-04).
     const items = attacksWhole
       ? ["where in the country an attack happened", "the facility's later status"]
       : ["an attacked facility's later status"];
-    items.push("whether, or how many, records are in review");
+    items.push("how many records are in review");
     withheld.push(`While attacks on energy facilities are reported: ${listOf(items)}.`);
   } else {
     withheld.push("Records still in review, until they pass review.");

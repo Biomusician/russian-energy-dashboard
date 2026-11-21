@@ -80,6 +80,8 @@
   .member-list-note { display: none; }
   /* One row the reader can swipe, inside itself: the page never scrolls sideways. */
   .member-list ul { display: flex; overflow-x: auto; gap: 6px; padding-bottom: 2px; scroll-snap-type: x proximity; }
+  /* V-06: the fade says there is more to the side, as on the country tab row. */
+  .member-list ul { mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); padding-right: 28px; }
   .member-list li { flex: 0 0 auto; scroll-snap-align: start; }
   .member-btn { width: auto; white-space: nowrap; }
 }
@@ -173,6 +175,7 @@
   /* One row the reader can swipe, inside itself, as the member strip is: the page never scrolls
      sideways, and the map stays in the first screen. */
   .group-sections ul { flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity; }
+  .group-sections ul { mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); padding-right: 28px; }
   .group-sections li { flex: 0 0 auto; scroll-snap-align: start; }
   .group-sections a { min-height: 44px; white-space: nowrap; }
   .group-tell-list, .cause-kinds { grid-template-columns: minmax(0, 1fr); }

@@ -11,6 +11,7 @@ import {
 import { canvasPng, drawCompareFrame } from "./compareExport";
 import { downloadBlob } from "../download";
 import { fmtDate } from "../data";
+import { LearnMore } from "./help/LearnMore";
 import "../styles/compare.css";
 
 /** The comparison workspace (iteration 21): two to four monitored systems side by side, on the
@@ -107,7 +108,7 @@ export default function CompareView({ ids }: { ids: string[] }) {
       <div className="page-title">
         <div>
           <h1 className="ribbon-title">Compare systems</h1>
-          <div className="ribbon-sub">Research state and national context, side by side · open sources only</div>
+          <div className="ribbon-sub">Research state and national context, side by side · open sources only · <LearnMore anchor="what-to-click" label="How to read Compare" /></div>
         </div>
         <div className="head-actions">
           <button className="ghost" onClick={runExport} disabled={cols.length < 2}>Download comparison (PNG)</button>

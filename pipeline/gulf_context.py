@@ -126,6 +126,9 @@ def build(context, country_payloads):
             # states no policy and places by first-level region; the view says so rather than
             # leave a reader to wonder why two neighbours' records look different.
             "attack_records_placed": ((p["geography"].get("precision_policy") or {}).get("kinetic") or "admin1"),
+            # And where it places every other record (iteration 23, AN-07): a system with no stated
+            # policy places them by first-level region at most, as before.
+            "other_records_placed": ((p["geography"].get("precision_policy") or {}).get("other") or "admin1"),
         })
     region = {}
     for mid in metrics:

@@ -581,7 +581,7 @@ export default function GroupView({ id }: { id: string }) {
               <div className="sys-headline none"><span className="small">No index. Reviewed historical events and context only.</span></div>
               <div className="small dim">Reporting: {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}</div>
               {s.attack_records_placed && (
-                <div className="small dim attack-placement">{attackPlacementText(s.attack_records_placed)}</div>
+                <div className="small dim attack-placement">{attackPlacementText(s.attack_records_placed, s.other_records_placed)}</div>
               )}
               <div className="small dim">
                 {s.last_systematic_pass ? `Latest systematic research pass ${fmtDate(s.last_systematic_pass)}` : "No systematic research pass yet"}

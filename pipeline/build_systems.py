@@ -2189,6 +2189,9 @@ def build_manifest(country_payloads, theatre_snapshot, build_time):
             # Iteration 21: the home card says when the record was last reviewed, or that there is
             # no qualifying record yet (None). A date, never a count: nothing here can be ranked.
             "record_reviewed": p["record_reviewed"],
+            # Iteration 23 (AN-10): the registry's country codes for this system, so a page can read
+            # the manifest's impact-presence list without downloading the impact corpus.
+            "admin0_a3": list(s["admin0_a3"]),
             "bounds": p["geography"]["bounds"],
             "files": ["system.json", "events.json", "regions.geojson"],
         })

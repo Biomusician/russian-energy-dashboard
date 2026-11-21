@@ -79,7 +79,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       { kind: "p", text: "The maps are never the only way in. Search, the breadcrumb and the lists on each page reach everything a map does, so the site works without a mouse and without seeing a map. Each map also says in words what it shows." },
       { kind: "p", text: "The maps answer different questions, and each legend says which:" },
       { kind: "list", items: [
-        "The world map is shaded by a national energy figure. That is context, not disruption. A thick outline marks a monitored system; the shading says nothing about monitoring.",
+        "The world map has two modes. “Where to explore”, the default, colours only what one click does: every monitored system in one shared colour, Crimea and Sevastopol hatched as occupied territory, every other country plain. That colour is not a measure. “National energy”, the second mode, shades every country by a national energy figure instead: context, not disruption, with a thick outline for each monitored system. That shading says nothing about monitoring.",
         "A country map is shaded by where that country's records were placed. An unshaded region has no record placed in it. It is an empty dataset, not a quiet region.",
         "The Russia, Belarus & Crimea map shows exposure: capacity at recently disrupted sites. It is not a map of damage or of current impairment.",
       ] },
@@ -129,12 +129,13 @@ export const HELP_SECTIONS: HelpSection[] = [
       { kind: "derived", key: "esdi.headline" },
       { kind: "p", text: "Read these limits before the number:" },
       { kind: "list", items: [
+        "It is not a percentage. A reading on its scale is not a share of capacity lost or out of service: it is a weighted exposure score.",
         "It measures exposure, not loss. Open reporting says that a facility was hit and when, but almost never how much output stopped or for how long. The site does not estimate that figure.",
         "Most of the number can come from one sector. The breakdown below shows how many points each sector adds.",
         "It depends heavily on assumed recovery times. Very few disruptions have a published restoration report, so most contributions fade on a modelled assumption about how long that type of facility takes to recover. A different assumption would give a very different figure.",
         "The transmission part is a count of disrupted substations and lines, weighted by voltage. It is not a share of the grid out of service.",
         "Its evidence weighting is the site's older method, not the Evidence Confidence shown on country and impact records.",
-        "Its records come from an older curated workflow, partly parsed from a public table of strikes. They did not pass through the three-role review that country records do, and the country systems' rule for inclusion is not applied to them.",
+        "Its records come from an older curated workflow, partly parsed from a public table of strikes. They did not pass through the three-role review that country records do, and the country systems' rule for inclusion is not applied to them. Their evidence labels, confirmed, probable and possible, are the older method: for a row from the strike table, confirmed means at least two different websites are cited, probable one, possible none; other records carry a label set by hand, and most “confirmed” ones rest on a single article. These labels cannot be compared with Evidence Confidence.",
         "Sectors without a capacity base are left out and the remaining weights rescaled. They are not counted as zero.",
       ] },
       { kind: "derived", key: "esdi.contributions" },
@@ -402,15 +403,15 @@ export const HELP_SECTIONS: HelpSection[] = [
   },
   {
     id: "exports",
-    answer: "Downloads and images carry their date, their sources and their caveats inside the file, so a table or picture taken off the site keeps the context that makes it honest.",
+    answer: "Images carry their title, date and caveats inside the picture; a CSV is a plain table, and its date, filters and caveats travel in the separate note that “About this file” downloads, so keep the two together.",
     blocks: [
       { kind: "list", items: [
-        "Download CSV, on country pages and in the Impact atlas: the records shown, after filters. Where a page offers “About this file”, it downloads a note explaining the columns and limits: these are the published records in this collection, not a census, and counts are not comparable across countries.",
+        "Download CSV, on country pages and in the Impact atlas: the records shown, after filters, as a header row and the records, nothing else. The caveats are not inside the CSV. “About this file”, beside the download, gives a separate note with the build date, the filters in force, what each column means and the limits: these are the published records in this collection, not a census, and counts are not comparable across countries.",
         "Images: the Russia, Belarus & Crimea briefing, the Gulf brief, impact briefs, comparisons and maps. Each carries its title, its date and its caveats inside the picture. In the briefing, some parts can be switched off; the caveat cannot.",
         "Print / PDF, on country pages, prints the page as shown.",
         "“Copy view link” and “Link to this record” give addresses that reopen a view or a single record. An address carries the view, never personal data.",
       ] },
-      { kind: "p", text: "A filtered export says so. The figures in it describe the subset shown, not the whole collection." },
+      { kind: "p", text: "A filtered export says so: an image in its caption, a CSV in its note. The figures in it describe the subset shown, not the whole collection." },
       { kind: "p", text: "Exports follow the same publication safeguards as the pages. Nothing in a download is more precise than what the page shows." },
     ],
     seeAlso: ["withheld", "do-not-infer", "what-to-click"],

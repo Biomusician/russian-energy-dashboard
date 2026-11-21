@@ -33,6 +33,8 @@ export interface ManifestSystem {
   /** Iteration 21. Newest review date of the country's published records; null = no qualifying
    *  record yet. Absent in older builds and for the theatre. A date, never a count. */
   record_reviewed?: string | null;
+  /** Iteration 23, country systems: the country codes the system covers (the registry's). */
+  admin0_a3?: string[];
   /** Iteration 21, theatre only. Days a restoration report must age before the theatre uses it
    *  (its active-campaign rule); null when no campaign policy applies; absent in older builds. */
   status_delay_days?: number | null;
@@ -337,6 +339,8 @@ export interface GroupSystem {
   reporting_environment: string;
   /** Where the system places an attack record: the country as a whole, or a first-level region. */
   attack_records_placed?: "country" | "admin1";
+  /** Iteration 23: where it places every other record. Absent in older builds: by region at most. */
+  other_records_placed?: "country" | "admin1";
 }
 
 export interface GroupContext {

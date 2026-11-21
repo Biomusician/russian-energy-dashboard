@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_time": "2026-11-21T07:19:27+00:00",
+  "build_time": "2026-11-21T08:19:38+00:00",
   "selection": {
     "rule": "The first five country systems are the five largest total primary energy producers in the world, excluding Russia: Canada, China, India, Saudi Arabia and the United States.",
     "source": "U.S. EIA International Energy Statistics, total primary energy production, 2024",
@@ -111,6 +111,9 @@
       "reporting_environment": "media_only",
       "as_of": "2026-11-21",
       "record_reviewed": null,
+      "admin0_a3": [
+        "BHR"
+      ],
       "bounds": [
         50.38,
         25.58,
@@ -138,6 +141,9 @@
       "reporting_environment": "mixed_regulatory",
       "as_of": "2026-11-21",
       "record_reviewed": "2026-11-10",
+      "admin0_a3": [
+        "CAN"
+      ],
       "bounds": [
         -141.01,
         41.67,
@@ -165,6 +171,11 @@
       "reporting_environment": "media_only",
       "as_of": "2026-11-21",
       "record_reviewed": "2026-11-10",
+      "admin0_a3": [
+        "CHN",
+        "HKG",
+        "MAC"
+      ],
       "bounds": [
         73.6,
         15.78,
@@ -192,6 +203,9 @@
       "reporting_environment": "mixed_regulatory",
       "as_of": "2026-11-21",
       "record_reviewed": "2026-11-10",
+      "admin0_a3": [
+        "IND"
+      ],
       "bounds": [
         68.14,
         6.75,
@@ -226,6 +240,9 @@
       "reporting_environment": "conflict_restricted",
       "as_of": "2026-11-21",
       "record_reviewed": null,
+      "admin0_a3": [
+        "IRN"
+      ],
       "bounds": [
         44.01,
         25.06,
@@ -260,6 +277,9 @@
       "reporting_environment": "corporate_disclosure",
       "as_of": "2026-11-21",
       "record_reviewed": "2026-11-11",
+      "admin0_a3": [
+        "IRQ"
+      ],
       "bounds": [
         38.77,
         29.06,
@@ -294,6 +314,9 @@
       "reporting_environment": "corporate_disclosure",
       "as_of": "2026-11-21",
       "record_reviewed": "2026-11-11",
+      "admin0_a3": [
+        "KWT"
+      ],
       "bounds": [
         46.53,
         28.53,
@@ -328,6 +351,9 @@
       "reporting_environment": "corporate_disclosure",
       "as_of": "2026-11-21",
       "record_reviewed": null,
+      "admin0_a3": [
+        "OMN"
+      ],
       "bounds": [
         51.98,
         16.64,
@@ -361,6 +387,9 @@
       "reporting_environment": "corporate_disclosure",
       "as_of": "2026-11-21",
       "record_reviewed": null,
+      "admin0_a3": [
+        "QAT"
+      ],
       "bounds": [
         50.75,
         24.56,
@@ -419,6 +448,9 @@
       "reporting_environment": "corporate_disclosure",
       "as_of": "2026-11-21",
       "record_reviewed": "2026-11-03",
+      "admin0_a3": [
+        "SAU"
+      ],
       "bounds": [
         34.57,
         16.37,
@@ -454,6 +486,9 @@
       "reporting_environment": "corporate_disclosure",
       "as_of": "2026-11-21",
       "record_reviewed": null,
+      "admin0_a3": [
+        "ARE"
+      ],
       "bounds": [
         51.57,
         22.62,
@@ -485,6 +520,9 @@
       "reporting_environment": "mandatory_regulatory",
       "as_of": "2026-11-21",
       "record_reviewed": "2026-11-10",
+      "admin0_a3": [
+        "USA"
+      ],
       "bounds": [
         -187.52,
         18.91,

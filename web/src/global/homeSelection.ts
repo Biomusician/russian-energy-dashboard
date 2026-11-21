@@ -132,6 +132,20 @@ export const STATUS: Record<UnitState, string> = {
   unchecked: "No dedicated monitored system",
 };
 
+/** A country part of which lies inside a system, chosen as a whole (from the A to Z list, the search
+ *  or a restored selection), iteration 23 (MU-05). A click on the map lands on one part and keeps
+ *  that part's own status; the list and the search mean the whole country, and say the same words. */
+export function partlyStatus(within: ManifestSystem): string {
+  return `Partly monitored, in the ${within.name} ${within.kind === "theatre" ? "theatre" : "system"}`;
+}
+
+/** The status a card and its announcement give a unit. `onMap`: chosen by a click on the map. */
+export function statusFor(unit: string, idx: WorldIndex | null, m: Manifest, onMap = false): string {
+  const state = stateOf(unit, idx, m);
+  const within = state === "outside_area" && !onMap ? systemOf(m, idx?.partOf.get(unit) ?? "") : undefined;
+  return within ? partlyStatus(within) : STATUS[state];
+}
+
 /** Crimea and Sevastopol: Ukrainian, occupied, and monitored inside the theatre. Never Russian. */
 export const OCCUPIED_PHRASE = "Ukrainian territory under Russian occupation";
 
@@ -189,7 +203,7 @@ export function impactRecordsHref(a3: string): string {
   return impactsHref(`f.country=${encodeURIComponent(a3)}`);
 }
 
-export const THEATRE_MEANING = "Exposure, not loss; the only system with an index.";
+export const THEATRE_MEANING = "Exposure, not loss and not a percentage; the only system with an index.";
 const CRIMEA_IN_THEATRE = `Includes Crimea and Sevastopol, ${OCCUPIED_PHRASE}, as a separate unit. `
   + "Including it in the index is an analytic choice, not a statement about sovereignty.";
 
@@ -217,9 +231,20 @@ export function groupIdOf(key: string): string {
  *  theatre). */
 export interface Feature { name: string; occupied?: boolean }
 
-/** The card for a selection: a group (`group:<id>`) or a unit. Null for a key nothing on the map or
- *  in the manifest answers to. */
-export function cardFor(key: string, idx: WorldIndex | null, m: Manifest, feature?: Feature): CardModel | null {
+/** The card for a selection: a group (`group:<id>`), a choice between places too close to tell
+ *  apart (`near:<unit>,<unit>`) or a unit. Null for a key nothing on the map or in the manifest
+ *  answers to. `onMap`: the unit was chosen by a click on the map, which lands on one part of it. */
+export function cardFor(key: string, idx: WorldIndex | null, m: Manifest, feature?: Feature, onMap = false): CardModel | null {
+  if (key.startsWith(NEAR)) {
+    // Alphabetical, never by any figure: a list of places is not a ranking.
+    const links = unitsOf(key, m).flatMap((u) => {
+      const s = systemOf(m, u);
+      return s ? [{ label: s.name, href: hrefFor(s.id), ret: `card:${s.id}` }] : [];
+    }).sort((a, b) => a.label.localeCompare(b.label, "en"));
+    if (!links[0]) return null;
+    return { key, heading: "Several places here", status: "Too close together to tell apart at this zoom: choose one",
+             lines: ["Or zoom in, or use the list or the search."], actions: [], links, contextA3: null };
+  }
   if (key.startsWith("group:")) {
     const id = groupIdOf(key);
     const g = m.groups?.[id];
@@ -256,7 +281,7 @@ export function cardFor(key: string, idx: WorldIndex | null, m: Manifest, featur
     if (sys.record_reviewed === null) {
       lines.push("No qualifying records yet. Its impact records tab is a separate layer with its own, broader inclusion rule, so it may hold reviewed records.");
     }
-    lines.push(`Data as of ${fmtDate(sys.as_of)}.`);
+    lines.push(`Site built ${fmtDate(sys.as_of)}.`);
     const actions: CardAction[] = [{ label: `Open ${sys.name}`, href: hrefFor(sys.id), ret: "card:open", primary: true }];
     if (sys.record_reviewed === null) actions.push({ label: "Open its impact records tab", href: `?sys=${encodeURIComponent(sys.id)}&tab=impacts`, ret: "card:impacts" });
     if (group?.[1].slug) actions.push({ label: `${group[1].label} overview`, href: `?group=${encodeURIComponent(group[1].slug)}`, ret: "card:group" });
@@ -267,9 +292,13 @@ export function cardFor(key: string, idx: WorldIndex | null, m: Manifest, featur
   if (state === "outside_area") {
     const within = systemOf(m, idx?.partOf.get(key) ?? "");
     const present = m.impact_presence?.countries.includes(key);
+    const where = onMap || !within
+      ? `This part of ${name} lies outside the area monitored${within ? ` in the ${within.name} ${kindWord(within)}` : ""}.`
+      : `Part of ${name} is monitored in the ${within.name} ${kindWord(within)}; the rest lies outside the monitored area.`;
     return {
       ...base,
-      lines: [`This part of ${name} lies outside the area monitored${within ? ` in the ${within.name} ${kindWord(within)}` : ""}. National energy figures cover the whole country.`,
+      status: statusFor(key, idx, m, onMap),
+      lines: [`${where} National energy figures cover the whole country.`,
               ...(present ? [`The Impact Atlas also holds reviewed records for ${name}, under its own, broader inclusion rule.`] : [])],
       actions: [...(within ? [{ label: `Open the ${within.name} ${kindWord(within)}`, href: hrefFor(within.id), ret: "card:open", primary: true }] : []),
                 ...(present ? [{ label: "Open impact records", href: impactRecordsHref(key), ret: "card:impacts" }] : [])],
@@ -339,11 +368,58 @@ export function panelRows(m: Manifest): PanelRow[] {
   return rows;
 }
 
-/** The units a selection or a pointer covers: a group's members, or the one unit. */
+/** The units a selection or a pointer covers: a group's members, a choice's places, or the one unit. */
 export function unitsOf(key: string | null, m: Manifest | null): string[] {
   if (!key) return [];
   if (key.startsWith("group:")) return m?.groups?.[groupIdOf(key)]?.members ?? [];
+  if (key.startsWith(NEAR)) return key.slice(NEAR.length).split(",").filter(Boolean);
   return [key];
+}
+
+const NEAR = "near:";
+
+/** The selection key for a click that landed on several monitored places at once. */
+export function nearKey(units: string[]): string {
+  return `${NEAR}${[...new Set(units)].sort().join(",")}`;
+}
+
+/** What lies under a click near the small systems' dots: the dots drawn under the pointer
+ *  (`core`), the dots whose wider reach it is in (`near`), and the one polygon under it (`under`). */
+export interface MapHits { core: Props[]; near: Props[]; under: Props[] }
+
+/** What a click near the dots means (iteration 23, MU-01). On a dot: the dots there and the place
+ *  beneath them. Off a dot but on a monitored place: that place, as an ordinary click, so a tap on
+ *  a large neighbour is never turned into a choice. Off a dot, in its reach, on nothing monitored:
+ *  the dots in reach. Then: one system is that system; several are a choice; none is an ordinary
+ *  click on the first feature. Whatever else was there is reachable by zooming, the list and the
+ *  search. */
+export function pickMany(hits: MapHits, m: Manifest): { kind: "one"; props: Props } | { kind: "near"; key: string } | null {
+  const monitored = (list: Props[]) => list.some((p) => systemOf(m, unitOf(p)));
+  const props = hits.core.length > 0 ? [...hits.core, ...hits.under]
+    : monitored(hits.under) ? hits.under : [...hits.near, ...hits.under];
+  const systems = [...new Set(props.map(unitOf))].filter((u) => systemOf(m, u));
+  if (systems.length > 1) return { kind: "near", key: nearKey(systems) };
+  const one = systems.length === 1 ? props.find((p) => unitOf(p) === systems[0]) : props[0];
+  return one ? { kind: "one", props: one } : null;
+}
+
+/** A unit whose box spans less than this many degrees is a few pixels wide at world zoom. */
+export const SMALL_DEGREES = 4;
+
+/** Points for the monitored systems too small to click at world zoom (iteration 23, MU-01): the
+ *  smallest Gulf member had no clickable pixel. A fixed-size dot in the monitored colour, at the centre of the system's
+ *  served bounds, with its properties, so a click on it means the system. Every small system gets
+ *  one, whatever it holds: a dot sized or coloured by anything would be a severity display. */
+export function smallSystemMarkers(m: Manifest): GeoJSON.FeatureCollection {
+  return {
+    type: "FeatureCollection",
+    features: m.systems.flatMap((s) => {
+      const b = s.bounds;
+      if (!b || Math.max(b[2] - b[0], b[3] - b[1]) >= SMALL_DEGREES) return [];
+      return [{ type: "Feature" as const, properties: { system_id: s.id, name: s.name, status: "normal" },
+                geometry: { type: "Point" as const, coordinates: [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2] } }];
+    }),
+  };
 }
 
 /** The box around a group's members, from their manifest bounds. */

@@ -40,6 +40,8 @@
 .help-table { border-collapse: collapse; font-size: 12.5px; min-width: 420px; }
 .help-table th, .help-table td { border-bottom: 1px solid var(--line-soft); padding: 4px 8px; text-align: left; vertical-align: top; }
 .help-table caption { text-align: left; padding-bottom: 4px; }
+/* V-10: on a phone the breakdown table scrolls sideways; the fade says so. */
+@media (max-width: 600px) { .help-main .table-scroll { mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); padding-right: 28px; } }
 .help-see { color: var(--text-dim); }
 .help-term { border-top: 1px dashed var(--line-soft); }
 .help-term:first-child { border-top: none; }

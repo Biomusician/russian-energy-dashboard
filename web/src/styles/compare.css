@@ -4,6 +4,13 @@
 .compare-page .compare-intro p { margin: 0 0 6px; }
 .compare-picker { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .compare-picker p { margin: 0; }
+/* V-02: the site's select, not the browser default (as country.css styles the region select). */
+.compare-picker select {
+  background: var(--bg-inset); color: var(--text); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 4px 6px; font: inherit; max-width: 100%;
+}
+.compare-picker select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.compare-picker select:disabled { opacity: 0.6; }
 
 /* The page never scrolls sideways; the table does, inside its own box, with the first column held. */
 .compare-scroll { overflow-x: auto; max-width: 100%; border: 1px solid var(--line); border-radius: var(--radius); }

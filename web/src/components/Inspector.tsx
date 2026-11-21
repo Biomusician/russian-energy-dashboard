@@ -31,6 +31,7 @@ import { excludedSectorEventsText, horizonSensitivityText } from "../indexText";
 import { readerText } from "../global/readerText";
 import { severityColor } from "../palette";
 import { EvidenceChip, RecoveryLine, hostOf, theatreAttribution } from "./ui";
+import { LearnMore } from "../global/help/LearnMore";
 
 export type InspectTarget =
   | { kind: "headline" }
@@ -132,7 +133,7 @@ export default function Inspector({
              aria-label="Evidence inspector" onKeyDown={onPanelKeyDown}>
         <div className="section-head inspector-head">
           <div style={{ minWidth: 0 }}>
-            <div className="eyebrow">Evidence inspector</div>
+            <div className="eyebrow">Evidence inspector · <LearnMore anchor="esdi" label="Help: the index" className="insp-learn" /></div>
             <Breadcrumb target={target} onNavigate={onNavigate} bundle={bundle} />
           </div>
           <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>

@@ -44,7 +44,7 @@ test.describe("world energy context", () => {
     await app.open("");
     const legend = page.getByLabel("Map legend");
     // The default mode colours monitoring alone, in one colour that is not a measure.
-    await expect(legend).toContainText("Monitored system: the theatre or a country system (one colour; not a measure)");
+    await expect(legend).toContainText("Monitored system: the theatre or a country system (one colour; not a measure");
     await energyMode(app);
     const c = await ctx(page);
     await expect(legend).toContainText(`Total primary energy production — ${c.comparison_year}`);

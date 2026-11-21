@@ -6,7 +6,7 @@ import { composeContextFrame, contextFilename } from "./contextExport";
 import { loadWorld, type Manifest } from "./manifest";
 import { MapGeometryPlaceholder } from "../components/MapLoadIndicator";
 import { downloadBlob, exportMapPng } from "../mapExport";
-import { ENERGY_ATTRIBUTION, EXPLORE_ATTRIBUTION, MAP_COLOURS, NAV_FILL, NAV_HATCH, UNIT_EXPR, hoverLabel, type Bbox, type WorldIndex } from "./homeSelection";
+import { ENERGY_ATTRIBUTION, EXPLORE_ATTRIBUTION, MAP_COLOURS, NAV_FILL, NAV_HATCH, UNIT_EXPR, hoverLabel, pickMany, smallSystemMarkers, unitName, unitsOf, type Bbox, type WorldIndex } from "./homeSelection";
 
 // The country pages read the national figures from here; they now live beside the table.
 export { NationalFigures } from "./NationalContext";
@@ -32,16 +32,18 @@ const MONITORED = ["!=", ["get", "system_id"], null];
 // A place drawn smaller than this, in CSS pixels, gets a ring when it is pointed at.
 const SMALL_PX = 14;
 
-export default function WorldContext({ world, worldError, manifest, index, mode, selected, highlighted, fitTo, onPick }: {
+export default function WorldContext({ world, worldError, manifest, index, mode, selected, highlighted, fitTo, onPick, onPickNear }: {
   world: GeoJSON.FeatureCollection | null; worldError: string | null; manifest: Manifest | null; index: WorldIndex | null;
   mode: HomeMapMode;
   selected: string[]; highlighted: string | string[] | null; fitTo: Bbox | null;
   onPick: (props: Record<string, unknown>, how: { touch: boolean }) => void;
+  /** A click that reached several monitored systems at once: offer a choice (`near:` key). */
+  onPickNear: (key: string, how: { touch: boolean }) => void;
 }) {
   const [ctx, setCtx] = useState<EnergyContext | null>(null);
   const [ctxError, setCtxError] = useState<string | null>(null);
   const [metric, setMetric] = useState<string | null>(null);
-  const [hover, setHover] = useState<{ unit: string; text: string } | null>(null);
+  const [hover, setHover] = useState<{ unit: string | string[]; text: string } | null>(null);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [moved, setMoved] = useState(0);
@@ -71,6 +73,8 @@ export default function WorldContext({ world, worldError, manifest, index, mode,
   const energy: MapMode | null = modes.find((m) => m.id === metric) ?? modes[0] ?? null;
   const byA3 = useMemo(() => new Map((ctx?.countries ?? []).map((r) => [r.a3, r])), [ctx]);
   const explore = mode === "explore";
+  // The small systems' dots belong to the default mode only: in National energy the fill is a figure.
+  const markers = useMemo(() => (manifest ? { data: smallSystemMarkers(manifest), color: MAP_COLOURS.monitored } : null), [manifest]);
   const fill = (explore || !energy ? NAV_FILL : energy.fill) as maplibregl.ExpressionSpecification;
 
   // What the pointer is over is outlined as a whole unit; otherwise whatever the panel points at.
@@ -151,11 +155,25 @@ export default function WorldContext({ world, worldError, manifest, index, mode,
             hatch={explore ? { filter: NAV_HATCH, color: MAP_COLOURS.hatch } : null}
             locator={locator}
             fitTo={fitTo}
+            markers={explore ? markers : null}
             onPick={(_id, p, how) => { if (p) onPick(p, how ?? { touch: false }); }}
-            onHover={(p) => {
+            onPickMany={(hits, how) => {
+              if (!manifest) return;
+              const r = pickMany(hits, manifest);
+              if (r?.kind === "near") onPickNear(r.key, how);
+              else if (r) onPick(r.props, how);
+            }}
+            onHover={(p, hits) => {
               if (!p || !manifest) { setHover(null); return; }
-              const unit = p.system_id ? String(p.system_id) : String(p.a3);
-              setHover({ unit, text: explore ? hoverLabel(p, index, manifest) : describeEnergy(p) });
+              const r = explore && hits ? pickMany(hits, manifest) : null;
+              if (r?.kind === "near") {
+                const units = unitsOf(r.key, manifest);
+                setHover({ unit: units, text: `${units.map((u) => unitName(u, index, manifest)).sort().join(", ")} · Click to choose one` });
+                return;
+              }
+              const q = r?.kind === "one" ? r.props : p;
+              const unit = q.system_id ? String(q.system_id) : String(q.a3);
+              setHover({ unit, text: explore ? hoverLabel(q, index, manifest) : describeEnergy(q) });
             }}
             ariaLabel={explore
               ? "World map: where to explore. Monitored systems share one colour. The list “Where to explore” beside the map has every destination as text, and the search finds every country."

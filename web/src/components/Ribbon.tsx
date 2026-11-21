@@ -138,7 +138,10 @@ export default function Ribbon({
                   </span>
                 )}
               </span>
-              {peak && <span title="The highest value of the index to date">peak<span className="peak-long"> to date</span> <span className="num">{fmtNum(peak.value, 1)}</span> ({fmtDate(peak.date)})</span>}
+              {/* AN-09: the series is a weekly reconstruction (today's evidence and method at weekly
+                  steps), so its highest point is not a value the site published on that date. On a phone
+                  the date moves to the tooltip, so "weekly" fits the header's cap in a wide font. */}
+              {peak && <span title={`The highest point of the weekly reconstruction to date, at ${fmtDate(peak.date)}: today's evidence and method applied at weekly steps, not a value the site published on that date.`}>weekly peak<span className="peak-long"> (reconstructed)</span> <span className="num">{fmtNum(peak.value, 1)}</span><span className="peak-date"> ({fmtDate(peak.date)})</span></span>}
               <BuildDelta bundle={bundle} isLatest={isLatest} onExplain={onExplain} />
             </p>
             {/* Iteration 16: a past date on this ribbon is today's evidence evaluated at that date,
@@ -238,6 +241,11 @@ export default function Ribbon({
             )}
           </div>
 
+          {/* Phones only (CSS): the headline's own Learn more is hidden there to keep the header
+              under its cap, so the panel this toggle opens carries both links (iteration 23, H-09). */}
+          <p className="ribbon-help">
+            Learn more: <LearnMore anchor="esdi" label="what the index measures" /> · <LearnMore anchor="recovery" label="recovery evidence" />
+          </p>
           {/* Recovery headline. §11: the headline is the national EVIDENCE COUNT, not the pooled
               cross-class median — a 2-day terminal restart and a 205-day gas-plant repair are not
               one repair time. These are as-at-build counts; only the ESDI follows the scrubber, so

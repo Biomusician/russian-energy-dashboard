@@ -2,7 +2,9 @@
  *
  *  SOURCES, AND WHAT THEY COST. Systems, their aliases and the regional overviews come from the
  *  manifest, which every view has already loaded. Glossary concepts are in the bundle, and each
- *  opens its entry on the Help page (`?view=help#g-<id>`, iteration 23). Region
+ *  opens its entry on the Help page (`?view=help#g-<id>`, iteration 23), and every Help section is
+ *  an option of its own under the words a reader would type for it (from the section list, which is
+ *  in the bundle already; the Help prose is not). Region
  *  names are added only where they are cheap: the theatre's region list (one small file, fetched
  *  the first time the search box is focused) and the regions of any country whose page this tab
  *  has already loaded. The home page never fetches a country's files to build the index. Every
@@ -18,12 +20,13 @@
  */
 
 import type { Manifest } from "./manifest";
-import { STATUS, stateOf, systemOf, type WorldIndex } from "./homeSelection";
+import { STATUS, partlyStatus, stateOf, systemOf, type WorldIndex } from "./homeSelection";
 import { GLOSSARY } from "./help/glossary";
+import { HELP_SECTIONS_TOC, HELP_SUBSECTIONS, helpHref, type HelpAnchor } from "./help/anchors";
 import { matchScore, normalizeForSearch } from "./searchNormalize";
 import { loadRegionRows } from "../data";
 
-export type SearchKind = "system" | "group" | "country" | "view" | "region" | "concept";
+export type SearchKind = "system" | "group" | "country" | "view" | "region" | "concept" | "help";
 
 export type SearchAction =
   | { type: "system"; id: string }
@@ -46,10 +49,10 @@ export interface SearchEntry {
 
 export interface SearchHit { entry: SearchEntry; score: number; matched: string }
 
-const KIND_ORDER: Record<SearchKind, number> = { system: 0, group: 1, country: 2, view: 3, region: 4, concept: 5 };
+const KIND_ORDER: Record<SearchKind, number> = { system: 0, group: 1, country: 2, view: 3, region: 4, concept: 5, help: 6 };
 
 export const KIND_LABEL: Record<SearchKind, string> = {
-  system: "System", group: "Regional overview", country: "Country", view: "View", region: "Region", concept: "Glossary",
+  system: "System", group: "Regional overview", country: "Country", view: "View", region: "Region", concept: "Glossary", help: "Help section",
 };
 
 export function makeEntry(e: Omit<SearchEntry, "folded">): SearchEntry {
@@ -124,7 +127,35 @@ export const CONCEPT_ENTRIES: SearchEntry[] = [
   })),
 ];
 
-export interface TheatreRegion { code: string; name: string; country: string }
+/** The words a reader types for a Help section that are not in its title (iteration 23, H-03).
+ *  Help promises that search finds what it explains: "csv" or "who reviewed" found nothing when only
+ *  glossary terms were indexed. Keyed by section id; a renamed section drops out of the type check. */
+const HELP_ALIASES: Partial<Record<HelpAnchor, string[]>> = {
+  "start-here": ["how to use", "new here", "occupied", "sovereignty", "crimea status"],
+  "navigating-the-map": ["map modes", "where to explore", "national energy map", "zoom", "keyboard", "borders", "disputed territory"],
+  "what-to-click": ["why", "link to this record", "copy view link"],
+  "product-types": ["reviewer", "reviewers", "who reviewed", "country systems", "kinds of data"],
+  esdi: ["percentage", "percent", "capacity lost", "output lost", "damage"],
+  "impact-records": ["reviewer", "who reviewed", "census", "complete list", "inclusion rule"],
+  "evidence-confidence": ["probability", "provisional", "draft", "calibration"],
+  "research-coverage": ["completeness", "how complete", "searched"],
+  "source-health": ["build date", "data as of", "dead link", "stale"],
+  "whats-new": ["what's new", "changes", "corrections", "withdrawn", "updates", "new records"],
+  history: ["past date", "as published", "reconstruction", "since last build"],
+  absence: ["blank", "missing", "no data", "empty", "zero"],
+  withheld: ["coordinates", "targeting", "exact location", "safeguards", "not published"],
+  exports: ["export", "csv", "download", "print", "pdf", "png", "image", "share", "caveats"],
+  "do-not-infer": ["ranking", "rank", "ranked", "risk", "resilience", "percentage", "capacity lost"],
+  recovery: ["restoration", "repair", "restart", "modelled recovery"],
+};
+
+/** One option per Help section and addressable subsection: it opens that section. */
+export const HELP_ENTRIES: SearchEntry[] = [...HELP_SECTIONS_TOC, ...HELP_SUBSECTIONS].map((s) => makeEntry({
+  key: `help:${s.id}`, kind: "help", label: s.title, sub: "Opens this section of Help",
+  terms: [s.title, ...(HELP_ALIASES[s.id] ?? [])], action: { type: "href", href: helpHref(s.id) },
+}));
+
+export interface TheatreRegion { code: string; name: string; country: string; aliases?: string[] }
 
 /** The theatre's regions. Crimea is described as what it is, an occupied unit, never as a region
  *  of Russia. */
@@ -133,7 +164,7 @@ export function theatreRegionEntries(regions: TheatreRegion[], theatreName: stri
     key: `region:ru:${r.code}`, kind: "region", label: r.name,
     sub: r.country === "UA" ? `Occupied unit, internationally Ukrainian · ${theatreName}`
       : r.country === "BY" ? `Region of Belarus · ${theatreName}` : `Region of Russia · ${theatreName}`,
-    terms: [r.name],
+    terms: [r.name, ...(r.aliases ?? [])],
     action: { type: "href", href: `?sys=ru&r=${encodeURIComponent(r.code)}` },
   }));
 }
@@ -186,7 +217,7 @@ export function countryEntries(idx: WorldIndex, m: Manifest): SearchEntry[] {
     }
     const state = stateOf(c.unit, idx, m);
     const within = state === "outside_area" ? systemOf(m, idx.partOf.get(c.unit) ?? "") : undefined;
-    const sub = within ? `Partly monitored, in the ${within.name} ${within.kind === "theatre" ? "theatre" : "system"}` : STATUS[state];
+    const sub = within ? partlyStatus(within) : STATUS[state];
     return [makeEntry({
       key: `country:${c.a3}`, kind: "country", label: c.name, sub: `${sub} · selects it on the map`,
       terms: [c.name, ...aliases, c.a3], action: { type: "select", key: c.unit },
@@ -220,6 +251,11 @@ export function searchEntries(entries: SearchEntry[], query: string, limit = 12)
     });
     if (best > 0) hits.push({ entry, score: best, matched });
   }
+  // Word boundaries first (iteration 23, H-03): a match inside a word ("review" in "preview") is
+  // offered only when nothing matches at the start of a word. It stays as a fallback for a query
+  // typed without a prefix the names carry, such as an Arabic name without its article.
+  const atWord = hits.some((h) => h.score >= 2);
+  if (atWord) hits.splice(0, hits.length, ...hits.filter((h) => h.score >= 2));
   hits.sort((a, b) => b.score - a.score || KIND_ORDER[a.entry.kind] - KIND_ORDER[b.entry.kind]
     || a.entry.label.localeCompare(b.entry.label));
   return hits.slice(0, limit);
@@ -238,11 +274,19 @@ export function loadTheatreRegions(): Promise<TheatreRegion[]> {
       .then((rows: unknown) => {
         if (!Array.isArray(rows)) throw new Error("regions: not a list");
         return rows.filter((x) => x && typeof x.code === "string" && typeof x.name === "string")
-          .map((x) => ({ code: x.code, name: x.name, country: String(x.country ?? "") }));
+          .map((x) => ({ code: x.code, name: x.name, country: String(x.country ?? ""), aliases: unitAliases(x.name, x.natural_earth_name) }));
       })
       .catch((err) => { theatrePromise = null; throw err; });
   }
   return theatrePromise;
+}
+
+/** The other names a theatre unit's boundary source gives it (iteration 23, MU-06): the source
+ *  calls the Crimea unit "Crimea+Sevastopol", and the map and legend name Sevastopol, so a reader
+ *  who types it must find the unit. From the served file, never typed here. */
+export function unitAliases(name: string, sourceName: unknown): string[] {
+  if (typeof sourceName !== "string") return [];
+  return sourceName.split("+").map((s) => s.trim()).filter((s) => s && s !== name);
 }
 
 // Regions of countries whose page this tab has loaded. Kept for the session, never fetched for it.

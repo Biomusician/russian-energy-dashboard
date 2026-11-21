@@ -67,7 +67,16 @@ export function SourceLine({ ctx }: { ctx: EnergyContext }) {
   );
 }
 
-export function NationalTable({ ctx, partly, onContext, systemNames }: { ctx: EnergyContext; partly: Set<string>; onContext: (a3: string) => void; systemNames: Record<string, string> }) {
+/** The status column (iteration 23, H-10): a country with published impact records but no system is
+ *  an impact-record country, not "context only". `impactRecords`: the manifest's presence codes. */
+export function nationalStatus(r: Pick<ContextRow, "a3" | "name" | "system_id">, partly: Set<string>, impactRecords: Set<string>,
+                               systemNames: Record<string, string>): string {
+  if (partly.has(r.a3)) return "Partly monitored";
+  if (r.system_id) return systemNames[r.system_id] && systemNames[r.system_id] !== r.name ? `Monitored, in the ${systemNames[r.system_id]} system` : "Monitored";
+  return impactRecords.has(r.a3) ? "Impact records, not monitored" : "Context only";
+}
+
+export function NationalTable({ ctx, partly, impactRecords, onContext, systemNames }: { ctx: EnergyContext; partly: Set<string>; impactRecords: Set<string>; onContext: (a3: string) => void; systemNames: Record<string, string> }) {
   const [sort, setSort] = useState<string | null>(null);
   const cols = ctx.map_metrics;
   const rows = useMemo(() => {
@@ -101,9 +110,7 @@ export function NationalTable({ ctx, partly, onContext, systemNames }: { ctx: En
                 <button className="linklike" aria-label={`${r.name}: ${r.system_id ? "open its page" : "select it on the map"}`}
                         onClick={() => { if (r.system_id) navigate(r.system_id); else onContext(r.a3); }}>{r.name}</button>
               </td>
-              <td className="small dim">{partly.has(r.a3) ? "Partly monitored"
-                : r.system_id ? (systemNames[r.system_id] && systemNames[r.system_id] !== r.name ? `Monitored, in the ${systemNames[r.system_id]} system` : "Monitored")
-                : "Context only"}</td>
+              <td className="small dim">{nationalStatus(r, partly, impactRecords, systemNames)}</td>
               {cols.map((c) => <td key={c} className="mono small">{fmtValue(r.values[c], ctx.metrics[c].unit).replace(/ .*$/, (s) => (s === " data" ? " data" : ""))}</td>)}
             </tr>
           ))}
@@ -113,8 +120,8 @@ export function NationalTable({ ctx, partly, onContext, systemNames }: { ctx: En
   );
 }
 
-export function WorldProfile({ ctx, partly, onContext, systemNames, tableOpen = false }: {
-  ctx: EnergyContext; partly: Set<string>; onContext: (a3: string) => void; systemNames: Record<string, string>; tableOpen?: boolean;
+export function WorldProfile({ ctx, partly, impactRecords, onContext, systemNames, tableOpen = false }: {
+  ctx: EnergyContext; partly: Set<string>; impactRecords: Set<string>; onContext: (a3: string) => void; systemNames: Record<string, string>; tableOpen?: boolean;
 }) {
   const w = ctx.world.values;
   const total = w.total_production;
@@ -134,7 +141,7 @@ export function WorldProfile({ ctx, partly, onContext, systemNames, tableOpen = 
           printed alphabetically. The national figures are in the table below, alphabetical. */}
       <details open={tableOpen || undefined}>
         <summary className="small">National figures table ({ctx.countries.length} countries and territories)</summary>
-        <NationalTable ctx={ctx} partly={partly} onContext={onContext} systemNames={systemNames} />
+        <NationalTable ctx={ctx} partly={partly} impactRecords={impactRecords} onContext={onContext} systemNames={systemNames} />
       </details>
       <SourceLine ctx={ctx} />
       <p className="small dim">{ctx.not_scoring}</p>

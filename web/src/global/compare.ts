@@ -295,8 +295,11 @@ export function compareRows(cols: CompareColumn[], ctx: EnergyContext | null, ma
       cells: cols.map((c) => c.entry.kind === "theatre"
         ? value("Monitored area spanning several countries", undefined, ["Monitored area,", "several countries"])
         : value("Country system", undefined, ["Country system"])) },
-    { id: "as_of", label: "Record as of", basis: "common", basisNote: "The date each system's published record describes.",
-      cells: cols.map((c) => value(fmtDate(c.entry.as_of), undefined, [fmtDate(c.entry.as_of)])) },
+    { id: "as_of", label: "Record reviewed", basis: "common",
+      basisNote: "The date each country system's published record was last reviewed. The site's build date is not a record date.",
+      cells: cols.map((c) => c.entry.kind === "theatre" ? notApplicable(THEATRE_OWN)
+        : c.entry.record_reviewed ? value(fmtDate(c.entry.record_reviewed), undefined, [fmtDate(c.entry.record_reviewed)])
+          : value("No qualifying record yet", undefined, ["No qualifying record yet"])) },
     { id: "index", label: "Index", basis: "common",
       basisNote: `Whether a disruption index is published. ${NO_INDEX_MEANING} An index built for one area is not comparable with any other system.`,
       cells: cols.map(indexCell) },

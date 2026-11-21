@@ -506,6 +506,8 @@ select.ghost {
   transform: translate(12px, 12px);
 }
 
+.map-scope-note .scope-crimea { display: block; color: var(--violet); }
+.map-scope-note .scope-more { display: block; margin-top: 4px; }
 .map-scope-note {
   position: absolute;
   right: 12px;
@@ -1126,17 +1128,20 @@ html[data-chrome="compact"] .tl-chart > div:last-child { display: none; }
    The scope note measured 268x218 on a 1067x504 map — 11% of the workspace, permanently. It is
    important text, so it is not deleted: on a constrained map it collapses to a marker that
    expands on hover or focus. */
+/* Iteration 23 (V-01): the fold used to be a 34 px height cap that cut the second line in half and
+   hid the Crimea sentence. Now the Crimea sentence is always whole and only the rest folds. */
 html[data-chrome="compact"] .map-scope-note {
   max-width: 214px;
-  max-height: 34px;
-  overflow: hidden;
   cursor: help;
 }
+html[data-chrome="compact"] .map-scope-note .scope-more { display: none; }
 html[data-chrome="compact"] .map-scope-note:hover,
 html[data-chrome="compact"] .map-scope-note:focus-within {
   max-height: 60vh;
   overflow-y: auto;
 }
+html[data-chrome="compact"] .map-scope-note:hover .scope-more,
+html[data-chrome="compact"] .map-scope-note:focus-within .scope-more { display: block; margin-top: 4px; }
 /* A hint that there is more, so the collapse is discoverable rather than a truncation bug. */
 html[data-chrome="compact"] .map-scope-note::after {
   content: " more…";
@@ -2092,6 +2097,12 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
 /* The theatre header's height is capped on a phone (theatre-ux.e2e.ts); there the Tools menu's Help
    entry is the way in, so the headline's link is dropped. */
 .hl-learn { font-size: 11px; }
+/* H-09: the phone's way to the headline's Help, inside the panel "Sector scores & recovery" opens. */
+.ribbon-help { display: none; margin: 0; padding: 4px 12px; font-size: 11px; color: var(--text-dim); flex-basis: 100%; }
+@media (max-width: 600px) { .ribbon-help { display: block; } }
+.insp-learn { font-size: 10.5px; letter-spacing: 0; text-transform: none; }
+/* H-06: under every list of theatre records. */
+.theatre-records-note { margin: 8px 0 2px; font-size: 10.5px; line-height: 1.45; color: var(--text-faint); }
 @media (max-width: 600px) { .hl-learn { display: none; } }
 .head-learn { font-size: 12px; align-self: center; }
 /* Same reason on a country page: on a phone the link wrapped onto a line of its own and, with

@@ -63,7 +63,7 @@ test.describe("home first screen", () => {
       await app.open("");
       await expect(page.getByRole("heading", { name: "Energy Disruption Monitor", level: 1 })).toBeInViewport();
       await expect(page.getByRole("combobox", { name: SEARCH })).toBeInViewport();
-      await expect(page.locator(".home-meta")).toContainText(/Data as of \d{1,2} \w{3} \d{4} · rebuilt daily · What's new/);
+      await expect(page.locator(".home-meta")).toContainText(/Built \d{1,2} \w{3} \d{4} · rebuilt daily · What's new/);
       await expect(page.locator(".home-newhere")).toHaveAttribute("href", "?view=help#start-here");
       // The map is on the first screen, not two to six screens down.
       const map = (await page.locator(".home-map-box").boundingBox())!;
@@ -116,7 +116,7 @@ test.describe("home first screen", () => {
     // The theatre row: its served headline, what it means, and that it is the only index.
     const row = panel(page).locator(".hp-theatre");
     await expect(row.locator(".home-headline-num")).toHaveText(theatre.headline!.value.toFixed(1));
-    await expect(row).toContainText("Exposure, not loss; the only system with an index.");
+    await expect(row).toContainText("Exposure, not loss and not a percentage; the only system with an index.");
     // Gulf membership is a quiet tag; no maturity anywhere in the panel.
     const gulf = m.groups.gulf_littoral;
     for (const s of countries) {
@@ -442,7 +442,7 @@ test.describe("map modes", () => {
     await app.open("");
     expect(asked).not.toContain("/data/global/energy_context.json");
     const legend = page.getByLabel("Map legend");
-    await expect(legend).toContainText("Monitored system: the theatre or a country system (one colour; not a measure)");
+    await expect(legend).toContainText("Monitored system: the theatre or a country system (one colour; not a measure");
     await expect(legend).toContainText("Crimea and Sevastopol: Ukrainian territory under Russian occupation");
     await page.getByRole("button", { name: "National energy" }).click();
     await expect(page.getByRole("button", { name: "National energy" })).toHaveAttribute("aria-pressed", "true");

@@ -220,7 +220,8 @@
   display: block; width: 100%; margin: 4px 0; background: var(--bg-inset); color: var(--text);
   border: 1px solid var(--line); border-radius: var(--radius); padding: 6px 8px; font: inherit;
 }
-.hp-az-list { list-style: none; margin: 4px 0 0; padding: 0 2px; columns: 2; column-gap: 12px; max-height: 280px; overflow-y: auto; }
+.hp-az-list { list-style: none; margin: 4px 0 0; padding: 0 2px; max-height: 280px; overflow-x: hidden; overflow-y: auto; }
+.hp-az-list li { display: block; }
 .hp-az-item { text-align: left; padding: 3px 0; font-size: 12.5px; }
 
 .sel-card {
@@ -229,6 +230,8 @@
 }
 .sel-card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .sel-card-title { margin: 0; font-size: 15px; }
+.sel-card-title:focus { outline: none; }
+.sel-card-title:focus-visible { outline: 2px dashed var(--text); outline-offset: 2px; }
 .sel-status { margin: 4px 0; font-weight: 600; font-size: 12.5px; }
 .sel-line { margin: 4px 0; line-height: 1.45; }
 .sel-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -269,4 +272,6 @@
   .hp-az-item { min-height: 44px; }
   .hp-show { min-height: 44px; }
   .sel-actions .home-action { min-height: 44px; }
+  /* A choice between places on a phone: each a full-height target. */
+  .sel-links a { display: inline-flex; align-items: center; min-height: 44px; }
 }

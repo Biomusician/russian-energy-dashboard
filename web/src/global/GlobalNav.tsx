@@ -3,7 +3,7 @@ import { loadManifest, loadWorld, type Manifest } from "./manifest";
 import { IMPACTS_VIEW, LOCATION_EVENT, impactsHref, navigate, navigateGroup, navigateTo } from "./router";
 import { HELP_VIEW, helpHref } from "./help/anchors";
 import {
-  CONCEPT_ENTRIES, KIND_LABEL, VIEW_ENTRIES, countryEntries, groupEntries, loadTheatreRegions, loadedCountryRegions,
+  CONCEPT_ENTRIES, HELP_ENTRIES, KIND_LABEL, VIEW_ENTRIES, countryEntries, groupEntries, loadTheatreRegions, loadedCountryRegions,
   onCountryRegions, previewKey, regionalContextEntries, searchEntries, systemEntries, theatreRegionEntries,
   type SearchEntry, type SearchHit, type TheatreRegion,
 } from "./searchIndex";
@@ -313,7 +313,7 @@ export function GlobalSearch({ compact = false, inputRef, onPreview }: {
   };
 
   const entries = useMemo(() => {
-    const out: SearchEntry[] = [...VIEW_ENTRIES, ...CONCEPT_ENTRIES];
+    const out: SearchEntry[] = [...VIEW_ENTRIES, ...CONCEPT_ENTRIES, ...HELP_ENTRIES];
     if (manifest) {
       out.push(...systemEntries(manifest), ...groupEntries(manifest), ...regionalContextEntries(manifest));
       const theatreName = manifest.systems.find((s) => s.kind === "theatre")?.name ?? "";
@@ -377,7 +377,7 @@ export function GlobalSearch({ compact = false, inputRef, onPreview }: {
           aria-controls={listId}
           aria-activedescendant={expanded && active >= 0 && hits[active] ? optionId(active) : undefined}
           aria-keyshortcuts="/"
-          placeholder={compact ? "Search" : "A country, region, alias or term — e.g. Iran, ایران, Texas, exposure"}
+          placeholder={compact ? "Search" : "Country, region or term, e.g. Iran, ایران, exposure"}
           value={query}
           onFocus={onFocus}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); setActive(-1); }}

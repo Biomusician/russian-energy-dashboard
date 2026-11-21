@@ -5,6 +5,7 @@ import type { Incident, RecoveryState } from "../types";
 import { CAUSE_COLOR, evidence, severityColor } from "../palette";
 import { fmtDate, fmtNum, titleCase } from "../data";
 import { readerText } from "../global/readerText";
+import { LearnMore } from "../global/help/LearnMore";
 
 /** A dependency-free inline SVG sparkline (§18-19). Draws a value series as a filled line with
  *  the current scrubber position marked, so the dossier shows a trajectory at a glance rather
@@ -213,6 +214,22 @@ function RecoveryKind({ kind }: { kind: string }) {
   );
 }
 
+/** Where the theatre's records come from (iteration 23, H-06), under every list of them. Help said
+ *  it and no theatre page did: these records did not pass the three-role review, and their
+ *  confirmed / probable / possible labels are the older method, not Evidence Confidence. */
+export const THEATRE_RECORDS_NOTE = "These records come from an older curated workflow, partly parsed from a public table of strikes, "
+  + "and did not pass the three-role review that country and impact records do. Confirmed, probable and possible are the "
+  + "older evidence labels: for a row from the strike table, confirmed means two or more different websites are cited; other "
+  + "records are labelled by hand. They are not Evidence Confidence.";
+
+export function TheatreRecordsNote() {
+  return (
+    <p className="theatre-records-note">
+      {THEATRE_RECORDS_NOTE} <LearnMore anchor="g-theatre-evidence-labels" />
+    </p>
+  );
+}
+
 /** Event row shared by Overview, Recent and Sources tabs. */
 export function EventRow({
   incident, showRegion, regionName,
@@ -234,7 +251,8 @@ export function EventRow({
         <span className="tag" style={{ color: CAUSE_COLOR[incident.cause], borderColor: "var(--line)" }}>
           {titleCase(incident.cause)}
         </span>
-        <span className={`tag ${incident.confidence}`}>{incident.confidence}</span>
+        <span className={`tag ${incident.confidence}`}
+              title="The older evidence label (the index's own method), not Evidence Confidence">{incident.confidence}</span>
         {incident.date_precision === "month" && <span className="tag">month precision</span>}
         {incident.conflicting_reports && <span className="tag conflict">sources conflict</span>}
         {incident.part_of_unenumerated_series && (

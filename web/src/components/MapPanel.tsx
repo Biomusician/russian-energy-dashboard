@@ -1344,15 +1344,18 @@ export default function MapPanel({
             order-of-battle vocabulary ("basing", "unit positions", "readiness") inherited from a
             sibling project, which disclaimed things that do not exist here and omitted the two
             caveats that matter: centroid placement and a modelled index. */}
-        Publicly reported disruption to energy infrastructure, aggregated to administrative
-        region. Facility markers show published permanent locations; a dashed marker is placed
-        on an administrative centroid and is not a facility location. Exposure is a modelled
-        index of capacity at disrupted sites — not measured loss, and never an assessment of
-        undamaged infrastructure.
-        <span style={{ display: "block", marginTop: 4, color: "var(--violet)" }}>
+        {/* The Crimea sentence first: on a compact map it is the part that never folds (V-01). */}
+        <span className="scope-crimea">
           Crimea (dashed outline) is internationally recognised as Ukraine, under Russian
           occupation. It is shown as a separate unit and is included in the Monitored-Area
           index — inclusion is an analytic choice, not a statement about sovereignty.
+        </span>
+        <span className="scope-more">
+          Publicly reported disruption to energy infrastructure, aggregated to administrative
+          region. Facility markers show published permanent locations; a dashed marker is placed
+          on an administrative centroid and is not a facility location. Exposure is a modelled
+          index of capacity at disrupted sites — not measured loss, and never an assessment of
+          undamaged infrastructure.
         </span>
       </div>
 

@@ -128,7 +128,7 @@ def test_country_overview_never_states_or_implies_a_held_count(tmp_path_factory)
         t = rows[0]["text"]
         assert all(r["restricted"] for r in rows), sid
         assert not re.search(r"4817|3929|5743|6151", t), sid
-        assert "whether, or how many, records are in review" in t, sid
+        assert "how many records are in review" in t and "whether" not in t, sid
         assert not re.search(r"\d+\s+(candidate|held|records? (are |is )?(held|in review|under review))", t, re.I), sid
         assert "remain under review" not in t, sid
 
