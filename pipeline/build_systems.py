@@ -763,8 +763,11 @@ COMPARABILITY_STATEMENT = (
 
 # Roles whose author is the body that ran, regulated or measured the system, as against a
 # publisher reporting on it. Used only to describe a country's citations (iteration 17, source
-# health); it never decides whether an event is included.
-FIRST_PARTY_ROLES = ("official", "government", "regulator", "operator", "dataset")
+# health); it never decides whether an event is included. Read from the evidence-confidence method's
+# "direct" tier, so the source-health figure and the confidence component call the same roles
+# first-party (iteration 23, F3: this list once kept "dataset" and lacked "cert", "law_enforcement"
+# and "court_record").
+FIRST_PARTY_ROLES = tuple(role for role, tier in evidence_confidence.METHOD["role_tier"].items() if tier == "direct")
 
 
 def _first_party(source):
@@ -780,6 +783,32 @@ WIRE_ORIGINS = (("reuters", "Reuters"), ("bloomberg", "Bloomberg"), ("associated
                 ("canadian press", "The Canadian Press"), ("xinhua", "Xinhua"), ("pti", "PTI"), ("ians", "IANS"),
                 ("afp", "AFP"), ("spa", "Saudi Press Agency"), ("kuna", "KUNA"), ("wam", "WAM"), ("qna", "QNA"),
                 ("irna", "IRNA"), ("wire copy", "an unnamed wire"))
+# A wire's short name is also the start of other names: "IANS Research" is an advisory firm, not the
+# Indian wire, and "spa" is an ordinary word (iteration 23, ECI-14). A key of this many letters or
+# fewer counts only where it ends the name: nothing follows it but a word that says the copy is the
+# wire's ("AFP via Dawn", "AP copy", "with AFP and Reuters"). In a publisher field it must also be
+# written in capitals, as every agency's short name is cited.
+WIRE_SHORT_NAME = 5
+WIRE_FOLLOWERS = ("via", "and", "with", "copy", "contributed", "published", "news", "wire")
+
+
+def wire_key_in(key, text, exact_case=True):
+    """Whether the wire key `key` (lower case, as in WIRE_ORIGINS) names its wire in `text`.
+
+    A long name or a name of several words matches as whole words anywhere. A short name matches
+    only where no other word continues it, and, with `exact_case`, only in capitals. An explicit
+    origin a lane typed (`exact_case=False`) is meant to name an origin, so its case is not read."""
+    words = re.sub(r"[^A-Za-z]+", " ", str(text or "")).split()
+    lower = [w.lower() for w in words]
+    parts = key.split()
+    if len(parts) > 1 or len(key) > WIRE_SHORT_NAME:
+        return any(lower[i:i + len(parts)] == parts for i in range(len(lower) - len(parts) + 1))
+    for i, w in enumerate(lower):
+        if w != key or (exact_case and words[i] != key.upper()):
+            continue
+        if i + 1 == len(lower) or lower[i + 1] in WIRE_FOLLOWERS:
+            return True
+    return False
 # Discovery aids, never an origin: an encyclopedia and a content aggregator restate others' reporting.
 DISCOVERY_ONLY_DOMAINS = ("wikipedia.org", "indexbox.io")
 _SECOND_LEVEL = {"co", "com", "gov", "org", "net", "ac", "edu", "nic"}
@@ -802,9 +831,8 @@ def source_origin(source):
     domain = registered_domain(source.get("url"))
     if domain in DISCOVERY_ONLY_DOMAINS or "wikipedia" in (source.get("publisher") or "").lower():
         return None
-    words = " " + re.sub(r"[^a-z]+", " ", (source.get("publisher") or "").lower()) + " "
     for key, name in WIRE_ORIGINS:
-        if f" {key} " in words:
+        if wire_key_in(key, source.get("publisher")):
             return "wire:" + name
     return domain or (source.get("publisher") or "").lower()
 
@@ -842,10 +870,15 @@ def source_health(events):
         # are one origin; Wikipedia and content aggregators are discovery aids and count for none.
         "single_origin_events": sum(1 for e in events if len(event_origins(e)) == 1),
         "discovery_only_events": sum(1 for e in events if not event_origins(e)),
+        # Iteration 23 (F3): this sentence said the count "can undercount independence but not
+        # overstate it", the opposite of what an unseen relay does. Two outlets carrying one
+        # statement count twice here unless the record names the wire.
         "origin_rule": ("An origin is a wire service the citation names, else the website it sits on. "
                         "Wikipedia and content aggregators are discovery aids and count as no origin. "
-                        "Republication a record does not name cannot be seen, so this can undercount "
-                        "independence but not overstate it."),
+                        "Republication a record does not name cannot be seen, so this count can overstate "
+                        "independence: two outlets relaying one statement count as two. The evidence-"
+                        "confidence count on each record also joins sources by publisher name, organisation "
+                        "and filed form, so it can be lower than this one."),
         "events_with_first_party_source": sum(
             1 for e in events if any(_first_party(s) for s in e["sources"])),
         "first_party_roles": list(FIRST_PARTY_ROLES),
@@ -1055,8 +1088,26 @@ def _region_status(code, rulings):
     return "normal", None
 
 
+# Who the "independent" reviewers were (REVIEW_GOVERNANCE.md §4). Said wherever the served review
+# says independent, because a reader takes "three independent reviewers" to mean three people
+# (iteration 23, F4/C12). The curated text keeps its wording; the build adds this sentence.
+REVIEWER_DISCLOSURE = ("Every reviewer was a separate session of the same AI model as the researcher, given the "
+                       "record but not the researcher's reasoning: independent in context, not in model.")
+
+
+def _disclosed_review(review):
+    """The review block as served: a review that claims independence says who the reviewers were."""
+    if not isinstance(review, dict) or review.get("review_status") not in ("blind_reviewed", "dual_reviewed"):
+        return review
+    process = str(review.get("process") or "").strip()
+    if REVIEWER_DISCLOSURE in process:
+        return review
+    return {**review, "process": f"{process} {REVIEWER_DISCLOSURE}".strip()}
+
+
 def _event(raw, unit_names):
     ev = {k: raw.get(k) for k in EVENT_FIELDS}
+    ev["review"] = _disclosed_review(ev["review"])
     ev.update({k: raw[k] for k in OPTIONAL_EVENT_FIELDS if raw.get(k)})
     ev["sources"] = [{**{k: s.get(k) for k in SOURCE_FIELDS},
                       **{k: s[k] for k in OPTIONAL_SOURCE_FIELDS if s.get(k)}} for s in raw["sources"]]
@@ -1758,6 +1809,22 @@ def guard_profile_years(profile, year):
     return {**profile, "metrics": kept, "as_of_note": (profile.get("as_of_note") or "") + note}
 
 
+def attack_record_detail(events):
+    """What this system's served attack and sabotage records carry, read from the records, never
+    from the precision policy: a policy that allows a region is not a page that shows one (the rule
+    `precision_statement` follows). Flags only, never a count. None when no such record is served.
+
+    Iteration 23 (XL-08): Compare said Saudi Arabia places nothing finer than one region, beside a
+    Saudi page whose attack records name the facility under the owner's current decision (option B).
+    Compare reads this to say so."""
+    hits = [e for e in events if e.get("cause") in KINETIC_CAUSES]
+    if not hits:
+        return None
+    return {"region": any(bool(e.get("region_code")) for e in hits),
+            "facility": any(bool(e.get("facility_name")) for e in hits),
+            "campaign_covered": any(bool(e.get("publication")) for e in hits)}
+
+
 def build_system(system_id, admin1, admin0, as_of):
     src = SYSTEMS_CURATED / system_id
     doc = read_json(src / "system.json")
@@ -1885,6 +1952,7 @@ def build_system(system_id, admin1, admin0, as_of):
                       # exists for the US, whose full extent (the Aleutians to Florida) leaves
                       # the lower 48 a small corner of the frame. Nothing outside it is hidden.
                       "view_bounds": doc["geography"].get("view_bounds") or _bounds(kept)},
+        "attack_records": attack_record_detail(events),
         "event_summary": {
             "recorded_events": len(events),
             "episodes": len(episodes),
@@ -1909,7 +1977,7 @@ def build_system(system_id, admin1, admin0, as_of):
                      "reviewed: a researcher found the record and a second, independent reviewer "
                      "opened its sources. Legacy: published before independent review was required, "
                      "checked by one reviewer against the threshold and the scope scan; these are "
-                     "grandfathered by id and leave the list as they are re-reviewed."),
+                     "grandfathered by id and leave the list as they are re-reviewed. " + REVIEWER_DISCLOSURE),
         },
         "publication_policy": {
             "withheld_records": sum(1 for e in events if e.get("publication")),
@@ -1949,6 +2017,17 @@ def build_system(system_id, admin1, admin0, as_of):
     return payload
 
 
+def _iso_a2(props):
+    """The country's ISO 3166-1 alpha-2 code, which every ISO 3166-2 region code starts with.
+    Natural Earth writes -99 where ISO_A2 is unassigned for its unit (France, Norway, Kosovo) and
+    gives the working code in ISO_A2_EH; None where it has neither (a disputed unit)."""
+    for key in ("ISO_A2", "ISO_A2_EH"):
+        v = str(props.get(key) or "")
+        if len(v) == 2 and v.isalpha():
+            return v.upper()
+    return None
+
+
 def build_world(admin1, admin0):
     """A light admin-0 world for the global home.
 
@@ -1980,7 +2059,7 @@ def build_world(admin1, admin0):
         if g is None:
             continue   # specks below a dashboard pixel at world zoom
         feats.append({"type": "Feature",
-                      "properties": {"a3": a3, "name": p.get("NAME"),
+                      "properties": {"a3": a3, "name": p.get("NAME"), "a2": _iso_a2(p),
                                      "system_id": None if a3 in disputed_a3 else owner.get(a3),
                                      "status": "disputed" if a3 in disputed_a3 else "normal"},
                       "geometry": geo.round_coords(g, 2)})
@@ -1995,6 +2074,7 @@ def build_world(admin1, admin0):
         feats.append({"type": "Feature",
                       "properties": {
                           "a3": "UKR" if crimea else "RUS",
+                          "a2": "UA" if crimea else "RU",
                           "name": p.get("name") if crimea else "Russia",
                           "system_id": "ru" if (crimea or p.get("name") in theatre_names) else None,
                           "status": "occupied" if crimea else "normal",

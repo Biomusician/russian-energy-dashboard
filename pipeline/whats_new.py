@@ -190,10 +190,14 @@ def _day(iso):
     return f"{int(parts[2])} {mon} {parts[0]}" if len(parts) > 2 else f"{mon} {parts[0]}"
 
 
-def _anchor(iso):
-    """Month and year precision anchor to their first day, as everywhere else in the build."""
-    s = str(iso)
-    return s if len(s) >= 10 else (s + "-01-01")[:10] if len(s) == 4 else s + "-01"
+def _wholly_before(iso, previous_as_of):
+    """Whether every day a date of day, month or year precision can mean falls before the previous
+    build. Positive evidence only (iteration 23, XL-04): "2026-11" beside a previous build of
+    2026-11-19 may be 20 November, so it is not called historical. An unreadable date claims nothing."""
+    try:
+        return _period_end(iso).isoformat() < previous_as_of
+    except (TypeError, ValueError):
+        return False
 
 
 def restricted(prev, curr):
@@ -256,7 +260,7 @@ def _record_changes(prev_events, curr_events, previous_as_of, is_restricted, lab
         # Positive evidence only: a record is "historical" when its own date precedes the previous
         # build. With no previous date the claim cannot be made either way, so it is not made.
         predates = bool(previous_as_of) and all(
-            _anchor(d) < previous_as_of for d in dates)
+            _wholly_before(d, previous_as_of) for d in dates)
         out.append({"category": "records_added", "event_dates": [dates[0], dates[-1]],
                     "all_predate_previous_build": predates, "items": items, "more": more,
                     "notes": []})
@@ -522,7 +526,9 @@ def global_changes(prev, curr):
                      "move with no change to the record.")
     if notes:
         # The home page's own account of how this works, on the page the panel sits on.
-        out.append({"category": "methodology", "notes": notes, "link": {"anchor": "why-head"}})
+        # The Help page's account of What's new and of the method changes it lists (iteration 23,
+        # IA-06): the home section this used to point at explains how systems were chosen.
+        out.append({"category": "methodology", "notes": notes, "link": {"help": "whats-new"}})
     pc, cc = prev.get("energy_context") or {}, curr.get("energy_context") or {}
     ps, cs = pc.get("source") or {}, cc.get("source") or {}
     if pc and cc:
@@ -553,6 +559,7 @@ FIRST_IMPACT_RELEASE = (
     "First release of the impact layer: reviewed records of disruption to energy and essential civilian "
     "services, each with its evidence confidence, attribution and AI-involvement status. Its records are "
     "listed on the impact pages, not here: none of them is a new event because it is newly published.")
+FIRST_CONTEXT_RELEASE = "The Gulf and Strait of Hormuz regional context was first published."
 
 
 def _period_end(iso):
@@ -569,12 +576,19 @@ def _period_end(iso):
 def impact_timing(record):
     """"backfill", "new_event" or "unknown" for a newly published impact record.
 
-    A backfill needs positive evidence: both dates present, and the whole of the event's date
-    (the end of its month, for a month-precision date) more than BACKFILL_DAYS before the record
-    was first published. With either date missing or unreadable nothing is claimed either way."""
+    A backfill needs positive evidence: both dates present, and the whole of the event (its observed
+    end day where the record gives one, else the end of its month for a month-precision date) more
+    than BACKFILL_DAYS before the record was first published. With either date missing or
+    unreadable nothing is claimed either way.
+
+    The same rule as the card's "Historical record added" line (`isHistoricalAddition` in
+    web/src/global/impacts/model.ts; iteration 23, XL-05): this one used to read the start date
+    only, so an outage that began six weeks before publication and ended last week was a backfill
+    here and current on the card. A test runs both on every served record."""
     try:
         published = dt.date.fromisoformat(str(record.get("first_published"))[:10])
-        event_end = _period_end(record.get("date"))
+        end = record.get("date_end")
+        event_end = dt.date.fromisoformat(end) if isinstance(end, str) and len(end) == 10 else _period_end(record.get("date"))
     except (TypeError, ValueError):
         return "unknown"
     return "backfill" if (published - event_end).days > BACKFILL_DAYS else "new_event"
@@ -611,7 +625,12 @@ def impact_changes(prev, curr):
         return None
     prev_doc, prev_ctx = prev.get("impacts"), prev.get("regional_context")
     if cur_doc is not None and prev_doc is None:
-        return [{"category": "impact_record_added", "first_release": True, "notes": [FIRST_IMPACT_RELEASE]}]
+        first = [{"category": "impact_record_added", "first_release": True, "notes": [FIRST_IMPACT_RELEASE]}]
+        # The regional context published with it is its own first publication, said in its own
+        # sentence (iteration 23, XL-02: this branch returned before the context was looked at).
+        if cur_ctx is not None and prev_ctx is None:
+            first.append({"category": "regional_context_updated", "notes": [FIRST_CONTEXT_RELEASE]})
+        return _ordered(first)
 
     out = []
     p, c = _records(prev_doc), _records(cur_doc)
@@ -653,7 +672,7 @@ def impact_changes(prev, curr):
         pe, ce = entries(prev_ctx), entries(cur_ctx)
         notes = []
         if prev_ctx is None:
-            notes.append("The Gulf and Strait of Hormuz regional context was first published.")
+            notes.append(FIRST_CONTEXT_RELEASE)
         else:
             if ce.keys() - pe.keys():
                 notes.append("Dated statements were added to the Gulf and Strait of Hormuz regional context.")

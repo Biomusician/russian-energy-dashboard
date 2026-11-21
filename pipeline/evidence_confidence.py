@@ -109,16 +109,18 @@ def _on(host, domains):
     return any(host == d or host.endswith("." + d) for d in domains)
 
 
-def _wire_named(text):
+def _wire_named(text, exact_case=True):
     """The wire a publisher string or an explicit origin names: the table the country systems use,
-    then this module's additions (full names, and the agencies that table lacks)."""
+    then this module's additions (full names, and the agencies that table lacks). Matched by the
+    country systems' own rule (`build_systems.wire_key_in`): a short name such as "IANS" or "SPA"
+    is the wire only where nothing continues the name, and, in a publisher field, only in
+    capitals. An explicit origin (`exact_case=False`) is matched without reading its case."""
     from pipeline import build_systems as B  # late: build_systems imports this module
-    words = " " + re.sub(r"[^a-z]+", " ", str(text or "").lower()) + " "
     for key, name in B.WIRE_ORIGINS:
-        if f" {key} " in words:
+        if B.wire_key_in(key, text, exact_case):
             return "wire:" + name
     for wire in METHOD["origins"]["wires"]:
-        if any(f" {m} " in words for m in wire["match"]):
+        if any(B.wire_key_in(m, text, exact_case) for m in wire["match"]):
             return "wire:" + wire["name"]
     return None
 
@@ -155,7 +157,7 @@ def origin_of(source):
     if natural is None:
         return None
     if source.get("origin"):
-        return _wire_named(source["origin"]) or str(source["origin"]).strip().lower()
+        return _wire_named(source["origin"], exact_case=False) or str(source["origin"]).strip().lower()
     if _medium(source) == "social":
         platform, handle = _account(source)
         if handle:

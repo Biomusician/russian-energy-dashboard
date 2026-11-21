@@ -141,7 +141,7 @@ def test_the_arrival_of_evidence_confidence_is_one_method_note_not_a_change_to_e
     curr = _with_confidence(T._bump(prev))
     d = _derive(prev, curr)
     assert d["systems"] == [], "a derived label on every record read as a change to each country"
-    assert d["global"] == [{"category": "methodology", "link": {"anchor": "why-head"}, "notes": [
+    assert d["global"] == [{"category": "methodology", "link": {"help": "whats-new"}, "notes": [
         "Each published country record now shows an evidence-confidence category, computed from its "
         "published citations. No record changed."]}]
     # Once it is there, a build that changes nothing says so...
@@ -192,7 +192,10 @@ def test_the_first_release_of_the_impact_layer_is_one_sentence_never_a_list_of_e
     records = [_rec(f"imp-2024-01-{i:02d}-ukr-telecom-x{i}", f"2024-01-{i:02d}") for i in range(1, 29)]
     prev = T._state(us=(T._system("us"), []))                 # a build from before the layer existed
     layer = _impact(prev, _layer(records, entries=[{"id": "ctx-1"}]))
-    assert layer == [{"category": "impact_record_added", "first_release": True, "notes": [W.FIRST_IMPACT_RELEASE]}]
+    # The regional context published in the same build is its own first publication, in its own
+    # sentence (iteration 23, XL-02: the first-release branch used to swallow it).
+    assert layer == [{"category": "impact_record_added", "first_release": True, "notes": [W.FIRST_IMPACT_RELEASE]},
+                     {"category": "regional_context_updated", "notes": [W.FIRST_CONTEXT_RELEASE]}]
     text = json.dumps(layer)
     assert "First release of the impact layer" in text and text.count("First release") == 1
     assert "imp-2024" not in text and '"items"' not in text
