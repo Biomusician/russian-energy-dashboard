@@ -617,8 +617,8 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
           {sourceCheckLine(used.length, late.length, blocked)}
         </span>
       </div>
-      <div className="small dim">One does not imply the other: sources checked on schedule say nothing about how
-        much of the search is done. A source group is one family of sources searched as a unit, for example one
+      <div className="small dim">One does not imply the other: a registry re-check is not a reading of the source, and
+        says nothing about how much of the search is done. A source group is one family of sources searched as a unit, for example one
         ministry's statements; see the Research coverage tab.</div>
     </div>
   );

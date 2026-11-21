@@ -471,9 +471,9 @@ def test_c10_c11_registry_rechecks_and_unread_sources_are_said_as_they_are(tmp_p
       return { line: ov.sourceCheckLine(8, 0, 1), clean: ov.sourceCheckLine(8, 0, 0), late: ov.sourceCheckLine(8, 2, 0),
                note: ov.countryOverview(input.sys, { state: "not_loaded" }, null).publishedNote, inclusion: ov.IMPACT_INCLUSION_LINE };
     """, {"sys": sys_})
-    assert out["line"].startswith("All 8 registered sources re-checked in the registry on schedule.")
-    assert "not a reading of the source" in out["line"] and "1 source group could not be read" in out["line"]
-    assert "could not be read" not in out["clean"] and "checked on schedule" not in out["late"].replace("re-check", "")
+    assert out["line"] == "All 8 registry entries re-checked on schedule · 1 source group unreadable in the latest search"
+    assert out["clean"] == "All 8 registry entries re-checked on schedule"
+    assert out["late"] == "2 of 8 registry entries overdue for a re-check"
     assert out["note"].startswith("Why: a source group could not be read in the latest search"), out["note"]
     assert "strict" not in out["note"]
     assert "could not read the sources" in out["inclusion"] and "broader contract" not in out["inclusion"]

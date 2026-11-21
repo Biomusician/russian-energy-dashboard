@@ -123,13 +123,15 @@ function searchReasons(sys: OverviewSystem): string[] {
  *  source, so the words say "re-checked in the registry", and a source group the latest search
  *  could not read is said beside it rather than hidden behind a green "all checked". */
 export function sourceCheckLine(registered: number, overdue: number, blockedGroups: number): string {
+  // Short on purpose: the line sits above the map on a phone. The sentence under it says that a
+  // re-check is not a reading of the source.
   const head = overdue > 0
-    ? `${overdue} of ${registered} registered sources overdue for a registry re-check`
-    : `All ${registered} registered sources re-checked in the registry on schedule`;
+    ? `${overdue} of ${registered} registry entries overdue for a re-check`
+    : `All ${registered} registry entries re-checked on schedule`;
   const blocked = blockedGroups > 0
-    ? ` A registry re-check is not a reading of the source: ${blockedGroups} source ${blockedGroups === 1 ? "group" : "groups"} could not be read in the latest search.`
+    ? ` · ${blockedGroups} source ${blockedGroups === 1 ? "group" : "groups"} unreadable in the latest search`
     : "";
-  return `${head}.${blocked}`;
+  return `${head}${blocked}`;
 }
 
 export function countryOverview(sys: OverviewSystem, impacts: ImpactPresence, regional: RegionalGroup | null): Overview {
