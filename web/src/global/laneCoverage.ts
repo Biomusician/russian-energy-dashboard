@@ -76,7 +76,7 @@ export const COVERAGE_STATE_MEANING: Record<CoverageState, string> = {
   blocked_by_source: "The source refused automated access or could not be read, for example a listing built by "
     + "script in the browser. It was not worked around, so the source itself is unread, whatever else the group ran.",
   stopped_by_search_limit: "This site's own search limit for the pass was reached before every planned search was run. "
-    + "The limit is ours, not the publisher's: the remaining searches can still be run.",
+    + "The limit is this site's, not the publisher's: the remaining searches can still be run.",
   not_started: "Planned, but no search has been run in it yet.",
   legacy: "This group was last logged before the current vocabulary existed and is shown as it was logged then.",
 };

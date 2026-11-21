@@ -78,7 +78,13 @@ export interface Manifest {
   comparability_statement: string;
   reporting_environments: Record<string, string>;
   systems: ManifestSystem[];
+  /** Iteration 23. Which countries have at least one published disruption record in the Impact
+   *  Atlas (codes only, by the atlas's own rule), and which have only attempts. Absent in older
+   *  builds or dropped when malformed: the home then says it could not check, never "no record". */
+  impact_presence?: ImpactPresence;
 }
+
+export interface ImpactPresence { countries: string[]; attempt_only: string[]; note: string }
 
 export interface SectorEntry {
   sector: string;
@@ -124,6 +130,9 @@ export interface CountrySystem {
     /** Iteration 19: how precisely events are placed here, and why. Admin-1 is a maximum. */
     precision_policy?: { kinetic?: "country" | "admin1"; other?: "country" | "admin1"; no_event_units?: string[]; reason: string };
   };
+  /** Iteration 23 (XL-08): what this system's served attack and sabotage records carry, read by the
+   *  build from the records themselves. Flags, never a count; null when none is served. */
+  attack_records?: { region: boolean; facility: boolean; campaign_covered: boolean } | null;
   maturity?: "monitored" | "research_preview";
   campaign_state?: { state: string; checked: string; basis: string; limitation?: string } | null;
   aliases?: string[];
@@ -689,6 +698,8 @@ export function sanitizeManifest(m: Manifest): Manifest {
   const box = (b: unknown) => Array.isArray(b) && b.length === 4 && b.every((x) => typeof x === "number" && Number.isFinite(x));
   const out: Manifest = { ...m };
   if (out.corpus !== undefined && !obj(out.corpus)) delete out.corpus;
+  if (out.impact_presence !== undefined && !(obj(out.impact_presence) && strings(out.impact_presence.countries)
+      && strings(out.impact_presence.attempt_only))) delete out.impact_presence;
   if (out.groups !== undefined) {
     const kept: Record<string, ManifestGroup> = {};
     if (obj(out.groups)) {
@@ -855,9 +866,11 @@ export const RECOVERY_LABEL: Record<string, string> = {
   WITHHELD_ACTIVE_CAMPAIGN: "Facility status not published while the attack campaign is active",
 };
 
+/** Iteration 23 (F4/C12): "independent reviewers" read as three people. Each label says what the
+ *  reviewers were; the long form is REVIEWERS_SAME_MODEL (reviewText.ts). */
 export const REVIEW_STATUS_LABEL: Record<string, string> = {
-  blind_reviewed: "Blind reviewed by three independent reviewers",
-  dual_reviewed: "Independently reviewed",
+  blind_reviewed: "Blind reviewed by three separate sessions of the same AI model (independent in context, not in model)",
+  dual_reviewed: "Reviewed by a second, separate session of the same AI model (independent in context, not in model)",
   legacy_single_review: "Single review (published before independent review was required)",
 };
 
@@ -967,7 +980,8 @@ export interface WhatsNewChange {
   aggregated?: boolean;
   /** Where the page explains this kind of change: a tab of the country's page, or a section of
    *  the home page. Never a record. */
-  link?: { system_id?: string; tab?: string; anchor?: string };
+  /** A tab of the country page, or a section of the Help page (`help`, iteration 23). */
+  link?: { system_id?: string; tab?: string; help?: string };
 }
 
 /** One impact record in the panel (iteration 22): its public id, date, country and sector. */

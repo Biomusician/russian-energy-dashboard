@@ -13,13 +13,17 @@ import { test, expect } from "./fixtures";
 
 type Page = import("@playwright/test").Page;
 
-const VIEWS = ["", "?sys=ru", "?sys=us", "?sys=sa", "?sys=bh", "?sys=ir", "?group=gulf", "?compare=us,ca,sa", "?help=glossary"];
+const VIEWS = ["", "?sys=ru", "?sys=us", "?sys=sa", "?sys=bh", "?sys=ir", "?group=gulf", "?compare=us,ca,sa", "?view=help"];
 const PHONE = { width: 390, height: 844 };
 
 /** Open a view and wait until it has drawn: the map's own idle event, or the compare table. */
 async function openView(page: Page, q: string) {
   await page.goto(`/${q}`);
-  if (q.startsWith("?compare")) {
+  if (q.startsWith("?view=help")) {
+    // A page of prose: drawn once its served values have arrived.
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.locator(".help-derived-missing")).toHaveCount(0);
+  } else if (q.startsWith("?compare")) {
     await expect(page.locator(".compare-colhead > a").first()).toBeVisible();
     await expect(page.locator('tr[data-row="lanes"] td').first()).not.toHaveText("Loading…");
   } else {
@@ -78,7 +82,9 @@ const PRIMARY = [
   ".global-nav-tools button", ".gsearch input", ".global-page .sys-switch select", ".home-action", ".sys-card button.ghost",
   ".start-here button", ".page-title .head-actions button", ".country-side .tabs button", ".ev-inspector-toggle",
   ".member-btn", ".compare-col-actions button", ".compare-picker select", ".map-tool",
-  ".drawer-btn", ".legend-toggle", ".camera-controls button", "button.play",
+  ".drawer-btn", ".legend-toggle", ".help-picker select", ".camera-controls button", "button.play",
+  // Iteration 23, the map-first home: the panel rows, the map-mode toggle and the selection card.
+  ".hp-row", ".hp-show", ".home-mode button", ".sel-actions .home-action",
   ".maplibregl-ctrl-zoom-in", ".maplibregl-ctrl-zoom-out",
 ].join(", ");
 // The theatre header's controls: 24 px (AA), not 44, because the header's height is capped so the
@@ -86,7 +92,7 @@ const PRIMARY = [
 const THEATRE_HEADER = [".mode-switch button", ".tb-tools-toggle", ".theatre-bar .sys-switch select", ".why-btn", ".ribbon-more-toggle"].join(", ");
 
 test.describe("phone width: 44 px touch targets", () => {
-  for (const q of VIEWS.filter((v) => v !== "?help=glossary")) {
+  for (const q of VIEWS) {
     test(`${q || "home"}: every visible primary control is at least 44 x 44`, async ({ page }) => {
       await page.setViewportSize(PHONE);
       await openView(page, q);
@@ -121,7 +127,8 @@ test.describe("phone width: 44 px touch targets", () => {
 
   test("inline disclosures reach the 24 px AA minimum", async ({ page }) => {
     await page.setViewportSize(PHONE);
-    await openView(page, "");
+    // The home carries no badge since iteration 23; a research-preview country's phone page does.
+    await openView(page, "?sys=bh");
     const heights = await page.locator(".disclosure-button.badge, .disclosure-button.home-tag").evaluateAll(
       (els) => els.map((e) => e.getBoundingClientRect().height));
     expect(heights.length).toBeGreaterThan(0);
@@ -198,7 +205,7 @@ test.describe("landmarks, headings and names", () => {
 
   test("the home page does not move focus on a first visit", async ({ page }) => {
     await openView(page, "");
-    await expect(page.getByRole("region", { name: /Start here/ })).toBeVisible();
+    await expect(page.locator("#where-to-explore")).toBeVisible();
     expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
     // The first Tab reaches the top of the page, not the middle: "Skip to content" (iteration 22
     // closure), shown once it has focus, then the site's home link.
@@ -236,8 +243,12 @@ test.describe("Escape closes, focus returns", () => {
 
   test("badge disclosures, the evidence inspector and the theatre's toggles", async ({ app, page }) => {
     let checked = 0;
-    await openView(page, "");
-    await escapeCloses(page, page.locator(".disclosure-button").first()); checked++;
+    // The home carries no badge since iteration 23; a research-preview country's page does, in
+    // the caveat line a phone shows first.
+    await page.setViewportSize(PHONE);
+    await openView(page, "?sys=bh");
+    await escapeCloses(page, page.locator(".disclosure-button.research-partial").first()); checked++;
+    await page.setViewportSize({ width: 1440, height: 900 });
     await openView(page, "?sys=us");
     const toggle = page.locator(".ev-inspector-toggle").first();
     await escapeCloses(page, toggle); checked++;
@@ -259,7 +270,7 @@ test.describe("Escape closes, focus returns", () => {
 
   test("a native <details> closes on Escape and gives focus back to its summary", async ({ page }) => {
     let checked = 0;
-    for (const [q, sel] of [["?compare=us,ca,sa", "details.compare-def"], ["?group=gulf", "details"], ["", "details.dq-system"]] as const) {
+    for (const [q, sel] of [["?compare=us,ca,sa", "details.compare-def"], ["?group=gulf", "details"], ["", "details.home-fold"]] as const) {
       await openView(page, q);
       const details = page.locator(sel).filter({ has: page.locator("summary:visible") }).first();
       const summary = details.locator("summary");
@@ -313,20 +324,21 @@ test.describe("Escape closes, focus returns", () => {
     await expect(btn).toBeFocused();
   });
 
-  test("the glossary closes on Escape from every view that has it", async ({ page }) => {
+  test("Help is a link from every view's bar, and Back returns to the view", async ({ page }) => {
     let checked = 0;
-    for (const q of ["", "?sys=us", "?group=gulf"]) {
+    for (const q of ["", "?sys=us", "?group=gulf", "?sys=ru"]) {
       await openView(page, q);
-      const btn = page.getByRole("button", { name: "Glossary", exact: true });
-      await btn.focus();
+      const link = q === "?sys=ru" ? page.locator(".tb-tools").getByRole("link", { name: "Help", exact: true })
+        : page.locator(".global-nav").getByRole("link", { name: "Help", exact: true });
+      await expect(link).toHaveAttribute("href", "?view=help");
+      await link.focus();
       await page.keyboard.press("Enter");
-      await expect(page.getByRole("dialog", { name: "Glossary" })).toBeVisible();
-      await page.keyboard.press("Escape");
-      await expect(page.getByRole("dialog", { name: "Glossary" })).toBeHidden();
-      await expect(btn).toBeFocused();
+      await expect(page.getByRole("heading", { name: "Help: how to read this site", level: 1 })).toBeVisible();
+      await page.goBack();
+      await expect(page).toHaveURL(new RegExp(`/${q.replace("?", "\\?")}$`));
       checked++;
     }
-    expect(checked).toBe(3);
+    expect(checked).toBe(4);
   });
 });
 

@@ -13,7 +13,6 @@
  */
 
 import { groupBySlug, loadCountry, loadGroupContext, loadManifest, loadWorld, prefetchCountry } from "./manifest";
-import { loadContext } from "./context";
 import { prefetchBundle } from "../data";
 import type { Route } from "./router";
 
@@ -29,8 +28,9 @@ export function prefetchRoute(route: Route): void {
   // Every view's header has the system picker, which reads the manifest.
   quiet(loadManifest());
   if (route.view === "home") {
+    // Not the national figures (iteration 23): the default map does not use them, so they load
+    // when the reader turns to the national-energy mode or opens a part that shows them.
     quiet(loadWorld());
-    quiet(loadContext());
   } else if (route.view === "country") {
     quiet(loadManifest().then((m) => {
       const e = m.systems.find((s) => s.id === route.id && s.kind === "country");
@@ -49,6 +49,9 @@ export function prefetchRoute(route: Route): void {
     // no other route's bundle, and this is the ONLY branch that asks for the impact files: the
     // home page fetches none of them.
     quiet(import("./impacts/load").then((m) => m.loadImpacts()));
+  } else if (route.view === "help") {
+    // Help's own small file, beside its code. Never the snapshot or the impact corpus.
+    quiet(import("./help/facts").then((m) => m.loadHelpFacts()));
   }
 }
 

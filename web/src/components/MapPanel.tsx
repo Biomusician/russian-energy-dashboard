@@ -1331,8 +1331,8 @@ export default function MapPanel({
         </button>
         {currentActivityBounds && (
           <button className="ghost" onClick={() => flyTo(currentActivityBounds)}
-                  title="Frame the regions with a reported disruption and no restoration report by the status cut-off. Not a map of facilities down now.">
-            Regions with no report
+                  title="Frame the regions with a facility still in the index and no full-restoration report by the status cut-off. Not a map of facilities down now.">
+            Regions still in the index
           </button>
         )}
       </div>

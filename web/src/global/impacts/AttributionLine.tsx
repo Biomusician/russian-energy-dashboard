@@ -1,4 +1,5 @@
 import { fmtDate } from "../../data";
+import { LearnMore } from "../help/LearnMore";
 import { SELF_CLAIM_NOTE, attributionConfidenceLabel, basisText, selfClaimText, selfClaimsOf } from "./model";
 import { confidenceMethod, definitionOf, labelOf, lowerLabel, useImpactVocab } from "./vocab";
 import type { Attribution, CompetingAttribution, SelfClaim } from "./types";
@@ -76,6 +77,7 @@ export function AttributionLine({ a, maliciousCause }: { a: Attribution | null |
       <div className="attr-line attr-unknown small">
         <span className="impact-line-label">Attribution:</span> unknown (not established)
         <span className="dim"> — {definitionOf("attribution_statuses", "UNKNOWN") ?? "No credible public attribution."}</span>
+        {" "}<LearnMore anchor="attribution" />
         <SelfClaims claims={selfClaims} />
       </div>
     );
@@ -97,7 +99,7 @@ export function AttributionLine({ a, maliciousCause }: { a: Attribution | null |
   ].filter(Boolean);
   return (
     <div className={`attr-line attr-${a.status.toLowerCase()} small`}>
-      <span className="impact-line-label">Attribution:</span> {parts.join(" · ")}
+      <span className="impact-line-label">Attribution:</span> {parts.join(" · ")} <LearnMore anchor="attribution" />
       {a.statement && <div className="attr-statement">{a.statement}</div>}
       {disputed && a.competing.length > 0 && (
         <>

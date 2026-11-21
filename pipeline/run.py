@@ -14,6 +14,7 @@ import argparse
 import collections
 import datetime as dt
 import os
+import re
 import shutil
 
 from pipeline import build_assets, build_context, build_index, build_pipeline_network
@@ -374,6 +375,33 @@ _DISCOVERY_SOURCES = {
 }
 
 
+_MONTHS = {m: n for n, m in enumerate(
+    ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), start=1)}
+
+
+def benchmark_window_end(by_period):
+    """The last day the benchmark's own table counts, read from its last period label.
+
+    The benchmark stops at its last period ("Feb '26– Jun '26"), but this dataset keeps adding
+    strikes after it. Counting those against a total that cannot contain them made the ratio
+    climb with every build without any new benchmark (iteration 23, C1). A label naming a month
+    ends on that month's last day; a war-year label ("4th") ends the day before the 24 February
+    anniversary. None when the label is neither: the caller flags it, it does not guess.
+    """
+    if not by_period:
+        return None
+    label = str(by_period[-1].get("period") or "")
+    months = re.findall(r"\b([A-Z][a-z]{2})[a-z]*\.?\s*['’](\d{2})\b", label)
+    if months and months[-1][0] in _MONTHS:
+        year, month = 2000 + int(months[-1][1]), _MONTHS[months[-1][0]]
+        first_of_next = dt.date(year + (month == 12), month % 12 + 1, 1)
+        return (first_of_next - dt.timedelta(days=1)).isoformat()
+    war_year = re.fullmatch(r"(\d+)(?:st|nd|rd|th)", label.strip())
+    if war_year:
+        return dt.date(2022 + int(war_year.group(1)), 2, 23).isoformat()
+    return None
+
+
 def _build_coverage(in_aoi, benchmark, snapshot):
     """Return (oil_benchmark, sector_matrix). Coverage is three DIFFERENT concepts kept
     separate (§5): EVENT coverage (only the oil sectors have a defensible benchmark),
@@ -382,27 +410,37 @@ def _build_coverage(in_aoi, benchmark, snapshot):
     sec_of = lambda i: SECTOR_OF_CLASS.get(i.get("asset_class"))
     events_by_sector = collections.Counter(sec_of(i) for i in in_aoi)
     # numerator that matches the oil-facility strike benchmark universe
-    oil_strikes = sum(1 for i in in_aoi
-                      if sec_of(i) in OIL_SECTORS and i.get("cause") in STRIKE_CAUSES)
+    oil = [i for i in in_aoi if sec_of(i) in OIL_SECTORS and i.get("cause") in STRIKE_CAUSES]
 
     oil_benchmark = None
     if benchmark and benchmark.get("reported_total_strikes"):
         total = benchmark["reported_total_strikes"]
+        # The same WINDOW as well as the same universe: only strikes dated inside the period the
+        # benchmark counts. Month-precision dates ("2026-06") compare correctly as strings.
+        window_end = benchmark_window_end(benchmark.get("by_period"))
+        oil_strikes = sum(1 for i in oil if window_end is None or i["date"][:10] <= window_end)
         oil_benchmark = {
             "reported_oil_strikes": total,
             "enumerated_oil_strikes": oil_strikes,
             "coverage_ratio": round(oil_strikes / total, 3),
             "total_events_all_sectors": len(in_aoi),
+            "numerator_window_end": window_end,
+            # Recorded here but dated after the benchmark's last period, so outside the ratio.
+            "enumerated_after_window": len(oil) - oil_strikes,
             "numerator_definition": (
                 "kinetic strikes and sabotage on refining and oil-logistics facilities in the "
                 "AOI — the same universe the benchmark counts"
+                + (f", dated on or before {window_end}, the end of the benchmark's last period"
+                   if window_end else
+                   "; the benchmark's last period could not be read, so the count is not limited "
+                   "to its window")
             ),
             "benchmark_source": benchmark.get("source_url"),
             "benchmark_categories": "reported strikes on Russian oil facilities",
             "by_period": benchmark.get("by_period"),
             "note": (
                 "Benchmark-aligned coverage: numerator and denominator are the SAME oil-strike "
-                "universe. Iterations 1-5 divided ALL energy events by this oil-only benchmark, "
+                "universe. Earlier versions divided ALL energy events by this oil-only benchmark, "
                 "which mixed universes and overstated coverage; that is corrected here."
             ),
         }
@@ -454,6 +492,14 @@ def _embargo_refusal(what, ids):
         return
     raise SystemExit(f"refused: {what}: {', '.join(ids)}. Hold them outside the curated files "
                      "until their release date (docs/OPERATIONAL_STATUS_DELAY_OPTIONS.md).")
+
+
+def history_concept(args):
+    """Which historical question this build answers. A past --as-of is compared with the real
+    calendar date, never with itself: comparing as_of with as_of would label every
+    reconstruction a current build (iteration 23, history mutant H-M3)."""
+    return production_history.history_concept(
+        args.as_of, dt.date.today().isoformat(), build_mode=args.mode)
 
 
 def main():
@@ -628,8 +674,14 @@ def main():
         coverage["coverage_ratio"] = oil_benchmark["coverage_ratio"]
         coverage["total_events_all_sectors"] = len(in_aoi)
         coverage["numerator_definition"] = oil_benchmark["numerator_definition"]
+        coverage["numerator_window_end"] = oil_benchmark["numerator_window_end"]
+        coverage["enumerated_after_window"] = oil_benchmark["enumerated_after_window"]
         coverage["note"] = oil_benchmark["note"]
         coverage["oil_benchmark"] = oil_benchmark
+        if oil_benchmark["numerator_window_end"] is None:
+            wiki_warnings.append(
+                "coverage benchmark: the last period label of the strike-total table could not be "
+                "read as a date, so the coverage numerator is not limited to the benchmark's window")
     snapshot["coverage"] = coverage
     snapshot["coverage_matrix"] = coverage_matrix
     snapshot["parser_warnings"] = wiki_warnings
@@ -669,8 +721,7 @@ def main():
     # RECONSTRUCTION: today's code and curated corpus, with the Wikipedia inputs pinned to that
     # date. It is never what the dashboard published on that date; that lives only in
     # production_history.json, read from what was actually deployed.
-    snapshot["history_concept"] = production_history.history_concept(
-        args.as_of, dt.date.today().isoformat(), build_mode=args.mode)
+    snapshot["history_concept"] = history_concept(args)
     snapshot["build_mode"] = args.mode
     snapshot["campaign_policy"] = campaign_policy
     recovery_mod.annotate_withheld(snapshot["live_disruptions"], incidents, campaign_policy)
@@ -681,9 +732,9 @@ def main():
         "build_time": snapshot["build_time"],
         **PUBLICATION_CADENCE,
         "note": (
-            "Measures the age of this build, not the age of its sources — see data_quality.json "
-            "for per-source freshness. The two are independent: a fresh build of stale sources "
-            "and a stale build of fresh sources are different failures."),
+            "Measures the age of this build, not the age of its sources; each source's own "
+            "freshness is listed separately. The two are independent: a fresh build of stale "
+            "sources and a stale build of fresh sources are different failures."),
     }
 
     # What this build was made from, and what it produced (addendum §4). The change ledger needs
@@ -793,7 +844,15 @@ def main():
     # the panel above so that nothing analytic can read it. It raises, naming the record, if the
     # curated corpus carries anything the scope boundary forbids.
     from pipeline import global_impacts
-    global_impacts.build(snapshot["as_of"])
+    impact_payloads = global_impacts.build(snapshot["as_of"])
+    # The home page says which countries have impact records from the manifest, never by loading the
+    # impact payload itself (iteration 23).
+    build_systems.write_impact_presence(global_impacts.impact_presence(impact_payloads[global_impacts.IMPACTS_OUT]))
+
+    # The Help page's live values (iteration 23), copied from the payloads just written so the page
+    # never downloads the snapshot or the impact corpus to state a caveat (pipeline/help_facts.py).
+    from pipeline import help_facts
+    write_json(outputs.processed() / help_facts.OUT, help_facts.build(outputs.processed()))
 
 
     # Single source of truth for headline numbers (§2) — regenerated every CURRENT build so no

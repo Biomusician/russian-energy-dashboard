@@ -90,7 +90,13 @@ def test_every_kinetic_or_sabotage_impact_record_is_country_abstracted_as_served
 
 @needs_payload
 def test_no_gulf_or_iran_impact_record_carries_a_region():
-    campaign = {"IRN", "IRQ", "KWT", "SAU", "BHR", "QAT", "ARE", "OMN"}
+    # Read from the curated register, not a list typed here (iteration 23, F10): a system that comes
+    # under the campaign policy is covered the day its state is recorded.
+    from pipeline import build_systems as B, systems as S
+    states = B.load_campaigns().get("system_states") or {}
+    campaign = {a3 for s in S.SYSTEMS if s["kind"] == "country"
+                and (states.get(s["id"]) or {}).get("state") in B.RESTRICTING_STATES for a3 in s["admin0_a3"]}
+    assert campaign, "no campaign-restricted country system is recorded: retire this guard deliberately"
     for r in _records():
         a3 = r["country_a3"]
         if (set(a3) if isinstance(a3, list) else {a3}) & campaign:

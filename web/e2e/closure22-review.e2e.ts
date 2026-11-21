@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { test, expect } from "./fixtures";
+import { test, expect, mapPoint } from "./fixtures";
 
 /**
  * Iteration-22 release closure: the first-time-user (C) and mobile/accessibility (A) review
@@ -29,24 +29,34 @@ async function openAtlas(page: Page, query = "") {
 }
 
 test.describe("review: home and country pages", () => {
-  test("C1: a country card with no qualifying record links its impact records tab, with no count", async ({ app, page }) => {
-    await app.open("");
-    const m = await page.evaluate(async () => (await fetch("/data/global/manifest.json")).json()) as
-      { systems: { id: string; name: string; kind: string; record_reviewed?: string | null }[] };
-    const countries = m.systems.filter((s) => s.kind === "country");
-    for (const s of countries) {
-      const card = page.getByRole("article", { name: s.name, exact: true });
-      await expect(card.locator(".home-impact-note")).toHaveCount(s.record_reviewed === null ? 1 : 0);
-    }
-    const zero = countries.filter((s) => s.record_reviewed === null);
-    test.skip(zero.length === 0, "every country system has a qualifying record in this build");
-    const card = page.getByRole("article", { name: zero[0].name, exact: true });
-    const link = card.getByRole("link", { name: new RegExp(`^impact records tab for ${zero[0].name}`) });
-    await expect(link).toHaveAttribute("href", `?sys=${zero[0].id}&tab=impacts`);
-    await expect(card.locator(".home-impact-note")).not.toContainText(/\d/);
-    await link.click();
-    await expect(page).toHaveURL(new RegExp(`[?&]sys=${zero[0].id}&tab=impacts`));
-    await expect(page.locator(".country-impacts h2")).toHaveText("Impact records (not scored)");
+  // Iteration 23: the home's cards are gone. A system's summary is now its sheet, which a tap on the
+  // map opens first; the C1 rule holds there: a system with no qualifying record points to its
+  // impact records tab, with no count. (The country page says the same; country.e2e covers it.)
+  test.describe("C1 on a touch screen", () => {
+    test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+    test("C1: a country system with no qualifying record links its impact records tab, with no count", async ({ app, page }) => {
+      await app.open("");
+      const m = await page.evaluate(async () => (await fetch("/data/global/manifest.json")).json()) as
+        { systems: { id: string; name: string; kind: string; record_reviewed?: string | null; bounds?: number[] }[] };
+      const area = (b: number[]) => (b[2] - b[0]) * (b[3] - b[1]);
+      // The largest such system, so a tap at the middle of its box lands on it.
+      const zero = m.systems.filter((s) => s.kind === "country" && s.record_reviewed === null && s.bounds)
+        .sort((x, y) => area(y.bounds!) - area(x.bounds!));
+      test.skip(zero.length === 0, "every country system has a qualifying record in this build");
+      const s = zero[0];
+      const p = await mapPoint(page, (s.bounds![0] + s.bounds![2]) / 2, (s.bounds![1] + s.bounds![3]) / 2);
+      await page.touchscreen.tap(p.x, p.y);
+      const sheet = page.locator(".sel-sheet");
+      await expect(sheet.getByRole("heading", { name: s.name })).toBeVisible();
+      await expect(sheet).toContainText("No qualifying records yet");
+      await expect(sheet).not.toContainText(/\d+ (records?|events?)/);
+      const link = sheet.getByRole("link", { name: "Open its impact records tab" });
+      await expect(link).toHaveAttribute("href", `?sys=${s.id}&tab=impacts`);
+      await link.click();
+      await expect(page).toHaveURL(new RegExp(`[?&]sys=${s.id}&tab=impacts`));
+      await expect(page.locator(".country-impacts h2")).toHaveText("Impact records (not scored)");
+    });
   });
 
   test("A14 + C9: a deep link to a tab brings it into view on a phone; a zero-record badge implies no events", async ({ app, page }) => {
@@ -59,10 +69,12 @@ test.describe("review: home and country pages", () => {
     }
   });
 
-  test("A13: 'How this works' opens a dialog named for that section", async ({ app, page }) => {
+  test("A13: 'How this works' opens that section of Help, named for it", async ({ app, page }) => {
     await app.open("");
+    await page.locator("#fold-why > summary").click();
     await page.getByRole("button", { name: "How this works, in six steps" }).click();
-    await expect(page.getByRole("dialog", { name: "How this works Glossary" })).toBeVisible();
+    await expect(page).toHaveURL(/\?view=help#how-it-works$/);
+    await expect(page.getByRole("heading", { name: "How this works, in six steps", level: 3 })).toBeFocused();
   });
 });
 
@@ -136,7 +148,8 @@ test.describe("review: the atlas on a phone", () => {
     const b = (await page.locator(".conf-why").first().boundingBox())!;
     expect(b.height).toBeGreaterThanOrEqual(23.5);
     expect(b.width).toBeGreaterThanOrEqual(23.5);
-    await page.goto("/");
+    // Iteration 23: the home's cards (and their inline disclosures) are gone; a country page's method tab has one.
+    await page.goto("/?sys=bh&tab=method");
     await expect(page.locator(".disclosure-button.linklike").first()).toBeVisible();
     for (const h of await page.locator(".disclosure-button.linklike").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) {
       expect(h).toBeGreaterThanOrEqual(23.5);

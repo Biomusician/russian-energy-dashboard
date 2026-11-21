@@ -31,7 +31,7 @@ const TABS: {
   // region's own (iteration-21 production FTU pass), so it shows only when no region is selected.
   { key: "Reconstitution", label: "Recovery", Comp: ReconstitutionTab,
     badge: (p) => (p.selected ? null : p.bundle.snapshot.recovery_stats.unresolved_count),
-    badgeTitle: "Disruptions with no restoration report by the status cut-off, whole monitored area" },
+    badgeTitle: "Facilities still in the index with no full-restoration report by the status cut-off, whole monitored area" },
   { key: "Effects", label: "Effects", Comp: EffectsTab },
   { key: "Costs", label: "Repair burden", Comp: CostsTab },
   { key: "Sources", label: "Sources", Comp: SourcesTab },

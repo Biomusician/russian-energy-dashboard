@@ -1,13 +1,14 @@
 import { useState } from "react";
 import type { Bundle } from "../types";
 import { fmtDate, fmtDelta, fmtNum } from "../data";
-import { buildDeltaTitle, fmtIndex } from "../indexText";
+import { buildDeltaTitle, fmtIndex, horizonSensitivityText } from "../indexText";
 import { assessFreshness } from "../freshness";
 import { HEADLINE_SHARE, HEADLINE_WEIGHTING, TRANSMISSION_CAVEAT, reconstructionLabel } from "../briefing";
 import { severityColor } from "../palette";
 import { noReportMeaning } from "../statusDelay";
 import type { InspectTarget } from "./Inspector";
 import TheatreBar, { type TheatreTool } from "./TheatreBar";
+import { LearnMore } from "../global/help/LearnMore";
 import type { TheatreMode } from "../theatreMode";
 import "../styles/theatre.css";
 
@@ -100,8 +101,11 @@ export default function Ribbon({
 
       <div className="ribbon-metrics">
         <section className="hl-block" aria-label="Headline">
+          {/* Iteration 23 (ESDI-02): the served horizon sweep, on the number it moves. Only at
+              the latest step: the sweep was computed for this build's date, not a past one. */}
           <div className="esdi-value" style={{ color: esdi == null ? "var(--text-faint)" : severityColor(esdi) }}
-               title={esdi == null ? "No index value exists for this date." : undefined}>
+               title={esdi == null ? "No index value exists for this date."
+                 : isLatest ? horizonSensitivityText(snapshot.recovery_horizon_sensitivity) ?? undefined : undefined}>
             {fmtNum(esdi, 1)}
           </div>
           <div className="esdi-meta">
@@ -115,6 +119,7 @@ export default function Ribbon({
                       onClick={explainHeadline}>
                 Why this number?
               </button>
+              {" "}<LearnMore anchor="esdi" className="hl-learn" />
             </p>
             <p className="hl-scale" title="Belarus, the monitored Russian regions and occupied Crimea.">
               {/* METHODOLOGY §1 in one line: a share, weighted, and exposure rather than loss. */}
@@ -144,6 +149,7 @@ export default function Ribbon({
                 {payloadReconstructed && isLatest
                   ? bundle.snapshot.history_concept!.label
                   : reconstructionLabel(currentDate)}
+                {" "}<LearnMore anchor="history" />
               </p>
             )}
           </div>
@@ -161,8 +167,11 @@ export default function Ribbon({
                   <span className="dimmer"> / {coverage.reported_total_strikes}</span>
                   <span className="dim"> ({Math.round(coverage.coverage_ratio * 100)}%)</span>
                 </span>
+                {/* Iteration 23 (C1): the numerator stops where the benchmark does, and says so. */}
                 <span className="known-label" title={coverage.numerator_definition ?? undefined}>
-                  oil-sector strikes recorded, of the reported total; other sectors have no
+                  oil-sector strikes recorded{coverage.numerator_window_end
+                    ? ` to ${fmtDate(coverage.numerator_window_end)}, the benchmark's end` : ""}, of
+                  the reported total; other sectors have no
                   benchmark{coverage.total_events_all_sectors
                     ? ` (${coverage.total_events_all_sectors} events in all)` : ""}.
                 </span>
@@ -234,11 +243,12 @@ export default function Ribbon({
               one repair time. These are as-at-build counts; only the ESDI follows the scrubber, so
               the group says so once, in words, instead of on every label. */}
           <div className="recovery-group" title="Counted at the publication date — these do not follow the timeline scrubber; only the index does.">
-            <span className="rg-head">Recovery evidence · <span className="warn-text">not timeline-linked</span></span>
+            <span className="rg-head">Recovery evidence · <span className="warn-text">not timeline-linked</span> · <LearnMore anchor="recovery" /></span>
             <div className="rg-stats">
               <RecoveryStat value={rs.unresolved_count} color="var(--amber)"
-                            label="with no restoration report by the cut-off"
-                            title={noReportMeaning(snapshot.as_of, snapshot.campaign_policy)} />
+                            label="still in the index, no full-restoration report by the cut-off"
+                            title={noReportMeaning(snapshot.as_of, snapshot.campaign_policy,
+                                                   rs.unresolved_with_recovery_report)} />
               <RecoveryStat
                 value={rs.observed_restoration_episodes}
                 color="var(--green)"

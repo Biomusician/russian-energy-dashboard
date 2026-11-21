@@ -30,7 +30,16 @@ parameters live in `methodology/evidence_confidence.json`. Nothing here is hardc
 
 Never collected, stored or published, in any field, title, address, export or CSV:
 
-- incident coordinates; anything finer than first-level region;
+- incident coordinates (the gate refuses a coordinate key, a decimal or degree pair, and a map link in
+  any field, title or address);
+- a placement finer than first-level region: no record carries a place below `admin1`, and an attack or
+  sabotage record, or any record of a country system under the campaign policy, carries no region at
+  all (§4). What the gate checks in **text** is narrower, and stated rather than implied (iteration 23,
+  XL-17): on those two kinds of record it refuses a region's name in the prose, the id and (for an
+  attack) a citation address, and refuses every headline. On any other record a summary, an effect
+  line or a cited headline may name the area a source names inside the record's first-level region
+  (a peninsula, a city), as it reported the disruption; that is the source's description of the
+  affected area, never a facility's position;
 - current operating, repair or restart status, or remaining capacity, of an attacked facility;
 - target, criticality, vulnerability or weak-point ranking of anything; defensive gaps;
 - route dependence, bypass or alternate-route capacity, chokepoint exploitation;
@@ -232,8 +241,17 @@ Field rules:
   a keyed hash minted by the import script, never a lane's own numbering and never a place name.
 - `country_a3`: ISO alpha-3 present in `global/world.geojson`. `"MULTI"` is allowed only with
   `geographic_precision: "multi_country"` and a `countries_a3` list.
-- `admin1`: `null`, or `{"code", "name"}` at first-level region. **Never** for a kinetic or sabotage
-  record, **never** for any record in a system under the campaign policy, never finer.
+- `admin1`: `null`, or `{"code", "name"}` at first-level region, never finer. **Never** for a kinetic
+  or sabotage record, and **never** for any record of a **country system** under the campaign policy
+  (the campaign-restricted systems are read from `data/curated/systems/conflict_campaigns.json`
+  `system_states`; UNCERTAIN restricts as ACTIVE). The Russia theatre's campaign is recorded in the
+  same file, but the theatre places its own records by region by design, and a non-attack impact
+  record in a theatre country may carry a region in the same way; an attack record there is
+  country-abstracted like any other (iteration 23, F10: this line used to say "any record in a
+  system under the campaign policy", which the gate never enforced for the theatre). The code must
+  belong to the record's country: an ISO 3166-2 code starts with the country's alpha-2 code
+  (`a2` in `global/world.geojson`), and the gate refuses one that does not, so a Russian record
+  cannot carry a Crimean code (UA-43, UA-40) (iteration 23, F11).
 - `domain`: `energy` or `civilian_service`. `sector` and `technology` come from the taxonomy (§5).
   `technology` is `null` (not applicable) outside energy.
 - `cause_family`: one primary cause; `contributing_factors` only where a source says so.
@@ -471,7 +489,7 @@ Properties, each tested and mutation-tested:
   (directness and corroboration are separate components), and many copies of one state or wire
   statement are one origin.
 
-Thresholds are provisional: one blind calibration has been run and they did not pass it, and the method is served with `status: "provisional: thresholds not calibrated"` until a run passes (`docs/EVIDENCE_CONFIDENCE_V2.md` §6).
+Thresholds are provisional: one blind calibration has been run and they did not pass it, and the method is served with `status: "provisional: thresholds not calibrated; calibration run 1 (19 November 2026) was performed and did not pass"` until a run passes (`docs/EVIDENCE_CONFIDENCE_V2.md` §6). Since iteration 23 that status is shown beside every evidence category ("provisional method"), in each country's summary and in both CSV dictionaries, and the "Why?" panel no longer prints the total of the points (ECI-15).
 
 ### 8.2 Attribution confidence
 
@@ -575,6 +593,15 @@ Figures in context entries:
 - **"Latest" is a set, not a pick.** Within one `context_type`, every entry carrying the newest
   `as_of` date is latest; ties are all latest and none is chosen over another. The served file lists
   them per type in `latest_by_type`. Latest is not current: the reader sees the entry's age beside it.
+- **`date` and `as_of` are two dates (iteration 23, XL-01).** `date` is when the statement was
+  made: the date of the source that first published it. `as_of` is the date the statement's facts
+  describe (the end of a reporting period, the day a level was observed), which is **on or before**
+  `date`: a statement cannot describe a day after it was made. The timeline lists entries by `date`
+  and marks the latest of each type by `as_of`, so an older entry's newer statement can be drawn
+  above or below it; the card says which, computed from the order drawn. A later source that
+  restates or updates an entry does not move its `as_of` past its `date`: an update is its own
+  entry. The gate does not yet refuse `as_of` later than `date`, because one served entry has it
+  (listed for a data correction); the check is added once the data passes it.
 
 ## 11. Served artifacts
 

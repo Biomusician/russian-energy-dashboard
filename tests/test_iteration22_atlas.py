@@ -422,7 +422,9 @@ def test_atlas_confidence_is_words_with_the_served_caveat(tmp_path_factory, serv
     """)
     assert out["chip"].startswith("Evidence confidence: Moderate")
     assert out["none"].startswith("Evidence confidence: Not assessed") and not re.search(r"Preliminary|Limited|Low", out["none"])
-    assert f"{out['score']} points : ordinal score, not a probability" in out["why"]
+    # No total (iteration 23, ECI-15): the components' maxima stay ("up to 15 points"), the sum does not.
+    assert not re.search(rf"(?<!up to ){out['score']} points", out["why"]), "the total is never shown"
+    assert "they are not a probability" in out["why"]
     assert not re.search(r"/\s*100|of 100|\d\s*%|percent", out["why"], re.I), "points only: never out of a hundred, never a percentage"
     assert served["method"]["statement"] in out["why"]
     for reason in out["reasons"]:
@@ -627,7 +629,9 @@ def test_atlas_home_code_never_includes_the_atlas_or_its_loader(tmp_path):
     lazy = ("impacts/ImpactAtlas.tsx", "impacts/load.ts", "impacts/ImpactCard.tsx", "impacts/ImpactPresenceMap.tsx", "impacts/atlasModel.ts")
     for name in lazy:
         assert not [i for i in inputs if i.endswith(name)], f"{name} is loaded with the home page"
-    for name in ("GlobalHome.tsx", "StartHere.tsx", "GlobalPanels.tsx", "homeModel.ts"):
+    for name in ("GlobalHome.tsx", "StartHere.tsx", "GlobalPanels.tsx", "homeModel.ts",
+                 # Iteration 23: the map-first home says "impact records available" from the manifest.
+                 "HomeStage.tsx", "SystemPanel.tsx", "SelectionCard.tsx", "homeSelection.ts", "WorldContext.tsx", "NationalContext.tsx"):
         code = (SRC / "global" / name).read_text(encoding="utf-8")
         assert "impacts/" not in code and "loadImpacts" not in code, f"{name} must only link to the atlas"
 

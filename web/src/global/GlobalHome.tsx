@@ -1,283 +1,224 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
-import SystemSwitcher from "./SystemSwitcher";
-import StartHere from "./StartHere";
+import { useEffect, useRef, useState } from "react";
 import WhatsNew from "./WhatsNew";
 import { DataQualityPanel, RecentEvidencePanel } from "./GlobalPanels";
-import { GlobalNavBar, GlobalSearch, openGlossary } from "./GlobalNav";
-import {
-  ENVIRONMENT_LABEL, labelFor, loadDataQuality, loadManifest, loadWorld,
-  type DataQuality, type Manifest, type ManifestSystem,
-} from "./manifest";
+import { GlobalNavBar, GlobalSearch, goWhatsNew, openGlossary, WHATS_NEW_ID } from "./GlobalNav";
+import { loadDataQuality, loadManifest, loadWorld, type DataQuality, type Manifest } from "./manifest";
 import { loadContext, type EnergyContext } from "./context";
-import { impactsHref, navigate, navigateGroup, navigateTo } from "./router";
-import { prefetchOn } from "./prefetch";
 import { PanelBoundary } from "../components/ViewBoundary";
-import { ZERO_RECORD_IMPACT_NOTE, dated, impactTabHref, recordLine } from "./homeModel";
 import { laneLine } from "./laneCoverage";
-import { localISODate } from "../freshness";
-import { Disclosure, ResearchPreviewTag } from "./Disclosure";
-import { fmtDate, fmtNum } from "../data";
+import { localDayOf, localISODate } from "../freshness";
+import { fmtDate } from "../data";
 import { readerText } from "./readerText";
+import HomeStage from "./HomeStage";
+import { WorldProfile } from "./NationalContext";
+import { openFromHome, readHomeState, selectOnHome } from "./homeSelection";
 import "../styles/home.css";
 
-// The world map is below the fold and brings MapLibre with it: its own chunk, so the first screen
-// (purpose, search, actions, systems) does not wait for a megabyte of map code.
-const WorldContext = lazy(() => import("./WorldContext"));
-
-/** The global home (iteration 14; first screen redesigned in iteration 21).
+/** The global home (iteration 14; map-first since iteration 23).
  *
- *  WHAT IT REFUSES TO SHOW. No event counts per system, no scores side by side, no ordering by
- *  any disruption figure. Systems with different reporting environments cannot be compared on
- *  disruption, and a page of cards with a number on each is read as a league table whatever the
- *  caption says (GLOBAL_METHODOLOGY §6).
+ *  WHAT THE FIRST SCREEN ANSWERS. What this is (one sentence), where one can explore (the map and,
+ *  beside it, the same places as text), the one index's headline, what other evidence exists (the
+ *  Impact Atlas row) and when the data was built. Everything an analyst needs beyond that is one
+ *  click away below, each part collapsed: recent evidence, what changed, data quality, why these
+ *  systems, the country record and the national figures table.
  *
- *  THE ORDER OF THE PAGE. What this is and what to do next (purpose, search, four actions, the
- *  comparability caveat); how to read it (Start here); the indexed theatre, then the country
- *  systems in the manifest's alphabetical order; research and context state; recent published
- *  evidence; data freshness. The theatre leads because it is a different kind of system (the one
- *  with an index), not because of any figure.
+ *  WHAT IT REFUSES TO SHOW. No event counts per system, no scores side by side, no ordering by any
+ *  disruption figure, no maturity label on a list of places, and no map colour for impact records:
+ *  systems with different reporting environments cannot be compared on disruption, and a list or a
+ *  map with a figure on each is read as a league table whatever the caption says
+ *  (GLOBAL_METHODOLOGY §6).
+ *
+ *  WHAT THE FIRST SCREEN WAITS FOR. The manifest only. The map is its own chunk and draws into a
+ *  box of fixed size, so it never moves the page and never holds up the panel or the search; the
+ *  data-quality summary, the recent list and the national figures load when their part is opened.
  */
-
 export default function GlobalHome() {
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [world, setWorld] = useState<GeoJSON.FeatureCollection | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [dq, setDq] = useState<DataQuality | null>(null);
-  const [dqFailed, setDqFailed] = useState(false);
-  const [groupFilter, setGroupFilter] = useState("all");
-  const [ctx, setCtx] = useState<EnergyContext | null>(null);
-  const [ctxError, setCtxError] = useState<string | null>(null);
-  // The first screen waits until the manifest and the data-quality summary have each arrived or
-  // failed: each adds lines to it (the cards' record and research dates), and drawing them as they
-  // landed moved the whole screen (layout shift 0.86 before iteration 21). The world map is below
-  // the fold, draws into a box of fixed size, and does not wait.
+  const [worldError, setWorldError] = useState<string | null>(null);
   const [manifestSettled, setManifestSettled] = useState(false);
-  const [dqSettled, setDqSettled] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
-  // The reader's own calendar day: ages are computed here, never shipped precomputed.
-  const today = localISODate(new Date());
 
   useEffect(() => {
     let live = true;
     loadManifest().then((m) => { if (live) setManifest(m); })
       .catch((e) => { if (live) setError(String(e)); })
       .finally(() => { if (live) setManifestSettled(true); });
-    loadDataQuality().then((d) => { if (live) setDq(d); })
-      .catch(() => { if (live) setDqFailed(true); })
-      .finally(() => { if (live) setDqSettled(true); });
-    loadContext().then((c) => { if (live) setCtx(c); })
-      .catch((e) => { if (live) setCtxError(e instanceof Error ? e.message : String(e)); });
-    loadWorld().then((w) => { if (live) setWorld(w); }).catch((e) => {
-      if (live) setError(String(e));
-    });
+    loadWorld().then((w) => { if (live) setWorld(w); }).catch((e) => { if (live) setWorldError(String(e)); });
     return () => { live = false; };
   }, []);
 
   useEffect(() => { document.title = "Energy Disruption Monitor — overview"; }, []);
 
-  const groups = Object.entries(manifest?.groups ?? {});
-  const gulf = groups.find(([, g]) => g.slug && g.context)?.[1] ?? null;
-  const filterGroup = groupFilter === "all" ? null : manifest?.groups?.[groupFilter] ?? null;
-  const inFilter = (s: ManifestSystem) => !filterGroup || filterGroup.members.includes(s.id);
   const theatre = manifest?.systems.find((s) => s.kind === "theatre") ?? null;
-  // The manifest's own (alphabetical) order. Never re-sorted here.
-  const countries = manifest?.systems.filter((s) => s.kind === "country" && inFilter(s)) ?? [];
-  const lastPass = new Map((dq?.systems ?? []).map((s) => [s.system_id, s.last_systematic_pass]));
+  const dataDay = theatre?.as_of ?? localDayOf(manifest?.build_time);
+  const leave = (href: string, ret: string) => (e: React.MouseEvent) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    openFromHome(href, readHomeState().focus, ret);
+  };
 
   return (
     <div className="global-page home-page">
       <header className="home-head">
-        <GlobalNavBar trail={[]} search={false} extra={<SystemSwitcher current={null} />} />
+        {/* No system picker here: the panel below is the same list, visible. Other views keep it. */}
+        <GlobalNavBar trail={[]} search={false} />
       </header>
 
-      {!(manifestSettled && dqSettled) ? (
-        <main className="global-main"><p className="dim" role="status">Loading…</p></main>
+      {!manifestSettled ? (
+        <main className="global-main home-main"><p className="dim" role="status">Loading…</p></main>
       ) : (
-      <main className="global-main">
-        <section className="home-hero" aria-labelledby="home-title">
-          <h1 id="home-title" className="home-title">Energy Disruption Monitor</h1>
-          <p className="home-purpose">
-            What public sources report about disruption to energy infrastructure, by region, with every gap and
-            limit stated. One system has an index; the others are reviewed evidence and context, with no score.
-          </p>
-          <GlobalSearch inputRef={searchRef} />
-          <nav className="home-actions" aria-label="Main actions">
-            {gulf?.slug
-              ? <a className="home-action" href={`?group=${gulf.slug}`} onClick={(e) => { e.preventDefault(); navigateGroup(gulf.slug as string); }}>Explore the {gulf.label} →</a>
-              : <span className="home-action disabled">Regional overview loading…</span>}
-            <a className="home-action" href="?compare=" onClick={(e) => { e.preventDefault(); navigateTo("?compare="); }}>Compare systems →</a>
-            {/* A link only: the impact corpus is fetched when the atlas opens, never by this page. */}
-            <a className="home-action" href={impactsHref()} onClick={(e) => { e.preventDefault(); navigateTo(impactsHref()); }}>Impact atlas →</a>
-            <a className="home-action primary" href="?sys=ru" onClick={(e) => { e.preventDefault(); navigate("ru"); }}>Russia, Belarus &amp; Crimea (indexed) →</a>
-          </nav>
-          {manifest && <p className="comparability compact" role="note">{manifest.comparability_statement}</p>}
-          {error && !manifest && (
-            <p className="warn-text" role="alert">
-              The list of monitored systems could not be loaded ({error}). The Russia, Belarus &amp; Crimea view is still
-              available: <a href="?sys=ru">open it</a>.
+      <main className="global-main home-main">
+        <section className="home-strip" aria-labelledby="home-title">
+          <div className="home-strip-text">
+            <h1 id="home-title" className="home-title">Energy Disruption Monitor</h1>
+            <p className="home-purpose">
+              What public sources report about disruption to energy infrastructure, by region, with every gap and limit
+              stated. Choose a place on the map or from the list.
             </p>
+            <p className="home-meta small">
+              {dataDay && <>Data as of {fmtDate(dataDay)} · rebuilt daily · </>}
+              <a href={`#${WHATS_NEW_ID}`} onClick={(e) => { e.preventDefault(); goWhatsNew(); }}>What's new</a>
+              {" · "}
+              <a className="home-newhere" href="?view=help#start-here" onClick={leave("?view=help#start-here", "newhere")} data-ret="newhere">New here? How to use this dashboard</a>
+            </p>
+          </div>
+          <GlobalSearch inputRef={searchRef} onPreview={setPreview} />
+        </section>
+
+        {error && !manifest && (
+          <p className="warn-text" role="alert">
+            The list of monitored systems could not be loaded ({error}). The Russia, Belarus &amp; Crimea view is still
+            available: <a href="?sys=ru">open it</a>.
+          </p>
+        )}
+
+        {manifest && <HomeStage manifest={manifest} world={world} worldError={worldError} preview={preview} />}
+
+        <div className="home-below">
+          <Fold title="Recent published evidence" id="fold-recent">
+            <PanelBoundary label="Recent evidence"><RecentEvidencePanel /></PanelBoundary>
+          </Fold>
+          {/* Mounted while closed, so the site bar's "What's new" can open it and move focus there. */}
+          <Fold title="What's new in the data" id="fold-whats-new" eager openOnHash={`#${WHATS_NEW_ID}`}>
+            <PanelBoundary label="What's new in the data"><WhatsNew /></PanelBoundary>
+          </Fold>
+          <Fold title="Data freshness and quality" id="fold-quality">
+            <PanelBoundary label="Data quality"><QualityFold manifest={manifest} /></PanelBoundary>
+          </Fold>
+          {manifest && (
+            <Fold title="Why these systems, and how this works" id="fold-why" openOnHash="#why-head">
+              <section className="panel global-note" aria-labelledby="why-head">
+                <h2 id="why-head" className="home-h2">Why these systems, and how this works</h2>
+                <p>
+                  {readerText(manifest.selection.rule)} Source:{" "}
+                  <a href={manifest.selection.source_url} target="_blank" rel="noreferrer">
+                    {manifest.selection.source}
+                  </a>.
+                </p>
+                {manifest.selection.regional_rule && <p>{readerText(manifest.selection.regional_rule)}</p>}
+                <p className="small">{readerText(manifest.selection.caveat)}</p>
+                <p className="small">
+                  The original Russia, Belarus &amp; Crimea theatre is the only system with an index. The countries are shown
+                  with reported major disruptions and energy-system context: the index's weights and recovery model were built
+                  for a strike campaign and do not transfer.{" "}
+                  <button className="linklike" type="button" onClick={() => openGlossary("how-it-works")}>How this works, in six steps</button>
+                </p>
+                <p className="small comparability-line">{manifest.comparability_statement}</p>
+              </section>
+            </Fold>
           )}
-        </section>
-
-        <StartHere gulfSlug={gulf?.slug ?? null} gulfLabel={gulf?.label ?? null} />
-
-        <PanelBoundary label="The list of monitored systems">
-        <section aria-label="Monitored systems" className="home-systems">
-          <div className="home-section-head">
-            <h2 className="home-h2">Monitored systems</h2>
-            {groups.length > 0 && (
-              <div className="map-control-row">
-                <label className="small">Show{" "}
-                  <select aria-label="Filter the system cards by group" value={groupFilter} onChange={(e) => setGroupFilter(e.target.value)}>
-                    <option value="all">all systems</option>
-                    {groups.map(([id, g]) => <option key={id} value={id}>{g.label}{g.kind === "membership" ? " members" : " states"}</option>)}
-                  </select>
-                </label>
-                {groups.filter(([, g]) => g.slug && g.context).map(([id, g]) => (
-                  <button key={id} className="ghost" onClick={() => navigateGroup(g.slug as string)}>Open the {g.label} overview</button>
-                ))}
-                {filterGroup && <span className="small dim">{filterGroup.note}</span>}
-              </div>
-            )}
-          </div>
-          {theatre && inFilter(theatre) && <TheatreEntry s={theatre} today={today} />}
-          <div className="sys-cards home-cards">
-            {manifest && countries.map((s) => (
-              <SystemCard key={s.id} s={s} manifest={manifest} lastPass={lastPass.get(s.id)} today={today} />
-            ))}
-          </div>
-        </section>
-        </PanelBoundary>
-
-        <section className="home-research" aria-labelledby="research-head">
-          <h2 id="research-head" className="home-h2">Research and national context</h2>
-          <p className="small dim home-lead">
-            The world map is coloured by national energy statistics, for background only; a thick outline marks a
-            monitored system. Other countries are shown only for national energy context: an unmonitored country has no
-            disruption record here, which is not the same as no disruptions.
-          </p>
-          <PanelBoundary label="The world energy map">
-            <Suspense fallback={<div className="simple-map placeholder">Loading map…</div>}>
-              <WorldContext world={world} worldError={error} manifest={manifest} ctx={ctx} ctxError={ctxError} />
-            </Suspense>
-          </PanelBoundary>
-        </section>
-
-        <PanelBoundary label="Recent evidence">
-          <RecentEvidencePanel />
-        </PanelBoundary>
-
-        <PanelBoundary label="What's new in the data">
-          <WhatsNew />
-        </PanelBoundary>
-
-        <PanelBoundary label="Data quality">
-          <DataQualityPanel data={dq} failed={dqFailed} manifest={manifest} today={today} />
-        </PanelBoundary>
-
-        {manifest && (
-          <section className="panel global-note" aria-labelledby="why-head">
-            <h2 id="why-head" className="home-h2">Why these systems, and how this works</h2>
-            <p>
-              {readerText(manifest.selection.rule)} Source:{" "}
-              <a href={manifest.selection.source_url} target="_blank" rel="noreferrer">
-                {manifest.selection.source}
-              </a>.
-            </p>
-            {manifest.selection.regional_rule && <p>{readerText(manifest.selection.regional_rule)}</p>}
-            <p className="small">{readerText(manifest.selection.caveat)}</p>
-            <p className="small">
-              The original Russia, Belarus &amp; Crimea theatre is the only system with an index. The countries are shown
-              with reported major disruptions and energy-system context: the index's weights and recovery model were built
-              for a strike campaign and do not transfer.{" "}
-              <button className="linklike" type="button" onClick={() => openGlossary("how-it-works")}>How this works, in six steps</button>
-            </p>
-          </section>
-        )}
-        {manifest?.corpus && (
-          <section className="panel global-note corpus-totals" aria-label="Country record, all countries together">
-            <h2 className="eyebrow">The country record so far, all {manifest.corpus.countries} countries together</h2>
-            <p className="small">
-              {manifest.corpus.records} reported disruptions in {manifest.corpus.episodes} episodes;{" "}
-              {manifest.corpus.independently_reviewed} independently reviewed ({manifest.corpus.blind_reviewed} blind
-              by three reviewers). {manifest.corpus.records_with_observed_recovery} with a cited report that the
-              facility or service came back at least in part ({manifest.corpus.records_reported_fully_back} of them
-              fully); {manifest.corpus.records_with_recovery_estimate_only} with only an estimate. Research process:{" "}
-              {laneLine(manifest.corpus.research_lane_states ?? {}, manifest.corpus.research_lanes)}
-              {" "}{manifest.corpus.registry_sources} sources are on the countries' check lists: the regulators, ministries,
-              operators and other publishers that are re-read on a schedule.
-            </p>
-            <p className="small dim">{readerText(manifest.corpus.note)}</p>
-          </section>
-        )}
+          {manifest?.corpus && (
+            <Fold title="The country record so far" id="fold-corpus">
+              <section className="panel global-note corpus-totals" aria-label="Country record, all countries together">
+                <h2 className="eyebrow">The country record so far, all {manifest.corpus.countries} countries together</h2>
+                <p className="small">
+                  {manifest.corpus.records} reported disruptions in {manifest.corpus.episodes} episodes. Research process:{" "}
+                  {laneLine(manifest.corpus.research_lane_states ?? {}, manifest.corpus.research_lanes)}
+                  {" "}{manifest.corpus.registry_sources} sources are on the countries' check lists: the regulators, ministries,
+                  operators and other publishers that are re-read on a schedule.
+                </p>
+                {/* Iteration 23: the recovery and review sub-totals are gone from here. Nearly all of them
+                    come from the systems with regulatory reporting, so beside "all countries together"
+                    they read as a rate for every country. Each country page keeps its own. */}
+                <p className="small">{reportingLine(manifest)}</p>
+                <p className="small dim">{readerText(manifest.corpus.note)}</p>
+              </section>
+            </Fold>
+          )}
+          <Fold title="National energy figures table" id="fold-national">
+            <PanelBoundary label="National energy figures"><NationalFold manifest={manifest} world={world} /></PanelBoundary>
+          </Fold>
+        </div>
       </main>
       )}
     </div>
   );
 }
 
-/** The one indexed system, ahead of the countries because it is a different kind of view. */
-function TheatreEntry({ s, today }: { s: ManifestSystem; today: string }) {
+/** Which country systems have regulatory outage reporting, by name, from the manifest: a total
+ *  across countries mostly says how much each one reports. */
+function reportingLine(m: Manifest): string {
+  const regulated = m.systems.filter((s) => s.kind === "country" && s.reporting_environment.endsWith("_regulatory")).map((s) => s.name);
+  const list = regulated.length > 1 ? `${regulated.slice(0, -1).join(", ")} and ${regulated[regulated.length - 1]}` : regulated[0] ?? "";
+  return `These totals mostly reflect how much each country reports publicly, not how much happened.${list
+    ? ` ${list} ${regulated.length > 1 ? "have" : "has"} some mandatory outage reporting; the others rely on company, ministry and press statements, so they add far fewer records.` : ""}`;
+}
+
+/** A collapsed part of the home below the first screen. Its content is mounted the first time it
+ *  is opened (so a closed part fetches nothing), unless `eager`. `openOnHash` opens it when the
+ *  address points inside it. */
+function Fold({ title, id, children, eager = false, openOnHash }: {
+  title: string; id: string; children: React.ReactNode; eager?: boolean; openOnHash?: string;
+}) {
+  const ref = useRef<HTMLDetailsElement | null>(null);
+  const [opened, setOpened] = useState(() => !!openOnHash && window.location.hash === openOnHash);
+  useEffect(() => { if (opened && ref.current && !ref.current.open) ref.current.open = true; }, [opened]);
   return (
-    <article className="theatre-entry panel" aria-label={s.name}>
-      <div className="theatre-entry-text">
-        <div className="eyebrow">Indexed system · the only one with a score</div>
-        <h2>{s.name}</h2>
-        {s.headline && (
-          <p className="theatre-headline">
-            <span className="num">{fmtNum(s.headline.value, 1)}</span>{" "}
-            <span>{s.headline.label}, {fmtDate(s.headline.as_of)}</span>
-            <span className="small dim"> (scale 0 to 100) — {s.headline.meaning}</span>
-          </p>
-        )}
-        {/* The number sits above a row of cards that have none. Said here, beside it, so the row
-            does not read as a scale with one value filled in. */}
-        <p className="small dim theatre-entry-alone">
-          Built for this area alone. No country below has an index, so there is nothing on this page to set
-          this number against.
-        </p>
-        <div className="small dim">Reporting: {labelFor(ENVIRONMENT_LABEL, s.reporting_environment)} · {dated("Data as of", s.as_of, today)}</div>
-      </div>
-      <button className="home-action primary" onClick={() => navigate(s.id)} {...prefetchOn(s.id)}>Open {s.name}</button>
-    </article>
+    <details ref={ref} className="home-fold" id={id} onToggle={() => { if (ref.current?.open) setOpened(true); }}>
+      <summary><span className="home-fold-title">{title}</span></summary>
+      {(opened || eager) && <div className="home-fold-body">{children}</div>}
+    </details>
   );
 }
 
-/** A country system. Name, kind of view, "No index", research stage, record and research dates,
- *  reporting environment. Never a count, a score, a held number or a status colour. */
-function SystemCard({ s, manifest, lastPass, today }: {
-  s: ManifestSystem; manifest: Manifest; lastPass: string | null | undefined; today: string;
-}) {
-  const record = recordLine(s.record_reviewed, today);
-  const region = Object.values(manifest.groups ?? {}).find((g) => g.slug && g.context && g.members.includes(s.id));
+function QualityFold({ manifest }: { manifest: Manifest | null }) {
+  const [dq, setDq] = useState<DataQuality | null>(null);
+  const [failed, setFailed] = useState(false);
+  // The reader's own calendar day: ages are computed here, never shipped precomputed.
+  const today = localISODate(new Date());
+  useEffect(() => {
+    let live = true;
+    loadDataQuality().then((d) => { if (live) setDq(d); }).catch(() => { if (live) setFailed(true); });
+    return () => { live = false; };
+  }, []);
+  return <DataQualityPanel data={dq} failed={failed} manifest={manifest} today={today} />;
+}
+
+function NationalFold({ manifest, world }: { manifest: Manifest | null; world: GeoJSON.FeatureCollection | null }) {
+  const [ctx, setCtx] = useState<EnergyContext | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let live = true;
+    loadContext().then((c) => { if (live) setCtx(c); }).catch(() => { if (live) setFailed(true); });
+    return () => { live = false; };
+  }, []);
+  // A country drawn both with and without a system id is monitored in part.
+  const partly = new Set<string>();
+  const seen = new Map<string, Set<boolean>>();
+  for (const f of world?.features ?? []) {
+    const p = f.properties as { a3?: string; system_id?: string | null; status?: string } | null;
+    if (!p?.a3 || p.status === "occupied") continue;
+    seen.set(p.a3, (seen.get(p.a3) ?? new Set()).add(!!p.system_id));
+  }
+  for (const [a3, s] of seen) if (s.size > 1) partly.add(a3);
+  if (failed) return <p className="warn-text small" role="alert">Global energy context unavailable. The monitored systems are not affected.</p>;
+  if (!ctx) return <p className="small dim" role="status">Loading…</p>;
   return (
-    <article className="sys-card panel home-card" aria-label={s.name}>
-      <h2>{s.name}</h2>
-      <div className="small">Country evidence system · <strong>No index</strong></div>
-      <div className="home-tags">
-        {/* Tap disclosures, not hover titles: a touch screen has no hover. */}
-        {s.maturity === "research_preview" && <ResearchPreviewTag />}
-        {region && <span className="home-tag home-tag-region">{region.label}</span>}
-        {s.campaign_restricted && (
-          <Disclosure label="Publication safeguards" className="home-tag home-tag-safeguard"
-            text="While attacks on energy facilities are being reported, some detail, such as a facility's later status, is not published." />
-        )}
-      </div>
-      {record && <div className="small">{record}</div>}
-      {s.record_reviewed === null && (
-        <div className="small home-impact-note">{ZERO_RECORD_IMPACT_NOTE.before}
-          <a href={impactTabHref(s.id)} onClick={(e) => {
-            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-            e.preventDefault();
-            navigateTo(impactTabHref(s.id));
-          }}>{ZERO_RECORD_IMPACT_NOTE.link}<span className="sr-only"> for {s.name}</span></a>{ZERO_RECORD_IMPACT_NOTE.after}</div>
-      )}
-      <div className="small dim">{lastPass ? dated("Last researched", lastPass, today) : lastPass === null ? "No systematic search yet" : ""}</div>
-      <div className="small dim">
-        Reporting: <Disclosure label={labelFor(ENVIRONMENT_LABEL, s.reporting_environment)}
-          text={manifest.reporting_environments[s.reporting_environment] ?? ""} className="linklike" />
-      </div>
-      <button className="ghost" onClick={() => navigate(s.id)} {...prefetchOn(s.id)}>Open {s.name}</button>
-    </article>
+    <WorldProfile ctx={ctx} partly={partly} tableOpen
+      onContext={(a3) => { selectOnHome(a3); document.querySelector(".home-stage")?.scrollIntoView({ block: "start" }); }}
+      systemNames={Object.fromEntries((manifest?.systems ?? []).map((s) => [s.id, s.name]))} />
   );
 }

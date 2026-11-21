@@ -113,6 +113,7 @@ export function countryExport(sys: CountrySystem, shown: readonly CountryEvent[]
     ],
     columns: COUNTRY_EVENT_COLUMNS,
     fields: COUNTRY_EVENT_FIELDS,
+    confidenceStatus: (sys as { evidence_confidence_summary?: { status?: string } }).evidence_confidence_summary?.status ?? null,
   });
   return { csvName, csv: countryEventsCsv(rows, sys), readmeName: readmeFilename(csvName), readme };
 }

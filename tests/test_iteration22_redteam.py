@@ -390,7 +390,9 @@ def test_no_served_record_whose_only_citations_are_discovery_aids_carries_a_cate
 
 # --- 5. nothing says the thresholds were calibrated until a calibration is recorded --------------------
 
-PROVISIONAL = "provisional: thresholds not calibrated"
+# Iteration 23 (F5): the status says the first run was performed and did not pass, not only that the
+# thresholds are uncalibrated, which read as if no calibration had been attempted.
+PROVISIONAL = "provisional: thresholds not calibrated; calibration run 1 (19 November 2026) was performed and did not pass"
 
 
 def test_while_the_version_is_a_draft_the_method_is_served_as_provisional(monkeypatch):

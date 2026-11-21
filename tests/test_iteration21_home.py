@@ -31,35 +31,47 @@ def _function_body(text, name):
     return text[start: start + 1 + nxt.start()] if nxt else text[start:]
 
 
-CARD_FIELDS = {"id", "name", "maturity", "campaign_restricted", "record_reviewed", "reporting_environment"}
+# Iteration 23: the country cards became rows of the "Where to explore" panel (SystemPanel.tsx,
+# built by panelRows in homeSelection.ts), and their detail moved to the selection card (cardFor).
+# What a row or a card may read from a system: its identity, the theatre's served headline, and
+# dates. Never a count, a held figure, a maturity or a reporting tally.
+ROW_FIELDS = {"id", "name", "kind", "headline"}
+CARD_FIELDS = ROW_FIELDS | {"record_reviewed", "as_of"}
+# Read as properties: the reader copy may say "records"; the code may not read a field of that name.
+COUNTS = r"\.(length|corpus|held|withheld|events?|records|episodes|maturity|campaign_restricted)\b"
 
 
 @pytest.mark.repo_hygiene
 def test_a_country_card_reads_no_count_score_or_held_figure():
-    body = _function_body(_code(WEB_SRC / "GlobalHome.tsx"), "SystemCard")
-    read = set(re.findall(r"\bs\.(\w+)", body))
-    assert read, "the card reads its system"
-    assert read <= CARD_FIELDS, f"a card reads {sorted(read - CARD_FIELDS)}: a count, score or held figure has no place on it"
-    for obj, field in re.findall(r"\bmanifest\??\.(\w+)(?:\??\.(\w+))?", body):
-        assert obj in {"groups", "reporting_environments"}, f"a card reads manifest.{obj}"
-    assert not re.search(r"\.length\b|\bcorpus\b|\bheadline\b|\bheld\b|\bwithheld\b|\bevents?\b|\brecords\b|\bepisodes\b",
-                         body, re.I), "a card shows a count, a score or a held figure"
+    panel = _code(WEB_SRC / "SystemPanel.tsx")
+    model = _code(WEB_SRC / "homeSelection.ts")
+    rows = _function_body(model, "panelRows")
+    card = _function_body(model, "cardFor")
+    for name, body, allowed in (("SystemPanel", panel, ROW_FIELDS), ("panelRows", rows, ROW_FIELDS), ("cardFor", card, CARD_FIELDS)):
+        read = set(re.findall(r"\b(?:s|sys|within)\??\.(\w+)", body))
+        assert read, f"{name} reads its system"
+        assert read <= allowed, f"{name} reads {sorted(read - allowed)}: a count, score or held figure has no place on it"
+        assert not re.search(COUNTS, body), f"{name} shows a count, a held figure or a maturity"
 
 
 @pytest.mark.repo_hygiene
 def test_the_theatre_entry_reads_no_count_or_held_figure():
-    body = _function_body(_code(WEB_SRC / "GlobalHome.tsx"), "TheatreEntry")
-    assert not re.search(r"\.length\b|\bcorpus\b|\bheld\b|\bwithheld\b|\bevent_count\b|\brecords\b", body, re.I)
+    """The theatre row reads its served headline (value, label, date) and nothing else."""
+    panel = _code(WEB_SRC / "SystemPanel.tsx")
+    assert "s.headline.value" in panel and "s.headline.as_of" in panel
+    assert not re.search(r"\bevent_count\b|\bsectors\b|\bcoverage\b", panel)
 
 
 @pytest.mark.repo_hygiene
 def test_the_home_page_never_reorders_systems():
     """The manifest's order is alphabetical by name. The home page filters it, never sorts it: an
     order by any figure (a date, a count, a size) is a ranking."""
-    code = _code(WEB_SRC / "GlobalHome.tsx")
-    assert "manifest?.systems.filter(" in code
-    assert not re.search(r"\.sort\(|\.reverse\(|\.toSorted\(|\.toReversed\(|localeCompare", code), \
-        "the home page re-orders systems"
+    rows = _function_body(_code(WEB_SRC / "homeSelection.ts"), "panelRows")
+    assert "m.systems.filter(" in rows
+    for name, code in (("panelRows", rows), ("SystemPanel", _code(WEB_SRC / "SystemPanel.tsx")),
+                       ("GlobalHome", _code(WEB_SRC / "GlobalHome.tsx"))):
+        assert not re.search(r"\.sort\(|\.reverse\(|\.toSorted\(|\.toReversed\(|localeCompare", code), \
+            f"{name} re-orders systems"
 
 
 @pytest.mark.repo_hygiene
@@ -103,7 +115,9 @@ def test_the_manifest_carries_each_countrys_review_date_and_null_for_no_record()
 
 @pytest.mark.repo_hygiene
 def test_reader_copy_on_the_new_surfaces_has_no_build_vocabulary():
-    for name in ("GlobalHome.tsx", "GlobalNav.tsx", "StartHere.tsx", "glossary.ts", "GlobalPanels.tsx"):
+    for name in ("GlobalHome.tsx", "GlobalNav.tsx", "StartHere.tsx", "help/glossary.ts", "help/glossaryDetail.ts",
+                 "help/content.ts", "GlobalPanels.tsx", "SystemPanel.tsx", "SelectionCard.tsx", "homeSelection.ts",
+                 "WorldContext.tsx"):
         strings = re.findall(r'"([^"\n]{12,})"|>([^<>{}\n]{12,})<', _code(WEB_SRC / name))
         text = " ".join(a or b for a, b in strings)
         assert strings, name

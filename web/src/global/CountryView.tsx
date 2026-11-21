@@ -13,6 +13,7 @@ import { EventCard, fmtEventDate } from "./EventCard";
 import { EmptyCorpus } from "./EmptyCorpus";
 import { Disclosure, ResearchPreviewBadge } from "./Disclosure";
 import { NO_SCORE_NOT_ZERO, RESEARCH_PREVIEW_DEFINITION, RESEARCH_PREVIEW_LABEL, inSentence, noScorePlain } from "./countryCopy";
+import { LearnMore } from "./help/LearnMore";
 import { confidenceOptions, eventAnchor } from "./evidence";
 import { ConfidenceSummary } from "./ConfidenceSummary";
 import { laneLine } from "./laneCoverage";
@@ -39,6 +40,8 @@ import {
   DEFAULT_TAB, TAB_LABEL, regionalGroupFor, resolveTab, tabFromSearch, tabsFor, withTab, type RegionalGroup, type Tab,
 } from "./countryTabs";
 import { CountryOverview } from "./OverviewBlock";
+import { sourceCheckLine } from "./countryOverview";
+import { REVIEWERS_SAME_MODEL } from "./reviewText";
 import { CountryImpacts, impactPresence, useCountryImpacts } from "./CountryImpacts";
 import { CountryRegional } from "./CountryRegional";
 import { loadConfidenceMethod } from "./impacts";
@@ -342,6 +345,7 @@ export default function CountryView({ id }: { id: string }) {
           {exporting ? "Rendering…" : "Download PNG"}
         </button>
         <button className="ghost" onClick={() => window.print()}>Print / PDF</button>
+        <LearnMore anchor="exports" label="About exports" className="head-learn" />
       </CountryHeader>
 
       {/* One main landmark per view: everything below the shared header and navigation bar. */}
@@ -371,7 +375,7 @@ export default function CountryView({ id }: { id: string }) {
         <div className="no-index">
           <div className="no-index-value" aria-label="No index">No index</div>
           {/* Said once, plainly (iteration 20, §70). */}
-          <div className="small no-index-plain">{sys.no_index_reason}</div>
+          <div className="small no-index-plain">{sys.no_index_reason} <LearnMore anchor="why-no-country-score" /></div>
         </div>
         <div>
           <div className="eyebrow">Evidence readiness</div>
@@ -424,7 +428,7 @@ export default function CountryView({ id }: { id: string }) {
             <p className="small research-preview-statement">
               {/* The one definition, stated in full where the page explains itself. */}
               <span className="badge research-partial">{RESEARCH_PREVIEW_LABEL}</span>{" "}
-              {RESEARCH_PREVIEW_DEFINITION}
+              {RESEARCH_PREVIEW_DEFINITION} <LearnMore anchor="research-coverage" />
             </p>
           )}
           {sys.campaign_state && sys.campaign_state.state !== "NO_ACTIVE_CAMPAIGN" && (
@@ -434,6 +438,7 @@ export default function CountryView({ id }: { id: string }) {
               {readerText(sys.campaign_state.basis)} Checked {fmtDate(sys.campaign_state.checked)}. While that holds, an attack
               is recorded as having happened, with its date, the kind of infrastructure and the effect reported at
               the time. Whether a facility has been repaired, restarted or is operating is not published.
+              {" "}<LearnMore anchor="withheld" />
             </p>
           )}
           {sys.geography.precision_policy && (
@@ -589,11 +594,12 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
   const used = sys.sources.filter((x) => !x.role.startsWith("rejected"));
   const late = staleSources(used, today);
   const overdue = rf.next_due != null && rf.next_due < today;
+  const blocked = (rf.lane_states ?? {}).blocked_by_source ?? 0;
   return (
     <div className="research-status" aria-label="Research status">
       {/* Two questions, two labelled answers (iteration 20, §68): how much of the planned search is
           done, and whether the registered sources were checked on schedule. */}
-      <div className="eyebrow">Research coverage <span className="dim">· how much of the planned historical search is done</span></div>
+      <div className="eyebrow">Research coverage <span className="dim">· how much of the planned historical search is done</span> <LearnMore anchor="research-coverage" /></div>
       <div className="small">
         <span className={`badge research-${rf.completeness}`}>
           {sys.research_log.passes.length === 0 ? "No search has been run yet" : RESEARCH_COMPLETENESS_LABEL[rf.completeness]}
@@ -608,17 +614,14 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
             last worked on {fmtDate(rf.last_systematic_pass)}{overdue ? "; a new pass is due" : ""}.</span>
         )}
       </div>
-      <div className="eyebrow">Source health <span className="dim">· whether the registered sources were checked on schedule</span></div>
+      <div className="eyebrow">Source health <span className="dim">· whether the source registry was re-checked on schedule</span> <LearnMore anchor="source-health" /></div>
       <div className="small">
-        <span className={`source-freshness sources-${late.length ? "stale" : "current"}`}>
-          {late.length
-            ? `${late.length} of ${used.length} registered sources overdue for a check`
-            : `All ${used.length} registered sources checked on schedule`}
+        <span className={`source-freshness sources-${late.length ? "stale" : blocked > 0 ? "partial" : "current"}`}>
+          {sourceCheckLine(used.length, late.length, blocked)}
         </span>
       </div>
-      <div className="small dim">One does not imply the other: sources checked on schedule say nothing about how
-        much of the search is done. A source group is one family of sources searched as a unit, for example one
-        ministry's statements; see the Research coverage tab.</div>
+      <div className="small dim">One does not imply the other, and a re-check is not a reading of the source. A source
+        group is one family of sources searched as a unit (one ministry's statements, say); see Research coverage.</div>
     </div>
   );
 }
@@ -695,7 +698,8 @@ function EventsPanel({ events, region, regionName, regionStatus, onClear, bundle
         </span>
       </RecordFilterBar>
       <p className="small dim record-export-note">The CSV holds the records shown here, after the filters. “About this file” explains its
-        columns and limits: these are the published records in this corpus, not a census, and counts are not comparable across countries.</p>
+        columns and limits: these are the published records in this corpus, not a census, and counts are not comparable across countries.
+        {" "}<LearnMore anchor="exports" /></p>
       {exportMsg && <p className="small" role="status">{exportMsg}</p>}
       {filtering && shown.length === 0 && (
         <p className="small filter-empty" role="status">No published record in this list matches the filters. That describes the
@@ -960,7 +964,7 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
       <p className="small review-summary">{(s.review_summary.blind_reviewed ?? 0) + s.review_summary.dual_reviewed} of {bundle.events.length} events
         independently reviewed ({s.review_summary.blind_reviewed ?? 0} blind by three reviewers,{" "}
         {s.review_summary.dual_reviewed} by one); {s.review_summary.legacy_single_review} published before independent
-        review was required.</p>
+        review was required. {REVIEWERS_SAME_MODEL}</p>
       <p className="small dim">{readerText(s.review_summary.note)}
         {unrecorded > 0 && ` For ${unrecorded} of ${bundle.events.length} events the researchers did not record whether they read the cited sources.`}</p>
       </>)}
@@ -970,6 +974,7 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
 
 const ROLE_TEXT: Record<string, string> = {
   official: "official body", government: "government", regulator: "regulator", operator: "operator",
+  cert: "national cyber agency", law_enforcement: "law enforcement", court_record: "court record",
   dataset: "dataset", media: "news media", industry: "industry press",
 };
 
@@ -983,8 +988,10 @@ function SourceHealthBlock({ h }: { h: SourceHealth }) {
       <ul className="small">
         <li>{h.citations} citations from {h.publishers} publishers, across {h.events} events.</li>
         <li>By role: {roles}.</li>
+        {/* The roles come from the served list, which the build reads from the evidence-confidence
+            method (iteration 23, F3): this sentence once named "a dataset", a role neither counts. */}
         <li>{h.events_with_first_party_source} of {h.events} events cite at least one first-party
-          source (the operator, a regulator, a government body or a dataset; Wikipedia does not count); {h.single_source_events} rest
+          source ({h.first_party_roles.map((r) => labelFor(ROLE_TEXT, r)).join(", ")}; Wikipedia does not count); {h.single_source_events} rest
           on a single citation.</li>
         {h.single_origin_events !== undefined && (
           <li>Counted by origin rather than by citation: {h.single_origin_events} events rest on a single originating
@@ -1117,7 +1124,7 @@ function MethodPanel({ bundle }: { bundle: CountryBundle }) {
       <h2>Why no score</h2>
       <p className="no-score-plain">{noScorePlain(s.name)}</p>
       <h3>No score is not a score of zero</h3>
-      <p className="small">{NO_SCORE_NOT_ZERO}</p>
+      <p className="small">{NO_SCORE_NOT_ZERO} <LearnMore anchor="why-no-country-score" /></p>
       <p className="small dim">{s.no_index_reason}</p>
       <h3>What this page shows instead</h3>
       <ul className="small">
@@ -1131,13 +1138,14 @@ function MethodPanel({ bundle }: { bundle: CountryBundle }) {
 
       <details className="small no-score-technical">
         <summary>Technical detail: why the Russia, Belarus &amp; Crimea method does not transfer</summary>
-        <p>The Russia, Belarus &amp; Crimea index combines reported damage by sector, weighting each sector by its share of the monitored
-          capacity, lets each event's weight fade with a fixed half-life, and adds a measure of the power-transmission
-          network. Each of those parts was set for that one area: its weights come from that infrastructure, the half-life
-          from how that campaign's damage was reported and repaired, and the transmission measure from that grid.</p>
+        <p>The Russia, Belarus &amp; Crimea index combines reported damage by sector, weighting each sector by a published
+          judgement of its importance, lets each event's weight fade on a recovery horizon (taken from a recovery report where
+          one exists and assumed where it does not), and adds a measure of the power-transmission network. Each of those parts
+          was set for that one area: its weights were judged for that infrastructure, its assumed horizons for how that
+          campaign's damage was reported and repaired, and the transmission measure for that grid.</p>
         <p>Here none of the three has a basis. There is no shared capacity denominator for the records, so a weight per
           sector would be invented. Recovery evidence is uneven and, for attacked facilities under the campaign
-          safeguards, deliberately unpublished, so a fixed fading rate would stand in for evidence that does not exist.
+          safeguards, deliberately unpublished, so an assumed fading rate would stand in for evidence that does not exist.
           Reporting rules differ between countries, so the same number would mean different things in each.</p>
         <p>A sector can only carry a value once code computes one from evidence that supports it; until then every
           sector says "tracked, not scored" or why it is unknown. The Sectors tab shows each one.</p>

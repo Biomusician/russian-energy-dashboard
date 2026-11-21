@@ -37,13 +37,3 @@ export function writeDismissed(dismissed: boolean, getStorage: () => StorageLike
     return false;
   }
 }
-
-// "How to read this" on another view opens the home page with the panel showing. The flag is
-// read once by the panel when it mounts.
-let openRequested = false;
-export function requestStartHere() { openRequested = true; }
-export function takeStartHereRequest(): boolean {
-  const r = openRequested;
-  openRequested = false;
-  return r;
-}

@@ -371,6 +371,15 @@ def sector_states(snapshot, explanations):
     return states
 
 
+def _unscored_events_sentence(snapshot, uncovered):
+    """How many recorded events the unscored sectors hold, from this build's counts. The old
+    sentence said documented strikes exist in every unscored sector; coal has none."""
+    counts = (snapshot.get("facet_counts") or {}).get("sector") or {}
+    parts = [f"{SECTORS.get(s, s)} {counts.get(s, 0)}" for s in uncovered]
+    return (f"Recorded events in these sectors, none of them scored: {', '.join(parts)}. A sector "
+            "with no recorded event is not measured either, so that is not evidence that none occurred.")
+
+
 def cannot_tell_you(snapshot, explanations):
     """The questions this dashboard cannot answer, derived from the build rather than asserted.
 
@@ -381,12 +390,15 @@ def cannot_tell_you(snapshot, explanations):
     items = []
     uncovered = snapshot.get("sectors_uncovered") or []
     if uncovered:
+        # Reader words, not sector keys: this list is shown on the theatre page and in Help.
+        names = [SECTORS.get(s, s) for s in uncovered]
+        listed = " and ".join([", ".join(names[:-1]), names[-1]] if len(names) > 1 else names)
         items.append({
-            "question": "How much gas or coal infrastructure is disrupted",
+            "question": f"How much {' or '.join(n.lower() for n in names)} infrastructure is disrupted",
             "answer": (
-                f"Not known. {', '.join(uncovered)} have no published capacity denominator, so "
-                "they are excluded from the composite and their weight redistributed. Documented "
-                "strikes in these sectors exist and are NOT scored. Excluded is not zero."),
+                f"Not known. {listed} {'has' if len(names) == 1 else 'have'} no published capacity denominator, so "
+                "they are excluded from the composite and their weight redistributed. "
+                + _unscored_events_sentence(snapshot, uncovered) + " Excluded is not zero."),
             "basis": "sectors_uncovered",
         })
 
@@ -420,8 +432,10 @@ def cannot_tell_you(snapshot, explanations):
         items.append({
             "question": "Every strike that has occurred",
             "answer": (
-                f"No. {coverage.get('enumerated_in_this_dataset')} oil-sector strikes are "
-                f"enumerated against a reported benchmark of "
+                f"No. {coverage.get('enumerated_in_this_dataset')} oil-sector strikes "
+                + (f"dated within the benchmark's period (to {coverage['numerator_window_end']}) "
+                   if coverage.get("numerator_window_end") else "")
+                + f"are enumerated against a reported benchmark of "
                 f"{coverage.get('reported_total_strikes')} ({pct}%). The remainder are counted "
                 "in aggregate by the source without individual dates, so they cannot become "
                 "events here. Other sectors have no benchmark at all."),
@@ -456,8 +470,8 @@ def cannot_tell_you(snapshot, explanations):
             "question": "The true current installed generating base",
             "answer": (
                 f"Not known. The census vintage is {gen.get('vintage')}, and it "
-                f"{gen.get('known_bias')}. The measured effect on the index is published in "
-                "docs/GENERATION_DENOMINATOR_AUDIT.md."),
+                f"{gen.get('known_bias')}. The measured effect on the index is published with "
+                "the project's methodology documentation."),
             "basis": "electric_generation denominator",
         })
 

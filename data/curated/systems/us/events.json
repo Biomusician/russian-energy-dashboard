@@ -250,7 +250,7 @@
       "effect": "EEA 3 declared shortly after the peak; CAISO and state officials used conservation appeals (Flex Alert, a Wireless Emergency Alert) and demand response to avoid rolling blackouts.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
-      "threshold_basis": "Grid-operator EEA 3 declaration (clause 5 names EEA3 explicitly).",
+      "threshold_basis": "Grid-operator EEA 3 declaration: an emergency declared by the grid operator (clause 5, its second limb).",
       "capacity_affected": null,
       "sources": [
         {

@@ -97,7 +97,9 @@ GLOBAL_PAYLOADS = ("global/manifest.json", "global/world.geojson", "global/energ
                    # Iteration 21: what changed since the last published build, by cause (whats_new.py).
                    "global/whats_new.json",
                    # Iteration 22: the global impact layer (global_impacts.py). Non-scored, lazy-loaded.
-                   "global/impacts.json", "global/regional_context.json", "global/evidence_confidence.json")
+                   "global/impacts.json", "global/regional_context.json", "global/evidence_confidence.json",
+                   # Iteration 23: the live values the Help page shows (help_facts.py). Small, lazy-loaded.
+                   "global/help_facts.json")
 
 
 def system_payload_paths():

@@ -25,6 +25,7 @@
 import type { CountryEvent, CountrySystem } from "./manifest";
 import { eventPlacement, headlinesAllowed, isOpaqueAttackId, placementKind } from "./evidence";
 import { PLACEMENT_LABEL } from "./placement";
+import { REVIEWERS_SAME_MODEL } from "./reviewText";
 
 // ---- the CSV itself -----------------------------------------------------------------------------
 
@@ -102,7 +103,7 @@ export const COUNTRY_EVENT_FIELDS: Record<(typeof COUNTRY_EVENT_COLUMNS)[number]
   recovery_kind: "What kind of return the evidence describes (an estimate is not an observed restoration).",
   recovery_date: "The date of that return, where the evidence gives one.",
   evidence_confidence: "Evidence confidence category, where the build publishes one: the quality of the public evidence, not a probability, a severity or an importance.",
-  review_status: "How the record was reviewed before publication.",
+  review_status: `How the record was reviewed before publication: blind_reviewed, dual_reviewed or legacy_single_review. ${REVIEWERS_SAME_MODEL}`,
   citations: "Each cited source as publisher, date, address; sources separated by \" | \".",
   source_headlines: "Original-language headlines of the cited sources, where the record may show them.",
   publication_note: "Why cells of this row are empty, where a publication rule withholds them.",
@@ -256,8 +257,8 @@ export const IMPACT_FIELDS: Record<(typeof IMPACT_COLUMNS)[number], string> = {
   ai_involvement_role: "The role the source describes.",
   ai_involvement_as_of: "The date of that statement.",
   evidence_confidence: "Evidence confidence category: the quality of the public evidence that it happened and of the reported effect. Not a probability, a severity or an importance.",
-  evidence_confidence_score: "The ordinal score behind the category (0 to 100). Not a probability and not a percentage; never rank or sort records by it.",
-  originating_statements: "How many distinct originating statements support the record. Republications count once.",
+  evidence_confidence_score: "The ordinal points behind the category: points, not a percentage and not a probability; never rank or sort records by it.",
+  originating_statements: "Originating statements across all of the record's citations, for any claim (the event, its effect, attribution, AI involvement); republications count once, and a citation added on lead review, an actor's own claim and a discovery aid are not counted. Where no reviewer checked which sources relay which, it is a count of distinct publishers. Not the evidence-confidence component's count, which covers only the first-party and press sources for the event and its effect.",
   citations: "Each cited source as publisher, date, address; sources separated by \" | \".",
   source_headlines: "Original-language headlines of the cited sources, where the record may show them.",
   first_published: "The build date on which the record was first served here: not the event's date and not the source's. Empty (null in the served data): not yet served, pending its first release.",
@@ -368,6 +369,17 @@ export interface ReadmeInput {
   limitations: readonly string[];
   columns: readonly string[];
   fields: Record<string, string>;
+  /** The served evidence-confidence method status ("provisional: ..."), said beside the column it
+   *  qualifies (iteration 23, F5). Null when the page could not read it. */
+  confidenceStatus?: string | null;
+}
+
+/** The column's dictionary entry with the method status the file was made under. A file outlives
+ *  the page, so the status travels in it; a status the page could not read is said as such. */
+export function fieldText(column: string, fields: Record<string, string>, status: string | null | undefined): string {
+  const base = fields[column] ?? "";
+  if (column !== "evidence_confidence") return base;
+  return `${base} Method status as served when this file was made: ${status ? status : "not available (the method could not be read)"}.`;
 }
 
 /** "About this file": plain text, one fact per line, so it can be read anywhere. */
@@ -403,7 +415,7 @@ export function readmeText(i: ReadmeInput): string {
     ...CSV_CONVENTIONS.map((c) => `- ${c}`),
     "",
     "Columns",
-    ...i.columns.map((c) => `- ${c}: ${i.fields[c] ?? ""}`),
+    ...i.columns.map((c) => `- ${c}: ${fieldText(c, i.fields, i.confidenceStatus)}`),
     "",
   ];
   return lines.join("\r\n");

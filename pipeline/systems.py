@@ -144,7 +144,7 @@ COUNTRY_SYSTEMS = tuple(s["id"] for s in SYSTEMS if s["kind"] == "country")
 # Why the Gulf systems (iteration 19): a regional expansion decided by the owner, not by the
 # five-largest rule below. Stated so nobody reads the Gulf systems as "the next largest".
 GULF_SELECTION = {
-    "rule": "Seven Gulf states were added in iteration 19 as a geographic expansion alongside "
+    "rule": "Seven Gulf states were added later as a geographic expansion alongside "
             "Saudi Arabia: Bahrain, Iran, Iraq, Kuwait, Oman, Qatar and the United Arab Emirates. "
             "They were not chosen by production size, and no order among them is displayed.",
 }

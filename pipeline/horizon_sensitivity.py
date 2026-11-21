@@ -2,10 +2,11 @@
 
 WHY THIS EXISTS.
 
-Decomposing the index by the evidence kind driving each facility's decay gives roughly
-97% modelled, 2% sourced-estimate, 0.1% observed. The transmission saturation constant --
-worth under one index point -- ships a six-point sweep, a concentration split, four
-alternative models and a red-team verdict. The refinery reconstitution horizon, worth almost
+When this was written (iteration 13), decomposing the index by the evidence kind driving each
+facility's decay gave roughly 97% modelled, 2% sourced-estimate, 0.1% observed; the current split
+is served beside the sweep as `evidence_kind_counts`. The transmission saturation constant
+shipped a six-point sweep, a concentration split, four alternative models and a review verdict;
+how much transmission moves the headline is computed below each build, not written down here. The refinery reconstitution horizon, worth almost
 the whole number, shipped no sensitivity anywhere: not in the snapshot, not in data_quality,
 not in the frontend. METHODOLOGY.md calls these horizons "the single largest lever" and
 `cannot_tell_you` says the decline "is modelled decay, not evidence of repair". Both true,
@@ -57,6 +58,22 @@ def sweep(build_index, build_kwargs):
     return out
 
 
+def _comparison(lo, hi, snapshot):
+    """The horizon sweep's width beside what removing transmission would move, both from this
+    build. The sentence used to say transmission was "worth under one index point" as a fixed
+    fact; that was true only on the day it was written (iteration 23, ESDI-06)."""
+    span = round(hi - lo, 2)
+    ex_tx, esdi = snapshot.get("esdi_excluding_transmission"), snapshot.get("esdi")
+    if ex_tx is None or esdi is None:
+        tx = "The transmission comparison is not available in this build."
+    else:
+        tx = (f"Removing transmission from the headline altogether would move it by "
+              f"{abs(ex_tx - esdi):.2f} points, and transmission ships a saturation sweep, four "
+              "alternative models and a review verdict.")
+    return (f"Halving and doubling the modelled horizons spans {span:.2f} index points. {tx} "
+            "The horizon assumption shipped no sensitivity at all until iteration 13.")
+
+
 def build(build_index, build_kwargs, snapshot):
     rows = sweep(build_index, build_kwargs)
     declared = [r for r in rows if r["scale"] == 1.0][0]
@@ -80,9 +97,5 @@ def build(build_index, build_kwargs, snapshot):
             "unchanged, and the way to narrow this range is recovery evidence, not a better "
             "guess."
         ),
-        "why_this_matters_more_than_the_transmission_sweep": (
-            "The transmission saturation constant is worth under one index point and ships a "
-            "six-point sweep, four alternative models and a red-team verdict. This parameter is "
-            "worth most of the number and shipped no sensitivity at all until iteration 13."
-        ),
+        "why_this_matters_more_than_the_transmission_sweep": _comparison(lo, hi, snapshot),
     }

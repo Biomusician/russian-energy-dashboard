@@ -31,9 +31,12 @@ export function statusCutoff(asOf: string | null | undefined, policy: StatusPoli
   return addDays(asOf, -days);
 }
 
-/** Short label for the count. True with or without the delay: a facility with no report at all
- *  also has none by the cut-off. */
-export const NO_REPORT_LABEL = "No restoration report by the cut-off";
+/** Short label for the count (`unresolved_count`). It is a MODEL count: facilities whose modelled
+ *  exposure is still above the index's cut-off and that no usable full-restoration report has
+ *  closed. Iteration 23 (ESDI-03): it used to read "No restoration report by the cut-off", but six
+ *  of the fifty facilities it counted carried a partial-restart or restoration report, and struck
+ *  facilities whose modelled exposure had decayed away were not counted at all. */
+export const NO_REPORT_LABEL = "Still in the index, no full-restoration report by the cut-off";
 
 /** The rule in one clause, with the number only when the served data carries it. */
 export function delayRule(policy: StatusPolicy | null | undefined): string {
@@ -58,15 +61,26 @@ export function theatreDelayLine(
     + `repair report is used ${when}. The site never shows whether a facility is working now.`;
 }
 
-/** What a "no restoration report" count means, in full. */
-export function noReportMeaning(asOf: string | null | undefined, policy: StatusPolicy | null | undefined): string {
+/** What the count means, in full. `withReport` is the served number of counted facilities that
+ *  do carry a partial-restart or restoration report (`unresolved_with_recovery_report`); omitted
+ *  where the build serves no such figure (a region, a sector), and then no number is claimed. */
+export function noReportMeaning(
+  asOf: string | null | undefined, policy: StatusPolicy | null | undefined, withReport?: number | null,
+): string {
   const cutoff = statusCutoff(asOf, policy);
   const rule = delayRule(policy);
-  const head = "Counts reported disruptions with no public restoration report";
+  const head = "A model count, not a reporting fact: facilities whose modelled exposure has not yet "
+    + "decayed below the index's cut-off and that no usable report of full restoration has closed";
+  const partial = withReport == null
+    ? " Some may carry a partial-restart or restoration report that did not close the disruption."
+    : withReport > 0
+      ? ` ${withReport} of them ${withReport === 1 ? "carries" : "carry"} a partial-restart or restoration report that did not close the disruption.`
+      : " None of them carries a partial-restart or restoration report.";
+  const decayed = " A struck facility whose modelled exposure has decayed away is not counted, whether or not anyone reported it restored.";
   if (!rule) {
-    return `${head}. It is modelled as not yet recovered, not an observed operating status.`;
+    return `${head}.${partial}${decayed} It is not an observed operating status.`;
   }
-  return `${head} dated on or before the status cut-off${cutoff ? ` (${fmtDate(cutoff)})` : ""}. `
+  return `${head}, by the status cut-off${cutoff ? ` (${fmtDate(cutoff)})` : ""}.${partial}${decayed} `
     + `While attacks on energy facilities are being reported, ${rule}, so a facility counted here may already be working again. `
     + "It is not a list of facilities that are down now.";
 }

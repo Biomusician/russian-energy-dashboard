@@ -39,6 +39,15 @@ NOT_MODELLED = {
 }
 
 
+# A regional effect that is null is not a zero: it was not measured, for one of these reasons.
+EFFECTS_NULL_REASONS = {
+    "generation_margin": "No installed-generation figure for the region in the census, so there "
+                         "is nothing to divide by.",
+    "heating_season_exposure": "Outside the heating season the question does not apply; inside "
+                               "it, null where the region has no installed-generation figure.",
+}
+
+
 def _dates(start, end, step_days):
     out = []
     d = dt.date.fromisoformat(start)
@@ -234,15 +243,18 @@ def build(incidents, facilities, assets, refinery_total_mtpa, region_meta, as_of
             if region_code:
                 reg_sector[region_code][info["sector"]] += share * weight
 
+        # An uncovered sector has no denominator, so it has no value: null, never 0.0, which
+        # would read "measured, nothing disrupted" (iteration 23, F8).
         for s in SECTORS:
-            national["sectors"][s].append(round(min(1.0, nat_sector[s]) * 100, 2))
+            national["sectors"][s].append(round(min(1.0, nat_sector[s]) * 100, 2) if s in covered else None)
         national["esdi"].append(_composite(nat_sector, sector_weights, covered))
         national["esdi_all_sectors"].append(_composite_all(nat_sector, sector_weights))
 
         for code in region_meta:
             rs = reg_sector.get(code, {})
             for s in SECTORS:
-                regional[code]["sectors"][s].append(round(min(1.0, rs.get(s, 0.0)) * 100, 2))
+                regional[code]["sectors"][s].append(
+                    round(min(1.0, rs.get(s, 0.0)) * 100, 2) if s in covered else None)
             regional[code]["esdi"].append(_composite(rs, sector_weights, covered))
 
         # Keep the last step's UNROUNDED fractions: the explanation decomposition must reconcile
@@ -715,6 +727,18 @@ def _denominators(assets, refinery_total_mtpa, region_meta, transmission_lines_b
     return {"national": nat, "regional": per_region, "tx_context": tx_context}
 
 
+def _concentration_note(facilities, regions, occupied_share_pct):
+    """The transmission concentration warning, from this build's own figures. It names no
+    facility: what matters to a reader is that a handful of sites carry the sector, not which."""
+    return (
+        f"Transmission is an event-burden measure against a saturation constant "
+        f"({SATURATION_EVENTS:g}), so it is dominated by the freshest strikes in a thin sector: "
+        f"{facilities} {'facility' if facilities == 1 else 'facilities'} in {regions} "
+        f"{'region' if regions == 1 else 'regions'} carry it, {occupied_share_pct:g}% of it in "
+        "occupied territory. Read it as theatre-concentrated, not as a national-grid measure."
+    )
+
+
 def _share(info, denominators):
     """Per-facility contribution to its sector's exposure.
 
@@ -781,9 +805,12 @@ def _regional_intensity(code, r_live, facility_info, installed_mw, tx_burden):
 
     # Sectors the region is actually disrupted in, so we can flag the ones we cannot score.
     disrupted_sectors = {finfo(x).get("sector") for x in r_live}
+    # Missing = disrupted here but not scored here, for either reason: no regional denominator
+    # for the sector at all (refining), or none for this region (Crimea's generation, which has
+    # struck plants and no census capacity). The second used to fall in neither list.
     missing = sorted(
         s for s in SECTORS
-        if s in disrupted_sectors and s not in _INTENSITY_SECTORS
+        if s in disrupted_sectors and per_sector.get(s) is None
     )
 
     sector_weights = SCORING["sector_weights"]
@@ -1006,12 +1033,13 @@ def _transmission_sensitivity(live, facility_info, esdi_excluded):
             f"and {sweep[0]['saturation']}. Published as a sensitivity, not a tuning knob."
         ),
         "red_team_verdict": (
-            "RETAINED in the headline as 'Transmission disruption burden' (iteration-7 independent "
-            "red-team). Model A is the least-bad scalar: it is the only formulation that jointly "
+            "Kept in the headline as 'Transmission disruption burden' after an internal review "
+            "(iteration 7). Model A is the least-bad scalar: it is the only formulation that jointly "
             "honours recency, evidence confidence, damage severity and voltage class, is "
             "structurally immune to repeat-strike double-counting (a node's strongest live "
-            "trajectory wins, never the sum), and fits the service-only recovery evidence we "
-            "actually have (it never needs a reconstitution duration). Alternatives were measured "
+            "trajectory wins, never the sum), and decays on the same evidence-driven horizons as "
+            "every sector: the modelled substation and line horizons unless a recovery report "
+            "shortens them. Alternatives were measured "
             "and rejected as a headline: B's breadth-awareness is dormant at current magnitudes; D "
             "(distinct-facility count) is the single most misleading number; C (breadth+intensity) "
             "is kept only as a supporting display; E (remove entirely) moves the headline by only "
@@ -1064,9 +1092,10 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
 
     # Transmission-concentration disclosure (red-team, iteration 5). Transmission is an
     # event-burden measure against a small saturation constant, so it is dominated by the
-    # freshest strikes in a thinly-populated sector -- currently the Kerch power bridge and
-    # occupied-Crimea substations. Surface where the burden actually sits so "transmission N"
-    # is not misread as "N% of Russia's grid".
+    # freshest strikes in a thinly-populated sector. Surface where the burden actually sits so
+    # "transmission N" is not misread as "N% of Russia's grid". The note is built from the data:
+    # a sentence naming particular facilities went stale and read as their current status
+    # (iteration 23, IA-16).
     tx = []
     for x in live:
         if x["sector"] != "transmission":
@@ -1081,19 +1110,15 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
         "top": [{"name": n, "region_code": rc, "pct": round(c / tx_total * 100, 1)}
                 for c, n, rc in tx[:5]],
         "occupied_share_pct": round(sum(c for c, _, rc in tx if rc in occupied) / tx_total * 100, 1),
-        "note": (
-            "Transmission is an event-burden measure against a saturation constant (8), so it "
-            "is dominated by the freshest strikes in a thin sector -- currently the Kerch power "
-            "bridge (Taman) and occupied-Crimea substations, not the wider Russian grid. Read "
-            "it as theatre-concentrated, not national."
-        ),
     }
+    transmission_concentration["note"] = _concentration_note(
+        len(tx), len({rc for _, _, rc in tx}), transmission_concentration["occupied_share_pct"])
     tx_esdi_excluded = {code for code, m in region_meta.items() if not m.get("esdi_included", True)}
     transmission_sensitivity = _transmission_sensitivity(live, facility_info, tx_esdi_excluded)
     # Model E (§23): the headline recomputed WITHOUT transmission — the counterfactual the
     # "remove transmission from the ESDI" option would produce, disclosed so the choice is visible.
     _sw = SCORING["sector_weights"]
-    _nat_final = {s: national["sectors"][s][-1] / 100.0 for s in SECTORS}
+    _nat_final = {s: (national["sectors"][s][-1] or 0.0) / 100.0 for s in SECTORS}
     _covered_no_tx = [s for s in covered if s != "transmission"]
     esdi_excluding_transmission = _composite(_nat_final, _sw, _covered_no_tx) if _covered_no_tx else None
     transmission_sensitivity["alternative_models"]["E_esdi_if_transmission_removed"] = esdi_excluding_transmission
@@ -1166,9 +1191,7 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             # Transmission is event-burden, not capacity: show the weighted burden and
             # the tracked network context, never a "% offline".
             "transmission_burden": round(tx_burden, 2),
-            "heating_season_exposure": (
-                _pct(thermal_disrupted, installed_mw) if heating else 0.0
-            ),
+            "heating_season_exposure": _heating_exposure(thermal_disrupted, installed_mw, heating),
             "repair_burden": len(unresolved),
             "recurrence": round(len(r_inc) / len(struck), 2) if struck else 0.0,
         }
@@ -1204,7 +1227,10 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             "median_unresolved_age_days": _median(open_ages),
             "reconstitution_backlog_days": round(backlog_days),
             "affected_sectors": affected_sectors,
-            "installed_mw": round(installed_mw),
+            # 0 MW means the generation census holds no plant here, not that the region has no
+            # generation: Crimea carries struck plants the census does not list. No capacity
+            # figure is null, never 0 (iteration 23, F8).
+            "installed_mw": round(installed_mw) if installed_mw else None,
             "tracked_substations": tx_ctx["substations"],
             "tracked_transmission_lines": tx_ctx["lines"],
             "regional_intensity": intensity,
@@ -1229,8 +1255,8 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             "because gas and coal are uncovered). The 'uncovered-zero-assumption sensitivity' is "
             "the same figure computed under the explicitly FALSE assumption that gas and coal are "
             "zero; the gap is the uplift that excluding them adds. It is a sensitivity, not a "
-            "measured ESDI — unknown stays unknown. Gas carries documented strikes that score zero "
-            "only for want of a defensible denominator."
+            "measured ESDI — unknown stays unknown. Gas carries documented strikes that are not "
+            "scored, for want of a defensible denominator."
         ),
         "sectors": {s: national["sectors"][s][-1] for s in SECTORS},
         "sectors_covered": covered,
@@ -1258,7 +1284,7 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
             },
             "refining_mtpa": {
                 "source": "curated refinery registry (data/curated/refineries_canonical.csv)",
-                "census_vintage": "maintained per-incident; see refinery_reconciliation",
+                "census_vintage": "maintained per incident; its completeness is stated under refining denominator completeness",
             },
         },
         "incident_total": len(incidents),
@@ -1281,6 +1307,8 @@ def _snapshot(incidents, by_facility, facility_info, denominators, region_meta,
         "recovery_events": _recovery_events(incidents, recovery_by_incident, facility_info),
         "regions": regions_out,
         "not_modelled": NOT_MODELLED,
+        # Why a regional effect can be null. Said once here rather than on 80 regions.
+        "effects_null_reasons": EFFECTS_NULL_REASONS,
     }
 
 
@@ -1476,7 +1504,14 @@ def _recovery_stats(live, incidents, recovery_by_incident, facility_info):
         if m["median_observed_restoration_days"] is not None
     }
     return {
+        # A MODEL count: facilities whose modelled exposure is still above the scoring cutoff and
+        # that no usable full-reconstitution report has closed. Not "no restoration report": some
+        # carry a partial-restart or restoration report that did not close the disruption (counted
+        # next), and a struck facility whose modelled exposure has decayed away is not counted
+        # whether or not anyone reported it restored (iteration 23, ESDI-03).
         "unresolved_count": len(unresolved),
+        "unresolved_with_recovery_report": sum(
+            1 for x in unresolved if x["recovery"]["recovery_status"] not in ("impaired", "unknown")),
         "resolved_count": len(resolved),
         "min_median_episodes": MIN_MEDIAN_EPISODES,
         "min_sector_median_episodes": MIN_SECTOR_MEDIAN_EPISODES,
@@ -1556,5 +1591,14 @@ def _coverage_detail(incidents, recovery_by_incident=None):
     }
 
 
+def _heating_exposure(thermal_disrupted_mw, installed_mw, heating):
+    """Thermal generation exposure while the heating season is on. Out of season the question
+    does not apply, so the value is None with its reason in snapshot.effects_null_reasons; it
+    used to be 0.0, a measured zero for something nobody measured (iteration 23, F8)."""
+    return _pct(thermal_disrupted_mw, installed_mw) if heating else None
+
+
 def _pct(part, whole):
-    return round(part / whole * 100, 2) if whole else 0.0
+    """A percentage, or None when there is no denominator. 0.0 would claim a measured zero for a
+    region with no capacity figure at all (Crimea's generation, iteration 23, F8)."""
+    return round(part / whole * 100, 2) if whole else None

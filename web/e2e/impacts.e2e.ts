@@ -70,7 +70,7 @@ test.describe("Impact atlas", () => {
     page.on("request", (r) => { if (FILES.some((f) => r.url().endsWith(`/data/global/${f}`))) asked.push(r.url()); });
     await serveFixture(page);
     await app.open("");
-    await expect(page.getByRole("link", { name: "Impact atlas →" })).toBeVisible();
+    await expect(page.locator("#where-to-explore").getByRole("link", { name: /^Impact Atlas/ })).toBeVisible();
     expect(asked, "home must load none of the impact files").toEqual([]);
 
     await page.locator(".global-nav").getByRole("link", { name: "Impact atlas", exact: true }).click();
@@ -214,7 +214,9 @@ test.describe("Impact atlas", () => {
     const card = cards(page).first();
     await card.getByRole("button", { name: /^Why\?/ }).click();
     const why = card.locator(".conf-panel");
-    await expect(why).toContainText("ordinal score, not a probability");
+    // No total of the points (iteration 23, ECI-15); the category and its components stay.
+    await expect(why).toContainText("they are not a probability");
+    await expect(why).not.toContainText("ordinal score");
     await expect(why).toContainText("It is not a probability, not a measure of severity");
     await expect(why.locator("table tbody tr")).toHaveCount(5);
     await page.keyboard.press("Escape");
@@ -358,7 +360,11 @@ test.describe("Impact atlas", () => {
     const why = second.locator(".conf-panel");
     await expect(why).toContainText("Method status: provisional: thresholds not calibrated.");
     await expect(why).toContainText(/distinct publishers? cited; whether they relay one statement was not reviewed/);
-    await expect(why).toContainText("points: ordinal score, not a probability");
+    await expect(why).toContainText("they are not a probability");
+    // The status is beside the category itself, before any click (iteration 23, F5), with the line
+    // that the category does not cover the cause (ECI-08).
+    await expect(second.locator(".conf-provisional")).toHaveText(/^provisional method/);
+    await expect(second.locator(".conf-scope")).toContainText("It does not cover the cause");
     await expect(why).not.toContainText(/\/\s*100|of 100|\d\s*%/);
   });
 
@@ -396,13 +402,13 @@ test.describe("Impact atlas", () => {
 
   test("the glossary explains the impact terms, with the served definition as the detail", async ({ app, page }) => {
     await openAtlas(page);
-    await page.locator(".global-nav").getByRole("button", { name: "Glossary" }).click();
-    const dialog = page.locator("dialog.glossary-dialog");
+    await page.locator(".global-nav").getByRole("link", { name: "Help", exact: true }).click();
+    const glossary = page.locator("section[aria-labelledby=glossary]");
     for (const term of ["AI involvement", "Attribution", "Attribution confidence", "Evidence confidence", "Impact atlas", "Cyber disruption",
       "Civilian-service impact", "Reported effect", "Claimed", "Assessed", "Attributed", "Disputed"]) {
-      await expect(dialog.getByRole("heading", { name: term, exact: true })).toHaveCount(1);
+      await expect(glossary.getByRole("heading", { name: term, exact: true })).toHaveCount(1);
     }
-    const entry = dialog.locator("#gl-evidence-confidence");
+    const entry = glossary.locator(".help-term").filter({ has: page.locator("#g-evidence-confidence") });
     await entry.locator("summary").click();
     await expect(entry.locator("details p")).toContainText("It is not a probability, not a measure of severity");
   });

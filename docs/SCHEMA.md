@@ -708,15 +708,36 @@ state may be null until it is fetched.
   public event id, **only** in a system outside the campaign rule and never on a withdrawn record;
   the panel links it to `?sys=<id>#ev-<record id>`. Under the rule an item is exactly as before. A
   change may carry `link`: `{system_id, tab}` (`research` or `method`, a tab of the country page,
-  opened by `#tab-<name>`) or `{anchor}` (a section of the home page); never a record.
+  opened by `#tab-<name>`) or `{help}` (a section of the Help page, opened by
+  `?view=help#<section>`; iteration 23 replaced `{anchor}`, which pointed at a home-page section
+  about choosing systems); never a record.
   `impact_layer` is `null` when the build publishes no impact layer, `[]` when it does and nothing
   in it changed, else a list of changes derived from `global/impacts.json` and
   `global/regional_context.json` in the previous and the current build. An impact item is
   `{key, impact_id, date, date_precision, country, sector, timing?, first_published?, from?, to?}`;
-  `timing` is `backfill` (event more than 30 days older than `first_published`), `new_event` or
-  `unknown`. A layer with no predecessor is one change with `first_release: true` and one sentence,
-  never a list of its records. A withdrawn impact record is one `aggregated` sentence: no id, no
+  `timing` is `backfill` (the event's observed end, else the end of its date's period, more than 30
+  days before `first_published`; the same rule as the card's "Historical record added" line since
+  iteration 23), `new_event` or `unknown`. A layer with no predecessor is one change with
+  `first_release: true` and one sentence, never a list of its records; a regional context published
+  for the first time in the same build is its own `regional_context_updated` sentence beside it.
+- **Three "historical" rules, side by side (iteration 23, XL-03).** Each layer tells a backfill from
+  a new event by its own rule, and they are not the same rule. Unifying them would change what each
+  panel calls historical, which is a methodology decision, so they are documented, not merged:
+
+  | Layer | Where | Called historical / backfill when | Month-precision date |
+  |---|---|---|---|
+  | Theatre ledger | `diff_builds._is_new_in_world` | the effective date is before the previous build's `as_of` (no window) | anchored to its first day |
+  | Country records | `whats_new._record_changes` (`all_predate_previous_build`) | every added record's date lies wholly before the previous build's `as_of` (no window) | its last day (iteration 23, XL-04) |
+  | Impact records | `whats_new.impact_timing`, `isHistoricalAddition` | the event ended more than 30 days before `first_published` | its last day | A withdrawn impact record is one `aggregated` sentence: no id, no
   count, nothing about candidates.
+- **Iteration 23 additions.** `system.json` carries `attack_records`: `{region, facility,
+  campaign_covered}` (booleans, never a count) describing what the system's served kinetic and
+  sabotage records carry, or `null` when it serves none; Compare reads it. `global/world.geojson`
+  features carry `a2`, the ISO 3166-1 alpha-2 code every first-level region code of that country
+  starts with (Crimea and Sevastopol: `UA`); the impact gate reads it. `source_health.first_party_roles`
+  is the evidence-confidence method's direct tier (`methodology/evidence_confidence.json`
+  `role_tier`). A served `review.process` that claims an independent review ends with the sentence
+  that every reviewer was a separate session of the same AI model as the researcher.
 - **Evidence confidence on country records (iteration 22).** Each event in
   `systems/<id>/events.json` carries `evidence_confidence`: `{category, label, score, disputed,
   reason, cap, components {directness {tier, points}, origins {count, points, basis}, effect
@@ -734,5 +755,5 @@ state may be null until it is fetched.
   `outside_window` or `not_recorded`. The points are points, never a percentage. `system.json`
   carries `evidence_confidence_summary`: `{by_category, not_assessed, not_assessed_reason,
   method_version, status, statement, note}`, inside the country only; `status` is
-  `"provisional: thresholds not calibrated"` while the method version ends `-draft`. Neither
+  `"provisional: thresholds not calibrated; calibration run 1 (19 November 2026) was performed and did not pass"` while the method version ends `-draft`. Neither
   appears in the manifest or any cross-country file, and neither reaches the theatre's index.

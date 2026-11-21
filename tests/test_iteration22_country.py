@@ -146,7 +146,9 @@ def test_country_overview_of_an_empty_country_says_why_and_prints_no_zero(tmp_pa
         t = r["text"]
         assert "What this page can tell you" in t, sid
         assert r["model"]["published"].startswith("No energy-disruption record is published for "), sid
-        assert "the inclusion rule is strict" in r["model"]["publishedNote"], sid
+        # The rule is a condition, not a finding that nothing qualified (iteration 23, C11).
+        assert "only disruptions that meet the inclusion rule are published" in r["model"]["publishedNote"], sid
+        assert "strict" not in r["model"]["publishedNote"], sid
         assert "No record is not no disruption." in t, sid
         assert not re.search(r"\d", t), f"{sid}: a number on a page with no record: {t}"
         assert not re.search(r"no disruptions|nothing happened", t, re.I), sid
@@ -336,7 +338,10 @@ def test_country_campaign_covered_records_gain_the_chip_and_nothing_else(tmp_pat
                  {"system": _systems()[sid], "events": [{k: v for k, v in e.items() if k != "evidence_confidence"}], "conf": CONF})
     assert "Evidence confidence: High" in out["with"]
     # Only the chip and its disclosure are added.
-    assert out["with"].replace("Evidence confidence: High Why? Evidence confidence: High", "").split() == out["without"].split()
+    # Only the chip, its disclosure and the line that it does not cover the cause are added.
+    from_chip = ("Evidence confidence: High Why? Evidence confidence: High Evidence confidence covers whether this happened "
+                 "and the reported effect. It does not cover the cause or who was responsible.")
+    assert out["with"].replace(from_chip, "").split() == out["without"].split()
 
 
 # ---------------- the impact tab ----------------

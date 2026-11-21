@@ -23,38 +23,35 @@ test.describe("global home", () => {
     await app.open("");
     await expect(page.getByRole("heading", { name: "Energy Disruption Monitor", level: 1 })).toBeVisible();
     const m = await manifest(page);
-    const cards = page.getByRole("article");
-    await expect(cards).toHaveCount(m.systems.length);
-    // Iteration 21: the one indexed system first, as a different kind of view; then the country
-    // systems in the manifest's alphabetical order. Never an order by any figure.
-    const names = await cards.locator("h2").allInnerTexts();
+    // Iteration 23: the systems are rows of the "Where to explore" panel beside the map. The one
+    // indexed system first, as a different kind of view; then the country systems in the manifest's
+    // alphabetical order. Never an order by any figure.
+    const panel = page.locator("#where-to-explore");
+    const names = await panel.locator("a.hp-row[href^='?sys='] .hp-name").allInnerTexts();
     const theatre = m.systems.find((s: { kind: string }) => s.kind === "theatre").name;
     const countries = m.systems.filter((s: { kind: string }) => s.kind === "country").map((s: { name: string }) => s.name);
     expect(names).toEqual([theatre, ...countries]);
     expect(countries).toEqual([...countries].sort());
-    // The comparability statement is on the page, not in a tooltip.
-    await expect(page.getByRole("note")).toContainText("not shown to be safer");
-    // No event counts anywhere on the home page: a number per card reads as a league table.
+    // The comparability rule is stated where the list is, in one line.
+    await expect(panel).toContainText("Never ranked or compared");
+    // No event counts anywhere on the home page: a number per row reads as a league table.
     await expect(page.locator("main")).not.toContainText(/qualifying events/i);
-    // Only the theatre has a headline; every country says it has none.
-    await expect(page.getByRole("article", { name: "Russia, Belarus & Crimea" })).toContainText("Monitored-Area ESDI");
-    for (const s of m.systems.filter((x: { kind: string }) => x.kind === "country")) {
-      await expect(page.getByRole("article", { name: s.name })).toContainText("No index");
-    }
+    // Only the theatre has a headline; the countries are listed under "no index".
+    await expect(panel.locator(".hp-theatre")).toContainText("Monitored-Area ESDI");
+    await expect(panel).toContainText("Country systems · no index");
     const px = await app.mapPixels();
-    expect(px.distinct).toBeGreaterThan(8);
-    // Totals for the countries together, once, outside every card (iteration 17).
+    expect(px.distinct).toBeGreaterThan(3);
+    // Totals for the countries together, once, outside every row (iteration 17), one click away.
+    await page.locator("#fold-corpus > summary").click();
     const totals = page.getByRole("region", { name: "Country record, all countries together" });
     await expect(totals).toContainText(`${m.corpus.records} reported disruptions in ${m.corpus.episodes} episodes`);
     await expect(totals).toContainText(`${m.corpus.research_lanes} source groups`);
-    for (const s of m.systems) {
-      await expect(page.getByRole("article", { name: s.name })).not.toContainText(String(m.corpus.records));
-    }
+    await expect(panel).not.toContainText(String(m.corpus.records));
   });
 
   test("opening a system from the home page pushes history, and Back returns", async ({ app, page }) => {
     await app.open("");
-    await app.button("Open Canada").click();
+    await page.locator("#where-to-explore").getByRole("link", { name: "Canada", exact: true }).click();
     await expect(page).toHaveURL(/[?&]sys=ca\b/);
     await expect(page.getByRole("heading", { name: "Canada", level: 1 })).toBeVisible();
     await app.mapIdle();
@@ -185,7 +182,8 @@ test.describe("country systems", () => {
     await app.mapIdle();
     await page.getByRole("combobox", { name: "Monitored system" }).selectOption("");
     const m = await manifest(page);
-    await expect(page.getByRole("article")).toHaveCount(m.systems.length);
+    // Back on the home, every system is still listed (the panel links each one by its address).
+    await expect(page.locator("#where-to-explore a.hp-row[href^='?sys=']")).toHaveCount(m.systems.length);
   });
 });
 
@@ -282,7 +280,7 @@ test.describe("provenance and coverage (iteration 16)", () => {
     });
     await app.open("?sys=ca");
     const status = page.getByLabel("Research status");
-    await expect(status).toContainText("overdue for a check");
+    await expect(status).toContainText("overdue for a re-check");
     await expect(status.locator(".badge").first()).toHaveText(before);
   });
 
@@ -491,7 +489,9 @@ test.describe("responsive", () => {
         const box = await page.locator("[data-map-state]").boundingBox();
         expect(box!.width).toBeGreaterThan(w * 0.5);
         expect(box!.height).toBeGreaterThan(200);
-        await expect(page.getByRole("combobox", { name: "Monitored system" })).toBeVisible();
+        // The home has no picker since iteration 23: its panel and the search do the job.
+        if (q) await expect(page.getByRole("combobox", { name: "Monitored system", exact: true })).toBeVisible();
+        else await expect(page.locator("#where-to-explore")).toBeVisible();
       });
     }
   }

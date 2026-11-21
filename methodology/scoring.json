@@ -3,11 +3,19 @@
   "index_name": "Energy System Disruption Exposure Index",
   "index_abbreviation": "ESDI",
 
+  "_unread_keys": {
+    "_comment": "Keys in this file that no code reads (iteration 23, red team ESDI-04). Listed so nobody mistakes one for an applied parameter; tests/test_iteration23_theatre.py fails when a key is neither read by the pipeline nor listed here. 'descriptive' keys document the index; 'not_applied' keys are parameters the scorer does NOT apply, and applying any of them would change the index (an owner decision).",
+    "descriptive": ["version", "index_name", "index_abbreviation", "what_this_measures"],
+    "not_applied": ["recovery.resolved_statuses", "recovery.partial_operations_floor",
+                    "recovery_precedence.display_only_states", "status_multipliers"]
+  },
+
   "what_this_measures": [
     "ESDI measures DISRUPTION EXPOSURE, not measured capacity loss.",
-    "For each sector it answers: what share of the installed base sits at facilities",
-    "disrupted recently enough to still be plausibly impaired, weighted by how strong",
-    "the evidence is and how long ago it happened.",
+    "For each capacity-based sector it answers: what share of the installed base sits at",
+    "facilities disrupted recently enough to still be plausibly impaired, weighted by how",
+    "strong the evidence is and how long ago it happened. Transmission has no capacity base",
+    "and is scored instead as an event-burden count against a saturation point.",
     "It is NOT a claim about actual lost throughput or generation. Open reporting",
     "almost never states how much capacity a given strike removed, and this project",
     "does not invent that number. Where a source does quantify the loss, the figure is",
@@ -70,7 +78,7 @@
     },
     "resolved_statuses": ["repaired"],
     "partial_operations_floor": 0.5,
-    "_partial_note": "When a source reports partial operations resumed but not full reconstitution, impairment is held no lower than this until full reconstitution evidence arrives -- a restart is not a return to full capability."
+    "_partial_note": "NOT READ BY ANY CODE AND NOT APPLIED (see _unread_keys): resolved_statuses and partial_operations_floor are left over from an earlier model. A partial restart is display only (recovery_precedence) and holds no floor under impairment; a facility is closed only by a fully_reconstituted record. Applying the floor would change the index, which is an owner decision."
   },
 
   "campaign_publication": {

@@ -1,7 +1,7 @@
 # Evidence Confidence v2: calibration run 2 plan
 
 Iteration 22 closure. **Preparation only.** Nothing here has been run. Evidence Confidence stays
-`2.0-draft` and is served as `provisional: thresholds not calibrated`; the theatre's multiplier is
+`2.0-draft` and is served as `provisional: thresholds not calibrated; calibration run 1 (19 November 2026) was performed and did not pass`; the theatre's multiplier is
 untouched whatever this run shows (`docs/EVIDENCE_CONFIDENCE_V2.md` §8).
 
 **If no human reviewer from outside the build is available, the packet is prepared and the run

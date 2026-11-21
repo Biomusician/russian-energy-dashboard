@@ -18,6 +18,10 @@
  *  - `?view=impacts`      the Impact Atlas (iteration 22): the cross-country corpus of reviewed
  *                         impact records. Its filters travel as `f.<id>=` parameters, which no
  *                         other view owns. `sys`, `group` and `compare` win.
+ *  - `?view=help`         the reader's Help page (iteration 23); a section is the hash,
+ *                         `?view=help#evidence-confidence`. Same precedence as the atlas. The old
+ *                         glossary link `?help=glossary` (and `&term=<id>`) is rewritten in place to
+ *                         `?view=help#glossary` (`#g-<id>`), so a link shared before keeps working.
  *  - a bare URL: the global home.
  *
  *  Nothing here reads a value from the query string as an object key, so `sys=constructor`
@@ -25,6 +29,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { HELP_VIEW } from "./help/anchors";
 
 export type Route =
   | { view: "home" }
@@ -32,7 +37,8 @@ export type Route =
   | { view: "country"; id: string }
   | { view: "group"; id: string }
   | { view: "compare"; ids: string[] }
-  | { view: "impacts" };
+  | { view: "impacts" }
+  | { view: "help" };
 
 /** At most this many systems side by side: past four a table of prose stops being readable. */
 export const MAX_COMPARE = 4;
@@ -60,7 +66,9 @@ export function routeFor(search: string): Route {
   if (group) return { view: "group", id: group };
   // getAll: `?compare=us&compare=ca` reads as `?compare=us,ca` instead of silently losing one.
   if (p.has("compare")) return { view: "compare", ids: compareIdsFrom(p.getAll("compare").join(",")) };
-  if ((p.get("view") ?? "").trim().toLowerCase() === IMPACTS_VIEW) return { view: "impacts" };
+  const view = (p.get("view") ?? "").trim().toLowerCase();
+  if (view === IMPACTS_VIEW) return { view: "impacts" };
+  if (view === HELP_VIEW || p.get("help") === "glossary") return { view: "help" };
   if (THEATRE_KEYS.some((k) => p.has(k))) return { view: "theatre" };
   return { view: "home" };
 }
@@ -123,11 +131,28 @@ export function navigateTo(query: string) {
   window.dispatchEvent(new Event(CHANGE));
 }
 
+/** Where an old glossary link now points: `?help=glossary&term=esdi` -> `?view=help#g-esdi`.
+ *  Null for any other address, and for one a system, group or comparison claims first (those
+ *  win, as they do over `view=`). Other parameters are dropped: the glossary dialog had none. */
+export function legacyHelpUrl(search: string, hash: string): string | null {
+  const p = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+  if (p.get("help") !== "glossary" || routeFor(search).view !== "help") return null;
+  const term = (p.get("term") ?? "").trim().toLowerCase();
+  const anchor = /^[a-z0-9-]+$/.test(term) ? `g-${term}` : hash.replace(/^#/, "") || "glossary";
+  return `?view=${HELP_VIEW}#${anchor}`;
+}
+
+/** Rewrite an old glossary address in place (no new history entry), before any view reads it. */
+function redirectLegacyHelp() {
+  const to = legacyHelpUrl(window.location.search, window.location.hash);
+  if (to) window.history.replaceState(null, "", `${window.location.pathname}${to}`);
+}
+
 /** The current route, kept in step with Back/Forward and with navigate(). */
 export function useRoute(): Route {
-  const [route, setRoute] = useState(() => routeFor(window.location.search));
+  const [route, setRoute] = useState(() => { redirectLegacyHelp(); return routeFor(window.location.search); });
   useEffect(() => {
-    const update = () => setRoute(routeFor(window.location.search));
+    const update = () => { redirectLegacyHelp(); setRoute(routeFor(window.location.search)); };
     window.addEventListener("popstate", update);
     window.addEventListener(CHANGE, update);
     return () => {

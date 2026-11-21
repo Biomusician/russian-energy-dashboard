@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import SystemSwitcher from "../SystemSwitcher";
 import { GlobalNavBar } from "../GlobalNav";
+import { LearnMore } from "../help/LearnMore";
 import { PanelBoundary } from "../../components/ViewBoundary";
 import { RecordFilterBar } from "../RecordFilterBar";
 import {
@@ -14,6 +15,7 @@ import { localISODate } from "../../freshness";
 import { fmtDate } from "../../data";
 import { ImpactCard } from "./ImpactCard";
 import { loadConfidenceMethod, loadImpacts } from "./load";
+import { REVIEWERS_SAME_MODEL } from "../reviewText";
 import { attempts as attemptsOf, disruptions, monthHeading } from "./model";
 import {
   PAGE, activePreset, atlasFilterDefs, atlasPresets, corpusSummary, countriesPresent, groupByMonth, presenceCodes, presetCount,
@@ -170,7 +172,7 @@ function AtlasBody({ payload, method }: { payload: ImpactsPayload; method: Confi
         "Documented attempts with no reported service disruption are listed apart on the site and are not in this file.",
         ...(payload.research.limitations ?? []),
       ],
-      columns: IMPACT_COLUMNS, fields: IMPACT_FIELDS,
+      columns: IMPACT_COLUMNS, fields: IMPACT_FIELDS, confidenceStatus: method?.status ?? null,
     });
     downloadBlob(new Blob([text], { type: "text/plain;charset=utf-8" }), readmeFilename(name));
     setExportMsg(`Saved ${readmeFilename(name)}.`);
@@ -189,11 +191,11 @@ function AtlasBody({ payload, method }: { payload: ImpactsPayload; method: Confi
           {summary.first && summary.last && <>{" · "}records from {fmtDate(summary.first)} to {fmtDate(summary.last)}</>}
           {" · "}research last run {summary.researched ? fmtDate(summary.researched) : "not recorded"}
         </p>
-        <p className="small dim atlas-bias" role="note">{BIAS_NOTE}</p>
+        <p className="small dim atlas-bias" role="note">{BIAS_NOTE} <LearnMore anchor="impact-records" /></p>
         <details className="atlas-what small">
           <summary>What this is / is not</summary>
-          <p><strong>It is</strong> a reviewed, expanding corpus: each record passed three independent reviews before it
-            was published, and says what service was affected, what kind of cause is reported, who is publicly said to
+          <p><strong>It is</strong> a reviewed, expanding corpus: each record passed three separate reviews before it
+            was published ({REVIEWERS_SAME_MODEL.charAt(0).toLowerCase() + REVIEWERS_SAME_MODEL.slice(1, -1)}), and says what service was affected, what kind of cause is reported, who is publicly said to
             be responsible and how firmly, and how strong the public evidence is.</p>
           <p><strong>It is not:</strong></p>
           <ul>{payload.caveats.map((c) => <li key={c}>{c}</li>)}</ul>
@@ -264,7 +266,7 @@ function AtlasBody({ payload, method }: { payload: ImpactsPayload; method: Confi
             </span>
           </RecordFilterBar>
           <p className="small dim record-export-note">The CSV holds the records shown here, after the filters. “About this file” downloads
-            a note that explains its columns and limits.</p>
+            a note that explains its columns and limits. <LearnMore anchor="exports" /></p>
           {exportMsg && <p className="small" role="status">{exportMsg}</p>}
           <p className="small dim atlas-bias atlas-bias-short" role="note">{BIAS_SHORT}</p>
 

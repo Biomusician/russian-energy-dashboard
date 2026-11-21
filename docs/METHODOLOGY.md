@@ -13,14 +13,19 @@ That file is the single source of truth; this document explains it.
 > enough to still be plausibly impaired, weighted by evidence strength, cause, and
 > elapsed time.
 
+That definition holds for the sectors with a capacity base. Transmission has none: its part
+of the headline is a voltage-weighted count of disrupted facilities against a saturation
+point (§3), so the headline as a whole is a weighted mix of capacity shares and one
+event-burden figure, not a single capacity share.
+
 ### Why exposure and not capacity loss
 
 The brief asked for "estimated capacity unavailable". We cannot honestly produce it.
 
 Open reporting on strikes against Russian energy infrastructure reliably states *that*
 a facility was hit and *when*. It very rarely states how much throughput was removed or
-for how long. Of 127 region-assigned events in the current dataset, **zero** carry a
-quantified capacity effect from their sources.
+for how long. Only a handful of the events in the current dataset carry a quantified
+capacity effect from their sources (the live count is in [CURRENT_STATE.md](CURRENT_STATE.md)).
 
 Three options were available:
 
@@ -106,7 +111,7 @@ test for this.
 | Sector | Base | Source |
 |---|---|---|
 | Refining | **tracked refinery base** (current figure in [CURRENT_STATE.md](CURRENT_STATE.md)) | National inventory: Wikipedia's *List of oil refineries* plus a sourced curated supplement, audited in iteration 2. A `refinery_reconciliation` block reports it as a share of the national crude nameplate reference, an explicit lower bound — not padded toward the reference with unlike facilities. (The iteration-2 figures, 280.6 MTPA and 85% of ~330, are historical.) |
-| Electric generation | **219,992 MW** | Sum of WRI plant capacities inside the AOI (thermal + hydro + nuclear + other), capacity basis like refining |
+| Electric generation | **installed MW in the AOI** (current figure in [CURRENT_STATE.md](CURRENT_STATE.md)) | Sum of WRI plant capacities inside the AOI (thermal + hydro + nuclear + other), capacity basis like refining |
 | Transmission | **event-burden, not capacity** | No open capacity denominator exists. A voltage-weighted count of disrupted substations/lines is scored against a documented **saturation constant of 8 weighted concurrent events = 100**. Network inventory (substations, lines) is *context, not a denominator*; the measure is never expressed as "% offline" |
 | Oil logistics | Refining base (proxy) | No published throughput denominator exists; flagged as a proxy in the emitted metadata |
 | Gas, coal | *none* | Excluded from the composite |
@@ -208,8 +213,11 @@ Used only when no observed or estimated evidence exists.
 These are **assumptions, not measurements**, and remain the single largest lever on any
 score where no evidence exists. They were set so the implied half-lives match the
 original MVP model (keeping the index continuous) — a refinery unit hit today is ~50%
-"still impaired" at ~6 weeks and ~10% at ~5 months, broadly consistent with reported
-timelines. No systematic dataset of Russian repair durations was consulted because none
+"still impaired" at ~6 weeks and ~10% at ~5 months. Whether that matches reported repair
+timelines is untested: the few observed refinery restorations in the corpus are much
+shorter than 150 days (the per-class median is in [CURRENT_STATE.md](CURRENT_STATE.md)), and
+the published horizon sweep shows how far the headline moves with this assumption. Whether
+to change the horizons is an open owner decision. No systematic dataset of Russian repair durations was consulted because none
 is openly available. **Replacing these with curated observed durations is the highest-
 value model improvement**, and the framework now makes each such replacement visible as
 an "observed" record.
@@ -331,9 +339,14 @@ from "we have no data". Hence the explicit null.
 5. **Month-precision dates are anchored to the first of the month** for decay
    arithmetic. The precision is preserved on the record and shown in the UI.
 
-6. **Attribution is reported, never asserted.** Events from strike reporting carry
+6. **Attribution is reported, never asserted.** Events from the strike table carry
    `attribution_confidence = "probable"`, reflecting media reporting of responsibility
-   rather than independent confirmation.
+   rather than independent confirmation. Curated events carry a hand-set label
+   (`confirmed`, `probable` or `possible`) with no test of independent confirmation behind
+   it; most of the curated "confirmed" labels rest on a single article. The label is not
+   read by the score, and the dashboard shows every theatre attribution as *reported*,
+   never as confirmed (iteration 23). An event with no reported attribution carries
+   `not_applicable`.
 
 7. **Unenumerated event series are counted, not invented.** Where a source says a
    facility was hit "at least 16 times" without listing dates, only the extractable
@@ -344,8 +357,12 @@ from "we have no data". Hence the explicit null.
 
 ## 8. Coverage
 
-The dashboard states its own coverage in the top ribbon: **127 enumerated events
-against a reported total of 305** (~42%).
+The dashboard states its own coverage in the top ribbon: enumerated oil-sector strikes
+against the benchmark's reported total (the live figures are in
+[CURRENT_STATE.md](CURRENT_STATE.md)). The numerator counts only strikes dated on or before
+the end of the benchmark's last period, read from the table's own period label; strikes
+recorded after it are outside the ratio and counted separately (iteration 23). Counting them
+made the ratio rise with every build without any new benchmark.
 
 The benchmark comes from the source article's own tabulation of reported strikes on
 Russian oil facilities by war year. It is used only to state coverage and is never an

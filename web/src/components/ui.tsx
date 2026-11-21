@@ -221,6 +221,7 @@ export function EventRow({
   showRegion?: boolean;
   regionName?: string;
 }) {
+  const attribution = theatreAttribution(incident.attribution, incident.attribution_confidence);
   return (
     <div className="event">
       <div className="event-top">
@@ -250,9 +251,9 @@ export function EventRow({
         )}
         {showRegion && regionName && <span className="tag">{regionName}</span>}
       </div>
-      {incident.attribution === "reported_ukrainian_strike" && (
+      {attribution && (
         <div style={{ fontSize: 10.5, color: "var(--text-faint)", marginTop: 4 }}>
-          Attribution: reported Ukrainian strike ({incident.attribution_confidence}) — reported, not independently confirmed
+          {attribution.line}
         </div>
       )}
       {incident.notes && (
@@ -275,6 +276,22 @@ export function EventRow({
       )}
     </div>
   );
+}
+
+/** Reader words for a theatre incident's attribution (iteration 23, C6 / F6 / XL-06).
+ *
+ *  The curated file's `attribution_confidence` is a label typed by hand with no test of
+ *  independent confirmation behind it: 38 curated strikes, most resting on one article, carried
+ *  "confirmed" and rendered "(confirmed) — reported, not independently confirmed". The label is
+ *  not read by the score. On screen every theatre attribution reads as reported; "possible" and
+ *  "unverified" keep their doubt. Null when no attribution is reported. */
+export function theatreAttribution(
+  attribution: string | null | undefined, confidence: string | null | undefined,
+): { label: string; line: string } | null {
+  if (attribution !== "reported_ukrainian_strike") return null;
+  const doubtful = confidence === "possible" || confidence === "unverified";
+  const label = doubtful ? "Possibly a Ukrainian strike, as reported" : "Reported Ukrainian strike";
+  return { label, line: `Attribution: ${label.charAt(0).toLowerCase()}${label.slice(1)} — media reporting of responsibility, not independent confirmation` };
 }
 
 export function pct(value: number | null | undefined): string {

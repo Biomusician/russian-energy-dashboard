@@ -59,9 +59,14 @@ def render(snapshot, test_count):
         "",
         "## Coverage",
         f"- **Oil-strike benchmark coverage**: {f((cov.get('coverage_ratio') or 0) * 100, 1)}% "
-        f"({cov.get('enumerated_in_this_dataset')} enumerated oil-sector strikes / "
-        f"{cov.get('reported_total_strikes')} reported)",
+        f"({cov.get('enumerated_in_this_dataset')} enumerated oil-sector strikes dated to "
+        f"{cov.get('numerator_window_end') or 'an unread window end'} / "
+        f"{cov.get('reported_total_strikes')} reported; {cov.get('enumerated_after_window')} more "
+        "recorded after the benchmark's last period, outside the ratio)",
         f"- **Total events across all sectors**: {cov.get('total_events_all_sectors')}",
+        f"- **Events stating a quantified capacity effect**: "
+        f"{s.get('incidents_with_quantified_capacity')} of {s.get('incident_total')}",
+        f"- **Generation denominator**: {s.get('denominators', {}).get('electric_generation_mw')} MW",
         "",
         "## Recovery",
         f"- **Observed-restoration episodes (monitored area)**: n = {rs.get('observed_restoration_episodes')}",

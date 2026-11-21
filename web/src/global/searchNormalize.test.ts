@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { matchScore, normalizeForSearch as n } from "./searchNormalize";
 import { searchEntries, systemEntries, groupEntries, CONCEPT_ENTRIES, VIEW_ENTRIES, theatreRegionEntries, countryRegionEntries } from "./searchIndex";
 import type { Manifest } from "./manifest";
-import { GLOSSARY } from "./glossary";
+import { GLOSSARY } from "./help/glossary";
+import { GLOSSARY_DETAIL } from "./help/glossaryDetail";
 
 // Every way the same Arabic/Persian letter is typed on common keyboards.
 const VARIANTS: [string, string[]][] = [
@@ -149,9 +150,9 @@ describe("glossary", () => {
     }
     for (const g of GLOSSARY) {
       expect(g.plain.length).toBeGreaterThan(40);
-      expect(g.detail.length).toBeGreaterThan(40);
+      expect(GLOSSARY_DETAIL[g.id].detail.length).toBeGreaterThan(40);
       // Reader copy: no build vocabulary.
-      expect(`${g.plain} ${g.detail}`).not.toMatch(/iteration|payload|pipeline|\.json|D-\d\d/i);
+      expect(`${g.plain} ${GLOSSARY_DETAIL[g.id].detail}`).not.toMatch(/iteration|payload|pipeline|\.json|D-\d\d/i);
     }
   });
 });

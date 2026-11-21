@@ -27,10 +27,10 @@ import {
   loadRegionalExplanations, titleCase,
 } from "../data";
 import { assessFreshness, localDayOf } from "../freshness";
-import { excludedSectorEventsText } from "../indexText";
+import { excludedSectorEventsText, horizonSensitivityText } from "../indexText";
 import { readerText } from "../global/readerText";
 import { severityColor } from "../palette";
-import { EvidenceChip, RecoveryLine, hostOf } from "./ui";
+import { EvidenceChip, RecoveryLine, hostOf, theatreAttribution } from "./ui";
 
 export type InspectTarget =
   | { kind: "headline" }
@@ -283,6 +283,15 @@ function HeadlineView({ bundle, onDrill }: { bundle: Bundle; onDrill: (t: Inspec
         )}
       </Block>
 
+      {/* Iteration 23 (ESDI-02): the largest sensitivity the build serves, shown first. The
+          smaller ones below (excluded sectors at zero, no transmission) were here alone, so the
+          panel explaining the number left out the assumption most of it rests on. */}
+      {horizonSensitivityText(bundle.snapshot.recovery_horizon_sensitivity) && (
+        <Block title="The assumption most of this number rests on" tone="warn">
+          <p className="horizon-sensitivity">{horizonSensitivityText(bundle.snapshot.recovery_horizon_sensitivity)}</p>
+        </Block>
+      )}
+
       <Block title="Why the weights are not the published weights">
         <p>{h.renormalisation_note}</p>
         <table className="mini">
@@ -345,7 +354,7 @@ function SectorView({
 
   return (
     <>
-      <Block title={`${label} — ${fmtNum(e.value, 2)}`}>
+      <Block title={`${label} — ${e.value != null ? fmtNum(e.value, 2) : "not scored"}`}>
         {e.proxy_warning && <div className="proxy-warn">{e.proxy_warning}</div>}
         <ZeroExplanation basis={e.zero_basis} note={e.zero_note} raw={e.raw_value} />
         {e.denominator ? (
@@ -414,7 +423,7 @@ function SectorView({
                              onClick={() => onDrill({ kind: "facility", assetId: c.asset_id })} />
               ))}
             </div>
-            <Reconciles sum={e.sum_of_contributions} value={e.value} />
+            {e.value != null && <Reconciles sum={e.sum_of_contributions} value={e.value} />}
           </>
         )}
       </Block>
@@ -454,7 +463,7 @@ function FacilityRow({
  *  shows its raw value. */
 function ZeroExplanation({
   basis, note, raw,
-}: { basis: ZeroBasis; note: string | null; raw: number }) {
+}: { basis: ZeroBasis; note: string | null; raw: number | null }) {
   if (!basis) return null;
   // Both of these are zeros that mean "we cannot measure this", not "nothing happened" — the
   // reading a reader is most likely to get wrong, so both are flagged.
@@ -464,7 +473,7 @@ function ZeroExplanation({
     <div className={`zero-basis ${alarming ? "warn" : ""}`}>
       <span className="flag">{basis.replace(/_/g, " ").toLowerCase()}</span>
       <p>{note}</p>
-      {basis === "COVERED_SECTOR_SIGNAL_ROUNDS_TO_ZERO" && (
+      {basis === "COVERED_SECTOR_SIGNAL_ROUNDS_TO_ZERO" && raw != null && (
         <p className="mono small">raw value {raw.toExponential(2)} — not zero</p>
       )}
     </div>
@@ -702,6 +711,7 @@ function IncidentView({
   const episodeId = useEpisodeFor(incidentId);
   const inc: Incident | undefined = bundle.incidents.find((i) => i.incident_id === incidentId);
   if (!inc) return <Unavailable />;
+  const attribution = theatreAttribution(inc.attribution, inc.attribution_confidence);
 
   // Capacity fields are shown ONLY where the source stated one. An em-dash here is a real
   // finding: most open reporting never says how much capacity an event removed.
@@ -727,7 +737,9 @@ function IncidentView({
           <dt>Date precision</dt>
           <dd>{inc.date_precision === "month" ? "month only" : "exact day"}</dd>
           <dt>Attribution</dt>
-          <dd>{titleCase(inc.attribution)} <span className="small">({inc.attribution_confidence})</span></dd>
+          <dd>{attribution
+            ? <>{attribution.label} <span className="small">(media reporting of responsibility, not independent confirmation)</span></>
+            : titleCase(inc.attribution)}</dd>
           <dt>Confidence</dt><dd>{inc.confidence}</dd>
           {inc.status && <><dt>Status</dt><dd>{titleCase(inc.status)}</dd></>}
           {quantified.map(([k, v]) => <span key={k + v}><dt>{k}</dt><dd className="mono">{v}</dd></span>)}
@@ -1043,7 +1055,7 @@ const PARTICIPATION_COPY: Record<string, { label: string; blurb: string }> = {
   },
   not_scored: {
     label: "Not in the index",
-    blurb: "Excluded from the composite and its weight redistributed. Documented strikes here " +
+    blurb: "Excluded from the composite and its weight redistributed. Any events recorded here " +
            "are NOT counted. Excluded is not zero.",
   },
 };

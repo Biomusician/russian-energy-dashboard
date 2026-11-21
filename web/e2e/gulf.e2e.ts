@@ -83,27 +83,24 @@ test.describe("Gulf group", () => {
     expect(m.groups.gcc.members).toHaveLength(6);
   });
 
-  test("the home page filters by group and opens the Gulf overview, and Back returns", async ({ app, page }) => {
+  test("the home page shows the Gulf littoral from the manifest and opens its overview, and Back returns", async ({ app, page }) => {
+    // Iteration 23: no group filter on the home. Gulf membership is a quiet tag on each member's
+    // row, "Show on map" selects the group, and its card lists the members and opens the overview.
+    // GCC and OPEC stay membership fields, never a home grouping.
     await app.open("");
     const m = await manifest(page);
     const name = (id: string) => m.systems.find((s: { id: string }) => s.id === id).name;
-    const filter = page.getByLabel("Filter the system cards by group");
-    const cards = page.getByRole("region", { name: "Monitored systems" }).getByRole("article");
-    await expect(cards).toHaveCount(m.systems.length);
+    const panel = page.locator("#where-to-explore");
+    const tagged = await panel.locator("a.hp-row:has(.hp-tag) .hp-name").allInnerTexts();
+    expect(tagged).toEqual(m.groups.gulf_littoral.members.map(name));
+    expect(tagged).toEqual([...tagged].sort());
+    await expect(panel).not.toContainText(/\bGCC\b|\bOPEC\b/);
+    await panel.getByRole("button", { name: /Show on map/ }).click();
+    const card = page.locator(".sel-card");
+    await expect(card.locator(".sel-links a")).toHaveText(m.groups.gulf_littoral.members.map(name));
+    await expect(card).toContainText("not the GCC and not OPEC");
 
-    await filter.selectOption("gulf_littoral");
-    await expect(cards).toHaveCount(8);
-    const shown = await cards.locator("h2").allInnerTexts();
-    expect(shown).toEqual([...shown].sort());
-    expect(shown).toEqual(m.groups.gulf_littoral.members.map(name));
-
-    await filter.selectOption("gcc");
-    await expect(cards).toHaveCount(6);
-    await expect(page.getByRole("article", { name: "Iran" })).toHaveCount(0);
-    await expect(page.getByRole("article", { name: "Iraq" })).toHaveCount(0);
-    await expect(page.locator(".map-control-row").filter({ has: filter })).toContainText("Iran and Iraq are not members");
-
-    await app.button("Open the Gulf littoral overview").click();
+    await card.getByRole("link", { name: "Open the Gulf littoral overview" }).click();
     await expect(page).toHaveURL(/[?&]group=gulf\b/);
     await expect(page.getByRole("heading", { name: "Gulf littoral overview", level: 1 })).toBeVisible();
     await page.goBack();

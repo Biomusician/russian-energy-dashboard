@@ -24,7 +24,7 @@ const EMPTY_STYLE: maplibregl.StyleSpecification = {
 
 /** The layers that mark what the reader is pointing at or has chosen. They belong to this screen
  *  and this reader, so an exported image leaves them out (see `withoutHighlight`). */
-export const HIGHLIGHT_LAYERS = ["sel", "hl"];
+export const HIGHLIGHT_LAYERS = ["sel", "hl", "sel-cover", "hl-cover", "locator"];
 
 /** A copy of a map style with the reader's own selection and hover marks removed. */
 export function withoutHighlight(style: maplibregl.StyleSpecification): maplibregl.StyleSpecification {
@@ -33,6 +33,41 @@ export function withoutHighlight(style: maplibregl.StyleSpecification): maplibre
 
 const FIT_PADDING = 24;
 const NONE = "\u0000";
+const NO_FEATURE: maplibregl.ExpressionSpecification = ["==", ["get", "a3"], NONE];
+
+/** A filter matching features whose `expr` is `value`, or is any of `value` when it is a list. */
+function matchFilter(expr: unknown, value: string | string[] | null | undefined): maplibregl.ExpressionSpecification {
+  if (Array.isArray(value)) return (value.length ? ["in", expr, ["literal", value]] : NO_FEATURE) as maplibregl.ExpressionSpecification;
+  return ["==", expr, value ?? NONE] as maplibregl.ExpressionSpecification;
+}
+
+/** Diagonal lines for the occupied hatch, drawn once into an image: a texture, not a colour, so the
+ *  status is not carried by colour alone. */
+function hatchImage(color: string): ImageData | null {
+  const n = 8;
+  const c = document.createElement("canvas");
+  c.width = n; c.height = n;
+  const g = c.getContext("2d");
+  if (!g) return null;
+  g.strokeStyle = color;
+  g.lineWidth = 1.5;
+  g.beginPath();
+  g.moveTo(0, n); g.lineTo(n, 0);
+  g.moveTo(-n / 2, n / 2); g.lineTo(n / 2, -n / 2);
+  g.moveTo(n / 2, n * 1.5); g.lineTo(n * 1.5, n / 2);
+  g.stroke();
+  return g.getImageData(0, 0, n, n);
+}
+
+function setLocator(m: maplibregl.Map, at: [number, number] | null | undefined) {
+  const src = m.getSource("locator") as maplibregl.GeoJSONSource | undefined;
+  src?.setData({ type: "FeatureCollection",
+                 features: at ? [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: at } }] : [] });
+}
+
+function reducedMotion(): boolean {
+  return !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+}
 
 export interface SimpleMapProps {
   data: GeoJSON.FeatureCollection;
@@ -40,10 +75,25 @@ export interface SimpleMapProps {
   fill: maplibregl.ExpressionSpecification | string;
   /** Feature property that identifies a feature for picking and selection. */
   idProp: string;
-  selected?: string | null;
+  /** One id, or (iteration 23) several, such as a regional group's members. */
+  selected?: string | string[] | null;
   /** A lighter, dashed mark for what the reader is pointing at in a list beside the map. */
-  highlighted?: string | null;
-  onPick?: (id: string | null, props: Record<string, unknown> | null) => void;
+  highlighted?: string | string[] | null;
+  /** Iteration 23: what `selected` and `highlighted` are compared with, when it is not simply the
+   *  `idProp` property (the home compares a feature's system, else its country). */
+  matchExpr?: unknown;
+  /** Iteration 23: draw the hover and selection marks around the whole matched unit, with its
+   *  internal borders hidden, so a unit of many polygons reads as one shape. */
+  dissolve?: boolean;
+  /** Iteration 23: features drawn with a hatch (a filter), in this colour. Null draws none. */
+  hatch?: { filter: unknown; color: string } | null;
+  /** Iteration 23: a ring at this point, for a place too small to see at the current zoom. */
+  locator?: [number, number] | null;
+  /** Iteration 23: move the view to this box whenever it changes. */
+  fitTo?: [number, number, number, number] | null;
+  /** `how.touch` says whether the click came from a finger, where the caller may preview rather
+   *  than open. */
+  onPick?: (id: string | null, props: Record<string, unknown> | null, how?: { touch: boolean }) => void;
   /** A filter on which features may be picked (e.g. only monitored countries). */
   pickable?: (props: Record<string, unknown>) => boolean;
   /** Features drawn with a thick outline: a mark independent of fill colour. */
@@ -130,6 +180,9 @@ export default function SimpleMap(props: SimpleMapProps) {
     m.on("movestart", () => { el.dataset.mapState = "moving"; });
     m.on("idle", () => {
       el.dataset.mapState = "idle";
+      // Where the view rests (iteration 23), so a browser test can find a place on the canvas.
+      const c = m.getCenter();
+      el.dataset.mapView = `${c.lng},${c.lat},${m.getZoom()}`;
       // Idle before the polygons were handed over is an empty style at rest, not a drawn map.
       if (m.getSource("polys")) dispatch({ type: "idle" });
     });
@@ -137,25 +190,51 @@ export default function SimpleMap(props: SimpleMapProps) {
     m.on("error", (e) => dispatch({ type: "failed", message: e.error?.message ?? "the map reported an error" }));
 
     m.on("load", () => {
-      const { idProp } = latest.current;
-      m.addSource("polys", { type: "geojson", data: latest.current.data });
+      const cur = latest.current;
+      const expr = cur.matchExpr ?? ["get", cur.idProp];
+      m.addSource("polys", { type: "geojson", data: cur.data });
       m.addLayer({ id: "fill", type: "fill", source: "polys",
-                   paint: { "fill-color": latest.current.fill as maplibregl.ExpressionSpecification,
+                   paint: { "fill-color": cur.fill as maplibregl.ExpressionSpecification,
                             "fill-opacity": 0.92 } });
       m.addLayer({ id: "line", type: "line", source: "polys",
                    paint: { "line-color": "#2a3846", "line-width": 0.6 } });
-      if (latest.current.outlineFilter) {
-        m.addLayer({ id: "outline", type: "line", source: "polys", filter: latest.current.outlineFilter,
+      if (cur.outlineFilter) {
+        m.addLayer({ id: "outline", type: "line", source: "polys", filter: cur.outlineFilter,
                      paint: { "line-color": "#f4f7fb", "line-width": 2 } });
       }
-      // Above the outline, so a chosen member is visible even where every member is outlined.
-      m.addLayer({ id: "hl", type: "line", source: "polys",
-                   filter: ["==", ["get", idProp], latest.current.highlighted ?? NONE],
-                   paint: { "line-color": "#9beaf7", "line-width": 2.5, "line-dasharray": [2, 1] } });
-      m.addLayer({ id: "sel", type: "line", source: "polys",
-                   filter: ["==", ["get", idProp], latest.current.selected ?? NONE],
-                   paint: { "line-color": "#2ad4ee", "line-width": 3.5 } });
-      latest.current.onMap?.(m);
+      if (cur.dissolve) {
+        // Neutral marks, never a data colour: dashed for pointing, solid and wider for chosen. Each
+        // line is drawn twice as wide and the unit's own fill laid back over it, which hides the
+        // inner half of the line and every border inside the unit (iteration 23).
+        m.addLayer({ id: "hl", type: "line", source: "polys", filter: matchFilter(expr, cur.highlighted),
+                     paint: { "line-color": "#e6edf5", "line-width": 4, "line-dasharray": [2, 1.2] } });
+        m.addLayer({ id: "hl-cover", type: "fill", source: "polys", filter: matchFilter(expr, cur.highlighted),
+                     paint: { "fill-color": cur.fill as maplibregl.ExpressionSpecification, "fill-opacity": 0.92 } });
+        m.addLayer({ id: "sel", type: "line", source: "polys", filter: matchFilter(expr, cur.selected),
+                     paint: { "line-color": "#ffffff", "line-width": 6 } });
+        m.addLayer({ id: "sel-cover", type: "fill", source: "polys", filter: matchFilter(expr, cur.selected),
+                     paint: { "fill-color": cur.fill as maplibregl.ExpressionSpecification, "fill-opacity": 0.92 } });
+      } else {
+        // Above the outline, so a chosen member is visible even where every member is outlined.
+        m.addLayer({ id: "hl", type: "line", source: "polys", filter: matchFilter(expr, cur.highlighted),
+                     paint: { "line-color": "#9beaf7", "line-width": 2.5, "line-dasharray": [2, 1] } });
+        m.addLayer({ id: "sel", type: "line", source: "polys", filter: matchFilter(expr, cur.selected),
+                     paint: { "line-color": "#2ad4ee", "line-width": 3.5 } });
+      }
+      if (cur.hatch !== undefined) {
+        const img = hatchImage(cur.hatch?.color ?? "#cccccc");
+        if (img) m.addImage("hatch", img);
+        m.addLayer({ id: "hatch", type: "fill", source: "polys",
+                     filter: (cur.hatch?.filter ?? NO_FEATURE) as maplibregl.ExpressionSpecification,
+                     paint: { "fill-pattern": "hatch" } });
+      }
+      if (cur.locator !== undefined) {
+        m.addSource("locator", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+        m.addLayer({ id: "locator", type: "circle", source: "locator",
+                     paint: { "circle-radius": 13, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 } });
+        setLocator(m, cur.locator);
+      }
+      cur.onMap?.(m);
     });
 
     m.on("click", "fill", (e) => {
@@ -163,7 +242,10 @@ export default function SimpleMap(props: SimpleMapProps) {
       const p = (f?.properties ?? null) as Record<string, unknown> | null;
       const { pickable, onPick, idProp } = latest.current;
       if (!p || (pickable && !pickable(p))) return;
-      onPick?.(String(p[idProp]), p);
+      // A finger on a phone or tablet: the caller may show what was tapped before opening it.
+      const ev = e.originalEvent as PointerEvent | undefined;
+      const touch = ev?.pointerType === "touch" || ev?.pointerType === "pen" || !!window.matchMedia?.("(hover: none)").matches;
+      onPick?.(String(p[idProp]), p, { touch });
     });
     m.on("mousemove", "fill", (e) => {
       const p = e.features?.[0]?.properties as Record<string, unknown> | undefined;
@@ -182,24 +264,62 @@ export default function SimpleMap(props: SimpleMapProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt]);
 
+  // Compared as text: a caller that builds a new list on every render does not refilter the map.
+  const selKey = JSON.stringify(props.selected ?? null);
+  const hlKey = JSON.stringify(props.highlighted ?? null);
   useEffect(() => {
     const m = map.current;
     if (!m || !m.getLayer("sel")) return;
-    m.setFilter("sel", ["==", ["get", props.idProp], props.selected ?? NONE]);
-  }, [props.selected, props.idProp]);
+    const f = matchFilter(props.matchExpr ?? ["get", props.idProp], props.selected);
+    m.setFilter("sel", f);
+    if (m.getLayer("sel-cover")) m.setFilter("sel-cover", f);
+  }, [selKey, props.idProp]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const m = map.current;
     if (!m || !m.getLayer("hl")) return;
-    m.setFilter("hl", ["==", ["get", props.idProp], props.highlighted ?? NONE]);
-  }, [props.highlighted, props.idProp]);
+    const f = matchFilter(props.matchExpr ?? ["get", props.idProp], props.highlighted);
+    m.setFilter("hl", f);
+    if (m.getLayer("hl-cover")) m.setFilter("hl-cover", f);
+  }, [hlKey, props.idProp]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // The colour may change after load (a metric selector); the map is not recreated for it.
   useEffect(() => {
     const m = map.current;
     if (!m || !m.getLayer("fill")) return;
     m.setPaintProperty("fill", "fill-color", props.fill as maplibregl.ExpressionSpecification);
+    for (const id of ["hl-cover", "sel-cover"]) {
+      if (m.getLayer(id)) m.setPaintProperty(id, "fill-color", props.fill as maplibregl.ExpressionSpecification);
+    }
   }, [props.fill]);
+
+  // Iteration 23: what changes with the home map's mode, applied without recreating the map.
+  const outlineKey = JSON.stringify(props.outlineFilter ?? null);
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !m.getLayer("outline") || !props.outlineFilter) return;
+    m.setFilter("outline", props.outlineFilter);
+  }, [outlineKey]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  const hatchKey = JSON.stringify(props.hatch?.filter ?? null);
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !m.getLayer("hatch")) return;
+    m.setFilter("hatch", (props.hatch?.filter ?? NO_FEATURE) as maplibregl.ExpressionSpecification);
+  }, [hatchKey]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  const locatorKey = JSON.stringify(props.locator ?? null);
+  useEffect(() => {
+    const m = map.current;
+    if (m && m.getSource("locator")) setLocator(m, props.locator ?? null);
+  }, [locatorKey]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fitKey = JSON.stringify(props.fitTo ?? null);
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !props.fitTo) return;
+    m.fitBounds(props.fitTo, { padding: FIT_PADDING * 2, maxZoom: 5.5, duration: reducedMotion() ? 0 : 600 });
+  }, [fitKey]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const zoomBy = (d: number) => { const m = map.current; if (m) (d > 0 ? m.zoomIn() : m.zoomOut()); };
   const reset = () => map.current?.fitBounds(latest.current.bounds, { padding: FIT_PADDING });

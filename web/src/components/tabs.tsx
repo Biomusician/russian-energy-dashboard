@@ -12,9 +12,10 @@ import {
 import { Bar, EventRow, EvidenceChip, RecoveryLine, Sparkline, Tile } from "./ui";
 import { NO_REPORT_LABEL, noReportMeaning } from "../statusDelay";
 
-/** What a "no restoration report" count means, for this bundle's publication date and policy. */
-function noReport(bundle: Bundle): string {
-  return noReportMeaning(bundle.snapshot.as_of, bundle.snapshot.campaign_policy);
+/** What a still-in-the-index count means, for this bundle's publication date and policy.
+ *  `withReport` only for the monitored-area count, the one figure the build breaks down. */
+function noReport(bundle: Bundle, withReport?: number | null): string {
+  return noReportMeaning(bundle.snapshot.as_of, bundle.snapshot.campaign_policy, withReport);
 }
 
 export interface TabProps {
@@ -57,6 +58,12 @@ function genBasisHint(bundle: Bundle): string | undefined {
   return `${b.source} — ${b.census_vintage}. ${b.known_bias ?? ""} `
     + "Regional generation intensity is computed against this base, so it carries the same "
     + "vintage limitation. The denominator audit in the project documentation gives the detail.";
+}
+
+/** A region's installed generation. Null is "no capacity figure": the census lists no plant there,
+ *  which for Crimea is a gap in the census, not an absence of power plants (iteration 23, F8). */
+export function installedText(mw: number | null | undefined): string {
+  return mw == null ? "no capacity figure in the census" : `${mw.toLocaleString("en-GB")} MW`;
 }
 
 function KV({ k, v, hint }: { k: string; v: React.ReactNode; hint?: string }) {
@@ -305,7 +312,7 @@ export function OverviewTab(p: TabProps) {
           <KV
             k={NO_REPORT_LABEL}
             v={<>{bundle.snapshot.recovery_stats.unresolved_count}<span style={{ color: "var(--amber)", fontSize: 10 }}> · not timeline-linked</span></>}
-            hint={`Counted at the publication date; it does not follow the timeline. ${noReport(bundle)}`}
+            hint={`Counted at the publication date; it does not follow the timeline. ${noReport(bundle, bundle.snapshot.recovery_stats.unresolved_with_recovery_report)}`}
           />
           <KV k="Refining base tracked" v={`${fmtNum(bundle.snapshot.denominators.refining_mtpa, 0)} MTPA`} />
         </Block>
@@ -364,7 +371,7 @@ export function OverviewTab(p: TabProps) {
             marker repeated on every recovery figure read as "these facilities, now" (it. 21). */}
         <KV k="Facilities with a reported disruption" v={region.struck_facility_count} />
         <KV k={NO_REPORT_LABEL} v={region.unresolved_count} hint={noReport(bundle)} />
-        <KV k="Modelled reconstitution backlog" v={`${region.reconstitution_backlog_days} d`} hint="an assumed repair time per facility type, minus the days since each disruption, summed over facilities with no restoration report by the cut-off; an assumption, not a report of any facility" />
+        <KV k="Modelled reconstitution backlog" v={`${region.reconstitution_backlog_days} d`} hint="an assumed repair time per facility type, minus the days since each disruption, summed over facilities still in the index with no full-restoration report by the cut-off; an assumption, not a report of any facility" />
         <div className="no-report-note" style={{ fontSize: 10, color: "var(--text-faint)", marginTop: 4, lineHeight: 1.45 }}>
           The last three rows are counted at the publication date, not the timeline date. {noReport(bundle)}
         </div>
@@ -387,7 +394,7 @@ export function OverviewTab(p: TabProps) {
       <Block title="Network & sectors" right={<button className="ghost" style={{ padding: "1px 6px", fontSize: 10 }} onClick={() => p.onTab("Effects")}>effects ›</button>}>
         <KV
           k="Installed generation"
-          v={`${region.installed_mw.toLocaleString("en-GB")} MW`}
+          v={installedText(region.installed_mw)}
           hint={genBasisHint(bundle)}
         />
         <KV k="Tracked substations (≥220 kV)" v={region.tracked_substations} />
@@ -463,7 +470,7 @@ const RANK_METRICS: Metric[] = [
   {
     key: "unresolved",
     label: NO_REPORT_LABEL,
-    desc: "Modelled as not yet recovered.",
+    desc: "A model count: facilities whose modelled exposure is still above the index's cut-off and that no full-restoration report has closed.",
     value: (code, c) => c.bundle.snapshot.regions[code]?.unresolved_count ?? 0,
     current: true,
     noReport: true,
@@ -471,7 +478,7 @@ const RANK_METRICS: Metric[] = [
   {
     key: "backlog",
     label: "Modelled reconstitution backlog (days)",
-    desc: "An assumed repair time per facility type (or a sourced estimate where one exists), minus the days since each disruption, summed over the region's facilities with no restoration report by the cut-off. An assumption, not a report of any facility.",
+    desc: "An assumed repair time per facility type (or a sourced estimate where one exists), minus the days since each disruption, summed over the region's facilities still in the index with no full-restoration report by the cut-off. An assumption, not a report of any facility.",
     value: (code, c) => c.bundle.snapshot.regions[code]?.reconstitution_backlog_days ?? 0,
     current: true,
     noReport: true,
@@ -548,7 +555,7 @@ export function RankingsTab(p: TabProps) {
       <div className="ranking-picker">
         <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
           <button className="ghost" aria-pressed={true}>Ranked</button>
-          <button className="ghost" onClick={() => setView("burden")} title="Time since each region's reported disruptions with no restoration report by the cut-off, in columns">Time since disruption ›</button>
+          <button className="ghost" onClick={() => setView("burden")} title="Time since each region's disruptions still in the index with no full-restoration report by the cut-off, in columns">Time since disruption ›</button>
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <select className="ghost" value={metricKey} onChange={(e) => setMetricKey(e.target.value)}>
@@ -604,13 +611,13 @@ export function RankingsTab(p: TabProps) {
 }
 
 /** Time since disruption: a transparent sortable table (columns, not a composite) of each
- *  region's reported disruptions with no restoration report by the status cut-off. It was
+ *  region's disruptions still in the index with no full-restoration report by the status cut-off. It was
  *  "Active burden ... right now", which a first-time reader took for a list of facilities down
  *  today (iteration 21); during the campaign a recent restoration is not yet used. */
 function ActiveBurdenTable({ p, onBack }: { p: TabProps; onBack: () => void }) {
   type Col = { key: string; label: string; get: (r: RegionSnapshot) => number };
   const cols: Col[] = [
-    { key: "unresolved_count", label: "No report", get: (r) => r.unresolved_count },
+    { key: "unresolved_count", label: "Still in index", get: (r) => r.unresolved_count },
     { key: "oldest_unresolved_days", label: "Days since, oldest", get: (r) => r.oldest_unresolved_days },
     { key: "median_unresolved_age_days", label: "Days since, median", get: (r) => r.median_unresolved_age_days ?? 0 },
     { key: "reconstitution_backlog_days", label: "Modelled backlog (d)", get: (r) => r.reconstitution_backlog_days },
@@ -630,7 +637,7 @@ function ActiveBurdenTable({ p, onBack }: { p: TabProps; onBack: () => void }) {
           <button className="ghost" aria-pressed={true}>Time since disruption</button>
         </div>
         <div className="ranking-desc">
-          Per region: how many reported disruptions have no restoration report by the cut-off,
+          Per region: how many disruptions are still in the index with no full-restoration report by the cut-off,
           and how many days have passed since them. Click a column to sort; click a region to
           select it. No hidden composite. {noReport(p.bundle)}
         </div>
@@ -664,7 +671,7 @@ function ActiveBurdenTable({ p, onBack }: { p: TabProps; onBack: () => void }) {
           </tbody>
         </table>
       </div>
-      {rows.length === 0 && <div className="empty">No reported disruption is without a restoration report by the cut-off.</div>}
+      {rows.length === 0 && <div className="empty">No disruption is still in the index without a full-restoration report by the cut-off.</div>}
       <Note>Days are counted from the reported disruption to the publication date. Modelled backlog = an assumed repair time per facility type (or a sourced estimate) minus those days, summed. A transparent view, not a score, and not the current state of any facility.</Note>
     </div>
   );
@@ -803,7 +810,7 @@ export function ReconstitutionTab(p: TabProps) {
 
       <div className="tiles">
         <Tile label={NO_REPORT_LABEL} value={rs.unresolved_count} />
-        <Tile label="Restoration reported" value={rs.resolved_count} />
+        <Tile label="Full restoration reported, still in the index" value={rs.resolved_count} />
         <Tile
           label="Observed-restoration evidence"
           value={rs.observed_restoration_episodes}
@@ -886,7 +893,7 @@ export function ReconstitutionTab(p: TabProps) {
           <div key={sector} className="kv" style={{ alignItems: "center" }}>
             <span className="k" style={{ flex: 1 }}>
               {titleCase(sector)}
-              <span style={{ color: "var(--text-faint)", fontSize: 10 }}> · {s.unresolved}/{s.disrupted_facilities} with no restoration report</span>
+              <span style={{ color: "var(--text-faint)", fontSize: 10 }}> · {s.unresolved}/{s.disrupted_facilities} with no full-restoration report</span>
             </span>
             <span className="v">
               {s.median_observed_restoration_days != null
@@ -1077,7 +1084,7 @@ export function EffectsTab(p: TabProps) {
             <KV k="Region population" v={region.population_millions != null ? `${fmtNum(region.population_millions, 1)} m` : "—"} hint="population POTENTIALLY exposed — not population actually affected" />
             <KV
           k="Installed generation"
-          v={`${region.installed_mw.toLocaleString("en-GB")} MW`}
+          v={installedText(region.installed_mw)}
           hint={genBasisHint(bundle)}
         />
             <KV k="Tracked substations / HV lines" v={`${region.tracked_substations} / ${region.tracked_transmission_lines}`} />
@@ -1206,8 +1213,8 @@ export function CostsTab(p: TabProps) {
       <Block title="Reconstitution burden — the non-monetary cost">
         <div style={{ fontSize: 10.5, color: "var(--text-dim)", marginBottom: 8, lineHeight: 1.5 }}>
           Where repair-cost figures are absent, the cost signal is the
-          <em> reconstitution burden</em>: how many struck facilities have no public restoration
-          report by the cut-off, and how long since they were struck. The count and the days since
+          <em> reconstitution burden</em>: how many struck facilities are still in the index with
+          no full-restoration report by the cut-off, and how long since they were struck. The count and the days since
           come from public strike dates; the backlog in days is <strong>modelled</strong>: an
           assumed repair time per facility type minus the days elapsed, not a report of any
           facility's state. {noReport(bundle)}

@@ -10,8 +10,9 @@ The tests are `tests/test_iteration22_confidence.py` and, for the methodology re
 `tests/test_iteration22_redteam.py`.
 
 **Status: provisional.** The method version is `2.0-draft` and the method is served with
-`status: "provisional: thresholds not calibrated"`. One blind calibration has been
-run and the thresholds did not pass it (Results, below). A test ties the two: while the version ends `-draft`, no document may say otherwise.
+`status: "provisional: thresholds not calibrated; calibration run 1 (19 November 2026) was performed and did not pass"`. One blind calibration has been
+run and the thresholds did not pass it (Results, below); the served status says so itself, and is
+shown beside every category since iteration 23. A test ties the two: while the version ends `-draft`, no document may say otherwise.
 
 ## 1. What it is, and is not
 
@@ -137,9 +138,12 @@ population alone cannot calibrate the thresholds (§5).
 **A claim is a claim, in every shape it takes.** A source is the actor's own claim when it is typed
 `actor_self_claim`, when it declares `attribution_basis: "actor_self_claim"` (a wire or outlet
 report of the claim: the shape reviewers were given), or when its publisher or origin is the named
-actor, whatever role it was given (`attribution.actor`, plus optional `actor_aliases` for a
-government body announcing its own operation). A name of two or more words also matches inside a
-longer publisher name ("Group X News"); a one-word name must match whole.
+actor, whatever role it was given (`attribution.actor`). A name of two or more words also matches
+inside a longer publisher name ("Group X News"); a one-word name must match whole. The module can
+also read a list of other names for the actor (`actor_aliases`), but the impact record contract does
+not accept that field and the gate refuses it (`ATTRIBUTION_FIELDS`, iteration 23, T-C6), so on a
+published record only `attribution.actor` is matched. A government body announcing its own
+operation is matched when the record names that body as the actor.
 
 **A relay of a claim is the claim.** A source that `relays` a claim (or a relay of one, to any
 depth), and, wherever a claim is among the sources, any restating role (wire, media, specialist

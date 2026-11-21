@@ -3,7 +3,8 @@ import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 import { NO_FILTERS, activeFilters, applyFilters, decodeFilters, describeFilters, encodeFilters, toggleChoice, withFilterQuery } from "../recordFilters";
 import { IMPACT_COLUMNS, impactRecordsCsv } from "../recordCsv";
-import { GLOSSARY, glossaryDetail } from "../glossary";
+import { GLOSSARY } from "../help/glossary";
+import { GLOSSARY_DETAIL, glossaryDetail } from "../help/glossaryDetail";
 import { hrefFor, impactsHref, routeFor } from "../router";
 import { CONCEPT_ENTRIES, IMPACT_ENTRIES, VIEW_ENTRIES, regionalContextEntries, searchEntries } from "../searchIndex";
 import type { Manifest } from "../manifest";
@@ -243,20 +244,20 @@ describe("glossary", () => {
       const g = GLOSSARY.find((x) => x.id === id);
       expect(g, id).toBeTruthy();
       expect(g!.plain.length).toBeGreaterThan(60);
-      expect(`${g!.plain} ${g!.detail}`).not.toMatch(/cyberwar|crippled|\bconfirmed\b/i);
+      expect(`${g!.plain} ${GLOSSARY_DETAIL[g!.id].detail}`).not.toMatch(/cyberwar|crippled|\bconfirmed\b/i);
     }
   });
 
   it("uses the served definition as the detail once the method has loaded, and its own wording before", () => {
     const g = GLOSSARY.find((x) => x.id === "evidence-confidence")!;
-    expect(glossaryDetail(g, null)).toBe(g.detail);
-    expect(glossaryDetail(g, method)).toContain(method.statement);
+    expect(glossaryDetail(g.id, null)).toBe(GLOSSARY_DETAIL[g.id].detail);
+    expect(glossaryDetail(g.id, method)).toContain(method.statement);
     const attr = GLOSSARY.find((x) => x.id === "attribution-confidence")!;
-    expect(glossaryDetail(attr, method)).toContain(method.attribution.meanings.NOT_ESTABLISHED);
+    expect(glossaryDetail(attr.id, method)).toContain(method.attribution.meanings.NOT_ESTABLISHED);
     const unknown = GLOSSARY.find((x) => x.id === "attribution")!;
-    expect(glossaryDetail(unknown, method)).toContain("Not established");
+    expect(glossaryDetail(unknown.id, method)).toContain("Not established");
     // A method that lacks what an entry reads falls back to the entry's own wording.
-    expect(glossaryDetail(g, { statement: "", categories: [], attribution: { labels: {}, meanings: {} }, labels: {} })).toBeTruthy();
-    expect(glossaryDetail(attr, { statement: "", categories: [], attribution: { labels: {}, meanings: {} }, labels: {} })).toBe(attr.detail);
+    expect(glossaryDetail(g.id, { statement: "", categories: [], attribution: { labels: {}, meanings: {} }, labels: {} })).toBeTruthy();
+    expect(glossaryDetail(attr.id, { statement: "", categories: [], attribution: { labels: {}, meanings: {} }, labels: {} })).toBe(GLOSSARY_DETAIL[attr.id].detail);
   });
 });

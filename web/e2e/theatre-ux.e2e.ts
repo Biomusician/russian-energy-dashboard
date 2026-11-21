@@ -54,7 +54,7 @@ test.describe("where am I, and the way home", () => {
       await expect(crumbs.locator('[aria-current="page"]')).toHaveText(theatre.name);
       await expect(page).toHaveTitle(`Energy Disruption Monitor — ${theatre.name}`);
       await crumbs.getByRole("link", { name: "Home" }).click();
-      await expect(page.getByRole("heading", { name: "Monitored systems" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Where to explore" })).toBeVisible();
       await expect(page).not.toHaveURL(/sys=/);
       await page.goBack();
       await app.mapIdle();
@@ -450,7 +450,7 @@ test.describe("recovery figures say what is known, and whose they are", () => {
     const banned = /awaiting reconstitution|Median impairment age|latest build|Counted, never named|ready · no figures yet|Unresolved disruptions/;
 
     await panel.getByRole("tab", { name: /recovery/i }).click();
-    await expect(panel).toContainText("No restoration report by the cut-off");
+    await expect(panel).toContainText("Still in the index, no full-restoration report by the cut-off");
     await expect(panel).toContainText(`only once it is ${days} days old`);
     await expect(panel).toContainText("not a list of facilities that are down now");
     await expect(panel).not.toContainText(banned);
@@ -463,7 +463,7 @@ test.describe("recovery figures say what is known, and whose they are", () => {
 
     await panel.getByRole("tab", { name: /rankings/i }).click();
     await expect(panel).not.toContainText(/impaired, but no capacity figure/);
-    await panel.locator(".ranking-picker select").selectOption({ label: "No restoration report by the cut-off" });
+    await panel.locator(".ranking-picker select").selectOption({ label: "Still in the index, no full-restoration report by the cut-off" });
     await expect(panel.locator(".ranking-desc")).toContainText(`only once it is ${days} days old`);
     await panel.getByRole("button", { name: "Time since disruption ›" }).click();
     await expect(panel.locator(".burden-table")).toContainText("Days since, median");

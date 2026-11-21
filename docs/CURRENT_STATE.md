@@ -7,11 +7,13 @@
 - **as_of**: 2026-11-20
 - **Headline ESDI (monitored area)**: 5.87
 - **Uncovered-sector zero-assumption sensitivity**: 4.99
-- **Sector exposures**: refining 12.63, electric_generation 0.03, transmission 3.06, oil_logistics 1.30, gas 0.00, coal 0.00
+- **Sector exposures**: refining 12.63, electric_generation 0.03, transmission 3.06, oil_logistics 1.30, gas —, coal —
 
 ## Coverage
-- **Oil-strike benchmark coverage**: 50.2% (153 enumerated oil-sector strikes / 305 reported)
+- **Oil-strike benchmark coverage**: 38.0% (116 enumerated oil-sector strikes dated to 2026-06-30 / 305 reported; 37 more recorded after the benchmark's last period, outside the ratio)
 - **Total events across all sectors**: 184
+- **Events stating a quantified capacity effect**: 0 of 184
+- **Generation denominator**: 219992 MW
 
 ## Recovery
 - **Observed-restoration episodes (monitored area)**: n = 9

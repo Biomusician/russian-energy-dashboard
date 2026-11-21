@@ -181,7 +181,10 @@ test.describe("why no score, and the research-preview definition", () => {
   });
 
   test("the research-preview badge explains itself on click, with the one shared definition", async ({ app, page }) => {
-    await app.open("");
+    // Iteration 23: maturity is no longer on the home's list of places; it is on each system's page.
+    // On the page itself the badge leads the caveat line a phone shows first.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await app.open("?sys=bh");
     const badge = page.getByRole("button", { name: /^Research preview/ }).first();
     await expect(badge).toHaveAttribute("aria-expanded", "false");
     await badge.click();

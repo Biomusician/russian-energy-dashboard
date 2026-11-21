@@ -76,7 +76,8 @@ export interface EvidenceConfidence {
     origins: { count: number; points: number; basis?: string | null };
     effect: { specificity: string | null; points: number };
     opened: { points: number };
-    contemporaneous: { points: number };
+    /** `dated`: at_the_time, later_formal_account, outside_window or not_recorded (SCHEMA.md). */
+    contemporaneous: { points: number; dated?: string | null };
   };
   reasons: string[];
 }

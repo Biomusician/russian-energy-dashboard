@@ -1,7 +1,8 @@
 import { test, expect, pixelStats } from "./fixtures";
 
 /**
- * The world energy context in a real browser (iteration 18).
+ * The world energy context in a real browser (iteration 18; since iteration 23 the "National energy"
+ * mode of the home map, and the national figures in the selection card and the collapsed table).
  *
  * THE WORLD PICTURE IS NOT THE WORLD INCIDENT CORPUS. These tests read the emitted payloads so the
  * context-only examples come from the data, then assert what the reader sees: a coloured country
@@ -22,26 +23,38 @@ function contextOnly(c: { countries: Row[] }, n: number): Row[] {
     .slice(0, n);
 }
 
-const SEARCH = "Find a country";
+const SEARCH = /Search systems, regions and terms/;
 
+/** Select a country on the home map through the one search (iteration 23: the map's own "Find a
+ *  country" box is gone; a country without a system selects exactly as a click on it would). */
 async function openCard(page: import("@playwright/test").Page, name: string) {
-  await page.getByRole("searchbox", { name: SEARCH }).fill(name);
-  await page.getByRole("button", { name, exact: true }).first().click();
+  const box = page.getByRole("combobox", { name: SEARCH });
+  await box.fill(name);
+  await page.getByRole("listbox", { name: "Search results" }).getByRole("option").filter({ hasText: name }).first().click();
+}
+
+/** The national-energy map mode, where the iteration-18 context map lives since iteration 23. */
+async function energyMode(app: import("./fixtures").App) {
+  await app.page.getByRole("button", { name: "National energy" }).click();
+  await app.mapIdle();
 }
 
 test.describe("world energy context", () => {
   test("the legend states metric, year and unit, and states monitoring separately", async ({ app, page }) => {
     await app.open("");
-    const c = await ctx(page);
     const legend = page.getByLabel("Map legend");
+    // The default mode colours monitoring alone, in one colour that is not a measure.
+    await expect(legend).toContainText("Monitored system: the theatre or a country system (one colour; not a measure)");
+    await energyMode(app);
+    const c = await ctx(page);
     await expect(legend).toContainText(`Total primary energy production — ${c.comparison_year}`);
     await expect(legend).toContainText("quadrillion Btu");
     await expect(legend).toContainText("Thick outline: systematically monitored");
-    await expect(page.locator(".home-lead")).toContainText("Other countries are shown only for national energy context");
   });
 
   test("every map metric keeps a unit and the comparison year in the legend, and redraws", async ({ app, page }) => {
     await app.open("");
+    await energyMode(app);
     const c = await ctx(page);
     const select = page.getByLabel("Map metric");
     const legend = page.getByLabel("Map legend");
@@ -60,66 +73,85 @@ test.describe("world energy context", () => {
       const requests: string[] = [];
       const seen = (r: import("@playwright/test").Request) => requests.push(r.url());
       page.on("request", seen);
-      await openCard(page, row.name);
-      const card = page.getByRole("region", { name: `${row.name}: national energy context` });
-      await expect(card).toContainText("Not systematically monitored for disruptions");
+      // Keyboard only: a mouse left over a panel row when the result list closes fires a hover, and a
+      // hover over a system link prefetches that view's code by design. This test is about the card.
+      const box = page.getByRole("combobox", { name: SEARCH });
+      await box.fill(row.name);
+      const option = page.getByRole("listbox", { name: "Search results" }).getByRole("option").filter({ hasText: row.name }).first();
+      await expect(option).toBeVisible();
+      while (!(await option.getAttribute("aria-selected"))?.startsWith("true")) await box.press("ArrowDown");
+      await box.press("Enter");
+      const card = page.locator(".sel-card");
+      await expect(card.getByRole("heading", { name: row.name })).toBeVisible();
+      await expect(card).toContainText(/Not a monitored country system|No dedicated monitored system/);
+      // The national figures are one tap away, with their year and source.
+      await card.getByText("National energy context").click();
       await expect(card).toContainText(String(c.comparison_year));
       await expect(card).toContainText("U.S. Energy Information Administration");
       // Not a dossier and not a zero.
       await expect(card).not.toContainText(/0 (events|incidents|records|disruptions)/i);
-      await expect(card).not.toContainText(/no index/i);
+      await expect(card).not.toContainText(/no index|no disruption record/i);
       page.off("request", seen);
-      expect(requests.filter((u) => /systems\/|assets|pipeline|refiner/.test(u))).toEqual([]);
-      await app.button(`Close ${row.name}`).click();
+      expect(requests.filter((u) => /systems\/|assets|pipeline|refiner|impacts\.json/.test(u))).toEqual([]);
+      await page.keyboard.press("Escape");
       await expect(card).toHaveCount(0);
     }
   });
 
-  test("Search names a context country as context, and a monitored one as monitored", async ({ app, page }) => {
+  test("Search names a context country by what choosing it does, and a monitored one as monitored", async ({ app, page }) => {
     await app.open("");
     const c = await ctx(page);
     const row = contextOnly(c, 1)[0];
-    await page.getByRole("searchbox", { name: SEARCH }).fill(row.name);
-    await expect(page.locator(".search-hits")).toContainText("Not systematically monitored");
-    await page.getByRole("searchbox", { name: SEARCH }).fill("Canada");
-    await expect(page.locator(".search-hits")).toContainText("Monitored system");
+    const box = page.getByRole("combobox", { name: SEARCH });
+    const options = page.getByRole("listbox", { name: "Search results" }).getByRole("option");
+    await box.fill(row.name);
+    await expect(options.filter({ hasText: row.name }).first()).toContainText("selects it on the map");
+    await box.fill("Canada");
+    await expect(options.first()).toContainText("Monitored country system · no index · opens it");
   });
 
-  test("a context click then a monitored system leaves no stale state", async ({ app, page }) => {
+  test("a context selection then a monitored system leaves no stale state, and Back restores the selection", async ({ app, page }) => {
     await app.open("");
     const c = await ctx(page);
     const row = contextOnly(c, 1)[0];
     await openCard(page, row.name);
-    await app.button("Open Canada").click();
+    await page.locator("#where-to-explore").getByRole("link", { name: "Canada", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Canada", level: 1 })).toBeVisible();
-    await expect(page.getByText("Not systematically monitored for disruptions")).toHaveCount(0);
+    await expect(page.getByText("Not a monitored country system")).toHaveCount(0);
     await page.goBack();
     await app.mapIdle();
-    await expect(page.getByRole("region", { name: `${row.name}: national energy context` })).toHaveCount(0);
+    // Iteration 23: Back lands on the home as the reader left it, with that country still selected.
+    await expect(page.locator(".sel-card").getByRole("heading", { name: row.name })).toBeVisible();
   });
 
-  test("Ukraine's card does not inherit Crimea's note, and Crimea stays described as occupied", async ({ app, page }) => {
+  test("Ukraine's card speaks of Crimea only as Crimea, occupied and monitored in the theatre", async ({ app, page }) => {
     await app.open("");
     await openCard(page, "Ukraine");
-    const card = page.getByRole("region", { name: /Ukraine: national energy context/ });
-    await expect(card).toBeVisible();
-    await expect(card).not.toContainText(/Monitored as a separate unit/);
-    await expect(page.locator(".map-legend-mini")).toContainText(/Crimea is Ukrainian, occupied/);
+    const card = page.locator(".sel-card");
+    await expect(card.getByRole("heading", { name: "Ukraine" })).toBeVisible();
+    await expect(card).toContainText("Crimea and Sevastopol: Internationally recognised as Ukraine; occupied by Russia.");
+    await expect(card.getByRole("link", { name: "Open the Russia, Belarus & Crimea theatre" })).toHaveAttribute("href", "?sys=ru");
+    // Its own state, not the theatre's: impact records only, not a monitored system.
+    await expect(card.locator(".sel-status")).toHaveText("Impact records available · Not a monitored country system");
+    await expect(card.locator(".sel-status")).not.toContainText(/theatre/i);
+    await expect(page.getByLabel("Map legend")).toContainText("Crimea and Sevastopol: Ukrainian territory under Russian occupation");
   });
 
   test("an alias finds a country and a monitored country says so", async ({ app, page }) => {
     await app.open("");
-    await page.getByRole("searchbox", { name: SEARCH }).fill("USA");
-    await expect(page.locator(".search-hits")).toContainText("United States");
-    await expect(page.locator(".search-hits")).toContainText("Monitored system");
-    await page.getByRole("searchbox", { name: SEARCH }).fill("UK");
-    await expect(page.locator(".search-hits li").first()).toContainText("United Kingdom");
+    const box = page.getByRole("combobox", { name: SEARCH });
+    const options = page.getByRole("listbox", { name: "Search results" }).getByRole("option");
+    await box.fill("USA");
+    await expect(options.filter({ hasText: "United States" }).first()).toContainText(/Monitored country system|opens it/);
+    await box.fill("UK");
+    await expect(options.filter({ hasText: "United Kingdom" })).toHaveCount(1);
   });
 
   test("the world profile lists no largest producers and no position", async ({ app, page }) => {
     // Iteration 20 (§80): no "largest producers" list at all, alphabetical or not. The table is
     // alphabetical by default and says what production does not mean.
     await app.open("");
+    await page.locator("#fold-national > summary").click();
     const profile = page.locator(".world-profile");
     await expect(profile).not.toContainText(/largest producers|leading|#1|No\. ?1|first place/i);
     await expect(profile).toContainText("Alphabetical by default");
@@ -156,7 +188,7 @@ test.describe("world energy context", () => {
 
   test("the national table is alphabetical by default and has no disruption column", async ({ app, page }) => {
     await app.open("");
-    await page.getByText(/National figures table/).click();
+    await page.locator("#fold-national > summary").click();
     const table = page.locator(".national-table");
     await expect(table).toBeVisible();
     const first = await table.locator("tbody tr td:first-child").allInnerTexts();
@@ -168,6 +200,7 @@ test.describe("world energy context", () => {
 
   test("the recent list is newest first with no severity sort", async ({ app, page }) => {
     await app.open("");
+    await page.locator("#fold-recent > summary").click();
     const feed = page.getByRole("region", { name: "Recent evidence" });
     await expect(feed).toContainText("Newest first");
     const data = await page.evaluate(() => fetch("/data/global/recent_evidence.json").then((r) => r.json()));
@@ -180,6 +213,7 @@ test.describe("world energy context", () => {
 
   test("data quality separates source window from analyst work and carries no event counts", async ({ app, page }) => {
     await app.open("");
+    await page.locator("#fold-quality > summary").click();
     const panel = page.getByRole("region", { name: "Data quality" });
     await expect(panel).toContainText("Global energy context");
     await expect(panel).not.toContainText(/\d+ (records|events|episodes)\b/i);
@@ -189,8 +223,9 @@ test.describe("world energy context", () => {
 
   test("the context PNG keeps year, source and monitored status", async ({ app, page }) => {
     await app.open("");
+    await energyMode(app);
     const dl = page.waitForEvent("download");
-    await page.locator(".world-context").getByRole("button", { name: "Download PNG" }).click();
+    await page.locator(".home-map").getByRole("button", { name: "Download PNG" }).click();
     const file = await dl;
     expect(file.suggestedFilename()).toMatch(/^global-energy-context-total_production-\d{4}\.png$/);
     const path = await file.path();
@@ -205,9 +240,11 @@ test.describe("world energy context", () => {
     app.allowConsoleError(/Failed to load resource/);
     await page.route("**/data/global/energy_context.json", (r) => r.fulfill({ status: 500, body: "no" }));
     await app.open("");
+    // The default map needs no national figures; asking for them says they are unavailable.
+    await page.getByRole("button", { name: "National energy" }).click();
     await expect(page.getByRole("alert").filter({ hasText: "Global energy context unavailable" })).toBeVisible();
-    await expect(page.getByRole("article")).not.toHaveCount(0);
-    await app.button("Open Canada").click();
+    await expect(page.locator("#where-to-explore a.hp-row")).not.toHaveCount(0);
+    await page.locator("#where-to-explore").getByRole("link", { name: "Canada", exact: true }).click();
     await app.mapIdle();
     await expect(page.getByRole("heading", { name: "Canada", level: 1 })).toBeVisible();
     await page.getByRole("button", { name: "Energy context" }).click();
@@ -217,6 +254,7 @@ test.describe("world energy context", () => {
   test("a malformed context file is refused rather than drawn", async ({ app, page }) => {
     await page.route("**/data/global/energy_context.json", (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ countries: "x" }) }));
     await app.open("");
+    await page.getByRole("button", { name: "National energy" }).click();
     await expect(page.getByRole("alert").filter({ hasText: "Global energy context unavailable" })).toBeVisible();
   });
 
@@ -224,8 +262,9 @@ test.describe("world energy context", () => {
     app.allowConsoleError(/Failed to load resource/);
     await page.route("**/data/systems/us/*", (r) => r.fulfill({ status: 500, body: "no" }));
     await app.open("");
+    await energyMode(app);
     await expect(page.getByLabel("Map legend")).toContainText("Total primary energy production");
-    await app.button("Open United States").click();
+    await page.locator("#where-to-explore").getByRole("link", { name: "United States", exact: true }).click();
     await expect(page.getByRole("alert")).toContainText("could not be loaded");
     await page.getByLabel("Monitored system").selectOption("ca");
     await app.mapIdle();
