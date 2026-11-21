@@ -157,9 +157,19 @@ def test_mu01_every_small_system_gets_one_neutral_marker_and_a_shared_click_is_a
       const idx = hs.indexWorld(input.world);
       const fc = hs.smallSystemMarkers(m);
       const small = fc.features.map((f) => f.properties.system_id);
-      const near = hs.pickMany(fc.features.map((f) => f.properties), m);
-      const one = hs.pickMany([fc.features[0].properties], m);
-      return { fc, small, near, one, card: near && near.kind === "near" ? hs.cardFor(near.key, idx, m) : null,
+      const props = fc.features.map((f) => f.properties);
+      const big = m.systems.find((s) => s.kind === "country" && !small.includes(s.id));
+      const bigProps = { system_id: big.id, name: big.name, status: "normal" };
+      const near = hs.pickMany({ core: props, near: props, under: [] }, m);
+      const one = hs.pickMany({ core: [props[0]], near: props, under: [] }, m);
+      // Off a dot, on a large monitored neighbour: that neighbour, never a choice.
+      const neighbour = hs.pickMany({ core: [], near: props, under: [bigProps] }, m);
+      // On a dot over a neighbour: the dot and the neighbour, as a choice.
+      const onDot = hs.pickMany({ core: [props[0]], near: props, under: [bigProps] }, m);
+      // Off a dot, on the sea: the dots in reach.
+      const sea = hs.pickMany({ core: [], near: props, under: [] }, m);
+      return { fc, small, near, one, big: big.id, neighbour, onDot: onDot.kind === "near" ? hs.unitsOf(onDot.key, m) : null,
+               sea: sea.kind === "near" ? hs.unitsOf(sea.key, m) : null, card: near && near.kind === "near" ? hs.cardFor(near.key, idx, m) : null,
                units: near && near.kind === "near" ? hs.unitsOf(near.key, m) : [] };
     """, served)
     m = served["manifest"]
@@ -173,6 +183,10 @@ def test_mu01_every_small_system_gets_one_neutral_marker_and_a_shared_click_is_a
         assert f["geometry"]["coordinates"] == [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]
     assert out["one"]["kind"] == "one" and out["one"]["props"]["system_id"] == out["small"][0]
     assert out["near"]["kind"] == "near" and sorted(out["units"]) == sorted(out["small"])
+    assert out["neighbour"]["kind"] == "one" and out["neighbour"]["props"]["system_id"] == out["big"], \
+        "a click off a dot on a large monitored place must open that place"
+    assert sorted(out["onDot"]) == sorted([out["small"][0], out["big"]])
+    assert sorted(out["sea"]) == sorted(out["small"])
     names = {s["id"]: s["name"] for s in m["systems"]}
     assert [a["label"] for a in out["card"]["links"]] == sorted(names[s] for s in out["small"]), "a choice is alphabetical"
     assert [a["href"] for a in out["card"]["links"]] == [f"?sys={s}" for s in sorted(out["small"], key=lambda s: names[s])]
@@ -185,7 +199,7 @@ def test_mu01_the_markers_are_drawn_in_the_monitored_colour_in_the_default_mode_
     assert "color: MAP_COLOURS.monitored" in world
     simple = _code("global/SimpleMap.tsx")
     assert 'm.addLayer({ id: "markers-hit", type: "circle"' in simple
-    assert 'near: at("markers-hit")' in simple and "onPickMany([...near, ...under], { touch })" in simple
+    assert 'core: at("markers"), near: at("markers-hit")' in simple and "onPickMany(hits, { touch })" in simple
 
 
 def test_mu02_a_phone_group_zoom_keeps_little_padding_and_show_on_map_scrolls_to_the_map():
@@ -255,7 +269,8 @@ def test_an08_compare_shows_the_record_date_never_the_build_date(tmp_path_factor
             assert cell["kind"] == "not_applicable", s["id"]
         elif s["record_reviewed"]:
             d = s["record_reviewed"]
-            assert cell["text"].endswith(d[:4]) and cell["text"] != re.sub(r"^0", "", s["as_of"]), s["id"]
+            months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            assert cell["text"] == f"{int(d[8:10])} {months[int(d[5:7]) - 1]} {d[:4]}", s["id"]
         else:
             assert cell["text"] == "No qualifying record yet", s["id"]
     assert any(s.get("record_reviewed") and s["record_reviewed"] != s["as_of"] for s in m["systems"]), "nothing to tell apart"
@@ -300,7 +315,7 @@ def test_h09_the_index_and_recovery_help_is_reachable_on_a_phone_and_from_the_in
 
 def test_an09_the_ribbon_peak_is_labelled_as_the_weekly_reconstructions():
     ribbon = _code("components/Ribbon.tsx")
-    assert 'title="The highest point of the weekly reconstruction to date' in ribbon
+    assert "title={`The highest point of the weekly reconstruction to date" in ribbon
     assert ">weekly peak<" in ribbon and "highest value of the index to date" not in ribbon
 
 
@@ -434,4 +449,6 @@ def test_v05_the_source_health_heading_has_room_above_it_on_a_wide_screen():
 def test_v06_v10_every_phone_sideways_scroller_shows_more_to_the_side(rel, selector):
     css = (SRC / rel).read_text(encoding="utf-8")
     rules = re.findall(re.escape(selector) + r" \{([^}]*)\}", css)
-    assert any("mask-image: linear-gradient(to right" in r and "padding-right: 28px" in r for r in rules), selector
+    # Both the standard property and the prefixed one: either alone misses a browser.
+    assert any(re.search(r"(?<!-webkit-)mask-image: linear-gradient\(to right", r) and "-webkit-mask-image: linear-gradient(to right" in r
+               and "padding-right: 28px" in r for r in rules), selector

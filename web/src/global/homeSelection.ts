@@ -383,11 +383,20 @@ export function nearKey(units: string[]): string {
   return `${NEAR}${[...new Set(units)].sort().join(",")}`;
 }
 
-/** What a click on several features means (iteration 23, MU-01): the monitored systems among them.
- *  One system: that system, as an ordinary click. Several: a choice. None: an ordinary click on the
- *  first feature. Whatever else lay under the pointer is reachable by zooming in, the list and the
+/** What lies under a click near the small systems' dots: the dots drawn under the pointer
+ *  (`core`), the dots whose wider reach it is in (`near`), and the one polygon under it (`under`). */
+export interface MapHits { core: Props[]; near: Props[]; under: Props[] }
+
+/** What a click near the dots means (iteration 23, MU-01). On a dot: the dots there and the place
+ *  beneath them. Off a dot but on a monitored place: that place, as an ordinary click, so a tap on
+ *  a large neighbour is never turned into a choice. Off a dot, in its reach, on nothing monitored:
+ *  the dots in reach. Then: one system is that system; several are a choice; none is an ordinary
+ *  click on the first feature. Whatever else was there is reachable by zooming, the list and the
  *  search. */
-export function pickMany(props: Props[], m: Manifest): { kind: "one"; props: Props } | { kind: "near"; key: string } | null {
+export function pickMany(hits: MapHits, m: Manifest): { kind: "one"; props: Props } | { kind: "near"; key: string } | null {
+  const monitored = (list: Props[]) => list.some((p) => systemOf(m, unitOf(p)));
+  const props = hits.core.length > 0 ? [...hits.core, ...hits.under]
+    : monitored(hits.under) ? hits.under : [...hits.near, ...hits.under];
   const systems = [...new Set(props.map(unitOf))].filter((u) => systemOf(m, u));
   if (systems.length > 1) return { kind: "near", key: nearKey(systems) };
   const one = systems.length === 1 ? props.find((p) => unitOf(p) === systems[0]) : props[0];

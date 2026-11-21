@@ -73,7 +73,8 @@ test.describe("the headline and what it means", () => {
       await expect(headline).toContainText(Number(snap.esdi).toFixed(1));
       await expect(headline).toContainText("0–100 exposure index");
       await expect(headline).toContainText("not measured loss");
-      await expect(headline).toContainText(/peak to date \d+\.\d/);
+      // AN-09: the peak is the weekly reconstruction's, and says so.
+      await expect(headline).toContainText(/weekly peak( \(reconstructed\))? \d+\.\d/);
       const why = headline.getByRole("button", { name: /why this number/i });
       within(await why.boundingBox(), size.width, size.height);
       await why.click();

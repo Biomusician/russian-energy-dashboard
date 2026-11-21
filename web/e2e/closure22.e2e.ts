@@ -89,7 +89,7 @@ test.describe("closure: tied newest statements", () => {
 test.describe("closure: Gulf placement rules", () => {
   test("the page says attacks are country level in the impact layer, the admin1 system's own-page rule, and region at most otherwise", async ({ app, page }) => {
     await app.open("?group=gulf");
-    const g = await (await page.request.get("/data/global/gulf.json")).json() as { systems: { name: string; attack_records_placed?: string }[] };
+    const g = await (await page.request.get("/data/global/gulf.json")).json() as { systems: { name: string; attack_records_placed?: string; other_records_placed?: string }[] };
     const rules = page.locator(".precision-rules");
     await expect(rules).toContainText("In the impact records on this page that holds for every country, always.");
     await expect(rules).toContainText("Records that are not attacks are placed by first-level region at most");
@@ -97,7 +97,9 @@ test.describe("closure: Gulf placement rules", () => {
     const cards = page.getByRole("region", { name: "Monitored systems in this view" });
     for (const s of g.systems) {
       const line = cards.getByRole("article", { name: s.name, exact: true }).locator(".attack-placement");
-      await expect(line).toContainText("Other eligible records: first-level region at most.");
+      // Iteration 23 (AN-07): a system that places every record for the country says so.
+      await expect(line).toContainText(s.other_records_placed === "country" ? "Every other record too is recorded for the country as a whole."
+        : "Other eligible records: first-level region at most.");
       await expect(line).toContainText(s.attack_records_placed === "admin1" ? "In the impact records on this page they are country level" : "Attacks and sabotage are recorded for the country as a whole");
     }
   });

@@ -139,8 +139,9 @@ export default function Ribbon({
                 )}
               </span>
               {/* AN-09: the series is a weekly reconstruction (today's evidence and method at weekly
-                  steps), so its highest point is not a value the site published on that date. */}
-              {peak && <span title="The highest point of the weekly reconstruction to date: today's evidence and method applied at weekly steps, not a value the site published on that date.">weekly peak<span className="peak-long"> (reconstructed)</span> <span className="num">{fmtNum(peak.value, 1)}</span> ({fmtDate(peak.date)})</span>}
+                  steps), so its highest point is not a value the site published on that date. On a phone
+                  the date moves to the tooltip, so "weekly" fits the header's cap in a wide font. */}
+              {peak && <span title={`The highest point of the weekly reconstruction to date, at ${fmtDate(peak.date)}: today's evidence and method applied at weekly steps, not a value the site published on that date.`}>weekly peak<span className="peak-long"> (reconstructed)</span> <span className="num">{fmtNum(peak.value, 1)}</span><span className="peak-date"> ({fmtDate(peak.date)})</span></span>}
               <BuildDelta bundle={bundle} isLatest={isLatest} onExplain={onExplain} />
             </p>
             {/* Iteration 16: a past date on this ribbon is today's evidence evaluated at that date,

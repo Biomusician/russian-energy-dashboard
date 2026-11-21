@@ -2,6 +2,7 @@ import { useEffect, useReducer, useRef, useState, type MouseEvent } from "react"
 import maplibregl from "maplibre-gl";
 import { MapLoadIndicator } from "../components/MapLoadIndicator";
 import { MAP_LOAD_INITIAL, mapLoadReducer } from "../mapLoad";
+import type { MapHits } from "./homeSelection";
 import "../styles/map.css";
 
 /** A plain polygon map for the global home, the country views and the regional view.
@@ -100,9 +101,10 @@ export interface SimpleMapProps {
    *  current zoom, each with a wider invisible area around it that takes the click. Each point
    *  carries the same properties as its place's polygons. Null draws none. */
   markers?: { data: GeoJSON.FeatureCollection; color: string } | null;
-  /** A click within reach of a marker: every feature in reach, markers first, then the polygon
-   *  under the pointer. The caller decides between one place and a choice. */
-  onPickMany?: (props: Record<string, unknown>[], how: { touch: boolean }) => void;
+  /** A click within reach of a marker: the markers drawn under the pointer (`core`), the markers
+   *  in reach (`near`) and the polygon under it (`under`). The caller decides between one place and
+   *  a choice. */
+  onPickMany?: (hits: MapHits, how: { touch: boolean }) => void;
   /** `how.touch` says whether the click came from a finger, where the caller may preview rather
    *  than open. */
   onPick?: (id: string | null, props: Record<string, unknown> | null, how?: { touch: boolean }) => void;
@@ -110,8 +112,8 @@ export interface SimpleMapProps {
   pickable?: (props: Record<string, unknown>) => boolean;
   /** Features drawn with a thick outline: a mark independent of fill colour. */
   outlineFilter?: maplibregl.ExpressionSpecification;
-  /** `all`: every feature in reach of the pointer (markers, then the polygon), when there are markers. */
-  onHover?: (props: Record<string, unknown> | null, all?: Record<string, unknown>[]) => void;
+  /** `hits`: what is in reach of the pointer, when a marker is. */
+  onHover?: (props: Record<string, unknown> | null, hits?: MapHits) => void;
   ariaLabel: string;
   attribution: string;
   /** Said over the map when nothing on it is shaded, so an empty map is never read as a quiet one. */
@@ -266,23 +268,24 @@ export default function SimpleMap(props: SimpleMapProps) {
       const at = (layer: string) => (m.getLayer(layer) ? m.queryRenderedFeatures(pt, { layers: [layer] }) : [])
         .map((f) => f.properties as Record<string, unknown>)
         .filter((p) => !!p && (!pickable || pickable(p)));
-      return { near: at("markers-hit"), under: at("fill").slice(0, 1) };
+      return { core: at("markers"), near: at("markers-hit"), under: at("fill").slice(0, 1) };
     };
     m.on("click", (e) => {
       const { onPick, onPickMany, idProp } = latest.current;
-      const { near, under } = reach(e.point);
+      const hits = reach(e.point);
+      const { near, under } = hits;
       // A finger on a phone or tablet: the caller may show what was tapped before opening it.
       const ev = e.originalEvent as PointerEvent | undefined;
       const touch = ev?.pointerType === "touch" || ev?.pointerType === "pen" || !!window.matchMedia?.("(hover: none)").matches;
-      if (near.length > 0 && onPickMany) { onPickMany([...near, ...under], { touch }); return; }
+      if (near.length > 0 && onPickMany) { onPickMany(hits, { touch }); return; }
       const p = near[0] ?? under[0];
       if (p) onPick?.(String(p[idProp]), p, { touch });
     });
     m.on("mousemove", (e) => {
-      const { near, under } = reach(e.point);
-      const all = [...near, ...under];
+      const hits = reach(e.point);
+      const all = [...hits.near, ...hits.under];
       m.getCanvas().style.cursor = all.length ? "pointer" : "";
-      latest.current.onHover?.(all[0] ?? null, near.length ? all : undefined);
+      latest.current.onHover?.(all[0] ?? null, hits.near.length ? hits : undefined);
     });
     m.getCanvas().addEventListener("mouseleave", () => { m.getCanvas().style.cursor = ""; latest.current.onHover?.(null); });
 

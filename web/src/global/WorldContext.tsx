@@ -157,15 +157,15 @@ export default function WorldContext({ world, worldError, manifest, index, mode,
             fitTo={fitTo}
             markers={explore ? markers : null}
             onPick={(_id, p, how) => { if (p) onPick(p, how ?? { touch: false }); }}
-            onPickMany={(list, how) => {
+            onPickMany={(hits, how) => {
               if (!manifest) return;
-              const r = pickMany(list, manifest);
+              const r = pickMany(hits, manifest);
               if (r?.kind === "near") onPickNear(r.key, how);
               else if (r) onPick(r.props, how);
             }}
-            onHover={(p, all) => {
+            onHover={(p, hits) => {
               if (!p || !manifest) { setHover(null); return; }
-              const r = explore && all ? pickMany(all, manifest) : null;
+              const r = explore && hits ? pickMany(hits, manifest) : null;
               if (r?.kind === "near") {
                 const units = unitsOf(r.key, manifest);
                 setHover({ unit: units, text: `${units.map((u) => unitName(u, index, manifest)).sort().join(", ")} · Click to choose one` });
