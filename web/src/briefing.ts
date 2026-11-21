@@ -140,9 +140,10 @@ export const METRIC_CAVEAT: Record<string, string> = {
  *  added the transmission part, which is an event-burden count and not a capacity share. One
  *  string, so the ribbon and the methodology panel cannot drift apart. */
 // METHODOLOGY §1, in two parts so a phone can show the share and keep the weighting for screen
-// readers and "Why this number?" without the header outgrowing its height.
-export const HEADLINE_SHARE = "capacity shares at recently disrupted sites, plus a transmission event-burden count";
-export const HEADLINE_WEIGHTING = "weighted by evidence, cause and elapsed time";
+// readers and "Why this number?" without the header outgrowing its height. "Mostly" is what a
+// phone keeps of the transmission part; the second half names it.
+export const HEADLINE_SHARE = "mostly capacity shares at recently disrupted sites";
+export const HEADLINE_WEIGHTING = "plus a transmission event count, weighted by evidence, cause and elapsed time";
 export const HEADLINE_SCALE = `${HEADLINE_SHARE}, ${HEADLINE_WEIGHTING}`;
 
 export const TRANSMISSION_CAVEAT =

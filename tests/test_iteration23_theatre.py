@@ -276,7 +276,7 @@ def test_the_methodology_panel_says_what_the_model_does(tmp_path_factory):
     """, payload)
     text = _text(html)
     # ESDI-12: the per-event formula names damage severity; reconstitution caps, it does not collapse.
-    assert "damage severity" in text
+    assert "confidence × cause × damage severity × 0.5" in text
     assert "collapses" not in text
     # ESDI-05: the invariance claim was retracted in iteration 13.
     assert "essentially unchanged" not in text and "doesn't systematically bias" not in text
@@ -293,7 +293,7 @@ def test_the_methodology_panel_says_what_the_model_does(tmp_path_factory):
     # C6: theatre attribution is reported, never confirmed.
     assert "never as confirmed" in text
     # ESDI-07: the headline is not one capacity share.
-    assert "event-burden count" in text
+    assert "mostly capacity shares" in text and "plus a transmission event count" in text
     # C1: the coverage numerator states the benchmark's window.
     assert "where the benchmark's table ends" in text
 
@@ -399,6 +399,36 @@ def test_uncovered_sectors_and_missing_denominators_are_null_in_every_served_fil
     assert set(snap["effects_null_reasons"]) >= {"generation_margin", "heating_season_exposure"}
 
 
+def _synthetic_build():
+    """A two-region build from invented records: region RA has a refinery strike and 1,000 MW in
+    the census; region RB has a struck power plant and no census capacity (Crimea's shape)."""
+    from pipeline import build_index as B
+    inc = lambda iid, aid, cls, region: {
+        "incident_id": iid, "asset_id": aid, "asset_class": cls, "region_code": region, "date": "2026-11-01",
+        "date_precision": "day", "cause": "kinetic_strike", "confidence": "confirmed", "status": "damaged",
+        "asset_name": aid, "attribution": "none", "attribution_confidence": "not_applicable"}
+    incidents = [inc("i1", "ref-a", "refinery", "RA"), inc("i2", "plant-b", "power_plant_thermal", "RB")]
+    facilities = [{"asset_id": "ref-a", "asset_class": "refinery", "region_code": "RA", "capacity_mtpa": 10, "name": "A"}]
+    assets = [{"asset_id": "plant-a", "asset_class": "power_plant_thermal", "region_code": "RA", "capacity_mw": 1000, "name": "P"}]
+    meta = {"RA": {"name": "SYNTHETIC A", "district": "X", "country": "RU"},
+            "RB": {"name": "SYNTHETIC B", "district": "X", "country": "RU"}}
+    return B.build(incidents, facilities, assets, 100.0, meta, "2026-11-20")
+
+
+def test_a_build_serves_null_for_what_it_cannot_measure():
+    """F8, through the real builder rather than the committed payload, so a change to how the
+    series are assembled cannot pass on a stale file."""
+    nat, reg, snap = _synthetic_build()[:3]
+    assert snap["sectors"]["refining"] > 0
+    for s in snap["sectors_uncovered"]:
+        assert snap["sectors"][s] is None and all(v is None for v in nat["sectors"][s])
+        assert all(v is None for v in reg["RB"]["sectors"][s]) and snap["regions"]["RA"]["sectors"][s] is None
+    rb = snap["regions"]["RB"]
+    assert rb["installed_mw"] is None and snap["regions"]["RA"]["installed_mw"] == 1000
+    assert rb["effects"]["generation_margin"] is None
+    assert "electric_generation" in rb["regional_intensity"]["missing_sectors"]
+
+
 @needs_build
 def test_a_disrupted_sector_with_no_regional_base_is_listed_missing():
     """F8. Crimea has struck generation plants and no census capacity: its generation intensity
@@ -428,6 +458,8 @@ def test_the_transmission_concentration_note_is_built_from_the_data():
     assert f"{tc['occupied_share_pct']:g}%" in tc["note"]
     src = (ROOT / "pipeline" / "build_index.py").read_text(encoding="utf-8")
     assert "Kerch" not in src and "Taman" not in src
+    # ESDI-06: transmission decays on the modelled substation and line horizons like any sector.
+    assert "never needs a reconstitution duration" not in src
 
 
 # ---------------- XL-12: "first served" is never "learned" ----------------
