@@ -84,18 +84,16 @@ function sys(policy?: CountrySystem["geography"]["precision_policy"]): CountrySy
 describe("plain-language basis", () => {
   it("speaks every clause without a clause number", () => {
     for (const n of [1, 2, 3, 4, 5, 6, 7]) {
-      const t = plainBasis(ev({ criterion_met: n, threshold_basis: null }), threshold);
+      const t = plainBasis(ev({ criterion_met: n }), threshold);
       expect(t).toBe(PLAIN_BASIS[n]);
-      expect(t).not.toMatch(/\bclause \d|\b\d\b|§/i);
+      expect(t).not.toMatch(/clause|\b\d\b|§/i);
     }
   });
-  it("the grid clause never reads as the 100,000-customer limb: it says the rule admits either, and gives the recorded basis (T-A7)", () => {
-    const t = plainBasis(ev({ criterion_met: 5, threshold_basis: "Firm load shed under emergency operations." }), threshold);
-    expect(t).toMatch(/admits either of two things/);
-    expect(t).toMatch(/Recorded basis: Firm load shed under emergency operations\.$/);
+  it("the grid sentence never reads as the 100,000-customer test: it says the rule has two, and where the record's is (T-A7)", () => {
+    const t = plainBasis(ev({ criterion_met: 5 }), threshold);
+    expect(t).toMatch(/^It met one of two tests for power grids/);
+    expect(t).toMatch(/Which of the two is in the recorded basis/);
     expect(t).not.toMatch(/^A power-grid event was reported to affect/);
-    // Only the two-limb clause carries the recorded basis.
-    expect(plainBasis(ev({ criterion_met: 1, threshold_basis: "x" }), threshold)).toBe(PLAIN_BASIS[1]);
   });
   it("falls back to the served rule when the rule version changed, and never invents a part", () => {
     expect(plainBasis(ev({ criterion_met: 1 }), { ...threshold, version: "2099-01-01.1" })).toBe("Refinery shut.");

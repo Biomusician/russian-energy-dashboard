@@ -282,7 +282,7 @@ test.describe("provenance and coverage (iteration 16)", () => {
     });
     await app.open("?sys=ca");
     const status = page.getByLabel("Research status");
-    await expect(status).toContainText("overdue for a check");
+    await expect(status).toContainText("overdue for a registry re-check");
     await expect(status.locator(".badge").first()).toHaveText(before);
   });
 
