@@ -538,6 +538,10 @@ def test_f3_reported_effects_are_counted_apart_from_capacity_removed():
     snap = _read(PROCESSED / "snapshot.json")
     by_incident = snap["strategic_effects"]["by_incident"]
     assert snap["incidents_with_reported_effect"] == sum(1 for v in by_incident.values() if v)
+    # The built file can lag the code: the build itself must write the count, after the embargo.
+    run_py = (ROOT / "pipeline" / "run.py").read_text(encoding="utf-8")
+    write = run_py.find('snapshot["incidents_with_reported_effect"] = sum(1 for _v in _kept.values() if _v)')
+    assert write > run_py.find('snapshot["strategic_effects"]["by_incident"] = _kept') > 0
     ribbon = (ROOT / "web" / "src" / "components" / "Ribbon.tsx").read_text(encoding="utf-8")
     assert "events state how much capacity they removed" not in ribbon
     assert "incidents_with_reported_effect" in ribbon and "MW or Mt/yr" in ribbon and "not scored" in ribbon
