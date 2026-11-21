@@ -391,7 +391,12 @@ annotations, which Playwright's CI reporter writes for exactly this reason (iter
 
 The fixes went out with the production red team's (§29). The result on the final commit is below.
 
-PENDING: recorded after the push.
+**Final run, on `f2f6740`.** All four jobs passed: `python` (bundler required), `frontend`, and both
+browser shards, shard 1 with 292 passed and 3 skipped in 12.5 minutes, shard 2 with 269 passed in
+17.7 minutes, each well inside its 30-minute limit. The three skips are tests that skip themselves
+on Linux by design (296 + 269 = 564 locally, where none skip). The only other annotations are
+GitHub's notice that `actions/checkout@v4` and `actions/setup-node@v4` target the deprecated Node 20
+and are forced onto Node 24; they ran correctly, and moving to their next major is in §31.
 
 ## 29. Production
 
@@ -439,9 +444,21 @@ PENDING: recorded after the push.
   build counts and the lineage says so. What's New rebuilt this way is byte-identical to the one
   production serves. BUG, fixed, four mutants.
 
-**Follow-up release.**
+**Follow-up release `f2f6740`** (PR-1, PR-2, CI-1 to CI-3, this review), pushed onto an unmoved
+`main` after the full gate on the same tree (§24) and the complete mutation campaign (§25, 1,018 of
+1,018). Deployed to Production at 21:53 UTC on 21 November, GitHub deployment status `success`.
 
-PENDING: recorded after the push.
+- **Bytes.** All 72 served data files are byte-identical to the commit; `index.html` and all 30
+  assets are byte-identical to the gate's build of the same tree.
+- **Safety sweep** of the served payload: the same hits as on `2ace8f4`, each already reviewed
+  above (keyed-id form, citation slugs under PR-3, aggregate context statements, P6 names, one
+  "critical incident" wording); no blocker. The queue, the key and `.git` return 404.
+- **The fixes, as served.** `help_facts.json` gives Gas and Coal no value and no points (PR-1);
+  What's New compares 21 November with 20 November, the build readers were served before this
+  release (`8f17610`), not an intermediate commit (PR-2).
+
+No release blocker remains. The standing Saudi item (PR-S) is an owner decision, not a defect of
+this release.
 
 ## 30. Remaining limitations
 
@@ -475,6 +492,9 @@ PENDING: recorded after the push.
 3. A human-labelled Evidence Confidence calibration run (M13), the only route out of `2.0-draft`.
 4. A screen-reader and real-device accessibility pass.
 5. No new country, per the iteration-23 directive's own doctrine.
+6. Owner decision PR-S (Saudi attack-record placement under an active campaign, Option B) and PR-3
+   (headline-like citation slugs on abstracted records), raised again by the production red team.
+7. Move `actions/checkout` and `actions/setup-node` off the deprecated Node 20 majors (CI notice).
 
 ## Findings table (serious findings)
 

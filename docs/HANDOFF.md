@@ -35,7 +35,7 @@ Current, durable state of the project. Read this first when resuming.
 
 ## Iteration 23 end state (theme: map-first navigation, a Help Center, methodology red teams — no new country, no new score)
 
-Released 21 November 2026 (the production SHA is in the review §29). See [ITERATION_23_REVIEW.md](ITERATION_23_REVIEW.md), then
+Released 21 November 2026 (`2ace8f4`, then `f2f6740` for the CI and production red-team fixes; review §28–§29). See [ITERATION_23_REVIEW.md](ITERATION_23_REVIEW.md), then
 [METHODOLOGY_RED_TEAM_23.md](METHODOLOGY_RED_TEAM_23.md) (137 findings, owner memos M1–M15) and
 [METHODOLOGY_CONSISTENCY_MATRIX_23.md](METHODOLOGY_CONSISTENCY_MATRIX_23.md). Owner questions: review
 §23 (M1–M15, P1–P6) plus the standing ones. Nothing was ruled on the owner's behalf.
