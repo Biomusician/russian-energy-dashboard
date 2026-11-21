@@ -1,7 +1,5 @@
 # Iteration 22 review: from event database to impact evidence
 
-<!-- status: in-progress -->
-
 Iteration 21 made the existing data easier to use. Iteration 22 adds new kinds of evidence: a
 second, non-scored corpus of reviewed cyber and civilian-service impact records from any country,
 attribution and AI involvement as first-class and separately-evidenced claims, a new evidence
@@ -349,96 +347,129 @@ throttled connection (median of five, uncompressed preview).
 
 ## 28. Tests
 
-Final local gate on the integrated branch (19 November 2026, commit `df252c8` plus docs):
+Release gate on the release tree (`main` after the 20 November refresh merge, the first-published
+stamp, the production-mode rebuild and the territory reconcile fix in §31; 20 November 2026,
+20:24-23:22), run untouched end to end:
 
 | Suite | Result |
 |---|---|
-| pytest | 1769 passed, 2 skipped |
+| pytest | 1924 passed, 2 skipped |
 | TypeScript (`tsc -b --noEmit`) | clean |
-| vitest | 665 passed in 44 files |
+| vitest | 701 passed |
 | Vite production build | OK |
-| Playwright (Chromium, built bundle) | 496 passed, 1 skipped |
+| Playwright (Chromium, built bundle) | 512 passed |
+| Mutation campaign | 829 attempted, 829 caught (§29) |
 
-The first full run after integration failed 3 pytest, 2 vitest and 4 Playwright tests. None was a
-data or safety defect: tests not yet following the registry-named `regional_context` key, a
-calibration test that read "no run yet" as the only draft state, a stale inspector heading, a
-fixture counted twice, the phone-width header regression in §26, and the over-strict context check
-in §33. Each was fixed at its cause; none was skipped or loosened beyond the written rule.
+The first full run after integration (19 November) failed 3 pytest, 2 vitest and 4 Playwright
+tests. None was a data or safety defect: tests not yet following the registry-named
+`regional_context` key, a calibration test that read "no run yet" as the only draft state, a stale
+inspector heading, a fixture counted twice, the phone-width header regression in §26, and the
+over-strict context check in §33. Each was fixed at its cause; none was skipped or loosened beyond
+the written rule.
+
+**CI after the push.** The first CI run on the release commit failed six phone-layout browser
+tests that pass locally. Cause: GitHub's Linux runner draws the page in DejaVu Sans, wider than
+the fonts on the development machine, so on four Gulf country pages at 390x844 the "What this page
+can tell you" block wrapped to more lines and pushed the map below the first screen (map top
+706-738 px against a limit of 694). Reproduced locally by forcing Verdana, which is as wide. Fixed
+at the layout, not the test: on a phone every part of that block runs its label into its text and
+the links sit on one line (`5b06c05`); the worst case in the wide font is now 663 px. A new browser
+test checks five Gulf pages under the wide font and fails on the old stylesheet. The four affected
+Playwright files then passed locally (217 of 217). CI on `5b06c05`: see §32.
 
 ## 29. Mutations
 
-Baseline 376 of 376 caught. The campaign now holds 713 mutants (filters 31, impact layer 97, Atlas
-43, confidence 107, country pages 26, Gulf page 28, lead integration 9, and earlier lists).
-Each agent ran its own list to zero survivors; the lead's integration list: 33 attempted, 33
-caught. **Full campaign on the integrated branch: 713 attempted, 713 caught, 0 survived, 0 invalid
-anchors, 0 errored, 0 baselines not green** (19 November 2026, 19:28-20:57). The sandbox was copied
-after the Python and calibration fixes in `df252c8` and before that commit's frontend changes (the
-brief button's move and the e2e rule); the campaign's mutants are pytest-keyed, and the anchor check
-passes on the final tree.
+The campaign holds 829 named mutants. Lists added in this iteration: filters, impact layer, Atlas,
+confidence, country pages, Gulf page, the lead's integration list, the test-architecture red team's
+guards, and the territory reconcile (§31). **Release run: 829 attempted, 829 caught, 0 survived,
+0 invalid anchors, 0 errored, 0 baselines not green** (20 November 2026, 20:44-23:22, on the
+release tree).
+
+An earlier attempt that night reported hundreds of "baseline not green" results: the lead switched
+branches and rebuilt in the main tree while the campaign was copying it. It was stopped and the
+whole gate rerun with the tree left alone; that rerun is the result above.
 
 ## 30. Red teams
 
+All by Claude agents. A Claude agent is not an outside human reviewer, and nothing here stands in
+for one.
+
 | Red team | State |
 |---|---|
-| Methodology and confidence | Done: 21 findings (5 blockers, 13 should-fix, 3 notes), all reproduced; blockers fixed, 10 should-fix fixed, 3 recorded as limitations |
-| Iran, Gulf, Hormuz safety | Started; stopped by the usage limit before reporting. Lead sweep instead (§25) |
-| Cyber safety and exports | Started; stopped by the usage limit |
-| Attribution, AI, social | Started; stopped by the usage limit. Social sources had two blind reviews |
-| Energy analyst and multilingual | Started; stopped by the usage limit |
-| First-time user, mobile, accessibility, test architecture, final post-production | Not run |
+| Methodology and confidence | 21 findings (5 blockers, 13 should-fix, 3 notes), all reproduced; blockers fixed, 10 should-fix fixed, 3 recorded as limitations |
+| Iran, Gulf and Hormuz safety; cyber safety and exports; attribution, AI and social; energy analyst and multilingual | Each ran blind on the served bytes, then again with the earlier findings. Three rounds of lead rulings (B1-B12, S1-S8, RC1-RC5; R1-R13; fixes and holds), every correction through the review queue and the import gate. A final verifier found no blocker |
+| Link health | All published impact and context citations, one request per address, rate-limited; a blocked page is never counted dead; redirect targets scanned. Eight citations whose final address named a Gulf place or a later status were removed or their records held |
+| First-time user, mobile, accessibility | C1-C9 and A1-A14 fixed in the frontend except C1 (a count on the home card has no manifest field to supply it) and A8 (two disclaimers pinned by tests) |
+| Test architecture | Real mutants; two missing guards now enforced at import and build (an affected figure must be a scale, never a duration or a restoration; inclusion basis 2 needs the source's own figure) and a build check refusing queue and pipeline wording in served research notes |
+| Final production red team (on the served site, after release) | One blocker reported, and it is not new: Saudi Arabia's own page publishes attack records at first-level region with facility names during the active campaign. That is the standing owner decision on Saudi harmonisation (Option B stays; §34), which the iteration-23 directive says not to change, so it did not block this release and heads the owner items. Should-fix items are carried to iteration 23: record corrections through the review queue (source relays, two source tiers, a German record's later-status wording, one context entry's as-of date, late citations on one record), What's New change attribution, two risky citation links, and cosmetic items (a brief's build date, the meta description, Atlas country names) |
 
 ## 31. Moving-main integration
 
-Not done: `origin/main` keeps advancing with the daily refresh bot, and the branch has not been
-merged with it. Before release: `git fetch`, merge `origin/main` (generated payloads conflict: take
-ours and rebuild), current-date build.
+`origin/main` with the 20 November daily refresh was merged into the branch (generated payloads
+taken from the branch, then rebuilt). `first_published` was stamped 2026-11-20 on the 231 impact
+records and 35 context entries this release first serves (`scripts/stamp_first_published.py`;
+the import keeps an existing stamp). The release was then rebuilt on `main` itself: the What's New
+comparison reads the branch name, and a branch build compares as a development copy.
+
+A next-day refresh was simulated in a clean clone with the clock set to 21 November: the bot's build
+succeeded and the theatre index moved by time decay only; the refresh-gated tests passed (1,747,
+including the two the local gate always skips); change detection and staging worked, and a same-day
+rerun reported no change; `first_published` was unchanged.
+
+**Defect found during integration and fixed at its cause.** The impact import reconciles each
+candidate against records a country system holds, so a held record cannot return through the
+impact layer. It looked only at each system's own countries. The United States system holds events
+in US territories pending the owner's decision on their geography (GLOBAL_GEOGRAPHY §7), and such an
+event could return as a Puerto Rico impact record. The US entry in `pipeline/systems.py` now names
+the territories its queue holds (`held_scope_a3`), and the reconcile reads that map (`45458c5`). New
+test and two mutants.
 
 ## 32. Production
 
-Not released. Production still serves iteration 21 plus the daily refreshes.
+Released. `main` = `origin/main` = production at `45458c5`, confirmed through the GitHub deployments
+API, then at `5b06c05` (a stylesheet and test change only; no data file changed).
+
+- Served bytes: every file under `/data` (71 of 71) byte-identical to the commit.
+- Safety scan of the served payloads: no new hit.
+- Browser checks on production, desktop and phone: the pages load, no horizontal overflow, no
+  console errors. The Atlas's country figure counts a multi-country record once per country, so it
+  is higher than the number of distinct country codes; carried to iteration 23 as a wording item.
+- CI: red on `45458c5` (the six phone tests in §28); green on `5b06c05` (run 44869257317: python, frontend and browser jobs all passed).
 
 ## 33. Unverified and limitations
 
-- The four content red teams above did not report.
-- Link check not run on the impact corpus.
-- Full Playwright run on the integrated branch: 496 passed, 1 skipped (Chromium only, local; CI not run because nothing was pushed).
-- Next-day refresh simulation not run with the impact layer present.
-- Calibration used two agent labelers, not people; it failed, so nothing rests on it.
-- One e2e check was stricter than the rule it tested: it refused the bare words "ship" and "vessel"
-  in the Gulf context section, which methodology §10 allows in an authority's aggregate statement.
-  It failed on nine real IMO, UNCTAD and UN statements (seafarers on ships, a fall in ship transits,
-  IMO-recorded incidents involving vessels), never on a name, number, position, track, flag or list.
-  The check now tests §10 as written (names, lists, tracks, positions, flags, AIS, MMSI, warships,
-  routes, bypass, dependence). Whether those nine statements read well is for the Gulf content red
-  team.
-- Many news and official sites refused automated access; records rest on what opened.
+- Every reviewer in §30 is a Claude agent. No outside human has reviewed the corpus.
+- Calibration used two agent labelers, not people; it failed, so nothing rests on it and Evidence
+  Confidence stays `2.0-draft`. The theatre multiplier is still v1.
+- Many news and official sites refused automated access; records rest on what opened. Blocked links
+  are reported as blocked, never as dead.
 - Counts are published records in this corpus, never rates, and never comparable across countries.
+- The production red team's should-fix items (§30) are not yet applied; they are iteration 23's first
+  data work.
+- One e2e check had been stricter than its rule (it refused the bare words "ship" and "vessel" in the
+  Gulf context section, which methodology §10 allows in an authority's aggregate statement). It now
+  tests §10 as written.
 
 ## 34. Owner decisions
 
 Unchanged and still the owner's: Saudi harmonisation (Option B stays), D-34 to D-37, Release Rule A.
-New:
+New in this iteration, none implemented:
 
-1. **Held country records and the impact layer.** 39 impact candidates matched records that country
-   systems hold, mostly on threshold or season-representation grounds (for example Iraqi national
-   blackouts held for a missing customer count). Under brief §216 they are refused with no override.
-   Should a non-kinetic, country-level record held only on a country system's threshold be allowed
-   in the impact layer, which has its own inclusion contract?
+1. **Held country records and the impact layer.** Impact candidates that matched records a country
+   system holds, mostly on threshold or season-representation grounds, are refused with no override.
+   Should a non-kinetic, country-level record held only on a country system's threshold be allowed in
+   the impact layer, which has its own inclusion contract?
 2. **Sectors outside the list.** Banking and card payments, tax and customs platforms, heavy
    industry: add a sector, or keep rejecting?
 3. **Baltic subsea cables and pipelines:** deliberately not researched; research at country level
    with the abstraction rule, or leave out?
-4. **Release without the content red teams?** Recommended: no.
-5. **Calibration:** accept a second run on reviewed records with a human labeler as the bar for
+4. **Calibration:** accept a second run on reviewed records with a human labeler as the bar for
    dropping `-draft`?
+5. **US territories** (GLOBAL_GEOGRAPHY §7): until decided, their events stay held, and §31's guard
+   keeps them out of the impact layer too.
 
 ## 35. Recommended next iteration
 
-1. Run the four content red teams (Iran/Gulf/Hormuz safety, cyber safety and exports, attribution
-   and AI, energy analyst and multilingual) on the served bytes; fix through review corrections.
-2. Link check on the impact corpus; next-day refresh simulation; merge `origin/main`; full gate;
-   push; CI; production verification (served bytes, safety scan, Atlas, Iran, Gulf, phones).
-3. First-time-user, mobile and accessibility red teams on the Atlas, the Gulf page and Iran.
-4. Calibration run 2 on reviewed records with three labelers including a person.
-5. Research: Gulf desalination and water; CERT and regulator archives end to end; healthcare
-   backfill; Persian and Arabic official sources when they open; Central Asia second origins.
+Iteration 23 (directive received): map-first navigation, a simpler home, a Help Center, methodology
+and implementation red teams, UX, accessibility and test hardening. First data work: the production
+red team's record corrections (§30) through the review queue.
