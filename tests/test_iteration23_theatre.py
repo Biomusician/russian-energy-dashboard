@@ -136,13 +136,18 @@ def test_the_horizon_range_is_shown_where_the_headline_is_explained(tmp_path_fac
     number?" showed. It is now in the headline inspector and on the ribbon's number."""
     payload = _payload()
     h = payload["snapshot"]["recovery_horizon_sensitivity"]
-    lo, hi = (f"{v:.1f}" for v in h["esdi_range"])
     out = run_ts(tmp_path_factory, THEATRE, """
       const b = { ...input, regions: [], assets: [] };
       const html = renderToStaticMarkup(React.createElement(insp.default, {
         bundle: b, target: [{ kind: "headline" }], onNavigate: () => {}, onClose: () => {} }));
-      return { insp: html, none: it.horizonSensitivityText(null) };
+      const [l, r] = input.snapshot.recovery_horizon_sensitivity.esdi_range;
+      return { insp: html, none: it.horizonSensitivityText(null), lo: it.fmtIndex(l), hi: it.fmtIndex(r) };
     """, payload)
+    # Rounded by the page's own formatter: Python's "{:.1f}" turns the served 1.65 into "1.6" (the
+    # binary value is just under 1.65) where the page writes 1.7, and this test failed on a build
+    # whose range happened to end in 5 (iteration 23, first gate on the merged branch).
+    lo, hi = out["lo"], out["hi"]
+    assert (lo, hi) != ("—", "—") and h["esdi_range"]
     text = _text(out["insp"])
     assert f"{lo} to {hi}" in text, "the inspector must show the served horizon range"
     assert "The assumption most of this number rests on" in text
