@@ -15,7 +15,7 @@ facility and kept current, it would be exactly the feed this project must never 
 | Element | Published | Why |
 |---|---|---|
 | Event occurrence (that it happened, date) | yes | the historical record; reported publicly at the time |
-| Administrative-level placement | yes, admin-1 only | the project's only geographic precision |
+| Administrative-level placement | admin-1 at most, and only where the system's `geography.precision_policy` allows it | admin-1 is a maximum, not an entitlement. In the Gulf systems onboarded since iteration 19, and in Iran and Iraq, an attack or sabotage record is placed for the country only (`precision_policy.kinetic: "country"`); Bahrain places every record for the country. Saudi Arabia keeps admin-1 on its own page under the owner's current decision (Saudi harmonisation, option B). Every impact-layer attack record is country level everywhere |
 | The reported effect at the time (shut, cut by a stated volume) | yes | the disruption itself, as reported |
 | Sources | yes, publisher and link | provenance |
 
@@ -58,9 +58,17 @@ record:
   withheld marker on a record no active campaign covers — so recording a campaign as ended forces a
   deliberate re-import rather than leaving status hidden by accident.
 
-**Applied now:** Saudi Arabia, "Attacks on Saudi energy facilities, 2026", active (attacks were
-still reported in late October 2026; no ceasefire found). Ten records publish the event and withhold facility status: nine 2026
-kinetic records, plus the Juaymah LPG halt by name; their summaries were trimmed of restart, operating-rate and
+**Applied now (iteration 23 correction, F9):** to every Gulf country system, not to Saudi Arabia
+alone. `data/curated/systems/conflict_campaigns.json` lists one campaign per system with
+`policy_applied: true`; its `system_states` classify Iran, Iraq and Saudi Arabia as
+ACTIVE_KINETIC_CAMPAIGN and Bahrain, Kuwait, Oman, Qatar and the United Arab Emirates as UNCERTAIN,
+and **UNCERTAIN restricts exactly as ACTIVE does**. The theatre's campaign is in the same file, in
+its own form (below). Which records each system publishes, and how many, is on its own page and in
+`docs/CURRENT_STATE.md`; this document does not re-quote a live count.
+
+**History: the first application (iteration 16).** Saudi Arabia was the first system the rule was
+applied to, "Attacks on Saudi energy facilities, 2026". At the time ten records published the event
+and withheld facility status, and their summaries were trimmed of restart, operating-rate and
 dependency wording. The citation rule was added after the iteration-16 safety review of the
 served payload found status in places the summary check did not look:
 
@@ -148,7 +156,8 @@ marker.
 
 ## 6. Publication lag and later historical inclusion
 
-New events in an active campaign are published as they are researched, at admin-1 precision and
+New events in an active campaign are published as they are researched, at the precision the
+system's policy allows (admin-1 at most, the country only for attack records where §1 says so) and
 with their effect at the time — the same lag as any research pass. Their facility status joins
 the record later, through the release rule, as history.
 
