@@ -2605,7 +2605,7 @@ def test_the_recent_lists_say_where_attack_records_are_placed_and_saudi_keeps_it
                 "United Arab Emirates") in scope
         assert "Bahrain places every record for the country only." in scope
         assert ("In Saudi Arabia, the country's own page publishes attack records with first-level region and "
-                "facility detail under the owner's current decision.") in scope
+                "facility detail under the project's current decision.") in scope
         assert "a record covered by the campaign policy is shown for the country only" in scope
         assert not re.search(r"\b(five|six|seven|eight|twelve|\d+)\b", scope), scope
     gulf = _recent_scope(members, events=_SERVED_NOW)
@@ -2623,7 +2623,7 @@ def test_the_precision_sentence_says_only_what_served_records_do():
     # Only Saudi Arabia serves an attack record here, so only Saudi Arabia is said to publish them.
     publishes = [sentence for sentence in scope.split(". ") if "publishes attack records" in sentence]
     assert publishes == ["In Saudi Arabia, the country's own page publishes attack records with first-level region "
-                         "and facility detail under the owner's current decision"], publishes
+                         "and facility detail under the project's current decision"], publishes
     assert ("Canada, China, India and United States serve no attack or sabotage record; records there are placed "
             "by first-level region at most.") in scope
     # With no served attack record anywhere, nobody publishes one, whatever the policy allows.
@@ -2634,7 +2634,7 @@ def test_the_precision_sentence_says_only_what_served_records_do():
     plain = {"ca": [{"event_id": "ca-x2", "cause": "sabotage", "region_code": "CA-ON"}]}
     one = _recent_scope(every, "The country systems.", events=plain)
     assert "In Canada, the country's own page publishes attack records with first-level region." in one
-    assert "owner's current decision" not in one and "facility detail" not in one
+    assert "project's current decision" not in one and "facility detail" not in one
     assert "Canada" not in one.split("serve no attack")[0].split("publishes attack records")[-1]
 
 

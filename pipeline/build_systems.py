@@ -2174,13 +2174,13 @@ def precision_statement(names_by_system, aggregating=False, events_by_system=Non
             continue
         detail = [w for w, present in (("first-level region", any(e.get("region_code") for e in hits)),
                                        ("facility detail", any(e.get("facility_name") for e in hits))) if present]
-        # "Under the owner's current decision" only where the records are campaign-covered: the
+        # "Under the project's current decision" only where the records are campaign-covered: the
         # iteration-20 decision (option B) is about publishing those, not about attack records at large.
         covered = any(e.get("publication") for e in hits)
         publishing.setdefault((tuple(detail), covered), []).append(name(sid))
     for (detail, covered), names in sorted(publishing.items(), key=lambda kv: sorted(kv[1])):
         with_ = f" with {' and '.join(detail)}" if detail else " for the country only"
-        under = " under the owner's current decision" if covered else ""
+        under = " under the project's current decision" if covered else ""
         own = "the country's own page publishes" if len(names) == 1 else "each country's own page publishes"
         out.append(f"In {_names(names)}, {own} attack records{with_}{under}.")
     if silent:
