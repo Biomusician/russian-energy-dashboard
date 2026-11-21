@@ -59,10 +59,11 @@ test.describe("review: home and country pages", () => {
     }
   });
 
-  test("A13: 'How this works' opens a dialog named for that section", async ({ app, page }) => {
+  test("A13: 'How this works' opens that section of Help, named for it", async ({ app, page }) => {
     await app.open("");
     await page.getByRole("button", { name: "How this works, in six steps" }).click();
-    await expect(page.getByRole("dialog", { name: "How this works Glossary" })).toBeVisible();
+    await expect(page).toHaveURL(/\?view=help#how-it-works$/);
+    await expect(page.getByRole("heading", { name: "How this works, in six steps", level: 3 })).toBeFocused();
   });
 });
 

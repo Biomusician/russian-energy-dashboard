@@ -14,7 +14,7 @@ export function inSentence(name: string): string {
 }
 
 export const RESEARCH_PREVIEW_DEFINITION =
-  "A research preview is a country added recently whose systematic search is still incomplete: some source "
+  "A research preview is a country system whose systematic search is at an earlier stage: some source "
   + "groups have not been fully searched and some sources could not be read at all, so the absence of a record is "
   + "not evidence that no disruption occurred. The Research coverage tab says what was searched.";
 
@@ -28,7 +28,7 @@ export const EMPTY_CORPUS_LEAD =
 
 /** The plain first paragraph of "Why no score". */
 export function noScorePlain(country: string): string {
-  return `The disruption score on the Russia, Belarus & Crimea page was designed for one conflict and one energy system. `
+  return `The exposure index (ESDI) on the Russia, Belarus & Crimea page was designed for one conflict and one energy system. `
     + `Its weights, and its assumptions about how quickly damaged infrastructure comes back, do not transfer to `
     + `${country}. Showing that score here would imply a precision this evidence does not have, so no score is `
     + `calculated for this country.`;

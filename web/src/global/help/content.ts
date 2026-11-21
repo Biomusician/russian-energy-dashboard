@@ -148,7 +148,7 @@ export const HELP_SECTIONS: HelpSection[] = [
         "The headline. Sectors are combined with fixed weights, which are a judgement about importance, not a measurement. Sectors with no capacity base are left out and the weights of the rest rescaled.",
       ] },
       { kind: "p", text: "The area covered is Belarus, the six western federal districts of Russia and the Siberian Federal District. The Russian Far East is not included. Crimea, Ukrainian territory under Russian occupation, is included in the index as an analytic choice, not a statement about sovereignty. It contributes only through the sectors where it has qualifying events and a compatible base, keeps its own styling, and is never labelled a Russian region. The four other Ukrainian regions Russia claims are excluded entirely." },
-      { kind: "details", summary: "Technical detail: the formula", blocks: [
+      { kind: "details", summary: "Technical detail: the index formula", blocks: [
         { kind: "p", text: "Each event, at an evaluation date, carries a weight: its confidence weight × its cause weight × its damage severity × 0.5 raised to the power (days elapsed ÷ half-life)." },
         { kind: "p", text: "Damage severity is always applied and is independent of recovery. Recovery evidence changes only the decay and the tail: once a credible full reconstitution has been observed, the contribution is capped at a small residual of its first value. A contribution below a small cut-off is dropped, so the series carries no long meaningless tail." },
         { kind: "p", text: "The half-life comes from a recovery horizon, the time from disruption to substantial restoration: half-life = horizon ÷ 3.3219, so that only the small residual remains at the horizon. The horizon comes from an observed restoration, else a credible sourced estimate of at least medium confidence, else the modelled horizon for that class of facility. A partial restart is shown but does not speed the decay. A low-confidence estimate is shown but does not drive it." },
@@ -202,7 +202,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       { kind: "derived", key: "impacts.caveats" },
       { kind: "p", text: "Counts are not rates. A number of impact records is a number of published records in this collection: never a rate, and never compared or ranked between countries." },
       { kind: "p", text: "A record held back from a country system never reappears here, whatever the reason it was held. An attack or sabotage record is published for the country only, in every country." },
-      { kind: "details", summary: "Technical detail", blocks: [
+      { kind: "details", summary: "Technical detail: units, episodes and research", blocks: [
         { kind: "p", text: "Civilian-service figures keep the source's own unit. People are not customers, customers are not households, and households are not subscribers, so nothing is converted or added up. Where no source gives a figure, the record says so; it is never shown as zero." },
         { kind: "p", text: "Records that share one cause a source names, such as one storm or one coordinated wave, form an episode. Counting episodes stops one storm that touched many regions from looking like many separate disruptions." },
         { kind: "p", text: "Each record shows the date it was first published here. Combined with the event date, that separates a newly found old event from a new one." },
@@ -221,7 +221,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       { kind: "p", text: "It counts independent originating statements, not links. Ten articles repeating one news-agency report are ten links but one originating statement. Adding more copies of the same report changes nothing." },
       { kind: "p", text: "It does not measure how important the infrastructure is, how severe the disruption was, how likely anything is, or how thoroughly a country was researched. It does not cover cause or responsibility: a well-evidenced outage can have an uncertain cause or an unknown actor." },
       { kind: "p", text: "The Russia, Belarus & Crimea index does not use this method. It still uses the site's older evidence weighting." },
-      { kind: "details", summary: "Technical detail", blocks: [
+      { kind: "details", summary: "Technical detail: how a category is worked out", blocks: [
         { kind: "p", text: "The category is worked out from five things about the sources that support occurrence or effect: who is speaking (an operator or official body counts for more than a repost); how many separate originating statements there are; how specific the reported effect is; whether a source was opened during research or review; and whether a source is dated at the time or is a later formal account. The number of links never enters." },
         { kind: "p", text: "The points behind a category are ordinal. They put records in order by what their citations show. They are not a percentage and not a probability, and no list on this site is ordered by them." },
         { kind: "derived", key: "eci.overrides" },
@@ -325,7 +325,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       { kind: "derived", key: "history.first" },
       { kind: "p", text: "A reconstruction uses today's method too. If the method changes, a reconstruction of an old date changes with it; the as-published value does not. A reconstruction also lets later knowledge reach back: a restoration reported weeks later sets how fast that disruption is modelled to fade across its whole history. That makes it a better estimate, and not a record of what was known at the time." },
       { kind: "p", text: "The top ribbon's “since last build” change compares this build's index with the previous build's. What's new compares with the last published build dated before this one, so the two can differ. Neither change is, by itself, evidence of new damage or of repair." },
-      { kind: "details", summary: "Technical detail", blocks: [
+      { kind: "details", summary: "Technical detail: weekly points and first appearance", blocks: [
         { kind: "p", text: "The reconstructed series is computed at fixed weekly points. A requested date is resolved to the point at or before it, and both dates are reported, so a weekly point is never mistaken for a daily observation." },
         { kind: "p", text: "When a record was first shown is taken from the as-published history, never inferred from its event date. A record already present in the first reliable build is marked as present before tracking began, and no date is claimed for it." },
       ] },

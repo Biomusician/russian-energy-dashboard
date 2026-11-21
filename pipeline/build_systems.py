@@ -1869,8 +1869,8 @@ def build_system(system_id, admin1, admin0, as_of):
         # Said once, for a reader (iteration 20, §69-70). The technical version is in the
         # methodology documents, not on the page.
         "no_index_reason": (
-            "Only the Russia-theatre system has a disruption index. Its weights and recovery "
-            "assumptions were designed for that theatre and are not transferred to other countries, "
+            "Only Russia, Belarus & Crimea has an index, an exposure index. Its weights and recovery "
+            "assumptions were designed for that area and are not transferred to other countries, "
             "so this page shows reported disruptions and national energy context instead. No index "
             "is not a zero."),
         "sectors": [{**s, "label": SECTORS[s["sector"]]} for s in doc["sectors"]],

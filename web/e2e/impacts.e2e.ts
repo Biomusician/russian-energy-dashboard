@@ -396,13 +396,13 @@ test.describe("Impact atlas", () => {
 
   test("the glossary explains the impact terms, with the served definition as the detail", async ({ app, page }) => {
     await openAtlas(page);
-    await page.locator(".global-nav").getByRole("button", { name: "Glossary" }).click();
-    const dialog = page.locator("dialog.glossary-dialog");
+    await page.locator(".global-nav").getByRole("link", { name: "Help", exact: true }).click();
+    const glossary = page.locator("section[aria-labelledby=glossary]");
     for (const term of ["AI involvement", "Attribution", "Attribution confidence", "Evidence confidence", "Impact atlas", "Cyber disruption",
       "Civilian-service impact", "Reported effect", "Claimed", "Assessed", "Attributed", "Disputed"]) {
-      await expect(dialog.getByRole("heading", { name: term, exact: true })).toHaveCount(1);
+      await expect(glossary.getByRole("heading", { name: term, exact: true })).toHaveCount(1);
     }
-    const entry = dialog.locator("#gl-evidence-confidence");
+    const entry = glossary.locator(".help-term").filter({ has: page.locator("#g-evidence-confidence") });
     await entry.locator("summary").click();
     await expect(entry.locator("details p")).toContainText("It is not a probability, not a measure of severity");
   });

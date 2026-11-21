@@ -13,13 +13,17 @@ import { test, expect } from "./fixtures";
 
 type Page = import("@playwright/test").Page;
 
-const VIEWS = ["", "?sys=ru", "?sys=us", "?sys=sa", "?sys=bh", "?sys=ir", "?group=gulf", "?compare=us,ca,sa", "?help=glossary"];
+const VIEWS = ["", "?sys=ru", "?sys=us", "?sys=sa", "?sys=bh", "?sys=ir", "?group=gulf", "?compare=us,ca,sa", "?view=help"];
 const PHONE = { width: 390, height: 844 };
 
 /** Open a view and wait until it has drawn: the map's own idle event, or the compare table. */
 async function openView(page: Page, q: string) {
   await page.goto(`/${q}`);
-  if (q.startsWith("?compare")) {
+  if (q.startsWith("?view=help")) {
+    // A page of prose: drawn once its served values have arrived.
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.locator(".help-derived-missing")).toHaveCount(0);
+  } else if (q.startsWith("?compare")) {
     await expect(page.locator(".compare-colhead > a").first()).toBeVisible();
     await expect(page.locator('tr[data-row="lanes"] td').first()).not.toHaveText("Loading…");
   } else {
@@ -78,7 +82,7 @@ const PRIMARY = [
   ".global-nav-tools button", ".gsearch input", ".global-page .sys-switch select", ".home-action", ".sys-card button.ghost",
   ".start-here button", ".page-title .head-actions button", ".country-side .tabs button", ".ev-inspector-toggle",
   ".member-btn", ".compare-col-actions button", ".compare-picker select", ".map-tool",
-  ".drawer-btn", ".legend-toggle", ".camera-controls button", "button.play",
+  ".drawer-btn", ".legend-toggle", ".help-picker select", ".camera-controls button", "button.play",
   ".maplibregl-ctrl-zoom-in", ".maplibregl-ctrl-zoom-out",
 ].join(", ");
 // The theatre header's controls: 24 px (AA), not 44, because the header's height is capped so the
@@ -86,7 +90,7 @@ const PRIMARY = [
 const THEATRE_HEADER = [".mode-switch button", ".tb-tools-toggle", ".theatre-bar .sys-switch select", ".why-btn", ".ribbon-more-toggle"].join(", ");
 
 test.describe("phone width: 44 px touch targets", () => {
-  for (const q of VIEWS.filter((v) => v !== "?help=glossary")) {
+  for (const q of VIEWS) {
     test(`${q || "home"}: every visible primary control is at least 44 x 44`, async ({ page }) => {
       await page.setViewportSize(PHONE);
       await openView(page, q);
@@ -313,20 +317,21 @@ test.describe("Escape closes, focus returns", () => {
     await expect(btn).toBeFocused();
   });
 
-  test("the glossary closes on Escape from every view that has it", async ({ page }) => {
+  test("Help is a link from every view's bar, and Back returns to the view", async ({ page }) => {
     let checked = 0;
-    for (const q of ["", "?sys=us", "?group=gulf"]) {
+    for (const q of ["", "?sys=us", "?group=gulf", "?sys=ru"]) {
       await openView(page, q);
-      const btn = page.getByRole("button", { name: "Glossary", exact: true });
-      await btn.focus();
+      const link = q === "?sys=ru" ? page.locator(".tb-tools").getByRole("link", { name: "Help", exact: true })
+        : page.locator(".global-nav").getByRole("link", { name: "Help", exact: true });
+      await expect(link).toHaveAttribute("href", "?view=help");
+      await link.focus();
       await page.keyboard.press("Enter");
-      await expect(page.getByRole("dialog", { name: "Glossary" })).toBeVisible();
-      await page.keyboard.press("Escape");
-      await expect(page.getByRole("dialog", { name: "Glossary" })).toBeHidden();
-      await expect(btn).toBeFocused();
+      await expect(page.getByRole("heading", { name: "Help: how to read this site", level: 1 })).toBeVisible();
+      await page.goBack();
+      await expect(page).toHaveURL(new RegExp(`/${q.replace("?", "\\?")}$`));
       checked++;
     }
-    expect(checked).toBe(3);
+    expect(checked).toBe(4);
   });
 });
 

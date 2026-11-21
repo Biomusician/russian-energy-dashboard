@@ -2303,7 +2303,7 @@ ITER22_ATLAS_MUTATIONS = [
      "atlas_home_route_never_requests_the_impact_corpus"),
     ("?view=impacts no longer opens the atlas",
      [("web/src/global/router.ts", _text(
-         '  if ((p.get("view") ?? "").trim().toLowerCase() === IMPACTS_VIEW) return { view: "impacts" };\n', ''))],
+         '  if (view === IMPACTS_VIEW) return { view: "impacts" };\n', ''))],
      "atlas_home_route_never_requests_the_impact_corpus"),
     ("the atlas is imported eagerly by the route switch",
      [("web/src/Root.tsx", _text(
@@ -3397,6 +3397,76 @@ ITER22_TERRITORY_MUTATIONS = [
 MUTATIONS += ITER22_TERRITORY_MUTATIONS
 
 
+# Iteration 23: the reader's Help page (web/src/global/help/) and global/help_facts.json. Each mutant
+# breaks one thing the page must always say, one address, or the rule that its live values carry no
+# file path; tests/test_iteration23_help.py runs the shipped page and builds the facts to catch it.
+HELP_DIR = "web/src/global/help/"
+ITER23_HELP_MUTATIONS = [
+    ("Help drops the Evidence Confidence draft warning while the method is a draft",
+     [(HELP_DIR + "HelpDerived.tsx", _text("          {draft && <p>{ECI_DRAFT_NOTE}</p>}",
+                                           "          {false && draft && <p>{ECI_DRAFT_NOTE}</p>}"))],
+     "evidence_confidence_status_from_the_served_file"),
+    ("Help describes High evidence confidence as a probability",
+     [(HELP_DIR + "glossary.ts", _text("It is not a probability, not severity, not importance and not research completeness",
+                                       "High means a high probability; it is not severity, not importance and not research completeness"))],
+     "never_calls_evidence_confidence_a_probability"),
+    ("Help says no index means zero",
+     [(HELP_DIR + "glossary.ts", _text("“No index” means no figure was computed; it never means zero, and it never means nothing happened.",
+                                       "“No index” means the figure is zero, and it never means nothing happened."))],
+     "says_no_index_is_not_zero"),
+    ("Help calls the impact records complete",
+     [(HELP_DIR + "content.ts", _text("The impact records are not a complete list of disruptions in any country.",
+                                      "The impact records are a complete list of disruptions in every country."))],
+     "never_calls_the_impact_records_complete"),
+    ("Help calls the latest Gulf context statement the current status",
+     [(HELP_DIR + "content.ts", _text("The latest statement is not the current status, and its age",
+                                      "The latest statement is the current status, and its age"))],
+     "latest_gulf_statement_is_not_the_current_status"),
+    ("Help says no record means no disruption",
+     [(HELP_DIR + "content.ts", _text("No record is not no disruption. “No qualifying",
+                                      "No record means no disruption. “No qualifying"))],
+     "says_no_record_is_not_no_disruption"),
+    ("Help calls modelled recovery observed",
+     [(HELP_DIR + "content.ts", _text('"Modelled means no source said anything, and an assumption for that type of facility is used. A modelled value',
+                                      '"Modelled means a source reported the restoration. A modelled value'))],
+     "keeps_modelled_recovery_apart_from_observed"),
+    ("Help presents a current-evidence reconstruction as what was published",
+     [(HELP_DIR + "content.ts", _text(
+         "The first answer is the as-published history: what the site actually served on each day. The second is a current-evidence reconstruction:",
+         "The first answer is the current-evidence reconstruction: what the site actually served on each day. The second is the as-published history:"))],
+     "keeps_a_reconstruction_apart_from_what_was_published"),
+    ("Help calls an event count a rate",
+     [(HELP_DIR + "content.ts", _text('"Counts are not rates. A count is the number of records published here. It is never a rate, a risk level',
+                                      '"Counts are rates. A count is the number of records published here. It is a rate, not a risk level'))],
+     "never_calls_evidence_confidence_a_probability_or_a_count_a_rate"),
+    ("a Learn more link names a Help section that does not exist",
+     [("web/src/global/CountryView.tsx", _text('              {" "}<LearnMore anchor="withheld" />',
+                                               '              {" "}<LearnMore anchor="safeguards" />'))],
+     "every_learn_more_link_in_the_source_names_a_help_section"),
+    ("help_facts carries a note that names a data file",
+     [("pipeline/help_facts.py", _text('            "build_date_note": quality.get("build_date_is_not_a_source_date"),',
+                                       '            "build_date_note": (snapshot.get("publication_freshness") or {}).get("note"),'))],
+     "help_facts_has_no_file_path"),
+    ("the theatre's cannot-tell-you list names a repository document again",
+     [("pipeline/data_quality.py", _text("\"the project's methodology documentation.\"),",
+                                         "\"docs/GENERATION_DENOMINATOR_AUDIT.md.\"),"))],
+     "cannot_tell_you_names_sectors_in_words_and_no_file"),
+    ("the old glossary link no longer opens Help",
+     [("web/src/global/router.ts", _text('  if (view === HELP_VIEW || p.get("help") === "glossary") return { view: "help" };',
+                                         '  if (view === HELP_VIEW) return { view: "help" };'))],
+     "help_routes_and_the_old_glossary_link"),
+    ("the Help text is loaded with the home page",
+     [("web/src/Root.tsx", _text('const HelpPage = lazy(() => import("./global/help/HelpPage"));',
+                                 'import HelpPageEager from "./global/help/HelpPage";\nconst HelpPage = HelpPageEager;'))],
+     "home_bundle_never_carries_the_help_text"),
+    ("What's New links a rule change to the home page's selection heading again",
+     [("pipeline/whats_new.py", _text('        out.append({"category": "methodology", "notes": notes, "link": {"help": help_anchor}})',
+                                      '        out.append({"category": "methodology", "notes": notes, "link": {"anchor": "why-head"}})'))],
+     "links_a_rule_change_to_a_help_section"),
+]
+MUTATIONS += ITER23_HELP_MUTATIONS
+
+
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
     for d in COPY_DIRS:
@@ -3423,6 +3493,7 @@ TEST_FILES += ("tests/test_iteration22_round2.py",)
 TEST_FILES += ("tests/test_iteration22_round3.py",)
 TEST_FILES += ("tests/test_iteration22_linkhealth.py",)
 TEST_FILES += ("tests/test_iteration22_release.py",)
+TEST_FILES += ("tests/test_iteration23_help.py",)
 
 
 def _run(box, k):

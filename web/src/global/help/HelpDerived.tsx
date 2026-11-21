@@ -234,8 +234,8 @@ export function Derived({ k, data }: { k: DerivedKey; data: HelpData }) {
       );
     }
     case "build.date":
-      if (!m) return needManifest("build date");
-      return <p className="help-served">This build was generated on {fmtDate(m.build_time.slice(0, 10))}.</p>;
+      if (!f) return needFacts("build date");
+      return <p className="help-served">This build's data are as of {fmtDate(f.as_of)}; the build was generated on {fmtDate(f.build_time.slice(0, 10))} (UTC).</p>;
     case "build.note":
       if (!f) return needFacts("note on build dates");
       return f.theatre.build_date_note ? <p className="help-served">{f.theatre.build_date_note}</p> : null;
