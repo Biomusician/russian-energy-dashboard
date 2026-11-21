@@ -523,3 +523,106 @@ def test_xl01_a_historical_statement_points_where_its_newer_statement_is_drawn(t
     below = [r for r in rows if r["place"] == "below"]
     if below:
         assert "A later statement of this type is listed below." in out["page"]
+
+
+# ---- Record corrections (production red team; XL-15, XL-01, T-B2): the gate rules behind them ------
+
+def _served_records():
+    doc = _read("global/impacts.json")
+    return doc["records"] + doc.get("attempts", [])
+
+
+def _one_abstracted():
+    return copy.deepcopy(next(r for r in _served_records() if r.get("publication_policy") == G.ABSTRACTED
+                              and r.get("date_precision") == "day"))
+
+
+@needs_payload
+def test_an_abstracted_record_states_no_duration(ctx):
+    """A German sabotage record said its outage lasted "several days": how long service was out is
+    the same later status as an end date, which an abstracted record never carries."""
+    r = _one_abstracted()
+    assert not [p for p in G.abstraction_problems(r, ctx) if "duration" in p]
+    r["civilian_service_impact"][0]["duration_text"] = "several days"
+    assert any("states no duration" in p for p in G.abstraction_problems(r, ctx))
+    for word in ("withheld", "unknown", None):
+        r["civilian_service_impact"][0]["duration_text"] = word
+        assert not [p for p in G.abstraction_problems(r, ctx) if "duration" in p], word
+
+
+@needs_payload
+def test_xl15_an_abstracted_record_carries_no_late_citation(ctx):
+    """The country systems' late-citation rule, now on abstracted impact records: a report from more
+    than seven days after the event, an undated one, or one dated only to a month is refused."""
+    import datetime as dt
+    r = _one_abstracted()
+    start = dt.date.fromisoformat(r["date"])
+    s = r["sources"][0]
+    for date, late in (((start + dt.timedelta(days=7)).isoformat(), False),
+                       ((start + dt.timedelta(days=8)).isoformat(), True),
+                       (None, True), (r["date"][:7], True)):
+        s["date"] = date
+        hit = [p for p in G.abstraction_problems(r, ctx) if "days of the event" in p]
+        assert bool(hit) is late, (date, hit)
+
+
+@needs_payload
+def test_served_abstracted_records_pass_the_duration_and_late_citation_rules(ctx):
+    for r in _served_records():
+        if r.get("publication_policy") == G.ABSTRACTED:
+            bad = [p for p in G.abstraction_problems(r, ctx) if "duration" in p or "days of the event" in p]
+            assert not bad, (r["impact_id"], bad)
+
+
+@needs_payload
+def test_the_import_withholds_an_abstracted_records_duration():
+    """The import writes any duration on an abstracted record as withheld, as it removes an end
+    date; an absence word is kept as it is."""
+    import scripts.import_impacts as I
+    r = _one_abstracted()
+    r["civilian_service_impact"][0]["duration_text"] = "several days"
+    notes = []
+    out = I.shape(r, "imp-test-original-id", b"test-key-not-the-real-one", False, notes)
+    assert out["civilian_service_impact"][0]["duration_text"] == "withheld"
+    assert any("duration written as withheld" in n for n in notes)
+    r["civilian_service_impact"][0]["duration_text"] = "unknown"
+    assert I.shape(r, "imp-test-original-id", b"k", False, [])["civilian_service_impact"][0]["duration_text"] == "unknown"
+
+
+def test_tb2_basis_four_needs_a_national_or_regional_scope():
+    """Basis 4 is a national or regional service lost; it had been claimed for one hospital, one
+    airport and one island community, all recorded as local."""
+    r = copy.deepcopy(next(x for x in _served_records() if x.get("inclusion_basis") == 4))
+    assert not [p for p in G.vocabulary_problems(r) if "inclusion_basis 4" in p]
+    for c in r["civilian_service_impact"]:
+        c["geographic_scope"] = "local"
+    assert any("inclusion_basis 4" in p for p in G.vocabulary_problems(r))
+    taxonomy = json.loads((ROOT / "methodology" / "impact_taxonomy.json").read_text(encoding="utf-8"))
+    scopes = {s["id"] for s in taxonomy["geographic_scopes"]}
+    assert set(G.WIDE_SCOPES) <= scopes and "local" not in G.WIDE_SCOPES
+
+
+def test_tb2_no_served_basis_four_record_is_local_only():
+    for r in _served_records():
+        if r.get("inclusion_basis") == 4:
+            assert any(c.get("geographic_scope") in G.WIDE_SCOPES for c in r["civilian_service_impact"]), r["impact_id"]
+
+
+def test_xl01_a_context_entry_cannot_describe_a_day_after_it_was_made():
+    entries = copy.deepcopy(_read("global/regional_context.json")["entries"])
+    assert not [p for p in G.context_problems(entries) if "is after date" in p], "the served file passes"
+    e = next(x for x in entries if x["as_of"] == x["date"])
+    e["as_of"] = "2099-01-01"
+    assert any("is after date" in p for p in G.context_problems(entries))
+
+
+def test_a_lead_correction_carries_its_own_date():
+    """A correction added to a lane's lead file later is dated alone: restamping the lane's date had
+    marked some sixty untouched records as revised (found applying the iteration-23 corrections)."""
+    import scripts.import_impacts as I
+    reviews = {I.LEAD: {"lane": {"reviewed_at": "2026-11-19", "verdicts": {
+        "a": {"verdict": "accept_with_correction", "set": {}},
+        "b": {"verdict": "accept_with_correction", "set": {}, "reviewed_at": "2026-11-21"}}}}}
+    assert I.lead_patch(reviews, "lane", "a")[1] == "2026-11-19"
+    assert I.lead_patch(reviews, "lane", "b")[1] == "2026-11-21"
+    assert "reviewed_at" in I.LEAD_KEYS

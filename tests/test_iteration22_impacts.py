@@ -1153,7 +1153,7 @@ def test_context_entries_carry_their_age_and_only_the_newest_of_a_type_is_latest
     by_id = {e["id"]: e for e in cx["entries"]}
     old, new = by_id["ctx-2026-03-05-synthetic-shipping-statement"], by_id["ctx-2026-09-20-synthetic-shipping-statement"]
     assert new["is_latest_of_type"] is True and old["is_latest_of_type"] is False
-    assert old["age_days"] == 259 and new["age_days"] == 58       # from each entry's as-of date to the build date
+    assert old["age_days"] == 259 and new["age_days"] == 60       # from each entry's as-of date to the build date
     for ctype in {e["context_type"] for e in cx["entries"]}:
         latest = [e for e in cx["entries"] if e["context_type"] == ctype and e["is_latest_of_type"]]
         assert len(latest) == 1 and latest[0]["as_of"] == max(e["as_of"] for e in cx["entries"] if e["context_type"] == ctype)
@@ -2299,7 +2299,11 @@ def test_an_abstracted_energy_record_that_names_no_technology_says_it_is_withhel
     attack = _attack_candidate()
     attack["technology"] = None
     named = candidate(BRA, publication_policy="country_abstracted")
-    paths = make_queue(tmp_path, {"eurasia": [attack], "europe": [named, candidate(JPN, publication_policy="country_abstracted")]})
+    japan = candidate(JPN, publication_policy="country_abstracted")
+    # An abstracted record cites nothing from more than seven days after the event (iteration 23, XL-15).
+    for x in japan["sources"]:
+        x["date"] = japan["date"]
+    paths = make_queue(tmp_path, {"eurasia": [attack], "europe": [named, japan]})
     report = run(paths)
     got = {r["country_a3"]: r for r in curated_records(paths).values()}
     assert got["UKR"]["technology"] == "withheld" and got["BRA"]["technology"] == "transmission"
@@ -2984,6 +2988,9 @@ def _abstracted_irn():
     r = rec(IRN)
     r["publication_policy"] = G.ABSTRACTED
     r["impact_id"] = "imp-2024-08-irn-electricity-event-0a1b2c"
+    # An abstracted record states no duration (iteration 23): the import writes it as withheld.
+    for c in r.get("civilian_service_impact") or []:
+        c["duration_text"] = "withheld"
     for s in r["sources"]:
         s.pop("title_en", None)
         s.pop("title_original", None)

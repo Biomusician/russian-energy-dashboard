@@ -7149,7 +7149,9 @@ def test_one_hurricane_is_one_episode_not_many():
     helene = [ep for ep in payload["episodes"] if ep["episode_id"] == "us-2024-09-hurricane-helene"]
     naming = sorted(e["event_id"] for e in payload["events"] if e.get("hazard_name") == "Hurricane Helene (2024)")
     assert len(helene) == 1 and sorted(helene[0]["event_ids"]) == naming
-    assert {"US-FL", "US-GA", "US-NC", "US-SC"} <= set(helene[0]["region_codes"])
+    # The Florida, Georgia, North Carolina and South Carolina records were held in iteration 23
+    # (C5: figures from Wikipedia only); the five other states remain.
+    assert {"US-IN", "US-KY", "US-OH", "US-TN", "US-VA"} <= set(helene[0]["region_codes"])
     assert helene[0]["has_country_level_record"]   # the Gulf shut-ins are not one state's
 
 

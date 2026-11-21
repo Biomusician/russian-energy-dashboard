@@ -180,7 +180,7 @@
     {
       "id": "ctx-2026-09-20-synthetic-shipping-statement",
       "date": "2026-09-20",
-      "as_of": "2026-09-22",
+      "as_of": "2026-09-20",
       "context_type": "shipping_status",
       "claim": "SYNTHETIC FIXTURE. The Example Maritime Agency said transit traffic through the Strait of Hormuz remained below its usual level.",
       "metric": null,
@@ -189,7 +189,7 @@
           "ref": "s1",
           "url": "https://maritime-agency.example/synthetic/ctx-2026-09-20-synthetic-shipping-statement",
           "publisher": "Example Maritime Agency",
-          "date": "2026-09-22",
+          "date": "2026-09-20",
           "language": "en",
           "source_role": "government",
           "medium": "web",

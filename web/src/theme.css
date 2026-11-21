@@ -2094,4 +2094,7 @@ html[data-layout="narrow"] .brief-panel { left: 16px; right: 16px; width: auto; 
 .hl-learn { font-size: 11px; }
 @media (max-width: 600px) { .hl-learn { display: none; } }
 .head-learn { font-size: 12px; align-self: center; }
+/* Same reason on a country page: on a phone the link wrapped onto a line of its own and, with
+   CI's wider font, pushed the map below the first screen. The Menu's Help entry is the way in. */
+@media (max-width: 600px) { .head-learn { display: none; } }
 .learn-more:hover, .learn-more:focus-visible { color: var(--text); }

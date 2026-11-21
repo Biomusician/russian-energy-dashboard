@@ -108,6 +108,8 @@ ENTRY_FIELDS = ("id", "date", "as_of", "context_type", "claim", "metric", "sourc
                 "last_revised", "review")
 METRIC_FIELDS = ("value", "value_upper", "qualifier", "unit", "basis")
 METRIC_QUALIFIERS = ("about", "at_least", "at_most", "range")
+# The scopes that are a national or regional service (inclusion basis 4); "local" is not one.
+WIDE_SCOPES = ("national", "regional", "multi_region", "multi_country")
 # The one mechanism a record that is not a cyberattack may carry (methodology §4).
 IT_FAILURE_MECHANISM = "it_outage_affecting_operations"
 LOG_FIELDS = ("window", "status", "source_families", "regions_worked", "limitations", "latest_research_date",
@@ -818,6 +820,12 @@ def vocabulary_problems(r):
             isinstance(c, dict) and isinstance(c.get("affected"), dict) and _number(c["affected"].get("value"))
             for c in impacts):
         out.append("inclusion_basis 2 (large population affected) needs the source's figure in an affected value")
+    # Basis 4 is a NATIONAL OR REGIONAL service lost. It had been claimed for one hospital, one
+    # airport and one island community, all recorded as local (iteration 23, T-B2).
+    if not attempt and basis == 4 and not any(
+            isinstance(c, dict) and c.get("geographic_scope") in WIDE_SCOPES for c in impacts):
+        out.append(f"inclusion_basis 4 (national or regional service lost) needs an impact whose scope is one of "
+                   f"{WIDE_SCOPES}; a local service meets another basis or none")
 
     a = r.get("attribution")
     if not isinstance(a, dict):
@@ -1095,7 +1103,22 @@ def abstraction_problems(r, ctx):
         out.append("an abstracted record is its own episode: a declared episode's name is not gated")
     if r.get("date_end") is not None:
         out.append("an abstracted record carries no end date: when service came back is later status")
+    # How long it lasted says when service came back, the same later status as an end date: a
+    # German record said "several days" (production red team, iteration 22).
+    for i, c in enumerate(r.get("civilian_service_impact") or []):
+        if isinstance(c, dict) and c.get("duration_text") is not None and c.get("duration_text") not in ABSENCE:
+            out.append(f"civilian_service_impact[{i}]: an abstracted record states no duration: how long service "
+                       "was out is later status")
     for s in _sources(r):
+        # The country systems' late-citation rule (build_systems.LATE_CITATION_DAYS): a report from
+        # well after the event is where restoration and later status live (XL-15, iteration 23).
+        # As there, an undated source counts as late, and so does one dated only to a month or year:
+        # nothing shows it was published within the window.
+        if isinstance(s, dict) and _date_ok(r.get("date"), ("day", "month", "year")) and (
+                not _date_ok(s.get("date")) or B.late_citation(r, s)):
+            out.append(f"source {s.get('ref')!r}: dated {s.get('date')!r}, not shown to be within "
+                       f"{B.LATE_CITATION_DAYS} days of the event, on an abstracted record: a late report is "
+                       "where later status lives")
         if s.get("title_original") or s.get("title_en"):
             out.append(f"source {s.get('ref')!r}: a headline on a record published without its place")
         url = str(s.get("url") or "")
@@ -1190,6 +1213,12 @@ def context_problems(entries):
                 p.append(f"{k} {e.get(k)!r} is not a date: every statement is dated and says as of when")
         p += stamp_problems(e)
         # `as_of` may be earlier than `date`: a report published today about last week's position.
+        # Never later: a statement cannot describe a day after it was made, and an `as_of` moved
+        # forward by a later restating source showed a "latest" card dated before its own facts
+        # (iteration 23, XL-01). An update is its own entry.
+        if _date_ok(e.get("date")) and _date_ok(e.get("as_of")) and e["as_of"] > e["date"]:
+            p.append(f"as_of {e['as_of']} is after date {e['date']}: a statement cannot describe a day after it was "
+                     "made; a later update is its own entry")
         if _date_ok(e.get("date")) and e["date"] < WINDOW_START:
             p.append(f"date is before the corpus window ({WINDOW_START})")
         if e.get("context_type") not in ids("context_types"):

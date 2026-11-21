@@ -382,7 +382,13 @@ def test_no_served_record_whose_only_citations_are_discovery_aids_carries_a_cate
         if only_aids:
             found += 1
             assert ec["reason"] == NOT_YET and ec["score"] is None
-    assert found, "no discovery-aid-only record is served any more: retire this guard deliberately"
+    # Retired deliberately (iteration 23): the last served discovery-aid-only records were held (C5),
+    # so the case is checked on a synthetic record through the same function the build calls.
+    if not found:
+        aid = {"ref": "s1", "url": "https://en.wikipedia.org/wiki/Synthetic_storm", "publisher": "Wikipedia",
+               "date": "2024-09-27", "source_role": "aggregator", "supports": ["occurrence", "effect"], "opened": True}
+        ec = EC.assess([aid], "2024-09-27")
+        assert EC.is_discovery_aid(aid) and ec["category"] is None and ec["reason"] == NOT_YET and ec["score"] is None
     for sid in systems.COUNTRY_SYSTEMS:
         system = _served(sid, "system.json")
         assert "this record cites" in system["evidence_confidence_summary"]["statement"]

@@ -48,8 +48,10 @@ def _drop_helene_member(eps):
 
 
 def _helene_member_into_francine(eps):
-    eps["us-2024-09-hurricane-francine"]["event_ids"].append(
-        eps["us-2024-09-hurricane-helene"]["event_ids"][0])
+    # Into any other episode: the Francine episode itself left the file when its records were held
+    # for Wikipedia-only figures (iteration 23, C5).
+    other = next(k for k in eps if k != "us-2024-09-hurricane-helene")
+    eps[other]["event_ids"].append(eps["us-2024-09-hurricane-helene"]["event_ids"][0])
 
 
 CTX = "web/public/data/global/energy_context.json"
@@ -3830,6 +3832,34 @@ ITER23_HOME_MUTATIONS = [
      "the_home_loads_no_national_figures_until_the_reader_asks"),
 ]
 MUTATIONS += ITER23_HOME_MUTATIONS
+
+
+# ---- iteration 23: the gate rules behind the record corrections (lead) -----------------------------
+ITER23_RECORDS_MUTATIONS = [
+    ("an abstracted record may state how long service was out",
+     [("pipeline/global_impacts.py", _text(
+         'if isinstance(c, dict) and c.get("duration_text") is not None and c.get("duration_text") not in ABSENCE:',
+         'if False:'))],
+     "an_abstracted_record_states_no_duration"),
+    ("an abstracted record may cite a report from weeks after the event",
+     [("pipeline/global_impacts.py", _text(
+         "not _date_ok(s.get(\"date\")) or B.late_citation(r, s)):",
+         "False):"))],
+     "xl15_an_abstracted_record_carries_no_late_citation"),
+    ("the import keeps an abstracted record's duration",
+     [("scripts/import_impacts.py", _text('                c["duration_text"] = "withheld"', '                pass'))],
+     "the_import_withholds_an_abstracted_records_duration"),
+    ("basis 4 is accepted for a local service",
+     [("pipeline/global_impacts.py", _text('    if not attempt and basis == 4 and not any(', '    if False and not any('))],
+     "tb2_basis_four_needs_a_national_or_regional_scope"),
+    ("a context entry may describe a day after it was made",
+     [("pipeline/global_impacts.py", _text('and e["as_of"] > e["date"]:', 'and False:'))],
+     "xl01_a_context_entry_cannot_describe_a_day_after_it_was_made"),
+    ("a lead correction is dated by its lane file, not by itself",
+     [("scripts/import_impacts.py", _text('str(v.get("reviewed_at") or doc.get("reviewed_at") or "")', 'str(doc.get("reviewed_at") or "")'))],
+     "a_lead_correction_carries_its_own_date"),
+]
+MUTATIONS += ITER23_RECORDS_MUTATIONS
 
 
 def _sandbox():

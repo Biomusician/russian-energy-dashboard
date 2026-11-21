@@ -90,7 +90,9 @@ LEAD = "lead"
 # already reviewed, so what remains to check is the social check (identity, tier, origin, what the
 # post itself states; both reviewers open the post) and safety.
 ADDENDA_ROLES = ("attribution_source", "safety")
-LEAD_KEYS = ("verdict", "set", "remove_sources", "add_sources", "reason", "note")
+# `reviewed_at` on one verdict dates that correction alone: a later correction in a lane file must not
+# restamp every other record the lead normalised there (iteration 23).
+LEAD_KEYS = ("verdict", "set", "remove_sources", "add_sources", "reason", "note", "reviewed_at")
 PASS = B.BLIND_PASS
 VERDICTS = PASS + ("reject",)
 # Where a lane worked, for the published research note. A thematic lane names no region.
@@ -283,7 +285,7 @@ def lead_patch(reviews, lane, cid):
     """(the lead's normalisation of this candidate, its date), or (None, None)."""
     doc = reviews.get(LEAD, {}).get(lane)
     v = doc["verdicts"].get(cid) if doc else None
-    return (v, str(doc.get("reviewed_at") or "")) if isinstance(v, dict) else (None, None)
+    return (v, str(v.get("reviewed_at") or doc.get("reviewed_at") or "")) if isinstance(v, dict) else (None, None)
 
 
 def apply_lead(reviewed, patch, patched_at):
@@ -653,6 +655,12 @@ def shape(reviewed, original_id, key, restricted, notes):
         if r.get("date_end") is not None:
             notes.append("end date removed: when service came back is later status")
             r["date_end"] = None
+        # A duration says the same thing as an end date ("several days", production red team,
+        # iteration 22). Withheld whatever the source said: the policy, not the source, decides.
+        for c in r.get("civilian_service_impact") or []:
+            if isinstance(c, dict) and c.get("duration_text") is not None and c["duration_text"] not in G.ABSENCE:
+                notes.append("duration written as withheld: how long service was out is later status")
+                c["duration_text"] = "withheld"
         if r.get("domain") == "energy" and r.get("technology") is None:
             # An energy record names its technology or says why not. For a record published
             # without its place the honest word is that it is withheld.

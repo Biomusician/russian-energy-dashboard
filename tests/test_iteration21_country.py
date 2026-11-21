@@ -10,6 +10,7 @@ Node is not on the machine PATH (CLAUDE.md); the tests look for the portable cop
 repository, or EDM_NODE. Without a Node that can strip types they skip and say so; vitest runs
 the same mirror against the served totals in CI.
 """
+import copy
 import json
 import os
 import re
@@ -81,6 +82,13 @@ ORIGINS_JS = ("return Object.fromEntries(Object.entries(input).map(([sid, d]) =>
 @needs_payload
 def test_the_card_counts_origins_exactly_as_the_pipeline_does_on_every_served_record(tmp_path):
     served = _served()
+    # No served record cites only discovery aids since the iteration-23 holds (C5), so one is built
+    # from a served record to keep that branch exercised. Its pseudo-system has no source_health.
+    synthetic = copy.deepcopy(served["us"]["events"][0])
+    synthetic["event_id"] = "zz-synthetic-discovery-aid-only"
+    synthetic["sources"] = [{**copy.deepcopy(synthetic["sources"][0]), "url": "https://en.wikipedia.org/wiki/Synthetic_storm",
+                             "publisher": "Wikipedia"}]
+    served["zz"] = {"events": [synthetic], "system": {}}
     got = _run_ts(tmp_path, ORIGINS_JS, {sid: {"events": d["events"]} for sid, d in served.items()})
     checked = fewer_origins_than_pages = discovery_only = wire = 0
     for sid, d in served.items():
