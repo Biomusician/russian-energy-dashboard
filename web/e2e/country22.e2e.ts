@@ -435,3 +435,27 @@ test.describe("the image export", () => {
     expect(app.errors).toEqual([]);
   });
 });
+
+// CI's Linux runner draws the page in DejaVu Sans, which is wider than the fonts on a developer's
+// machine: the overview wrapped to more lines there and pushed the map below the first screen on
+// four Gulf pages. Verdana is as wide, so this reproduces the runner anywhere.
+const WIDE_FONT = ":root { --sans: Verdana, 'DejaVu Sans', sans-serif !important; }";
+
+test.describe("phones in a wide fallback font", () => {
+  for (const sys of ["ae", "bh", "kw", "om", "ir"]) {
+    test(`?sys=${sys} at 390x844 still starts its map on the first screen, overview headings visible`, async ({ app, page }) => {
+      const h = 844;
+      await page.setViewportSize({ width: 390, height: h });
+      await app.open(`?sys=${sys}`);
+      await page.addStyleTag({ content: WIDE_FONT });
+      await page.waitForLoadState("networkidle");
+      expect(await sideways(page), "horizontal scroll").toBeLessThanOrEqual(1);
+      for (const part of ["Published here", "Also on this page", "Not published, and why"]) {
+        const b = await page.locator(".country-overview").getByRole("heading", { name: part, exact: true }).boundingBox();
+        expect(b!.y + b!.height, `${part} is below the first screen`).toBeLessThanOrEqual(h);
+      }
+      const map = await page.locator("[data-map-state]").boundingBox();
+      expect(map!.y, "the map starts below the first screen").toBeLessThan(h - 150);
+    });
+  }
+});

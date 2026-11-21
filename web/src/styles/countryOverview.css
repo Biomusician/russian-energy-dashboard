@@ -31,13 +31,19 @@
      short enough that the map still starts in the first screen (iteration 20's rule). */
   .country-main > .country-overview { order: -2; margin: 8px 16px 0; padding: 7px 10px 8px; }
   .country-overview h2 { margin-bottom: 4px; }
-  /* The first and last parts run their label into the sentence: two lines saved, and the longest
-     country name still leaves the map in the first screen. The links keep their label above. */
-  .overview-published h3.eyebrow, .overview-withheld h3.eyebrow { display: inline; margin: 0 6px 0 0; line-height: 16px; }
+  /* Every part runs its label into its text, so the longest country name still leaves the map in
+     the first screen. */
+  .overview-part h3.eyebrow { display: inline; margin: 0 6px 0 0; line-height: 16px; }
   .overview-published p, .overview-withheld p { display: inline; }
+  /* The links run on one line after their label, and each link's one-line description is left to
+     the tab it opens. With a description per link the block was five lines taller, and in a wider
+     fallback font (CI's DejaVu Sans) that pushed the map below the first screen. */
+  .overview-part ul.overview-links, .overview-links li { display: inline; }
+  .overview-links li:not(:last-child)::after { content: "\00B7"; padding: 0 6px; color: var(--text-dim); }
+  .overview-link-line { display: none; }
   /* With inline children the part's own font sets each line's height: without this every line is
      the body's 19 px, not the sentence's 16. */
-  .overview-published, .overview-withheld { font-size: 11.5px; line-height: 16px; }
+  .overview-part { font-size: 11.5px; line-height: 16px; }
   .overview-parts { gap: 4px; }
 }
 
