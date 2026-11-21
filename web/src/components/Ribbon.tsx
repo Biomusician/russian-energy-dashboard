@@ -190,8 +190,9 @@ export default function Ribbon({
               <span className="dimmer"> of {snapshot.incident_total}</span>
             </span>
             <span className="known-label"
-                  title="The index measures exposure, not loss, because so few events state a capacity effect.">
-              events state how much capacity they removed.
+                  title="The index measures exposure, not loss, because open reporting rarely states capacity removed. Reported effects are shown on each event and never enter the index.">
+              events state capacity removed in MW or Mt/yr{snapshot.incidents_with_reported_effect != null
+                ? `; ${snapshot.incidents_with_reported_effect} report a halt, outage or throughput effect, shown on the event, not scored` : ""}.
             </span>
           </div>
         </section>

@@ -104,6 +104,16 @@ test.describe("the headline and what it means", () => {
       const sizes = await known.locator(".known-num").evaluateAll((els) => els.map((e) => getComputedStyle(e).fontSize));
       expect(sizes.length).toBe(2);
       expect(new Set(sizes).size, "the two ratios are at different weights").toBe(1);
+      // F-4: the ratios stand at the headline's weight: same typeface and weight, at least 2/3 its size.
+      const head = await page.locator(".theatre-ribbon .esdi-value").evaluate((e) => {
+        const c = getComputedStyle(e); return { size: parseFloat(c.fontSize), weight: c.fontWeight, family: c.fontFamily };
+      });
+      const ratio = await known.locator(".known-num").first().evaluate((e) => {
+        const c = getComputedStyle(e); return { size: parseFloat(c.fontSize), weight: c.fontWeight, family: c.fontFamily };
+      });
+      expect(ratio.weight, "the ratios are lighter than the headline").toBe(head.weight);
+      expect(ratio.family, "the ratios use another typeface than the headline").toBe(head.family);
+      expect(ratio.size, "the ratios are footnote-sized beside the headline").toBeGreaterThanOrEqual(head.size * 0.66);
       const m = await page.evaluate(() => {
         const r = document.querySelector(".theatre-ribbon") as HTMLElement;
         const clipped = [...r.querySelectorAll<HTMLElement>("*")].filter((e) =>

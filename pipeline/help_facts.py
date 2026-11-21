@@ -81,6 +81,7 @@ def build(processed):
                 "reported_oil_strikes": bench.get("reported_oil_strikes"),
                 "coverage_ratio": bench.get("coverage_ratio"),
                 "incidents_with_quantified_capacity": snapshot.get("incidents_with_quantified_capacity"),
+                "incidents_with_reported_effect": snapshot.get("incidents_with_reported_effect"),
                 "incident_total": snapshot.get("incident_total"),
             },
             "cannot_tell_you": [{"question": c["question"], "answer": c["answer"]}

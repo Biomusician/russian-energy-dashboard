@@ -33,6 +33,7 @@ export interface HelpFacts {
       reported_oil_strikes: number | null;
       coverage_ratio: number | null;
       incidents_with_quantified_capacity: number | null;
+      incidents_with_reported_effect?: number | null;
       incident_total: number | null;
     };
     cannot_tell_you: { question: string; answer: string }[];

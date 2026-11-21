@@ -12,7 +12,8 @@
 ## Coverage
 - **Oil-strike benchmark coverage**: 38.0% (116 enumerated oil-sector strikes dated to 2026-06-30 / 305 reported; 37 more recorded after the benchmark's last period, outside the ratio)
 - **Total events across all sectors**: 184
-- **Events stating a quantified capacity effect**: 0 of 184
+- **Events stating capacity removed (MW or Mt/yr)**: 0 of 184
+- **Events with a reported effect shown, not scored**: 14
 - **Generation denominator**: 219992 MW
 
 ## Recovery

@@ -653,6 +653,10 @@ def main():
         _embargo_refusal(f"effects for {len(_young)} active-campaign incident(s) report status still "
                          "under embargo", _young)
     snapshot["strategic_effects"]["by_incident"] = _kept
+    # The capacity count above reads MW or Mt/yr fields only. Events whose observed halt, outage
+    # or throughput effect is published per event are counted here, so the ribbon can say both
+    # (final methodology red team F-3, iteration 23). Neither enters the index.
+    snapshot["incidents_with_reported_effect"] = sum(1 for _v in _kept.values() if _v)
     if campaign_policy["applied"]:
         campaign_policy["withheld_effects"] = _withheld
     snapshot["facet_counts"] = _facet_counts(assets, lines, incidents, snapshot, ctx_net)

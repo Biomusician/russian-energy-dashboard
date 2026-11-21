@@ -3961,7 +3961,11 @@ def main():
         failures = list(invalid)
         # --from N: start at the Nth mutation, to check new mutants quickly. A release gate runs all.
         start = int(sys.argv[sys.argv.index("--from") + 1]) if "--from" in sys.argv else 0
+        # --only PREFIX: just the mutants whose name starts with PREFIX (repeatable). Not a gate either.
+        only = [sys.argv[i + 1] for i, a in enumerate(sys.argv) if a == "--only"]
         for name, edits, k in MUTATIONS[start:]:
+            if only and not name.startswith(tuple(only)):
+                continue
             if name in bad_names:
                 continue
             code, tail = _run(box, k)
@@ -4000,6 +4004,28 @@ F23_GLOSS = "web/src/global/help/glossary.ts"
 F23_SI = "web/src/global/searchIndex.ts"
 F23_HS = "web/src/global/homeSelection.ts"
 ITER23_FIX_MUTATIONS = [
+    ("F-2: Help promises no facility is ever named",
+     [("web/src/global/help/content.ts", _text(" A record may name the facility it concerns, except where the safeguards below withhold it.",
+                                              " Nothing finer than a first-level region is published."))],
+     "pytest -k f2_help_never_claims"),
+    ("F-5: the stale-impact check reports nothing",
+     [("scripts/import_candidates.py", _text('    return import_impacts.run(write=False, **paths)["withdrawn"]',
+                                             '    return []'))],
+     "pytest -k held_after_its_impact_twin"),
+    ("F-5: the check writes the curated corpus",
+     [("scripts/import_candidates.py", _text('    return import_impacts.run(write=False, **paths)["withdrawn"]',
+                                             '    return import_impacts.run(write=True, **paths)["withdrawn"]'))],
+     "pytest -k held_after_its_impact_twin"),
+    ("F-5: the country import never asks",
+     [("scripts/import_candidates.py", _text('    stale = impact_layer_stale()\n', '    stale = []\n'))],
+     "pytest -k checks_the_impact_layer_after_every_run"),
+    ("F-3: the reported-effect count is dropped",
+     [("pipeline/run.py", _text('    snapshot["incidents_with_reported_effect"] = sum(1 for _v in _kept.values() if _v)\n', ''))],
+     "pytest -k f3_reported_effects"),
+    ("F-4: the ratios fall back to a footnote weight",
+     [("web/src/styles/theatre.css", _text('             font-size: 27px; line-height: 1.05; color: var(--text); }',
+                                           '             font-size: 19px; line-height: 1.05; color: var(--text); }'))],
+     "pytest -k f4_ratios_at_headline_weight"),
     ("H-02: Help describes only the National energy mode again",
      [(F23_HELP, _text("“National energy”, the second mode, shades every country", "The map shades every country"))],
      "h02"),

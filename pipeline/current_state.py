@@ -64,8 +64,10 @@ def render(snapshot, test_count):
         f"{cov.get('reported_total_strikes')} reported; {cov.get('enumerated_after_window')} more "
         "recorded after the benchmark's last period, outside the ratio)",
         f"- **Total events across all sectors**: {cov.get('total_events_all_sectors')}",
-        f"- **Events stating a quantified capacity effect**: "
+        f"- **Events stating capacity removed (MW or Mt/yr)**: "
         f"{s.get('incidents_with_quantified_capacity')} of {s.get('incident_total')}",
+        f"- **Events with a reported effect shown, not scored**: "
+        f"{s.get('incidents_with_reported_effect')}",
         f"- **Generation denominator**: {s.get('denominators', {}).get('electric_generation_mw')} MW",
         "",
         "## Recovery",

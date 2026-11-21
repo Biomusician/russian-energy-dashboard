@@ -514,6 +514,8 @@ export interface Snapshot {
   }>;
   incident_total: number;
   incidents_with_quantified_capacity: number;
+  /** Events with a published observed effect (halt, outage, throughput); shown, never scored. */
+  incidents_with_reported_effect?: number;
   assessed_degradation: AssessedDegradation;
   recovery_stats: RecoveryStats;
   coverage_detail: CoverageDetail;

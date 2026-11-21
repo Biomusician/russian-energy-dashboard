@@ -527,3 +527,41 @@ def test_h01_the_cannot_tell_you_list_never_calls_the_model_count_no_restoration
     assert "have no published restoration report" not in text
     assert "49 struck facilities are still counted in the index with no report that closes the disruption" in text
     assert "(6 of them carry a partial-restart or restoration report that did not close it)" in text
+
+
+# --- final methodology red team (iteration 23) ------------------------------------------------------
+
+@needs_build
+def test_f3_reported_effects_are_counted_apart_from_capacity_removed():
+    """F-3: "0 of N events state how much capacity they removed" sat beside events whose observed
+    halt or outage the dashboard publishes. Each figure now says what it counts."""
+    snap = _read(PROCESSED / "snapshot.json")
+    by_incident = snap["strategic_effects"]["by_incident"]
+    assert snap["incidents_with_reported_effect"] == sum(1 for v in by_incident.values() if v)
+    ribbon = (ROOT / "web" / "src" / "components" / "Ribbon.tsx").read_text(encoding="utf-8")
+    assert "events state how much capacity they removed" not in ribbon
+    assert "incidents_with_reported_effect" in ribbon and "MW or Mt/yr" in ribbon and "not scored" in ribbon
+    method = (ROOT / "web" / "src" / "components" / "Methodology.tsx").read_text(encoding="utf-8")
+    assert "carry a quantified\n            capacity effect" not in method and "incidents_with_reported_effect" in method
+    facts = _read(PROCESSED / "global" / "help_facts.json")
+    assert facts["theatre"]["coverage"]["incidents_with_reported_effect"] == snap["incidents_with_reported_effect"]
+
+
+def _px(css, selector_line):
+    m = re.search(re.escape(selector_line) + r"[^}]*?font-size:\s*([\d.]+)px", css)
+    assert m, selector_line
+    return float(m.group(1))
+
+
+def test_f4_ratios_at_headline_weight():
+    """F-4: CLAUDE.md puts the coverage ratios at the headline's visual weight. They were 19 px
+    regular beside a 40 px semibold index."""
+    css = (ROOT / "web" / "src" / "styles" / "theatre.css").read_text(encoding="utf-8")
+    rule = re.search(r"\n\.known-num \{([^}]*)\}", css).group(1)
+    assert "font-family: var(--mono)" in rule and "font-weight: 600" in rule
+    head = _px(css, ".theatre-ribbon .esdi-value {")
+    head_compact = _px(css, 'html[data-chrome="compact"] .theatre-ribbon .esdi-value {')
+    assert _px(css, "\n.known-num {") >= head * 0.66
+    assert _px(css, 'html[data-chrome="compact"] .known-num {') >= head_compact * 0.66
+    phone = css[css.index("  .hl-block { flex: 1 1 100%"):]
+    assert _px(phone, ".known-num, html[data-chrome=\"compact\"] .known-num {") >= _px(phone, ".theatre-ribbon .esdi-value") * 0.66

@@ -230,7 +230,8 @@ export function Derived({ k, data }: { k: DerivedKey; data: HelpData }) {
       return (
         <p className="help-served">In this build: {c.enumerated_oil_strikes ?? "an unstated number of"} oil-sector strikes enumerated against a reported
           benchmark of {c.reported_oil_strikes ?? "an unstated number"}{c.coverage_ratio != null ? ` (${Math.round(c.coverage_ratio * 100)}%)` : ""};
-          {" "}{c.incidents_with_quantified_capacity ?? "an unstated number"} of {c.incident_total ?? "an unstated number of"} disruptions have a quantified capacity effect.</p>
+          {" "}{c.incidents_with_quantified_capacity ?? "an unstated number"} of {c.incident_total ?? "an unstated number of"} disruptions state capacity removed in MW or Mt/yr
+          {c.incidents_with_reported_effect != null ? `, and ${c.incidents_with_reported_effect} report a halt, outage or throughput effect that is shown but never scored` : ""}.</p>
       );
     }
     case "build.date":

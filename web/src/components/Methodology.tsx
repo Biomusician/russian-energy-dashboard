@@ -85,7 +85,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
               <li>The headline ({fmtNum(s.esdi, 1)}, on a 0–100 scale) is <b>exposure</b>: {HEADLINE_SCALE} — not measured loss.</li>
               <li>Each event fades on a half-life set by recovery evidence: observed, then estimated, then a modelled assumption.</li>
               <li>Sectors without a capacity base ({s.sectors_uncovered.map(titleCase).join(", ") || "none"}) are left out and their weight shared, never counted as zero.</li>
-              <li>{s.incidents_with_quantified_capacity} of {s.incident_total} events state a capacity effect; coverage of oil strikes is measured against a public benchmark, other sectors have none.</li>
+              <li>{s.incidents_with_quantified_capacity} of {s.incident_total} events state capacity removed in MW or Mt/yr{s.incidents_with_reported_effect != null ? `, and ${s.incidents_with_reported_effect} report a halt, outage or throughput effect that is shown but not scored` : ""}; coverage of oil strikes is measured against a public benchmark, other sectors have none.</li>
               <li>Public sources only, aggregated to administrative region. Crimea is shown as occupied Ukrainian territory and included in the index as an analytic choice.</li>
             </ul>
           </div>
@@ -102,8 +102,9 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
             It is not a measurement of lost throughput or lost generation. Open
             reporting almost never states how much capacity a given event removed, and
             nothing here fills that gap with an estimate. Of {s.incident_total} events
-            in the dataset, {s.incidents_with_quantified_capacity} carry a quantified
-            capacity effect.
+            in the dataset, {s.incidents_with_quantified_capacity} state capacity removed in
+            the index's units (MW or Mt/yr).{s.incidents_with_reported_effect != null
+              ? ` ${s.incidents_with_reported_effect} carry an observed effect from a source, such as a halt, an outage or a throughput cut, shown on the event and never scored.` : ""}
           </p>
 
           <H>How a score is built</H>

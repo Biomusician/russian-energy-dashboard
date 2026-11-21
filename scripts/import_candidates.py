@@ -667,8 +667,27 @@ def run(system_id):
         print(f"   held {cid}: {why}")
 
 
+def impact_layer_stale(**paths):
+    """Impact records still served that the impact import would now withdraw.
+
+    The impact import refuses a record that matches one held in a country queue, but only when it
+    runs. Holding a country record after its impact twin was imported left the twin published
+    until the next impact import (final methodology red team F-5, iteration 23). Nothing is
+    written here: the impact import is run without writing and its withdrawals are returned."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import import_impacts
+    queue = Path(paths.get("queue") or import_impacts.QUEUE)
+    if not queue.exists():
+        return []            # no impact queue on this machine (CI): nothing can be reconciled
+    return import_impacts.run(write=False, **paths)["withdrawn"]
+
+
 if __name__ == "__main__":
     for sid in sys.argv[1:]:
         if sid not in systems.COUNTRY_SYSTEMS:
             raise SystemExit(f"unknown country system {sid!r}")
         run(sid)
+    stale = impact_layer_stale()
+    if stale:
+        raise SystemExit("the impact layer still serves records its import would now withdraw: "
+                         + ", ".join(stale) + ". Run scripts/import_impacts.py before building.")

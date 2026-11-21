@@ -1630,6 +1630,31 @@ def test_a_candidate_matching_a_record_held_from_a_country_system_is_refused(tmp
     assert match["hold_fields"]["suggested_disposition"] == "held" and "threshold" in match["hold_fields"]["disposition_reason"]
 
 
+def test_a_country_record_held_after_its_impact_twin_was_imported_stops_the_country_import(tmp_path):
+    """F-5 (final methodology red team, iteration 23): publish, import the twin, then hold."""
+    C = _script("import_candidates")
+    row = _country_row("us-2026-02-14-synthetic-terminal", date="2026-02-15", disposition="accept", reason="")
+    paths = make_queue(tmp_path, {"na": [candidate(USA)]}, country={"us": [row]}, published={"us": [row["candidate_id"]]})
+    run(paths)
+    assert set(curated_records(paths)) == {USA}
+    assert C.impact_layer_stale(date=DAY1, ctx=ctx(), key=KEY, **paths) == []
+    # The country record is held: its curated file no longer carries it.
+    (paths["country_queues"] / "us.json").write_text(json.dumps([_country_row(row["candidate_id"], date="2026-02-15")]),
+                                                    encoding="utf-8")
+    (paths["systems_curated"] / "us" / "events.json").write_text(json.dumps({"system_id": "us", "events": []}),
+                                                               encoding="utf-8")
+    assert C.impact_layer_stale(date=DAY1, ctx=ctx(), key=KEY, **paths) == [USA]
+    assert set(curated_records(paths)) == {USA}, "the check must not write"
+    run(paths)
+    assert curated_records(paths) == {} and C.impact_layer_stale(date=DAY1, ctx=ctx(), key=KEY, **paths) == []
+
+
+def test_the_country_import_checks_the_impact_layer_after_every_run():
+    src = (ROOT / "scripts" / "import_candidates.py").read_text(encoding="utf-8")
+    main = src[src.index('if __name__ == "__main__":'):]
+    assert "stale = impact_layer_stale()" in main and "raise SystemExit" in main.split("stale = impact_layer_stale()")[1]
+
+
 def test_a_held_territory_event_cannot_return_through_the_impact_layer(tmp_path):
     """Puerto Rico is outside the US system's geography, but the US queue holds its accepted events
     pending the owner's decision on territories. A PRI impact record of the same event is refused,
@@ -2299,7 +2324,7 @@ def test_an_abstracted_energy_record_that_names_no_technology_says_it_is_withhel
     attack = _attack_candidate()
     attack["technology"] = None
     named = candidate(BRA, publication_policy="country_abstracted")
-    japan = candidate(JPN, publication_policy="country_abstracted")
+    japan = _no_duration(candidate(JPN, publication_policy="country_abstracted"))
     # An abstracted record cites nothing from more than seven days after the event (iteration 23, XL-15).
     for x in japan["sources"]:
         x["date"] = japan["date"]
@@ -2984,10 +3009,21 @@ def test_a_held_country_record_of_a_class_with_no_sector_matches_any_energy_cand
     assert curated_records(paths) == {} and "reconcile with us" in reasons(report, USA)
 
 
+def _no_duration(r):
+    """A synthetic record readied for abstraction: every string loses its duration wording, which an
+    abstracted record never states (final methodology red team F-1, iteration 23)."""
+    if isinstance(r, dict):
+        return {k: (v if k == "url" else _no_duration(v)) for k, v in r.items()}
+    if isinstance(r, list):
+        return [_no_duration(v) for v in r]
+    return G.DURATION_WORDING.sub("for a period", r) if isinstance(r, str) else r
+
+
 def _abstracted_irn():
     r = rec(IRN)
     r["publication_policy"] = G.ABSTRACTED
     r["impact_id"] = "imp-2024-08-irn-electricity-event-0a1b2c"
+    r = _no_duration(r)
     # An abstracted record states no duration (iteration 23): the import writes it as withheld.
     for c in r.get("civilian_service_impact") or []:
         c["duration_text"] = "withheld"
