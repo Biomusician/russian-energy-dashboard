@@ -85,7 +85,7 @@ export const GLOSSARY_DETAIL: Record<string, GlossaryDetail> = {
     detail: "Records join an episode only when a cited source names the shared hazard or event, or says one event continued another. Counting episodes instead of records stops a single storm that touched many regions from looking like many separate disruptions.",
   },
   "esdi": {
-    detail: "It measures exposure, not output lost and not current damage. A sector with no capacity base is left out and the remaining weights are rescaled; it is not counted as zero. It depends heavily on assumed recovery times, and its transmission part is a count of disrupted equipment, not a share of the grid.",
+    detail: "It weighs each facility's published capacity by evidence strength, cause, reported damage severity and time elapsed, sector by sector, then combines sectors with fixed weights. It measures exposure, not output lost and not current damage. A sector with no capacity base is left out and the remaining weights are rescaled; it is not counted as zero. It depends heavily on assumed recovery times, and its transmission part is a count of disrupted equipment, not a share of the grid.",
   },
   "evidence-confidence": {
     detail: "It counts independent originating statements, never links, and weighs who is speaking (an operator or official body counts for more than a repost), how specific the reported effect is, whether a source was opened during research or review, and whether it was dated at the time. The category is the finding; the points behind it are not a percentage. Each record shows its reasons under “Why?”.",
