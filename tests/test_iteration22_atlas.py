@@ -422,7 +422,9 @@ def test_atlas_confidence_is_words_with_the_served_caveat(tmp_path_factory, serv
     """)
     assert out["chip"].startswith("Evidence confidence: Moderate")
     assert out["none"].startswith("Evidence confidence: Not assessed") and not re.search(r"Preliminary|Limited|Low", out["none"])
-    assert f"{out['score']} points : ordinal score, not a probability" in out["why"]
+    # No total (iteration 23, ECI-15): the components' maxima stay ("up to 15 points"), the sum does not.
+    assert not re.search(rf"(?<!up to ){out['score']} points", out["why"]), "the total is never shown"
+    assert "they are not a probability" in out["why"]
     assert not re.search(r"/\s*100|of 100|\d\s*%|percent", out["why"], re.I), "points only: never out of a hundred, never a percentage"
     assert served["method"]["statement"] in out["why"]
     for reason in out["reasons"]:

@@ -21,6 +21,27 @@ export const WIRE_ORIGINS: readonly (readonly [string, string])[] = [
   ["afp", "AFP"], ["spa", "Saudi Press Agency"], ["kuna", "KUNA"], ["wam", "WAM"], ["qna", "QNA"],
   ["irna", "IRNA"], ["wire copy", "an unnamed wire"],
 ];
+/** A wire's short name is also the start of other names ("IANS Research" is an advisory firm) and
+ *  "spa" is a word: a key of this many letters or fewer counts only in capitals and only where
+ *  nothing but one of WIRE_FOLLOWERS continues it (build_systems.wire_key_in; iteration 23, ECI-14). */
+export const WIRE_SHORT_NAME = 5;
+export const WIRE_FOLLOWERS: readonly string[] = ["via", "and", "with", "copy", "contributed", "published", "news", "wire"];
+
+/** Whether the wire key `key` (lower case) names its wire in a publisher field. */
+export function wireKeyIn(key: string, text: string | null | undefined): boolean {
+  const words = (text ?? "").replace(/[^A-Za-z]+/g, " ").split(" ").filter(Boolean);
+  const lower = words.map((w) => w.toLowerCase());
+  const parts = key.split(" ");
+  if (parts.length > 1 || key.length > WIRE_SHORT_NAME) {
+    for (let i = 0; i + parts.length <= lower.length; i += 1) {
+      if (parts.every((p, j) => lower[i + j] === p)) return true;
+    }
+    return false;
+  }
+  return lower.some((w, i) => w === key && words[i] === key.toUpperCase()
+    && (i + 1 === lower.length || WIRE_FOLLOWERS.includes(lower[i + 1])));
+}
+
 /** Discovery aids, never an origin: an encyclopedia and a content aggregator restate others' reporting. */
 export const DISCOVERY_ONLY_DOMAINS: readonly string[] = ["wikipedia.org", "indexbox.io"];
 const SECOND_LEVEL = new Set(["co", "com", "gov", "org", "net", "ac", "edu", "nic"]);
@@ -45,9 +66,8 @@ export function sourceOrigin(s: Cited): string | null {
   const domain = registeredDomain(s.url);
   const publisher = (s.publisher ?? "").toLowerCase();
   if (DISCOVERY_ONLY_DOMAINS.includes(domain) || publisher.includes("wikipedia")) return null;
-  const words = ` ${publisher.replace(/[^a-z]+/g, " ")} `;
   for (const [key, name] of WIRE_ORIGINS) {
-    if (words.includes(` ${key} `)) return `wire:${name}`;
+    if (wireKeyIn(key, s.publisher)) return `wire:${name}`;
   }
   return domain || publisher;
 }
@@ -176,17 +196,22 @@ export const PLAIN_BASIS: Record<number, string> = {
   2: "Operations at an energy export or import terminal were reported suspended.",
   3: "A trunk pipeline was reported shut down, or force majeure was declared on it.",
   4: "A power plant of about 500 MW or more was forced offline with a reported effect, or a shortage of generation forced rotating power cuts.",
-  5: "A power-grid event was reported to affect about 100,000 customers or more, or the grid operator declared an emergency.",
+  // Two limbs (T-A7): the sentence says the rule admits either, never that this record met the first.
+  5: "The grid clause admits either of two things: a power-grid event reported to affect about 100,000 customers or more, or an emergency declared by the grid operator. The record's own basis says which it met.",
   6: "An event at a coal mine was reported to have materially cut supply.",
   7: "Oil or gas production was reported shut in at a material volume.",
 };
 
+/** Clauses that admit two different things: the record's own recorded basis is said beside the
+ *  sentence, so a reader of an 8,517-customer record is not left to assume the 100,000 limb. */
+const TWO_LIMB_CLAUSES: readonly number[] = [5];
+
 export function plainBasis(e: CountryEvent, threshold: CountrySystem["inclusion_threshold"]): string {
   const n = e.criterion_met;
   if (n == null) return "The record meets the inclusion rule; which part of the rule it meets is not recorded.";
-  if (threshold.version === PLAIN_BASIS_VERSION && PLAIN_BASIS[n]) return PLAIN_BASIS[n];
-  const served = threshold.clauses[String(n)];
-  return served ?? "The record meets the inclusion rule; which part of the rule it meets is not recorded.";
+  const base = threshold.version === PLAIN_BASIS_VERSION && PLAIN_BASIS[n] ? PLAIN_BASIS[n] : threshold.clauses[String(n)];
+  if (!base) return "The record meets the inclusion rule; which part of the rule it meets is not recorded.";
+  return TWO_LIMB_CLAUSES.includes(n) && e.threshold_basis ? `${base} Recorded basis: ${e.threshold_basis}` : base;
 }
 
 // ---- what the report does not establish --------------------------------------------------------

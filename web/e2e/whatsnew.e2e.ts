@@ -129,7 +129,7 @@ test.describe("what's new in the data", () => {
       recordId = e.event_id;
       body.available = true;
       body.comparison = { previous_as_of: "2026-11-11", current_as_of: "2026-11-12", mode: "production", basis: "b" };
-      body.global = [{ category: "methodology", notes: ["The inclusion threshold for country records was revised."], link: { anchor: "why-head" } }];
+      body.global = [{ category: "methodology", notes: ["The inclusion threshold for country records was revised."], link: { help: "whats-new" } }];
       body.unchanged = [];
       body.impact_layer = [
         { category: "impact_record_added", notes: [], more: false, all_backfill: false, all_new_events: false, items: [
@@ -163,7 +163,7 @@ test.describe("what's new in the data", () => {
     await expect(panel.locator('.wn-system[data-system="sa"] .wn-items li')).toHaveText(["Mar 2022 · National · Oil refinery"]);
     const record = panel.locator('.wn-system[data-system="us"] a.wn-record');
     await expect(record).toHaveAttribute("href", `?sys=us#${anchor}`);
-    await expect(panel.locator(".wn-global a.wn-link")).toHaveAttribute("href", "#why-head");
+    await expect(panel.locator(".wn-global a.wn-link")).toHaveAttribute("href", "?view=help#whats-new");
 
     // The impact layer is said once, apart from any country, and tells a backfill from a new event.
     const impact = panel.locator(".wn-impact");

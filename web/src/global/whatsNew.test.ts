@@ -105,17 +105,19 @@ describe("record and section links (iteration 22)", () => {
     expect(recordHref("sa", { ...row, record_id: "" })).toBeNull();
   });
 
-  it("links a coverage change to the country's tab, a rule change to this page, and nothing else", () => {
+  it("links a coverage change to the country's tab, a rule change to the Help page, and nothing else", () => {
     expect(changeLink({ category: "research_coverage", notes: [], link: { system_id: "us", tab: "research" } }))
       .toEqual({ href: "?sys=us#tab-research", label: "Open Research coverage", samePage: false });
     expect(changeLink({ category: "methodology", notes: [], link: { system_id: "us", tab: "method" } }))
       .toEqual({ href: "?sys=us#tab-method", label: "How this country is assessed", samePage: false });
-    expect(changeLink({ category: "methodology", notes: [], link: { anchor: "why-head" } }))
-      .toEqual({ href: "#why-head", label: "How this works", samePage: true });
+    expect(changeLink({ category: "methodology", notes: [], link: { help: "whats-new" } }))
+      .toEqual({ href: "?view=help#whats-new", label: "How this works", samePage: false });
+    // The home section it used to name explains how systems were chosen (IA-06): no longer a target.
+    expect(changeLink({ category: "methodology", notes: [], link: { anchor: "why-head" } as never })).toBeNull();
     expect(changeLink({ category: "methodology", notes: [] })).toBeNull();
     // A link the panel does not know is dropped, never followed: no tab it has not heard of, no script.
     expect(changeLink({ category: "x", notes: [], link: { system_id: "us", tab: "events" } })).toBeNull();
-    expect(changeLink({ category: "x", notes: [], link: { anchor: "javascript:alert(1)" } })).toBeNull();
+    expect(changeLink({ category: "x", notes: [], link: { help: "javascript:alert(1)" } })).toBeNull();
   });
 
   it("accepts the new fields and refuses a malformed impact layer", () => {

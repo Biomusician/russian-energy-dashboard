@@ -39,6 +39,8 @@ import {
   DEFAULT_TAB, TAB_LABEL, regionalGroupFor, resolveTab, tabFromSearch, tabsFor, withTab, type RegionalGroup, type Tab,
 } from "./countryTabs";
 import { CountryOverview } from "./OverviewBlock";
+import { sourceCheckLine } from "./countryOverview";
+import { REVIEWERS_SAME_MODEL } from "./reviewText";
 import { CountryImpacts, impactPresence, useCountryImpacts } from "./CountryImpacts";
 import { CountryRegional } from "./CountryRegional";
 import { loadConfidenceMethod } from "./impacts";
@@ -589,6 +591,7 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
   const used = sys.sources.filter((x) => !x.role.startsWith("rejected"));
   const late = staleSources(used, today);
   const overdue = rf.next_due != null && rf.next_due < today;
+  const blocked = (rf.lane_states ?? {}).blocked_by_source ?? 0;
   return (
     <div className="research-status" aria-label="Research status">
       {/* Two questions, two labelled answers (iteration 20, §68): how much of the planned search is
@@ -608,12 +611,10 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
             last worked on {fmtDate(rf.last_systematic_pass)}{overdue ? "; a new pass is due" : ""}.</span>
         )}
       </div>
-      <div className="eyebrow">Source health <span className="dim">· whether the registered sources were checked on schedule</span></div>
+      <div className="eyebrow">Source health <span className="dim">· whether the source registry was re-checked on schedule</span></div>
       <div className="small">
-        <span className={`source-freshness sources-${late.length ? "stale" : "current"}`}>
-          {late.length
-            ? `${late.length} of ${used.length} registered sources overdue for a check`
-            : `All ${used.length} registered sources checked on schedule`}
+        <span className={`source-freshness sources-${late.length ? "stale" : blocked > 0 ? "partial" : "current"}`}>
+          {sourceCheckLine(used.length, late.length, blocked)}
         </span>
       </div>
       <div className="small dim">One does not imply the other: sources checked on schedule say nothing about how
@@ -960,7 +961,7 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
       <p className="small review-summary">{(s.review_summary.blind_reviewed ?? 0) + s.review_summary.dual_reviewed} of {bundle.events.length} events
         independently reviewed ({s.review_summary.blind_reviewed ?? 0} blind by three reviewers,{" "}
         {s.review_summary.dual_reviewed} by one); {s.review_summary.legacy_single_review} published before independent
-        review was required.</p>
+        review was required. {REVIEWERS_SAME_MODEL}</p>
       <p className="small dim">{readerText(s.review_summary.note)}
         {unrecorded > 0 && ` For ${unrecorded} of ${bundle.events.length} events the researchers did not record whether they read the cited sources.`}</p>
       </>)}
@@ -970,6 +971,7 @@ function SourcesPanel({ bundle, ctx }: { bundle: CountryBundle; ctx: EnergyConte
 
 const ROLE_TEXT: Record<string, string> = {
   official: "official body", government: "government", regulator: "regulator", operator: "operator",
+  cert: "national cyber agency", law_enforcement: "law enforcement", court_record: "court record",
   dataset: "dataset", media: "news media", industry: "industry press",
 };
 
@@ -983,8 +985,10 @@ function SourceHealthBlock({ h }: { h: SourceHealth }) {
       <ul className="small">
         <li>{h.citations} citations from {h.publishers} publishers, across {h.events} events.</li>
         <li>By role: {roles}.</li>
+        {/* The roles come from the served list, which the build reads from the evidence-confidence
+            method (iteration 23, F3): this sentence once named "a dataset", a role neither counts. */}
         <li>{h.events_with_first_party_source} of {h.events} events cite at least one first-party
-          source (the operator, a regulator, a government body or a dataset; Wikipedia does not count); {h.single_source_events} rest
+          source ({h.first_party_roles.map((r) => labelFor(ROLE_TEXT, r)).join(", ")}; Wikipedia does not count); {h.single_source_events} rest
           on a single citation.</li>
         {h.single_origin_events !== undefined && (
           <li>Counted by origin rather than by citation: {h.single_origin_events} events rest on a single originating

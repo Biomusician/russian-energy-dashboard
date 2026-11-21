@@ -216,7 +216,7 @@ export const ATTEMPTS_NOT_IN_FILE =
 export function impactFiles(systemId: string, name: string, shown: readonly ImpactRecord[], total: number,
                             filterLines: readonly string[],
                             payload: Pick<ImpactsPayload, "as_of" | "caveats"> & { research?: Pick<ImpactsPayload["research"], "limitations"> },
-                            today: string): ImpactFiles {
+                            today: string, confidenceStatus: string | null = null): ImpactFiles {
   const csvName = csvFilename(systemId, "impacts", payload.as_of);
   const rows = impactOrder(shown);
   const readme = readmeText({
@@ -240,6 +240,7 @@ export function impactFiles(systemId: string, name: string, shown: readonly Impa
     ],
     columns: IMPACT_COLUMNS,
     fields: IMPACT_FIELDS,
+    confidenceStatus,
   });
   return { csvName, csv: impactRecordsCsv(rows), readmeName: readmeFilename(csvName), readme };
 }

@@ -91,7 +91,8 @@ function ImpactList({ sys, payload, records, attempts, today }: {
   const name = inSentence(sys.name);
 
   const save = (which: "csv" | "readme") => {
-    const out = impactFiles(sys.system_id, sys.name, shown, records.length, describeFilters(defs, state, today), payload, today);
+    const out = impactFiles(sys.system_id, sys.name, shown, records.length, describeFilters(defs, state, today), payload, today,
+                            method?.status ?? null);
     if (which === "csv") {
       downloadBlob(new Blob([out.csv], { type: "text/csv;charset=utf-8" }), out.csvName);
       setExportMsg(`Saved ${out.csvName}: ${shown.length} of ${records.length} impact records.`);

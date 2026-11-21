@@ -214,7 +214,9 @@ test.describe("Impact atlas", () => {
     const card = cards(page).first();
     await card.getByRole("button", { name: /^Why\?/ }).click();
     const why = card.locator(".conf-panel");
-    await expect(why).toContainText("ordinal score, not a probability");
+    // No total of the points (iteration 23, ECI-15); the category and its components stay.
+    await expect(why).toContainText("they are not a probability");
+    await expect(why).not.toContainText("ordinal score");
     await expect(why).toContainText("It is not a probability, not a measure of severity");
     await expect(why.locator("table tbody tr")).toHaveCount(5);
     await page.keyboard.press("Escape");
@@ -358,7 +360,11 @@ test.describe("Impact atlas", () => {
     const why = second.locator(".conf-panel");
     await expect(why).toContainText("Method status: provisional: thresholds not calibrated.");
     await expect(why).toContainText(/distinct publishers? cited; whether they relay one statement was not reviewed/);
-    await expect(why).toContainText("points: ordinal score, not a probability");
+    await expect(why).toContainText("they are not a probability");
+    // The status is beside the category itself, before any click (iteration 23, F5), with the line
+    // that the category does not cover the cause (ECI-08).
+    await expect(second.locator(".conf-provisional")).toHaveText(/^provisional method/);
+    await expect(second.locator(".conf-scope")).toContainText("It does not cover the cause");
     await expect(why).not.toContainText(/\/\s*100|of 100|\d\s*%/);
   });
 
