@@ -428,8 +428,11 @@ def _build_coverage(in_aoi, benchmark, snapshot):
             # Recorded here but dated after the benchmark's last period, so outside the ratio.
             "enumerated_after_window": len(oil) - oil_strikes,
             "numerator_definition": (
+                # Not "the same universe the benchmark counts": the AOI includes Crimea, and the
+                # benchmark's source does not say whether it does (final methodology red team N-1).
                 "kinetic strikes and sabotage on refining and oil-logistics facilities in the "
-                "AOI — the same universe the benchmark counts"
+                "AOI, Crimea included — the universe the benchmark counts, except that its source "
+                "does not say whether it counts Crimea"
                 + (f", dated on or before {window_end}, the end of the benchmark's last period"
                    if window_end else
                    "; the benchmark's last period could not be read, so the count is not limited "

@@ -230,6 +230,9 @@ correction restamped every record in its lane file (now dated per verdict).
 | H-01 | "Cannot tell you" model count | `7f50fe0` |
 | AN-01, AN-05, AN-06, AN-12, AN-13 | What's New order; encyclopedia rule; held-record disclosure | `813e1ad` |
 | H-02–H-11, MU-01–MU-07, AN-03–AN-11, V-01–V-10 | Help, search, map reach and focus, country and Gulf wording | `a693aa6`, `e4a651f` |
+| F-1 | An abstracted record said how long an outage lasted, in its summary and a kept source claim | `19d9087` |
+| F-2 | Help's "never published" list promised more than the layers withhold | `ade07fb` |
+| F-3, F-4, F-5 | Capacity-quantified label; ratio weight; country hold reaching the impact layer | `5e4f79b` |
 
 ## 22. Methodology weaknesses not changed
 
@@ -241,6 +244,13 @@ Moderate cap; inclusion clauses; no-widening per event rather than per rule; inc
 6 drift; attribution formality; observed-only end dates in country systems; theatre and impact-layer
 reconciliation; the ECI calibration bar and components; comparison surfaces; the S1/S2 gap for
 unproven official accounts.
+
+Two notes from the final methodology red team. N-1: the coverage ratio's numerator counts six
+Crimea oil strikes that the benchmark may or may not include; the ratio is unchanged, and the
+definition served beside it no longer calls the two "the same universe" but says the benchmark's
+source does not state whether it counts Crimea. N-2, not changed: the check that keeps
+importance wording out of impact records reads record prose, not citation addresses; an address is
+the publisher's text and the abstraction rules already limit what one may name.
 
 ## 23. Owner decisions
 
@@ -257,6 +267,7 @@ New, none implemented:
 | P2 Hormuz shares | The Gulf & Hormuz context includes the strait's share of world seaborne oil trade, the standard statement of a chokepoint's importance, and an authority's dated "virtually closed". Within the iteration-22 rule. (a) keep; (b) drop throughput-share figures; (c) rename the tab "Gulf regional context" |
 | P3 Gulf phone header | Gulf country pages shift by 0.18 on a phone when the breadcrumb gains its group crumb (§26). Delay the header until the manifest loads, or give every phone page a two-row header |
 | P4 Held-record counts in What's New | What's New caps lists and never counts the remainder ("capped and flagged, never counted"); a reader asked how many were held. Add a count field, or keep the rule |
+| P5 Means named in theatre records | A theatre record's title and text may name the broad means its source reports ("drone attack"); Gulf attack records name none. Help now says so (F-2). (a) keep; (b) abstract means in theatre text as the Gulf does; (c) keep in sources only |
 
 ## 24. Tests
 
@@ -315,7 +326,7 @@ PENDING.
 
 ## 31. Recommended iteration 24
 
-1. Owner decisions M1–M15 and P1–P4, starting with the ones that block nothing else: P1 error
+1. Owner decisions M1–M15 and P1–P5, starting with the ones that block nothing else: P1 error
    reporting, M15 social tier, M10 attribution instrument, M5 cohort flag.
 2. Re-source and re-review the held US, Canadian and Chinese records; a reviewer for the two
    undeclared-relay candidates.
@@ -348,3 +359,9 @@ PENDING.
 | ECI-10 | ECI | Unproven official accounts fit neither S1 nor S2 | METHODOLOGY WEAKNESS | public-source check | Under- or overstatement | Memo M15 | Yes |
 | H-04 | Product | No route to report an error | OWNER DECISION | Help, site | Corrections depend on re-checks | Memo P1 | Yes |
 | MU-08 | Gulf | Strait trade-share figures | OWNER DECISION | regional context | Reads as chokepoint importance | Memo P2 | Yes |
+| F-1 | Impact | An abstracted record stated an outage's duration in its summary and a kept source claim | BUG | German record; gate read only the duration field | Later status published | Fixed; gate reads all prose | No |
+| F-2 | Help | "Never published" promised no place finer than admin-1 and no weapon detail | DOCUMENTATION DRIFT | theatre records name facilities and broad means | Reader trusts a rule that is not the rule | Reworded; test | No |
+| F-3 | Theatre | "0 of 184 events state capacity removed" beside 14 events with observed effects | UX MISREPRESENTATION | `strategic_effects.by_incident` | Reads as "no effect is ever reported" | Counted apart; relabelled | No |
+| F-4 | Theatre | Coverage ratios not at the headline's visual weight | BUG (CLAUDE.md rule) | 19 px regular vs 40 px semibold | Honesty figures read as footnotes | Headline typeface and weight, ≥2/3 size | No |
+| F-5 | Impact | A country hold reached the impact layer only at the next impact import | BUG | import order | A held event could stay served | Country import stops until reconciled | No |
+| P5 | Theatre | Broad means named in theatre text, not in Gulf attack records | OWNER DECISION | record titles | Inconsistent abstraction across layers | Memo P5 | Yes |
