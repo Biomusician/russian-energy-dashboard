@@ -212,7 +212,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
                 <i> false</i> assumption that gas &amp; coal are zero, giving {zero.toFixed(1)} — so
                 excluding them lifts the headline by {(s.esdi - zero).toFixed(1)}. It is a
                 sensitivity under an assumption, <b>not a second valid ESDI</b>: unknown stays
-                unknown. Gas carries documented strikes that score zero only for want of a
+                unknown. Gas carries documented strikes that are not scored, for want of a
                 defensible denominator.
               </p>
             );
