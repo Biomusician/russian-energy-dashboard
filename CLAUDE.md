@@ -109,6 +109,23 @@ Do not reintroduce the ambiguous "SFD" abbreviation — a test forbids it.
 only. Context never enters analytics, a context-only country never carries an incident field, and
 lane states have two dimensions (`docs/GLOBAL_METHODOLOGY.md`, "Research coverage vocabulary").
 
+**Since iteration 23 the world map is the home's navigation, and teaching lives in the Help Center**
+(`?view=help#<anchor>`, `web/src/global/help/`, live values from `global/help_facts.json`). National
+energy context is the map's second mode. Rules, all tested:
+
+- **The map is navigation, never a severity score.** The default mode colours only what one click
+  does (monitored system, Crimea's occupied hatch, base), in neutral colours; hover cards carry no
+  count; tiny monitored systems get a neutral fixed-size marker, not a highlight.
+- **A country with impact records is not a monitored system**, and a country with no published
+  record is not a country with no disruption: each gets its own card, read from the manifest's
+  `impact_presence`, never from the impact corpus or a queue.
+- **One regional view only** (the Gulf littoral). Existing URLs are the contract; the home's
+  selection lives in its history entry, not in a new URL parameter.
+- **Help never quotes a number by hand**; every live value comes from `help_facts.json`. The home
+  orients; Help teaches.
+- **A first-screen phone check also runs in a wide font** (`WIDE_FONT`): CI's Linux runner draws a
+  wider font than this machine, and a layout that fits here can overflow there.
+
 Read [docs/METHODOLOGY.md](docs/METHODOLOGY.md) before changing anything that produces a
 number. For the current figures read [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md), which
 the build regenerates; for where the project actually is, read
