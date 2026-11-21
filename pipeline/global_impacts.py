@@ -400,6 +400,11 @@ def load_context(world_path=None, unit_names=None, link_states=None):
     return {
         "names": names,
         "system_of": {a3: s["id"] for s in systems.SYSTEMS if s["kind"] == "country" for a3 in s["admin0_a3"]},
+        # Whose country queue may hold an event placed in this admin-0 unit: the system's own
+        # geography plus any unit whose inclusion awaits an owner decision (`held_scope_a3`).
+        # Only the reconcile reads it; placement, precision and policy follow `system_of`.
+        "queue_of": {a3: s["id"] for s in systems.SYSTEMS if s["kind"] == "country"
+                     for a3 in (*s["admin0_a3"], *s.get("held_scope_a3", ()))},
         "theatre_a3": frozenset(systems.system(systems.THEATRE)["admin0_a3"]),
         # The same classification the country systems use (build_systems.RESTRICTING_STATES).
         "restricted": frozenset(sid for sid in systems.COUNTRY_SYSTEMS

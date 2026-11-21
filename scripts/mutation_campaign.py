@@ -3109,8 +3109,8 @@ TESTARCH22_MUTATIONS = [
                  '        out["is_latest_of_type"] = e["date"] == newest[e["context_type"]]'))],
      "latest_statement_of_a_type_is_chosen_by_its_as_of_date"),
     ("a multi-country candidate is reconciled with no country (a held record returns inside it)",
-     [(II, _text('    for a3 in G._countries(record):\n        sid = ctx["system_of"].get(a3)\n        if not sid:\n            continue\n        unpublished',
-                 '    for a3 in [record.get("country_a3")]:\n        sid = ctx["system_of"].get(a3)\n        if not sid:\n            continue\n        unpublished'))],
+     [(II, _text('    for a3 in G._countries(record):\n        sid = ctx["queue_of"].get(a3)\n        if not sid:\n            continue\n        unpublished',
+                 '    for a3 in [record.get("country_a3")]:\n        sid = ctx["queue_of"].get(a3)\n        if not sid:\n            continue\n        unpublished'))],
      "multi_country_candidate_is_reconciled_with_every_country"),
     ("a held system-wide country record matches no impact record",
      [(II, _text('    if mapped is None or mapped["sector"] is None:\n        return record.get("domain") == "energy"',
@@ -3382,6 +3382,19 @@ ITER22_RELEASE_MUTATIONS = [
      "the_research_note_refuses_first_person_and_pipeline_wording"),
 ]
 MUTATIONS += ITER22_RELEASE_MUTATIONS
+
+# Release closure, found by the iteration-23 UX red team: the US queue holds Puerto Rico's accepted
+# events pending the owner's territory decision, and the impact layer published them as PRI records.
+ITER22_TERRITORY_MUTATIONS = [
+    ("the reconcile reads only a system's own geography (a held Puerto Rico event returns as a PRI record)",
+     [(II, _text('        sid = ctx["queue_of"].get(a3)', '        sid = ctx["system_of"].get(a3)'))],
+     "held_territory_event_cannot_return_through_the_impact_layer"),
+    ("the territories awaiting the owner's decision are dropped from the reconcile",
+     [(GI, _text('                     for a3 in (*s["admin0_a3"], *s.get("held_scope_a3", ()))},',
+                 '                     for a3 in s["admin0_a3"]},'))],
+     "held_territory_event_cannot_return_through_the_impact_layer"),
+]
+MUTATIONS += ITER22_TERRITORY_MUTATIONS
 
 
 def _sandbox():

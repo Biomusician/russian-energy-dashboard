@@ -75,7 +75,12 @@ SYSTEMS = (
     {"id": "ae", "name": "United Arab Emirates", "kind": "country", "admin0_a3": ("ARE",),
      "aliases": ("الإمارات", "الإمارات العربية المتحدة", "UAE", "Emirates")},
     {"id": "us", "name": "United States", "kind": "country", "admin0_a3": ("USA",),
-     "aliases": ("USA", "US", "United States of America")},
+     "aliases": ("USA", "US", "United States of America"),
+     # Admin-0 units outside this system's geography whose events its research queue nonetheless
+     # holds, pending the owner's decision on US territories (docs/GLOBAL_GEOGRAPHY.md §7). The
+     # impact layer reconciles against this queue for them too: a record held here must not
+     # reappear there as a Puerto Rico record (iteration 23).
+     "held_scope_a3": ("PRI", "GUM", "VIR", "ASM", "MNP", "UMI")},
 )
 
 # GROUPS (iteration 19). Four different things that are easy to conflate, kept as separate facts:

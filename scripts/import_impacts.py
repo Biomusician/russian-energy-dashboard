@@ -850,10 +850,14 @@ def hold_kind(r, system_id, by_id, restricted, depth=0):
 
 
 def country_matches(record, ctx, queues):
-    """[(system_id, queue record)] for unpublished country candidates this record matches."""
+    """[(system_id, queue record)] for unpublished country candidates this record matches.
+
+    Read through `queue_of`, not `system_of`: Puerto Rico is outside the US system's geography, but
+    the US queue holds its accepted events pending the owner's territory decision, and an impact
+    record for Puerto Rico must not publish what that queue holds (iteration 23)."""
     out = []
     for a3 in G._countries(record):
-        sid = ctx["system_of"].get(a3)
+        sid = ctx["queue_of"].get(a3)
         if not sid:
             continue
         unpublished, _ = queues(sid)

@@ -1630,6 +1630,23 @@ def test_a_candidate_matching_a_record_held_from_a_country_system_is_refused(tmp
     assert match["hold_fields"]["suggested_disposition"] == "held" and "threshold" in match["hold_fields"]["disposition_reason"]
 
 
+def test_a_held_territory_event_cannot_return_through_the_impact_layer(tmp_path):
+    """Puerto Rico is outside the US system's geography, but the US queue holds its accepted events
+    pending the owner's decision on territories. A PRI impact record of the same event is refused,
+    exactly as a USA one would be (iteration-23 red team: three were published)."""
+    from pipeline import systems
+    assert "PRI" not in systems.system("us")["admin0_a3"] and "PRI" in systems.system("us")["held_scope_a3"]
+    held = _country_row("us-2026-02-14-synthetic-puerto-rico-blackout", admin1_code="US-PR",
+                        reason="Clause 5. Territory scope flag: curator should confirm territories are in scope.",
+                        disposition="accept")
+    pri = candidate(USA, impact_id="imp-2026-02-14-pri-fuel_supply-synthetic-payment-outage", country_a3="PRI")
+    paths = make_queue(tmp_path, {"na": [pri], "europe": [candidate(FRA)]}, country={"us": [held]})
+    report = run(paths)
+    assert set(curated_records(paths)) == {FRA}
+    match = report["reconcile"][0]
+    assert match["country_candidate_id"] == held["candidate_id"] and match["system_id"] == "us"
+
+
 def test_a_published_country_record_or_one_far_in_date_or_class_is_no_match(tmp_path):
     rows = [_country_row("us-2026-02-14-synthetic-published-terminal"),
             _country_row("us-2026-03-01-synthetic-held-later", date="2026-03-01"),
