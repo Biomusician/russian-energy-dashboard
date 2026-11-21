@@ -2730,12 +2730,12 @@ C_CARD = "web/src/global/EventCard.tsx"
 C_EXPORT = "web/src/global/countryExport.ts"
 ITER22_COUNTRY_MUTATIONS = [
     ("the overview of a campaign country states how many records are held",
-     [(C_OVERVIEW, _text('    items.push("whether, or how many, records are in review");',
+     [(C_OVERVIEW, _text('    items.push("how many records are in review");',
                          "    items.push(`${sys.research_log.passes.map((p) => (p.outcome && p.outcome.held) || 0).reduce((a, b) => a + b, 0)} records in review`);"))],
      "overview_never_states_or_implies_a_held_count"),
     ("the overview of a campaign country says candidates remain under review when a pass is flagged",
-     [(C_OVERVIEW, _text('    items.push("whether, or how many, records are in review");',
-                         '    items.push(sys.research_log.passes.some((p) => p.under_review) ? "records that remain under review" : "whether, or how many, records are in review");'))],
+     [(C_OVERVIEW, _text('    items.push("how many records are in review");',
+                         '    items.push(sys.research_log.passes.some((p) => p.under_review) ? "records that remain under review" : "how many records are in review");'))],
      "overview_never_states_or_implies_a_held_count"),
     ("the overview treats a campaign country as unrestricted",
      [(C_OVERVIEW, _text("  const restricted = isCampaignRestricted(sys);", "  const restricted = false;"))],
@@ -3214,7 +3214,7 @@ ITER22_CLOSURE_FRONTEND_MUTATIONS = [
      [(CL_PRECISION, _text('    "In the impact records on this page that holds for every country, always.",\n', ""))],
      "closure22_gulf_placement"),
     ("the admin1 card loses the impact layer's country-level rule",
-     [(CL_PRECISION, _text(" In the impact records on this page they are country level. ${OTHERS}`;", " ${OTHERS}`;"))],
+     [(CL_PRECISION, _text(" In the impact records on this page they are country level. ${others}`;", " ${others}`;"))],
      "closure22_gulf_placement"),
 ]
 MUTATIONS += ITER22_CLOSURE_FRONTEND_MUTATIONS
@@ -3801,8 +3801,8 @@ ITER23_HOME_MUTATIONS = [
      [(HS, _text('monitored: "#5f7c9a"', 'monitored: "#2e3c4a"'))],
      "default_map_colours_only"),
     ("a new map mark is left out of the highlight layers, so it is drawn into an export",
-     [("web/src/global/SimpleMap.tsx", _text('export const HIGHLIGHT_LAYERS = ["sel", "hl", "sel-cover", "hl-cover", "locator"];',
-                                             'export const HIGHLIGHT_LAYERS = ["sel", "hl", "hl-cover", "locator"];'))],
+     [("web/src/global/SimpleMap.tsx", _text('export const HIGHLIGHT_LAYERS = ["sel", "hl", "sel-cover", "hl-cover", "locator", "markers", "markers-hit"];',
+                                             'export const HIGHLIGHT_LAYERS = ["sel", "hl", "hl-cover", "locator", "markers", "markers-hit"];'))],
      "every_new_map_mark_is_a_highlight_layer"),
     ("a group's members are typed into the code",
      [(HS, _text('  if (key.startsWith("group:")) return m?.groups?.[groupIdOf(key)]?.members ?? [];',

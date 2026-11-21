@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import WhatsNew from "./WhatsNew";
 import { DataQualityPanel, RecentEvidencePanel } from "./GlobalPanels";
 import { GlobalNavBar, GlobalSearch, goWhatsNew, openGlossary, WHATS_NEW_ID } from "./GlobalNav";
-import { loadDataQuality, loadManifest, loadWorld, type DataQuality, type Manifest } from "./manifest";
+import { ENVIRONMENT_LABEL, labelFor, loadDataQuality, loadManifest, loadWorld, type DataQuality, type Manifest } from "./manifest";
 import { loadContext, type EnergyContext } from "./context";
 import { PanelBoundary } from "../components/ViewBoundary";
 import { laneLine } from "./laneCoverage";
@@ -79,7 +79,8 @@ export default function GlobalHome() {
               stated. Choose a place on the map or from the list.
             </p>
             <p className="home-meta small">
-              {dataDay && <>Data as of {fmtDate(dataDay)} · rebuilt daily · </>}
+              {/* The build date (H-08): a record or a source has its own date, on its own page. */}
+              {dataDay && <>Built {fmtDate(dataDay)} · rebuilt daily · </>}
               <a href={`#${WHATS_NEW_ID}`} onClick={(e) => { e.preventDefault(); goWhatsNew(); }}>What's new</a>
               {" · "}
               <a className="home-newhere" href="?view=help#start-here" onClick={leave("?view=help#start-here", "newhere")} data-ret="newhere">New here? How to use this dashboard</a>
@@ -158,13 +159,13 @@ export default function GlobalHome() {
   );
 }
 
-/** Which country systems have regulatory outage reporting, by name, from the manifest: a total
- *  across countries mostly says how much each one reports. */
-function reportingLine(m: Manifest): string {
-  const regulated = m.systems.filter((s) => s.kind === "country" && s.reporting_environment.endsWith("_regulatory")).map((s) => s.name);
-  const list = regulated.length > 1 ? `${regulated.slice(0, -1).join(", ")} and ${regulated[regulated.length - 1]}` : regulated[0] ?? "";
-  return `These totals mostly reflect how much each country reports publicly, not how much happened.${list
-    ? ` ${list} ${regulated.length > 1 ? "have" : "has"} some mandatory outage reporting; the others rely on company, ministry and press statements, so they add far fewer records.` : ""}`;
+/** How each country system's outages come to be reported, from its own manifest field, in the
+ *  manifest's (alphabetical) order. Iteration 23 (AN-03): this used to say which systems "add far
+ *  fewer records", a comparison of counts across countries, and a false one. */
+export function reportingLine(m: Manifest): string {
+  const each = m.systems.filter((s) => s.kind === "country")
+    .map((s) => `${s.name}: ${labelFor(ENVIRONMENT_LABEL, s.reporting_environment).toLowerCase()}`);
+  return `These totals mostly reflect how much each country reports publicly, not how much happened. How each country's outages come to be reported: ${each.join("; ")}.`;
 }
 
 /** A collapsed part of the home below the first screen. Its content is mounted the first time it
@@ -217,7 +218,7 @@ function NationalFold({ manifest, world }: { manifest: Manifest | null; world: G
   if (failed) return <p className="warn-text small" role="alert">Global energy context unavailable. The monitored systems are not affected.</p>;
   if (!ctx) return <p className="small dim" role="status">Loading…</p>;
   return (
-    <WorldProfile ctx={ctx} partly={partly} tableOpen
+    <WorldProfile ctx={ctx} partly={partly} tableOpen impactRecords={new Set(manifest?.impact_presence?.countries ?? [])}
       onContext={(a3) => { selectOnHome(a3); document.querySelector(".home-stage")?.scrollIntoView({ block: "start" }); }}
       systemNames={Object.fromEntries((manifest?.systems ?? []).map((s) => [s.id, s.name]))} />
   );

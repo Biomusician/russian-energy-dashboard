@@ -71,7 +71,8 @@ export function WhatsNewPanel({ data, failed, now }: { data: WhatsNewData | null
                 </li>
               );
             })}
-            {c.more && <li className="dim">and more on the country page</li>}
+            {/* Capped and flagged, never counted; no page lists the rest (AN-02). */}
+            {c.more && <li className="dim">and more, not listed here</li>}
           </ul>
         )}
         {link && (

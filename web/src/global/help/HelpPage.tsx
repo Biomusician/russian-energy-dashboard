@@ -108,7 +108,7 @@ export function HelpDocument({ data, current = "" }: { data: HelpData; current?:
       <main id="main-content" className="help-main">
         <h1 className="help-title">Help: how to read this site</h1>
         <p className="small dim help-meta">
-          {f ? `This build: data as of ${fmtDate(f.as_of)}` : m ? `This build: generated ${fmtDate(m.build_time.slice(0, 10))}` : "Build date loading"}
+          {f ? `Built ${fmtDate(f.as_of)}` : m ? `Built ${fmtDate(m.build_time.slice(0, 10))}` : "Build date loading"}
           {f?.theatre.method_version ? ` · index method version ${f.theatre.method_version}` : ""}
           {meth ? ` · evidence-confidence method ${meth.version}${meth.status ? ` (${readerText(meth.status)})` : ""}` : ""}
         </p>

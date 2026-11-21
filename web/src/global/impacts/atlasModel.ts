@@ -172,11 +172,18 @@ export interface CorpusSummary {
 export function corpusSummary(payload: ImpactsPayload): CorpusSummary {
   const records = disruptions(payload);
   const days = records.map(startDay).sort();
+  // The span at the precision the records give (iteration 23, AN-11): a month-precision record is
+  // "Jan 2022", never "1 Jan 2022". Where records on the end day differ, a full date wins.
+  const asDated = (day: string | undefined) => {
+    if (!day) return null;
+    const same = records.filter((r) => startDay(r) === day);
+    return same.find((r) => r.date === day)?.date ?? same[0]?.date ?? day;
+  };
   return {
     records: records.length,
     countries: countriesPresent(records, payload.countries).length,
-    first: days[0] ?? null,
-    last: days[days.length - 1] ?? null,
+    first: asDated(days[0]),
+    last: asDated(days[days.length - 1]),
     researched: payload.research?.latest_research_date ?? null,
   };
 }

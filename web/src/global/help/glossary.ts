@@ -99,6 +99,13 @@ export const GLOSSARY: GlossaryEntry[] = [
     see: "attribution",
   },
   {
+    id: "theatre-evidence-labels",
+    term: "Confirmed, probable, possible (Russia, Belarus & Crimea)",
+    aliases: ["confirmed", "probable", "possible", "unverified", "confidence label", "older evidence weighting", "theatre confidence"],
+    plain: "The evidence labels on records of Russia, Belarus & Crimea, from the site's older method, which the index still weights by. They are not Evidence Confidence and cannot be compared with its categories: a theatre record marked confirmed is not a record of high evidence confidence.",
+    see: "esdi",
+  },
+  {
     id: "cyber-disruption",
     term: "Cyber disruption",
     aliases: ["cyber", "cyberattack", "cyber attack", "hack", "ransomware", "it failure", "it outage", "mechanism"],
@@ -122,8 +129,8 @@ export const GLOSSARY: GlossaryEntry[] = [
   {
     id: "esdi",
     term: "ESDI (Energy System Disruption Exposure Index)",
-    aliases: ["index", "exposure index", "monitored-area esdi", "score", "headline"],
-    plain: "The one index on this site, published only for Russia, Belarus & Crimea. On a 0 to 100 scale it shows how much tracked energy capacity sits at recently disrupted sites, weighted by evidence, cause and time elapsed.",
+    aliases: ["index", "exposure index", "monitored-area esdi", "score", "headline", "percentage", "percent"],
+    plain: "The one index on this site, published only for Russia, Belarus & Crimea. On a 0 to 100 scale it shows how much tracked energy capacity sits at recently disrupted sites, weighted by evidence, cause and time elapsed. It is not a percentage of capacity lost.",
     see: "esdi",
   },
   {
@@ -165,7 +172,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     id: "monitored-system",
     term: "Monitored system",
     aliases: ["monitored system", "monitored", "country system", "system"],
-    plain: "A place searched systematically, with a page of its own: Russia, Belarus & Crimea, or one of the country systems. A thick outline marks it on the world map.",
+    plain: "A place searched systematically, with a page of its own: Russia, Belarus & Crimea, or one of the country systems. On the world map's default mode it has one shared colour that is not a measure; in the National energy mode a thick outline marks it.",
     see: "product-types",
   },
   {
@@ -239,6 +246,13 @@ export const GLOSSARY: GlossaryEntry[] = [
     see: "research-coverage",
   },
   {
+    id: "reviewers",
+    term: "Reviewers (three-role review)",
+    aliases: ["reviewer", "reviewers", "who reviewed", "review", "reviewed", "three-role review", "blind review", "ai review"],
+    plain: "Impact records, and the newer country-system records, were each checked blind before publication by three reviewers with separate roles: evidence, attribution and sources, and safety. The reviewers are separate sessions of the same AI model that did the research: independent in what they were shown, not in model. Records of Russia, Belarus & Crimea did not pass through this review.",
+    see: "impact-records",
+  },
+  {
     id: "sector-state",
     term: "Sector state",
     aliases: ["sector", "tracked not scored", "not yet researched", "not applicable", "unknown"],
@@ -276,7 +290,7 @@ export const START_HERE: { title: string; text: string }[] = [
   { title: "No index is not zero.", text: "A country without an index has no figure computed; it is not rated as calm or safe." },
   { title: "Research coverage differs by country.", text: "Some are research previews. A missing record is not evidence that nothing happened." },
   { title: "National energy context is not disruption.", text: "Production and consumption figures describe an energy system; they say nothing about damage or importance." },
-  { title: "Maps mean different things by view.", text: "The world map is coloured by a national energy figure; a country map is coloured by where records were placed; the Russia, Belarus & Crimea map shows exposure. Each map's legend says which." },
+  { title: "Maps mean different things by view.", text: "The world map's default mode colours only the monitored systems, in one colour that is not a measure, and its National energy mode shades countries by a national figure; a country map is coloured by where records were placed; the Russia, Belarus & Crimea map shows exposure. Each map's legend says which." },
 ];
 
 export function glossaryEntry(id: string): GlossaryEntry | null {

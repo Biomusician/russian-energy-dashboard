@@ -70,7 +70,8 @@ test.describe("first screen of a country with no published record", () => {
     await expect(block).toContainText(NO_RECORD_IS_NOT_NO_DISRUPTION);
     await expect(block).toContainText("only disruptions that meet the inclusion rule are published");
     await expect(block).toContainText("attack-campaign safeguards apply");
-    await expect(block).toContainText("whether, or how many, records are in review");
+    await expect(block).toContainText("how many records are in review");
+    await expect(block).not.toContainText("whether, or how many");
     for (const tab of ["impacts", "regional", "context", "research"]) {
       await expect(overviewLink(page, tab)).toHaveText(TAB_LABEL[tab as keyof typeof TAB_LABEL]);
       await expect(overviewLink(page, tab)).toHaveAttribute("href", `?sys=ir&tab=${tab}`);

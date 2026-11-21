@@ -73,6 +73,9 @@ export const GLOSSARY_DETAIL: Record<string, GlossaryDetail> = {
     detail: "Groups claim attacks they did not carry out and exaggerate ones they did. However many outlets repeat a claim, it stays a claim. A record resting only on an actor's own claim has attribution confidence claim only, and its evidence confidence can be no higher than preliminary.",
     served: (m) => definition(m, "attribution_statuses", "CLAIMED"),
   },
+  "theatre-evidence-labels": {
+    detail: "For a row parsed from the public table of strikes, confirmed means at least two different websites are cited, probable one, and possible none. Other records carry a label set by hand, and most “confirmed” ones rest on a single article. The index weights a weaker label less. Attribution on these records is always shown as reported, never as confirmed.",
+  },
   "cyber-disruption": {
     detail: "A failure that was digital but not malicious, such as a faulty software update that stopped operations, is an IT failure: it is filed as a technical failure, has its own filter, and is never counted as a cyberattack. No record says how access was gained or carries any other exploit detail.",
     served: (m) => definition(m, "cause_families", "cyber"),
@@ -139,6 +142,9 @@ export const GLOSSARY_DETAIL: Record<string, GlossaryDetail> = {
   },
   "research-preview": {
     detail: "A missing record in any country is not evidence that nothing happened. Each country page lists the state of every source group and through which date it was searched.",
+  },
+  "reviewers": {
+    detail: "Any one reviewer could hold or reject a record, and none saw the researcher's reasoning or another reviewer's verdict. Separate sessions of one model can share its blind spots; a person reading a sample of reviewed records would be a stronger check, and that is not part of the current review. Records of Russia, Belarus & Crimea come from an older curated workflow instead.",
   },
   "sector-state": {
     detail: "These are kept apart on purpose. Unknown means the evidence does not settle it; not applicable means the sector does not exist there; not yet researched means nobody has looked. None of them is a zero, and no country's sector carries a score.",

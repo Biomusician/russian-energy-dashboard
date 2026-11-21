@@ -19,7 +19,8 @@ export default function SelectionCard({ card, sheet, onClose, onAction }: {
   return (
     <aside className={`sel-card${sheet ? " sel-sheet" : " panel"}`} aria-labelledby="sel-card-title" data-sel={card.key}>
       <div className="sel-card-head">
-        <Heading id="sel-card-title" className="sel-card-title">{card.heading}</Heading>
+        {/* Focusable by script only: a choice from the list or the search moves focus here. */}
+        <Heading id="sel-card-title" className="sel-card-title" tabIndex={-1}>{card.heading}</Heading>
         <button type="button" className="ghost sel-close" onClick={onClose} aria-label={`Close ${card.heading}`}>Close</button>
       </div>
       <p className="sel-status">{card.status}</p>

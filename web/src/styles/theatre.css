@@ -343,6 +343,9 @@ html[data-briefing="on"] .map-legend { top: 72px; right: 12px; left: auto; botto
     scrollbar-width: none;
   }
   .camera-controls button.ghost { white-space: nowrap; }
+  /* V-06: the presets scroll sideways; the fade says so. */
+  .camera-controls,
+  html[data-chrome="compact"] .camera-controls { mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); padding-right: 28px; }
   .map-scope-note,
   html[data-chrome="compact"] .map-scope-note { top: 88px; margin-top: 0 !important; max-width: min(260px, calc(100% - 24px)); }
   .map-legend { max-width: 210px; padding: 7px 9px; }

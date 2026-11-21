@@ -183,7 +183,7 @@ describe("overview: what is withheld", () => {
         expect(got, `${s.system_id} under_review=${underReview}`).toEqual(plain);
         expect(got.join(" ")).not.toMatch(/4817|3929|5743|6151/);
       }
-      expect(plain.join(" ")).toContain("whether, or how many, records are in review");
+      expect(plain.join(" ")).toContain("how many records are in review");
     }
   });
 

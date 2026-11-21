@@ -182,7 +182,8 @@ def test_each_card_offers_only_what_is_true_for_its_state(tmp_path_factory, serv
             if c["unit"] not in occupied:
                 assert hrefs == [], f"{c['unit']}: no system and no record means no button and no dashboard"
         if c["state"] == "outside_area":
-            assert "?sys=ru" in hrefs and "outside the area monitored" in text
+            # Chosen as a whole (no map click), iteration 23 (MU-05): "the rest lies outside the monitored area".
+            assert "?sys=ru" in hrefs and re.search(r"outside the (area monitored|monitored area)", text)
 
 
 @needs_bundler

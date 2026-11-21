@@ -40,7 +40,7 @@ import {
   DEFAULT_TAB, TAB_LABEL, regionalGroupFor, resolveTab, tabFromSearch, tabsFor, withTab, type RegionalGroup, type Tab,
 } from "./countryTabs";
 import { CountryOverview } from "./OverviewBlock";
-import { sourceCheckLine } from "./countryOverview";
+import { listedPresence, sourceCheckLine, type ListedPresence } from "./countryOverview";
 import { REVIEWERS_SAME_MODEL } from "./reviewText";
 import { CountryImpacts, impactPresence, useCountryImpacts } from "./CountryImpacts";
 import { CountryRegional } from "./CountryRegional";
@@ -92,6 +92,7 @@ export default function CountryView({ id }: { id: string }) {
   // does not have (the regional context outside its group) falls back to the country's own record.
   const [askedTab, setTab] = useState<Tab>(() => tabFromSearch(window.location.search) ?? initialTab());
   const [regional, setRegional] = useState<RegionalGroup | null>(null);
+  const [listed, setListed] = useState<ListedPresence>(null);
   const tabs = useMemo(() => tabsFor(regional), [regional]);
   const tab = resolveTab(askedTab, tabs);
   const [region, setRegion] = useState<string | null>(initialRegion);
@@ -125,12 +126,14 @@ export default function CountryView({ id }: { id: string }) {
     setEntry(null);
     setError(null);
     setRegional(null);
+    setListed(null);
     loadManifest()
       .then((m) => {
         const e = m.systems.find((s) => s.id === id && s.kind === "country");
         if (!e) throw new Error(`"${id}" is not a monitored country system.`);
         if (ctl.signal.aborted) return null;
         setEntry(e);
+        setListed(listedPresence(m, e));
         // Whether this system has the regional-context tab is the manifest's group table, read here.
         setRegional(regionalGroupFor(m, id));
         return loadCountry(e);
@@ -362,7 +365,7 @@ export default function CountryView({ id }: { id: string }) {
       </p>
 
       {/* What is published, what else is here, what is withheld: before the detail, on every system. */}
-      <CountryOverview sys={sys} impacts={impactPresence(impacts)} regional={regional} onTab={openTab} />
+      <CountryOverview sys={sys} impacts={impactPresence(impacts)} regional={regional} listed={listed} onTab={openTab} />
 
       {stale && (
         <div className="stale-note" role="status">
@@ -614,7 +617,7 @@ function ResearchStatus({ sys }: { sys: CountrySystem }) {
             last worked on {fmtDate(rf.last_systematic_pass)}{overdue ? "; a new pass is due" : ""}.</span>
         )}
       </div>
-      <div className="eyebrow">Source health <span className="dim">· whether the source registry was re-checked on schedule</span> <LearnMore anchor="source-health" /></div>
+      <div className="eyebrow rs-health-head">Source health <span className="dim">· whether the source registry was re-checked on schedule</span> <LearnMore anchor="source-health" /></div>
       <div className="small">
         <span className={`source-freshness sources-${late.length ? "stale" : blocked > 0 ? "partial" : "current"}`}>
           {sourceCheckLine(used.length, late.length, blocked)}

@@ -5,7 +5,7 @@ import SystemPanel from "./SystemPanel";
 import SelectionCard from "./SelectionCard";
 import { hrefFor } from "./router";
 import {
-  EXPLORE_ATTRIBUTION, HOME_SELECT_EVENT, MAP_COLOURS, STATUS, cardFor, groupBounds, groupIdOf, indexWorld, openFromHome, pickAction, readHomeState, stateOf, unitName,
+  EXPLORE_ATTRIBUTION, HOME_SELECT_EVENT, MAP_COLOURS, SMALL_DEGREES, cardFor, groupBounds, groupIdOf, indexWorld, openFromHome, pickAction, readHomeState, unitName,
   unitsOf, writeHomeState, type Bbox, type CardAction, type Feature, type PanelRow,
 } from "./homeSelection";
 import type { HomeMapMode } from "./WorldContext";
@@ -14,11 +14,17 @@ import type { HomeMapMode } from "./WorldContext";
 // first and work whether or not the map ever draws (no WebGL, a slow device, a failed download).
 const WorldContext = lazy(() => import("./WorldContext"));
 
-interface Selection { key: string; feature?: Feature; touch: boolean; opener: HTMLElement | null }
+/** `onMap`: chosen by a click on the map, which lands on one part of a country (MU-05). */
+interface Selection { key: string; feature?: Feature; touch: boolean; opener: HTMLElement | null; onMap?: boolean }
 
-// A unit whose box spans less than this many degrees is a few pixels wide at world zoom: choosing it
-// from a list or the search zooms the map to it, so the reader can see what was chosen.
-const SMALL_DEGREES = 4;
+// A unit smaller than SMALL_DEGREES is a few pixels wide at world zoom: choosing it from a list or
+// the search zooms the map to it, so the reader can see what was chosen.
+
+/** Give the selection card's heading focus (iteration 23, MU-03/MU-07): a choice made from the list,
+ *  the search or a restored entry otherwise left focus on the list, or on nothing at all. */
+function focusCardHeading() {
+  document.getElementById("sel-card-title")?.focus();
+}
 
 function useNarrow(): boolean {
   const q = "(max-width: 720px)";
@@ -50,6 +56,8 @@ export default function HomeStage({ manifest, world, worldError, preview }: {
   const [initial] = useState(readHomeState);
   const [selection, setSelection] = useState<Selection | null>(() =>
     (initial.focus && cardFor(initial.focus, null, manifest) ? { key: initial.focus, touch: false, opener: null } : null));
+  // Set when a selection should take focus once its card is drawn.
+  const focusNext = useRef(false);
   const [pointed, setPointed] = useState<string | null>(null);
   const [fitTo, setFitTo] = useState<Bbox | null>(null);
   const [mode, setMode] = useState<HomeMapMode>("explore");
@@ -57,9 +65,10 @@ export default function HomeStage({ manifest, world, worldError, preview }: {
   const opened = initial.ret;
   const stageRef = useRef<HTMLDivElement | null>(null);
 
-  const select = useCallback((key: string, opts: { touch?: boolean; feature?: Feature; zoom?: boolean } = {}) => {
+  const select = useCallback((key: string, opts: { touch?: boolean; feature?: Feature; zoom?: boolean; focus?: boolean; onMap?: boolean } = {}) => {
     const opener = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null;
-    setSelection({ key, feature: opts.feature, touch: !!opts.touch, opener });
+    focusNext.current = !!opts.focus;
+    setSelection({ key, feature: opts.feature, touch: !!opts.touch, opener, onMap: opts.onMap });
     writeHomeState(key, null);
     if (key.startsWith("group:")) {
       setFitTo(groupBounds(manifest, groupIdOf(key)));
@@ -67,9 +76,9 @@ export default function HomeStage({ manifest, world, worldError, preview }: {
       const b = index?.bounds.get(key);
       if (b && Math.max(b[2] - b[0], b[3] - b[1]) < SMALL_DEGREES) setFitTo([b[0] - 3, b[1] - 3, b[2] + 3, b[3] + 3]);
     }
-    const label = key.startsWith("group:") ? manifest.groups?.[groupIdOf(key)]?.label ?? key : unitName(key, index, manifest);
-    const status = key.startsWith("group:") ? "Regional overview" : STATUS[stateOf(key, index, manifest)];
-    setAnnounce(`Selected ${label}: ${status}`);
+    // The card's own heading and status, so what is announced is what is shown.
+    const c = cardFor(key, index, manifest, opts.feature, opts.onMap);
+    setAnnounce(c ? `Selected ${c.heading}: ${c.status}` : "");
   }, [manifest, index]);
 
   const open = useCallback((href: string, ret: string | null) => {
@@ -79,8 +88,15 @@ export default function HomeStage({ manifest, world, worldError, preview }: {
   /** Everything that chooses a place comes here. */
   const pick = useCallback((key: string, opts: { touch?: boolean; feature?: Feature; ret?: string; fromList?: boolean } = {}) => {
     if (pickAction(key, manifest, !!opts.touch) === "open") { open(hrefFor(key), opts.ret ?? `row:${key}`); return; }
-    select(key, { touch: opts.touch, feature: opts.feature, zoom: opts.fromList });
+    select(key, { touch: opts.touch, feature: opts.feature, zoom: opts.fromList, focus: opts.fromList, onMap: !opts.fromList });
   }, [manifest, open, select]);
+
+  // The selection card has been drawn: give it focus if the choice asked for that.
+  useEffect(() => {
+    if (!selection || !focusNext.current) return;
+    focusNext.current = false;
+    focusCardHeading();
+  }, [selection]);
 
   const close = useCallback(() => {
     const back = selection?.opener;
@@ -112,18 +128,20 @@ export default function HomeStage({ manifest, world, worldError, preview }: {
     return () => document.removeEventListener("keydown", on, true);
   }, [selection, close]);
 
-  // Back: focus returns to the control the reader left from.
+  // Back: focus returns to the control the reader left from; with none to return to, to the
+  // restored card, never to the page's body (MU-07).
   useEffect(() => {
-    if (!initial.ret) return;
+    if (!initial.ret) { if (initial.focus) focusCardHeading(); return; }
     const el = document.querySelector<HTMLElement>(`[data-ret="${CSS.escape(initial.ret)}"]`);
     const details = el?.closest("details");
     if (details && !details.open) details.open = true;
-    el?.focus();
+    if (el) el.focus();
+    else if (initial.focus) focusCardHeading();
     // Once given back, forgotten: a reload of this entry does not move focus again.
     writeHomeState(initial.focus, null);
   }, [initial]);
 
-  const card = selection ? cardFor(selection.key, index, manifest, selection.feature) : null;
+  const card = selection ? cardFor(selection.key, index, manifest, selection.feature, selection.onMap) : null;
   const sheet = !!card && (narrow || !!selection?.touch);
   const onAction = (a: CardAction) => open(a.href, a.ret);
   const cardNode = card ? <SelectionCard card={card} sheet={sheet} onClose={close} onAction={onAction} /> : null;
@@ -159,12 +177,13 @@ export default function HomeStage({ manifest, world, worldError, preview }: {
                 const name = String(p.name ?? "");
                 const feature = name && name !== unitName(key, index, manifest) ? { name, occupied: p.status === "occupied" } : undefined;
                 pick(key, { touch: how.touch, feature });
-              }} />
+              }}
+              onPickNear={(key, how) => select(key, { touch: how.touch, onMap: true })} />
           </Suspense>
         </PanelBoundary>
         {mode === "explore" && (
           <div className="map-legend-mini home-legend" aria-label="Map legend">
-            <span><i style={{ background: MAP_COLOURS.monitored }} />Monitored system: the theatre or a country system (one colour; not a measure)</span>
+            <span><i style={{ background: MAP_COLOURS.monitored }} />Monitored system: the theatre or a country system (one colour; not a measure; a dot marks one too small to see)</span>
             <span><i className="hatch-swatch" />Crimea and Sevastopol: Ukrainian territory under Russian occupation, monitored in the theatre</span>
             <span><i style={{ background: MAP_COLOURS.base }} />No monitored system: select a country to see what this site holds for it</span>
           </div>
@@ -174,7 +193,11 @@ export default function HomeStage({ manifest, world, worldError, preview }: {
         <SystemPanel manifest={manifest} index={index} opened={opened}
           onHighlight={setPointed}
           onOpen={(r: PanelRow) => open(r.href, r.key)}
-          onShowGroup={(id) => select(`group:${id}`)}
+          onShowGroup={(id) => {
+            select(`group:${id}`);
+            // On a phone the map is above the list: bring it into view, or the zoom happens off screen (MU-02).
+            if (narrow) stageRef.current?.querySelector(".home-stage-map")?.scrollIntoView({ block: "start", behavior: "smooth" });
+          }}
           onPickCountry={(unit, ret) => pick(unit, { ret, fromList: true })}
           card={sheet ? null : cardNode} />
       </PanelBoundary>

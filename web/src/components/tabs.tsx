@@ -9,7 +9,7 @@ import { fmtIndex } from "../indexText";
 import {
   ZERO_SHORT, classColor, evidence, severityColor, zeroIsUnmeasured,
 } from "../palette";
-import { Bar, EventRow, EvidenceChip, RecoveryLine, Sparkline, Tile } from "./ui";
+import { Bar, EventRow, EvidenceChip, RecoveryLine, Sparkline, TheatreRecordsNote, Tile } from "./ui";
 import { NO_REPORT_LABEL, noReportMeaning } from "../statusDelay";
 
 /** What a still-in-the-index count means, for this bundle's publication date and policy.
@@ -194,6 +194,7 @@ export function WhatChangedTab(p: TabProps) {
                 +{newEvents.length - 6} more — open the Recent tab
               </button>
             )}
+            <TheatreRecordsNote />
           </>
         )}
       </Block>
@@ -410,6 +411,7 @@ export function OverviewTab(p: TabProps) {
             <EventRow key={i.incident_id} incident={i} />
           ))}
         </div>
+        {regionIncidents.length > 0 && <TheatreRecordsNote />}
       </Block>
     </div>
   );

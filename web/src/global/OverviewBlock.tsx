@@ -1,5 +1,5 @@
 import type { CountrySystem } from "./manifest";
-import { OVERVIEW_TITLE, countryOverview, type ImpactPresence } from "./countryOverview";
+import { OVERVIEW_TITLE, countryOverview, type ImpactPresence, type ListedPresence } from "./countryOverview";
 import { tabHref, type RegionalGroup, type Tab } from "./countryTabs";
 import "../styles/country.css";
 import "../styles/countryOverview.css";
@@ -11,10 +11,10 @@ import "../styles/countryOverview.css";
  *  Each destination is a real link to its tab (`?sys=ir&tab=impacts`), so it can be copied or opened
  *  in a new window; a plain click switches the tab in place.
  */
-export function CountryOverview({ sys, impacts, regional, onTab }: {
-  sys: CountrySystem; impacts: ImpactPresence; regional: RegionalGroup | null; onTab: (t: Tab) => void;
+export function CountryOverview({ sys, impacts, regional, listed = null, onTab }: {
+  sys: CountrySystem; impacts: ImpactPresence; regional: RegionalGroup | null; listed?: ListedPresence; onTab: (t: Tab) => void;
 }) {
-  const o = countryOverview(sys, impacts, regional);
+  const o = countryOverview(sys, impacts, regional, listed);
   return (
     <section className="country-overview" aria-labelledby="country-overview-title">
       <h2 id="country-overview-title">{OVERVIEW_TITLE}</h2>

@@ -23,8 +23,9 @@ const EMPTY_STYLE: maplibregl.StyleSpecification = {
 };
 
 /** The layers that mark what the reader is pointing at or has chosen. They belong to this screen
- *  and this reader, so an exported image leaves them out (see `withoutHighlight`). */
-export const HIGHLIGHT_LAYERS = ["sel", "hl", "sel-cover", "hl-cover", "locator"];
+ *  and this reader, so an exported image leaves them out (see `withoutHighlight`). The small
+ *  systems' dots (iteration 23) are a way to click, not data, so an export leaves them out too. */
+export const HIGHLIGHT_LAYERS = ["sel", "hl", "sel-cover", "hl-cover", "locator", "markers", "markers-hit"];
 
 /** A copy of a map style with the reader's own selection and hover marks removed. */
 export function withoutHighlight(style: maplibregl.StyleSpecification): maplibregl.StyleSpecification {
@@ -32,6 +33,8 @@ export function withoutHighlight(style: maplibregl.StyleSpecification): maplibre
 }
 
 const FIT_PADDING = 24;
+// How far from a marker's centre a click still means it, in CSS pixels.
+const MARKER_REACH = 12;
 const NONE = "\u0000";
 const NO_FEATURE: maplibregl.ExpressionSpecification = ["==", ["get", "a3"], NONE];
 
@@ -65,6 +68,8 @@ function setLocator(m: maplibregl.Map, at: [number, number] | null | undefined) 
                  features: at ? [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: at } }] : [] });
 }
 
+const NO_POINTS: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+
 function reducedMotion(): boolean {
   return !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
@@ -91,6 +96,13 @@ export interface SimpleMapProps {
   locator?: [number, number] | null;
   /** Iteration 23: move the view to this box whenever it changes. */
   fitTo?: [number, number, number, number] | null;
+  /** Iteration 23 (MU-01): fixed-size dots, in `color`, for places too small to click at the
+   *  current zoom, each with a wider invisible area around it that takes the click. Each point
+   *  carries the same properties as its place's polygons. Null draws none. */
+  markers?: { data: GeoJSON.FeatureCollection; color: string } | null;
+  /** A click within reach of a marker: every feature in reach, markers first, then the polygon
+   *  under the pointer. The caller decides between one place and a choice. */
+  onPickMany?: (props: Record<string, unknown>[], how: { touch: boolean }) => void;
   /** `how.touch` says whether the click came from a finger, where the caller may preview rather
    *  than open. */
   onPick?: (id: string | null, props: Record<string, unknown> | null, how?: { touch: boolean }) => void;
@@ -98,7 +110,8 @@ export interface SimpleMapProps {
   pickable?: (props: Record<string, unknown>) => boolean;
   /** Features drawn with a thick outline: a mark independent of fill colour. */
   outlineFilter?: maplibregl.ExpressionSpecification;
-  onHover?: (props: Record<string, unknown> | null) => void;
+  /** `all`: every feature in reach of the pointer (markers, then the polygon), when there are markers. */
+  onHover?: (props: Record<string, unknown> | null, all?: Record<string, unknown>[]) => void;
   ariaLabel: string;
   attribution: string;
   /** Said over the map when nothing on it is shaded, so an empty map is never read as a quiet one. */
@@ -228,6 +241,15 @@ export default function SimpleMap(props: SimpleMapProps) {
                      filter: (cur.hatch?.filter ?? NO_FEATURE) as maplibregl.ExpressionSpecification,
                      paint: { "fill-pattern": "hatch" } });
       }
+      if (cur.markers !== undefined) {
+        m.addSource("markers", { type: "geojson", data: cur.markers?.data ?? NO_POINTS });
+        // The hit area is a transparent circle wider than the dot: a finger needs more than a dot.
+        m.addLayer({ id: "markers-hit", type: "circle", source: "markers",
+                     paint: { "circle-radius": MARKER_REACH, "circle-color": "rgba(0,0,0,0)" } });
+        m.addLayer({ id: "markers", type: "circle", source: "markers",
+                     paint: { "circle-radius": 5, "circle-color": cur.markers?.color ?? "#8a96a3", "circle-opacity": 0.92,
+                              "circle-stroke-color": "#2a3846", "circle-stroke-width": 1 } });
+      }
       if (cur.locator !== undefined) {
         m.addSource("locator", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
         m.addLayer({ id: "locator", type: "circle", source: "locator",
@@ -237,23 +259,32 @@ export default function SimpleMap(props: SimpleMapProps) {
       cur.onMap?.(m);
     });
 
-    m.on("click", "fill", (e) => {
-      const f = e.features?.[0];
-      const p = (f?.properties ?? null) as Record<string, unknown> | null;
-      const { pickable, onPick, idProp } = latest.current;
-      if (!p || (pickable && !pickable(p))) return;
+    // What lies under a point: markers in reach first (a dot is what the reader aimed at), then the
+    // one polygon under the pointer. Without markers this is exactly the polygon, as before.
+    const reach = (pt: maplibregl.PointLike) => {
+      const { pickable } = latest.current;
+      const at = (layer: string) => (m.getLayer(layer) ? m.queryRenderedFeatures(pt, { layers: [layer] }) : [])
+        .map((f) => f.properties as Record<string, unknown>)
+        .filter((p) => !!p && (!pickable || pickable(p)));
+      return { near: at("markers-hit"), under: at("fill").slice(0, 1) };
+    };
+    m.on("click", (e) => {
+      const { onPick, onPickMany, idProp } = latest.current;
+      const { near, under } = reach(e.point);
       // A finger on a phone or tablet: the caller may show what was tapped before opening it.
       const ev = e.originalEvent as PointerEvent | undefined;
       const touch = ev?.pointerType === "touch" || ev?.pointerType === "pen" || !!window.matchMedia?.("(hover: none)").matches;
-      onPick?.(String(p[idProp]), p, { touch });
+      if (near.length > 0 && onPickMany) { onPickMany([...near, ...under], { touch }); return; }
+      const p = near[0] ?? under[0];
+      if (p) onPick?.(String(p[idProp]), p, { touch });
     });
-    m.on("mousemove", "fill", (e) => {
-      const p = e.features?.[0]?.properties as Record<string, unknown> | undefined;
-      const ok = !!p && (!latest.current.pickable || latest.current.pickable(p));
-      m.getCanvas().style.cursor = ok ? "pointer" : "";
-      latest.current.onHover?.(p ?? null);
+    m.on("mousemove", (e) => {
+      const { near, under } = reach(e.point);
+      const all = [...near, ...under];
+      m.getCanvas().style.cursor = all.length ? "pointer" : "";
+      latest.current.onHover?.(all[0] ?? null, near.length ? all : undefined);
     });
-    m.on("mouseleave", "fill", () => { m.getCanvas().style.cursor = ""; latest.current.onHover?.(null); });
+    m.getCanvas().addEventListener("mouseleave", () => { m.getCanvas().style.cursor = ""; latest.current.onHover?.(null); });
 
     return () => {
       latest.current.onMap?.(null);
@@ -308,6 +339,13 @@ export default function SimpleMap(props: SimpleMapProps) {
     m.setFilter("hatch", (props.hatch?.filter ?? NO_FEATURE) as maplibregl.ExpressionSpecification);
   }, [hatchKey]);  // eslint-disable-line react-hooks/exhaustive-deps
 
+  const markersKey = JSON.stringify(props.markers ?? null);
+  useEffect(() => {
+    const m = map.current;
+    const src = m?.getSource("markers") as maplibregl.GeoJSONSource | undefined;
+    src?.setData(props.markers?.data ?? NO_POINTS);
+  }, [markersKey]);  // eslint-disable-line react-hooks/exhaustive-deps
+
   const locatorKey = JSON.stringify(props.locator ?? null);
   useEffect(() => {
     const m = map.current;
@@ -318,7 +356,9 @@ export default function SimpleMap(props: SimpleMapProps) {
   useEffect(() => {
     const m = map.current;
     if (!m || !props.fitTo) return;
-    m.fitBounds(props.fitTo, { padding: FIT_PADDING * 2, maxZoom: 5.5, duration: reducedMotion() ? 0 : 600 });
+    // A phone-width map keeps little padding, or a group's smallest member is a few pixels wide.
+    const padding = m.getContainer().clientWidth < 600 ? FIT_PADDING / 2 : FIT_PADDING * 2;
+    m.fitBounds(props.fitTo, { padding, maxZoom: 5.5, duration: reducedMotion() ? 0 : 600 });
   }, [fitKey]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const zoomBy = (d: number) => { const m = map.current; if (m) (d > 0 ? m.zoomIn() : m.zoomOut()); };

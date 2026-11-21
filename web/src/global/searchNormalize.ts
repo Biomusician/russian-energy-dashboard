@@ -53,7 +53,9 @@ export function normalizeForSearch(text: string): string {
 }
 
 /** How well a folded query matches one folded name. 0 = no match. Higher is better.
- *  Exact > name starts with the query > every query word starts a word of the name > substring. */
+ *  Exact > name starts with the query > every query word starts a word of the name > substring.
+ *  A substring inside a word scores 1, and searchEntries drops those whenever any option matches
+ *  at a word start, so "review" never finds only "Research preview". */
 export function matchScore(query: string, name: string): number {
   if (!query || !name) return 0;
   if (name === query) return 4;
