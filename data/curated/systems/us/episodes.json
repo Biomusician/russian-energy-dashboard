@@ -68,28 +68,14 @@
       ]
     },
     {
-      "episode_id": "us-2024-09-hurricane-francine",
-      "name": "Hurricane Francine, September 2024",
-      "basis": "named_hazard",
-      "event_ids": [
-        "us-2024-09-11-hurricane-francine-gulf-shut-ins",
-        "us-2024-09-11-hurricane-francine-loop-closure"
-      ],
-      "hazard": "Hurricane Francine (2024)"
-    },
-    {
       "episode_id": "us-2024-09-hurricane-helene",
       "name": "Hurricane Helene, September 2024",
       "basis": "named_hazard",
       "event_ids": [
         "us-2024-09-25-hurricane-helene-gulf-shut-ins",
-        "us-2024-09-26-hurricane-helene-florida-outages",
-        "us-2024-09-27-hurricane-helene-georgia-outages",
         "us-2024-09-27-hurricane-helene-indiana-outages",
         "us-2024-09-27-hurricane-helene-kentucky-outages",
-        "us-2024-09-27-hurricane-helene-north-carolina-outages",
         "us-2024-09-27-hurricane-helene-ohio-outages",
-        "us-2024-09-27-hurricane-helene-south-carolina-outages",
         "us-2024-09-27-hurricane-helene-tennessee-outages",
         "us-2024-09-27-hurricane-helene-virginia-outages"
       ],
@@ -104,16 +90,6 @@
         "us-2024-10-09-hurricane-milton-florida-outages",
         "us-2024-10-09-hurricane-milton-tampa-fuel-terminals"
       ]
-    },
-    {
-      "episode_id": "us-2026-01-winter-storm-fern",
-      "name": "Winter storm of 23-27 January 2026 (Fern)",
-      "basis": "named_hazard",
-      "event_ids": [
-        "us-2026-01-winter-storm-fern-gas-production",
-        "us-2026-01-24-winter-storm-fern-tennessee-outages"
-      ],
-      "hazard": "Winter Storm Fern (2026)"
     },
     {
       "episode_id": "us-2024-08-hurricane-debby",

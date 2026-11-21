@@ -1618,9 +1618,9 @@
   ],
   "latest_research_date": "2026-11-19",
   "lead_holds": {
-    "held": 26,
+    "held": 30,
     "duplicates_across_lanes": 8,
     "safety_grounds": 7,
-    "other_grounds": 11
+    "other_grounds": 15
   }
 }

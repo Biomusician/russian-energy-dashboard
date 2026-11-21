@@ -3102,7 +3102,7 @@
       "summary": "A ransomware attack on 21 August 2022 made the business, imaging and admissions systems of a 1,000-bed public hospital in Île-de-France inaccessible; the hospital triggered its emergency plan, referred patients to other hospitals and postponed surgery.",
       "effect": "By the hospital's announcement as reported, patients were referred to other establishments, surgical appointments were postponed and emergency patients needing imaging were transferred. The hospital serves an area of 600,000 inhabitants; no count of affected patients or procedures was given.",
       "effect_specificity": "described",
-      "inclusion_basis": 4,
+      "inclusion_basis": 1,
       "civilian_service_impact": [
         {
           "service": "healthcare",
@@ -3153,7 +3153,8 @@
             "effect"
           ],
           "opened": true,
-          "derived_claim": "Reports the hospital's announcement: systems inaccessible since 21 August, patients referred elsewhere, surgery postponed; the hospital serves an area of 600,000 inhabitants; attribution unconfirmed."
+          "derived_claim": "Reports the hospital's announcement: systems inaccessible since 21 August, patients referred elsewhere, surgery postponed; the hospital serves an area of 600,000 inhabitants; attribution unconfirmed.",
+          "origin": "the hospital's announcement"
         },
         {
           "ref": "s2",
@@ -3171,7 +3172,8 @@
           "opened": false,
           "title_original": "Déclenchement du plan blanc dimanche 21 août 2022",
           "title_en": "Emergency plan triggered on Sunday 21 August 2022",
-          "derived_claim": "The hospital's own announcement that it triggered its emergency plan on 21 August 2022 (not opened: the address now leads to a general news list; content known through s1)."
+          "derived_claim": "The hospital's own announcement that it triggered its emergency plan on 21 August 2022 (not opened: the address now leads to a general news list; content known through s1).",
+          "origin": "the hospital's announcement"
         }
       ],
       "episode_id": null,
@@ -3179,6 +3181,7 @@
       "publication_policy": "standard",
       "research_pass": "i22-water_health",
       "first_published": "2026-11-20",
+      "last_revised": "2026-11-21",
       "review": {
         "reviewed_at": "2026-11-19",
         "review_status": "blind_reviewed",
@@ -3188,7 +3191,9 @@
           "safety": "accept_with_correction"
         },
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-21"
       }
     },
     {
@@ -3530,7 +3535,7 @@
           "s1",
           "s2"
         ],
-        "about": "cause"
+        "about": "effect"
       },
       "sources": [
         {
@@ -3591,6 +3596,7 @@
       "publication_policy": "standard",
       "research_pass": "i22-africa_latam",
       "first_published": "2026-11-20",
+      "last_revised": "2026-11-21",
       "review": {
         "reviewed_at": "2026-11-19",
         "review_status": "blind_reviewed",
@@ -3600,7 +3606,9 @@
           "safety": "accept"
         },
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-21"
       }
     },
     {
@@ -6617,119 +6625,6 @@
       }
     },
     {
-      "impact_id": "imp-2023-03-05-esp-healthcare-public-hospital-ransomware",
-      "record_kind": "disruption",
-      "date": "2023-03-05",
-      "date_precision": "day",
-      "date_end": null,
-      "country_a3": "ESP",
-      "admin1": {
-        "code": "ES-CT",
-        "name": "Catalonia"
-      },
-      "geographic_precision": "admin1",
-      "domain": "civilian_service",
-      "sector": "healthcare",
-      "technology": null,
-      "cause_family": "cyber",
-      "contributing_factors": [],
-      "cyber_mechanism": "ransomware",
-      "summary": "A ransomware attack on 5 March 2023 shut down computer systems in the laboratories, emergency room and pharmacy of a public hospital in Catalonia; urgent cases were diverted to other hospitals and planned care was cancelled.",
-      "effect": "Officials said on 6 March that 150 non-urgent operations and up to 3,000 patient checkups had been cancelled; new urgent cases were diverted to other facilities in the city and staff worked on paper.",
-      "effect_specificity": "quantified",
-      "inclusion_basis": 4,
-      "civilian_service_impact": [
-        {
-          "service": "healthcare",
-          "geographic_scope": "local",
-          "affected": {
-            "value": 150,
-            "unit": "non-urgent operations",
-            "qualifier": "exact",
-            "source_says": "the cancellation of 150 nonurgent operations"
-          },
-          "duration_text": "figures as of 6 March 2023; return to normal not forecast",
-          "source_refs": [
-            "s1"
-          ]
-        },
-        {
-          "service": "healthcare",
-          "geographic_scope": "local",
-          "affected": {
-            "value": 3000,
-            "unit": "patient checkups",
-            "qualifier": "at_most",
-            "source_says": "up to 3,000 patient checkups"
-          },
-          "duration_text": "figures as of 6 March 2023",
-          "source_refs": [
-            "s1"
-          ]
-        }
-      ],
-      "attribution": {
-        "status": "ASSESSED",
-        "actor": "RansomHouse",
-        "actor_type": "criminal",
-        "basis": [
-          "government"
-        ],
-        "as_of": "2023-03-06",
-        "statement": "Catalonia's Cybersecurity Agency said on 6 March 2023 that the attack was carried out from outside Spain by a group called Ransom House, the Associated Press reported.",
-        "competing": [],
-        "source_refs": [
-          "s1"
-        ]
-      },
-      "ai_involvement": {
-        "status": "NONE_REPORTED",
-        "relation": null,
-        "role": null,
-        "as_of": null,
-        "statement": null,
-        "source_refs": []
-      },
-      "dispute": null,
-      "sources": [
-        {
-          "ref": "s1",
-          "url": "https://www.securityweek.com/cyberattack-hits-major-hospital-in-spanish-city-of-barcelona/",
-          "publisher": "Associated Press (published by SecurityWeek)",
-          "date": "2023-03-06",
-          "language": "en",
-          "source_role": "wire",
-          "medium": "web",
-          "social": null,
-          "supports": [
-            "occurrence",
-            "effect",
-            "attribution"
-          ],
-          "opened": true,
-          "derived_claim": "AP: ransomware hit the hospital on 5 March; about 150 non-urgent operations and up to 3,000 checkups cancelled; urgent cases diverted; the regional cybersecurity agency named the group.",
-          "origin": "Associated Press",
-          "attribution_basis": "government"
-        }
-      ],
-      "episode_id": null,
-      "episode_basis": null,
-      "publication_policy": "standard",
-      "research_pass": "i22-water_health",
-      "first_published": "2026-11-20",
-      "review": {
-        "reviewed_at": "2026-11-19",
-        "review_status": "blind_reviewed",
-        "roles": {
-          "evidence": "accept_with_correction",
-          "attribution_source": "accept_with_correction",
-          "safety": "accept_with_correction"
-        },
-        "social_check": "not_applicable",
-        "disposition": "corrected"
-      }
-    },
-    {
       "impact_id": "imp-2023-03-31-tun-water-drought-night-cuts",
       "record_kind": "disruption",
       "date": "2023-03-31",
@@ -8148,141 +8043,6 @@
           "evidence": "accept_with_correction",
           "attribution_source": "accept",
           "safety": "accept"
-        },
-        "social_check": "not_applicable",
-        "disposition": "corrected",
-        "lead_normalisation": true,
-        "lead_normalisation_at": "2026-11-19"
-      }
-    },
-    {
-      "impact_id": "imp-2023-08-07-isr-healthcare-hospital-ransomware-diversion",
-      "record_kind": "disruption",
-      "date": "2023-08-07",
-      "date_precision": "day",
-      "date_end": null,
-      "country_a3": "ISR",
-      "admin1": {
-        "code": "IL-TA",
-        "name": "Tel Aviv District"
-      },
-      "geographic_precision": "admin1",
-      "domain": "civilian_service",
-      "sector": "healthcare",
-      "technology": null,
-      "cause_family": "cyber",
-      "contributing_factors": [],
-      "cyber_mechanism": "ransomware",
-      "summary": "A ransomware incident disabled the administrative and record-keeping computer systems of a hospital in the Tel Aviv District of Israel; the Health Ministry and the national cyber directorate announced it the next morning.",
-      "effect": "Outpatient clinics and imaging stopped accepting new patients and people needing emergency care were directed to other hospitals. Medical equipment was reported unaffected and admitted patients continued to be treated. The cited sources do not say when normal admissions resumed.",
-      "effect_specificity": "described",
-      "inclusion_basis": 4,
-      "civilian_service_impact": [
-        {
-          "service": "healthcare",
-          "geographic_scope": "local",
-          "affected": {
-            "value": "unknown",
-            "unit": null,
-            "qualifier": null,
-            "source_says": null
-          },
-          "duration_text": "not stated by the cited sources",
-          "source_refs": [
-            "s1",
-            "s2"
-          ]
-        }
-      ],
-      "attribution": {
-        "status": "CLAIMED",
-        "actor": "Ragnar Locker",
-        "actor_type": "criminal",
-        "basis": [
-          "actor_self_claim"
-        ],
-        "as_of": "2023-09-07",
-        "statement": "The Ragnar Locker ransomware group claimed responsibility for the incident, as reported by The Record, 7 September 2023; the outlet could not verify the claim and Israeli authorities named no actor in the cited reporting.",
-        "competing": [],
-        "source_refs": [
-          "s3"
-        ]
-      },
-      "ai_involvement": {
-        "status": "NONE_REPORTED",
-        "relation": null,
-        "role": null,
-        "as_of": null,
-        "statement": null,
-        "source_refs": []
-      },
-      "dispute": null,
-      "sources": [
-        {
-          "ref": "s1",
-          "url": "https://www.jpost.com/breaking-news/article-754032",
-          "publisher": "The Jerusalem Post",
-          "date": "2023-08-08",
-          "language": "en",
-          "source_role": "media",
-          "medium": "web",
-          "social": null,
-          "supports": [
-            "occurrence",
-            "effect"
-          ],
-          "opened": true,
-          "title_original": "Israel hospital hacking disrupts services; Cyberattackers unknown",
-          "title_en": "Israel hospital hacking disrupts services; Cyberattackers unknown",
-          "derived_claim": "Reports the Health Ministry and cyber directorate announcement, the disabled administrative systems, the halt to new outpatient and imaging patients and the redirection of emergency patients."
-        },
-        {
-          "ref": "s2",
-          "url": "https://therecord.media/israeli-hospital-ransomware-attack-disruptions",
-          "publisher": "The Record (Recorded Future News)",
-          "date": "2023-08-08",
-          "language": "en",
-          "source_role": "specialist_media",
-          "medium": "web",
-          "social": null,
-          "supports": [
-            "occurrence",
-            "effect"
-          ],
-          "opened": true,
-          "title_original": "Israeli hospital redirects new patients following ransomware attack",
-          "title_en": "Israeli hospital redirects new patients following ransomware attack",
-          "derived_claim": "Reports the administrative systems shut down and new and emergency patients redirected to other medical centres."
-        },
-        {
-          "ref": "s3",
-          "url": "https://therecord.media/israel-hospital-data-leaked-ragnar-locker-ransomware",
-          "publisher": "The Record (Recorded Future News)",
-          "date": "2023-09-07",
-          "language": "en",
-          "source_role": "specialist_media",
-          "medium": "web",
-          "social": null,
-          "supports": [
-            "attribution"
-          ],
-          "opened": true,
-          "derived_claim": "Reports that the Ragnar Locker group claimed responsibility in early September 2023; the outlet could not verify the claim.",
-          "attribution_basis": "actor_self_claim"
-        }
-      ],
-      "episode_id": null,
-      "episode_basis": null,
-      "publication_policy": "standard",
-      "research_pass": "i22-mideast",
-      "first_published": "2026-11-20",
-      "review": {
-        "reviewed_at": "2026-11-19",
-        "review_status": "blind_reviewed",
-        "roles": {
-          "evidence": "accept",
-          "attribution_source": "accept_with_correction",
-          "safety": "accept_with_correction"
         },
         "social_check": "not_applicable",
         "disposition": "corrected",
@@ -11016,7 +10776,8 @@
           "opened": true,
           "title_original": "Ransomware attack forces 100 Romanian hospitals to go offline",
           "title_en": "Ransomware attack forces 100 Romanian hospitals to go offline",
-          "derived_claim": "Reports the health ministry and the cyber security directorate: system down with files encrypted; 25 hospitals encrypted, 75 others offline as a precaution; staff working on paper; no actor named."
+          "derived_claim": "Reports the health ministry and the cyber security directorate: system down with files encrypted; 25 hospitals encrypted, 75 others offline as a precaution; staff working on paper; no actor named.",
+          "origin": "health ministry and cyber directorate statements (known only through s1)"
         },
         {
           "ref": "s2",
@@ -11032,7 +10793,8 @@
             "effect"
           ],
           "opened": false,
-          "derived_claim": "The directorate's own statement with the hospital counts (not opened: HTTP 403; content known through s1)."
+          "derived_claim": "The directorate's own statement with the hospital counts (not opened: HTTP 403; content known through s1).",
+          "origin": "health ministry and cyber directorate statements (known only through s1)"
         },
         {
           "ref": "s3",
@@ -11048,7 +10810,8 @@
             "effect"
           ],
           "opened": true,
-          "derived_claim": "The health ministry's announcement of the attack (not opened: the connection was closed twice; content known through s1)."
+          "derived_claim": "The health ministry's announcement of the attack (not opened: the connection was closed twice; content known through s1).",
+          "origin": "health ministry and cyber directorate statements (known only through s1)"
         }
       ],
       "episode_id": null,
@@ -11056,6 +10819,7 @@
       "publication_policy": "standard",
       "research_pass": "i22-water_health",
       "first_published": "2026-11-20",
+      "last_revised": "2026-11-21",
       "review": {
         "reviewed_at": "2026-11-19",
         "review_status": "blind_reviewed",
@@ -11065,7 +10829,9 @@
           "safety": "accept_with_correction"
         },
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-21"
       }
     },
     {
@@ -12159,7 +11925,8 @@
           "opened": true,
           "title_original": "Ascension Ransomware Attack Affects 5.6 Million Patients",
           "title_en": "Ascension Ransomware Attack Affects 5.6 Million Patients",
-          "derived_claim": "Secondary running account: the provider confirmed ransomware on 13 May 2024; diversion, paper charting, postponed elective procedures; records restored by mid-June; CNN's unnamed-source report naming a ransomware group."
+          "derived_claim": "Secondary running account: the provider confirmed ransomware on 13 May 2024; diversion, paper charting, postponed elective procedures; records restored by mid-June; CNN's unnamed-source report naming a ransomware group.",
+          "origin": "the provider's statements"
         },
         {
           "ref": "s3",
@@ -12175,7 +11942,8 @@
             "effect"
           ],
           "opened": false,
-          "derived_claim": "The provider's own incident page (not opened: it now returns 'not found'; referenced by s2)."
+          "derived_claim": "The provider's own incident page (not opened: it now returns 'not found'; referenced by s2).",
+          "origin": "the provider's statements"
         }
       ],
       "episode_id": null,
@@ -12183,6 +11951,7 @@
       "publication_policy": "standard",
       "research_pass": "i22-water_health",
       "first_published": "2026-11-20",
+      "last_revised": "2026-11-21",
       "review": {
         "reviewed_at": "2026-11-19",
         "review_status": "blind_reviewed",
@@ -12194,7 +11963,7 @@
         "social_check": "not_applicable",
         "disposition": "corrected",
         "lead_normalisation": true,
-        "lead_normalisation_at": "2026-11-19"
+        "lead_normalisation_at": "2026-11-21"
       }
     },
     {
@@ -12215,9 +11984,9 @@
       ],
       "cyber_mechanism": null,
       "summary": "From mid-May 2024 consumption limits and hourly outage schedules were announced for household and industrial consumers in all regions of Ukraine on repeated days.",
-      "effect": "Wire reports of the announcements show nationwide limits for households and industry on 21, 23 and 27 May 2024, with hourly outages applied in any region exceeding its limit. The announcements give a capacity shortfall and weather as reasons; the operator's announcement of 16 May, as reported, said generating capacity was insufficient after attacks on the power system since 22 March.",
+      "effect": "The operator announced hourly outage schedules for household and industrial consumers throughout the country from 16 May 2024, and wire reports show schedules could apply across the country all day on 21 May. The operator's announcement, as reported, gave higher consumption in a cold snap and generating capacity insufficient after attacks on the power system since 22 March as the reasons.",
       "effect_specificity": "described",
-      "inclusion_basis": 5,
+      "inclusion_basis": 4,
       "civilian_service_impact": [
         {
           "service": "electricity",
@@ -12228,11 +11997,9 @@
             "qualifier": null,
             "source_says": "restrictions for households and industrial enterprises in all regions"
           },
-          "duration_text": "repeated days from 16 May 2024 (announcements opened for 16, 21, 23 and 27 May); end not stated",
+          "duration_text": "withheld",
           "source_refs": [
             "s1",
-            "s2",
-            "s3",
             "s4"
           ]
         }
@@ -12274,38 +12041,6 @@
           "derived_claim": "Reports the announcement that hourly outage schedules could apply across the country all day on 21 May 2024 for industrial and household consumers."
         },
         {
-          "ref": "s2",
-          "url": "https://interfax.com/newsroom/top-stories/102562/",
-          "publisher": "Interfax",
-          "date": "2024-05-23",
-          "language": "en",
-          "source_role": "wire",
-          "medium": "web",
-          "social": null,
-          "supports": [
-            "occurrence",
-            "effect"
-          ],
-          "opened": true,
-          "derived_claim": "Reports hourly outage schedules across the country for households and industry on 23 May 2024."
-        },
-        {
-          "ref": "s3",
-          "url": "https://interfax.com/newsroom/top-stories/102670/",
-          "publisher": "Interfax",
-          "date": "2024-05-27",
-          "language": "en",
-          "source_role": "wire",
-          "medium": "web",
-          "social": null,
-          "supports": [
-            "occurrence",
-            "effect"
-          ],
-          "opened": true,
-          "derived_claim": "Reports nationwide limits on 27 May 2024 for households and industrial enterprises."
-        },
-        {
           "ref": "s4",
           "url": "https://pravda.com.ua/eng/news/2024/05/15/7455973",
           "publisher": "Ukrainska Pravda",
@@ -12327,6 +12062,7 @@
       "publication_policy": "country_abstracted",
       "research_pass": "i22-eurasia",
       "first_published": "2026-11-20",
+      "last_revised": "2026-11-21",
       "review": {
         "reviewed_at": "2026-11-19",
         "review_status": "blind_reviewed",
@@ -12338,7 +12074,7 @@
         "social_check": "not_applicable",
         "disposition": "corrected",
         "lead_normalisation": true,
-        "lead_normalisation_at": "2026-11-19"
+        "lead_normalisation_at": "2026-11-21"
       }
     },
     {
@@ -14352,106 +14088,6 @@
       }
     },
     {
-      "impact_id": "imp-2024-08-24-usa-transport-airport-ransomware",
-      "record_kind": "disruption",
-      "date": "2024-08-24",
-      "date_precision": "day",
-      "date_end": null,
-      "country_a3": "USA",
-      "admin1": {
-        "code": "US-WA",
-        "name": "Washington"
-      },
-      "geographic_precision": "admin1",
-      "domain": "civilian_service",
-      "sector": "transport",
-      "technology": null,
-      "cause_family": "cyber",
-      "contributing_factors": [],
-      "cyber_mechanism": "ransomware",
-      "summary": "A ransomware attack disclosed on 24 August 2024 on the Port of Seattle, the public agency that runs an international airport in Washington State, disrupted passenger-facing systems at the airport.",
-      "effect": "Reservation check-in systems, passenger display boards, the agency's website and the airport app were disrupted and flights were delayed. The agency said it refused to pay the ransom.",
-      "effect_specificity": "described",
-      "inclusion_basis": 4,
-      "civilian_service_impact": [
-        {
-          "service": "transport",
-          "geographic_scope": "local",
-          "affected": {
-            "value": "unknown",
-            "unit": null,
-            "qualifier": null,
-            "source_says": null
-          },
-          "duration_text": "not stated in the opened source",
-          "source_refs": [
-            "s1"
-          ]
-        }
-      ],
-      "attribution": {
-        "status": "ASSESSED",
-        "actor": "Rhysida",
-        "actor_type": "criminal",
-        "basis": [
-          "victim_operator"
-        ],
-        "as_of": "2024-09-13",
-        "statement": "The Port of Seattle attributed the August 2024 attack to the Rhysida ransomware operation, 13 September 2024.",
-        "competing": [],
-        "source_refs": [
-          "s1"
-        ]
-      },
-      "ai_involvement": {
-        "status": "NONE_REPORTED",
-        "relation": null,
-        "role": null,
-        "as_of": null,
-        "statement": null,
-        "source_refs": []
-      },
-      "dispute": null,
-      "sources": [
-        {
-          "ref": "s1",
-          "url": "https://www.bleepingcomputer.com/news/security/port-of-seattle-says-ransomware-breach-impacts-90-000-people/",
-          "publisher": "BleepingComputer",
-          "date": "2025-04-04",
-          "language": "en",
-          "source_role": "specialist_media",
-          "medium": "web",
-          "social": null,
-          "supports": [
-            "occurrence",
-            "effect",
-            "attribution"
-          ],
-          "opened": true,
-          "title_original": "Port of Seattle says ransomware breach impacts 90,000 people",
-          "title_en": "Port of Seattle says ransomware breach impacts 90,000 people",
-          "derived_claim": "The agency disclosed the attack on 24 August 2024, later confirmed a named ransomware operation was behind it and that it refused to pay; check-in systems, display boards, website and app disrupted, flights delayed.",
-          "attribution_basis": "victim_operator"
-        }
-      ],
-      "episode_id": null,
-      "episode_basis": null,
-      "publication_policy": "standard",
-      "research_pass": "i22-telecom_transport",
-      "first_published": "2026-11-20",
-      "review": {
-        "reviewed_at": "2026-11-19",
-        "review_status": "blind_reviewed",
-        "roles": {
-          "evidence": "accept",
-          "attribution_source": "accept_with_correction",
-          "safety": "accept_with_correction"
-        },
-        "social_check": "not_applicable",
-        "disposition": "corrected"
-      }
-    },
-    {
       "impact_id": "imp-2024-08-30-ven-electricity-event-707827",
       "record_kind": "disruption",
       "date": "2024-08-30",
@@ -14480,7 +14116,7 @@
             "qualifier": "exact",
             "source_says": "23 states fully or partly affected (France 24)"
           },
-          "duration_text": "began in the early hours of 30 August 2024; duration not stated in the cited source",
+          "duration_text": "withheld",
           "source_refs": [
             "s2"
           ]
@@ -14494,7 +14130,7 @@
             "qualifier": null,
             "source_says": null
           },
-          "duration_text": "urban rail service suspended on 30 August 2024",
+          "duration_text": "withheld",
           "source_refs": [
             "s2"
           ]
@@ -14554,6 +14190,7 @@
       "publication_policy": "country_abstracted",
       "research_pass": "i22-africa_latam",
       "first_published": "2026-11-20",
+      "last_revised": "2026-11-21",
       "review": {
         "reviewed_at": "2026-11-19",
         "review_status": "blind_reviewed",
@@ -14627,7 +14264,8 @@
           "opened": true,
           "title_original": "Kansas Water Facility Switches to Manual Operations Following Cyberattack",
           "title_en": "Kansas Water Facility Switches to Manual Operations Following Cyberattack",
-          "derived_claim": "Quotes the city's statement: incident discovered on the morning of 22 September; treatment facility switched to manual operations as a precaution; water safe and service not disrupted."
+          "derived_claim": "Quotes the city's statement: incident discovered on the morning of 22 September; treatment facility switched to manual operations as a precaution; water safe and service not disrupted.",
+          "origin": "the city's statement"
         },
         {
           "ref": "s2",
@@ -14645,7 +14283,8 @@
           "opened": false,
           "title_original": "City of Arkansas City Faces Cybersecurity Incident",
           "title_en": "City of Arkansas City Faces Cybersecurity Incident",
-          "derived_claim": "The city's own statement on the incident and the switch to manual operations (page now returns 'not found'; content known only through s1's quotation)."
+          "derived_claim": "The city's own statement on the incident and the switch to manual operations (page now returns 'not found'; content known only through s1's quotation).",
+          "origin": "the city's statement"
         }
       ],
       "episode_id": null,
@@ -14653,6 +14292,7 @@
       "publication_policy": "standard",
       "research_pass": "i22-water_health",
       "first_published": "2026-11-20",
+      "last_revised": "2026-11-21",
       "review": {
         "reviewed_at": "2026-11-19",
         "review_status": "blind_reviewed",
@@ -14662,7 +14302,9 @@
           "safety": "accept_with_correction"
         },
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-21"
       }
     },
     {
@@ -16516,7 +16158,7 @@
       "summary": "On Saturday 11 January 2025 schools and public offices were closed in a large share of Iran's provinces; the state news agency gave the cold and the management of electricity consumption as the reason, while power plants remained short of fuel.",
       "effect": "AFP: schools and public buildings closed in a third of the provinces, by an order issued on Friday, 'because of the cold and to manage electricity consumption' (IRNA); several power plants remained shut for lack of fuel. Iran International: closures across nearly two-thirds of the provinces because of a gas shortage; the national gas company said 605 million cubic metres went to households, commerce and small industry on 10 January, 10% more than a year earlier; the energy minister had spoken to parliament on 5 January of a 20,000-megawatt electricity shortage. The two province counts differ and both are recorded.",
       "effect_specificity": "described",
-      "inclusion_basis": 5,
+      "inclusion_basis": 4,
       "civilian_service_impact": [
         {
           "service": "municipal_services",
@@ -16593,6 +16235,7 @@
       "publication_policy": "standard",
       "research_pass": "i22-iran_power",
       "first_published": "2026-11-20",
+      "last_revised": "2026-11-21",
       "review": {
         "reviewed_at": "2026-11-19",
         "review_status": "blind_reviewed",
@@ -16602,7 +16245,9 @@
           "safety": "accept_with_correction"
         },
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-21"
       }
     },
     {
@@ -16785,7 +16430,8 @@
           "opened": true,
           "title_original": "Storm Éowyn update: ESB Networks teams mobilising to restore electricity supply to 725,000 homes, farms and businesses without power",
           "title_en": "Storm Éowyn update: ESB Networks teams mobilising to restore electricity supply to 725,000 homes, farms and businesses without power",
-          "derived_claim": "Operator release: about 725,000 homes, farms and businesses without power at 12:30 on 24 January 2025; damage described as unprecedented; restoration to take more than a week in the worst-hit areas."
+          "derived_claim": "Operator release: about 725,000 homes, farms and businesses without power at 12:30 on 24 January 2025; damage described as unprecedented; restoration to take more than a week in the worst-hit areas.",
+          "origin": "the network operator's statements"
         },
         {
           "ref": "s2",
@@ -16803,7 +16449,8 @@
           "opened": true,
           "title_original": "Power restored to all customers hit by storm, says ESB",
           "title_en": "Power restored to all customers hit by storm, says ESB",
-          "derived_claim": "Reports the operator's statement that power was restored to all of the over 768,000 customers affected, and the telecoms regulator's statement on the scale of telecom disruption."
+          "derived_claim": "Reports the operator's statement that power was restored to all of the over 768,000 customers affected, and the telecoms regulator's statement on the scale of telecom disruption.",
+          "origin": "the network operator's statements"
         },
         {
           "ref": "soc1",
@@ -16834,6 +16481,7 @@
       "publication_policy": "standard",
       "research_pass": "i22-europe",
       "first_published": "2026-11-20",
+      "last_revised": "2026-11-21",
       "review": {
         "reviewed_at": "2026-11-19",
         "review_status": "blind_reviewed",
@@ -16845,7 +16493,7 @@
         "social_check": "passed",
         "disposition": "corrected",
         "lead_normalisation": true,
-        "lead_normalisation_at": "2026-11-19"
+        "lead_normalisation_at": "2026-11-21"
       }
     },
     {
@@ -17257,7 +16905,7 @@
       "summary": "On 24 and 25 February 2025 government offices, banks and schools were closed in most of Iran's provinces, with gas shortages and electricity cuts reported alongside cold weather.",
       "effect": "Closures in at least 22 of 31 provinces on Monday 24 February, announced by provincial officials late on Sunday; in one province heating systems in closed buildings were ordered switched off to save fuel. A digest of Iranian media counted full or partial shutdowns in 25 provinces announced on 25 February.",
       "effect_specificity": "quantified",
-      "inclusion_basis": 5,
+      "inclusion_basis": 4,
       "civilian_service_impact": [
         {
           "service": "municipal_services",
@@ -17331,6 +16979,7 @@
       "publication_policy": "standard",
       "research_pass": "i22-iran_power",
       "first_published": "2026-11-20",
+      "last_revised": "2026-11-21",
       "review": {
         "reviewed_at": "2026-11-19",
         "review_status": "blind_reviewed",
@@ -17340,7 +16989,9 @@
           "safety": "accept_with_correction"
         },
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-21"
       }
     },
     {
@@ -19274,7 +18925,7 @@
             "qualifier": "exact",
             "source_says": "160 000 foyers (Business AM)"
           },
-          "duration_text": "not stated in the cited source",
+          "duration_text": "withheld",
           "source_refs": [
             "s1"
           ]
@@ -19328,6 +18979,7 @@
       "publication_policy": "country_abstracted",
       "research_pass": "i22-europe",
       "first_published": "2026-11-20",
+      "last_revised": "2026-11-21",
       "review": {
         "reviewed_at": "2026-11-19",
         "review_status": "blind_reviewed",
@@ -21106,7 +20758,7 @@
             "qualifier": "exact",
             "source_says": "zeitweise 50.000 Menschen (50,000 people at times)"
           },
-          "duration_text": "not stated in the cited source",
+          "duration_text": "withheld",
           "source_refs": [
             "s1"
           ]
@@ -21170,6 +20822,7 @@
       "publication_policy": "country_abstracted",
       "research_pass": "i22-europe",
       "first_published": "2026-11-20",
+      "last_revised": "2026-11-21",
       "review": {
         "reviewed_at": "2026-11-19",
         "review_status": "blind_reviewed",
@@ -23183,7 +22836,7 @@
       "contributing_factors": [],
       "cyber_mechanism": null,
       "summary": "In early January 2026 an act of sabotage against electricity distribution infrastructure in Germany left tens of thousands of households without power for several days.",
-      "effect": "About 45,000 households and more than 2,200 businesses lost electricity for several days.",
+      "effect": "About 45,000 households and more than 2,200 businesses lost electricity.",
       "effect_specificity": "quantified",
       "inclusion_basis": 2,
       "civilian_service_impact": [
@@ -23196,7 +22849,7 @@
             "qualifier": "about",
             "source_says": "about 45,000 households and over 2,200 businesses"
           },
-          "duration_text": "several days",
+          "duration_text": "withheld",
           "source_refs": [
             "s4"
           ]
@@ -23275,6 +22928,7 @@
       "publication_policy": "country_abstracted",
       "research_pass": "i22-europe",
       "first_published": "2026-11-20",
+      "last_revised": "2026-11-21",
       "review": {
         "reviewed_at": "2026-11-19",
         "review_status": "blind_reviewed",
@@ -23286,7 +22940,7 @@
         "social_check": "not_applicable",
         "disposition": "corrected",
         "lead_normalisation": true,
-        "lead_normalisation_at": "2026-11-19"
+        "lead_normalisation_at": "2026-11-21"
       }
     },
     {
@@ -23443,7 +23097,7 @@
             "qualifier": null,
             "source_says": "thousands of homes without heat and electricity"
           },
-          "duration_text": "not stated",
+          "duration_text": "withheld",
           "source_refs": [
             "s1",
             "s2"
@@ -23458,7 +23112,7 @@
             "qualifier": null,
             "source_says": "thousands of homes without heat and electricity"
           },
-          "duration_text": "not stated",
+          "duration_text": "withheld",
           "source_refs": [
             "s1",
             "s2"
@@ -23544,6 +23198,7 @@
       "publication_policy": "country_abstracted",
       "research_pass": "i22-eurasia",
       "first_published": "2026-11-20",
+      "last_revised": "2026-11-21",
       "review": {
         "reviewed_at": "2026-11-19",
         "review_status": "blind_reviewed",
@@ -23782,131 +23437,6 @@
         "roles": {
           "evidence": "accept",
           "attribution_source": "accept_with_correction",
-          "safety": "accept_with_correction"
-        },
-        "social_check": "not_applicable",
-        "disposition": "corrected"
-      }
-    },
-    {
-      "impact_id": "imp-2026-01-21-dnk-electricity-grid-outage",
-      "record_kind": "disruption",
-      "date": "2026-01-21",
-      "date_precision": "day",
-      "date_end": "2026-01-21",
-      "country_a3": "DNK",
-      "admin1": {
-        "code": "DK-84",
-        "name": "Capital Region of Denmark (Region Hovedstaden)"
-      },
-      "geographic_precision": "admin1",
-      "domain": "energy",
-      "sector": "electricity",
-      "technology": "distribution",
-      "cause_family": "industrial_technical",
-      "contributing_factors": [],
-      "cyber_mechanism": null,
-      "summary": "On 21 January 2026 part of Denmark's Capital Region lost its entire electricity supply for about four hours after a grid fault.",
-      "effect": "All customers in the affected area lost power from about 10:16; supply was restored after about four hours.",
-      "effect_specificity": "described",
-      "inclusion_basis": 4,
-      "civilian_service_impact": [
-        {
-          "service": "electricity",
-          "geographic_scope": "local",
-          "affected": {
-            "value": "source_inaccessible",
-            "unit": null,
-            "qualifier": null,
-            "source_says": "all customers in the affected area; figure in an unopened operator update"
-          },
-          "duration_text": "about four hours",
-          "source_refs": [
-            "s1",
-            "s2"
-          ]
-        }
-      ],
-      "attribution": {
-        "status": "NOT_APPLICABLE",
-        "actor": null,
-        "actor_type": null,
-        "basis": [],
-        "as_of": null,
-        "statement": null,
-        "competing": [],
-        "source_refs": []
-      },
-      "ai_involvement": {
-        "status": "NONE_REPORTED",
-        "relation": null,
-        "role": null,
-        "as_of": null,
-        "statement": null,
-        "source_refs": []
-      },
-      "dispute": null,
-      "sources": [
-        {
-          "ref": "s1",
-          "url": "https://ing.dk/artikel/nu-er-stroemmen-paa-vej-tilbage-til-bornholm",
-          "publisher": "Ingeniøren",
-          "date": "2026-01-21",
-          "language": "da",
-          "source_role": "specialist_media",
-          "medium": "web",
-          "social": null,
-          "supports": [
-            "occurrence",
-            "effect"
-          ],
-          "opened": true,
-          "derived_claim": "Reports the outage from 10:16 and the operators' statements that restoration was under way."
-        },
-        {
-          "ref": "s2",
-          "url": "https://www.doi.dk/en/vindkraft/artikel/stroemmen-er-tilbage-paa-bornholm-efter-fire-timer-langt-nedbrud",
-          "publisher": "Dansk Offshore Industri / DOI.dk",
-          "date": "2026-01-21",
-          "language": "da",
-          "source_role": "specialist_media",
-          "medium": "web",
-          "social": null,
-          "supports": [
-            "occurrence",
-            "effect"
-          ],
-          "opened": true,
-          "derived_claim": "Reports that power returned to the whole affected area after an outage of about four hours."
-        },
-        {
-          "ref": "s3",
-          "url": "https://lovguiden.dk/det-offentlige/energinet/2026-01-20-opdatering-paa-stroemafbrud-paa-bornholm-her-er-hvad-vi-ved",
-          "publisher": "Energinet (mirrored by Lovguiden)",
-          "date": "2026-01-21",
-          "language": "da",
-          "source_role": "operator",
-          "medium": "web",
-          "social": null,
-          "supports": [
-            "occurrence",
-            "effect"
-          ],
-          "opened": false,
-          "derived_claim": "Mirror of the transmission operator's update on the outage (not opened: HTTP 429; date approximate)."
-        }
-      ],
-      "episode_id": null,
-      "episode_basis": null,
-      "publication_policy": "standard",
-      "research_pass": "i22-europe",
-      "first_published": "2026-11-20",
-      "review": {
-        "reviewed_at": "2026-11-19",
-        "review_status": "blind_reviewed",
-        "roles": {
-          "evidence": "accept_with_correction",
-          "attribution_source": "accept",
           "safety": "accept_with_correction"
         },
         "social_check": "not_applicable",
@@ -25339,7 +24869,8 @@
           "opened": true,
           "title_original": "Alert Announcements at Signature Healthcare",
           "title_en": "Alert Announcements at Signature Healthcare",
-          "derived_claim": "Provider's dated alerts: suspicious network activity identified 6 April; downtime procedures; ambulance diversion until 15 April; chemotherapy cancelled then phased back; pharmacies unable to fill prescriptions until 24 April."
+          "derived_claim": "Provider's dated alerts: suspicious network activity identified 6 April; downtime procedures; ambulance diversion until 15 April; chemotherapy cancelled then phased back; pharmacies unable to fill prescriptions until 24 April.",
+          "origin": "the provider's statements"
         },
         {
           "ref": "s2",
@@ -25357,7 +24888,8 @@
           "opened": true,
           "title_original": "Massachusetts Hospital Diverts Ambulances as Cyberattack Causes Disruption",
           "title_en": "Massachusetts Hospital Diverts Ambulances as Cyberattack Causes Disruption",
-          "derived_claim": "Reports the provider's statement: ambulance diversion, chemotherapy cancellations, pharmacies unable to fill prescriptions; ransomware not confirmed and no group claim known."
+          "derived_claim": "Reports the provider's statement: ambulance diversion, chemotherapy cancellations, pharmacies unable to fill prescriptions; ransomware not confirmed and no group claim known.",
+          "origin": "the provider's statements"
         },
         {
           "ref": "s3",
@@ -25383,6 +24915,7 @@
       "publication_policy": "standard",
       "research_pass": "i22-water_health",
       "first_published": "2026-11-20",
+      "last_revised": "2026-11-21",
       "review": {
         "reviewed_at": "2026-11-19",
         "review_status": "blind_reviewed",
@@ -25392,7 +24925,9 @@
           "safety": "accept_with_correction"
         },
         "social_check": "not_applicable",
-        "disposition": "corrected"
+        "disposition": "corrected",
+        "lead_normalisation": true,
+        "lead_normalisation_at": "2026-11-21"
       }
     },
     {

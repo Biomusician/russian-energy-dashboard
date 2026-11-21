@@ -4110,6 +4110,12 @@
       "field": "capacity_affected.measure",
       "set": "other",
       "reason": "Lead correction (iteration 20, energy-analyst red team): 8.30 TMT is the crude processed in June 2023, not the amount lost; the shortfall against the 267.00 TMT target is not stated by the source as a loss"
+    },
+    {
+      "event_id": "us-2022-09-06-caiso-eea3-heat",
+      "field": "threshold_basis",
+      "set": "Grid-operator EEA 3 declaration: an emergency declared by the grid operator (clause 5, its second limb).",
+      "reason": "Clause 5 does not name EEA3; the declaration meets its second limb, an emergency declared by the grid operator (red team T-A8, iteration 23). Held here so a re-import keeps it."
     }
   ]
 }
