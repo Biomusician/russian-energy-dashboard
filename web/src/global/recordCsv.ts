@@ -349,7 +349,7 @@ export const CSV_CONVENTIONS = [
   "UTF-8 with a byte-order mark, comma separated, quoted per RFC 4180, CRLF line ends.",
   "An empty cell means the record does not publish that value: it was not reported, it does not apply, or a publication rule withholds it (see publication_note). An empty cell is never a zero.",
   "A cell that begins with = + - or @ is prefixed with an apostrophe so a spreadsheet shows it as text instead of running it as a formula.",
-  "No coordinates, and nothing finer than a first-level region, are published or exported.",
+  "No coordinates are published or exported. A record is placed in a first-level region at most; it may name the facility it concerns unless a publication rule withholds it (see publication_note).",
 ];
 
 export interface ReadmeInput {

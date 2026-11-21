@@ -380,15 +380,15 @@ export const HELP_SECTIONS: HelpSection[] = [
   },
   {
     id: "withheld",
-    answer: "Some detail is deliberately not published so that the site can never serve as a targeting or facility-status tool: no coordinates, nothing finer than a first-level region, and no later status of attacked facilities while attacks are being reported.",
+    answer: "Some detail is deliberately not published so that the site can never serve as a targeting or facility-status tool: no coordinates, no incident placed finer than a first-level region, and no later status of attacked facilities while attacks are being reported.",
     blocks: [
       { kind: "p", text: "Never published, anywhere on the site or in any download:" },
       { kind: "list", items: [
-        "Coordinates of any incident, or any place finer than a first-level region such as a state, province or oblast.",
+        "Coordinates of any incident. An incident is placed in a first-level region such as a state, province or oblast, never at a point. A record may name the facility it concerns, except where the safeguards below withhold it.",
         "The current operating, repair or restart status, or remaining capacity, of an attacked facility.",
         "Any ranking of facilities by importance, weakness or vulnerability, or any list of undamaged assets.",
         "Which facility or port depends on another, and the names, positions or tracks of ships.",
-        "Weapon or attack-method detail, or the distance from any point to a target. The public strike table's distance column is deliberately not read.",
+        "Analysis of weapons or attack methods, and the distance from any point to a target. The public strike table's distance column is deliberately not read. In Russia, Belarus & Crimea a record's own text may name the broad means a source reports, such as a drone attack; an attack record published for the country only names none.",
         "Exploit detail of any kind, and personal data of any kind.",
       ] },
       { kind: "p", text: "Publication safeguards. While attacks on a country's energy facilities are being reported, an attack record there still shows that something was reported, its date, its broad class and its cause. What is not published is the later status of the facility and, in most safeguarded countries, where in the country it happened, the operator and the facility. A country whose situation is uncertain is treated as under the safeguards." },
@@ -396,7 +396,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       { kind: "p", text: "In Russia, Belarus & Crimea, recovery evidence is used, for display and for the index alike, only once it is old enough and any repair estimate it carries has run its course. Until then the index uses the modelled recovery assumption, which tends to overstate exposure for that period, and the disruption says that its current status is withheld. That note appears on every such disruption, so its presence reveals nothing about any one facility." },
       { kind: "derived", key: "theatre.delay" },
       { kind: "p", text: "For the country systems, when held evidence may be published has not yet been decided." },
-      { kind: "p", text: "Every record cites a public source, and that page may name what the record does not. The safeguards limit what this site gathers and states. They cannot change what a cited report says." },
+      { kind: "p", text: "Every record cites a public source, and that page, its address or its headline may name what the record does not, including a weapon. The safeguards limit what this site gathers and states. They cannot change what a cited report says." },
       { kind: "p", text: "Out of scope by design: unit positions, readiness, fuel or ammunition state, assessments of defensive gaps, and anything with targeting value. These are not withheld data. They were never collected." },
     ],
     seeAlso: ["absence", "exports", "do-not-infer"],

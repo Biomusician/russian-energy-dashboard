@@ -298,3 +298,16 @@ def test_the_home_bundle_never_carries_the_help_text(tmp_path):
         assert not [i for i in inputs if i.endswith(name)], f"{name} is loaded with the home page"
     root = (SRC / "Root.tsx").read_text(encoding="utf-8")
     assert 'lazy(() => import("./global/help/HelpPage"))' in root
+
+
+def test_f2_help_never_claims_more_than_the_layers_publish():
+    """Final methodology red team F-2. Help's "never published" list promised no place finer than a
+    first-level region and no attack-method detail anywhere, while theatre records name facilities
+    and the broad means a source reports, and a cited headline can name a weapon."""
+    content = (ROOT / "web" / "src" / "global" / "help" / "content.ts").read_text(encoding="utf-8")
+    csv = (ROOT / "web" / "src" / "global" / "recordCsv.ts").read_text(encoding="utf-8")
+    assert "or any place finer than a first-level region" not in content
+    assert "Weapon or attack-method detail" not in content
+    assert "A record may name the facility it concerns" in content
+    assert "its address or its headline may name what the record does not, including a weapon" in content
+    assert "nothing finer than a first-level region, are published" not in csv
