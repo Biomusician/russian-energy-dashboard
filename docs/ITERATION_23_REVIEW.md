@@ -276,7 +276,8 @@ Final gate on the release tree (`24db80a`, 21 November, after both red teams): p
 two that need a warm raw cache); `tsc -b` clean; vitest 726 in 47 files; Vite build; Playwright 564 of
 564, which includes the project's own accessibility checks (keyboard order, focus, roles and names, touch targets; no axe engine is installed), the screenshot-review captures, every Help deep link, the
 map-routing cases (monitored, theatre, impact-only, none, Gulf, the small Gulf states, keyboard,
-phone, Back/Forward) and the wide-font first-screen checks.
+phone, Back/Forward) and the wide-font first-screen checks. The same gate was rerun, all green with the same totals, on the release
+build rebuilt over the merged daily refresh (`9741336`, §27).
 
 The final methodology red team ("find one claim the product makes that its implementation cannot
 justify") returned five findings and two notes, all handled (F-1 to F-5, N-1, N-2, P5 in the
@@ -350,10 +351,21 @@ the breadcrumb gains its "Gulf littoral" crumb and wraps (owner item P3).
 
 ## 27. Moving-main integration
 
-`main` did not move during the iteration: `origin/main` was still the iteration-22 release
-(`8f17610`) when the release began, so the branch fast-forwarded with nothing to merge. The release
-build ran on `main`, where What's New reads the production lineage (comparison mode `production`,
-against the last published build before this one).
+`main` moved once. When the release began, `origin/main` was still the iteration-22 release
+(`8f17610`), and the release build ran on `main`, where What's New reads the production lineage
+(comparison mode `production`, against the last published build dated before this one). The fetch
+before pushing found that the daily refresh bot had since committed `5d796d4` (21 November, build
+artifacts and `CURRENT_STATE.md` only, no curated or code change).
+
+It was merged (`8ae64e9`), keeping the release tree's artifacts, which the release build regenerates
+anyway, and the release was rebuilt on the merged history (`9741336`). What's New is unchanged: its
+baseline is still the last build dated before 21 November (`45458c5`), because a same-day build is
+never a baseline. Production history gains the refresh's entry (`bot_refresh_presumed_deployed`);
+every other file differs only in build time and commit. One trap, recorded for the next release: a
+rebuild while the merge is still uncommitted finds the new `origin/main` is not an ancestor of HEAD
+and turns What's New off ("diverged histories"). Commit the merge first, then rebuild. The full gate
+was rerun on the merged tree (§24). The mutation campaign ran on `24db80a`; no code has changed
+since.
 
 ## 28. CI
 
