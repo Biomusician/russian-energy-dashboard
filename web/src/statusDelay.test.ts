@@ -56,6 +56,19 @@ describe("a no-report count never reads as an operating status", () => {
   it("the label carries no status word", () => {
     expect(NO_REPORT_LABEL).not.toMatch(/impair|awaiting|unresolved|down|offline|current/i);
   });
+
+  // Iteration 23 (ESDI-03): the count is a model output. Six of the fifty facilities it counted
+  // carried a partial-restart or restoration report, so "no restoration report" was false.
+  it("says it is a model count and carries the served report count when there is one", () => {
+    expect(NO_REPORT_LABEL).not.toMatch(/^No restoration report/);
+    const six = noReportMeaning("2026-11-13", POLICY, 6);
+    expect(six).toContain("model count, not a reporting fact");
+    expect(six).toContain("6 of them carry a partial-restart or restoration report");
+    expect(six).toContain("decayed away is not counted");
+    expect(noReportMeaning("2026-11-13", POLICY, 1)).toContain("1 of them carries");
+    expect(noReportMeaning("2026-11-13", POLICY, 0)).toContain("None of them carries");
+    expect(noReportMeaning("2026-11-13", POLICY)).not.toMatch(/\d+ of them/);
+  });
 });
 
 describe("the home page's theatre line", () => {

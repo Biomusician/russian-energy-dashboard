@@ -271,7 +271,7 @@ export default function Comparison({
           </tbody>
         </table>
         <p className="small">
-          Counted by when each thing HAPPENED, not by when this dataset learned of it. When a
+          Counted by when each thing HAPPENED, not by when this dataset first served it. When a
           record was added or corrected is a separate question, answered by the build ledger.
         </p>
       </section>
@@ -389,8 +389,8 @@ function PublishedComparison({ published, a, b, onChange }: {
       {A && B && (
         <section className="cmp-block">
           <h3>Events the dashboard first served after A and by B ({learned.length})</h3>
-          <p className="small">Counted by when the dashboard LEARNED of each event, not when it happened.
-            An event dated months earlier appears here if research found it in this interval.</p>
+          <p className="small">Counted by when the dashboard first served each event: not when it happened, and not
+            when it was first reported. An event dated months earlier appears here if it was first served in this interval.</p>
           {learned.length > 0 && (
             <ul className="small mono published-learned">{learned.slice(0, 25).map((id) => <li key={id}>{id}</li>)}</ul>
           )}

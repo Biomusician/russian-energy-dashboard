@@ -158,7 +158,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     term: "ESDI (Energy System Disruption Exposure Index)",
     aliases: ["index", "exposure index", "monitored-area esdi", "score", "headline"],
     plain: "The one index on this site, published only for the Russia, Belarus & Crimea theatre. On a 0 to 100 scale it shows how much of the tracked energy capacity sits at facilities disrupted recently enough to be plausibly still affected.",
-    detail: "It weighs each facility's published capacity by evidence strength, cause and time elapsed, sector by sector, then combines sectors with fixed weights. A sector with no capacity base is left out and the weights are rescaled; it is not counted as zero. It is a measure of exposure, not of output lost.",
+    detail: "It weighs each facility's published capacity by evidence strength, cause, reported damage severity and time elapsed, sector by sector, then combines sectors with fixed weights. Transmission has no capacity base and is scored as a count of disrupted equipment instead. A sector with no basis for a value is left out and the weights are rescaled; it is not counted as zero. It is a measure of exposure, not of output lost.",
   },
   {
     id: "evidence-confidence",

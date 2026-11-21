@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { buildDeltaTitle, excludedSectorEventsText, fmtIndex, indexMoveText } from "./indexText";
+import { buildDeltaTitle, excludedSectorEventsText, fmtIndex, indexMoveText, horizonSensitivityText } from "./indexText";
 import { localDayOf } from "./freshness";
 import { LANE_STATE_LABEL, laneChips, laneLine, laneStatePhrase } from "./global/laneCoverage";
 
@@ -105,5 +105,18 @@ describe("laneStatePhrase — the number counts source groups, not searches", ()
     expect(laneLine({ declared_query_set_run: 5, partially_searched: 1 }, 6))
       .toBe("6 source groups: 5 with planned searches run (not exhaustive) · 1 partly searched.");
     expect(laneLine({ not_started: 1 })).toBe("1 source group: 1 not started.");
+  });
+});
+
+// Iteration 23 (ESDI-02): the served horizon sweep, where the headline is explained.
+describe("horizonSensitivityText", () => {
+  it("states the served range and the modelled share, and claims nothing without a sweep", () => {
+    const s = horizonSensitivityText({ declared_refinery_horizon_days: 150, declared_esdi: 5.87,
+      esdi_range: [1.73, 13.89], evidence_kind_counts: { modelled: 50 } });
+    expect(s).toContain("50 of 50 facilities");
+    expect(s).toContain("1.7 to 13.9");
+    expect(s).toContain("published 5.9");
+    expect(horizonSensitivityText(null)).toBeNull();
+    expect(horizonSensitivityText(undefined)).toBeNull();
   });
 });

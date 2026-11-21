@@ -47,3 +47,22 @@ export function indexMoveText(label: string, before: number, after: number, sepa
   const base = `${label} ${fmtNum(before, 1)} to ${fmtNum(after, 1)} (${sign}${Math.abs(d).toFixed(2)}).`;
   return separable ? base : `${base} The method changed too, so the movement cannot be split between data and method.`;
 }
+
+/** The served recovery-horizon sweep, in one sentence for the places the headline is explained
+ *  (iteration 23, ESDI-02). Read from `snapshot.recovery_horizon_sensitivity`, never computed
+ *  here. Null when the build serves no sweep, so nothing is claimed. */
+export function horizonSensitivityText(h: {
+  declared_refinery_horizon_days: number;
+  declared_esdi: number;
+  esdi_range: [number, number];
+  evidence_kind_counts?: Record<string, number>;
+} | null | undefined): string | null {
+  if (!h || !h.esdi_range || h.esdi_range.length !== 2) return null;
+  const [lo, hi] = h.esdi_range;
+  const kinds = h.evidence_kind_counts ?? {};
+  const total = Object.values(kinds).reduce((a, b) => a + b, 0);
+  const share = total > 0 ? `${kinds.modelled ?? 0} of ${total} facilities still in the index decay on ` : "Facilities decay on ";
+  return `${share}a modelled recovery horizon (${h.declared_refinery_horizon_days} days for a refinery), `
+    + `an assumption no source supports. Halving or doubling the horizons gives ${fmtNum(lo, 1)} to ${fmtNum(hi, 1)} `
+    + `against the published ${fmtNum(h.declared_esdi, 1)}.`;
+}

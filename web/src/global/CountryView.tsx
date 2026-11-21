@@ -1131,13 +1131,14 @@ function MethodPanel({ bundle }: { bundle: CountryBundle }) {
 
       <details className="small no-score-technical">
         <summary>Technical detail: why the Russia, Belarus &amp; Crimea method does not transfer</summary>
-        <p>The Russia, Belarus &amp; Crimea index combines reported damage by sector, weighting each sector by its share of the monitored
-          capacity, lets each event's weight fade with a fixed half-life, and adds a measure of the power-transmission
-          network. Each of those parts was set for that one area: its weights come from that infrastructure, the half-life
-          from how that campaign's damage was reported and repaired, and the transmission measure from that grid.</p>
+        <p>The Russia, Belarus &amp; Crimea index combines reported damage by sector, weighting each sector by a published
+          judgement of its importance, lets each event's weight fade on a recovery horizon (taken from a recovery report where
+          one exists and assumed where it does not), and adds a measure of the power-transmission network. Each of those parts
+          was set for that one area: its weights were judged for that infrastructure, its assumed horizons for how that
+          campaign's damage was reported and repaired, and the transmission measure for that grid.</p>
         <p>Here none of the three has a basis. There is no shared capacity denominator for the records, so a weight per
           sector would be invented. Recovery evidence is uneven and, for attacked facilities under the campaign
-          safeguards, deliberately unpublished, so a fixed fading rate would stand in for evidence that does not exist.
+          safeguards, deliberately unpublished, so an assumed fading rate would stand in for evidence that does not exist.
           Reporting rules differ between countries, so the same number would mean different things in each.</p>
         <p>A sector can only carry a value once code computes one from evidence that supports it; until then every
           sector says "tracked, not scored" or why it is unknown. The Sectors tab shows each one.</p>
