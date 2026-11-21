@@ -271,8 +271,15 @@ New, none implemented:
 
 ## 24. Tests
 
-PENDING: final gate totals (pytest, tsc, vitest, Vite, Playwright) on the release tree; the final
-methodology red team; the final test-architecture red team (real mutant survivors only).
+Gate on the release-candidate tree (`04bbe5e`, 21 November): pytest 2,097 passed, 2 skipped (the
+two that need a warm raw cache); `tsc -b` clean; vitest 726 in 47 files; Vite build; Playwright 564 of
+564, which includes the project's own accessibility checks (keyboard order, focus, roles and names, touch targets; no axe engine is installed), the screenshot-review captures, every Help deep link, the
+map-routing cases (monitored, theatre, impact-only, none, Gulf, the small Gulf states, keyboard,
+phone, Back/Forward) and the wide-font first-screen checks.
+
+The final methodology red team ("find one claim the product makes that its implementation cannot
+justify") returned five findings and two notes, all handled (F-1 to F-5, N-1, N-2, P5 in the
+findings table). The final test-architecture red team is reported in §25.
 
 ## 25. Mutations
 

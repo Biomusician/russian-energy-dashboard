@@ -608,6 +608,27 @@ def test_tb2_no_served_basis_four_record_is_local_only():
             assert any(c.get("geographic_scope") in G.WIDE_SCOPES for c in r["civilian_service_impact"]), r["impact_id"]
 
 
+@needs_bundler
+def test_xl01_every_place_is_reachable_on_a_synthetic_order(tmp_path_factory):
+    """The served file puts every newer statement above its older one, so it cannot show that the
+    "below" and "above and below" branches work (full mutation campaign, iteration 23)."""
+    out = _ts(tmp_path_factory, """
+      const e = (id, t) => ({ id, context_type: t });
+      const order = [e("a1", "a"), e("b1", "b"), e("a2", "a"), e("b2", "b"), e("c1", "c"), e("c2", "c")];
+      const latest = new Set([order[0], order[3], order[5]]);
+      const places = ctxt.laterPlaces(order, latest);
+      return Object.fromEntries(order.map((x) => [x.id, places.get(x) || null]));
+    """)
+    assert out == {"a1": None, "b1": "below", "a2": "above", "b2": None, "c1": "below", "c2": None}
+    out = _ts(tmp_path_factory, """
+      const e = (id) => ({ id, context_type: "a" });
+      const order = [e("n1"), e("old"), e("n2")];
+      const places = ctxt.laterPlaces(order, new Set([order[0], order[2]]));
+      return places.get(order[1]);
+    """)
+    assert out == "above and below"
+
+
 def test_xl01_a_context_entry_cannot_describe_a_day_after_it_was_made():
     entries = copy.deepcopy(_read("global/regional_context.json")["entries"])
     assert not [p for p in G.context_problems(entries) if "is after date" in p], "the served file passes"

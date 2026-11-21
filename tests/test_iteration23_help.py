@@ -22,7 +22,7 @@ WEB = ROOT / "web" / "public" / "data"
 needs_payload = pytest.mark.skipif(not (PROCESSED / "global" / "help_facts.json").exists(), reason="no built payload")
 
 # A file or repository path, a release label, or a raw key, anywhere in a reader string.
-PATHLIKE = re.compile(r"\b[\w.-]+\.(?:json|csv|md|py|tsx?|geojson)\b|\bdocs/|\bdata/|\bpipeline/|\bmethodology/")
+PATHLIKE = re.compile(r"\b[\w.-]+\.(?:json|csv|md|py|tsx?|geojson|ya?ml)\b|\bdocs/|\bdata/|\bpipeline/|\bmethodology/|\.github/")
 RELEASE = re.compile(r"\biterations?\b", re.I)
 RAW_ID = re.compile(r"(?<![\w/.-])[a-z]+(?:_[a-z]+)+(?![\w/.-])|\b[A-Z]{2,}(?:_[A-Z]+)+\b")
 
