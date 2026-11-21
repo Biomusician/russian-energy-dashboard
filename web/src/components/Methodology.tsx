@@ -94,7 +94,9 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
             The Energy System Disruption Exposure Index answers one question: <em>what
             share of the tracked installed base sits at facilities disrupted recently
             enough to still be plausibly impaired</em>, weighted by evidence strength,
-            cause, and time elapsed.
+            cause, and time elapsed. That holds for the sectors with a capacity base.
+            Transmission has none: its part of the headline is a count of disrupted
+            facilities against a saturation point, not a capacity share.
           </p>
           <p style={{ color: "var(--amber)" }}>
             It is not a measurement of lost throughput or lost generation. Open
@@ -106,8 +108,9 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
 
           <H>How a score is built</H>
           <p>
-            Each event contributes <code>confidence × cause × 0.5^(days ÷ half-life)</code>,
-            where the half-life is set by the recovery evidence (below). Per facility the
+            Each event contributes <code>confidence × cause × damage severity × 0.5^(days ÷ half-life)</code>,
+            where the half-life is set by the recovery evidence (below), and a credible report of
+            full restoration caps what remains at a small residual. Per facility the
             single strongest live contribution wins rather than the sum, so a site hit
             four times cannot exceed being fully disrupted. Facility contributions are
             then weighted by that facility's share of the Russian national capacity base for its
@@ -124,12 +127,13 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
             <strong style={{ color: "var(--text-dim)" }}>modelled</strong> (neither exists,
             so a generic per-sector assumption is used). The kind is carried on every
             number and shown in the Recovery tab, so an observed restart never looks like a
-            guess. Confirmed reconstitution collapses a facility's contribution.
+            guess. A credible report of full reconstitution caps a facility's contribution at a
+            small residual from that date; it does not remove it.
           </p>
           <p>
             The modelled fallback horizons are the weakest input — assumptions about how
             quickly each asset class returns to service, not measurements. All of them, and
-            every other weight, live in <code>methodology/scoring.json</code>.
+            every other weight, are published with the project's source code.
           </p>
 
           <H>Denominators</H>
@@ -176,10 +180,12 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
                 missing</b>: the gap is ~{r.gap_decomposition?.excluded_condensate_splitters_mtpa} MTPA
                 of gas-condensate splitters (Surgut, Ust-Luga, Astrakhan) excluded like Tobolsk, plus ~
                 {r.gap_decomposition?.conservative_basis_understatement_mtpa} MTPA because the tracked
-                figures use one consistent source ~10-15% below current nameplate. Because refining
-                exposure is a capacity <i>share</i>, a uniform revaluation of all plants leaves it
-                essentially unchanged — the conservative basis doesn't systematically bias the score;
-                it mainly affects the absolute MTPA and this completeness ratio. This is denominator
+                figures use one consistent source ~10-15% below current nameplate. Refining exposure
+                is a capacity <i>share</i>, but its two sides are not drawn from one source: the
+                denominator comes from the refinery registry and each struck plant's capacity from
+                the strike table, and the two disagree. So a revaluation of the plants does not
+                leave the score unchanged, and the conservative basis cannot be said to leave it
+                unbiased; which basis to use is an open methodology decision. This is denominator
                 completeness, NOT event coverage.
               </p>
             );
@@ -206,7 +212,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
                 <i> false</i> assumption that gas &amp; coal are zero, giving {zero.toFixed(1)} — so
                 excluding them lifts the headline by {(s.esdi - zero).toFixed(1)}. It is a
                 sensitivity under an assumption, <b>not a second valid ESDI</b>: unknown stays
-                unknown. Gas carries documented strikes that score zero only for want of a
+                unknown. Gas carries documented strikes that are not scored, for want of a
                 defensible denominator.
               </p>
             );
@@ -221,43 +227,48 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
                   denominator exists. As a separate, <b style={{ color: "var(--amber)" }}>experimental</b>{" "}
                   measure only, disrupted gas-processing capacity is compared against a{" "}
                   bottom-up census of {g.census_plants} publicly-sourced plants totalling{" "}
-                  {g.census_bcm_y} bcm/y raw gas. {g.struck_plants} of them carry a live
-                  disruption, giving a <b>within-census exposure of{" "}
+                  {g.census_bcm_y} bcm/y raw gas. {g.struck_plants} of them still contribute
+                  modelled exposure, giving a <b>within-census exposure of{" "}
                   {g.within_census_exposure_pct != null ? `${g.within_census_exposure_pct}%` : "—"}</b>.
                 </p>
                 <p style={{ color: "var(--amber)", fontSize: 11 }}>
                   This is <b>not</b> national gas-processing exposure. The census is a
                   non-exhaustive sample — Russia processes far more gas than {g.census_bcm_y}{" "}
                   bcm/y — so the ratio overstates the national picture and is deliberately kept
-                  out of the headline ESDI pending an independent red-team.{" "}
+                  out of the headline ESDI pending an independent review.{" "}
                   {g.uncertain_bcm_y > 0 && `${g.uncertain_bcm_y} bcm/y of the census is flagged uncertain; `}
                   {g.aggregate_bcm_y > 0 && `${g.aggregate_bcm_y} bcm/y is multi-plant aggregate. `}
                   Capacities are structured bcm/y fields, never parsed from prose at scoring time.
                 </p>
                 <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
-                  <b>Decision: stays experimental.</b> A defensible headline sub-sector
+                  <b>Why it stays experimental.</b> A defensible headline sub-sector
                   would need a matched external denominator and internally comparable capacities;
                   an open-source census found neither — no all-Russia/AOI gas-processing capacity
                   total exists, and the census mixes design nameplate (Orenburg, Astrakhan) with
                   actual throughput. It is never summed with LNG (MTPA) or gas pipelines into a
                   single "Gas" score — different functions and units.
                 </p>
+                {/* Iteration 23 (IA-16): an exposure-model statement, never an operating status.
+                    "Live-disrupted plants" read as which named attacked plants are down now. */}
                 {g.struck.length > 0 && (
                   <p style={{ fontSize: 10.5, color: "var(--text-faint)" }}>
-                    Live-disrupted plants:{" "}
+                    Plants contributing modelled gas-processing exposure (census capacity × model
+                    weight, which decays with time; not an operating status):{" "}
                     {g.struck.map((p) => `${p.name} (${p.bcm_y} bcm/y × ${p.disruption_weight})`).join(", ")}.
                   </p>
                 )}
               </>
             );
           })()}
+          {/* Iteration 23 (IA-16): built from served figures only. A hard-coded sentence naming
+              one power link as what "transmission" means went stale with the data and read as a
+              statement about that facility. */}
           {s.transmission_concentration && s.transmission_concentration.top.length > 0 && (
             <p style={{ color: "var(--text-faint)" }}>
-              Transmission is theatre-concentrated, not a national-grid measure: the top
-              contributor is {s.transmission_concentration.top[0].name} (
-              {s.transmission_concentration.top[0].pct}% of the sector), and occupied Crimea is{" "}
-              {s.transmission_concentration.occupied_share_pct}% of it — so read "transmission"
-              as the Kerch power bridge plus Crimea substations, not the wider Russian grid.
+              Transmission is theatre-concentrated, not a national-grid measure: the largest single
+              contributor carries {s.transmission_concentration.top[0].pct}% of the sector, and
+              occupied Crimea {s.transmission_concentration.occupied_share_pct}% of it. Read it as a
+              burden on a handful of sites, not as the state of the wider Russian grid.
             </p>
           )}
           {s.recovery_horizon_sensitivity && (() => {
@@ -312,7 +323,7 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
                   </p>
                 )}
                 <p style={{ color: "var(--text-faint)", fontSize: 10.5, fontStyle: "italic" }}>
-                  Red-team verdict: {readerText(t.red_team_verdict)}
+                  Why it stays in the headline (an earlier internal review): {readerText(t.red_team_verdict)}
                 </p>
               </>
             );
@@ -323,7 +334,12 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
             <p>
               <b>Oil-strike benchmark coverage ≈ {Math.round(s.coverage.coverage_ratio * 100)}%</b>:{" "}
               {s.coverage.enumerated_in_this_dataset} enumerated oil-sector strikes vs the{" "}
-              {s.coverage.reported_total_strikes} reported strikes on Russian oil facilities. The
+              {s.coverage.reported_total_strikes} reported strikes on Russian oil facilities
+              {s.coverage.numerator_window_end && <>
+                , both counted to {fmtDate(s.coverage.numerator_window_end)}, where the benchmark's
+                table ends{s.coverage.enumerated_after_window
+                  ? ` (${s.coverage.enumerated_after_window} strikes recorded after that are outside the ratio)` : ""}
+              </>}. The
               numerator and denominator are the same oil-strike universe — earlier versions
               divided <i>all</i> energy events ({s.coverage.total_events_all_sectors} across all
               sectors) by this oil-only benchmark, which overstated coverage; that is corrected.
@@ -364,9 +380,11 @@ export default function Methodology({ bundle, onClose }: { bundle: Bundle; onClo
 
           <H>Attribution</H>
           <p>
-            Attribution is reported, never asserted. Events drawn from strike reporting
-            carry <code>attribution_confidence = probable</code>, reflecting media
-            reporting of responsibility rather than independent confirmation.
+            Attribution is reported, never asserted. Events drawn from the strike table are
+            labelled probable, reflecting media reporting of responsibility rather than
+            independent confirmation. Curated events carry a label set by hand, which has no
+            test of independent confirmation behind it, so the dashboard shows every theatre
+            attribution as reported, never as confirmed. The label does not enter the score.
           </p>
 
           <H>Scope boundary</H>

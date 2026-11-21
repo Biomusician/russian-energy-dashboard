@@ -27,7 +27,13 @@ percent-of-grid-offline, which it does not. Each contribution therefore names it
 and carries only the fields that mechanism actually has.
 """
 
-from pipeline.config import SECTORS
+from pipeline.config import METHODOLOGY_DIR, SECTORS
+from pipeline.util import read_json
+
+# What kind of number each sector is, as methodology/scoring.json declares it. Read from there
+# rather than restated here, so the published basis cannot drift from the declared one.
+SECTOR_BASIS = {k: v for k, v in read_json(METHODOLOGY_DIR / "scoring.json")["sector_basis"].items()
+                if not k.startswith("_")}
 
 # How each sector turns a disrupted facility into sector points. Not cosmetic: the Inspector
 # renders different fields per mechanism, and conflating them is the specific misreading the
@@ -101,6 +107,22 @@ def _classify_zero(raw_total, unscored_sectors, has_covered_denominator, unsized
     return ZERO_NO_IMPAIRMENT
 
 
+def _renormalisation_note(covered):
+    """Which sectors are out, and what the ones that are in actually measure. The old note said
+    every included sector has a capacity denominator; transmission has none and is scored as an
+    event-burden count, so the headline is not one capacity share (iteration 23, ESDI-07)."""
+    out = [s for s in SECTORS if s not in covered]
+    burden = [s for s in covered if MECHANISM.get(s) == "event_burden"]
+    note = (f"{', '.join(out) if out else 'No sector'} {'has' if len(out) == 1 else 'have'} no basis "
+            "for a value and are EXCLUDED, with the remaining weights renormalised, rather than "
+            "counted as zero. An absent measurement is not evidence of no disruption.")
+    if burden:
+        note += (f" {', '.join(burden).capitalize()} has no capacity denominator either: it is "
+                 "included as a count of disrupted facilities against a saturation point, so its "
+                 "part of the headline is an event-burden figure, not a capacity share.")
+    return note
+
+
 def headline_explanation(sector_fracs, weights, covered, esdi, raw_esdi, as_of, sensitivities):
     """Decompose the national composite into per-sector index points.
 
@@ -163,11 +185,7 @@ def headline_explanation(sector_fracs, weights, covered, esdi, raw_esdi, as_of, 
         "reconciles_published": _r(raw_esdi) == esdi,
         # Older field name, kept meaning the same thing: the raw identity holds.
         "reconciles": abs(raw_total - raw_esdi) <= 1e-9,
-        "renormalisation_note": (
-            "Sectors without a capacity denominator are EXCLUDED and the remaining weights "
-            "renormalised, rather than counted as zero. An absent measurement is not evidence "
-            "of no disruption."
-        ),
+        "renormalisation_note": _renormalisation_note(covered),
         "decay": {
             "form": "contribution x 0.5 ^ (days_elapsed / half_life_days)",
             "half_life_source": (
@@ -243,11 +261,7 @@ def _contribution_trace(x, info, share, sector, trace):
 def sector_explanations(sector_fracs, denominators, snapshot, live, facility_info,
                         share_fn, saturation_events, trace_fn=None):
     """Per sector: what the denominator is, what is contributing now, and what is wrong with it."""
-    basis = {
-        "refining": "capacity_mtpa", "oil_logistics": "capacity_mtpa",
-        "electric_generation": "capacity_mw", "transmission": "event_burden",
-        "gas": "uncovered", "coal": "uncovered",
-    }
+    basis = SECTOR_BASIS
     dbasis = snapshot.get("denominator_basis") or {}
     out = {}
     for s in SECTORS:
@@ -268,8 +282,9 @@ def sector_explanations(sector_fracs, denominators, snapshot, live, facility_inf
             "sector": s,
             "basis": basis[s],
             "mechanism": MECHANISM[s],
-            "value": _r(raw_value),
-            "raw_value": raw_value,
+            # An unscored sector has no value, not a value of zero (iteration 23, F8).
+            "value": _r(raw_value) if scored else None,
+            "raw_value": raw_value if scored else None,
             "contributing": contributing,
             "contributing_count": len(contributing),
             "sum_of_contributions": _r(raw_sum),
@@ -339,7 +354,7 @@ def sector_explanations(sector_fracs, denominators, snapshot, live, facility_inf
         else:
             entry["limitations"].append(
                 "No capacity denominator exists for this sector, so it is excluded from the "
-                "composite and its weight redistributed. Documented strikes in this sector are "
+                "composite and its weight redistributed. Any events recorded in this sector are "
                 "NOT scored. Excluded is not the same as zero.")
         out[s] = entry
     return out

@@ -32,7 +32,9 @@ export default function ComparisonTray({
     const esdiNow = series?.[step] ?? 0;
     const change = series ? esdiNow - (series[refStep] ?? 0) : 0;
     const topSector = snap
-      ? Object.entries(snap.sectors).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1])[0]
+      // An uncovered sector is null (no value), never a candidate for the top sector.
+      ? Object.entries(snap.sectors).filter((e): e is [string, number] => e[1] != null && e[1] > 0)
+          .sort((a, b) => b[1] - a[1])[0]
       : undefined;
     const occupied = snap ? snap.analytic_scope !== "aoi" : false;
     return { code, snap, series, esdiNow, change, topSector, occupied };
@@ -71,7 +73,7 @@ export default function ComparisonTray({
                 <span>90-day change</span><span className="num" style={{ color: changeColor }}>{fmtDelta(change)}</span>
               </div>
               <div className="compare-kv"><span>Events to date</span><span className="num">{snap?.incident_count ?? 0}</span></div>
-              <div className="compare-kv" title="Reported disruptions with no restoration report by the status cut-off; counted at the publication date. Not facilities known to be down now."><span>No restoration report</span><span className="num">{snap?.unresolved_count ?? 0}</span></div>
+              <div className="compare-kv" title="Facilities still in the index with no full-restoration report by the status cut-off: a model count, counted at the publication date. Not facilities known to be down now."><span>Still in the index</span><span className="num">{snap?.unresolved_count ?? 0}</span></div>
               <div className="compare-kv">
                 <span>Top sector</span>
                 <span className="num" style={{ fontSize: 11 }}>{topSector ? `${titleCase(topSector[0])} ${fmtNum(topSector[1], 1)}` : "—"}</span>

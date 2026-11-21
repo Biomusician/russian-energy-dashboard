@@ -22,7 +22,7 @@
     "Absolute thresholds (500 MW, 100,000 customers) mean very different things in systems that differ in size by thirty times; a province-wide outage in a small province can fall below them.",
     "There is no duration floor.",
     "'With reported effect' measures how much a country discloses as well as what happened.",
-    "One storm can produce several records; episodes are not yet grouped.",
+    "One storm can produce several records. They are grouped into episodes (one hazard or one statement is one episode), but a record count still counts records, not episodes.",
     "See GLOBAL_METHODOLOGY.md §5.1 for the full red-team."
   ]
 }

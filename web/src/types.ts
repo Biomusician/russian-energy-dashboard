@@ -110,7 +110,7 @@ export interface RegionSnapshot {
   de_facto_control: string | null;
   status_note: string | null;
   esdi: number;
-  sectors: Record<string, number>;
+  sectors: Record<string, number | null>;  // null: an uncovered sector has no value (iteration 23)
   incident_count: number;
   struck_facility_count: number;
   live_disruption_count: number;
@@ -119,7 +119,8 @@ export interface RegionSnapshot {
   median_unresolved_age_days: number | null;
   reconstitution_backlog_days: number;
   affected_sectors: string[];
-  installed_mw: number;
+  /** Null when the generation census holds no plant for the region: no capacity figure, not 0 MW. */
+  installed_mw: number | null;
   tracked_substations: number;
   tracked_transmission_lines: number;
   population_millions: number | null;
@@ -194,6 +195,8 @@ export interface LiveDisruption {
 
 export interface RecoveryStats {
   unresolved_count: number;
+  /** Iteration 23: how many of unresolved_count carry a partial-restart or restoration report. */
+  unresolved_with_recovery_report?: number;
   resolved_count: number;
   min_median_episodes: number;
   min_sector_median_episodes?: number;
@@ -364,6 +367,10 @@ export interface Coverage {
   coverage_ratio: number;
   total_events_all_sectors?: number;
   numerator_definition?: string;
+  /** Iteration 23: the last day the benchmark counts; the numerator stops there too. */
+  numerator_window_end?: string | null;
+  /** Oil strikes recorded but dated after the benchmark's last period, so outside the ratio. */
+  enumerated_after_window?: number;
   by_period: { period: string; strikes: number; cumulative: number }[];
   source_url: string;
   note: string;
@@ -455,12 +462,10 @@ export interface Snapshot {
     occupied_share_pct: number;
     note: string;
   };
-  /** Iteration 13. The assumption the headline actually rests on.
-   *
-   *  Roughly 96% of live facilities decay on a MODELLED reconstitution horizon, because
-   *  observed and estimated recovery evidence covers a handful. The transmission saturation
-   *  constant is worth under one index point and ships a six-point sweep plus four alternative
-   *  models; this parameter is worth most of the number and shipped nothing at all. */
+  /** Iteration 13. The assumption the headline actually rests on: most live facilities decay on
+   *  a MODELLED reconstitution horizon, because observed and estimated recovery evidence covers a
+   *  handful (the build's split is `evidence_kind_counts`). Until iteration 13 it shipped no
+   *  sensitivity while the transmission constant shipped a sweep and four alternative models. */
   recovery_horizon_sensitivity?: {
     parameter: string;
     declared_refinery_horizon_days: number;
@@ -494,7 +499,7 @@ export interface Snapshot {
     note: string;
     red_team_verdict: string;
   };
-  sectors: Record<string, number>;
+  sectors: Record<string, number | null>;  // null: an uncovered sector has no value (iteration 23)
   sectors_covered: string[];
   sectors_uncovered: string[];
   heating_season: boolean;
@@ -524,6 +529,8 @@ export interface Snapshot {
   network_coverage?: NetworkCoverage;
   regions: Record<string, RegionSnapshot>;
   not_modelled: Record<string, string>;
+  /** Why a regional effect can be null (iteration 23): not measured, never zero. */
+  effects_null_reasons?: Record<string, string>;
   coverage: Coverage | null;
   coverage_matrix?: Record<string, CoverageMatrixEntry>;
   experimental_indices?: { gas_processing: GasProcessingIndex | null };
@@ -567,12 +574,13 @@ export interface FacetCounts {
 export interface NationalSeries {
   dates: string[];
   esdi: number[];
-  sectors: Record<string, number[]>;
+  /** An uncovered sector's series is all null: no denominator, so no value (iteration 23). */
+  sectors: Record<string, (number | null)[]>;
 }
 
 export interface RegionalSeries {
   dates: string[];
-  regions: Record<string, { esdi: number[]; sectors: Record<string, number[]> }>;
+  regions: Record<string, { esdi: number[]; sectors: Record<string, (number | null)[]> }>;
 }
 
 export interface Taxonomy {
@@ -830,8 +838,9 @@ export interface SectorExplanation {
   sector: string;
   basis: "capacity_mtpa" | "capacity_mw" | "event_burden" | "uncovered";
   mechanism: Mechanism;
-  value: number;
-  raw_value: number;
+  /** Null for an unscored sector (iteration 23): it has no value, not a value of zero. */
+  value: number | null;
+  raw_value: number | null;
   zero_basis: ZeroBasis;
   zero_note: string | null;
   contributing: ContributingFacility[];

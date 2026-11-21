@@ -1819,7 +1819,7 @@ def test_sector_record_count_is_not_the_sector_score():
     assert fc["sector"].get("gas", 0) > 0
     # ...but the gas sector is uncovered (score path), i.e. not in sectors_covered.
     assert "gas" in snap["sectors_uncovered"]
-    assert snap["sectors"]["gas"] == 0
+    assert snap["sectors"]["gas"] is None  # no denominator, no value (iteration 23: null, not 0.0)
 
 
 # --------------------------------------------------------------------------
@@ -1873,7 +1873,7 @@ def test_lng_inventory_does_not_invent_a_gas_denominator():
     snap = _snapshot()
     assert snap["facet_counts"]["asset_class"].get("lng_terminal", 0) > 0
     assert "gas" in snap["sectors_uncovered"]
-    assert snap["sectors"]["gas"] == 0
+    assert snap["sectors"]["gas"] is None  # no denominator, no value (iteration 23: null, not 0.0)
     assert snap["denominators"].get("gas") in (None, 0), "no gas denominator should be emitted"
 
 
@@ -2000,7 +2000,7 @@ def test_coal_inventory_present_but_sector_unsupported():
     fc = snap["facet_counts"]["asset_class"]
     assert fc.get("coal_mine", 0) > 0 and fc.get("coal_terminal", 0) > 0, "coal inventory expected"
     assert "coal" in snap["sectors_uncovered"]
-    assert snap["sectors"]["coal"] == 0
+    assert snap["sectors"]["coal"] is None  # no denominator, no value (iteration 23: null, not 0)
     assert snap["denominators"].get("coal") in (None, 0), "no coal denominator should be emitted"
 
 
@@ -2650,7 +2650,7 @@ def test_transmission_alternative_models_are_deterministic_and_bounded():
         covered = snap["sectors_covered"]
         others = [s for s in covered if s != "transmission"]
         # Recompute through the shipped composite, from the published sector values.
-        fracs = {s: v / 100.0 for s, v in snap["sectors"].items()}
+        fracs = {s: v / 100.0 for s, v in snap["sectors"].items() if v is not None}
         assert E == pytest.approx(_composite(fracs, SCORING["sector_weights"], others), abs=0.05)
         assert 0.0 <= E <= 100.0
         v_tx = snap["sectors"]["transmission"]
@@ -2779,12 +2779,15 @@ def test_oil_coverage_uses_the_oil_strike_universe():
     snap = _snapshot()
     cov = snap["coverage"]
     inc = json.loads((PROCESSED / "incidents.json").read_text(encoding="utf-8"))
-    oil_strikes = sum(
-        1 for i in inc
-        if SECTOR_OF_CLASS.get(i.get("asset_class")) in ("refining", "oil_logistics")
-        and i.get("cause") in ("kinetic_strike", "sabotage")
-    )
+    oil = [i for i in inc
+           if SECTOR_OF_CLASS.get(i.get("asset_class")) in ("refining", "oil_logistics")
+           and i.get("cause") in ("kinetic_strike", "sabotage")]
+    # Iteration 23 (C1): and only those inside the benchmark's own window.
+    end = cov["numerator_window_end"]
+    assert end, "the benchmark's window end should be read from its table"
+    oil_strikes = sum(1 for i in oil if i["date"][:10] <= end)
     assert cov["enumerated_in_this_dataset"] == oil_strikes, "numerator must be oil-sector strikes only"
+    assert cov["enumerated_after_window"] == len(oil) - oil_strikes
     assert cov["enumerated_in_this_dataset"] < snap["incident_total"], "numerator must exclude non-oil events"
     assert cov["total_events_all_sectors"] == snap["incident_total"]
     assert cov["numerator_definition"]
@@ -2835,8 +2838,8 @@ def test_experimental_gas_index_excluded_from_headline_esdi():
     g = (snap.get("experimental_indices") or {}).get("gas_processing")
     assert g is not None, "experimental gas-processing index should be present"
     assert g["experimental"] is True and g["in_headline_esdi"] is False
-    # Gas still contributes exactly zero to the composite.
-    assert snap["sectors"]["gas"] == 0.0
+    # Gas still contributes nothing to the composite: it has no value at all (null since iteration 23).
+    assert snap["sectors"]["gas"] is None
 
 
 @pytest.mark.skipif(not (PROCESSED / "snapshot.json").exists(), reason="pipeline not run")
@@ -3809,6 +3812,10 @@ def test_contributing_facilities_reconcile_to_their_sector_value():
     """A sector's value is the sum of its facilities' capacity shares, capped at 100%. Below
     the cap the two must agree, or the listed facilities are not the ones that produced it."""
     for s, e in _snap()["explanations"]["sectors"].items():
+        if e["value"] is None:
+            # Unscored (iteration 23: null, not 0.0): its facilities carry no capacity share.
+            assert e["sum_of_contributions"] == 0, s
+            continue
         if e["value"] >= 100.0:
             continue  # saturated: the uncapped sum legitimately exceeds the published value
         assert abs(e["sum_of_contributions"] - e["value"]) <= 0.05, s
@@ -7704,6 +7711,13 @@ def _check_backfill(h):
     assert not set(OCT10_BACKFILL) & set(oct9["events_added"] or [])
     # Every one of them predates the 9 October build: dated before it, known only after it.
     assert all(eid.split(":")[1] < oct9["as_of"] for eid in OCT10_BACKFILL)
+    # Their first-seen fact names the 10 October build; a record already in the first reliable
+    # build is "present before tracking", with no invented date (iteration 23, history mutant
+    # H-M1: the live rebuild below never looked at first_seen, so swapping the two statuses passed).
+    fs = h["first_seen"]
+    for eid in OCT10_BACKFILL:
+        assert fs[eid] == {"status": "first_served", "served_from": oct10["served_from"], "sha": oct10["sha"]}, eid
+    assert fs["afipsky-refinery:2025-02-10"] == {"status": "present_before_tracking", "served_from": None, "sha": None}
 
 
 @needs_build
