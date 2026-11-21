@@ -267,7 +267,7 @@ New, none implemented:
 | P3 Gulf phone header | Gulf country pages shift by 0.18 on a phone when the breadcrumb gains its group crumb (§26). Delay the header until the manifest loads, or give every phone page a two-row header |
 | P4 Held-record counts in What's New | What's New caps lists and never counts the remainder ("capped and flagged, never counted"); a reader asked how many were held. Add a count field, or keep the rule |
 | P5 Means named in theatre records | A theatre record's title and text may name the broad means its source reports ("drone attack"); Gulf attack records name none. Help now says so (F-2). (a) keep; (b) abstract means in theatre text as the Gulf does; (c) keep in sources only |
-| P6 Ransomware names in attribution | "No malware family" is enforced in a cyber record's own text (T-5). Ransomware groups share their tool's name, and five records name one as the claimed actor; one attribution statement reports, from a cited outlet, that a named ransomware was involved. (a) attribution may name the group, as now; (b) attribution names an actor only, never a tool; (c) abstract group names to "a ransomware group" |
+| P6 Ransomware names in attribution | "No malware family" is enforced in a cyber record's own text (T-5). Ransomware groups share their tool's name, and five records name one as the claimed actor; one attribution statement reports, from a cited outlet, that a named ransomware was involved. The production red team found more: group names in source `derived_claim` fields and a URL slug on the Colombian record, a state-linked group named on Polish and Ukrainian records and three attempts, and one attempt naming its claimed group in its own summary. (a) attribution may name the group, as now; (b) attribution names an actor only, never a tool; (c) abstract group names to "a ransomware group" |
 
 ## 24. Tests
 
@@ -277,7 +277,8 @@ two that need a warm raw cache); `tsc -b` clean; vitest 726 in 47 files; Vite bu
 564, which includes the project's own accessibility checks (keyboard order, focus, roles and names, touch targets; no axe engine is installed), the screenshot-review captures, every Help deep link, the
 map-routing cases (monitored, theatre, impact-only, none, Gulf, the small Gulf states, keyboard,
 phone, Back/Forward) and the wide-font first-screen checks. The same gate was rerun, all green with the same totals, on the release
-build rebuilt over the merged daily refresh (`9741336`, §27).
+build rebuilt over the merged daily refresh (`9741336`, §27). After the push, CI and the production
+red team found five bugs (§28, §29); the gate on that fix commit is all green: pytest 2,119 passed (2 skipped), tsc clean, vitest 726, build, 564 of 564 browser tests.
 
 The final methodology red team ("find one claim the product makes that its implementation cannot
 justify") returned five findings and two notes, all handled (F-1 to F-5, N-1, N-2, P5 in the
@@ -369,11 +370,78 @@ since.
 
 ## 28. CI
 
-PENDING.
+**First run, on the release (`2ace8f4`).** The `python` job passed: it now installs `node_modules`
+before the suite and sets `EDM_REQUIRE_BUNDLER`, so the bundler tests (T-3) ran on Linux for the
+first time and a missing bundler would have failed the job instead of skipping. The `frontend` job
+passed. The `e2e` job was **cancelled at its 30-minute limit**, after two Linux-only failures, each
+retried once. Job logs need a signed-in account; the failures were read from the run's public
+annotations, which Playwright's CI reporter writes for exactly this reason (iteration 19).
+
+- **CI-1** *Deep links open exactly the views they always did* checked that `?sys=ru` and
+  `?compare=us,ca` show no h1 named "Energy Disruption Monitor". The theatre's own bar is an h1 with
+  that name, and the absence was checked before the view mounted, so it passed on anything locally;
+  CI's runner mounted the theatre first. Each view is now proved by something only it shows, then
+  the home's own title is proved absent. BUG (test); no product change.
+- **CI-2** *The downloaded PNG is a real image* required a 600 px tall frame in a 900 px viewport,
+  guarding a 300 px defect. Linux draws a taller font, so the chrome above the theatre's map leaves
+  595 px. The floor is 60% of the viewport (540 px), still twice the defect. BUG (test).
+- **CI-3** 564 browser tests on one worker took longer than 30 minutes (iteration 22 took 23). The
+  job runs as two shards by file (295 and 269 tests), each with the same limit and its own failure
+  report. BUG (process).
+
+The fixes went out with the production red team's (§29). The result on the final commit is below.
+
+PENDING: recorded after the push.
 
 ## 29. Production
 
-PENDING.
+**Release `2ace8f4`**, deployed to Production at 17:03 UTC on 21 November (GitHub deployment status
+`success`). Read-only checks against the served site:
+
+- **Bytes.** All 72 served data files are byte-identical to the commit; `index.html` and all 30
+  assets are byte-identical to the gate's build of the same tree.
+- **Safety sweep** of the served payload (iteration 22's `safety_scan.py`, pointed at the served
+  bytes): no place word on any of the 21 campaign-system impact records; every kinetic or sabotage
+  record abstracted (7 abstracted records, keyed ids, no headline); no IP, CVE, protocol, device or
+  credential; context entries aggregate only (the hits are IMO/UNCTAD statements already accepted in
+  iteration 22). The queue, the key, `data/raw` and `.git` all return 404. No blocker.
+- **QA in a browser.** The home loads with no console error; a list click opens `?sys=ca`, and Back
+  restores the home with focus on the row it came from; France gets the impact-only card;
+  `?group=gulf` draws no route, vessel or chokepoint (its only such words are the "why there is no
+  tanker map" disclaimers); a Help deep link scrolls to and focuses its section; an unknown anchor
+  opens Help at the top. On a phone there is no sideways scroll and the map draws in 1.6 s.
+- **Production red team** (an independent Claude agent, read-only, about 45 requests). It reported
+  one blocker: Saudi Arabia's own page publishes six attack records with region, facility and
+  operator during the active campaign, and two carry a ministry figure for the cut in production.
+  It is the standing owner decision on Saudi harmonisation (Option B stays), reported the same way
+  by iteration 22's production red team; CLAUDE.md limits country-level placement to the seven new
+  systems, and the brief given to the agent overstated that rule. It did not block this release
+  and stays at the head of the owner items. Its other findings:
+  - **PR-1** `help_facts.json` gave Gas and Coal, the two sectors left out of the index, a value of
+    0.0 and 0.0 points; the page said "Left out", the file said zero. A left-out sector now carries
+    no value, weight or points. BUG, fixed. (`snapshot.explanations` still writes 0.0 for them,
+    as it has since iteration 6, feeding arithmetic in `diff_builds`; §30.)
+  - Group names outside the attribution block (in `derived_claim` fields, a URL slug, one
+    attempt's summary): actor names, not tooling. Added to owner question P6.
+  - Abstracted records whose citation URL is a headline-like slug: no place, operator or method,
+    so the gate passes them, but the slug restates what the record withholds. METHODOLOGY WEAKNESS,
+    §30.
+  - A record that reports a victim's remote-service link was disabled as a precaution: the reported
+    effect, not an access method; noted. `world.geojson` "requested seven times": one request per
+    load when measured. `assets.json` coordinates for public power plants: unchanged design.
+- **PR-2, found while rebuilding for PR-1.** The rebuild compared What's New with `fc75ad0`, a
+  development merge from this release's own branch that no reader was ever served, while the panel
+  said "the last published build". After a release of many commits is pushed, every one of them is
+  an ancestor of `origin/main`, and the walk back to "the last build dated before today" stopped at
+  an intermediate one. Before the push it had landed correctly, so the served release was right;
+  any same-day rebuild after it would not have been. The walk now counts only served builds: the
+  deployment ledger, the daily refreshes, a refresh's parent and the live tip; with no ledger every
+  build counts and the lineage says so. What's New rebuilt this way is byte-identical to the one
+  production serves. BUG, fixed, four mutants.
+
+**Follow-up release.**
+
+PENDING: recorded after the push.
 
 ## 30. Remaining limitations
 
@@ -388,6 +456,15 @@ PENDING.
   the scope note, which is taller now that its Crimea sentence never folds away (V-01).
 - The theatre strike table cites bare home pages in a few incidents (from the source table); the
   confidence labels they feed are memo M4.
+- Saudi Arabia keeps region and facility on attack records under an active campaign (owner
+  decision, Option B), and two records carry a reported production-cut figure.
+- `snapshot.explanations` writes 0.0 value and points for the two left-out sectors (the UI and Help
+  say "left out"); changing it touches `diff_builds` arithmetic and the theatre panels.
+- An abstracted record's citation slug can restate a withheld headline while naming no place,
+  operator or method; the gate reads words, not paraphrase.
+- A release tip replaced the same day, before any daily refresh, is not known to have been served;
+  What's New then compares with an older served build and says so by its date (PR-2).
+- CI's job logs need a signed-in account; failures are read from public annotations only.
 
 ## 31. Recommended iteration 24
 
@@ -437,3 +514,10 @@ PENDING.
 | T-5 | Impact | No malware-family check | BUG | `EXPLOIT_WORDING` | Tooling named on a cyber record | Family check; P6 | No |
 | T-6 | Theatre | Key checks by whole name; parser untested | BUG (test) | `FORBIDDEN_FIELDS`, `fetch_wikipedia.build` | Distance column could return | Token match; fixture test | No |
 | P6 | Impact | Ransomware group names in attribution | OWNER DECISION | 5 records | Tool named as actor | Memo P6 | Yes |
+| PR-S | Saudi Arabia | Attack records at region and facility under an active campaign | OWNER DECISION (standing) | `systems/sa` | Facility placement during a campaign | Option B stays | Yes |
+| PR-1 | Help | Left-out sectors served as 0.0 in `help_facts.json` | BUG | `help_facts._contributions` | A zero for "never measured" | null for left-out sectors; 2 mutants | No |
+| PR-2 | What's New | Baseline could be a build nobody was served | BUG | `lineage.previous_dated_build` | "Since the last published build" against an unpublished one | Served builds only; 4 mutants | No |
+| PR-3 | Impact | Headline-like slug on abstracted records | METHODOLOGY WEAKNESS | citation URLs | Paraphrase of a withheld headline | §30 | Yes |
+| CI-1 | Tests | Deep-link absence checked before the view mounted | BUG (test) | `home.e2e.ts` | A wrong route would pass | Positive marker first | No |
+| CI-2 | Tests | PNG floor tied to one font's layout | BUG (test) | `russia.e2e.ts` | Red on Linux, green here | 60% of viewport | No |
+| CI-3 | CI | Browser job over its time limit | BUG (process) | `ci.yml` | No browser verdict in CI | Two shards | No |

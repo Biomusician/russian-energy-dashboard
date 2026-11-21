@@ -141,9 +141,11 @@ test.describe("export", () => {
 
     const whole = await pixelStats(page, png);
     // "Current viewport" export at 1600x900: the frame is the map canvas, so its height is the
-    // map's. 300px was the iteration-12 zero-height-map defect (MapLibre's fallback canvas).
+    // map's. 300px was the iteration-12 zero-height-map defect (MapLibre's fallback canvas). The
+    // floor is 60% of the viewport, not a layout's exact figure: the chrome above the map is
+    // taller where the font is (CI's Linux runner drew 595 px under a 600 px floor).
     expect(whole.width).toBeGreaterThanOrEqual(1000);
-    expect(whole.height).toBeGreaterThanOrEqual(600);
+    expect(whole.height).toBeGreaterThanOrEqual(540);
     expect(whole.distinct, "the exported frame is nearly one colour").toBeGreaterThan(40);
 
     // The central band is where the map sits in every frame layout; a blank map there is the

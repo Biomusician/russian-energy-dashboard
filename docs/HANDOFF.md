@@ -62,6 +62,12 @@ Released 21 November 2026 (the production SHA is in the review §29). See [ITERA
   anywhere in its prose and cites nothing dated more than seven days after the event; basis 4 needs
   a national or regional scope; a context entry's `as_of` cannot follow its date; a lead correction
   carries its own date; no country record names an encyclopedia as a source.
+- **What's New compares with a SERVED build** (`lineage.served_builds`: deployment ledger, daily
+  refreshes, a refresh's parent, the live tip). After pushing a release of many commits, the old
+  walk picked one of its intermediate builds (PR-2, review §29). After merging a moved `main`,
+  commit the merge before rebuilding, or the lineage reports diverged histories (§27).
+- **CI's browser job runs as two shards** (`--shard=N/2`); one job passed 30 minutes. Read CI
+  failures from the run's public annotations (no sign-in).
 - **After any country hold, re-run the impact import.** `scripts/import_candidates.py` now stops if
   the impact import would withdraw a record (F-5); run `scripts/import_impacts.py`, then
   `pipeline.run`.

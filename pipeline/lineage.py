@@ -183,8 +183,9 @@ def served_builds(root, tip):
     then falls back to an older served build, which lists more changes against an older date that
     the panel states. Too much against a stated date is honest; a build nobody saw is not.
     """
+    ledger_path = Path(root) / DEPLOYMENT_LEDGER
     try:
-        with open(Path(root) / DEPLOYMENT_LEDGER, encoding="utf-8") as fh:
+        with open(ledger_path, encoding="utf-8") as fh:
             ledger = json.load(fh)
     except (OSError, ValueError):
         return None

@@ -333,12 +333,17 @@ test.describe("one selection, kept in history", () => {
   });
 
   test("deep links open exactly the views they always did", async ({ app, page }) => {
-    for (const [q, heading] of [["?sys=ir", "Iran"], ["?sys=ru", null], ["?group=gulf", "Gulf littoral overview"],
-                                ["?view=impacts&f.country=FRA", "Impact atlas"], ["?compare=us,ca", null]] as const) {
+    // Each view is proved by something only it shows, THEN the home is proved absent. "No heading
+    // named Energy Disruption Monitor" was wrong twice over: the theatre's own bar is an h1 with
+    // that name, and an absence checked before the view mounts passes on anything (it did, on
+    // Windows, until CI's Linux runner mounted the theatre first).
+    for (const [q, marker] of [["?sys=ir", "Iran"], ["?sys=ru", "theatre"], ["?group=gulf", "Gulf littoral overview"],
+                               ["?view=impacts&f.country=FRA", "Impact atlas"], ["?compare=us,ca", "Compare systems"]] as const) {
       await page.goto(`/${q}`);
       await expect(page).toHaveURL(new RegExp(`${q.replace(/[?.]/g, "\\$&")}$`));
-      if (heading) await expect(page.getByRole("heading", { name: heading, level: 1 })).toBeVisible();
-      else await expect(page.getByRole("heading", { name: "Energy Disruption Monitor", level: 1 })).toHaveCount(0);
+      if (marker === "theatre") await expect(page.locator(".theatre-bar .tb-here")).toHaveText(/Russia, Belarus/);
+      else await expect(page.getByRole("heading", { name: marker, level: 1 })).toBeVisible();
+      await expect(page.locator("#home-title")).toHaveCount(0);
     }
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "Energy Disruption Monitor", level: 1 })).toBeVisible();

@@ -152,6 +152,12 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Two shards by file: one worker each (software WebGL is CPU-bound), so the suite's length is
+    # what grows. One job on 564 tests passed the 30-minute limit in iteration 23.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -173,13 +179,13 @@ jobs:
 
       - name: Browser tests against the production build
         working-directory: web
-        run: npm run e2e
+        run: npm run e2e -- --shard=${{ matrix.shard }}/2
 
       - name: Keep the report and traces when it fails
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-report
+          name: e2e-report-${{ matrix.shard }}
           path: |
             web/e2e-report
             web/e2e-results
