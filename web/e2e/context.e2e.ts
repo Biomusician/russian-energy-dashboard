@@ -73,7 +73,14 @@ test.describe("world energy context", () => {
       const requests: string[] = [];
       const seen = (r: import("@playwright/test").Request) => requests.push(r.url());
       page.on("request", seen);
-      await openCard(page, row.name);
+      // Keyboard only: a mouse left over a panel row when the result list closes fires a hover, and a
+      // hover over a system link prefetches that view's code by design. This test is about the card.
+      const box = page.getByRole("combobox", { name: SEARCH });
+      await box.fill(row.name);
+      const option = page.getByRole("listbox", { name: "Search results" }).getByRole("option").filter({ hasText: row.name }).first();
+      await expect(option).toBeVisible();
+      while (!(await option.getAttribute("aria-selected"))?.startsWith("true")) await box.press("ArrowDown");
+      await box.press("Enter");
       const card = page.locator(".sel-card");
       await expect(card.getByRole("heading", { name: row.name })).toBeVisible();
       await expect(card).toContainText(/Not a monitored country system|No dedicated monitored system/);
@@ -86,7 +93,7 @@ test.describe("world energy context", () => {
       await expect(card).not.toContainText(/no index|no disruption record/i);
       page.off("request", seen);
       expect(requests.filter((u) => /systems\/|assets|pipeline|refiner|impacts\.json/.test(u))).toEqual([]);
-      await app.button(`Close ${row.name}`).click();
+      await page.keyboard.press("Escape");
       await expect(card).toHaveCount(0);
     }
   });
