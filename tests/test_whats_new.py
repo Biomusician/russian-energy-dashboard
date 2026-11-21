@@ -379,6 +379,52 @@ def test_the_baseline_is_the_last_build_dated_before_today_so_a_same_day_rebuild
     assert none is None and "no committed build dated before" in why["reason"]
 
 
+def test_pr2_the_baseline_is_a_build_readers_were_served(tmp_path, monkeypatch):
+    """Production red team PR-2: after a release of many commits was pushed, the walk back to "the
+    last build dated before today" landed on one of the release's own intermediate builds, which
+    no reader was ever served. With a deployment ledger, only served builds count."""
+    import subprocess
+    from pipeline import lineage
+    monkeypatch.delenv("PRODUCTION_REF", raising=False)
+    run = lambda *a, **kw: subprocess.run(["git", *a], cwd=tmp_path, capture_output=True, check=True, **kw)  # noqa: E731
+    run("init", "-q", "-b", "main")
+    run("config", "user.email", "t@example.org")
+    run("config", "user.name", "T")
+    data = tmp_path / "web" / "public" / "data"
+    data.mkdir(parents=True)
+    ledger = tmp_path / "data" / "curated" / "production_deployments.json"
+    ledger.parent.mkdir(parents=True)
+    ledger.write_text(json.dumps({"deployments": []}), encoding="utf-8")
+    shas = {}
+
+    def commit(label, as_of, bot=False):
+        (data / "snapshot.json").write_text(json.dumps({"as_of": as_of, "label": label}), encoding="utf-8")
+        run("add", "-A")
+        author = ["--author", f"{lineage.BOT_AUTHOR} <bot@example.org>"] if bot else []
+        run("commit", "-qm", label, *author)
+        shas[label] = run("rev-parse", "HEAD", text=True).stdout.strip()
+
+    commit("dev-a", "2026-11-11")             # never pushed alone, never served
+    commit("release", "2026-11-11")           # the live tip when the refresh ran
+    commit("refresh", "2026-11-12", bot=True)
+    commit("dev-b", "2026-11-11")             # the next release's work, built on an old date
+    commit("next-release", "2026-11-12")      # pushed: the live tip now
+    sha, meta = lineage.previous_dated_build(tmp_path, "2026-11-12")
+    assert sha == shas["release"], "dev-b is newer and dated before today, but nobody was served it"
+    assert meta["served_basis"].startswith("served builds only")
+    # The live tip is served: the next day compares with it.
+    assert lineage.previous_dated_build(tmp_path, "2026-11-13")[0] == shas["next-release"]
+    # A failed deploy does not make a build served; a successful one does.
+    ledger.write_text(json.dumps({"deployments": [{"sha": shas["dev-b"], "state": "failure"}]}), encoding="utf-8")
+    assert lineage.previous_dated_build(tmp_path, "2026-11-12")[0] == shas["release"]
+    ledger.write_text(json.dumps({"deployments": [{"sha": shas["dev-b"], "state": "success"}]}), encoding="utf-8")
+    assert lineage.previous_dated_build(tmp_path, "2026-11-12")[0] == shas["dev-b"]
+    # Without a ledger nothing can say what was served: every build counts, and the basis says so.
+    ledger.unlink()
+    sha, meta = lineage.previous_dated_build(tmp_path, "2026-11-12")
+    assert sha == shas["dev-b"] and meta["served_basis"].startswith("unverified")
+
+
 def test_a_same_day_rebuild_writes_the_same_panel(tmp_path):
     prev = _state(us=(_system("us"), [_event("us-a", "2022-02-03")]))
     curr = _bump(prev)

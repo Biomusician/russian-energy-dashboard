@@ -236,8 +236,9 @@ account is [ITERATION_21_REVIEW.md](ITERATION_21_REVIEW.md); what changed in the
   system's `system.json`; it has no file of its own. The Research Coverage tab reads the research
   log already served.
 - **`global/whats_new.json`** (`pipeline/whats_new.py`, registered in `pipeline/artifacts.py`):
-  categories of change since the last committed build dated before the current one
-  (`lineage.previous_dated_build`), so same-day rebuilds produce identical bytes. No counts, no
+  categories of change since the last build readers were served that is dated before the current
+  one (`lineage.previous_dated_build`; served = deployment ledger, daily refreshes, a refresh's
+  parent, the live tip; since iteration 23, PR-2), so same-day rebuilds produce identical bytes. No counts, no
   event ids, no link targets; under the campaign policy a system's records appear only as the
   aggregating surfaces already show them.
 - **Served fields.** `record_reviewed` on manifest country entries; `link_check` (the last automated

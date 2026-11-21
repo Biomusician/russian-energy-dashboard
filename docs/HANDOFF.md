@@ -142,8 +142,9 @@ dates on campaign systems; Saudi superseded lane findings). Nothing was ruled on
 - **The theatre's recovery counts are "no restoration report by the cut-off", not "down now".** Do
   not reintroduce "impaired", "awaiting reconstitution" or "unresolved" (a pytest guards it).
 - **Two "since" baselines on purpose:** the ribbon compares with the previous build; What's new and
-  the theatre ledger with `lineage.previous_dated_build` (the last committed build dated before
-  today), so any number of same-day rebuilds produce identical output.
+  the theatre ledger with `lineage.previous_dated_build` (the last SERVED build dated before
+  today: ledger, refreshes, a refresh's parent, the live tip), so any number of same-day rebuilds
+  produce identical output, including after a release of many commits is pushed.
 - **Opaque attack ids are a keyed HMAC** from `data/candidates/opaque_id.key`, a local secret that is
   gitignored and must never be printed, committed or copied (or from `EDM_OPAQUE_ID_KEY`). If the
   file is missing, `import_candidates.py` creates a new key, which would change the id of any

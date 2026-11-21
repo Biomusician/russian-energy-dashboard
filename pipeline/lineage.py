@@ -29,9 +29,13 @@ inferred, and the UI badges it.
 import json
 import os
 import subprocess
+from pathlib import Path
 
 PRODUCTION_BRANCH = "main"
 PAYLOAD_DIR = "web/public/data"
+# Shared with production_history: what Vercel deployed, and who the daily refresh commits as.
+DEPLOYMENT_LEDGER = "data/curated/production_deployments.json"
+BOT_AUTHOR = "dataset-refresh[bot]"
 
 # Baseline payloads read from the commit, not from disk.
 BASELINE_FILES = ("snapshot.json", "incidents.json", "assets.json")
@@ -163,6 +167,39 @@ def resolve(root, current_as_of, baseline_sha=None):
     return payloads, lineage
 
 
+def served_builds(root, tip):
+    """Commits whose payload readers were actually served, as far as git and the deployment ledger
+    can tell, or None when there is no ledger to say so.
+
+    WHY. A push of several commits deploys only its tip. After a release of many commits is pushed,
+    every one of them is an ancestor of `origin/main`, and a walk back to "the last build dated
+    before today" lands on an intermediate commit nobody was ever served (production red team,
+    iteration 23: the baseline became a development merge from the release's own branch).
+
+    Served means: the ledger records a deploy of it (a failed one does not count); it is a
+    daily-refresh commit (each pushes alone, and every push to main deploys); it is the parent of a
+    refresh commit (the refresh builds on the tip that was live); or it is the production ref's tip
+    (live now). A release tip later replaced the same day, before any refresh, is missed: the walk
+    then falls back to an older served build, which lists more changes against an older date that
+    the panel states. Too much against a stated date is honest; a build nobody saw is not.
+    """
+    try:
+        with open(Path(root) / DEPLOYMENT_LEDGER, encoding="utf-8") as fh:
+            ledger = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    served = {tip}
+    for d in ledger.get("deployments") or []:
+        if d.get("sha") and d.get("state") in (None, "success"):
+            served.add(d["sha"])
+    # --fixed-strings: "[bot]" is otherwise a regex character class (see production_history).
+    out = _git(root, "log", "--fixed-strings", f"--author={BOT_AUTHOR}", "--format=%H %P", tip)
+    for line in (out or "").splitlines():
+        parts = line.split()
+        served.update(parts[:2])  # the refresh commit and its first parent
+    return served
+
+
 def previous_dated_build(root, current_as_of, max_commits=60):
     """The last committed production build evaluated BEFORE `current_as_of`: (sha, lineage).
 
@@ -191,8 +228,19 @@ def previous_dated_build(root, current_as_of, max_commits=60):
         lineage["reason"] = (f"baseline {sha[:8]} is not an ancestor of HEAD; these builds are on "
                              "diverged histories")
         return None, lineage
-    log = _git(root, "log", f"-n{max_commits}", "--format=%H", sha, "--", f"{PAYLOAD_DIR}/snapshot.json")
-    for candidate in (log or "").split():
+    served = served_builds(root, sha)
+    if served is None:
+        # No ledger: nothing can say what was served, so every committed build counts (labelled).
+        lineage["served_basis"] = "unverified: no deployment ledger, every committed build counted"
+        log = _git(root, "log", f"-n{max_commits}", "--format=%H", sha, "--", f"{PAYLOAD_DIR}/snapshot.json")
+        candidates = (log or "").split()
+    else:
+        lineage["served_basis"] = "served builds only: deployment ledger, daily refreshes and the live tip"
+        # Every commit, not only those touching the payload: a served tip often changed docs only,
+        # and serves the payload committed before it.
+        log = _git(root, "log", "--format=%H", sha)
+        candidates = [c for c in (log or "").split() if c in served][:max_commits]
+    for candidate in candidates:
         snap = _show_json(root, candidate, f"{PAYLOAD_DIR}/snapshot.json") or {}
         as_of = snap.get("as_of")
         # ISO calendar days compare correctly as text; both sides are full dates here.

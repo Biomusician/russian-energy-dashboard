@@ -690,9 +690,9 @@ state may be null until it is fetched.
 
 - `global/whats_new.json` (`pipeline/whats_new.py`): `{schema_version, available, unavailable_reason,
   comparison, categories[], order, note, global[], systems[], unchanged[]}`. `comparison` is
-  `{previous_as_of, current_as_of, mode, basis, note?}`; the previous build is the last committed
-  production build dated BEFORE this one (`lineage.previous_dated_build`), so a same-day rebuild
-  produces the same file. `categories` is the closed list of causes (ten, plus six for the impact
+  `{previous_as_of, current_as_of, mode, basis, note?}`; the previous build is the last production
+  build readers were served that is dated BEFORE this one (`lineage.previous_dated_build`; with no
+  deployment ledger every committed build counts), so a same-day rebuild produces the same file. `categories` is the closed list of causes (ten, plus six for the impact
   layer since iteration 22; see below). A change is
   `{category, notes[], items?, more?, event_dates?, all_predate_previous_build?, aggregated?}`; an
   item is `{key, date, date_precision, region, class, fields?, recovery_kind?, evidence_date?}`,

@@ -28,16 +28,21 @@ def _labels(ids):
 
 
 def _contributions(snapshot):
-    """Each sector's part of the headline, under its reader label. No mechanism key, no raw value."""
+    """Each sector's part of the headline, under its reader label. No mechanism key, no raw value.
+
+    A left-out sector carries no value, weight or points: the explanation's arithmetic writes 0.0
+    for it, but a zero would read "measured, nothing wrong", and it was never measured (no capacity
+    denominator). Its nominal weight stays, because that is the method's, not a measurement."""
     out = []
     for c in (snapshot.get("explanations") or {}).get("headline", {}).get("contributions") or []:
+        included = bool(c.get("included"))
         out.append({
             "sector": SECTORS.get(c["sector"], c["sector"]),
-            "included": bool(c.get("included")),
-            "sector_value": c.get("sector_value"),
+            "included": included,
+            "sector_value": c.get("sector_value") if included else None,
             "nominal_weight": c.get("nominal_weight"),
-            "effective_weight": c.get("effective_weight"),
-            "index_points": c.get("index_points"),
+            "effective_weight": c.get("effective_weight") if included else None,
+            "index_points": c.get("index_points") if included else None,
             "excluded_reason": c.get("excluded_reason"),
         })
     return out

@@ -34,8 +34,9 @@ served artifacts and listed once, apart from any country (`impact_layer`): its f
 sentence, a backfilled historical record is told apart from a new event by its own dates, and an
 attribution or AI-status change is an update to an existing record, never a new incident.
 
-WHERE THE BASELINE COMES FROM. The last committed production build dated before this one, read out
-of git (`lineage.previous_dated_build`), never the worktree copy. The theatre part re-runs the
+WHERE THE BASELINE COMES FROM. The last build readers were served that is dated before this one,
+read out of git (`lineage.previous_dated_build`, served builds per `lineage.served_builds`), never
+the worktree copy. The theatre part re-runs the
 theatre's own ledger (`diff_builds.diff`) against that same baseline, so one panel never mixes two
 "previous builds".
 """
@@ -778,7 +779,7 @@ def _published_state(read):
 
 
 def build(root, processed, snapshot, incidents, assets):
-    """The panel for this build against the last committed production build dated before it."""
+    """The panel for this build against the last served production build dated before it."""
     current_as_of = snapshot.get("as_of")
     sha, meta = lineage.previous_dated_build(root, current_as_of)
     if not sha:

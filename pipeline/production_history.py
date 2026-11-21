@@ -34,10 +34,8 @@ reconstructed and relabelled.
 import hashlib
 import json
 
-from pipeline.lineage import PAYLOAD_DIR, _git, _show_json
-
-LEDGER = "data/curated/production_deployments.json"
-BOT_AUTHOR = "dataset-refresh[bot]"
+from pipeline.lineage import BOT_AUTHOR, PAYLOAD_DIR, _git, _show_json
+from pipeline.lineage import DEPLOYMENT_LEDGER as LEDGER
 METHODOLOGY_FILE = "methodology/scoring.json"
 CONCEPT = "as_published"
 RECONSTRUCTION = "current_evidence_reconstruction"

@@ -69,6 +69,20 @@ def test_help_facts_is_built_from_the_payloads_and_carries_every_derived_value()
     assert (PROCESSED / help_facts.OUT).stat().st_size < 30_000
 
 
+def test_pr1_a_left_out_sector_carries_no_zero_in_help_facts():
+    """Production red team PR-1: Gas and Coal reached help_facts as value 0.0 and points 0.0. A
+    sector with no capacity denominator is left out, never counted as zero."""
+    snap = {"explanations": {"headline": {"contributions": [
+        {"sector": "refining", "included": True, "sector_value": 12.4, "nominal_weight": 0.35,
+         "effective_weight": 0.41, "index_points": 5.1, "excluded_reason": None},
+        {"sector": "gas", "included": False, "sector_value": 0.0, "nominal_weight": 0.1,
+         "effective_weight": 0.0, "index_points": 0.0, "excluded_reason": "no capacity denominator"}]}}}
+    inc, out = help_facts._contributions(snap)
+    assert (inc["sector_value"], inc["effective_weight"], inc["index_points"]) == (12.4, 0.41, 5.1)
+    assert (out["sector_value"], out["effective_weight"], out["index_points"]) == (None, None, None)
+    assert out["nominal_weight"] == 0.1 and out["excluded_reason"] and out["included"] is False
+
+
 @needs_payload
 def test_help_facts_has_no_file_path_no_release_label_and_no_raw_key():
     checked = 0
