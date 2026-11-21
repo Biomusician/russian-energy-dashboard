@@ -104,19 +104,19 @@ test.describe("country and world maps", () => {
   test("the world map says 'Loading map geometry…' while its file is held, and stops when it is drawn", async ({ app, page }) => {
     const world = await hold(page, "**/data/global/world.geojson");
     await page.goto("/");
-    const section = page.getByRole("region", { name: "World energy context" });
+    const section = page.getByRole("region", { name: "World map" });
     const waiting = section.locator(".map-load-placeholder");
     await expect(waiting.getByRole("status")).toHaveText("Loading map geometry…");
     expect(world.requests()).toBe(1);
-    const before = await section.locator(".global-map-wrap").boundingBox();
-    // The rest of the page does not wait for the map.
-    await expect(page.getByRole("article").first()).toBeVisible();
+    const before = await section.locator(".home-map-box").boundingBox();
+    // The rest of the page does not wait for the map: the panel is drawn from the manifest.
+    await expect(page.locator("#where-to-explore .hp-theatre")).toBeVisible();
     world.release();
     await app.mapIdle();
     await expect(section.locator(".map-load")).toHaveAttribute("data-map-load", "ready");
     await expect(section.locator(".map-load").getByRole("status")).toHaveText("");
     await expect(waiting).toHaveCount(0);
-    const after = await section.locator(".global-map-wrap").boundingBox();
+    const after = await section.locator(".home-map-box").boundingBox();
     expect(Math.abs(after!.height - before!.height)).toBeLessThanOrEqual(2);
     expect(app.errors).toEqual([]);
   });

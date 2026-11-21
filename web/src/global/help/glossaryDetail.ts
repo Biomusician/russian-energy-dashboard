@@ -107,7 +107,7 @@ export const GLOSSARY_DETAIL: Record<string, GlossaryDetail> = {
     detail: "Only Russia, Belarus & Crimea has an index. The country systems show reviewed records, what the evidence supports sector by sector, research coverage and context, with no score. A monitored system's search is still partial.",
   },
   "national-context": {
-    detail: "Every country on the world map has context figures. Only monitored systems have a disruption record. A country shown with context only was not searched for disruptions, so nothing can be said about what did or did not happen there.",
+    detail: "Every country on the world map has context figures. Monitored systems have a systematically researched disruption record; the Impact Atlas also holds reviewed records for many other countries under its own, broader rule. A country with neither has not been searched systematically, so nothing here says what did or did not happen there.",
   },
   "no-index": {
     detail: "The index's weights, recovery assumptions and transmission measure were built for one strike campaign against one energy system and do not transfer to other countries' reporting. Countries show reviewed records, what the evidence supports sector by sector, and context instead.",

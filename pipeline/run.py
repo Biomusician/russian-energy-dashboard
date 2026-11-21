@@ -844,7 +844,10 @@ def main():
     # the panel above so that nothing analytic can read it. It raises, naming the record, if the
     # curated corpus carries anything the scope boundary forbids.
     from pipeline import global_impacts
-    global_impacts.build(snapshot["as_of"])
+    impact_payloads = global_impacts.build(snapshot["as_of"])
+    # The home page says which countries have impact records from the manifest, never by loading the
+    # impact payload itself (iteration 23).
+    build_systems.write_impact_presence(global_impacts.impact_presence(impact_payloads[global_impacts.IMPACTS_OUT]))
 
     # The Help page's live values (iteration 23), copied from the payloads just written so the page
     # never downloads the snapshot or the impact corpus to state a caveat (pipeline/help_facts.py).

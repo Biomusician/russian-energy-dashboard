@@ -13,7 +13,6 @@
  */
 
 import { groupBySlug, loadCountry, loadGroupContext, loadManifest, loadWorld, prefetchCountry } from "./manifest";
-import { loadContext } from "./context";
 import { prefetchBundle } from "../data";
 import type { Route } from "./router";
 
@@ -29,8 +28,9 @@ export function prefetchRoute(route: Route): void {
   // Every view's header has the system picker, which reads the manifest.
   quiet(loadManifest());
   if (route.view === "home") {
+    // Not the national figures (iteration 23): the default map does not use them, so they load
+    // when the reader turns to the national-energy mode or opens a part that shows them.
     quiet(loadWorld());
-    quiet(loadContext());
   } else if (route.view === "country") {
     quiet(loadManifest().then((m) => {
       const e = m.systems.find((s) => s.id === route.id && s.kind === "country");

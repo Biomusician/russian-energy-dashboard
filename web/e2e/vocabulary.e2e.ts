@@ -12,6 +12,12 @@ import { test, expect } from "./fixtures";
 type Page = import("@playwright/test").Page;
 const PHONE = { width: 390, height: 844 };
 
+// Since iteration 23 the home's lower blocks are collapsed parts below the map: open one first.
+async function openFold(page: Page, id: string) {
+  await page.locator(`#${id} > summary`).click();
+  await expect(page.locator(`#${id}`)).toHaveAttribute("open", "");
+}
+
 async function openView(page: Page, q: string) {
   await page.goto(`/${q}`);
   if (q.startsWith("?compare")) await expect(page.locator(".compare-colhead > a").first()).toBeVisible();
@@ -33,6 +39,8 @@ test.describe("one research-coverage vocabulary", () => {
 
     // Home: the data-quality line for Iran is the same sentence.
     await openView(page, "");
+    await openFold(page, "fold-quality");
+    await openFold(page, "fold-corpus");
     const dq = page.locator("details.dq-system").filter({ has: page.locator("summary strong", { hasText: /^Iran$/ }) });
     await expect(dq.locator("summary .dim")).toHaveText(header);
     await expect(page.locator(".corpus-totals")).toContainText(/Research process: \d+ source groups: /);
@@ -49,6 +57,7 @@ test.describe("one research-coverage vocabulary", () => {
 
   test("China: the same states on its home line and in Compare", async ({ page }) => {
     await openView(page, "");
+    await openFold(page, "fold-quality");
     const line = (await page.locator("details.dq-system").filter({ has: page.locator("summary strong", { hasText: /^China$/ }) })
       .locator("summary .dim").textContent())!;
     const chips = line.replace(/^\d+ source groups?: /, "").replace(/\.$/, "").split(" · ");
@@ -74,6 +83,7 @@ test.describe("one research-coverage vocabulary", () => {
 test.describe("one placement vocabulary", () => {
   test("the home and Gulf lists use the shared words, and a safeguarded record keeps an opaque list entry", async ({ app, page }) => {
     await openView(page, "");
+    await openFold(page, "fold-recent");
     const feed = page.locator(".recent-evidence .feed");
     const places = await feed.locator(".feed-place").allTextContents();
     expect(places.length).toBeGreaterThan(0);
@@ -138,7 +148,8 @@ test.describe("phone: the site bar's secondary tools fold behind Menu", () => {
       const menu = page.locator(`[id="${menuId}"]`);
       await expect(bar.getByRole("button", { name: "Copy view link", exact: true })).toBeHidden();
       for (const name of ["What's new", "Help"]) await expect(bar.getByRole("link", { name, exact: true })).toBeHidden();
-      await expect(bar.getByLabel("Monitored system")).toBeVisible();
+      // The home has no picker since iteration 23 (its panel lists every system); other views keep it.
+      if (q) await expect(bar.getByRole("combobox", { name: "Monitored system", exact: true })).toBeVisible();
       if (q) await expect(bar.getByRole("combobox", { name: /Search systems/ })).toBeVisible();
       // The bar costs far less of the screen than the five rows it used to take.
       const h = (await bar.boundingBox())!.height;

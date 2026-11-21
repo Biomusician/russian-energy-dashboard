@@ -143,3 +143,130 @@
 @media print {
   .page-title { background: #fff !important; color: #000 !important; }
 }
+
+/* ---- the map-first home (iteration 23) ----
+   A strip (what this is, when it was built, the search), then one stage of fixed height: the map
+   and, beside it, the panel that lists the same places as text. The stage never changes size as
+   its files arrive, so nothing below it moves. Hover, focus, selected and opened are told apart by
+   line style (dashed, solid, dotted), never by a data colour. */
+.home-page .global-main.home-main { gap: 10px; padding-top: 8px; }
+.home-strip { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 6px 20px; }
+.home-strip-text { flex: 1 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.home-strip .home-title { font-size: 18px; }
+.home-strip .home-purpose { font-size: 13px; line-height: 1.4; }
+.home-meta { margin: 0; color: var(--text-dim); }
+.home-strip .gsearch { flex: 0 1 400px; }
+.home-strip .gsearch-label { font-size: 11px; }
+
+.home-stage {
+  display: grid; grid-template-columns: minmax(0, 1fr) clamp(300px, 26vw, 380px); gap: 12px;
+  height: max(460px, calc(100vh - 148px)); min-width: 0;
+}
+.home-stage-map { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.home-map { display: flex; flex-direction: column; min-height: 0; flex: 1; gap: 4px; }
+.home-map-bar { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; flex: none; min-height: 32px; }
+.home-mode { display: inline-flex; gap: 0; }
+.home-mode button { border-radius: 0; }
+.home-mode button:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.home-mode button:last-child { border-radius: 0 var(--radius) var(--radius) 0; border-left: none; }
+.home-mode button[aria-pressed="true"] { border-color: var(--text-dim); color: var(--text); background: var(--bg-panel-2); font-weight: 600; }
+.home-map-box { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.home-map-box > .simple-map-shell { flex: 1; min-height: 0; }
+.home-map-box > .simple-map-shell .simple-map-stage { flex: 1; min-height: 0; }
+.home-map-box > .simple-map.placeholder { flex: 1; min-height: 0; display: grid; place-items: center; }
+.home-map-label {
+  position: absolute; left: 8px; top: 60px; z-index: 3; max-width: calc(100% - 16px); pointer-events: none;
+  background: rgba(7, 9, 12, 0.92); border: 1px solid var(--line); padding: 4px 8px; border-radius: var(--radius);
+  color: var(--text); line-height: 1.4;
+}
+.home-map-label:empty { display: none; }
+/* A touch screen has no hover: what a tap does is said by the sheet, not by a label left behind. */
+@media (hover: none) { .home-map-label { display: none; } }
+.home-legend { flex: none; padding-top: 2px; }
+.map-legend-mini i.hatch-swatch {
+  background: repeating-linear-gradient(135deg, #cdb06a 0 1.5px, #5b4a1e 1.5px 4px);
+}
+
+.home-panel {
+  display: flex; flex-direction: column; min-height: 0; height: 100%; min-width: 0;
+  border: 1px solid var(--line); background: var(--bg-panel);
+}
+.home-panel:focus { outline: none; }
+.hp-head { flex: none; padding: 8px 12px 6px; border-bottom: 1px solid var(--line-soft); }
+.hp-head p { margin: 2px 0 0; }
+.hp-body { flex: 1; min-height: 0; overflow-y: auto; padding: 2px 0 10px; }
+.hp-section { padding: 2px 10px; }
+.hp-section .eyebrow { margin: 5px 0 1px; padding-left: 2px; }
+.global-main a.hp-row, .hp-row {
+  display: flex; flex-direction: column; gap: 1px; padding: 6px 9px; min-height: 40px; justify-content: center;
+  color: var(--text); text-decoration: none; border-left: 3px solid transparent; border-radius: 2px;
+}
+.global-main a.hp-row:hover { background: var(--bg-panel-2); border-left: 3px dashed var(--text-dim); }
+.global-main a.hp-row:focus-visible { outline: 2px dashed var(--text); outline-offset: -2px; background: var(--bg-panel-2); }
+.global-main a.hp-row.opened { border-left: 3px dotted var(--text); }
+.hp-name { font-size: 13.5px; color: var(--text); }
+.hp-sub { color: var(--text-dim); }
+.hp-headline { font-size: 12.5px; color: var(--text); }
+.home-headline-num { font-size: 18px; font-weight: 600; }
+.hp-list { list-style: none; margin: 0; padding: 0; }
+.global-main .hp-list a.hp-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; min-height: 28px; padding: 3px 9px; }
+.hp-tag { font-size: 10.5px; color: var(--text-dim); border: 1px solid var(--line); border-radius: 2px; padding: 0 5px; white-space: nowrap; }
+.hp-group { display: flex; align-items: center; gap: 6px; }
+.hp-group .hp-row { flex: 1; min-width: 0; }
+.hp-show { flex: none; white-space: nowrap; }
+.hp-az { margin-top: 4px; }
+.hp-az > summary { padding: 8px 9px; cursor: pointer; font-size: 13px; }
+.hp-az-filter {
+  display: block; width: 100%; margin: 4px 0; background: var(--bg-inset); color: var(--text);
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 6px 8px; font: inherit;
+}
+.hp-az-list { list-style: none; margin: 4px 0 0; padding: 0 2px; columns: 2; column-gap: 12px; max-height: 280px; overflow-y: auto; }
+.hp-az-item { text-align: left; padding: 3px 0; font-size: 12.5px; }
+
+.sel-card {
+  margin: 8px 10px 4px; padding: 10px 12px; border: 1px solid var(--text-dim); flex: none;
+  max-height: 58%; overflow-y: auto; background: var(--bg-panel-2);
+}
+.sel-card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sel-card-title { margin: 0; font-size: 15px; }
+.sel-status { margin: 4px 0; font-weight: 600; font-size: 12.5px; }
+.sel-line { margin: 4px 0; line-height: 1.45; }
+.sel-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.sel-links { columns: 2; margin: 6px 0; padding-left: 18px; font-size: 12.5px; }
+.sel-links li { padding: 2px 0; }
+.sel-context { margin-top: 8px; }
+.sel-context > summary { cursor: pointer; padding: 4px 0; }
+/* On a phone, a sheet: not modal, so the map above it stays usable. */
+.sel-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; max-height: 55vh; margin: 0;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border: none; border-top: 2px solid var(--text-dim);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.6); background: var(--bg-panel);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sel-sheet { animation: sel-sheet-in 160ms ease-out; }
+}
+@keyframes sel-sheet-in { from { transform: translateY(18px); opacity: 0.6; } to { transform: none; opacity: 1; } }
+
+.home-below { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; max-width: 1100px; min-width: 0; }
+.home-fold { border: 1px solid var(--line); background: var(--bg-panel); min-width: 0; }
+.home-fold > summary { padding: 10px 12px; cursor: pointer; font-size: 14px; color: var(--text); }
+.home-fold > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.home-fold-body { padding: 0 8px 8px; }
+.home-fold-body > .panel, .home-fold-body > section { max-width: none; }
+.comparability-line { color: var(--text-dim); }
+
+@media (max-width: 720px) {
+  .home-strip .gsearch { flex: 1 1 100%; max-width: none; }
+  .home-stage { grid-template-columns: minmax(0, 1fr); height: auto; }
+  .home-map-box { flex: none; }
+  /* The aspect of the world itself, so no band of empty ocean takes the height of a phone. */
+  .home-map-box > .simple-map-shell .simple-map-stage { flex: none; height: 62vw; min-height: 220px; }
+  .home-map-box > .simple-map.placeholder { flex: none; height: 62vw; min-height: 220px; }
+  .home-map-label { top: 56px; }
+  .home-panel { height: auto; }
+  .hp-body { overflow: visible; }
+  .global-main a.hp-row, .global-main .hp-list a.hp-row { min-height: 44px; }
+  .hp-az-item { min-height: 44px; }
+  .hp-show { min-height: 44px; }
+  .sel-actions .home-action { min-height: 44px; }
+}

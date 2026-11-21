@@ -1,12 +1,13 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { loadManifest, type Manifest } from "./manifest";
+import { loadManifest, loadWorld, type Manifest } from "./manifest";
 import { IMPACTS_VIEW, LOCATION_EVENT, impactsHref, navigate, navigateGroup, navigateTo } from "./router";
 import { HELP_VIEW, helpHref } from "./help/anchors";
 import {
-  CONCEPT_ENTRIES, KIND_LABEL, VIEW_ENTRIES, groupEntries, loadTheatreRegions, loadedCountryRegions,
-  onCountryRegions, regionalContextEntries, searchEntries, systemEntries, theatreRegionEntries,
+  CONCEPT_ENTRIES, KIND_LABEL, VIEW_ENTRIES, countryEntries, groupEntries, loadTheatreRegions, loadedCountryRegions,
+  onCountryRegions, previewKey, regionalContextEntries, searchEntries, systemEntries, theatreRegionEntries,
   type SearchEntry, type SearchHit, type TheatreRegion,
 } from "./searchIndex";
+import { indexWorld, selectOnHome, type WorldIndex } from "./homeSelection";
 import "../styles/home.css";
 import "../styles/sitebar.css";
 
@@ -50,6 +51,9 @@ export function goWhatsNew() {
 export function showWhatsNew(): boolean {
   const head = document.getElementById(`${WHATS_NEW_ID}-heading`);
   if (!head) return false;
+  // On the home page (iteration 23) the panel sits in a collapsed part below the map.
+  const fold = head.closest("details");
+  if (fold && !fold.open) fold.open = true;
   head.scrollIntoView?.({ block: "start" });
   head.focus({ preventScroll: true });
   return true;
@@ -256,11 +260,17 @@ function runAction(entry: SearchEntry) {
   if (a.type === "system") navigate(a.id || null);
   else if (a.type === "group") navigateGroup(a.slug);
   else if (a.type === "href") navigateTo(a.href);
-  else openGlossary(a.id);  // a glossary concept: its entry on the Help page
+  // A country without a system (iteration 23): selected on the home map, exactly as a click there.
+  else if (a.type === "select") selectOnHome(a.key);
+  else openGlossary(a.id);
 }
 
 /** One accessible combobox: the ARIA 1.2 pattern, list autocomplete, no dependency. */
-export function GlobalSearch({ compact = false, inputRef }: { compact?: boolean; inputRef?: React.MutableRefObject<HTMLInputElement | null> }) {
+export function GlobalSearch({ compact = false, inputRef, onPreview }: {
+  compact?: boolean; inputRef?: React.MutableRefObject<HTMLInputElement | null>;
+  /** Iteration 23, the home map: the place under the active option, so the map can outline it. */
+  onPreview?: (key: string | null) => void;
+}) {
   const id = useId();
   const listId = `${id}-list`;
   const ownRef = useRef<HTMLInputElement | null>(null);
@@ -268,6 +278,7 @@ export function GlobalSearch({ compact = false, inputRef }: { compact?: boolean;
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [theatre, setTheatre] = useState<TheatreRegion[] | null>(null);
   const [regionsFailed, setRegionsFailed] = useState(false);
+  const [world, setWorld] = useState<WorldIndex | null>(null);
   const [countryTick, setCountryTick] = useState(0);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -293,7 +304,10 @@ export function GlobalSearch({ compact = false, inputRef }: { compact?: boolean;
   }, [ref]);
 
   // Region names cost one small file, fetched the first time the box is focused, never on load.
+  // Every country on the world map (iteration 23) comes from the world geometry, which the home
+  // page has already loaded (one request per file); elsewhere it is fetched on that first focus.
   const onFocus = () => {
+    if (!world) loadWorld().then((w) => setWorld(indexWorld(w))).catch(() => undefined);
     if (theatre || regionsFailed) return;
     loadTheatreRegions().then(setTheatre).catch(() => setRegionsFailed(true));
   };
@@ -304,13 +318,17 @@ export function GlobalSearch({ compact = false, inputRef }: { compact?: boolean;
       out.push(...systemEntries(manifest), ...groupEntries(manifest), ...regionalContextEntries(manifest));
       const theatreName = manifest.systems.find((s) => s.kind === "theatre")?.name ?? "";
       if (theatre) out.push(...theatreRegionEntries(theatre, theatreName));
+      if (world) out.push(...countryEntries(world, manifest));
     }
     out.push(...loadedCountryRegions());
     return out;
-  }, [manifest, theatre, countryTick]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [manifest, theatre, world, countryTick]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const hits: SearchHit[] = useMemo(() => searchEntries(entries, query), [entries, query]);
   const expanded = open && query.trim() !== "";
+  // The map previews the place under the active option (arrow keys or pointer).
+  const previewed = expanded && active >= 0 && hits[active] && manifest ? previewKey(hits[active].entry, manifest) : null;
+  useEffect(() => { onPreview?.(previewed); }, [previewed]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const choose = (h: SearchHit) => {
     setOpen(false);

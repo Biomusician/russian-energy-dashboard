@@ -99,7 +99,10 @@ def test_iter21_gulf_brief_drops_the_readers_selection():
     # Every member coloured in the brief, whatever the page's membership filter shows.
     assert "groupFill(ctx.systems, metricId, () => true)" in brief.group(0)
     simple = _src("SimpleMap.tsx")
-    assert 'export const HIGHLIGHT_LAYERS = ["sel", "hl"];' in simple
+    # The selection and hover marks are always listed; iteration 23 added the home's own marks
+    # (tests/test_iteration23_home.py checks every one it adds is listed).
+    listed = re.search(r"export const HIGHLIGHT_LAYERS = \[([^\]]*)\];", simple)
+    assert listed and {'"sel"', '"hl"'} <= {x.strip() for x in listed.group(1).split(",")}
     assert "!HIGHLIGHT_LAYERS.includes(l.id)" in simple
     # The brief's text is built from the context and the metric alone: nothing about a selection.
     lines = _function_body(_src("groupExport.ts"), "groupBriefLines")

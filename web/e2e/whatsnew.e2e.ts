@@ -1,7 +1,8 @@
 import { test, expect } from "./fixtures";
 
 /**
- * "What's new in the data" on the global home (iteration 21), in a real browser.
+ * "What's new in the data" on the global home (iteration 21), in a real browser. Since iteration 23
+ * it is one of the collapsed parts below the map; each test opens it first.
  *
  * Every expectation is read from the file the page itself loaded: what changed depends on the day
  * the build ran. What is fixed is the behaviour — categories named by cause, systems in alphabetical
@@ -10,13 +11,19 @@ import { test, expect } from "./fixtures";
 
 const GULF = new Set(["ae", "bh", "iq", "ir", "kw", "om", "qa", "sa"]);
 
+/** Open the home at its What's new part (collapsed below the map since iteration 23). */
+async function openWhatsNew(app: import("./fixtures").App) {
+  await app.open("");
+  await app.page.locator("#fold-whats-new > summary").click();
+}
+
 async function served(page: import("@playwright/test").Page) {
   return page.evaluate(async () => (await fetch("/data/global/whats_new.json")).json());
 }
 
 test.describe("what's new in the data", () => {
   test("lists what the served file says, by cause, alphabetically, with no counts", async ({ app, page }) => {
-    await app.open("");
+    await openWhatsNew(app);
     const d = await served(page);
     const panel = page.getByRole("region", { name: "What's new in the data" });
     await expect(panel).toBeVisible();
@@ -77,7 +84,7 @@ test.describe("what's new in the data", () => {
 
   test("the build's age is worked out on the reader's clock", async ({ app, page }) => {
     await page.clock.setFixedTime(new Date("2030-01-15T12:00:00Z"));
-    await app.open("");
+    await openWhatsNew(app);
     const d = await served(page);
     test.skip(!d.available, "this build has no comparison");
     const days = Math.round((Date.UTC(2030, 0, 15) - Date.parse(`${d.comparison.current_as_of}T00:00:00Z`)) / 86400000);
@@ -103,7 +110,7 @@ test.describe("what's new in the data", () => {
       ];
       await route.fulfill({ response: res, json: body });
     });
-    await app.open("");
+    await openWhatsNew(app);
     const panel = page.getByRole("region", { name: "What's new in the data" });
     const ru = panel.locator('.wn-system[data-system="ru"]');
     await ru.locator("summary").click();
@@ -152,7 +159,7 @@ test.describe("what's new in the data", () => {
       ];
       await route.fulfill({ response: res, json: body });
     });
-    await app.open("");
+    await openWhatsNew(app);
     const panel = page.getByRole("region", { name: "What's new in the data" });
     await panel.locator('.wn-system[data-system="us"] summary').click();
     await panel.locator('.wn-system[data-system="sa"] summary').click();
@@ -181,6 +188,7 @@ test.describe("what's new in the data", () => {
 
     // Back, then the coverage change opens the country on its Research coverage tab.
     await page.goBack();
+    await page.locator("#fold-whats-new > summary").click();
     const back = page.getByRole("region", { name: "What's new in the data" });
     await back.locator('.wn-system[data-system="us"] summary').click();
     await back.getByRole("link", { name: "Open Research coverage" }).click();
@@ -191,9 +199,9 @@ test.describe("what's new in the data", () => {
   test("a malformed file is refused and the rest of the home page keeps working", async ({ app, page }) => {
     await page.route("**/data/global/whats_new.json", (r) => r.fulfill({ status: 200, contentType: "application/json",
       body: JSON.stringify({ available: true, systems: "x" }) }));
-    await app.open("");
+    await openWhatsNew(app);
     await expect(page.getByRole("alert").filter({ hasText: "The list of changes could not be loaded" })).toBeVisible();
-    await expect(page.getByRole("article")).not.toHaveCount(0);
+    await expect(page.locator("#where-to-explore a.hp-row")).not.toHaveCount(0);
   });
 
   test("a build with no comparison says so rather than showing an empty list", async ({ app, page }) => {
@@ -203,7 +211,7 @@ test.describe("what's new in the data", () => {
       Object.assign(body, { available: false, unavailable_reason: "no baseline", systems: [], global: [], unchanged: [] });
       await route.fulfill({ response: res, json: body });
     });
-    await app.open("");
+    await openWhatsNew(app);
     await expect(page.locator(".whats-new")).toContainText("That is not the same as nothing having changed.");
   });
 });

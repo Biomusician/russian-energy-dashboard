@@ -70,7 +70,7 @@ test.describe("Impact atlas", () => {
     page.on("request", (r) => { if (FILES.some((f) => r.url().endsWith(`/data/global/${f}`))) asked.push(r.url()); });
     await serveFixture(page);
     await app.open("");
-    await expect(page.getByRole("link", { name: "Impact atlas →" })).toBeVisible();
+    await expect(page.locator("#where-to-explore").getByRole("link", { name: /^Impact Atlas/ })).toBeVisible();
     expect(asked, "home must load none of the impact files").toEqual([]);
 
     await page.locator(".global-nav").getByRole("link", { name: "Impact atlas", exact: true }).click();

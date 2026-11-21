@@ -130,6 +130,22 @@ export async function colourGrid(page: Page, png: Buffer, cols = 8, rows = 5): P
   }, { b64, cols, rows });
 }
 
+/**
+ * Where a longitude/latitude sits on a SimpleMap's canvas right now (iteration 23), from the view
+ * the map publishes on its container when it comes to rest (`data-map-view`: centre and zoom) and
+ * MapLibre's Web Mercator with 512 px tiles. Lets a test hover or click a named country.
+ */
+export async function mapPoint(page: Page, lon: number, lat: number, scope = ".home-map-box"): Promise<{ x: number; y: number }> {
+  const el = page.locator(`${scope} [data-map-view]`);
+  await expect(el).toHaveAttribute("data-map-state", "idle");
+  const b = (await el.boundingBox())!;
+  const [clng, clat, z] = (await el.getAttribute("data-map-view"))!.split(",").map(Number);
+  const X = (x: number) => (x + 180) / 360;
+  const Y = (y: number) => { const r = (y * Math.PI) / 180; return (1 - Math.log(Math.tan(Math.PI / 4 + r / 2)) / Math.PI) / 2; };
+  const size = 512 * 2 ** z;
+  return { x: b.x + b.width / 2 + (X(lon) - X(clng)) * size, y: b.y + b.height / 2 + (Y(lat) - Y(clat)) * size };
+}
+
 export function readBytes(path: string): Buffer {
   return readFileSync(path);
 }

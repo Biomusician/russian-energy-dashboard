@@ -284,7 +284,8 @@ MUTATIONS = [
      [(f"{CTX}", _artifact(lambda d: d["metrics"][d["map_metrics"][0]].__setitem__("unit", "")))],
      "every_map_metric"),
     ("a context-only country opens an incident dossier",
-     [("web/src/global/WorldContext.tsx", _text("if (sid) navigate(sid);", "navigate(String(p?.a3).toLowerCase());"))],
+     [("web/src/global/NationalContext.tsx", _text("if (r.system_id) navigate(r.system_id); else onContext(r.a3);",
+                                                   "navigate(r.a3.toLowerCase());"))],
      "context_country_can_never_open_a_dossier"),
     ("a unit conversion is dropped",
      [("scripts/build_global_context.py", _text("values[mid] = None if v is None else rnd(v * mult, unit)",
@@ -1275,8 +1276,8 @@ ITER21_PERF_MUTATIONS = [
                                            "      return e ? loadCountry(e) : undefined;\n    });"))],
      "prefetch_never_reports"),
     ("a home panel failure takes the whole home down",
-     [("web/src/global/GlobalHome.tsx", _text('        <PanelBoundary label="Recent evidence">\n          <RecentEvidencePanel />\n        </PanelBoundary>',
-                                              "        <RecentEvidencePanel />"))],
+     [("web/src/global/GlobalHome.tsx", _text('<PanelBoundary label="Recent evidence"><RecentEvidencePanel /></PanelBoundary>',
+                                              "<RecentEvidencePanel />"))],
      "home_panels_each_have_their_own_boundary"),
     ("the regional context is drawn without validation",
      [("web/src/global/manifest.ts", _text("validated<GroupContext>(path, groupContextProblems)", "validated<GroupContext>(path, () => [])"))],
@@ -1288,21 +1289,21 @@ MUTATIONS += ITER21_PERF_MUTATIONS
 # Start-here memory, and must be caught by tests/test_iteration21_home.py.
 ITER21_HOME_MUTATIONS = [
     ("a home card shows an event count",
-     [("web/src/global/GlobalHome.tsx", _text(
-         "      {record && <div className=\"small\">{record}</div>}\n",
-         "      {record && <div className=\"small\">{record}</div>}\n      <div className=\"small\">{s.files.length} events</div>\n"))],
+     [("web/src/global/SystemPanel.tsx", _text(
+         "                  {r.tag && <span className=\"hp-tag\">{r.tag}</span>}\n",
+         "                  {r.tag && <span className=\"hp-tag\">{r.tag}</span>}\n"
+         "                  <span>{systemOf(manifest, r.systemId as string)?.files.length} events</span>\n"))],
      "card_reads_no_count"),
     ("the home page is sorted by a figure",
-     [("web/src/global/GlobalHome.tsx", _text(
-         "const countries = manifest?.systems.filter((s) => s.kind === \"country\" && inFilter(s)) ?? [];",
-         "const countries = (manifest?.systems.filter((s) => s.kind === \"country\" && inFilter(s)) ?? [])"
-         ".sort((a, b) => (b.record_reviewed ?? \"\").localeCompare(a.record_reviewed ?? \"\"));"))],
+     [("web/src/global/homeSelection.ts", _text(
+         '  for (const s of m.systems.filter((x) => x.kind === "country")) {',
+         '  for (const s of m.systems.filter((x) => x.kind === "country").sort((a, b) => (b.record_reviewed ?? "").localeCompare(a.record_reviewed ?? ""))) {'))],
      "never_reorders_systems"),
     ("a home card shows a held count",
-     [("web/src/global/GlobalHome.tsx", _text(
-         "      {record && <div className=\"small\">{record}</div>}\n",
-         "      {record && <div className=\"small\">{record}</div>}\n"
-         "      {s.campaign_restricted && <div className=\"small\">{manifest.corpus?.records} held for review</div>}\n"))],
+     [("web/src/global/SystemPanel.tsx", _text(
+         "                  {r.tag && <span className=\"hp-tag\">{r.tag}</span>}\n",
+         "                  {r.tag && <span className=\"hp-tag\">{r.tag}</span>}\n"
+         "                  <span>{manifest.corpus?.records} held for review</span>\n"))],
      "card_reads_no_count"),
     ("the Start-here memory crashes when storage throws",
      [("web/src/global/startHereMemory.ts", _text(
@@ -2299,8 +2300,8 @@ ITER22_ATLAS_MUTATIONS = [
      "atlas_context_timeline_keeps_its_caveat_and_has_no_status_flag"),
     ("the home route prefetches the impact corpus",
      [("web/src/global/prefetch.ts", _text(
-         '    quiet(loadWorld());\n    quiet(loadContext());\n  } else if (route.view === "country") {',
-         '    quiet(loadWorld());\n    quiet(loadContext());\n    quiet(import("./impacts/load").then((m) => m.loadImpacts()));\n  } else if (route.view === "country") {'))],
+         '    quiet(loadWorld());\n  } else if (route.view === "country") {',
+         '    quiet(loadWorld());\n    quiet(import("./impacts/load").then((m) => m.loadImpacts()));\n  } else if (route.view === "country") {'))],
      "atlas_home_route_never_requests_the_impact_corpus"),
     ("?view=impacts no longer opens the atlas",
      [("web/src/global/router.ts", _text(
@@ -3730,6 +3731,107 @@ ITER23_IMPACT_MUTATIONS = [
 MUTATIONS += ITER23_IMPACT_MUTATIONS
 
 
+# Iteration 23: the map-first home (tests/test_iteration23_home.py). Each breaks one product rule of
+# the home: what a click does, what a card offers, what the map colours, what an address carries.
+HS = "web/src/global/homeSelection.ts"
+ITER23_HOME_MUTATIONS = [
+    ("the presence list keeps a country that also has disruptions among the attempt-only ones",
+     [(GI, _text('    attempted = {a3 for r in payload["attempts"] for a3 in _countries(r)} - present',
+                 '    attempted = {a3 for r in payload["attempts"] for a3 in _countries(r)}'))],
+     "impact_presence_is_the_atlas_rule"),
+    ("the presence list does not expand a multi-country record",
+     [(GI, _text('    present = {a3 for r in payload["records"] if r["record_kind"] == DISRUPTION for a3 in _countries(r)}',
+                 '    present = {r["country_a3"] for r in payload["records"] if r["record_kind"] == DISRUPTION}'))],
+     "impact_presence_is_the_atlas_rule"),
+    ("a click on Crimea means Ukraine, not the theatre (the theatre is no longer one unit)",
+     [(HS, _text('  return p.system_id ? String(p.system_id) : String(p.a3);', '  return String(p.a3);'))],
+     "every_feature_is_one_unit"),
+    ("eastern Russia is treated as a country with no system",
+     [(HS, _text('  if (idx?.partOf.has(unit)) return "outside_area";\n', ''))],
+     "every_feature_is_one_unit or each_card_offers_only"),
+    ("Crimea is described as Russian territory",
+     [(HS, _text('export const OCCUPIED_PHRASE = "Ukrainian territory under Russian occupation";',
+                 'export const OCCUPIED_PHRASE = "Russian territory";'))],
+     "crimea_is_never_described_as_russian"),
+    ("a monitored country no longer opens in one click",
+     [(HS, _text('  return systemOf(m, unit) && !touch ? "open" : "select";', '  return "select";'))],
+     "systems_open_in_one_click"),
+    ("a tap on a phone opens a system without its sheet",
+     [(HS, _text('  return systemOf(m, unit) && !touch ? "open" : "select";', '  return systemOf(m, unit) ? "open" : "select";'))],
+     "systems_open_in_one_click"),
+    ("an impact-record country links the atlas unfiltered",
+     [(HS, _text('      actions: [{ label: "Open impact records", href: impactRecordsHref(key), ret: "card:impacts", primary: true }, ...occ.actions],',
+                 '      actions: [{ label: "Open impact records", href: impactsHref(), ret: "card:impacts", primary: true }, ...occ.actions],'))],
+     "each_card_offers_only"),
+    ("an attempt-only country links the atlas with its country filter",
+     [(HS, _text('      // Unfiltered: the atlas ignores a country filter that matches no disruption.\n'
+                 '      actions: [{ label: "Open the Impact Atlas", href: impactsHref(), ret: "card:impacts" }, ...occ.actions],',
+                 '      // Unfiltered: the atlas ignores a country filter that matches no disruption.\n'
+                 '      actions: [{ label: "Open the Impact Atlas", href: impactRecordsHref(key), ret: "card:impacts" }, ...occ.actions],'))],
+     "each_card_offers_only"),
+    ("a country with no system and no record gets a dashboard button",
+     [(HS, _text('  return { ...base, lines: [notSearched, ...occ.lines], actions: occ.actions, contextA3: key };',
+                 '  return { ...base, lines: [notSearched, ...occ.lines], actions: [{ label: "Open impact records", href: impactRecordsHref(key), ret: "x" }], contextA3: key };'))],
+     "each_card_offers_only"),
+    ("a country with no system and no record reads as having had no disruption",
+     [(HS, _text('  const notSearched = `This site has not searched ${name} systematically, so nothing here says whether disruptions happened.`;',
+                 '  const notSearched = `No disruptions were reported in ${name}.`;'))],
+     "each_card_offers_only"),
+    ("a build without the presence list says 'no published impact record'",
+     [(HS, _text('  if (!pres) return "unchecked";', '  if (!pres) return "no_record";'))],
+     "could_not_check"),
+    ("a status line carries a count",
+     [(HS, _text('  impact_only: "Impact records available · Not a monitored country system",',
+                 '  impact_only: "Impact records available (1 or more) · Not a monitored country system",'))],
+     "no_digit_in_any_label"),
+    ("a search option names a maturity",
+     [("web/src/global/searchIndex.ts", _text('    sub: s.kind === "theatre" ? "The indexed system · opens it" : `${STATUS.country_system} · opens it`,',
+                                              '    sub: s.kind === "theatre" ? "The indexed system · opens it" : `${STATUS.country_system}${s.maturity === "research_preview" ? " · research preview" : ""} · opens it`,'))],
+     "no_digit_in_any_label"),
+    ("the Gulf block is pulled out of the alphabetical list",
+     [(HS, _text('  for (const s of m.systems.filter((x) => x.kind === "country")) {',
+                 '  for (const s of [...m.systems.filter((x) => x.kind === "country" && regionalGroupOf(m, x.id)), ...m.systems.filter((x) => x.kind === "country" && !regionalGroupOf(m, x.id))]) {'))],
+     "the_panel_keeps_the_manifest_order"),
+    ("the default map is coloured by a count",
+     [(HS, _text('  ["!=", ["get", "system_id"], null], MAP_COLOURS.monitored,', '  [">", ["get", "records"], 0], MAP_COLOURS.monitored,'))],
+     "default_map_colours_only"),
+    ("the monitored colour falls under 3:1 against the base",
+     [(HS, _text('monitored: "#5f7c9a"', 'monitored: "#2e3c4a"'))],
+     "default_map_colours_only"),
+    ("a new map mark is left out of the highlight layers, so it is drawn into an export",
+     [("web/src/global/SimpleMap.tsx", _text('export const HIGHLIGHT_LAYERS = ["sel", "hl", "sel-cover", "hl-cover", "locator"];',
+                                             'export const HIGHLIGHT_LAYERS = ["sel", "hl", "hl-cover", "locator"];'))],
+     "every_new_map_mark_is_a_highlight_layer"),
+    ("a group's members are typed into the code",
+     [(HS, _text('  if (key.startsWith("group:")) return m?.groups?.[groupIdOf(key)]?.members ?? [];',
+                 '  if (key.startsWith("group:")) return ["bh", "ir", "iq", "kw", "om", "qa", "sa"];'))],
+     "regional_group_is_its_manifest_members or no_home_file_names"),
+    ("a country without a system navigates instead of selecting on the map",
+     [("web/src/global/searchIndex.ts", _text('      terms: [c.name, ...aliases, c.a3], action: { type: "select", key: c.unit },',
+                                              '      terms: [c.name, ...aliases, c.a3], action: { type: "href", href: `?sys=${c.a3.toLowerCase()}` },'))],
+     "search_reaches_every_country"),
+    ("leaving the home forgets the selection, so Back loses it",
+     [(HS, _text('  writeHomeState(focus, ret);\n  navigateTo(href);', '  navigateTo(href);'))],
+     "selection_lives_in_history_state"),
+    ("a selection from another view is written into the address",
+     [(HS, _text('  window.history.pushState({ homeFocus: key, homeReturn: null }, "", window.location.pathname);',
+                 '  window.history.pushState({ homeFocus: key, homeReturn: null }, "", `${window.location.pathname}?sel=${key}`);'))],
+     "selection_lives_in_history_state or writes_a_sel_parameter"),
+    ("the home's map loads the impact corpus",
+     [("web/src/global/HomeStage.tsx", _text('import SelectionCard from "./SelectionCard";',
+                                             'import SelectionCard from "./SelectionCard";\nimport { loadImpacts } from "./impacts/load";\nvoid loadImpacts();'))],
+     "atlas_home_code_never_includes_the_atlas_or_its_loader"),
+    ("the home starts downloading the national figures on load",
+     [("web/src/global/prefetch.ts", _text('    quiet(loadWorld());\n  } else if (route.view === "country")',
+                                          '    quiet(loadWorld());\n    quiet(import("./context").then((c) => c.loadContext()));\n  } else if (route.view === "country")'))],
+     "the_home_loads_no_national_figures_until_the_reader_asks"),
+    ("the national-energy figures load in the default map mode",
+     [("web/src/global/WorldContext.tsx", _text('if (mode !== "energy" || ctx) return;', 'if (ctx) return;'))],
+     "the_home_loads_no_national_figures_until_the_reader_asks"),
+]
+MUTATIONS += ITER23_HOME_MUTATIONS
+
+
 def _sandbox():
     box = Path(tempfile.mkdtemp(prefix="edm-mutation-"))
     for d in COPY_DIRS:
@@ -3759,6 +3861,7 @@ TEST_FILES += ("tests/test_iteration22_release.py",)
 TEST_FILES += ("tests/test_iteration23_theatre.py",)
 TEST_FILES += ("tests/test_iteration23_help.py",)
 TEST_FILES += ("tests/test_iteration23_impact.py",)
+TEST_FILES += ("tests/test_iteration23_home.py",)
 
 
 def _run(box, k):

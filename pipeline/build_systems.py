@@ -2462,3 +2462,13 @@ def build(theatre_snapshot):
     write_json(outputs.processed() / "global" / "manifest.json",
                build_manifest(payloads, theatre_snapshot, build_time), indent=2)
     return payloads
+
+
+def write_impact_presence(presence):
+    """Add the impact layer's presence list to the manifest (iteration 23). Written after the impact
+    layer is built, because it is read from the served impact payload; the home page needs it to say
+    "impact records available" without downloading that payload. Codes only, never a count."""
+    path = outputs.processed() / "global" / "manifest.json"
+    manifest = read_json(path)
+    manifest["impact_presence"] = presence
+    write_json(path, manifest, indent=2)
