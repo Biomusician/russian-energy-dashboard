@@ -2329,7 +2329,7 @@ EC_JSON = "methodology/evidence_confidence.json"
 ITER22_CONFIDENCE_MUTATIONS = [
     ("a second citation from one origin raises the score",
      [(EC_PY, _text("    origin_count = independent_origins(strong)\n", "    origin_count = len(strong)\n"))],
-     "second_citation_from_the_same_origin or three_releases_from_one_utility"),
+     "second_citation_from_the_same_origin or three_releases_from_one_utility or one_origin_on_the_publishers_basis"),
     ("citation count replaces origin count",
      [(EC_PY, _text("    return len({find(i) for i in range(len(counted))})", "    return len(counted)"))],
      "source_count_never_enters"),

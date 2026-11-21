@@ -212,6 +212,15 @@ def test_three_releases_from_one_utility_are_one_origin():
     assert assess(three)["components"]["origins"] == {"count": 1, "points": 0, "basis": "reviewed"}
 
 
+def test_three_releases_from_one_utility_are_one_origin_on_the_publishers_basis_too():
+    """No reviewer checked relays: the count is of publishers, and one publisher is still one."""
+    one = [src("operator", site="gridco.example", publisher="GridCo")]
+    three = one + [src("operator", site="gridco.example", publisher="GridCo", path=p, date=d)
+                   for p, d in (("update-2", "2024-03-03"), ("update-3", "2024-03-05"))]
+    assert assess(three, review=None) == assess(one, review=None)
+    assert assess(three, review=None)["components"]["origins"] == {"count": 1, "points": 0, "basis": "publishers"}
+
+
 def test_source_count_never_enters_only_who_speaks_and_how_many_origins():
     """Each citation repeated twenty times under new addresses: the same result, whatever the set."""
     rng = random.Random(5)
