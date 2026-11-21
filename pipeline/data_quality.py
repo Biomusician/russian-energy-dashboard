@@ -375,7 +375,7 @@ def _unscored_events_sentence(snapshot, uncovered):
     """How many recorded events the unscored sectors hold, from this build's counts. The old
     sentence said documented strikes exist in every unscored sector; coal has none."""
     counts = (snapshot.get("facet_counts") or {}).get("sector") or {}
-    parts = [f"{SECTORS.get(s, s).lower()} {counts.get(s, 0)}" for s in uncovered]
+    parts = [f"{SECTORS.get(s, s)} {counts.get(s, 0)}" for s in uncovered]
     return (f"Recorded events in these sectors, none of them scored: {', '.join(parts)}. A sector "
             "with no recorded event is not measured either, so that is not evidence that none occurred.")
 
