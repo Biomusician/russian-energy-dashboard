@@ -192,7 +192,10 @@ def test_the_first_release_of_the_impact_layer_is_one_sentence_never_a_list_of_e
     records = [_rec(f"imp-2024-01-{i:02d}-ukr-telecom-x{i}", f"2024-01-{i:02d}") for i in range(1, 29)]
     prev = T._state(us=(T._system("us"), []))                 # a build from before the layer existed
     layer = _impact(prev, _layer(records, entries=[{"id": "ctx-1"}]))
-    assert layer == [{"category": "impact_record_added", "first_release": True, "notes": [W.FIRST_IMPACT_RELEASE]}]
+    # The regional context published in the same build is its own first publication, in its own
+    # sentence (iteration 23, XL-02: the first-release branch used to swallow it).
+    assert layer == [{"category": "impact_record_added", "first_release": True, "notes": [W.FIRST_IMPACT_RELEASE]},
+                     {"category": "regional_context_updated", "notes": [W.FIRST_CONTEXT_RELEASE]}]
     text = json.dumps(layer)
     assert "First release of the impact layer" in text and text.count("First release") == 1
     assert "imp-2024" not in text and '"items"' not in text

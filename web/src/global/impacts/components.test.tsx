@@ -136,8 +136,11 @@ describe("ConfidenceChip", () => {
       expect(out).not.toMatch(/\/\s*100|of 100|\d\s*%|percent/i);
       // A Disputed or not-assessed record carries no score: no points line, and never "null points".
       const score = r.evidence_confidence!.score;
-      if (score == null) expect(out).not.toMatch(/null|points :/);
-      else expect(out).toContain(`${score} points : ordinal score, not a probability`);
+      // The total is never shown (ECI-15); "null" never is either.
+      expect(out).not.toMatch(/null|points :/);
+      // The component maxima ("up to 15 points") stay; the total line, in its own element, is gone.
+      if (score != null) expect(out).not.toMatch(new RegExp(`(?<!up to )\\b${score} points`));
+      expect(out).not.toContain("ordinal score");
     }
   });
 
@@ -182,7 +185,7 @@ describe("ConfidenceChip", () => {
     const out = render(<ConfidenceBreakdown value={r.evidence_confidence!} method={method} />);
     for (const reason of r.evidence_confidence!.reasons) expect(out).toContain(reason);
     for (const c of method.components) expect(out).toContain(c.label);
-    expect(out).toContain(`${r.evidence_confidence!.score} points : ordinal score, not a probability`);
+    expect(out).toContain("they are not a probability");
     expect(out).toContain(method.statement);
   });
 

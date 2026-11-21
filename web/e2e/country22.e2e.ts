@@ -68,7 +68,7 @@ test.describe("first screen of a country with no published record", () => {
     expect(whole!.y + whole!.height, "the overview runs below the first screen").toBeLessThanOrEqual(900);
     await expect(block).toContainText(`No energy-disruption record is published for ${name} yet.`);
     await expect(block).toContainText(NO_RECORD_IS_NOT_NO_DISRUPTION);
-    await expect(block).toContainText("the inclusion rule is strict");
+    await expect(block).toContainText("only disruptions that meet the inclusion rule are published");
     await expect(block).toContainText("attack-campaign safeguards apply");
     await expect(block).toContainText("whether, or how many, records are in review");
     for (const tab of ["impacts", "regional", "context", "research"]) {
@@ -125,7 +125,9 @@ test.describe("the new tabs", () => {
     await expect(panel.getByRole("heading", { name: TAB_LABEL.impacts, level: 2 })).toBeVisible();
     await expect(panel.locator(".impacts-what")).toContainText("not part of this country's published energy-disruption record and enter no count or index");
     expect(TAB_LABEL.impacts).toBe("Impact records (not scored)");
-    await expect(panel.locator(".impacts-inclusion")).toContainText("so an event can appear here and not there. Impact records never enter a score.");
+    // Two searches as well as two rules (iteration 23, C11): the gap is not blamed on the broader contract alone.
+    await expect(panel.locator(".impacts-inclusion")).toContainText("so an event can appear here and not there");
+    await expect(panel.locator(".impacts-inclusion")).toContainText("could not read the sources that report it. Impact records never enter a score.");
     await expect(panel.locator(".impact-list").first().locator(".impact-card")).toHaveCount(mine.records.length);
     if (mine.records.length === 0) {
       await expect(panel).toContainText("That describes this corpus, not Iran.");

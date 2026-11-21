@@ -97,7 +97,8 @@ def test_a_historical_backfill_is_new_published_records_with_event_dates_never_n
     assert "not a new disruption" in dict((c["id"], c["meaning"]) for c in d["categories"])["records_added"]
 
 
-@pytest.mark.parametrize("date,historical", [("2026-11-10", True), ("2026-10", True),
+# "2026-11" may be after the previous build of 2026-11-11: not historical (iteration 23, XL-04).
+@pytest.mark.parametrize("date,historical", [("2026-11-10", True), ("2026-10", True), ("2026-11", False),
                                              ("2026-11-11", False), ("2026-11-12", False)])
 def test_only_a_record_dated_before_the_previous_build_is_called_historical(date, historical):
     prev = _state(us=(_system("us"), []))

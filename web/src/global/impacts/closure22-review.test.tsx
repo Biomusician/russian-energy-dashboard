@@ -84,7 +84,9 @@ describe("C4: the evidence score is ordinal and nothing is ranked by it", () => 
   it("the breakdown says so without speaking of a percentage or a hundred", () => {
     const r = payload.records.find((x) => x.evidence_confidence?.score != null)!;
     const out = render(<ConfidenceBreakdown value={r.evidence_confidence!} method={method} />);
-    expect(out).toContain("ordinal score, not a probability and not a share of a maximum");
+    // No total at all (iteration 23, ECI-15): the components stay, the sum does not.
+    expect(out).not.toMatch(new RegExp(`(?<!up to )\\b${r.evidence_confidence!.score} points`));
+    expect(out).not.toContain("ordinal score");
     expect(out).toContain("records are never ranked by them");
     expect(out).not.toMatch(/\/\s*100|of 100|\d\s*%|percent/i);
   });

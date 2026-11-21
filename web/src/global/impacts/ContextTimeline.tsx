@@ -42,16 +42,36 @@ export function metricText(m: ContextMetric): string | null {
   return `${q ? `${q} ` : ""}${n(m.value)}${unit}`;
 }
 
+/** Where the newest statements of a type sit in the list, seen from an older one. */
+export type LaterPlace = "above" | "below" | "above and below";
+
+/** For each older entry, where its type's newest statements are in `ordered` (the list as drawn).
+ *  The list is in statement-date order and "latest" goes by "as of", so the newest of a type is not
+ *  always above an older one (iteration 23, XL-01: two cards said "listed above" of an entry drawn
+ *  below them). */
+export function laterPlaces<T extends Pick<ContextEntry, "context_type">>(ordered: readonly T[], latest: Set<T>): Map<T, LaterPlace> {
+  const out = new Map<T, LaterPlace>();
+  ordered.forEach((e, i) => {
+    if (latest.has(e)) return;
+    const at = ordered.flatMap((x, j) => (latest.has(x) && x.context_type === e.context_type ? [j] : []));
+    const above = at.some((j) => j < i);
+    const below = at.some((j) => j > i);
+    if (above || below) out.set(e, above && below ? "above and below" : above ? "above" : "below");
+  });
+  return out;
+}
+
 /** The "as of" line. `latestOfType` is how many statements share the type's newest place: 0 for
- *  an older statement, 1 for the one newest, more when several share the newest date. */
-export function asOfText(e: Pick<ContextEntry, "as_of" | "context_type">, latestOfType: number): string {
+ *  an older statement, 1 for the one newest, more when several share the newest date. `later` is
+ *  where an older statement's newer ones are drawn; without it the line names no direction. */
+export function asOfText(e: Pick<ContextEntry, "as_of" | "context_type">, latestOfType: number, later?: LaterPlace): string {
   const type = lowerLabel("context_types", e.context_type);
   if (latestOfType > 1) return `As of ${fmtDate(e.as_of)}: one of the ${latestOfType} most recent ${type} statements on record. Not a current status.`;
   if (latestOfType === 1) return `As of ${fmtDate(e.as_of)}: the most recent ${type} statement on record. Not a current status.`;
-  return `Historical statement, as of ${fmtDate(e.as_of)}. A later statement of this type is listed above.`;
+  return `Historical statement, as of ${fmtDate(e.as_of)}. ${later ? `A later statement of this type is listed ${later}.` : "A later statement of this type is on record."}`;
 }
 
-function Entry({ e, latestOfType }: { e: ContextEntry; latestOfType: number }) {
+function Entry({ e, latestOfType, later }: { e: ContextEntry; latestOfType: number; later?: LaterPlace }) {
   const metric = e.metric ? metricText(e.metric) : null;
   return (
     <li className={`ctx-entry${latestOfType > 0 ? " ctx-latest" : " ctx-historical"}`}>
@@ -67,7 +87,7 @@ function Entry({ e, latestOfType }: { e: ContextEntry; latestOfType: number }) {
       {metric && e.metric && (
         <p className="ctx-metric small">Figure: <strong>{metric}</strong>{e.metric.basis ? ` — ${e.metric.basis}` : ""}</p>
       )}
-      <p className="small ctx-asof">{asOfText(e, latestOfType)}</p>
+      <p className="small ctx-asof">{asOfText(e, latestOfType, later)}</p>
       <ul className="ctx-sources small">
         {e.sources.map((s) => (
           <li key={s.ref}>
@@ -89,6 +109,7 @@ export function ContextTimeline({ ctx }: { ctx: RegionalContext }) {
   const types = ctx.context_types.filter((t) => entries.some((e) => e.context_type === String(t.id)));
   const latest = latestEntries(entries, ctx.latest_by_type);
   const counts = latestCounts(entries, latest);
+  const later = laterPlaces(entries, latest);
   const tie = anyTie(counts);
   return (
     <section className="ctx-timeline" aria-label={ctx.label}>
@@ -99,7 +120,7 @@ export function ContextTimeline({ ctx }: { ctx: RegionalContext }) {
       </div>
       {entries.length === 0
         ? <p className="small dim">{ctx.empty_reason ?? "No reviewed statement is published yet. That is an absence of published statements, not a statement that nothing was said."}</p>
-        : <ol className="ctx-entries">{entries.map((e) => <Entry key={e.id} e={e} latestOfType={latest.has(e) ? counts.get(e.context_type) ?? 1 : 0} />)}</ol>}
+        : <ol className="ctx-entries">{entries.map((e) => <Entry key={e.id} e={e} latestOfType={latest.has(e) ? counts.get(e.context_type) ?? 1 : 0} later={later.get(e)} />)}</ol>}
       {types.length > 0 && (
         <details className="ctx-types small">
           <summary>What each kind of statement means</summary>

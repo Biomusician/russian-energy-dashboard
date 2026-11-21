@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import { loadConfidenceMethod } from "./load";
 import { LearnMore } from "../help/LearnMore";
-import { NO_CONFIDENCE_REASON, confidenceLabel, originsText } from "./model";
+import { CONFIDENCE_NOT_CAUSE, NO_CONFIDENCE_REASON, componentOriginsText, confidenceLabel, isProvisional } from "./model";
 import { confidenceMethod, lowerLabel, useImpactVocab } from "./vocab";
 import type { ConfidenceMethod, EvidenceConfidence } from "./types";
 import "../../styles/impacts.css";
@@ -9,10 +9,13 @@ import "../../styles/impacts.css";
 /** Evidence confidence, in words, with its reasons one click away (iteration 22).
  *
  *  The category is TEXT ("Evidence confidence: High"); the tint behind it only repeats the word.
- *  "Why?" lists the served reasons and the components that produced the category, the points with
- *  the words "not a probability" beside them, the method's status while it is provisional, and the
- *  served sentence that confidence is evidence quality: not severity, not probability, not
- *  importance.
+ *  Beside it, while the served method status says so, "provisional method" (iteration 23, F5/IA-10:
+ *  the status used to be one click away), and under it the sentence that the category does not
+ *  cover the cause, which every card shows next to it (ECI-08). "Why?" lists the served reasons
+ *  and the components that produced the category, the method's full status, and the served
+ *  sentence that confidence is evidence quality: not severity, not probability, not importance.
+ *  No total is shown (ECI-15): a bare "79 points" beside components whose maxima add to a hundred
+ *  reads as 79 out of 100, a precision the method does not have.
  *
  *  A record whose evidence was not assessed (a null category) gets a neutral "Not assessed" chip
  *  with the served reason: never "Preliminary", never an empty chip.
@@ -20,8 +23,8 @@ import "../../styles/impacts.css";
  *  The same shape is served on impact records and on country events, so this works for both.
  */
 
-/** The method, once a page has it. Asked for only when a reader opens a "Why?": the request cache
- *  holds one request however many cards ask. */
+/** The method, once a page has it. Every chip asks for it, because the provisional status beside
+ *  the category comes from it; the request cache holds one request however many cards ask. */
 export function useConfidenceMethod(wanted: boolean): { method: ConfidenceMethod | null; failed: boolean } {
   useImpactVocab();
   const [failed, setFailed] = useState(false);
@@ -44,16 +47,25 @@ function componentDetail(id: (typeof COMPONENT_ORDER)[number], value: EvidenceCo
     const tier = method?.components.find((x) => x.id === "directness")?.tiers?.find((t) => t.id === c.directness.tier);
     return tier?.label ?? (c.directness.tier ? c.directness.tier.replace(/_/g, " ") : "no supporting source");
   }
-  if (id === "origins") return originsText(c.origins.count, c.origins.basis);
+  if (id === "origins") return componentOriginsText(c.origins.count, c.origins.basis);
   if (id === "effect") return c.effect.specificity ? lowerLabel("effect_specificity", c.effect.specificity) : "no direct or independent source for the effect";
-  return c[id].points > 0 ? "yes" : "no";
+  // Not earned is not "no" (F13): a source not recorded as opened may have been opened, an undated
+  // source is not a late one, and with no first-party source or press report nothing was counted.
+  if (c.directness.tier !== "direct" && c.directness.tier !== "independent") return "not counted: no first-party source or press report";
+  if (id === "opened") return c.opened.points > 0 ? "yes" : "not recorded as opened";
+  const dated = c.contemporaneous.dated;
+  if (dated === "at_the_time") return "yes, reported at the time";
+  if (dated === "later_formal_account") return "yes, a dated formal account published later";
+  if (dated === "outside_window") return "no: the cited sources are dated outside the window";
+  if (dated === "not_recorded") return "not recorded: no cited source carries a date";
+  return c.contemporaneous.points > 0 ? "yes" : "not recorded";
 }
 
 /** The reasons, the components and the caveats. Shared by the chip's disclosure and the inspector.
  *
- *  The category is the finding. The points only show how it was reached, so they are shown as
- *  points: never out of a hundred and never as a percentage, which would read as a probability.
- *  The reasons are the served strings; nothing here rewords them. */
+ *  The category is the finding. Each component's points show how it was reached; their total is
+ *  not shown at all (ECI-15), never out of a hundred and never as a percentage, which would read
+ *  as a probability. The reasons are the served strings; nothing here rewords them. */
 export function ConfidenceBreakdown({ value, method, failed = false }: { value: EvidenceConfidence; method: ConfidenceMethod | null; failed?: boolean }) {
   const category = method?.categories.find((c) => c.id === value.category);
   return (
@@ -82,12 +94,9 @@ export function ConfidenceBreakdown({ value, method, failed = false }: { value: 
           </tbody>
         </table>
       )}
-      {value.score != null && (
-        <p className="conf-score">
-          {/* No "percent" and no "out of a hundred", not even to deny it: both read as a probability. */}
-          <span className="mono">{value.score} points</span>: ordinal score, not a probability and not a share of a maximum.
-          {" "}The category above is the finding; the points only show how it was reached, and records are never ranked by them.
-        </p>
+      {value.components && (
+        <p className="conf-score">The category above is the finding. The points only show how it was reached: they are not a
+          probability, and records are never ranked by them.</p>
       )}
       {value.disputed && <p className="conf-disputed">Disputed overrides the score: credible sources disagree, and this site does not choose.</p>}
       {method?.status && <p className="conf-status">Method status: {method.status}.</p>}
@@ -101,8 +110,9 @@ export function ConfidenceBreakdown({ value, method, failed = false }: { value: 
 export function ConfidenceChip({ value }: { value: EvidenceConfidence | null | undefined }) {
   const [open, setOpen] = useState(false);
   const id = useId();
-  const { method, failed } = useConfidenceMethod(open);
+  const { method, failed } = useConfidenceMethod(true);
   const label = confidenceLabel(value);
+  const status = method?.status ?? null;
   // Not assessed is its own state, said in words with its reason. It is never shown as the lowest
   // category, and never as a chip with nothing in it.
   if (!value || value.category == null) {
@@ -116,11 +126,15 @@ export function ConfidenceChip({ value }: { value: EvidenceConfidence | null | u
   return (
     <div className="conf">
       <span className={`conf-chip conf-${value.category.toLowerCase()}`}>Evidence confidence: <strong>{label}</strong></span>{" "}
+      {isProvisional(status) && (
+        <><span className="conf-provisional" title={status ?? undefined}>provisional method<span className="sr-only">: {status}</span></span>{" "}</>
+      )}
       <button type="button" className="disclosure-button linklike conf-why" aria-expanded={open} aria-controls={id}
               onClick={() => setOpen((o) => !o)}
               onKeyDown={(e) => { if (e.key === "Escape" && open) { e.preventDefault(); e.stopPropagation(); setOpen(false); } }}>
         {open ? "Hide why" : "Why?"}<span className="sr-only"> Evidence confidence: {label}</span>
       </button>
+      <div className="conf-scope small">{CONFIDENCE_NOT_CAUSE}</div>
       {open && (
         <div id={id} role="note" className="conf-panel small">
           <ConfidenceBreakdown value={value} method={method} failed={failed} />

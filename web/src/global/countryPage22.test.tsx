@@ -88,7 +88,8 @@ describe("overview: what is published", () => {
     for (const s of zeroRestricted) {
       const o = countryOverview(s, NOT_LOADED, null);
       expect(o.published).toMatch(/^No energy-disruption record is published for /);
-      expect(o.publishedNote).toContain("the inclusion rule is strict");
+      expect(o.publishedNote).toContain("only disruptions that meet the inclusion rule are published");
+      expect(o.publishedNote).not.toContain("strict");
       expect(o.publishedNote).toContain("attack-campaign safeguards apply");
       expect(o.publishedNote).toContain(NO_RECORD_IS_NOT_NO_DISRUPTION);
       // Nothing is counted on a page with no record: not records, not anything held.
@@ -99,7 +100,7 @@ describe("overview: what is published", () => {
   it("no record and no campaign: the same lead, with no safeguard given as a reason", () => {
     const o = countryOverview(zeroUnrestricted(), NOT_LOADED, null);
     expect(o.published).toMatch(/^No energy-disruption record is published for /);
-    expect(o.publishedNote).toContain("the inclusion rule is strict");
+    expect(o.publishedNote).toContain("only disruptions that meet the inclusion rule are published");
     expect(o.publishedNote).not.toContain("safeguards");
     expect(o.publishedNote).toContain(NO_RECORD_IS_NOT_NO_DISRUPTION);
     expect(o.withheld.join(" ")).not.toContain("attacks");
@@ -109,11 +110,12 @@ describe("overview: what is published", () => {
   it("an unfinished or blocked search is given as a reason; a finished one is not", () => {
     const s = zeroUnrestricted();
     s.research_freshness = { ...s.research_freshness, completeness: "complete", lane_states: { declared_query_set_run: 3 } };
-    expect(countryOverview(s, NOT_LOADED, null).publishedNote).toBe(`Why: the inclusion rule is strict. ${NO_RECORD_IS_NOT_NO_DISRUPTION}`);
+    expect(countryOverview(s, NOT_LOADED, null).publishedNote).toBe(`Why: only disruptions that meet the inclusion rule are published. ${NO_RECORD_IS_NOT_NO_DISRUPTION}`);
     s.research_freshness = { ...s.research_freshness, completeness: "partial" };
-    expect(countryOverview(s, NOT_LOADED, null).publishedNote).toContain("the search is unfinished");
+    // The research state comes first: it is the most specific reason (iteration 23, C11).
+    expect(countryOverview(s, NOT_LOADED, null).publishedNote).toMatch(/^Why: the latest search pass is partial and only disruptions/);
     s.research_freshness = { ...s.research_freshness, lane_states: { blocked_by_source: 1 } };
-    expect(countryOverview(s, NOT_LOADED, null).publishedNote).toContain("sources are hard to reach");
+    expect(countryOverview(s, NOT_LOADED, null).publishedNote).toMatch(/^Why: a source group could not be read in the latest search/);
     s.research_log = { ...s.research_log, passes: [] };
     expect(countryOverview(s, NOT_LOADED, null).publishedNote).toContain("no systematic search has been run yet");
   });

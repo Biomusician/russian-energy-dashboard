@@ -75,11 +75,16 @@ export const IMPACT_CORPUS_LINE =
   "Reviewed impact records from a separate, non-scored corpus. They are not part of this country's published "
   + "energy-disruption record and enter no count or index.";
 
-/** Why an event can be in the impact tab and not in the country's own record (iteration 22 closure). */
+/** Why an event can be in the impact tab and not in the country's own record (iteration 22 closure).
+ *
+ *  Iteration 23 (XL-07, C11): this used to give the impact layer's broader contract as the reason,
+ *  beside a country whose own search could not read its main sources. Two layers have two searches
+ *  as well as two rules, and the line names both. */
 export const IMPACT_INCLUSION_LINE =
-  "This country's published energy disruptions follow the country system's own inclusion rule. The impact layer has its own, "
-  + "broader contract (energy and essential civilian services, cyber, technical and natural causes), so an event can appear here "
-  + "and not there. Impact records never enter a score.";
+  "This country's published energy disruptions follow the country system's own inclusion rule and its own research passes. "
+  + "The impact layer has its own contract (energy and essential civilian services, cyber, technical and natural causes) and its own "
+  + "research, so an event can appear here and not there: because the impact layer covers more, or because the country's own search "
+  + "did not reach or could not read the sources that report it. Impact records never enter a score.";
 
 /** One line about the impact corpus, by what is known. A count only once the file has been read,
  *  and always beside the words that say it is another corpus. */
@@ -93,14 +98,40 @@ export function impactLine(name: string, impacts: ImpactPresence): string {
   return `${parts.join(" and ")}, in a separate, non-scored corpus.`;
 }
 
-/** Why the search may have missed things, from the served research state. Null when every declared
- *  source group was searched. */
-function searchReason(sys: OverviewSystem): string | null {
-  if (sys.research_log.passes.length === 0) return "no systematic search has been run yet";
+/** Why the search may have missed things, from the served research state: the most specific cause
+ *  first. Empty when every declared source group was searched.
+ *
+ *  Iteration 23 (C11): an empty page used to lead with "the inclusion rule is strict" where the
+ *  served research state says source groups could not be read. */
+function searchReasons(sys: OverviewSystem): string[] {
+  if (sys.research_log.passes.length === 0) return ["no systematic search has been run yet"];
   const rf = sys.research_freshness;
-  if (((rf.lane_states ?? {}).blocked_by_source ?? 0) > 0) return "sources are hard to reach";
-  if (rf.completeness !== "complete") return "the search is unfinished";
-  return null;
+  const blocked = (rf.lane_states ?? {}).blocked_by_source ?? 0;
+  const out: string[] = [];
+  // No number: the overview counts nothing on a page with no record, and the Research coverage
+  // tab gives the groups by state.
+  if (blocked > 0) {
+    // Why it could not be read is on the Research coverage tab; this sentence sits above the map on a phone.
+    out.push(`${blocked === 1 ? "a source group" : "some source groups"} could not be read in the latest search`);
+  }
+  if (rf.completeness !== "complete") out.push("the latest search pass is partial");
+  return out;
+}
+
+/** The registered-source line of the Research status block (iteration 23, C10). A registry
+ *  re-check confirms each source's entry and its terms are current; it is not a reading of the
+ *  source, so the words say "re-checked in the registry", and a source group the latest search
+ *  could not read is said beside it rather than hidden behind a green "all checked". */
+export function sourceCheckLine(registered: number, overdue: number, blockedGroups: number): string {
+  // Short on purpose: the line sits above the map on a phone. The sentence under it says that a
+  // re-check is not a reading of the source.
+  const head = overdue > 0
+    ? `${overdue} of ${registered} registry entries overdue for a re-check`
+    : `All ${registered} registry entries re-checked on schedule`;
+  const blocked = blockedGroups > 0
+    ? ` · ${blockedGroups} source ${blockedGroups === 1 ? "group" : "groups"} unreadable in the latest search`
+    : "";
+  return `${head}${blocked}`;
 }
 
 export function countryOverview(sys: OverviewSystem, impacts: ImpactPresence, regional: RegionalGroup | null): Overview {
@@ -113,10 +144,10 @@ export function countryOverview(sys: OverviewSystem, impacts: ImpactPresence, re
   let publishedNote: string;
   if (n === 0) {
     published = `No energy-disruption record is published for ${name} yet.`;
-    const why = ["the inclusion rule is strict"];
+    // What the research state says comes first; the rule and the safeguards are conditions, not
+    // a finding that nothing qualified.
+    const why = [...searchReasons(sys), "only disruptions that meet the inclusion rule are published"];
     if (restricted) why.push("attack-campaign safeguards apply");
-    const search = searchReason(sys);
-    if (search) why.push(search);
     publishedNote = `Why: ${listOf(why)}. ${NO_RECORD_IS_NOT_NO_DISRUPTION}`;
   } else {
     published = `${n} reviewed energy-disruption ${plural(n, "record is", "records are")} published for ${name}.`;

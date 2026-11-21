@@ -2,7 +2,7 @@
   "version": "2.0-draft",
   "note": "Evidence Confidence v2 (docs/GLOBAL_IMPACT_METHODOLOGY.md §8, docs/EVIDENCE_CONFIDENCE_V2.md). Read by pipeline/evidence_confidence.py. An ordinal description of the sources a record cites for 'did it happen and is the reported effect supported'. Not a probability, not severity, not infrastructure importance, not research completeness, and not a statement about cause or attribution. It does not enter the ESDI. While the version ends in -draft the thresholds are provisional: no blind calibration run has passed.",
   "statement": "Evidence confidence describes the sources this record cites, not everything published about the event. It covers whether the event happened and whether the reported effect is supported; it does not cover the cause, or who was responsible. It is not a probability, not a measure of severity, and not a statement about how important the infrastructure is.",
-  "status_while_draft": "provisional: thresholds not calibrated",
+  "status_while_draft": "provisional: thresholds not calibrated; calibration run 1 (19 November 2026) was performed and did not pass",
   "status_when_calibrated": "calibrated against blind reviewer labels: see docs/EVIDENCE_CONFIDENCE_V2.md",
   "tiers": {
     "direct": {"points": 40, "label": "First-party or official statement",
@@ -122,7 +122,7 @@
     {"id": "MODERATE", "min": 55, "label": "Moderate",
      "meaning": "A first-party or official account from one origin with a reported effect, or press reporting with most other components present. Also the most a record can be while the independence of its sources has not been reviewed."},
     {"id": "LIMITED", "min": 35, "label": "Limited",
-     "meaning": "Reported by a first-party source or the press, with several components missing: one origin, no figure, no dated source, or none recorded as opened."},
+     "meaning": "Reported by a first-party source or the press, with more missing than a second origin or a figure: no dated source, no source recorded as opened, or an effect reported only in general terms, usually with one origin. A single press report that is dated, recorded as opened and describes the effect is Moderate, not Limited."},
     {"id": "PRELIMINARY", "min": 0, "label": "Preliminary",
      "meaning": "Rests on an unverified claim, a post, or a secondary source, or on a single report with nothing else recorded about it. Published because it was reviewed, not because it is settled."}
   ],

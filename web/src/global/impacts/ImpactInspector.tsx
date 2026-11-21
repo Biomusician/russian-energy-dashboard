@@ -1,8 +1,9 @@
 import { fmtDate } from "../../data";
 import { LANGUAGE_LABEL, dirFor } from "../manifest";
 import { ConfidenceBreakdown, useConfidenceMethod } from "./ConfidenceChip";
+import { REVIEWERS_SAME_MODEL } from "../reviewText";
 import {
-  LEAD_ADDED_NOT_COUNTED, NO_CONFIDENCE_REASON, SELF_CLAIM_NOTE, claimSupport, confidenceLabel, isAbstracted, notEstablished, originsText, selfClaimText,
+  LEAD_ADDED_NOT_COUNTED, NO_CONFIDENCE_REASON, SELF_CLAIM_NOTE, allCitationsOriginsText, claimSupport, confidenceLabel, isAbstracted, notEstablished, selfClaimText,
   selfClaimsOf, sourceKind,
 } from "./model";
 import { definitionOf, labelOf, lowerLabel, useImpactVocab, vocabulary } from "./vocab";
@@ -98,7 +99,8 @@ export function ImpactInspector({ record, id, onClose, headingLevel = 4 }: { rec
           statements unless a reviewer established that they are. */}
       {r.origin_count != null && originsBasis && (
         <p className="dim imp-origins">
-          Across {r.sources.length} {r.sources.length === 1 ? "citation" : "citations"}: {originsText(r.origin_count, originsBasis)}.
+          {allCitationsOriginsText(r.origin_count, originsBasis, r.sources.length)}. The evidence-confidence row below counts
+          only the first-party and press sources for the event and its effect, so the two can differ.
           {/* The served count leaves out lead-added citations, actors' own claims and discovery aids
               (round-2 ruling R4); where a lead-added citation is present, say so beside the count. */}
           {r.sources.some((s) => s.added_by === "lead") && ` ${LEAD_ADDED_NOT_COUNTED}`}
@@ -147,8 +149,8 @@ export function ImpactInspector({ record, id, onClose, headingLevel = 4 }: { rec
       </ul>
 
       {r.review?.reviewed_at && (
-        <p className="dim">Reviewed {fmtDate(r.review.reviewed_at)} by three independent roles
-          ({vocabulary("review_roles").map((x) => x.label.toLowerCase()).join("; ") || "evidence; attribution and source; safety"}).</p>
+        <p className="dim">Reviewed {fmtDate(r.review.reviewed_at)} by three separate roles
+          ({vocabulary("review_roles").map((x) => x.label.toLowerCase()).join("; ") || "evidence; attribution and source; safety"}). {REVIEWERS_SAME_MODEL}</p>
       )}
       {onClose && <button type="button" className="ghost ev-inspector-close" onClick={onClose}>Close</button>}
     </section>

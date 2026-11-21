@@ -385,12 +385,14 @@ def load_context(world_path=None, unit_names=None, link_states=None):
     policy, and known link states. `unit_names` ({system_id: phrases}) is for tests that must not
     need the Natural Earth cache; left out, unit names are read on first use."""
     world = read_json(world_path or outputs.processed() / "global" / "world.geojson")
-    names = {}
+    names, a2 = {}, {}
     for f in world["features"]:
         p = f["properties"]
         # Crimea is drawn as its own feature carrying a3 UKR; the country's name is Ukraine's.
         if p.get("status") != "occupied" and p.get("a3") and p.get("name"):
             names.setdefault(p["a3"], p["name"])
+            if p.get("a2"):
+                a2.setdefault(p["a3"], p["a2"])
     states = B.load_campaigns().get("system_states") or {}
     if link_states is None:
         link_states = {}
@@ -399,6 +401,8 @@ def load_context(world_path=None, unit_names=None, link_states=None):
                 link_states.update(read_json(path).get("link_states") or {})
     return {
         "names": names,
+        # The alpha-2 code each country's first-level region codes start with (geography_problems).
+        "a2": a2,
         "system_of": {a3: s["id"] for s in systems.SYSTEMS if s["kind"] == "country" for a3 in s["admin0_a3"]},
         # Whose country queue may hold an event placed in this admin-0 unit: the system's own
         # geography plus any unit whose inclusion awaits an owner decision (`held_scope_a3`).
@@ -891,6 +895,15 @@ def geography_problems(r, ctx):
             out.append("admin1 is null or {code, name} for a first-level region")
         if precision != "admin1":
             out.append("admin1 is set but geographic_precision is not admin1")
+        # A region of another country is not this country's region (iteration 23, F11): a RUS record
+        # carrying a Crimean code (UA-43) would have placed occupied Ukraine inside Russia, against
+        # the theatre's own rule. An ISO 3166-2 code starts with its country's alpha-2 code.
+        code = str(admin1.get("code") or "") if isinstance(admin1, dict) else ""
+        want = ctx.get("a2", {}).get(a3)
+        if a3 != MULTI and code and not want:
+            out.append(f"no alpha-2 code is known for {a3!r}, so its region {code!r} cannot be checked")
+        elif a3 != MULTI and code and not code.startswith(want + "-"):
+            out.append(f"admin1 {code!r} is not a first-level region of {a3!r} (its codes start {want}-)")
         if is_attack(r):
             out.append("a kinetic or sabotage record never carries a region (admin1)")
     return out

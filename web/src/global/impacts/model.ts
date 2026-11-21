@@ -91,6 +91,30 @@ export function originsText(count: number, basis: string | null | undefined): st
   return String(count);
 }
 
+/** Two different counts sit in one inspector (iteration 23, F2), and once read in the same words:
+ *  the record's `origin_count`, over every citation for any claim, and the confidence component's
+ *  `origins.count`, over only the first-party and press sources behind the event and its effect.
+ *  Each now says what it counts. */
+export function allCitationsOriginsText(count: number, basis: string | null | undefined, citations: number): string {
+  return `Across all ${citations} ${citations === 1 ? "citation" : "citations"}, for any claim (the event, its effect, attribution, AI involvement): ${originsText(count, basis)}`;
+}
+
+export function componentOriginsText(count: number, basis: string | null | undefined): string {
+  return `${originsText(count, basis)}, among the first-party and press sources for the event and its effect`;
+}
+
+/** Beside every evidence category, where the card also shows a cause (ECI-08): the category is not
+ *  a verdict on the cause. The served method statement says the same; this line is on the card
+ *  itself, before any "Why?". */
+export const CONFIDENCE_NOT_CAUSE =
+  "Evidence confidence covers whether this happened and the reported effect. It does not cover the cause or who was responsible.";
+
+/** True when the served method status says its categories are provisional (F5). Read from the
+ *  served words, never assumed: a calibrated method's status does not start "provisional". */
+export function isProvisional(status: string | null | undefined): boolean {
+  return /^\s*provisional\b/i.test(status ?? "");
+}
+
 // ---- dates ---------------------------------------------------------------------------------------
 
 /** The first calendar day the record can refer to: a month-precision date starts on the 1st. */

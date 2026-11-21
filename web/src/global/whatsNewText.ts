@@ -60,8 +60,11 @@ export function recordHref(systemId: string, it: WhatsNewItem): string | null {
   return `?sys=${encodeURIComponent(systemId)}#ev-${it.record_id.replace(/[^A-Za-z0-9_-]/g, "-")}`;
 }
 
-/** Where the page explains a kind of change: a tab of the country's own page, or a section of
- *  this one. Null when the file names none. Never a record. */
+/** Where the page explains a kind of change: a tab of the country's own page, or a section of the
+ *  Help page. Null when the file names none. Never a record.
+ *
+ *  Iteration 23 (IA-05, IA-06): a method change used to link to the home page's "Why these
+ *  systems" section, which explains how systems were chosen, not the change. It now opens Help. */
 export function changeLink(c: WhatsNewChange): { href: string; label: string; samePage: boolean } | null {
   const l = c.link;
   if (!l) return null;

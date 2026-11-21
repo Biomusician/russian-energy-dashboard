@@ -124,6 +124,9 @@ export interface CountrySystem {
     /** Iteration 19: how precisely events are placed here, and why. Admin-1 is a maximum. */
     precision_policy?: { kinetic?: "country" | "admin1"; other?: "country" | "admin1"; no_event_units?: string[]; reason: string };
   };
+  /** Iteration 23 (XL-08): what this system's served attack and sabotage records carry, read by the
+   *  build from the records themselves. Flags, never a count; null when none is served. */
+  attack_records?: { region: boolean; facility: boolean; campaign_covered: boolean } | null;
   maturity?: "monitored" | "research_preview";
   campaign_state?: { state: string; checked: string; basis: string; limitation?: string } | null;
   aliases?: string[];
@@ -855,9 +858,11 @@ export const RECOVERY_LABEL: Record<string, string> = {
   WITHHELD_ACTIVE_CAMPAIGN: "Facility status not published while the attack campaign is active",
 };
 
+/** Iteration 23 (F4/C12): "independent reviewers" read as three people. Each label says what the
+ *  reviewers were; the long form is REVIEWERS_SAME_MODEL (reviewText.ts). */
 export const REVIEW_STATUS_LABEL: Record<string, string> = {
-  blind_reviewed: "Blind reviewed by three independent reviewers",
-  dual_reviewed: "Independently reviewed",
+  blind_reviewed: "Blind reviewed by three separate sessions of the same AI model (independent in context, not in model)",
+  dual_reviewed: "Reviewed by a second, separate session of the same AI model (independent in context, not in model)",
   legacy_single_review: "Single review (published before independent review was required)",
 };
 
@@ -967,7 +972,7 @@ export interface WhatsNewChange {
   aggregated?: boolean;
   /** Where the page explains this kind of change: a tab of the country's page, or a section of
    *  the home page. Never a record. */
-  /** `help`: a section of the Help page (iteration 23), e.g. "evidence-confidence". */
+  /** A tab of the country page, or a section of the Help page (`help`, iteration 23). */
   link?: { system_id?: string; tab?: string; help?: string };
 }
 

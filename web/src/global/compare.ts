@@ -216,6 +216,18 @@ function placementCell(col: CompareColumn): Cell {
       }
       // Some systems call their first-level unit simply "region"; "One region (region)" says nothing.
       const named = unit && unit !== "region" ? ` (${unit})` : "";
+      // Iteration 23 (XL-08): what the served attack records carry, not what the policy allows. A
+      // system onboarded before the country-level rule keeps first-level region on its own page,
+      // and may name the facility, under the owner's current decision; the cell says so.
+      const ar = s.attack_records;
+      if (ar && (ar.region || ar.facility)) {
+        const detail = [ar.region ? "first-level region" : "", ar.facility ? "the facility named" : ""].filter(Boolean).join(", with ");
+        const decision = ar.campaign_covered ? ", under the owner's current decision (the rule this system was added under)" : "";
+        return value(`${PLACEMENT_LABEL.one_region}${named} at most; attack records on this country's own page: ${detail}`,
+          `No record is placed more precisely than one first-level region. This country's own page publishes its attack records with ${detail}${decision}. `
+          + "In the impact records and in every list that sets countries side by side, those records are shown for the country only.",
+          [`${PLACEMENT_LABEL.one_region}${named} at most`, `Attack records: ${detail}`]);
+      }
       return value(`${PLACEMENT_LABEL.one_region}${named} at most`, "No record is placed more precisely than one first-level region.",
         [`${PLACEMENT_LABEL.one_region}${named} at most`]);
     });
