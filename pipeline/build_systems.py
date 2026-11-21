@@ -698,6 +698,20 @@ def method_in_address(url):
     return bool(METHOD_WORDING.search(path))
 
 
+# An encyclopedia is a discovery aid (evidence_confidence.is_discovery_aid): it may point a reviewer
+# to a source but is never the source of a published figure or claim. Three records still said
+# "(Wikipedia)" beside a figure after the Wikipedia-only records were held (iteration 23, AN-05).
+ENCYCLOPEDIA_WORDS = re.compile(r"\b(wikipedia|encyclop(a)?edia)\b", re.I)
+
+
+def encyclopedia_attribution_problems(events):
+    """Any record whose own text names an encyclopedia as where something was reported."""
+    return [f"{e['event_id']}: {field} names an encyclopedia as a source ({m.group(0)!r}); cite the primary source "
+            "or drop the claim"
+            for e in events for field in ("summary", "effect", "threshold_basis")
+            for m in [ENCYCLOPEDIA_WORDS.search(str(e.get(field) or ""))] if m]
+
+
 def route_problems(events):
     out = []
     for e in events:
@@ -1825,6 +1839,21 @@ def attack_record_detail(events):
             "campaign_covered": any(bool(e.get("publication")) for e in hits)}
 
 
+def record_problems(system_id, doc, events, profile, campaigns, research_log):
+    """Every text and placement rule a system's records must pass before publication. One function
+    the build calls, so a test can run the same list without the map data (iteration 23)."""
+    problems = precision_problems(system_id, doc, events) + campaign_problems(campaigns)
+    problems += encyclopedia_attribution_problems(events)
+    # Text rules new in iteration 19 apply to systems that state a precision policy, i.e. those
+    # onboarded under them. Earlier systems' records were reviewed under the rules of their day.
+    if (doc.get("geography") or {}).get("precision_policy"):
+        problems += nuclear_problems(profile, events) + route_problems(events)
+        problems += [f"{e['event_id']}: {why}" for e in events for why in [not_a_physical_event(e)] if why]
+    if ((campaigns.get("system_states") or {}).get(system_id) or {}).get("state") in RESTRICTING_STATES:
+        problems += held_wording_problems(doc, research_log)
+    return problems
+
+
 def build_system(system_id, admin1, admin0, as_of):
     src = SYSTEMS_CURATED / system_id
     doc = read_json(src / "system.json")
@@ -1850,14 +1879,7 @@ def build_system(system_id, admin1, admin0, as_of):
     for e in events:
         e["episode_id"] = episode_of.get(e["event_id"], e["event_id"])
     validate(system_id, doc, events, unit_codes)
-    problems = precision_problems(system_id, doc, events) + campaign_problems(campaigns)
-    # Text rules new in iteration 19 apply to systems that state a precision policy, i.e. those
-    # onboarded under them. Earlier systems' records were reviewed under the rules of their day.
-    if (doc.get("geography") or {}).get("precision_policy"):
-        problems += nuclear_problems(profile, events) + route_problems(events)
-        problems += [f"{e['event_id']}: {why}" for e in events for why in [not_a_physical_event(e)] if why]
-    if ((campaigns.get("system_states") or {}).get(system_id) or {}).get("state") in RESTRICTING_STATES:
-        problems += held_wording_problems(doc, research_log)
+    problems = record_problems(system_id, doc, events, profile, campaigns, research_log)
     if problems:
         raise ValueError(f"system {system_id}: " + "; ".join(problems))
     apply_publication_policy(system_id, events, campaigns)

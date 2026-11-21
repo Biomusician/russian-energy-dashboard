@@ -3965,7 +3965,7 @@
       "asset_class": "system_wide",
       "cause": "natural_hazard",
       "summary": "Ice and wind during the mid-January 2024 winter storm (Winter Storm Heather) caused large power outages in Oregon.",
-      "effect": "Portland General Electric reported a storm peak of 165,000 customers without power on 13 Jan 2024; over 200,000 customers lost power statewide (Wikipedia).",
+      "effect": "Portland General Electric reported a storm peak of 165,000 customers without power on 13 Jan 2024.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Clause 5: 165,000 customers of one utility out at the peak.",

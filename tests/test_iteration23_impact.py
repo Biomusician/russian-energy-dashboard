@@ -626,3 +626,44 @@ def test_a_lead_correction_carries_its_own_date():
     assert I.lead_patch(reviews, "lane", "a")[1] == "2026-11-19"
     assert I.lead_patch(reviews, "lane", "b")[1] == "2026-11-21"
     assert "reviewed_at" in I.LEAD_KEYS
+
+
+def test_an01_whats_new_is_built_after_the_impact_layer_it_reads():
+    """AN-01 (analyst red team). What's New reads impacts.json and regional_context.json from the
+    processed folder; built before the impact layer wrote them, it compared the previous run's
+    files, so the release that withdrew four impact records reported no withdrawal."""
+    src = (ROOT / "pipeline" / "run.py").read_text(encoding="utf-8")
+    impact_build = src.index("impact_payloads = global_impacts.build(")
+    panel_build = src.index("whats_new.build(ROOT, outputs.processed()")
+    assert impact_build < panel_build, "What's New must run after the impact layer has written its payloads"
+    assert src.count("whats_new.build(") == 1
+
+
+def test_an05_a_country_record_never_names_an_encyclopedia_as_a_source():
+    """AN-05 (analyst red team). Three records still said "(Wikipedia)" beside a figure after the
+    Wikipedia-only records were held; an encyclopedia is a discovery aid, never a source."""
+    ok = {"event_id": "x-1", "summary": "A storm.", "effect": "The utility reported 165,000 customers out.", "threshold_basis": None}
+    assert B.encyclopedia_attribution_problems([ok]) == []
+    for field, text in (("effect", "over 200,000 customers lost power statewide (Wikipedia)."),
+                        ("summary", "the encyclopaedia says 80% of customers"), ("threshold_basis", "per Encyclopedia Britannica")):
+        bad = {**ok, field: text}
+        assert any("names an encyclopedia as a source" in p for p in B.encyclopedia_attribution_problems([bad])), field
+    for sid in S.COUNTRY_SYSTEMS:
+        events = _read(f"systems/{sid}/events.json")["events"]
+        assert B.encyclopedia_attribution_problems(events) == [], sid
+
+
+def test_an05_the_build_refuses_a_record_that_names_an_encyclopedia():
+    """The rule is in the list the build runs, not only callable: build_system raises on whatever
+    record_problems returns, and record_problems refuses a US record whose effect cites Wikipedia."""
+    src = (ROOT / "pipeline" / "build_systems.py").read_text(encoding="utf-8")
+    body = src[src.index("def build_system("):src.index("def build_world(")]
+    assert "problems = record_problems(system_id, doc, events, profile, campaigns, research_log)" in body
+    cur = CURATED / "systems" / "us"
+    doc, profile = (json.loads((cur / f).read_text(encoding="utf-8")) for f in ("system.json", "profile.json"))
+    log = json.loads((cur / "research_log.json").read_text(encoding="utf-8"))
+    events = copy.deepcopy(_read("systems/us/events.json")["events"])
+    assert B.record_problems("us", doc, events, profile, B.load_campaigns(), log) == []
+    events[0]["effect"] = str(events[0].get("effect") or "") + " (Wikipedia)"
+    assert any("names an encyclopedia as a source" in p
+               for p in B.record_problems("us", doc, events, profile, B.load_campaigns(), log))

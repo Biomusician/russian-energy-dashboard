@@ -212,6 +212,8 @@ def test_a_held_count_in_a_campaign_systems_gap_fails_the_build():
 
 def test_the_build_applies_the_held_wording_gate_to_campaign_systems_only():
     src = (ROOT / "pipeline" / "build_systems.py").read_text(encoding="utf-8")
-    body = src[src.index("def build_system("):src.index("def build_world(")]
+    # The per-record rules moved into record_problems, which build_system calls (iteration 23).
+    assert "problems = record_problems(" in src[src.index("def build_system("):src.index("def build_world(")]
+    body = src[src.index("def record_problems("):src.index("def build_system(")]
     i = body.index("held_wording_problems(doc, research_log)")
     assert "RESTRICTING_STATES" in body[i - 200:i]

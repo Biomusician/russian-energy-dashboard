@@ -533,6 +533,21 @@
           "carried_forward": true
         }
       ]
+    },
+    {
+      "date": "2026-11-21",
+      "by": "iteration-23 review of published records",
+      "kind": "targeted",
+      "window": [
+        "2022-01-01",
+        "2026-11-21"
+      ],
+      "scope": "published records re-read against the source rules after the iteration-23 methodology red team: records whose every figure came only from an encyclopedia were held for re-sourcing to a primary source and re-review; no new search was run",
+      "status": "partial",
+      "status_reason": "a re-reading of records already published, not a search for new ones",
+      "outcome": {
+        "held": 8
+      }
     }
   ]
 }

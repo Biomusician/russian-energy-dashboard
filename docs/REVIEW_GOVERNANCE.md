@@ -101,6 +101,9 @@ Recorded so a reviewer and a later researcher apply them the same way:
 - **Aggregator figures.** A customer figure that rests only on an outage aggregator (for example
   PowerOutage.us) is held: the threshold definition requires a utility, a state agency, DOE, or an
   outlet citing one of them. An operator's own figure quoted verbatim on an aggregator page passes.
+  The same holds for an encyclopedia: Wikipedia is a discovery aid (EVIDENCE_CONFIDENCE_V2), so a
+  figure resting only on it is held, and a record's text never names it as where something was
+  reported (iteration 23, red team findings C5 and AN-05; the build refuses the second).
 - **Login walls.** A page that shows a log-in prompt over its text counts as not opened, even if
   the text is visible beneath it.
 - **Trunk pipelines (clause 3).** An interstate or major transmission or trunk line; a short local

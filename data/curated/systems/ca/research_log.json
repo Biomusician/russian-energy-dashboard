@@ -487,6 +487,21 @@
           "carried_forward": false
         }
       ]
+    },
+    {
+      "date": "2026-11-21",
+      "by": "iteration-23 review of published records",
+      "kind": "targeted",
+      "window": [
+        "2022-01-01",
+        "2026-11-21"
+      ],
+      "scope": "published records re-read against the source rules after the iteration-23 methodology red team: one record whose only figure for its province came from an encyclopedia was held for re-sourcing to a primary source and re-review, and two records lost an encyclopedia attribution from their text; no new search was run",
+      "status": "partial",
+      "status_reason": "a re-reading of records already published, not a search for new ones",
+      "outcome": {
+        "held": 1
+      }
     }
   ]
 }

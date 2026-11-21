@@ -4116,6 +4116,24 @@
       "field": "threshold_basis",
       "set": "Grid-operator EEA 3 declaration: an emergency declared by the grid operator (clause 5, its second limb).",
       "reason": "Clause 5 does not name EEA3; the declaration meets its second limb, an emergency declared by the grid operator (red team T-A8, iteration 23). Held here so a re-import keeps it."
+    },
+    {
+      "event_id": "us-2024-01-13-winter-storm-heather-oregon-outages",
+      "field": "effect",
+      "replace": [
+        "; over 200,000 customers lost power statewide (Wikipedia).",
+        "."
+      ],
+      "reason": "An encyclopedia is a discovery aid, never the source of a published figure (iteration 23, analyst red team AN-05). The utility's own figure stays."
+    },
+    {
+      "event_id": "ca-2022-05-21-derecho-ontario",
+      "field": "effect",
+      "replace": [
+        "(IESO storm summary, not stated as a simultaneous peak; Wikipedia attributes them to Hydro One)",
+        "(IESO storm summary, not stated as a simultaneous peak)"
+      ],
+      "reason": "An encyclopedia is a discovery aid, never the source of a published figure (iteration 23, analyst red team AN-05)."
     }
   ]
 }

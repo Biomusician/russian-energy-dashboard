@@ -830,24 +830,27 @@ def main():
     from pipeline import build_systems
     build_systems.build(snapshot)
 
-    # What changed since the last published build, for every system at once (iteration 21). Read
-    # from the published payloads just written and the committed previous build, so it can only
-    # describe what a reader could see; a non-current build has no published predecessor.
-    from pipeline import whats_new
-    write_json(outputs.processed() / "global" / "whats_new.json",
-               whats_new.build(ROOT, outputs.processed(), snapshot, incidents, assets)
-               if outputs.grants("production_ledger") else
-               whats_new.unavailable(f"a {args.mode} build has no published predecessor", snapshot["as_of"]))
-
     # The global impact layer (iteration 22): a separate, non-scored corpus with its own gate. Built
-    # after the country systems because it names countries from the world map they write, and after
-    # the panel above so that nothing analytic can read it. It raises, naming the record, if the
-    # curated corpus carries anything the scope boundary forbids.
+    # after the country systems because it names countries from the world map they write; nothing
+    # analytic runs after it. It raises, naming the record, if the curated corpus carries anything
+    # the scope boundary forbids.
     from pipeline import global_impacts
     impact_payloads = global_impacts.build(snapshot["as_of"])
     # The home page says which countries have impact records from the manifest, never by loading the
     # impact payload itself (iteration 23).
     build_systems.write_impact_presence(global_impacts.impact_presence(impact_payloads[global_impacts.IMPACTS_OUT]))
+
+    # What changed since the last published build, for every system at once (iteration 21). Read
+    # from the published payloads just written and the committed previous build, so it can only
+    # describe what a reader could see; a non-current build has no published predecessor. After the
+    # impact layer: it reads impacts.json and regional_context.json from disk, and built before them
+    # it compared the previous run's files, so a release that withdrew four impact records reported
+    # none, and a change shipped on the day it was made was never reported (iteration 23, AN-01).
+    from pipeline import whats_new
+    write_json(outputs.processed() / "global" / "whats_new.json",
+               whats_new.build(ROOT, outputs.processed(), snapshot, incidents, assets)
+               if outputs.grants("production_ledger") else
+               whats_new.unavailable(f"a {args.mode} build has no published predecessor", snapshot["as_of"]))
 
     # The Help page's live values (iteration 23), copied from the payloads just written so the page
     # never downloads the snapshot or the impact corpus to state a caveat (pipeline/help_facts.py).

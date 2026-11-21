@@ -15,7 +15,7 @@
       "asset_class": "system_wide",
       "cause": "natural_hazard",
       "summary": "A derecho crossed southern and eastern Ontario on 21 May 2022, bringing down poles and lines across the Hydro One and local-utility networks.",
-      "effect": "About 586,000 customer outages in Ontario (IESO storm summary, not stated as a simultaneous peak; Wikipedia attributes them to Hydro One); more than 15,000 properties in eastern Ontario were still without power on 30 May.",
+      "effect": "About 586,000 customer outages in Ontario (IESO storm summary, not stated as a simultaneous peak); more than 15,000 properties in eastern Ontario were still without power on 30 May.",
       "inclusion_basis": "reported_effect",
       "criterion_met": 5,
       "threshold_basis": "Loss of supply to >=100,000 customers (586,000 outages in Ontario per IESO briefing).",
@@ -240,78 +240,6 @@
         }
       },
       "hazard_name": null
-    },
-    {
-      "event_id": "ca-2022-09-24-fiona-nova-scotia",
-      "date": "2022-09-24",
-      "date_precision": "day",
-      "date_end": null,
-      "region_code": "CA-NS",
-      "geography_precision": "admin1",
-      "regions_affected": [],
-      "facility_name": null,
-      "facility_name_local": null,
-      "operator": "Nova Scotia Power",
-      "asset_class": "system_wide",
-      "cause": "natural_hazard",
-      "summary": "Post-tropical storm Fiona struck Nova Scotia on 24 September 2022, leaving about 80% of Nova Scotia's electricity customers without power.",
-      "effect": "Fiona left more than 500,000 customers in the region without power, including about 80% of all Nova Scotia customers (Wikipedia, citing the Globe and Mail).",
-      "inclusion_basis": "reported_effect",
-      "criterion_met": 5,
-      "threshold_basis": "Loss of supply to >=100,000 customers.",
-      "capacity_affected": null,
-      "sources": [
-        {
-          "url": "https://www.cbc.ca/lite/story/1.6597229",
-          "publisher": "CBC News",
-          "date": "2022-10-07",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://atlantic.ctvnews.ca/nearly-500-000-maritimers-without-power-in-fiona-s-wake-1.6083020",
-          "publisher": "CTV Atlantic",
-          "date": "2022-09-24",
-          "language": "en",
-          "source_role": "media",
-          "opened": null
-        },
-        {
-          "url": "https://en.wikipedia.org/wiki/Hurricane_Fiona",
-          "publisher": "Wikipedia",
-          "date": null,
-          "language": "en",
-          "source_role": "dataset",
-          "opened": true
-        }
-      ],
-      "recovery": {
-        "research_status": "NOT_YET_RESEARCHED",
-        "kind": null,
-        "date": null,
-        "evidence": null,
-        "url": null
-      },
-      "review": {
-        "reviewed_at": "2026-11-03",
-        "threshold_version": "2026-10-30.1",
-        "review_status": "blind_reviewed",
-        "primary_review_complete": true,
-        "independent_review_complete": true,
-        "reviewer_count": 4,
-        "disposition": "corrected",
-        "source_count": 3,
-        "sources_opened_by_reviewer": 1,
-        "process": "Found by a research lane; then reviewed blind by three independent reviewers, none of whom saw the researcher's rationale or each other: one opened the sources and checked identity, date, region, threshold and every figure; one checked the text for placement finer than first-level region, inventories, dependency and status wording; one checked class, cause, hazard name, episode and duplicates. Published only because all three accepted it; their corrections were reconciled into this text.",
-        "source_access": "at least one source read",
-        "roles": {
-          "evidence": "accept_with_correction",
-          "safety": "accept",
-          "taxonomy": "accept"
-        }
-      },
-      "hazard_name": "Post-tropical storm Fiona (2022)"
     },
     {
       "event_id": "ca-2022-12-23-holiday-storm-quebec",

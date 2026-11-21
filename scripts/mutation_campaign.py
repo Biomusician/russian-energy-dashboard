@@ -3863,6 +3863,17 @@ ITER23_RECORDS_MUTATIONS = [
          "struck facilities are still counted in the index \"",
          "reported disruptions have no published restoration report \""))],
      "h01_the_cannot_tell_you_list_never_calls_the_model_count"),
+    ("AN-01: What's New built before the impact layer writes the payloads it reads",
+     [("pipeline/run.py", _text('    impact_payloads = global_impacts.build(snapshot["as_of"])',
+                                '    _early = whats_new.build(ROOT, outputs.processed(), snapshot, incidents, assets) if False else None; '
+                                'impact_payloads = global_impacts.build(snapshot["as_of"])'))],
+     "an01_whats_new_is_built_after_the_impact_layer"),
+    ("AN-05: a country record may name an encyclopedia as its source",
+     [("pipeline/build_systems.py", _text('    problems += encyclopedia_attribution_problems(events)', '    pass'))],
+     "an05"),
+    ("AN-05: the encyclopedia rule reads the summary only",
+     [("pipeline/build_systems.py", _text('for field in ("summary", "effect", "threshold_basis")', 'for field in ("summary",)'))],
+     "an05"),
 ]
 MUTATIONS += ITER23_RECORDS_MUTATIONS
 

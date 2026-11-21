@@ -3,10 +3,10 @@
  "note": "One automated visit to each cited page. Blocked means the site refused an automated visitor, not that the page is gone. Redirects to a home page or listing count as gone; redirects to a bot check count as blocked.",
  "by_system": {
   "ca": {
-   "reachable": 54,
+   "reachable": 52,
    "redirected": 0,
    "blocked": 3,
-   "dead": 3,
+   "dead": 2,
    "error": 0
   },
   "cn": {
@@ -218,7 +218,6 @@
   "https://aeptexas.com/community/caring/view?id=8927": "reachable",
   "https://aeptexas.com/community/caring/view?id=8928": "reachable",
   "https://archives.lincolndailynews.com/2024/Feb/05/NEWS/news_e.shtml": "reachable",
-  "https://atlantic.ctvnews.ca/nearly-500-000-maritimers-without-power-in-fiona-s-wake-1.6083020": "dead",
   "https://attaqa.net/2024/06/19/%d8%a7%d9%86%d9%82%d8%b7%d8%a7%d8%b9-%d8%a7%d9%84%d9%83%d9%87%d8%b1%d8%a8%d8%a7%d8%a1-%d9%81%d9%8a-%d8%a7%d9%84%d9%83%d9%88%d9%8a%d8%aa-%d9%8a%d8%b6%d8%b1%d8%a8-40-%d9%85%d9%86%d8%b7%d9%82%d8%a9/": "reachable",
   "https://attaqa.net/2025/12/23/%d8%a5%d9%8a%d8%b1%d8%a7%d9%86-%d8%aa%d9%82%d8%b7%d8%b9-%d8%a7%d9%84%d8%ba%d8%a7%d8%b2-%d8%b9%d9%86-%d8%a7%d9%84%d8%b9%d8%b1%d8%a7%d9%82-%d9%88%d8%aa%d8%b3%d8%aa%d8%ab%d9%86%d9%8a-%d8%aa%d8%b1%d9%83/": "reachable",
   "https://biv.com/article/2022/09/strike-action-shuts-down-operations-roberts-banks-westshore-coal-terminal": "blocked",
@@ -243,7 +242,6 @@
   "https://en.wikipedia.org/wiki/2023_Sikkim_flash_floods": "reachable",
   "https://en.wikipedia.org/wiki/Freeport_LNG": "reachable",
   "https://en.wikipedia.org/wiki/Hurricane_Beryl": "reachable",
-  "https://en.wikipedia.org/wiki/Hurricane_Fiona": "reachable",
   "https://en.wikipedia.org/wiki/Hurricane_Milton": "reachable",
   "https://en.wikipedia.org/wiki/January_13%E2%80%9316,_2024_North_American_winter_storm": "reachable",
   "https://en.wikipedia.org/wiki/Keystone_Pipeline": "reachable",
@@ -372,7 +370,6 @@
   "https://www.canada.ca/en/environment-climate-change/services/top-ten-weather-stories/2023.html": "reachable",
   "https://www.canada.ca/en/environment-climate-change/services/top-ten-weather-stories/2025.html": "reachable",
   "https://www.capradio.org/articles/2023/01/08/widespread-power-outages-and-storm-damage-in-sacramento-for-second-consecutive-weekend/": "reachable",
-  "https://www.cbc.ca/lite/story/1.6597229": "reachable",
   "https://www.cbc.ca/lite/story/1.6696318": "reachable",
   "https://www.cbc.ca/lite/story/1.7291210": "reachable",
   "https://www.cbc.ca/lite/story/1.7388144": "reachable",
